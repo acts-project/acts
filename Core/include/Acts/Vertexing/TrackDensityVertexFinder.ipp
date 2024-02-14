@@ -9,14 +9,14 @@
 template <typename vfitter_t, typename track_density_t>
 auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& /*state*/) const -> Result<std::vector<Vertex>> {
+    const VertexingOptions& vertexingOptions, State& /*state*/) const
+    -> Result<std::vector<Vertex>> {
   typename track_density_t::State densityState(trackVector.size());
 
   // Calculate z seed position
   std::pair<double, double> zAndWidth =
-      m_cfg.trackDensityEstimator.globalMaximumWithWidth(
-          densityState, trackVector, m_extractParameters);
+      m_cfg.trackDensityEstimator.globalMaximumWithWidth(densityState,
+                                                         trackVector);
 
   double z = zAndWidth.first;
 

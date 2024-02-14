@@ -111,17 +111,15 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(
-      ip3dEst);
+  AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
@@ -129,9 +127,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
-      std::move(fitterCfg));
+  AdaptiveMultiVertexFitter<Linearizer> fitter(std::move(fitterCfg));
 
   // Create positions of three vertices, two of which (1 and 2) are
   // close to one another and will share a common track later
@@ -206,8 +204,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     ACTS_DEBUG("\t" << ct << ". track ptr: " << &trk);
   }
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
-      *bField, magFieldContext);
+  AdaptiveMultiVertexFitter<Linearizer>::State state(*bField, magFieldContext);
 
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
@@ -335,17 +332,15 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(
-      ip3dEst);
+  AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
@@ -355,9 +350,9 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   fitterCfg.doSmoothing = true;
   // Do time fit
   fitterCfg.useTime = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
-      std::move(fitterCfg));
+  AdaptiveMultiVertexFitter<Linearizer> fitter(std::move(fitterCfg));
 
   // Vertex position
   double trueVtxTime = 40.0_ps;
@@ -418,8 +413,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   }
 
   // Prepare fitter state
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
-      *bField, magFieldContext);
+  AdaptiveMultiVertexFitter<Linearizer>::State state(*bField, magFieldContext);
 
   for (const auto& trk : trks) {
     ACTS_DEBUG("Track parameters:\n" << trk);
@@ -473,11 +467,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<Propagator>;
 
   IPEstimator::Config ip3dEstCfg(bField, propagator);
   IPEstimator ip3dEst(ip3dEstCfg);
@@ -487,10 +480,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(
-      ip3dEst);
+  AdaptiveMultiVertexFitter<Linearizer>::Config fitterCfg(ip3dEst);
 
   fitterCfg.annealingTool = annealingUtility;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
   // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
@@ -499,8 +492,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Test smoothing
   // fitterCfg.doSmoothing = true;
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer> fitter(
-      std::move(fitterCfg));
+  AdaptiveMultiVertexFitter<Linearizer> fitter(std::move(fitterCfg));
 
   // Create first vector of tracks
   Vector3 pos1a(0.5_mm, -0.5_mm, 2.4_mm);
@@ -586,8 +578,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
           .value(),
   };
 
-  AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::State state(
-      *bField, magFieldContext);
+  AdaptiveMultiVertexFitter<Linearizer>::State state(*bField, magFieldContext);
 
   // The constraint vertex position covariance
   SquareMatrix4 covConstr(SquareMatrix4::Identity());
@@ -607,7 +598,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtx1Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo1;
+  VertexInfo vtxInfo1;
   vtxInfo1.seedPosition = vtxInfo1.linPoint;
   vtxInfo1.linPoint.setZero();
   vtxInfo1.linPoint.head<3>() = vtxPos1;
@@ -634,7 +625,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   vtx2Constr.setFitQuality(0, -3);
 
   // Prepare vtx info for fitter
-  VertexInfo<BoundTrackParameters> vtxInfo2;
+  VertexInfo vtxInfo2;
   vtxInfo2.linPoint.setZero();
   vtxInfo2.linPoint.head<3>() = vtxPos2;
   vtxInfo2.constraint = std::move(vtx2Constr);

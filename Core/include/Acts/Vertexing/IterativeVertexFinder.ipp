@@ -9,7 +9,7 @@
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
+    const VertexingOptions& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex>> {
   // Original tracks
   const std::vector<InputTrack>& origTracks = trackVector;
@@ -158,8 +158,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
     const std::vector<InputTrack>& seedTracks,
-    const VertexingOptions<InputTrack_t>& vertexingOptions) const
-    -> Result<Vertex> {
+    const VertexingOptions& vertexingOptions) const -> Result<Vertex> {
   typename sfinder_t::State finderState;
   auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
 
@@ -195,12 +194,12 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeTracks(
     const std::vector<InputTrack>& tracksToRemove,
     std::vector<InputTrack>& seedTracks) const {
   for (const auto& trk : tracksToRemove) {
-    const BoundTrackParameters& params = m_extractParameters(trk);
+    const BoundTrackParameters& params = m_cfg.extractParameters(trk);
     // Find track in seedTracks
     auto foundIter =
         std::find_if(seedTracks.begin(), seedTracks.end(),
                      [&params, this](const auto seedTrk) {
-                       return params == m_extractParameters(seedTrk);
+                       return params == m_cfg.extractParameters(seedTrk);
                      });
     if (foundIter != seedTracks.end()) {
       // Remove track from seed tracks
@@ -215,8 +214,7 @@ template <typename vfitter_t, typename sfinder_t>
 Acts::Result<double>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
     const BoundTrackParameters& params, const Vertex& vertex,
-    const Surface& perigeeSurface,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
+    const Surface& perigeeSurface, const VertexingOptions& vertexingOptions,
     State& state) const {
   // Linearize track
   auto result = m_cfg.linearizer.linearizeTrack(
@@ -254,8 +252,7 @@ Acts::Result<void>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     Vertex& vertex, std::vector<InputTrack>& tracksToFit,
     std::vector<InputTrack>& seedTracks,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& state) const {
+    const VertexingOptions& vertexingOptions, State& state) const {
   std::vector<TrackAtVertex> tracksAtVertex = vertex.tracks();
 
   for (const auto& trackAtVtx : tracksAtVertex) {
@@ -304,7 +301,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
   for (const auto& trk : tracksToFit) {
     // calculate chi2 w.r.t. last fitted vertex
     auto result =
-        getCompatibility(m_extractParameters(trk), vertex,
+        getCompatibility(m_cfg.extractParameters(trk), vertex,
                          *vertexPerigeeSurface, vertexingOptions, state);
 
     if (!result.ok()) {
@@ -349,8 +346,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
     const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
     std::vector<InputTrack>& tracksToFitSplitVertexOut,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& state) const {
+    const VertexingOptions& vertexingOptions, State& state) const {
   int numberOfTracks = seedTracks.size();
 
   // Count how many tracks are used for fit
@@ -378,7 +374,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
     // If a large amount of tracks is available, we check their compatibility
     // with the vertex before adding them to the fit:
     else {
-      const BoundTrackParameters& sTrackParams = m_extractParameters(sTrack);
+      const BoundTrackParameters& sTrackParams =
+          m_cfg.extractParameters(sTrack);
       auto distanceRes = m_cfg.ipEst.calculateDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
           state.ipState);
@@ -423,8 +420,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
     std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
-    const VertexingOptions<InputTrack_t>& vertexingOptions,
-    State& state) const {
+    const VertexingOptions& vertexingOptions, State& state) const {
   int numberOfAddedTracks = 0;
 
   const std::shared_ptr<PerigeeSurface> currentVertexPerigeeSurface =
@@ -452,7 +448,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
       }
       // use original perigee parameters
       BoundTrackParameters origParams =
-          m_extractParameters(tracksIter->originalParams);
+          m_cfg.extractParameters(tracksIter->originalParams);
 
       // compute compatibility
       auto resultNew = getCompatibility(origParams, currentVertex,

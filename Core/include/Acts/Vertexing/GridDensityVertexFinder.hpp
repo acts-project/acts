@@ -39,7 +39,6 @@ class GridDensityVertexFinder {
   // Assert bigger main grid than track grid
   static_assert(mainGridSize > trkGridSize);
 
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
  public:
@@ -73,6 +72,9 @@ class GridDensityVertexFinder {
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
     bool estimateSeedWidth = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief The State struct
@@ -105,49 +107,22 @@ class GridDensityVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex>> find(
-      const std::vector<InputTrack>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   State& state) const;
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  GridDensityVertexFinder(const Config& cfg)
-      : m_cfg(cfg), m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }) {}
-
-  /// @brief Default constructor used if InputTrack_t type ==
-  /// BoundTrackParameters
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  GridDensityVertexFinder()
-      : m_extractParameters([](T params) { return params; }) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  GridDensityVertexFinder(
-      const Config& cfg,
-      const std::function<BoundTrackParameters(const InputTrack&)>& func)
-      : m_cfg(cfg), m_extractParameters(func) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters with default Config object
-  ///
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  GridDensityVertexFinder(
-      const std::function<BoundTrackParameters(const InputTrack&)>& func)
-      : m_extractParameters(func) {}
+  /// @param func Function extracting BoundTrackParameters from InputTrack
+  ///             object
+  GridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "GridDensityVertexFinder: "
+          "No track parameter extractor provided.");
+    }
+  }
 
  private:
   /// @brief Checks if a track passes the selection criteria for seeding
@@ -159,11 +134,6 @@ class GridDensityVertexFinder {
 
   // The configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts

@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3 pos1c{1.69457_mm, -0.50837_mm, -7_mm};
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>,
-                               GaussianTrackDensity<BoundTrackParameters>>;
-  Finder finder;
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters
@@ -150,12 +150,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, constraint);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>,
-                               GaussianTrackDensity<BoundTrackParameters>>;
-  Finder finder;
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters
@@ -228,12 +228,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
   using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>,
-                               GaussianTrackDensity<BoundTrackParameters>>;
-  Finder finder;
+      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   int mySeed = 31415;
@@ -325,18 +325,18 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions<InputTrackStub> vertexingOptions(geoContext, magFieldContext,
-                                                    constraint);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
 
-  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
-      [](const InputTrack& params) {
-        return params.as<InputTrackStub>()->parameters();
-      };
+  auto extractParameters = [](const InputTrack& params) {
+    return params.as<InputTrackStub>()->parameters();
+  };
 
   using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrackStub>,
-                                          GaussianTrackDensity<InputTrackStub>>;
+                                          GaussianTrackDensity>;
 
-  Finder finder(extractParameters);
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect(extractParameters);
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters

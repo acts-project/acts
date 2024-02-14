@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -73,6 +74,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
       stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Propagator"));
   // Setup the vertex fitter
   Fitter::Config vertexFitterCfg;
+  vertexFitterCfg.extractParameters
+      .connect<&Acts::InputTrack::extractParameters>();
   Fitter vertexFitter(vertexFitterCfg,
                       logger().cloneWithSuffix("FullBilloirVertexFitter"));
   // Setup the track linearizer
@@ -82,12 +85,16 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // Setup the seed finder
   IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
   IPEstimator ipEst(ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
-  Seeder seeder;
+
+  Acts::GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+  Seeder seeder{{{densityCfg}}};
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
-                           std::move(seeder), ipEst);
+                           seeder, ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
+  finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
   Finder finder(std::move(finderCfg), logger().clone());
   Finder::State state(*m_cfg.bField, ctx.magFieldContext);
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);

@@ -1,5 +1,5 @@
 pytest
-pytest-check==2.1.5
+pytest-check
 uproot
 awkward
 pytest-xdist

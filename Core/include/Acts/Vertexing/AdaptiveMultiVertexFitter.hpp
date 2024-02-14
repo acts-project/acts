@@ -34,20 +34,18 @@ namespace Acts {
 ///
 ///////////////////////////////////////////////////////////////////////////
 ///
-/// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, typename linearizer_t>
+template <typename linearizer_t>
 class AdaptiveMultiVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
-  using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
 
  private:
-  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
+  using IPEstimator = ImpactPointEstimator<Propagator_t>;
 
  public:
   /// @brief The fitter state
@@ -70,7 +68,7 @@ class AdaptiveMultiVertexFitter {
 
     // Map to store vertices information
     // @TODO Does this have to be a mutable pointer?
-    std::map<Vertex*, VertexInfo<InputTrack_t>> vtxInfoMap;
+    std::map<Vertex*, VertexInfo> vtxInfoMap;
 
     std::multimap<InputTrack, Vertex*> trackToVerticesMultiMap;
 
@@ -151,39 +149,28 @@ class AdaptiveMultiVertexFitter {
 
     // Use time information when calculating the vertex compatibility
     bool useTime{false};
-  };
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFitter(Config cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFitter",
-                                                 Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }),
-        m_logger(std::move(logger)) {}
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
+  };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFitter(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  AdaptiveMultiVertexFitter(Config cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AdaptiveMultiVertexFitter",
+                                                 Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFitter: No function to extract parameters "
+          "from InputTrack_t provided.");
+    }
+  }
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -200,9 +187,9 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> addVtxToFit(
-      State& state, Vertex& newVertex, const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<void> addVtxToFit(State& state, Vertex& newVertex,
+                           const Linearizer_t& linearizer,
+                           const VertexingOptions& vertexingOptions) const;
 
   /// @brief Performs a simultaneous fit of all vertices in
   /// state.vertexCollection
@@ -212,18 +199,12 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> fit(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<void> fit(State& state, const Linearizer_t& linearizer,
+                   const VertexingOptions& vertexingOptions) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -250,7 +231,7 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   Result<void> prepareVertexForFit(
       State& state, Vertex* vtx,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Sets the vertexCompatibility for all TrackAtVertex objects
   /// at the current vertex
@@ -260,7 +241,7 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
       State& state, Vertex* currentVtx,
-      const VertexingOptions<input_track_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
@@ -270,7 +251,7 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   Result<void> setWeightsAndUpdate(
       State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<input_track_t>& vertexingOptions) const;
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Collects the compatibility values of the track `trk`
   /// wrt to all of its associated vertices
