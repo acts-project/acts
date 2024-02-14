@@ -44,15 +44,13 @@ namespace Acts {
 /// https://acts.readthedocs.io/en/latest/white_papers/billoir-covariances.html
 /// Author(s) Russo, F
 ///
-/// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, typename linearizer_t>
+template <typename linearizer_t>
 class FullBilloirVertexFitter {
   static_assert(LinearizerConcept<linearizer_t>,
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
-  using InputTrack_t = input_track_t;
   using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
 
@@ -69,36 +67,27 @@ class FullBilloirVertexFitter {
   struct Config {
     /// Maximum number of iterations in fitter
     int maxIterations = 5;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
-  /// @brief Constructor used if input_track_t type == BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
   /// @param logger Logging instance
-  template <
-      typename T = input_track_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg,
                           std::unique_ptr<const Logger> logger =
                               getDefaultLogger("FullBilloirVertexFitter",
                                                Logging::INFO))
-      : m_cfg(cfg),
-        extractParameters([](T params) { return params; }),
-        m_logger(std::move(logger)) {}
-
-  /// @brief Constructor for user-defined input_track_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from input_track_t
-  /// object
-  /// @param logger Logging instance
-  FullBilloirVertexFitter(
-      const Config& cfg,
-      std::function<BoundTrackParameters(input_track_t)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("FullBilloirVertexFitter", Logging::INFO))
-      : m_cfg(cfg), extractParameters(func), m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "FullBilloirVertexFitter: "
+          "No function to extract parameters "
+          "provided.");
+    }
+  }
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -108,21 +97,14 @@ class FullBilloirVertexFitter {
   /// @param state The state object
   ///
   /// @return Fitted vertex
-  Result<Vertex<input_track_t>> fit(
-      const std::vector<const input_track_t*>& paramVector,
-      const linearizer_t& linearizer,
-      const VertexingOptions<input_track_t>& vertexingOptions,
-      State& state) const;
+  Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
+                     const linearizer_t& linearizer,
+                     const VertexingOptions& vertexingOptions,
+                     State& state) const;
 
  private:
   /// Configuration object
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// input_track_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other input_track_t
-  /// objects.
-  std::function<BoundTrackParameters(input_track_t)> extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

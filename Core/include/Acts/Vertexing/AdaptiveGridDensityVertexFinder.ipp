@@ -8,9 +8,9 @@
 
 template <typename vfitter_t>
 auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
-    const std::vector<const InputTrack_t*>& trackVector,
-    const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
-    -> Result<std::vector<Vertex<InputTrack_t>>> {
+    const std::vector<InputTrack>& trackVector,
+    const VertexingOptions& vertexingOptions, State& state) const
+    -> Result<std::vector<Vertex>> {
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
@@ -26,7 +26,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
     state.mainDensityMap = DensityMap();
     // Fill with track densities
     for (auto trk : trackVector) {
-      const BoundTrackParameters& trkParams = m_extractParameters(*trk);
+      const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
       // Take only tracks that fulfill selection criteria
       if (!doesPassTrackSelection(trkParams)) {
         continue;
@@ -45,7 +45,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
     // No tracks passed selection
     // Return empty seed, i.e. vertex at constraint position
     // (Note: Upstream finder should check for this break condition)
-    std::vector<Vertex<InputTrack_t>> seedVec{vertexingOptions.constraint};
+    std::vector<Vertex> seedVec{vertexingOptions.constraint};
     return seedVec;
   }
 
@@ -79,7 +79,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
   Vector4 seedPos =
       vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
 
-  Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
+  Vertex returnVertex = Vertex(seedPos);
 
   SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
@@ -90,7 +90,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex<InputTrack_t>> seedVec{returnVertex};
+  std::vector<Vertex> seedVec{returnVertex};
 
   return seedVec;
 }
