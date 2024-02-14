@@ -169,8 +169,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      auto smoothingResult =
-          Acts::smoothTrack(ctx.geoContext, tracksTemp, track, logger());
+      auto smoothingResult = Acts::smoothTrack(ctx.geoContext, track, logger());
       if (!smoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("Smoothing for seed "

@@ -41,20 +41,20 @@ std::error_code make_error_code(TrackExtrapolationError e);
 
 /// @brief Smooth a track using the gain matrix smoother
 ///
-/// @tparam track_container_t The track container type
+/// @tparam track_proxy_t The track proxy type
 ///
 /// @param geoContext The geometry context
-/// @param trackContainer The track container
 /// @param track The track to smooth
 /// @param logger The logger
 ///
 /// @return The result of the smoothing
-template <typename track_container_t>
+template <typename track_proxy_t>
 Result<void> smoothTrack(
-    const GeometryContext &geoContext, track_container_t &trackContainer,
-    typename track_container_t::TrackProxy &track,
+    const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
   Acts::GainMatrixSmoother smoother;
+
+  auto &trackContainer = track.container();
 
   auto smoothingResult =
       smoother(geoContext, trackContainer.trackStateContainer(),
@@ -85,8 +85,7 @@ Result<void> smoothTracks(
   Result<void> result = Result<void>::success();
 
   for (const auto &track : trackContainer) {
-    auto smoothingResult =
-        smoothTrack(geoContext, trackContainer, track, logger);
+    auto smoothingResult = smoothTrack(geoContext, track, logger);
 
     if (!smoothingResult.ok()) {
       result = smoothingResult.error();
