@@ -74,7 +74,7 @@ inline int binIndex(double min, double max, unsigned nSteps, double val) {
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
 inline double lowerBinEdge(double min, double max, unsigned nSteps,
-                    std::size_t binIndex) {
+                           std::size_t binIndex) {
   return min + (max - min) * binIndex / nSteps;
 }
 // Returns the lower bound of the bin specified by step
@@ -86,7 +86,7 @@ inline double lowerBinEdge(double min, double max, unsigned nSteps,
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
 inline double binCenter(double min, double max, unsigned nSteps,
-                 std::size_t binIndex) {
+                        std::size_t binIndex) {
   return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
 }
 
