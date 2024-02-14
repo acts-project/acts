@@ -98,6 +98,9 @@ class ImpactPointEstimator {
   ImpactPointEstimator(const ImpactPointEstimator& other)
       : m_cfg(other.m_cfg), m_logger(other.logger().clone()) {}
 
+  /// Move constructor for impact point estimator
+  ImpactPointEstimator(ImpactPointEstimator&&) = default;
+
   /// @brief Calculates 3D distance between a track and a vertex
   ///
   /// @param gctx The geometry context
