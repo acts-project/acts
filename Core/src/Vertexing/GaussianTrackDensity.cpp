@@ -1,10 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
 
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -12,8 +14,7 @@
 
 namespace Acts {
 
-inline std::pair<double, double>
-Acts::GaussianTrackDensity::globalMaximumWithWidth(
+std::pair<double, double> Acts::GaussianTrackDensity::globalMaximumWithWidth(
     State& state, const std::vector<InputTrack>& trackList) const {
   auto result = addTracks(state, trackList);
   if (!result.ok()) {
@@ -63,12 +64,12 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
                               std::sqrt(-(maxDensity / maxSecondDerivative)));
 }
 
-inline double Acts::GaussianTrackDensity::globalMaximum(
+double Acts::GaussianTrackDensity::globalMaximum(
     State& state, const std::vector<InputTrack>& trackList) const {
   return globalMaximumWithWidth(state, trackList).first;
 }
 
-inline Result<void> Acts::GaussianTrackDensity::addTracks(
+Result<void> Acts::GaussianTrackDensity::addTracks(
     State& state, const std::vector<InputTrack>& trackList) const {
   for (auto trk : trackList) {
     const BoundTrackParameters& boundParams = m_cfg.extractParameters(trk);
@@ -121,7 +122,7 @@ inline Result<void> Acts::GaussianTrackDensity::addTracks(
   return Result<void>::success();
 }
 
-inline std::tuple<double, double, double>
+std::tuple<double, double, double>
 Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
                                                        double z) const {
   GaussianTrackDensityStore densityResult(z);
@@ -131,11 +132,9 @@ Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
   return densityResult.densityAndDerivatives();
 }
 
-inline std::tuple<double, double, double>
-Acts::GaussianTrackDensity::updateMaximum(double newZ, double newValue,
-                                          double newSecondDerivative,
-                                          double maxZ, double maxValue,
-                                          double maxSecondDerivative) const {
+std::tuple<double, double, double> Acts::GaussianTrackDensity::updateMaximum(
+    double newZ, double newValue, double newSecondDerivative, double maxZ,
+    double maxValue, double maxSecondDerivative) const {
   if (newValue > maxValue) {
     maxZ = newZ;
     maxValue = newValue;
@@ -144,13 +143,12 @@ Acts::GaussianTrackDensity::updateMaximum(double newZ, double newValue,
   return {maxZ, maxValue, maxSecondDerivative};
 }
 
-inline double Acts::GaussianTrackDensity::stepSize(double y, double dy,
-                                                   double ddy) const {
+double Acts::GaussianTrackDensity::stepSize(double y, double dy,
+                                            double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
 }
 
-inline void
-Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
+void Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
     const TrackEntry& entry) {
   // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {

@@ -13,4 +13,5 @@ target_sources(
     FullBilloirVertexFitter.cpp
     AdaptiveMultiVertexFinder.cpp
     Vertex.cpp
+    GaussianTrackDensity.cpp
 )
