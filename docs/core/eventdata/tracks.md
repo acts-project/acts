@@ -285,7 +285,7 @@ and the innermost track state becomes directly accessible via
 If the track container has branching track state sequences, running a smoothing
 step in-place on branching tracks is problematic: if tracks are smoothed one by
 one, the last track of each shared track state (i.e. the track state where
-branching occurs) will overwite the smoothing result of all previous tracks.
+branching occurs) will overwrite the smoothing result of all previous tracks.
 
 Consider again the track states in {numref}`ckf_tree`. $S_1$ is the common
 ancestor for $S_2$ and $S_3$, and has a single slot to store smoothed
@@ -524,7 +524,7 @@ track.reverseTrackStates();
 
 The transient vector backend implements the reference backend for the track
 {term}`EDM`. It does not implement any persistency directly. The implementation of
-this backend for both track and track state containers uses seperate classes
+this backend for both track and track state containers uses separate classes
 for the mutable and const versions, in order to fully comply with const
 correctness. It also uses a common base class internally, which is however an
 implementation detail.
@@ -575,7 +575,7 @@ The working model is this:
    tc.makeTrack();
    // ...
    ```
-4. The mutable backends *relased into* a `podio::Frame` for writing.
+4. The mutable backends *released into* a `podio::Frame` for writing.
    ```cpp
    ptc.releaseInto(frame);
    tsc.releaseInto(frame);
