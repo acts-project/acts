@@ -9,13 +9,12 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
-
-inline
-Acts::Result<Acts::LinearizedTrack> Acts::
-    HelicalTrackLinearizer::linearizeTrack(
-        const BoundTrackParameters& params, double linPointTime,
-        const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-        const Acts::MagneticFieldContext& mctx, MagneticFieldProvider::Cache& fieldCache) const {
+inline Acts::Result<Acts::LinearizedTrack>
+Acts::HelicalTrackLinearizer::linearizeTrack(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+    const Acts::MagneticFieldContext& mctx,
+    MagneticFieldProvider::Cache& fieldCache) const {
   // Create propagator options
   PropagatorOptions<> pOptions(gctx, mctx);
 
@@ -40,13 +39,15 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  // auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
-  // if (!result.ok()) {
-    // return result.error();
+  // auto result = m_cfg.propagator->propagate(params, perigeeSurface,
+  // pOptions); if (!result.ok()) { return result.error();
   // }
   // const auto& endParams = *result->endParameters;
-  const auto res = m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
-  if(!res.ok()) {return res.error();}
+  const auto res =
+      m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
+  if (!res.ok()) {
+    return res.error();
+  }
   const auto& endParams = *res;
 
   // Extracting the track parameters at said PCA - this corresponds to the
@@ -95,8 +96,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   ActsScalar absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
-  auto field =
-      m_cfg.bField->getField(VectorHelpers::position(pca), fieldCache);
+  auto field = m_cfg.bField->getField(VectorHelpers::position(pca), fieldCache);
   if (!field.ok()) {
     return field.error();
   }

@@ -10,14 +10,12 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
-inline
-Acts::Result<Acts::LinearizedTrack>
-Acts::NumericalTrackLinearizer::
-    linearizeTrack(const BoundTrackParameters& params, double linPointTime,
-                   const Surface& perigeeSurface,
-                   const Acts::GeometryContext& gctx,
-                   const Acts::MagneticFieldContext& mctx,
-                   MagneticFieldProvider::Cache& /*fieldCache*/) const {
+inline Acts::Result<Acts::LinearizedTrack>
+Acts::NumericalTrackLinearizer::linearizeTrack(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+    const Acts::MagneticFieldContext& mctx,
+    MagneticFieldProvider::Cache& /*fieldCache*/) const {
   // Create propagator options
   PropagatorOptions<> pOptions(gctx, mctx);
 
@@ -42,7 +40,8 @@ Acts::NumericalTrackLinearizer::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  auto result = m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
   if (!result.ok()) {
     return result.error();
   }
@@ -124,8 +123,8 @@ Acts::NumericalTrackLinearizer::
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
     // Propagate to the new PCA and extract Perigee parameters
-    auto newResult = m_cfg.propagator->propagateToSurface(wiggledCurvilinearParams,
-                                                 perigeeSurface, pOptions);
+    auto newResult = m_cfg.propagator->propagateToSurface(
+        wiggledCurvilinearParams, perigeeSurface, pOptions);
     if (!newResult.ok()) {
       return newResult.error();
     }

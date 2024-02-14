@@ -11,12 +11,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-inline
-Acts::Result<double>
-Acts::ImpactPointEstimator::
-    calculateDistance(const GeometryContext& gctx,
-                      const BoundTrackParameters& trkParams,
-                      const Vector3& vtxPos, State& state) const {
+inline Acts::Result<double> Acts::ImpactPointEstimator::calculateDistance(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
@@ -27,13 +24,11 @@ Acts::ImpactPointEstimator::
   return res.value().first.norm();
 }
 
-inline
-Acts::Result<Acts::BoundTrackParameters>
-Acts::ImpactPointEstimator::
-    estimate3DImpactParameters(const GeometryContext& gctx,
-                               const Acts::MagneticFieldContext& mctx,
-                               const BoundTrackParameters& trkParams,
-                               const Vector3& vtxPos, State& state) const {
+inline Acts::Result<Acts::BoundTrackParameters>
+Acts::ImpactPointEstimator::estimate3DImpactParameters(
+    const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+    State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
@@ -106,11 +101,9 @@ Acts::ImpactPointEstimator::
 }
 
 template <unsigned int nDim>
-Acts::Result<double>
-Acts::ImpactPointEstimator::
-    getVertexCompatibility(const GeometryContext& gctx,
-                           const BoundTrackParameters* trkParams,
-                           const ActsVector<nDim>& vertexPos) const {
+Acts::Result<double> Acts::ImpactPointEstimator::getVertexCompatibility(
+    const GeometryContext& gctx, const BoundTrackParameters* trkParams,
+    const ActsVector<nDim>& vertexPos) const {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -173,11 +166,10 @@ Acts::ImpactPointEstimator::
   return residual.dot(weight * residual);
 }
 
-inline
-Acts::Result<double> Acts::ImpactPointEstimator::performNewtonOptimization(const Vector3& helixCenter,
-                                                     const Vector3& vtxPos,
-                                                     double phi, double theta,
-                                                     double rho) const {
+inline Acts::Result<double>
+Acts::ImpactPointEstimator::performNewtonOptimization(
+    const Vector3& helixCenter, const Vector3& vtxPos, double phi, double theta,
+    double rho) const {
   double sinPhi = std::sin(phi);
   double cosPhi = std::cos(phi);
 
@@ -230,10 +222,9 @@ Acts::Result<double> Acts::ImpactPointEstimator::performNewtonOptimization(const
 
 template <unsigned int nDim>
 Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-Acts::ImpactPointEstimator::
-    getDistanceAndMomentum(const GeometryContext& gctx,
-                           const BoundTrackParameters& trkParams,
-                           const ActsVector<nDim>& vtxPos, State& state) const {
+Acts::ImpactPointEstimator::getDistanceAndMomentum(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const ActsVector<nDim>& vtxPos, State& state) const {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -364,14 +355,11 @@ Acts::ImpactPointEstimator::
   return std::make_pair(deltaR, momDir);
 }
 
-inline
-Acts::Result<Acts::ImpactParametersAndSigma>
-Acts::ImpactPointEstimator::
-    getImpactParameters(const BoundTrackParameters& track,
-                        const Vertex& vtx,
-                        const GeometryContext& gctx,
-                        const Acts::MagneticFieldContext& mctx,
-                        bool calculateTimeIP) const {
+inline Acts::Result<Acts::ImpactParametersAndSigma>
+Acts::ImpactPointEstimator::getImpactParameters(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    bool calculateTimeIP) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
@@ -405,8 +393,7 @@ Acts::ImpactPointEstimator::
 
   // Extract Perigee parameters and corresponding covariance matrix
   auto impactParams = params.impactParameters();
-  auto impactParamCovariance =
-      params.impactParameterCovariance().value();
+  auto impactParamCovariance = params.impactParameterCovariance().value();
 
   // Vertex variances
   // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
@@ -451,13 +438,11 @@ Acts::ImpactPointEstimator::
   return ipAndSigma;
 }
 
-inline
-Acts::Result<std::pair<double, double>>
-Acts::ImpactPointEstimator::getLifetimeSignOfTrack(const BoundTrackParameters& track,
-                           const Vertex& vtx,
-                           const Acts::Vector3& direction,
-                           const GeometryContext& gctx,
-                           const MagneticFieldContext& mctx) const {
+inline Acts::Result<std::pair<double, double>>
+Acts::ImpactPointEstimator::getLifetimeSignOfTrack(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const Acts::Vector3& direction, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
@@ -493,13 +478,11 @@ Acts::ImpactPointEstimator::getLifetimeSignOfTrack(const BoundTrackParameters& t
   return vszs;
 }
 
-inline
-Acts::Result<double>
-Acts::ImpactPointEstimator::
-    get3DLifetimeSignOfTrack(const BoundTrackParameters& track,
-                             const Vertex& vtx, const Acts::Vector3& direction,
-                             const GeometryContext& gctx,
-                             const MagneticFieldContext& mctx) const {
+inline Acts::Result<double>
+Acts::ImpactPointEstimator::get3DLifetimeSignOfTrack(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const Acts::Vector3& direction, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
