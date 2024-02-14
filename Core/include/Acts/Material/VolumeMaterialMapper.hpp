@@ -194,7 +194,8 @@ class VolumeMaterialMapper final : public IMaterialMapper {
   ///
   /// @note it will @return the mapped and unmapped part of the material track
   std::array<RecordedMaterialTrack, 2u> mapMaterialTrack(
-      MaterialMappingState& mState, const RecordedMaterialTrack& mTrack) const final;
+      MaterialMappingState& mState,
+      const RecordedMaterialTrack& mTrack) const final;
 
  private:
   /// selector for finding
