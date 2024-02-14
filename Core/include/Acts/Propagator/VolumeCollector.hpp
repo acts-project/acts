@@ -63,7 +63,7 @@ struct HitVolume : public InteractionVolume {
   /// @param pos The position of the hit
   /// @param dir The direction of the hit
   HitVolume(const TrackingVolume* tv, Vector3 pos, Vector3 dir)
-      : InteractionVolume(tv), position(pos), direction(dir){};
+      : InteractionVolume(tv), position(std::move(pos)), direction(std::move(dir)){};
 
   /// Constructor from a detector volume
   ///
@@ -71,7 +71,7 @@ struct HitVolume : public InteractionVolume {
   /// @param pos The position of the hit
   /// @param dir The direction of the hit
   HitVolume(const Experimental::DetectorVolume* dv, Vector3 pos, Vector3 dir)
-      : InteractionVolume(dv), position(pos), direction(dir){};
+      : InteractionVolume(dv), position(std::move(pos)), direction(std::move(dir)){};
 
   bool inside(const GeometryContext& gctx, const Acts::Vector3& gpos,
               double tol = 0.0) const {

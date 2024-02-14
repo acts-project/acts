@@ -414,7 +414,7 @@ Acts::SurfaceMaterialMapper::mapInteraction(
     // get the current Surface ID
     currentID = sfIter->surface->geometryId();
     // We have work to do: the assignment surface has changed
-    if (not(currentID == lastID)) {
+    if (!(currentID == lastID)) {
       // Let's (re-)assess the information
       lastID = currentID;
       currentPos = (sfIter)->position;

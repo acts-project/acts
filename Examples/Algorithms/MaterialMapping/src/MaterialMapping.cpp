@@ -28,11 +28,11 @@ ActsExamples::MaterialMapping::MaterialMapping(
   if (m_cfg.materialMappers.empty()) {
     throw std::invalid_argument(
         "At least one material mapper must to be defined.");
-  } else if (m_cfg.trackingGeometry == nullptr and m_cfg.detector == nullptr) {
+  } else if (m_cfg.trackingGeometry == nullptr && m_cfg.detector == nullptr) {
     throw std::invalid_argument(
         "Either TrackingGeometry or Detector must to be defined.");
   }
-  if (m_cfg.trackingGeometry == nullptr and m_cfg.detector == nullptr) {
+  if (m_cfg.trackingGeometry == nullptr && m_cfg.detector == nullptr) {
     throw std::invalid_argument(
         "Either TrackingGeometry or Detector must to be defined.");
   }

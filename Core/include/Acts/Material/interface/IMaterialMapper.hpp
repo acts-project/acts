@@ -40,7 +40,7 @@ struct MaterialMappingResult {
 using MaterialInteractionVeto = std::function<bool(const MaterialInteraction&)>;
 
 struct NoVeto {
-  bool operator()(const MaterialInteraction&) const { return false; }
+  bool operator()(const MaterialInteraction& /*matInt*/) const { return false; }
 };
 
 /// @brief Interface definition of Material mappers, it defines how to

@@ -145,8 +145,9 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapperTrackingGeometryWithVeto) {
   std::size_t negativeSide = 0;
   std::for_each(materialSteps.begin(), materialSteps.end(),
                 [&](const Acts::ActsScalar& p) {
-                  if (p < 0)
+                  if (p < 0) {
                     negativeSide++;
+                  }
                 });
 
   // Check that all material is mapped
