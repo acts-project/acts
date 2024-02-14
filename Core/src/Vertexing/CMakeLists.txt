@@ -12,4 +12,5 @@ target_sources(
     HelicalTrackLinearizer.cpp
     FullBilloirVertexFitter.cpp
     AdaptiveMultiVertexFinder.cpp
+    Vertex.cpp
 )
