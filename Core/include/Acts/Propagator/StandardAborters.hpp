@@ -155,6 +155,7 @@ struct SurfaceReached {
   }
 };
 
+/// Similar to `SurfaceReached` aborter but ignoring the overstepping tolerance
 struct ForcedSurfaceReached : SurfaceReached {
   ForcedSurfaceReached()
       : SurfaceReached(-std::numeric_limits<double>::max()) {}

@@ -24,9 +24,8 @@ namespace Acts {
 using StandardStepper = EigenStepper<>;
 
 using StandardNavigator = Navigator;
-using BlindNavigator = VoidNavigator;
 
-using BlindPropagator = Propagator<StandardStepper, BlindNavigator>;
+using VoidPropagator = Propagator<StandardStepper, VoidNavigator>;
 using StandardPropagator = Propagator<StandardStepper, StandardNavigator>;
 
 using StandardPropagatorOptions =
@@ -46,10 +45,10 @@ StandardStepper buildStandardStepper(
   return stepper;
 }
 
-/// @brief Build a blind navigator
+/// @brief Build a void navigator
 ///
-/// @return the blind navigator
-BlindNavigator buildBlindNavigator() {
+/// @return the void navigator
+VoidNavigator buildVoidNavigator() {
   auto navigator = VoidNavigator();
   return navigator;
 }
@@ -75,14 +74,14 @@ StandardNavigator buildStandardNavigator(
 /// @param logger is the logger
 ///
 /// @return the blind propagator
-BlindPropagator buildBlindPropagator(
+VoidPropagator buildBlindPropagator(
     std::shared_ptr<const MagneticFieldProvider> bField,
     std::shared_ptr<const Acts::Logger> logger =
         getDefaultLogger("Propagator", Logging::Level::INFO)) {
   auto stepper = buildStandardStepper(std::move(bField));
-  auto navigator = buildBlindNavigator();
-  auto propagator = BlindPropagator(std::move(stepper), std::move(navigator),
-                                    std::move(logger));
+  auto navigator = buildVoidNavigator();
+  auto propagator = VoidPropagator(std::move(stepper), std::move(navigator),
+                                   std::move(logger));
   return propagator;
 }
 

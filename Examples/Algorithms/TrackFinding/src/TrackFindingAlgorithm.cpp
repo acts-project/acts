@@ -189,6 +189,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         continue;
       }
 
+      // Set the seed number, this number decrease by 1 since the seed number
       seedNumber(track) = nSeed - 1;
 
       if (!m_trackSelector.has_value() ||

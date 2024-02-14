@@ -107,7 +107,8 @@ Result<void> smoothTracks(
 /// @param strategy The extrapolation strategy
 /// @param logger The logger
 ///
-/// @return The result of the search
+/// @return The result of the search containing the track state
+///         and the distance to the reference surface
 template <typename track_proxy_t>
 Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
 findTrackStateForExtrapolation(
@@ -248,7 +249,7 @@ findTrackStateForExtrapolation(
 /// @tparam propagator_t The propagator type
 /// @tparam propagator_options_t The propagator options type
 ///
-/// @param track The track
+/// @param track The track which is modified in-place
 /// @param referenceSurface The reference surface
 /// @param propagator The propagator
 /// @param options The propagator options
@@ -300,7 +301,7 @@ Result<void> extrapolateTrackToReferenceSurface(
 /// @tparam propagator_t The propagator type
 /// @tparam propagator_options_t The propagator options type
 ///
-/// @param trackContainer The track container
+/// @param trackContainer The track container which is modified in-place
 /// @param referenceSurface The reference surface
 /// @param propagator The propagator
 /// @param options The propagator options

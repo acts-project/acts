@@ -85,18 +85,18 @@ struct CombinatorialKalmanFilterExtensions {
   /// The Calibrator is a dedicated calibration algorithm that allows to
   /// calibrate measurements using track information, this could be e.g. sagging
   /// for wires, module deformations, etc.
-  Calibrator calibrator =
-      DelegateFuncTag<detail::voidFitterCalibrator<traj_t>>{};
+  Calibrator calibrator{
+      DelegateFuncTag<detail::voidFitterCalibrator<traj_t>>{}};
 
   /// The updater incorporates measurement information into the track parameters
-  Updater updater = DelegateFuncTag<detail::voidFitterUpdater<traj_t>>{};
+  Updater updater{DelegateFuncTag<detail::voidFitterUpdater<traj_t>>{}};
 
   /// The measurement selector is called during the filtering by the Actor.
-  MeasurementSelector measurementSelector =
-      DelegateFuncTag<voidMeasurementSelector>{};
+  MeasurementSelector measurementSelector{
+      DelegateFuncTag<voidMeasurementSelector>{}};
 
   /// The branch stopper is called during the filtering by the Actor.
-  BranchStopper branchStopper = DelegateFuncTag<voidBranchStopper>{};
+  BranchStopper branchStopper{DelegateFuncTag<voidBranchStopper>{}};
 
  private:
   /// Default measurement selector which will return all measurements
@@ -192,6 +192,8 @@ struct CombinatorialKalmanFilterOptions {
   PropagatorPlainOptions propagatorPlainOptions;
 
   /// The target surface
+  /// @note This is useful if the filtering should be terminated at a
+  ///       certain surface
   const Surface* targetSurface = nullptr;
 
   /// Whether to consider multiple scattering.
