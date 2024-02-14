@@ -29,7 +29,6 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/PropagatorHelpers.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -123,12 +122,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, pOptions);
 
-  auto extrapolator =
-      Acts::buildStandardPropagator(m_cfg.magneticField, m_cfg.trackingGeometry,
-                                    logger().cloneWithSuffix("Propagator"));
+  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+      Acts::EigenStepper<>(m_cfg.magneticField),
+      Acts::Navigator({}, logger().cloneWithSuffix("Navigator")),
+      logger().cloneWithSuffix("Propagator"));
 
-  auto extrapolationOptions =
-      Acts::buildMaterialPropagatorOptions(ctx.geoContext, ctx.magFieldContext);
+  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
+                          Acts::AbortList<Acts::EndOfWorldReached>>
+      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
