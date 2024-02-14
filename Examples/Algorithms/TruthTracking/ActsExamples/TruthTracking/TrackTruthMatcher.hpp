@@ -41,7 +41,7 @@ class TrackTruthMatcher final : public IAlgorithm {
     /// Matching ratio for track to particle matching
     double matchingRatio = 0.5;
     /// Whether to use double matching (track to particle and particle to track)
-    bool doubleMatching = true;
+    bool doubleMatching = false;
   };
 
   TrackTruthMatcher(const Config& config, Acts::Logging::Level level);
