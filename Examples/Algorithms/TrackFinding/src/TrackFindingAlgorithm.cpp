@@ -124,7 +124,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
-      Acts::Navigator({}, logger().cloneWithSuffix("Navigator")),
+      Acts::Navigator({m_cfg.trackingGeometry},
+                      logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
   Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
