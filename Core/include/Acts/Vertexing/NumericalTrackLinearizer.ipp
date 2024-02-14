@@ -128,7 +128,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     if (!newResult.ok()) {
       return newResult.error();
     }
-    newPerigeeParams = (*newResult).parameters();
+    newPerigeeParams = newResult->parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
     completeJacobian.array().col(i) =
