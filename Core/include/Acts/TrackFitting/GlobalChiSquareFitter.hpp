@@ -775,6 +775,7 @@ class Gx2Fitter {
     if (gx2fOptions.nUpdateMax > 0) {
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
+      ACTS_VERBOSE("finaldeltaParams:\n" << deltaParams);
       params.covariance() = fullCovariancePredicted;
 
       // set up propagator and co
