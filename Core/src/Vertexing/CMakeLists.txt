@@ -14,5 +14,6 @@ target_sources(
     AdaptiveMultiVertexFinder.cpp
     Vertex.cpp
     NumericalTrackLinearizer.cpp
+    TrackDensityVertexFinder.cpp
     GaussianTrackDensity.cpp
 )
