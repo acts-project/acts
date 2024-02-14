@@ -106,19 +106,23 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Fitter fitter(fitterCfg, InputTrack::extractParameters);
+  Fitter fitter(fitterCfg);
 
   using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
 
-  SeedFinder seedFinder{{}, InputTrack::extractParameters};
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  SeedFinder seedFinder{{densityCfg}};
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                              ipEstimator, std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
+                              std::move(linearizer), bField);
+  finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Finder finder(std::move(finderConfig), InputTrack::extractParameters);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -235,10 +239,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrackStub
-  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
-      [](const InputTrack& track) {
-        return track.as<InputTrackStub>()->parameters();
-      };
+  auto extractParameters = [](const InputTrack& track) {
+    return track.as<InputTrackStub>()->parameters();
+  };
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<Propagator>;
@@ -263,20 +266,24 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect(extractParameters);
 
-  Fitter fitter(fitterCfg, extractParameters);
+  Fitter fitter(fitterCfg);
 
   using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
 
-  SeedFinder seedFinder({}, extractParameters);
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect(extractParameters);
+  SeedFinder seedFinder({densityCfg});
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                              ipEstimator, std::move(linearizer), bField);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
+                              std::move(linearizer), bField);
+  finderConfig.extractParameters.connect(extractParameters);
   Finder::State state;
 
-  Finder finder(std::move(finderConfig), extractParameters);
+  Finder finder(std::move(finderConfig));
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -404,21 +411,24 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Fitter fitter(fitterCfg, InputTrack::extractParameters);
+  Fitter fitter(fitterCfg);
 
   using SeedFinder = GridDensityVertexFinder<4000, 55>;
   SeedFinder::Config seedFinderCfg(250);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
+  seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  SeedFinder seedFinder(seedFinderCfg, InputTrack::extractParameters);
+  SeedFinder seedFinder(seedFinderCfg);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
+  finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Finder finder(std::move(finderConfig), InputTrack::extractParameters);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);
@@ -551,8 +561,9 @@ BOOST_AUTO_TEST_CASE(
 
   // Test smoothing
   fitterCfg.doSmoothing = true;
+  fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Fitter fitter(fitterCfg, InputTrack::extractParameters);
+  Fitter fitter(fitterCfg);
 
   // Grid density used during vertex seed finding
   AdaptiveGridTrackDensity::Config gridDensityCfg;
@@ -565,15 +576,17 @@ BOOST_AUTO_TEST_CASE(
   using SeedFinder = AdaptiveGridDensityVertexFinder<>;
   SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
+  seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  SeedFinder seedFinder(seedFinderCfg, InputTrack::extractParameters);
+  SeedFinder seedFinder(seedFinderCfg);
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
                               std::move(linearizer), bField);
+  finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Finder finder(std::move(finderConfig), InputTrack::extractParameters);
+  Finder finder(std::move(finderConfig));
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(toolString);

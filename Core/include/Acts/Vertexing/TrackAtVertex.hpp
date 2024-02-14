@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 
 #include <any>
@@ -60,6 +61,8 @@ struct InputTrack {
   static BoundTrackParameters extractParameters(const InputTrack& track) {
     return *track.as<BoundTrackParameters>();
   }
+
+  using Extractor = Acts::Delegate<BoundTrackParameters(const InputTrack&)>;
 
  private:
   std::type_index m_type;

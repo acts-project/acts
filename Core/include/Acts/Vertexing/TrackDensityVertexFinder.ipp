@@ -15,8 +15,8 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   // Calculate z seed position
   std::pair<double, double> zAndWidth =
-      m_cfg.trackDensityEstimator.globalMaximumWithWidth(
-          densityState, trackVector, m_extractParameters);
+      m_cfg.trackDensityEstimator.globalMaximumWithWidth(densityState,
+                                                         trackVector);
 
   double z = zAndWidth.first;
 
