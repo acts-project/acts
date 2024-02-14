@@ -369,13 +369,6 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
-    /// The current iteration of the fitter.
-    /// The variable is updated in fit().
-    /// The actor needs to know the current iteration for adding new
-    /// trackStates. During the first iteration, each measurement surfaces will
-    /// be added to the track.
-    std::size_t nUpdate = Acts::MultiTrajectoryTraits::kInvalid;
-
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -401,7 +394,8 @@ class Gx2Fitter {
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       //      std::string direction = state.stepping.navDir.toString();
-      if (surface != nullptr) {
+      if (surface != nullptr and
+          surface->associatedDetectorElement() != nullptr) {
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
@@ -641,7 +635,6 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
-      gx2fActor.nUpdate = nUpdate;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -771,6 +764,38 @@ class Gx2Fitter {
     }
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
+
+    // Propagate again with the final covariance matrix. This is necessary to
+    // obtain the propagated covariance for each state.
+    if (gx2fOptions.nUpdateMax > 0) {
+      ACTS_VERBOSE("Propagate with the final covariance.");
+      ACTS_VERBOSE("pre-updated params:\n" << params);
+      // update covariance
+      params.covariance() = fullCovariancePredicted;
+      ACTS_VERBOSE("updated params:\n" << params);
+
+      // set up propagator and co
+      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
+      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
+      // Set options for propagator
+      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
+      gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.extensions = gx2fOptions.extensions;
+      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
+      gx2fActor.actorLogger = m_actorLogger.get();
+
+      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+
+      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
+      r.fittedStates = &trackContainer.trackStateContainer();
+
+      // Clear the track container. It could be more performant to update the
+      // existing states, but this needs some more thinking.
+      trackContainer.clear();
+
+      m_propagator.template propagate(propagatorState);
+    }
 
     if (!trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
