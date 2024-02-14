@@ -72,7 +72,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
-  Finder finder{{}, InputTrack::extractParameters};
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters
@@ -151,7 +153,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
-  Finder finder{{}, InputTrack::extractParameters};
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters
@@ -227,7 +231,9 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
-  Finder finder{{}, InputTrack::extractParameters};
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   int mySeed = 31415;
@@ -321,15 +327,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Finder options
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
 
-  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
-      [](const InputTrack& params) {
-        return params.as<InputTrackStub>()->parameters();
-      };
+  auto extractParameters = [](const InputTrack& params) {
+    return params.as<InputTrackStub>()->parameters();
+  };
 
   using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrackStub>,
                                           GaussianTrackDensity>;
 
-  Finder finder({}, extractParameters);
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect(extractParameters);
+  Finder finder{{{densityCfg}}};
   Finder::State state;
 
   // Start creating some track parameters

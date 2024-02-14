@@ -72,6 +72,9 @@ class GridDensityVertexFinder {
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
     bool estimateSeedWidth = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief The State struct
@@ -113,10 +116,13 @@ class GridDensityVertexFinder {
   /// @param cfg Configuration object
   /// @param func Function extracting BoundTrackParameters from InputTrack
   ///             object
-  GridDensityVertexFinder(
-      const Config& cfg,
-      const std::function<BoundTrackParameters(const InputTrack&)>& func)
-      : m_cfg(cfg), m_extractParameters(func) {}
+  GridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "GridDensityVertexFinder: "
+          "No track parameter extractor provided.");
+    }
+  }
 
  private:
   /// @brief Checks if a track passes the selection criteria for seeding
@@ -128,9 +134,6 @@ class GridDensityVertexFinder {
 
   // The configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts

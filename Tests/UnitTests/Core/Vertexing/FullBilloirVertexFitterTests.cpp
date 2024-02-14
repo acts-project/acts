@@ -144,7 +144,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   // Set up Billoir vertex fitter with default tracks
   using VertexFitter = FullBilloirVertexFitter<Linearizer>;
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter billoirFitter(vertexFitterCfg, InputTrack::extractParameters);
+  vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  VertexFitter billoirFitter(vertexFitterCfg);
   VertexFitter::State state(bField->makeCache(magFieldContext));
   // Vertexing options for default tracks
   VertexingOptions vfOptions(geoContext, magFieldContext);
@@ -152,14 +153,14 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
-  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
-      [](const InputTrack& params) {
-        return params.as<InputTrackStub>()->parameters();
-      };
+  auto extractParameters = [](const InputTrack& params) {
+    return params.as<InputTrackStub>()->parameters();
+  };
 
   // Set up Billoir vertex fitter with user-defined input tracks
   VertexFitter::Config customVertexFitterCfg;
-  VertexFitter customBilloirFitter(customVertexFitterCfg, extractParameters);
+  customVertexFitterCfg.extractParameters.connect(extractParameters);
+  VertexFitter customBilloirFitter(customVertexFitterCfg);
   VertexFitter::State customState(bField->makeCache(magFieldContext));
   // Vertexing options for custom tracks
   VertexingOptions customVfOptions(geoContext, magFieldContext);

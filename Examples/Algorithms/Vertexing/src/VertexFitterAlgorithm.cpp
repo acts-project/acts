@@ -13,6 +13,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -49,8 +50,9 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(vertexFitterCfg,
-                            Acts::InputTrack::extractParameters);
+  vertexFitterCfg.extractParameters
+      .connect<&Acts::InputTrack::extractParameters>();
+  VertexFitter vertexFitter(vertexFitterCfg);
   VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
