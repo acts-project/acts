@@ -52,7 +52,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSquareMatrix;
-using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
+using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -123,7 +123,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Constraint for vertex fit
