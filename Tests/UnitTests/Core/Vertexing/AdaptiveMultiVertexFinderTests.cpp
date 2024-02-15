@@ -61,7 +61,7 @@ using namespace Acts::UnitLiterals;
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -84,10 +84,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
-
-  IPEstimator::Config ipEstimatorCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
+  ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+  ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig;
@@ -101,7 +99,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -244,10 +244,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   };
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
-
-  IPEstimator::Config ipEstimatorCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
+  ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+  ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig;
@@ -261,7 +259,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -389,10 +389,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
-
-  IPEstimator::Config ipEstCfg(bField, propagator);
-  IPEstimator ipEst(ipEstCfg);
+  ImpactPointEstimator::Config ipEstCfg(bField, propagator);
+  ImpactPointEstimator ipEst(ipEstCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig;
@@ -406,7 +404,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
@@ -539,10 +539,8 @@ BOOST_AUTO_TEST_CASE(
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP Estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
-
-  IPEstimator::Config ipEstCfg(bField, propagator);
-  IPEstimator ipEst(ipEstCfg);
+  ImpactPointEstimator::Config ipEstCfg(bField, propagator);
+  ImpactPointEstimator ipEst(ipEstCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   AnnealingUtility::Config annealingConfig;
@@ -556,7 +554,9 @@ BOOST_AUTO_TEST_CASE(
   fitterCfg.annealingTool = annealingUtility;
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   // Test smoothing
