@@ -68,10 +68,10 @@ class VertexFitterAlgorithm final : public IAlgorithm {
     Acts::Vector4 constraintPos = Acts::Vector4(0, 0, 0, 0);
     /// Vertex constraint covariance matrix
     Acts::SquareMatrix4 constraintCov =
-        Acts::Vector4(3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      10 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      1 * Acts::UnitConstants::ns * Acts::UnitConstants::ns)
+        Acts::Vector4(1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1e8 * Acts::UnitConstants::mm * Acts::UnitConstants::mm)
             .asDiagonal();
   };
 
