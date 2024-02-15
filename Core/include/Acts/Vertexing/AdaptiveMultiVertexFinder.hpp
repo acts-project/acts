@@ -219,9 +219,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Calls the seed finder and sets constraints on the found seed
   /// vertex if desired

@@ -11,8 +11,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions, IVertexFinder::State& state) const
     -> Result<std::vector<Vertex>> {
-
-    auto& thisState = state.as<State>();
+  auto& thisState = state.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && thisState.isInitialized &&
       !thisState.tracksToRemove.empty()) {
@@ -71,7 +70,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
       z = *maxZres;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(thisState.mainGrid);
+      auto maxZres =
+          m_cfg.gridDensity.getMaxZPositionAndWidth(thisState.mainGrid);
 
       if (!maxZres.ok()) {
         return maxZres.error();
