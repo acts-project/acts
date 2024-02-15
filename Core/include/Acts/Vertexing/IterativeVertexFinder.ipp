@@ -220,7 +220,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
   auto result = m_cfg.linearizer.linearizeTrack(
       params, vertex.fullPosition()[3], perigeeSurface,
       vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-      state.linearizerState);
+      state.fieldCache);
   if (!result.ok()) {
     return result.error();
   }

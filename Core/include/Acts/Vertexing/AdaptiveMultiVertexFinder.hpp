@@ -33,7 +33,6 @@ namespace Acts {
 /// @tparam sfinder_t Seed finder type
 template <typename vfitter_t, typename sfinder_t>
 class AdaptiveMultiVertexFinder {
-  using Propagator_t = typename vfitter_t::Propagator_t;
   using Linearizer_t = typename vfitter_t::Linearizer_t;
   using FitterState_t = typename vfitter_t::State;
   using SeedFinderState_t = typename sfinder_t::State;
@@ -57,9 +56,8 @@ class AdaptiveMultiVertexFinder {
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, sfinder_t sfinder,
-           ImpactPointEstimator<Propagator_t> ipEst, Linearizer_t lin,
-           std::shared_ptr<const MagneticFieldProvider> bIn)
+    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator ipEst,
+           Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEstimator(std::move(ipEst)),
@@ -73,7 +71,7 @@ class AdaptiveMultiVertexFinder {
     sfinder_t seedFinder;
 
     // ImpactPointEstimator
-    ImpactPointEstimator<Propagator_t> ipEstimator;
+    ImpactPointEstimator ipEstimator;
 
     // Track linearizer
     Linearizer_t linearizer;
