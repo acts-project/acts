@@ -147,7 +147,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   par[eBoundQOverP] = particleHypothesis.qOverP(p, q);
 
   Estimator ipEstimator = makeEstimator(2_T);
-  Estimator::State state{magFieldCache()};
+  Estimator::State state(magFieldCache());
   // reference position and corresponding perigee surface
   Vector3 refPosition(0., 0., 0.);
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
@@ -203,7 +203,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   auto propagator = std::make_shared<Propagator>(std::move(stepper));
   Estimator::Config cfg(field, propagator);
   Estimator ipEstimator(cfg);
-  Estimator::State ipState{magFieldCache()};
+  Estimator::State ipState(magFieldCache());
 
   // Set up quantities for B = 0
   auto zeroField = std::make_shared<MagneticField>(Vector3(0, 0, 0));
@@ -212,7 +212,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
       std::make_shared<StraightPropagator>(straightLineStepper);
   StraightLineEstimator::Config zeroFieldCfg(zeroField, straightLinePropagator);
   StraightLineEstimator zeroFieldIPEstimator(zeroFieldCfg);
-  StraightLineEstimator::State zeroFieldIPState{magFieldCache()};
+  StraightLineEstimator::State zeroFieldIPState(magFieldCache());
 
   // Vertex position and vertex object
   Vector4 vtxPos(vx0, vy0, vz0, vt0);
@@ -417,7 +417,7 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 //
 BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   Estimator ipEstimator = makeEstimator(1.9971546939_T);
-  Estimator::State state{magFieldCache()};
+  Estimator::State state(magFieldCache());
 
   // Use same values as in Athena unit test
   Vector4 pos1(2_mm, 1_mm, -10_mm, 0_ns);
@@ -514,7 +514,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   vtxPos[eTime] = vt0;
 
   Estimator ipEstimator = makeEstimator(1_T);
-  Estimator::State state{magFieldCache()};
+  Estimator::State state(magFieldCache());
 
   // reference position and corresponding perigee surface
   Vector3 refPosition(0., 0., 0.);
