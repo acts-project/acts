@@ -256,6 +256,8 @@ findTrackStateForExtrapolation(
   }
 
   // unreachable
+  return Result<std::pair<TrackStateProxy, double>>::failure(
+      TrackExtrapolationError::CompatibleTrackStateNotFound);
 }
 
 /// @brief Extrapolate a track to a reference surface
