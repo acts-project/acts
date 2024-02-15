@@ -135,9 +135,9 @@ Result<void> smoothTracks(
   for (const auto &track : trackContainer) {
     auto smoothingResult = smoothTrack(geoContext, track, logger);
 
-    if (!smoothingResult.ok()) {
+    // Only keep the first error
+    if (!smoothingResult.ok() && result.ok()) {
       result = smoothingResult.error();
-      continue;
     }
   }
 
@@ -337,9 +337,10 @@ Result<void> extrapolateTracksToReferenceSurface(
   for (const auto &track : trackContainer) {
     auto extrapolateResult = extrapolateTrackToReferenceSurface(
         track, referenceSurface, propagator, options, strategy, logger);
-    if (!extrapolateResult.ok()) {
+
+    // Only keep the first error
+    if (!extrapolateResult.ok() && result.ok()) {
       result = extrapolateResult.error();
-      continue;
     }
   }
 
