@@ -39,6 +39,48 @@ enum class TrackExtrapolationError {
 
 std::error_code make_error_code(TrackExtrapolationError e);
 
+template <typename track_proxy_t>
+Result<typename track_proxy_t::ConstTrackStateProxy> findFirstMeasurementState(
+    const track_proxy_t &track) {
+  using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
+
+  // TODO specialize if track is forward linked
+
+  auto result = Result<TrackStateProxy>::failure(
+      TrackExtrapolationError::CompatibleTrackStateNotFound);
+
+  for (const auto &trackState : track.trackStatesReversed()) {
+    bool isMeasurement =
+        trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
+    bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
+
+    if (isMeasurement && !isOutlier) {
+      result = trackState;
+    }
+  }
+
+  return result;
+}
+
+template <typename track_proxy_t>
+Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
+    const track_proxy_t &track) {
+  using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
+
+  for (const auto &trackState : track.trackStatesReversed()) {
+    bool isMeasurement =
+        trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
+    bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
+
+    if (isMeasurement && !isOutlier) {
+      return trackState;
+    }
+  }
+
+  return Result<TrackStateProxy>::failure(
+      TrackExtrapolationError::CompatibleTrackStateNotFound);
+}
+
 /// @brief Smooth a track using the gain matrix smoother
 ///
 /// @tparam track_proxy_t The track proxy type
@@ -55,10 +97,16 @@ Result<void> smoothTrack(
   Acts::GainMatrixSmoother smoother;
 
   auto &trackContainer = track.container();
+  auto &trackStateContainer = trackContainer.trackStateContainer();
+
+  auto last = findLastMeasurementState(track);
+  if (!last.ok()) {
+    ACTS_ERROR("no last track state found");
+    return last.error();
+  }
 
   auto smoothingResult =
-      smoother(geoContext, trackContainer.trackStateContainer(),
-               track.tipIndex(), logger);
+      smoother(geoContext, trackStateContainer, last->index(), logger);
 
   if (!smoothingResult.ok()) {
     ACTS_ERROR("Smoothing track " << track.index() << " failed with error "
@@ -117,40 +165,6 @@ findTrackStateForExtrapolation(
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
-  auto findFirst = [&]() -> Result<TrackStateProxy> {
-    // TODO specialize if track is forward linked
-
-    auto result = Result<TrackStateProxy>::failure(
-        TrackExtrapolationError::CompatibleTrackStateNotFound);
-
-    for (const auto &trackState : track.trackStatesReversed()) {
-      bool isMeasurement =
-          trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
-      bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
-
-      if (isMeasurement && !isOutlier) {
-        result = trackState;
-      }
-    }
-
-    return result;
-  };
-
-  auto findLast = [&]() -> Result<TrackStateProxy> {
-    for (const auto &trackState : track.trackStatesReversed()) {
-      bool isMeasurement =
-          trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
-      bool isOutlier = trackState.typeFlags().test(TrackStateFlag::OutlierFlag);
-
-      if (isMeasurement && !isOutlier) {
-        return trackState;
-      }
-    }
-
-    return Result<TrackStateProxy>::failure(
-        TrackExtrapolationError::CompatibleTrackStateNotFound);
-  };
-
   auto intersect = [&](const TrackStateProxy &state) -> SurfaceIntersection {
     auto freeVector = MultiTrajectoryHelpers::freeSmoothed(geoContext, state);
 
@@ -164,7 +178,7 @@ findTrackStateForExtrapolation(
   if (strategy == TrackExtrapolationStrategy::first) {
     ACTS_VERBOSE("looking for first track state");
 
-    auto first = findFirst();
+    auto first = findFirstMeasurementState(track);
     if (!first.ok()) {
       ACTS_ERROR("no first track state found");
       return first.error();
@@ -184,7 +198,7 @@ findTrackStateForExtrapolation(
   if (strategy == TrackExtrapolationStrategy::last) {
     ACTS_VERBOSE("looking for last track state");
 
-    auto last = findLast();
+    auto last = findLastMeasurementState(track);
     if (!last.ok()) {
       ACTS_ERROR("no last track state found");
       return last.error();
@@ -204,13 +218,13 @@ findTrackStateForExtrapolation(
   if (strategy == TrackExtrapolationStrategy::firstOrLast) {
     ACTS_VERBOSE("looking for first or last track state");
 
-    auto first = findFirst();
+    auto first = findFirstMeasurementState(track);
     if (!first.ok()) {
       ACTS_ERROR("no first track state found");
       return first.error();
     }
 
-    auto last = findLast();
+    auto last = findLastMeasurementState(track);
     if (!last.ok()) {
       ACTS_ERROR("no last track state found");
       return last.error();
