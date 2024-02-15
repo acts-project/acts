@@ -20,8 +20,6 @@ namespace Concepts {
 namespace VertexFitter {
 
 template <typename T>
-using propagator_t = typename T::Propagator_t;
-template <typename T>
 using linearizer_t = typename T::Linearizer_t;
 template <typename T>
 using state_t = typename T::State;
@@ -39,15 +37,12 @@ METHOD_TRAIT(fit_t, fit);
          typename S::State&>;
         static_assert(fit_exists, "fit method not found");
 
-        constexpr static bool propagator_exists = exists<propagator_t, S>;
-        static_assert(propagator_exists, "Propagator type not found");
         constexpr static bool linearizer_exists = exists<linearizer_t, S>;
         static_assert(linearizer_exists, "Linearizer type not found");
         constexpr static bool state_exists = exists<state_t, S>;
         static_assert(state_exists, "State type not found");
 
         constexpr static bool value = require<fit_exists,
-                                              propagator_exists,
                                               linearizer_exists,
                                               state_exists>;
       };

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -51,17 +52,16 @@ class FullBilloirVertexFitter {
                 "Linearizer does not fulfill linearizer concept.");
 
  public:
-  using Propagator_t = typename linearizer_t::Propagator_t;
   using Linearizer_t = linearizer_t;
 
   struct State {
     /// @brief The state constructor
     ///
     /// @param fieldCache The magnetic field cache
-    State(MagneticFieldProvider::Cache fieldCache)
-        : linearizerState(std::move(fieldCache)) {}
-    /// The linearizer state
-    typename Linearizer_t::State linearizerState;
+    State(MagneticFieldProvider::Cache _fieldCache)
+        : fieldCache(std::move(_fieldCache)) {}
+
+    MagneticFieldProvider::Cache fieldCache;
   };
 
   struct Config {
