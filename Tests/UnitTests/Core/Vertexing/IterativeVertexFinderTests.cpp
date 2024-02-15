@@ -64,7 +64,7 @@ namespace Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -135,7 +135,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     auto propagator = std::make_shared<Propagator>(stepper);
 
     // Linearizer for BoundTrackParameters type test
-    Linearizer::Config ltConfig(bField, propagator);
+    Linearizer::Config ltConfig;
+    ltConfig.bField = bField;
+    ltConfig.propagator = propagator;
     Linearizer linearizer(ltConfig);
 
     using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
@@ -146,11 +148,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     BilloirFitter bFitter(vertexFitterCfg);
 
-    // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<Propagator>;
-
-    IPEstimator::Config ipEstimatorCfg(bField, propagator);
-    IPEstimator ipEstimator(ipEstimatorCfg);
+    ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+    ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
 
@@ -354,7 +353,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     auto propagator = std::make_shared<Propagator>(stepper);
 
     // Linearizer for user defined InputTrackStub type test
-    Linearizer::Config ltConfigUT(bField, propagator);
+    Linearizer::Config ltConfigUT;
+    ltConfigUT.bField = bField;
+    ltConfigUT.propagator = propagator;
     Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type
@@ -372,11 +373,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     BilloirFitter bFitter(vertexFitterCfg);
 
-    // IP Estimator
-    using IPEstimator = ImpactPointEstimator<Propagator>;
-
-    IPEstimator::Config ipEstimatorCfg(bField, propagator);
-    IPEstimator ipEstimator(ipEstimatorCfg);
+    ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+    ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
     using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
     ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
@@ -561,7 +559,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
   using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
@@ -572,11 +572,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   BilloirFitter bFitter(vertexFitterCfg);
 
-  // Impact point estimator
-  using IPEstimator = ImpactPointEstimator<Propagator>;
-
-  IPEstimator::Config ipEstimatorCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
+  ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+  ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
   using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
 
