@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline
-auto Acts::ZScanVertexFinder::find(
+inline auto Acts::ZScanVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {

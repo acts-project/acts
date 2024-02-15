@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline
-auto Acts::AdaptiveGridDensityVertexFinder::find(
+inline auto Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions, IVertexFinder::State& state) const
     -> Result<std::vector<Vertex>> {
-    auto& thisState = state.as<State>();
+  auto& thisState = state.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && thisState.isInitialized &&
       !thisState.tracksToRemove.empty()) {
@@ -56,7 +55,8 @@ auto Acts::AdaptiveGridDensityVertexFinder::find(
 
   if (!m_cfg.estimateSeedWidth) {
     // Get z value of highest density bin
-    auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(thisState.mainDensityMap);
+    auto maxZTRes =
+        m_cfg.gridDensity.getMaxZTPosition(thisState.mainDensityMap);
 
     if (!maxZTRes.ok()) {
       return maxZTRes.error();
@@ -96,8 +96,7 @@ auto Acts::AdaptiveGridDensityVertexFinder::find(
   return seedVec;
 }
 
-inline
-auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
     const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
