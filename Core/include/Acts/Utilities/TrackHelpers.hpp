@@ -175,85 +175,87 @@ findTrackStateForExtrapolation(
         .closest();
   };
 
-  if (strategy == TrackExtrapolationStrategy::first) {
-    ACTS_VERBOSE("looking for first track state");
+  switch (strategy) {
+    case TrackExtrapolationStrategy::first: {
+      ACTS_VERBOSE("looking for first track state");
 
-    auto first = findFirstMeasurementState(track);
-    if (!first.ok()) {
-      ACTS_ERROR("no first track state found");
-      return first.error();
+      auto first = findFirstMeasurementState(track);
+      if (!first.ok()) {
+        ACTS_ERROR("no first track state found");
+        return first.error();
+      }
+
+      SurfaceIntersection intersection = intersect(*first);
+      if (!intersection) {
+        ACTS_ERROR("no intersection found");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::ReferenceSurfaceUnreachable);
+      }
+
+      ACTS_VERBOSE("found intersection at " << intersection.pathLength());
+      return std::make_pair(*first, intersection.pathLength());
     }
 
-    SurfaceIntersection intersection = intersect(*first);
-    if (!intersection) {
+    case TrackExtrapolationStrategy::last: {
+      ACTS_VERBOSE("looking for last track state");
+
+      auto last = findLastMeasurementState(track);
+      if (!last.ok()) {
+        ACTS_ERROR("no last track state found");
+        return last.error();
+      }
+
+      SurfaceIntersection intersection = intersect(*last);
+      if (!intersection) {
+        ACTS_ERROR("no intersection found");
+        return Result<std::pair<TrackStateProxy, double>>::failure(
+            TrackExtrapolationError::ReferenceSurfaceUnreachable);
+      }
+
+      ACTS_VERBOSE("found intersection at " << intersection.pathLength());
+      return std::make_pair(*last, intersection.pathLength());
+    }
+
+    case TrackExtrapolationStrategy::firstOrLast: {
+      ACTS_VERBOSE("looking for first or last track state");
+
+      auto first = findFirstMeasurementState(track);
+      if (!first.ok()) {
+        ACTS_ERROR("no first track state found");
+        return first.error();
+      }
+
+      auto last = findLastMeasurementState(track);
+      if (!last.ok()) {
+        ACTS_ERROR("no last track state found");
+        return last.error();
+      }
+
+      SurfaceIntersection intersectionFirst = intersect(*first);
+      SurfaceIntersection intersectionLast = intersect(*last);
+
+      double absDistanceFirst = std::abs(intersectionFirst.pathLength());
+      double absDistanceLast = std::abs(intersectionLast.pathLength());
+
+      if (intersectionFirst && absDistanceFirst <= absDistanceLast) {
+        ACTS_VERBOSE("using first track state with intersection at "
+                     << intersectionFirst.pathLength());
+        return std::make_pair(*first, intersectionFirst.pathLength());
+      }
+
+      if (intersectionLast && absDistanceLast <= absDistanceFirst) {
+        ACTS_VERBOSE("using last track state with intersection at "
+                     << intersectionLast.pathLength());
+        return std::make_pair(*last, intersectionLast.pathLength());
+      }
+
       ACTS_ERROR("no intersection found");
       return Result<std::pair<TrackStateProxy, double>>::failure(
           TrackExtrapolationError::ReferenceSurfaceUnreachable);
     }
-
-    ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-    return std::make_pair(*first, intersection.pathLength());
   }
 
-  if (strategy == TrackExtrapolationStrategy::last) {
-    ACTS_VERBOSE("looking for last track state");
-
-    auto last = findLastMeasurementState(track);
-    if (!last.ok()) {
-      ACTS_ERROR("no last track state found");
-      return last.error();
-    }
-
-    SurfaceIntersection intersection = intersect(*last);
-    if (!intersection) {
-      ACTS_ERROR("no intersection found");
-      return Result<std::pair<TrackStateProxy, double>>::failure(
-          TrackExtrapolationError::ReferenceSurfaceUnreachable);
-    }
-
-    ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-    return std::make_pair(*last, intersection.pathLength());
-  }
-
-  if (strategy == TrackExtrapolationStrategy::firstOrLast) {
-    ACTS_VERBOSE("looking for first or last track state");
-
-    auto first = findFirstMeasurementState(track);
-    if (!first.ok()) {
-      ACTS_ERROR("no first track state found");
-      return first.error();
-    }
-
-    auto last = findLastMeasurementState(track);
-    if (!last.ok()) {
-      ACTS_ERROR("no last track state found");
-      return last.error();
-    }
-
-    SurfaceIntersection intersectionFirst = intersect(*first);
-    SurfaceIntersection intersectionLast = intersect(*last);
-
-    double absDistanceFirst = std::abs(intersectionFirst.pathLength());
-    double absDistanceLast = std::abs(intersectionLast.pathLength());
-
-    if (intersectionFirst && absDistanceFirst <= absDistanceLast) {
-      ACTS_VERBOSE("using first track state with intersection at "
-                   << intersectionFirst.pathLength());
-      return std::make_pair(*first, intersectionFirst.pathLength());
-    }
-
-    if (intersectionLast && absDistanceLast <= absDistanceFirst) {
-      ACTS_VERBOSE("using last track state with intersection at "
-                   << intersectionLast.pathLength());
-      return std::make_pair(*last, intersectionLast.pathLength());
-    }
-
-    ACTS_ERROR("no intersection found");
-    return Result<std::pair<TrackStateProxy, double>>::failure(
-        TrackExtrapolationError::ReferenceSurfaceUnreachable);
-  }
-
-  throw std::runtime_error("invalid extrapolation strategy");
+  // unreachable
 }
 
 /// @brief Extrapolate a track to a reference surface
