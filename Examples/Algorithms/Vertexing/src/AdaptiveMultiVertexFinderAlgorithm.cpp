@@ -19,6 +19,7 @@
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -104,12 +105,14 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator
-  IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg,
-                          logger().cloneWithSuffix("ImpactPointEstimator"));
+  Acts::ImpactPointEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
+  Acts::ImpactPointEstimator ipEstimator(
+      ipEstimatorCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
 
   // Set up the helical track linearizer
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = m_cfg.bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
 
