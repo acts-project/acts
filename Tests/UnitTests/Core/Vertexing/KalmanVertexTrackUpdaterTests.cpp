@@ -51,7 +51,7 @@ namespace Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -103,16 +103,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator, used for comparisons later
-  using IPEstimator = ImpactPointEstimator<Propagator>;
-  IPEstimator::Config ip3dEstConfig(bField, propagator);
-  IPEstimator ip3dEst(ip3dEstConfig);
-  IPEstimator::State state(bField->makeCache(magFieldContext));
+  ImpactPointEstimator::Config ip3dEstConfig(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstConfig);
+  ImpactPointEstimator::State state(bField->makeCache(magFieldContext));
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  Linearizer::State linState(bField->makeCache(magFieldContext));
+  auto fieldCache = bField->makeCache(magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -160,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     LinearizedTrack linTrack =
         linearizer
             .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
-                            linState)
+                            fieldCache)
             .value();
 
     // Create TrackAtVertex

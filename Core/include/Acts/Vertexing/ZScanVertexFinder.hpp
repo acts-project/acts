@@ -34,7 +34,6 @@ template <typename vfitter_t>
 class ZScanVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
-  using Propagator_t = typename vfitter_t::Propagator_t;
 
  public:
   /// Configuration struct
@@ -42,11 +41,10 @@ class ZScanVertexFinder {
     /// @brief Finder configuration
     ///
     /// @param ipEst ImpactPointEstimator
-    Config(const ImpactPointEstimator<Propagator_t>& ipEst)
-        : ipEstimator(ipEst) {}
+    Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
 
     // ImpactPointEstimator
-    ImpactPointEstimator<Propagator_t> ipEstimator;
+    ImpactPointEstimator ipEstimator;
 
     // FsmwMode1dFinder
     FsmwMode1dFinder mode1dFinder;

@@ -79,12 +79,15 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Fitter vertexFitter(vertexFitterCfg,
                       logger().cloneWithSuffix("FullBilloirVertexFitter"));
   // Setup the track linearizer
-  Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
+  Linearizer::Config linearizerCfg;
+  linearizerCfg.bField = m_cfg.bField;
+  linearizerCfg.propagator = propagator;
   Linearizer linearizer(linearizerCfg,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
   // Setup the seed finder
-  IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
-  IPEstimator ipEst(ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
+  Acts::ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
+  Acts::ImpactPointEstimator ipEst(
+      ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
 
   Acts::GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
