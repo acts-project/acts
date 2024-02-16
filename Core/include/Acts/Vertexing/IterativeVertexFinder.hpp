@@ -175,12 +175,13 @@ class IterativeVertexFinder final : public IVertexFinder {
   ///
   /// @param trackVector Input tracks
   /// @param vertexingOptions Vertexing options
-  /// @param state State for fulfilling interfaces
+  /// @param anyState State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
-  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
-                                   const VertexingOptions& vertexingOptions,
-                                   IVertexFinder::State& state) const override;
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
+      const VertexingOptions& vertexingOptions,
+      IVertexFinder::State& anyState) const override;
 
   IVertexFinder::State makeState(
       const MagneticFieldContext& mctx) const override {
@@ -188,7 +189,7 @@ class IterativeVertexFinder final : public IVertexFinder {
   }
 
   void setTracksToRemove(
-      IVertexFinder::State& /*state*/,
+      IVertexFinder::State& /*anyState*/,
       const std::vector<InputTrack>& /*removedTracks*/) const override {
     // Nothing to do here
   }

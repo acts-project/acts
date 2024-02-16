@@ -33,7 +33,7 @@ class IVertexFinder {
   virtual State makeState(const MagneticFieldContext& mctx) const = 0;
 
   virtual void setTracksToRemove(
-      State& state, const std::vector<InputTrack>& removedTracks) const = 0;
+      State& anyState, const std::vector<InputTrack>& removedTracks) const = 0;
 
   virtual ~IVertexFinder() = default;
 };

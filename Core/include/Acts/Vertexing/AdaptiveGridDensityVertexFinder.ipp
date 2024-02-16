@@ -8,22 +8,22 @@
 
 inline auto Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, IVertexFinder::State& state) const
-    -> Result<std::vector<Vertex>> {
-  auto& thisState = state.as<State>();
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+  auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
-  if (m_cfg.cacheGridStateForTrackRemoval && thisState.isInitialized &&
-      !thisState.tracksToRemove.empty()) {
-    for (auto trk : thisState.tracksToRemove) {
-      auto it = thisState.trackDensities.find(trk);
-      if (it == thisState.trackDensities.end()) {
+  if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
+      !state.tracksToRemove.empty()) {
+    for (auto trk : state.tracksToRemove) {
+      auto it = state.trackDensities.find(trk);
+      if (it == state.trackDensities.end()) {
         // Track was never added to grid, so cannot remove it
         continue;
       }
-      m_cfg.gridDensity.subtractTrack(it->second, thisState.mainDensityMap);
+      m_cfg.gridDensity.subtractTrack(it->second, state.mainDensityMap);
     }
   } else {
-    thisState.mainDensityMap = DensityMap();
+    state.mainDensityMap = DensityMap();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
@@ -32,16 +32,16 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
         continue;
       }
       auto trackDensityMap =
-          m_cfg.gridDensity.addTrack(trkParams, thisState.mainDensityMap);
+          m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        thisState.trackDensities[trk] = std::move(trackDensityMap);
+        state.trackDensities[trk] = std::move(trackDensityMap);
       }
     }
-    thisState.isInitialized = true;
+    state.isInitialized = true;
   }
 
-  if (thisState.mainDensityMap.empty()) {
+  if (state.mainDensityMap.empty()) {
     // No tracks passed selection
     // Return empty seed, i.e. vertex at constraint position
     // (Note: Upstream finder should check for this break condition)
@@ -55,8 +55,7 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
 
   if (!m_cfg.estimateSeedWidth) {
     // Get z value of highest density bin
-    auto maxZTRes =
-        m_cfg.gridDensity.getMaxZTPosition(thisState.mainDensityMap);
+    auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(state.mainDensityMap);
 
     if (!maxZTRes.ok()) {
       return maxZTRes.error();
@@ -66,7 +65,7 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
   } else {
     // Get z value of highest density bin and width
     auto maxZTResAndWidth =
-        m_cfg.gridDensity.getMaxZTPositionAndWidth(thisState.mainDensityMap);
+        m_cfg.gridDensity.getMaxZTPositionAndWidth(state.mainDensityMap);
 
     if (!maxZTResAndWidth.ok()) {
       return maxZTResAndWidth.error();

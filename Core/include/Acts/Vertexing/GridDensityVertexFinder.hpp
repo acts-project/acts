@@ -106,15 +106,16 @@ class GridDensityVertexFinder final : public IVertexFinder {
   ///
   /// @param trackVector Input track collection
   /// @param vertexingOptions Vertexing options
-  /// @param state The state object to cache the density grid
+  /// @param anyState The state object to cache the density grid
   /// and density contributions of each track, to be used
   /// if cacheGridStateForTrackRemoval == true
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
-                                   const VertexingOptions& vertexingOptions,
-                                   IVertexFinder::State& state) const override;
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
+      const VertexingOptions& vertexingOptions,
+      IVertexFinder::State& anyState) const override;
 
   IVertexFinder::State makeState(
       const Acts::MagneticFieldContext& /*mctx*/) const override {
@@ -122,10 +123,10 @@ class GridDensityVertexFinder final : public IVertexFinder {
   }
 
   void setTracksToRemove(
-      IVertexFinder::State& state,
+      IVertexFinder::State& anyState,
       const std::vector<InputTrack>& removedTracks) const override {
-    auto& thisState = state.template as<State>();
-    thisState.tracksToRemove = removedTracks;
+    auto& state = anyState.template as<State>();
+    state.tracksToRemove = removedTracks;
   }
 
   /// @brief Constructor for user-defined InputTrack type
