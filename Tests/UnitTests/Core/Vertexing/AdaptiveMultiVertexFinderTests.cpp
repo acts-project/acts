@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter;
 
   Fitter::Config fitterCfg(ipEstimator);
 
@@ -107,6 +107,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -119,7 +120,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+                              bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
@@ -252,7 +253,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter;
 
   Fitter::Config fitterCfg(ipEstimator);
 
@@ -267,6 +268,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect(extractParameters);
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -279,7 +281,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), bField);
+                              bField);
   finderConfig.extractParameters.connect(extractParameters);
   Finder::State state;
 
@@ -397,7 +399,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter;
 
   Fitter::Config fitterCfg(ipEst);
 
@@ -412,6 +414,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -425,7 +428,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
-                              std::move(linearizer), bField);
+                              bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
@@ -547,7 +550,7 @@ BOOST_AUTO_TEST_CASE(
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter;
 
   Fitter::Config fitterCfg(ipEst);
 
@@ -562,6 +565,7 @@ BOOST_AUTO_TEST_CASE(
   // Test smoothing
   fitterCfg.doSmoothing = true;
   fitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   Fitter fitter(fitterCfg);
 
@@ -583,7 +587,7 @@ BOOST_AUTO_TEST_CASE(
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
-                              std::move(linearizer), bField);
+                              bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));

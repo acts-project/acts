@@ -140,11 +140,13 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     ltConfig.propagator = propagator;
     Linearizer linearizer(ltConfig);
 
-    using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
+    using BilloirFitter = FullBilloirVertexFitter;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
     vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+    vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
 
     BilloirFitter bFitter(vertexFitterCfg);
 
@@ -167,8 +169,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder), ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
+                             ipEstimator);
+    cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect<&InputTrack::extractParameters>();
@@ -359,7 +362,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type
-    using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
+    using BilloirFitter = FullBilloirVertexFitter;
 
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
@@ -370,6 +373,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
     vertexFitterCfg.extractParameters.connect(extractParameters);
+    vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
 
     BilloirFitter bFitter(vertexFitterCfg);
 
@@ -384,10 +389,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder), ipEstimator);
+    VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
+                             ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect(extractParameters);
+    cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
     VertexFinder finder(std::move(cfg));
     VertexFinder::State state(*bField, magFieldContext);
@@ -564,11 +570,13 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
-  using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
+  using BilloirFitter = FullBilloirVertexFitter;
 
   // Set up Billoir Vertex Fitter
   BilloirFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
 
   BilloirFitter bFitter(vertexFitterCfg);
 
@@ -591,12 +599,12 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                           std::move(sFinder), ipEstimator);
+  VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder), ipEstimator);
   cfg.maxVertices = 200;
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
   cfg.extractParameters.connect<&InputTrack::extractParameters>();
+  cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
   VertexFinder finder(std::move(cfg));
   VertexFinder::State state(*bField, magFieldContext);

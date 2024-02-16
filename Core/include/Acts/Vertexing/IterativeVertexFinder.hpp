@@ -17,6 +17,7 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -61,7 +62,6 @@ template <typename vfitter_t, typename sfinder_t>
 class IterativeVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
-  using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
   /// Configuration struct
@@ -72,18 +72,16 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
-           ImpactPointEstimator est)
+    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
-          linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
 
     /// Vertex fitter
     vfitter_t vertexFitter;
 
-    /// Linearized track factory
-    Linearizer_t linearizer;
+    /// Track linearizer
+    TrackLinearizer trackLinearizer;
 
     /// Vertex seed finder
     sfinder_t seedFinder;
@@ -142,7 +140,20 @@ class IterativeVertexFinder {
   IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {}
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "IterativeVertexFinder: "
+          "No function to extract parameters "
+          "provided.");
+    }
+
+    if (!m_cfg.trackLinearizer.connected()) {
+      throw std::invalid_argument(
+          "IterativeVertexFinder: "
+          "No track linearizer provided.");
+    }
+  }
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
