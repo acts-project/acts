@@ -128,12 +128,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.doSmoothing = true;
   fitterCfg.useTime = m_cfg.useTime;
   fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
   typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                                       ipEstimator, std::move(linearizer),
-                                       m_cfg.bField);
+                                       ipEstimator, m_cfg.bField);
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
