@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
   // Number of test events
   unsigned int nEvents = 5;  // = nTest
 
-  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-    // Set up constant B-Field
-    auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
+  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up Eigenstepper
     EigenStepper<> stepper(bField);
 
@@ -165,6 +165,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
     VertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
                              ipEstimator);
+    cfg.field = bField;
     cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
     cfg.reassignTracksAfterFirstFit = true;
@@ -339,10 +340,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
   // Number of test events
   unsigned int nEvents = 5;  // = nTest
 
-  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-    // Set up constant B-Field
-    auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
+  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up Eigenstepper
     EigenStepper<> stepper(bField);
 
@@ -388,7 +389,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect(extractParameters);
     cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
-
+    cfg.field = bField;
     VertexFinder finder(std::move(cfg));
     IVertexFinder::State state{VertexFinder::State(*bField, magFieldContext)};
 
@@ -593,6 +594,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   cfg.significanceCutSeeding = 12;
   cfg.extractParameters.connect<&InputTrack::extractParameters>();
   cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  cfg.field = bField;
 
   VertexFinder finder(std::move(cfg));
   IVertexFinder::State state{VertexFinder::State(*bField, magFieldContext)};

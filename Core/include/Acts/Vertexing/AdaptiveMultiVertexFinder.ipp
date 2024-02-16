@@ -13,11 +13,13 @@ template <typename vfitter_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t>::find(
     const std::vector<InputTrack>& allTracks,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {
+    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
   if (allTracks.empty()) {
     ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
   }
+
+  State& state = anyState.template as<State>();
 
   // Original tracks
   const std::vector<InputTrack>& origTracks = allTracks;
@@ -26,7 +28,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t>::find(
   std::vector<InputTrack> seedTracks = allTracks;
 
   FitterState_t fitterState(*m_cfg.bField, vertexingOptions.magFieldContext);
-  auto seedFinderState = m_cfg.seedFinder->makeState();
+  auto seedFinderState = m_cfg.seedFinder->makeState(state.magContext);
 
   std::vector<std::unique_ptr<Vertex>> allVertices;
 

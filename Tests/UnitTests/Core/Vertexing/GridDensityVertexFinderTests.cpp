@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
-  IVertexFinder::State state1 = finder1.makeState();
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
-  IVertexFinder::State state2 = finder2.makeState();
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -276,8 +276,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     inputTracks.emplace_back(&trk);
   }
 
-  IVertexFinder::State state1 = finder1.makeState();
-  IVertexFinder::State state2 = finder2.makeState();
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   double zResult1 = 0;
   double zResult2 = 0;
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   cfg1.estimateSeedWidth = true;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
-  IVertexFinder::State state1 = finder1.makeState();
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   cfg2.estimateSeedWidth = true;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
-  IVertexFinder::State state2 = finder2.makeState();
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);

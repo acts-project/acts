@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
@@ -19,6 +20,7 @@
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
+#include <functional>
 #include <type_traits>
 
 namespace Acts {
@@ -153,7 +155,9 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   };  // Config struct
 
   /// State struct for fulfilling interface
-  struct State {};
+  struct State {
+    std::reference_wrapper<const MagneticFieldContext> magContext;
+  };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
@@ -192,15 +196,17 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @param allTracks Input track collection
   /// @param vertexingOptions Vertexing options
-  /// @param state State for fulfilling interfaces
+  /// @param anyState The state object
   ///
   /// @return Vector of all reconstructed vertices
-  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& allTracks,
-                                   const VertexingOptions& vertexingOptions,
-                                   IVertexFinder::State& state) const override;
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& allTracks,
+      const VertexingOptions& vertexingOptions,
+      IVertexFinder::State& anyState) const override;
 
-  IVertexFinder::State makeState() const override {
-    return IVertexFinder::State{State{}};
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& mctx) const override {
+    return IVertexFinder::State{State{mctx}};
   }
 
   bool hasTrivialState() const override { return true; }

@@ -186,7 +186,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   //////////////////////////////////////////////
 
   // The vertex finder state
-  auto state = m_vertexFinder.makeState();
+  auto state = m_vertexFinder.makeState(ctx.magFieldContext);
 
   // Default vertexing options, this is where e.g. a constraint could be set
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);

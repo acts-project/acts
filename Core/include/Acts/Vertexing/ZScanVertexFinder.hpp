@@ -97,7 +97,8 @@ class ZScanVertexFinder final : public IVertexFinder {
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& state) const override;
 
-  IVertexFinder::State makeState() const override {
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
     return IVertexFinder::State{State{}};
   }
 

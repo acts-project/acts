@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -28,7 +30,7 @@ class IVertexFinder {
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions& vertexingOptions, State& state) const = 0;
 
-  virtual State makeState() const = 0;
+  virtual State makeState(const MagneticFieldContext& mctx) const = 0;
 
   virtual bool hasTrivialState() const = 0;
 

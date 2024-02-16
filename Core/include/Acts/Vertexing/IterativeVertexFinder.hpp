@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -22,6 +23,8 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+#include <functional>
 
 namespace Acts {
 
@@ -111,21 +114,25 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// decide if a track should be checked for reassignment to other vertices
     double cutOffTrackWeightReassign = 1;
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
+
+    /// Magnetic field provider
+    std::shared_ptr<MagneticFieldProvider> field;
   };
 
   /// State struct
   struct State {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
-        : ipState(field.makeCache(magContext)),
-          fitterState(field.makeCache(magContext)),
+        : magContext(magContext),
+          ipState(field.makeCache(magContext)),
           fieldCache(field.makeCache(magContext)) {}
+
+    std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
+
     /// The IP estimator state
     ImpactPointEstimator::State ipState;
-    /// The fitter state
-    typename vfitter_t::State fitterState;
 
     MagneticFieldProvider::Cache fieldCache;
   };
@@ -157,10 +164,10 @@ class IterativeVertexFinder final : public IVertexFinder {
           "No seed finder provided.");
     }
 
-    if (!m_cfg.seedFinder->hasTrivialState()) {
+    if (!m_cfg.field) {
       throw std::invalid_argument(
           "IterativeVertexFinder: "
-          "Seed finder must have trivial state.");
+          "No magnetic field provider provided.");
     }
   }
 
@@ -175,9 +182,9 @@ class IterativeVertexFinder final : public IVertexFinder {
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& state) const override;
 
-  IVertexFinder::State makeState() const override {
-    // @TODO: This is not great
-    throw std::runtime_error("Not implemented");
+  IVertexFinder::State makeState(
+      const MagneticFieldContext& mctx) const override {
+    return IVertexFinder::State{State{*m_cfg.field, mctx}};
   }
 
   bool hasTrivialState() const override { return false; }
@@ -202,7 +209,8 @@ class IterativeVertexFinder final : public IVertexFinder {
   ///
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex> getVertexSeed(const std::vector<InputTrack>& seedTracks,
+  Result<Vertex> getVertexSeed(State& state,
+                               const std::vector<InputTrack>& seedTracks,
                                const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks

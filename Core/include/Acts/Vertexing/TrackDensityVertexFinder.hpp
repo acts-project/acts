@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
@@ -54,7 +55,8 @@ class TrackDensityVertexFinder final : public IVertexFinder {
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& state) const override;
 
-  IVertexFinder::State makeState() const override {
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
     return IVertexFinder::State{State{}};
   }
 

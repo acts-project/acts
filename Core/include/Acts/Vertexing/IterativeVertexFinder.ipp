@@ -24,7 +24,7 @@ auto Acts::IterativeVertexFinder<vfitter_t>::find(
   // begin iterating
   while (seedTracks.size() > 1 && nInterations < m_cfg.maxVertices) {
     /// Do seeding
-    auto seedRes = getVertexSeed(seedTracks, vertexingOptions);
+    auto seedRes = getVertexSeed(thisState, seedTracks, vertexingOptions);
 
     if (!seedRes.ok()) {
       return seedRes.error();
@@ -61,7 +61,7 @@ auto Acts::IterativeVertexFinder<vfitter_t>::find(
 
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              thisState.fitterState);
+                                              thisState.fieldCache);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -69,7 +69,7 @@ auto Acts::IterativeVertexFinder<vfitter_t>::find(
       }
     } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              thisState.fitterState);
+                                              thisState.fieldCache);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -78,7 +78,7 @@ auto Acts::IterativeVertexFinder<vfitter_t>::find(
     }
     if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFitSplitVertex, vertexingOptions, thisState.fitterState);
+          tracksToFitSplitVertex, vertexingOptions, thisState.fieldCache);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -158,9 +158,9 @@ auto Acts::IterativeVertexFinder<vfitter_t>::find(
 
 template <typename vfitter_t>
 auto Acts::IterativeVertexFinder<vfitter_t>::getVertexSeed(
-    const std::vector<InputTrack>& seedTracks,
+    State& state, const std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions) const -> Result<Vertex> {
-  auto finderState = m_cfg.seedFinder->makeState();
+  auto finderState = m_cfg.seedFinder->makeState(state.magContext);
   auto res = m_cfg.seedFinder->find(seedTracks, vertexingOptions, finderState);
 
   if (!res.ok()) {
@@ -509,16 +509,16 @@ Acts::IterativeVertexFinder<vfitter_t>::reassignTracksToNewVertex(
   // later
   currentVertex = Vertex();
   if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
-    auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                            state.fitterState);
+    auto fitResult =
+        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
       return Result<bool>::success(false);
     }
   } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
-    auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                            state.fitterState);
+    auto fitResult =
+        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {

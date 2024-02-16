@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
-  IVertexFinder::State state = finder.makeState();
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   std::vector<BoundTrackParameters> tracks = std::get<TracksData>(csvData);
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   finderConfig.extractParameters.connect(extractParameters);
 
   Finder finder(std::move(finderConfig));
-  IVertexFinder::State state = finder.makeState();
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
-  IVertexFinder::State state = finder.makeState();
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
   Finder finder(std::move(finderConfig));
-  IVertexFinder::State state = finder.makeState();
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
