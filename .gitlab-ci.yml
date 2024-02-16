@@ -105,7 +105,7 @@ build_exatrkx:
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
     - ccache -z
-    - cmake --build build -- -j3
+    - cmake --build build -- -j2
     - ccache -s
 
 test_exatrkx_unittests:
