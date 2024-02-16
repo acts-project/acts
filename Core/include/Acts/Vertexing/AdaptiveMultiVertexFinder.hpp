@@ -181,12 +181,6 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
           "AdaptiveMultiVertexFinder: "
           "No vertex fitter provided.");
     }
-
-    if (!m_cfg.seedFinder->hasTrivialState()) {
-      throw std::invalid_argument(
-          "AdaptiveMultiVertexFinder: "
-          "Seed finder state must be trivial.");
-    }
   }
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
@@ -208,8 +202,6 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
       const Acts::MagneticFieldContext& mctx) const override {
     return IVertexFinder::State{State{mctx}};
   }
-
-  bool hasTrivialState() const override { return true; }
 
   void setTracksToRemove(
       IVertexFinder::State& /*state*/,

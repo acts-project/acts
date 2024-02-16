@@ -66,8 +66,6 @@ class TrackDensityVertexFinder final : public IVertexFinder {
     // Nothing to do here
   }
 
-  bool hasTrivialState() const override { return true; }
-
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object

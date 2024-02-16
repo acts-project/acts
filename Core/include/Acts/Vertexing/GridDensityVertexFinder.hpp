@@ -121,8 +121,6 @@ class GridDensityVertexFinder final : public IVertexFinder {
     return IVertexFinder::State{State{}};
   }
 
-  bool hasTrivialState() const override { return true; }
-
   void setTracksToRemove(
       IVertexFinder::State& state,
       const std::vector<InputTrack>& removedTracks) const override {

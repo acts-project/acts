@@ -187,8 +187,6 @@ class IterativeVertexFinder final : public IVertexFinder {
     return IVertexFinder::State{State{*m_cfg.field, mctx}};
   }
 
-  bool hasTrivialState() const override { return false; }
-
   void setTracksToRemove(
       IVertexFinder::State& /*state*/,
       const std::vector<InputTrack>& /*removedTracks*/) const override {
