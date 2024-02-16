@@ -124,8 +124,8 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// State struct
   struct State {
     State(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext)
-        : magContext(magContext),
+          const Acts::MagneticFieldContext& _magContext)
+        : magContext(_magContext),
           ipState(field.makeCache(magContext)),
           fieldCache(field.makeCache(magContext)) {}
 
