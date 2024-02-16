@@ -82,4 +82,4 @@ if "__main__" == __name__:
         "detector",
     )
 
-    # acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")

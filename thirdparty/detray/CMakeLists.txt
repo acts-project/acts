@@ -16,11 +16,20 @@ message( STATUS "Building Detray as part of the Acts project" )
 # Declare where to get Detray from.
 set( ACTS_DETRAY_GIT_REPOSITORY "https://github.com/acts-project/detray.git"
    CACHE STRING "Git repository to take Detray from" )
-set( ACTS_DETRAY_GIT_TAG "v0.51.0" CACHE STRING "Version of Detray to build" )
+set( ACTS_DETRAY_GIT_TAG "v0.54.0" CACHE STRING "Version of Detray to build" )
 mark_as_advanced( ACTS_DETRAY_GIT_REPOSITORY ACTS_DETRAY_GIT_TAG )
 FetchContent_Declare( Detray
    GIT_REPOSITORY "${ACTS_DETRAY_GIT_REPOSITORY}"
    GIT_TAG "${ACTS_DETRAY_GIT_TAG}" )
 
-# Now set up its build.
+
+set( DETRAY_SETUP_ACTSVG FALSE CACHE BOOL
+   "Do not set up Actsvg as part of Detray" )
+#set( DETRAY_SETUP_VECMEM FALSE CACHE BOOL
+#   "Do not set up VecMem as part of Detray" )
+set( DETRAY_SETUP_NLOHMANN FALSE CACHE BOOL
+   "Do not set up Nlohmann as part of Detray" )
+
+
+#Now set up its build.
 FetchContent_MakeAvailable(Detray)
