@@ -18,6 +18,8 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -60,7 +62,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     using Seeder =
         Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
-    Seeder seedFinder{{}, Acts::InputTrack::extractParameters};
+    Acts::GaussianTrackDensity::Config trkDensityCfg;
+    trkDensityCfg.extractParameters
+        .connect<&Acts::InputTrack::extractParameters>();
+    Seeder seedFinder{{trkDensityCfg}};
+
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
@@ -76,7 +82,9 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     Seeder::Config seederConfig(trkDensity);
-    Seeder seedFinder(seederConfig, Acts::InputTrack::extractParameters);
+    seederConfig.extractParameters
+        .connect<&Acts::InputTrack::extractParameters>();
+    Seeder seedFinder(seederConfig);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
     return ActsExamples::ProcessCode::ABORT;
@@ -97,12 +105,14 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator
-  IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg,
-                          logger().cloneWithSuffix("ImpactPointEstimator"));
+  Acts::ImpactPointEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
+  Acts::ImpactPointEstimator ipEstimator(
+      ipEstimatorCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
 
   // Set up the helical track linearizer
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = m_cfg.bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
 
@@ -117,12 +127,13 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
   fitterCfg.useTime = m_cfg.useTime;
-  Fitter fitter(std::move(fitterCfg), Acts::InputTrack::extractParameters,
+  fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
   typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
-                                       ipEstimator, std::move(linearizer),
-                                       m_cfg.bField);
+                                       ipEstimator, m_cfg.bField);
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
@@ -144,10 +155,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
     // multiply the value by 4 and thus we set it to 3 * 4 = 12.
     finderConfig.maxMergeVertexSignificance = 12.;
   }
+  finderConfig.extractParameters
+      .template connect<&Acts::InputTrack::extractParameters>();
 
   // Instantiate the finder
-  Finder finder(std::move(finderConfig), Acts::InputTrack::extractParameters,
-                logger().clone());
+  Finder finder(std::move(finderConfig), logger().clone());
 
   // retrieve input tracks and convert into the expected format
 

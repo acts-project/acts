@@ -115,8 +115,8 @@ class ConstTrackStateType {
     for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
       trunc[i] = bs[i];
     }
-    // MeasurementParameterOutlierHoleMaterialSharedhit
-    os << "MPOHMS=" << trunc;
+    // SharedhitMaterialHoleOutlierParameterMeasurement
+    os << "SMHOPM=" << trunc;
     return os;
   }
 
