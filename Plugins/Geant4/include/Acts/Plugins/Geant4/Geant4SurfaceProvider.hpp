@@ -86,7 +86,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   ///@param config The configuration struct
   ///@param options The optional configuration for KDTree
   Geant4SurfaceProvider(const Config& config,
-                        const kdtOptions& options = kdtOptions()) {
+                        const kdtOptions& options = kdtOptions(),
+                        bool validateGDMLschema = false) {
     if (config.gdmlPath.empty()) {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: no gdml file provided");
@@ -101,7 +102,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     /// Read the gdml file and get the world volume
     G4GDMLParser parser;
-    parser.Read(m_cfg.gdmlPath);
+    parser.Read(m_cfg.gdmlPath, validateGDMLschema);
     m_g4World = parser.GetWorldVolume();
 
     if (m_g4World == nullptr) {

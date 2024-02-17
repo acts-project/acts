@@ -120,7 +120,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
                                                                           true);
 
   auto spFull =
-      std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(spFullCfg);
+      std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(spFullCfg,
+      Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(), 
+      false);
 
   auto lbFullCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lbFullCfg.surfacesProvider = spFull;
@@ -161,7 +163,10 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
 
   auto spLeftArm =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(
-          spLeftArmCfg);
+          spLeftArmCfg,
+                Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(), 
+      false);
+
 
   auto lbCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lbCfg.surfacesProvider = spLeftArm;
@@ -196,7 +201,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   kdt1DOpt.binningValues = {Acts::BinningValue::binZ};
 
   auto sp1D = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-      sp1DCfg, kdt1DOpt);
+      sp1DCfg, kdt1DOpt, false);
 
   auto lb1DCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb1DCfg.surfacesProvider = sp1D;
@@ -231,7 +236,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   kdt2DOpt.binningValues = {Acts::BinningValue::binZ};
 
   auto sp2D = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<2>>(
-      sp2DCfg, kdt2DOpt);
+      sp2DCfg, kdt2DOpt, false);
 
   auto lb2DCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb2DCfg.surfacesProvider = sp2D;
@@ -270,7 +275,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
           ranges);
 
   auto sp2DPos = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-      sp2DPosCfg, kdt1DOpt);
+      sp2DPosCfg, kdt1DOpt, false);
 
   auto lb2DPosCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb2DPosCfg.surfacesProvider = sp2DPos;
