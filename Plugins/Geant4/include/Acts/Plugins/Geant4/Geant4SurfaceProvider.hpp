@@ -87,7 +87,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   ///@param options The optional configuration for KDTree
   Geant4SurfaceProvider(const Config& config,
                         const kdtOptions& options = kdtOptions(),
-                        bool validateGDMLschema = false) {
+                        bool validateGDMLschema = true) {
     if (config.gdmlPath.empty()) {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: no gdml file provided");
