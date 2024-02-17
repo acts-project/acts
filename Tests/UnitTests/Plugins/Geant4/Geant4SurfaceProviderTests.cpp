@@ -119,9 +119,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(names,
                                                                           true);
 
-  auto spFull =
-      std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(spFullCfg,
-      Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(), 
+  auto spFull = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(
+      spFullCfg, Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(),
       false);
 
   auto lbFullCfg = Acts::Experimental::LayerStructureBuilder::Config();
@@ -164,9 +163,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
   auto spLeftArm =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(
           spLeftArmCfg,
-                Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(), 
-      false);
-
+          Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(), false);
 
   auto lbCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lbCfg.surfacesProvider = spLeftArm;
