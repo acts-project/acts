@@ -10,12 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -60,12 +62,8 @@ template <typename vfitter_t, typename sfinder_t>
 class IterativeVertexFinder {
   static_assert(VertexFitterConcept<vfitter_t>,
                 "Vertex fitter does not fulfill vertex fitter concept.");
-  using Propagator_t = typename vfitter_t::Propagator_t;
-  using Linearizer_t = typename vfitter_t::Linearizer_t;
 
  public:
-  using IPEstimator = ImpactPointEstimator<Propagator_t>;
-
   /// Configuration struct
   struct Config {
     /// @brief Config constructor
@@ -74,24 +72,22 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(vfitter_t fitter, Linearizer_t lin, sfinder_t sfinder,
-           IPEstimator est)
+    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
-          linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
 
     /// Vertex fitter
     vfitter_t vertexFitter;
 
-    /// Linearized track factory
-    Linearizer_t linearizer;
+    /// Track linearizer
+    TrackLinearizer trackLinearizer;
 
     /// Vertex seed finder
     sfinder_t seedFinder;
 
     /// ImpactPointEstimator
-    IPEstimator ipEst;
+    ImpactPointEstimator ipEst;
 
     /// Vertex finder configuration variables.
     /// Tracks that are within a distance of
@@ -117,6 +113,9 @@ class IterativeVertexFinder {
     /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
     /// decide if a track should be checked for reassignment to other vertices
     double cutOffTrackWeightReassign = 1;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// State struct
@@ -124,29 +123,37 @@ class IterativeVertexFinder {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
         : ipState(field.makeCache(magContext)),
-          linearizerState(field.makeCache(magContext)),
-          fitterState(field.makeCache(magContext)) {}
+          fitterState(field.makeCache(magContext)),
+          fieldCache(field.makeCache(magContext)) {}
     /// The IP estimator state
-    typename IPEstimator::State ipState;
-    /// The inearizer state
-    typename Linearizer_t::State linearizerState;
+    ImpactPointEstimator::State ipState;
     /// The fitter state
     typename vfitter_t::State fitterState;
+
+    MagneticFieldProvider::Cache fieldCache;
   };
 
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack
-  ///             object
   /// @param logger The logging instance
-  IterativeVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  IterativeVertexFinder(Config cfg,
+                        std::unique_ptr<const Logger> logger = getDefaultLogger(
+                            "IterativeVertexFinder", Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "IterativeVertexFinder: "
+          "No function to extract parameters "
+          "provided.");
+    }
+
+    if (!m_cfg.trackLinearizer.connected()) {
+      throw std::invalid_argument(
+          "IterativeVertexFinder: "
+          "No track linearizer provided.");
+    }
+  }
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
@@ -162,9 +169,6 @@ class IterativeVertexFinder {
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <type_traits>
@@ -33,8 +34,6 @@ namespace Acts {
 /// @tparam sfinder_t Seed finder type
 template <typename vfitter_t, typename sfinder_t>
 class AdaptiveMultiVertexFinder {
-  using Propagator_t = typename vfitter_t::Propagator_t;
-  using Linearizer_t = typename vfitter_t::Linearizer_t;
   using FitterState_t = typename vfitter_t::State;
   using SeedFinderState_t = typename sfinder_t::State;
 
@@ -55,15 +54,12 @@ class AdaptiveMultiVertexFinder {
     /// @param fitter The vertex fitter
     /// @param sfinder The seed finder
     /// @param ipEst ImpactPointEstimator
-    /// @param lin Track linearizer
     /// @param bIn Input magnetic field
-    Config(vfitter_t fitter, sfinder_t sfinder,
-           ImpactPointEstimator<Propagator_t> ipEst, Linearizer_t lin,
+    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator ipEst,
            std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEstimator(std::move(ipEst)),
-          linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
     // Vertex fitter
@@ -73,10 +69,7 @@ class AdaptiveMultiVertexFinder {
     sfinder_t seedFinder;
 
     // ImpactPointEstimator
-    ImpactPointEstimator<Propagator_t> ipEstimator;
-
-    // Track linearizer
-    Linearizer_t linearizer;
+    ImpactPointEstimator ipEstimator;
 
     std::shared_ptr<const MagneticFieldProvider> bField;
 
@@ -162,6 +155,9 @@ class AdaptiveMultiVertexFinder {
     // true, useTime of the vertex fitter configuration should also be set to
     // true, and time seeding should be enabled.
     bool useTime = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };  // Config struct
 
   /// State struct for fulfilling interface
@@ -171,15 +167,19 @@ class AdaptiveMultiVertexFinder {
   /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack
   /// @param logger The logging instance
-  AdaptiveMultiVertexFinder(
-      Config cfg, std::function<BoundTrackParameters(const InputTrack&)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+  AdaptiveMultiVertexFinder(Config cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AdaptiveMultiVertexFinder",
+                                                 Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFinder: "
+          "No function to extract parameters "
+          "from InputTrack provided.");
+    }
+  }
 
   AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
 
@@ -198,9 +198,6 @@ class AdaptiveMultiVertexFinder {
  private:
   /// Configuration object
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
