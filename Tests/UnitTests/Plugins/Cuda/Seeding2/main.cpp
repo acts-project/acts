@@ -165,9 +165,13 @@ int main(int argc, char* argv[]) {
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedFinder objects.
-  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig);
-  Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
-      sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
+  Acts::SeedFinder<TestSpacePoint,
+                   Acts::CylindricalSpacePointGrid<TestSpacePoint>>
+      seedFinder_host(sfConfig);
+  Acts::Cuda::SeedFinder<TestSpacePoint,
+                         Acts::CylindricalSpacePointGrid<TestSpacePoint>>
+      seedFinder_device(sfConfig, sfOptions, filterConfig, deviceCuts,
+                        cmdl.cudaDevice);
 
   //
   // Perform the seed finding on the host.
