@@ -134,15 +134,15 @@ def runTruthTrackingGx2f(
     #     )
     # )
     #
-    # s.addWriter(
-    #     acts.examples.TrackFitterPerformanceWriter(
-    #         level=acts.logging.INFO,
-    #         inputTracks="tracks",
-    #         inputParticles="truth_seeds_selected",
-    #         inputMeasurementParticlesMap="measurement_particles_map",
-    #         filePath=str(outputDir / "performance_track_fitter.root"),
-    #     )
-    # )
+    s.addWriter(
+        acts.examples.TrackFitterPerformanceWriter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            inputParticles="truth_seeds_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            filePath=str(outputDir / "performance_track_fitter.root"),
+        )
+    )
 
     return s
 
