@@ -9,9 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/DummyVertexFitter.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -28,10 +30,7 @@ namespace Acts {
 /// with the highest track density is returned as a vertex candidate.
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
-///
-/// @tparam vfitter_t Vertex fitter type
-template <typename vfitter_t = DummyVertexFitter<>>
-class AdaptiveGridDensityVertexFinder {
+class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity;
 
  public:
@@ -87,15 +86,28 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// @param trackVector Input track collection
   /// @param vertexingOptions Vertexing options
-  /// @param state The state object to cache the density grid
+  /// @param anyState The state object to cache the density grid
   /// and density contributions of each track, to be used
   /// if cacheGridStateForTrackRemoval == true
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
-                                   const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
+      const VertexingOptions& vertexingOptions,
+      IVertexFinder::State& anyState) const override;
+
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& anyState,
+      const std::vector<InputTrack>& removedTracks) const override {
+    auto& state = anyState.template as<State>();
+    state.tracksToRemove = removedTracks;
+  }
 
   /// @brief Constructor for user-defined InputTrack type
   ///

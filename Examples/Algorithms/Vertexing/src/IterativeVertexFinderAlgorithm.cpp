@@ -95,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
 
   Acts::GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  Seeder seeder{{{densityCfg}}};
+  auto seeder = std::make_shared<Seeder>(Seeder::Config{{densityCfg}});
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
@@ -103,8 +103,10 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+  finderCfg.field = m_cfg.bField;
   Finder finder(std::move(finderCfg), logger().clone());
-  Finder::State state(*m_cfg.bField, ctx.magFieldContext);
+  Acts::IVertexFinder::State state{std::in_place_type<Finder::State>,
+                                   *m_cfg.bField, ctx.magFieldContext};
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices
