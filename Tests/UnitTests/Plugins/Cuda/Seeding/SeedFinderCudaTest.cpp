@@ -224,9 +224,7 @@ int main(int argc, char** argv) {
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
   Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>
       seedFinder_cpu(config);
-  Acts::SeedFinder<SpacePoint,
-                   Acts::Cuda>
-      seedFinder_cuda(config, options);
+  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config, options);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float, float)
