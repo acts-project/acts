@@ -11,13 +11,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    calculateDistance(const GeometryContext& gctx,
-                      const BoundTrackParameters& trkParams,
-                      const Vector3& vtxPos, State& state) const {
+inline Acts::Result<double> Acts::ImpactPointEstimator::calculateDistance(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
@@ -28,14 +24,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return res.value().first.norm();
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<Acts::BoundTrackParameters>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    estimate3DImpactParameters(const GeometryContext& gctx,
-                               const Acts::MagneticFieldContext& mctx,
-                               const BoundTrackParameters& trkParams,
-                               const Vector3& vtxPos, State& state) const {
+inline Acts::Result<Acts::BoundTrackParameters>
+Acts::ImpactPointEstimator::estimate3DImpactParameters(
+    const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+    State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
@@ -88,15 +81,16 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
           .closest();
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the surface; intersection corresponds to an estimate of the 3D
   // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
-  auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
   if (result.ok()) {
-    return *result->endParameters;
+    return *result;
   } else {
     ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
     ACTS_DEBUG(
@@ -106,14 +100,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
 template <unsigned int nDim>
-Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    getVertexCompatibility(const GeometryContext& gctx,
-                           const BoundTrackParameters* trkParams,
-                           const ActsVector<nDim>& vertexPos) const {
+Acts::Result<double> Acts::ImpactPointEstimator::getVertexCompatibility(
+    const GeometryContext& gctx, const BoundTrackParameters* trkParams,
+    const ActsVector<nDim>& vertexPos) const {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -176,14 +166,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return residual.dot(weight * residual);
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<
-    input_track_t, propagator_t,
-    propagator_options_t>::performNewtonOptimization(const Vector3& helixCenter,
-                                                     const Vector3& vtxPos,
-                                                     double phi, double theta,
-                                                     double rho) const {
+inline Acts::Result<double>
+Acts::ImpactPointEstimator::performNewtonOptimization(
+    const Vector3& helixCenter, const Vector3& vtxPos, double phi, double theta,
+    double rho) const {
   double sinPhi = std::sin(phi);
   double cosPhi = std::cos(phi);
 
@@ -234,14 +220,11 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   return phi;
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
 template <unsigned int nDim>
 Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    getDistanceAndMomentum(const GeometryContext& gctx,
-                           const BoundTrackParameters& trkParams,
-                           const ActsVector<nDim>& vtxPos, State& state) const {
+Acts::ImpactPointEstimator::getDistanceAndMomentum(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const ActsVector<nDim>& vtxPos, State& state) const {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -372,19 +355,16 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return std::make_pair(deltaR, momDir);
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<Acts::ImpactParametersAndSigma>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    getImpactParameters(const BoundTrackParameters& track, const Vertex& vtx,
-                        const GeometryContext& gctx,
-                        const Acts::MagneticFieldContext& mctx,
-                        bool calculateTimeIP) const {
+inline Acts::Result<Acts::ImpactParametersAndSigma>
+Acts::ImpactPointEstimator::getImpactParameters(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    bool calculateTimeIP) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   auto intersection = perigeeSurface
                           ->intersect(gctx, track.position(gctx),
                                       track.direction(), BoundaryCheck(false))
@@ -393,7 +373,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPoint
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     ACTS_ERROR("Error during propagation in getImpactParameters.");
@@ -403,17 +384,16 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return result.error();
   }
 
-  const auto& propRes = *result;
+  const auto& params = *result;
 
   // Check if the covariance matrix of the Perigee parameters exists
-  if (!propRes.endParameters->covariance().has_value()) {
+  if (!params.covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
 
   // Extract Perigee parameters and corresponding covariance matrix
-  auto impactParams = propRes.endParameters->impactParameters();
-  auto impactParamCovariance =
-      propRes.endParameters->impactParameterCovariance().value();
+  auto impactParams = params.impactParameters();
+  auto impactParamCovariance = params.impactParameterCovariance().value();
 
   // Vertex variances
   // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
@@ -458,30 +438,27 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return ipAndSigma;
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<std::pair<double, double>>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    getLifetimeSignOfTrack(const BoundTrackParameters& track, const Vertex& vtx,
-                           const Acts::Vector3& direction,
-                           const GeometryContext& gctx,
-                           const MagneticFieldContext& mctx) const {
+inline Acts::Result<std::pair<double, double>>
+Acts::ImpactPointEstimator::getLifetimeSignOfTrack(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const Acts::Vector3& direction, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();
   }
 
-  const auto& propRes = *result;
-  const auto& params = propRes.endParameters->parameters();
+  const auto& params = (*result).parameters();
   const double d0 = params[BoundIndices::eBoundLoc0];
   const double z0 = params[BoundIndices::eBoundLoc1];
   const double phi = params[BoundIndices::eBoundPhi];
@@ -501,32 +478,29 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return vszs;
 }
 
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    get3DLifetimeSignOfTrack(const BoundTrackParameters& track,
-                             const Vertex& vtx, const Acts::Vector3& direction,
-                             const GeometryContext& gctx,
-                             const MagneticFieldContext& mctx) const {
+inline Acts::Result<double>
+Acts::ImpactPointEstimator::get3DLifetimeSignOfTrack(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const Acts::Vector3& direction, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();
   }
 
-  const auto& propRes = *result;
-  const auto& params = propRes.endParameters;
-  const Vector3 trkpos = params->position(gctx);
-  const Vector3 trkmom = params->momentum();
+  const auto& params = *result;
+  const Vector3 trkpos = params.position(gctx);
+  const Vector3 trkmom = params.momentum();
 
   double sign =
       (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));

@@ -52,14 +52,10 @@ struct AlgorithmContext;
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using Fitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Seeder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
+  using Linearizer = Acts::HelicalTrackLinearizer;
+  using Fitter = Acts::FullBilloirVertexFitter;
+  using Seeder = Acts::TrackDensityVertexFinder<Acts::GaussianTrackDensity>;
+  using Finder = Acts::IterativeVertexFinder<Fitter>;
   using Options = Acts::VertexingOptions;
 
   using VertexCollection = std::vector<Acts::Vertex>;

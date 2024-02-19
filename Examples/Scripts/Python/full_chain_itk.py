@@ -109,10 +109,12 @@ addCKFTracks(
     s,
     trackingGeometry,
     field,
-    TrackSelectorConfig(
-        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
-        absEta=(None, 4.0),
-        nMeasurementsMin=6,
+    trackSelectorConfig=(
+        # fmt: off
+        TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxSharedHits=2),
+        # fmt: on
     ),
     outputDirRoot=outputDir,
 )

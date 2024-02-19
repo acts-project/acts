@@ -14,9 +14,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <unordered_map>
@@ -30,25 +30,17 @@ namespace Acts {
 /// 2. If no constraint is given, returns (0,0, z0_mode) as vertex position
 /// 3. If vertex constraint is given with x=x_constr and y=y_constr,
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
-template <typename vfitter_t>
-class ZScanVertexFinder {
-  static_assert(VertexFitterConcept<vfitter_t>,
-                "Vertex fitter does not fulfill vertex fitter concept.");
-  using Propagator_t = typename vfitter_t::Propagator_t;
-
+class ZScanVertexFinder final : public IVertexFinder {
  public:
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
-
   /// Configuration struct
   struct Config {
     /// @brief Finder configuration
     ///
     /// @param ipEst ImpactPointEstimator
-    Config(const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst)
-        : ipEstimator(ipEst) {}
+    Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
 
     // ImpactPointEstimator
-    ImpactPointEstimator<InputTrack_t, Propagator_t> ipEstimator;
+    ImpactPointEstimator ipEstimator;
 
     // FsmwMode1dFinder
     FsmwMode1dFinder mode1dFinder;
@@ -68,42 +60,28 @@ class ZScanVertexFinder {
     double expPt = 1.;
     // minimum required weight
     double minWeight = 0.01;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// State struct for fulfilling interface
   struct State {};
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-
-  ZScanVertexFinder(const Config& cfg,
-                    std::unique_ptr<const Logger> logger =
-                        getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](const InputTrack& params) {
-          return *params.as<BoundTrackParameters>();
-        }),
-        m_logger(std::move(logger)) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
   /// @param logger Logging instance
   ZScanVertexFinder(const Config& cfg,
-                    std::function<BoundTrackParameters(const InputTrack&)> func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(cfg),
-        m_extractParameters(std::move(func)),
-        m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "ZScanVertexFinder: "
+          "No track parameter extractor provided.");
+    }
+  }
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,
@@ -117,15 +95,21 @@ class ZScanVertexFinder {
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& /*state*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {
+    // Nothing to do here
+  }
 
  private:
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
