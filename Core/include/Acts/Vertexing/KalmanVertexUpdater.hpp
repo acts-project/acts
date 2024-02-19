@@ -35,39 +35,6 @@ namespace KalmanVertexUpdater {
 /// CERN-THESIS-2010-027
 /// Section 5.3.5
 
-/// Cache object, the comments indicate the names of the variables in Ref. (1)
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-template <unsigned int nDimVertex>
-struct Cache {
-  using VertexVector = ActsVector<nDimVertex>;
-  using VertexMatrix = ActsSquareMatrix<nDimVertex>;
-  // \tilde{x_k}
-  VertexVector newVertexPos = VertexVector::Zero();
-  // C_k
-  VertexMatrix newVertexCov = VertexMatrix::Zero();
-  // C_k^-1
-  VertexMatrix newVertexWeight = VertexMatrix::Zero();
-  // C_{k-1}^-1
-  VertexMatrix oldVertexWeight = VertexMatrix::Zero();
-  // W_k
-  SquareMatrix3 wMat = SquareMatrix3::Zero();
-};
-
-namespace detail {
-// These two functions only exist so we can compile calculateUpdate in a
-// compilation unit
-void calculateUpdate3(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
-                      const Acts::LinearizedTrack& linTrack,
-                      const double trackWeight, const int sign,
-                      Cache<3>& cache);
-
-void calculateUpdate4(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
-                      const Acts::LinearizedTrack& linTrack,
-                      const double trackWeight, const int sign,
-                      Cache<4>& cache);
-}  // namespace detail
-
 /// @brief Updates vertex with knowledge of new track
 /// @note KalmanVertexUpdater updates the vertex when trk is added to the fit.
 /// However, it does not add the track to the TrackAtVertex list. This to be
@@ -80,39 +47,6 @@ void calculateUpdate4(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
 /// fit its spatial coordinates) or 4 (if we also fit time).
 void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
                            unsigned int nDimVertex);
-
-/// @brief Calculates updated vertex position and covariance as well as the
-/// updated track momentum when adding/removing linTrack. Saves the result in
-/// cache.
-///
-/// @tparam nDimVertex number of dimensions of the vertex. Can be 3 (if we only
-/// fit its spatial coordinates) or 4 (if we also fit time).
-///
-/// @param vtxPos Vertex position
-/// @param vtxCov Vertex covariance matrix
-/// @param linTrack Linearized track to be added or removed
-/// @param trackWeight Track weight
-/// @param sign +1 (add track) or -1 (remove track)
-/// @note Tracks are removed during the smoothing procedure to compute
-/// the chi2 of the track wrt the updated vertex position
-/// @param[in,out] cache A cache to store the results of this function
-template <unsigned int nDimVertex>
-void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
-                     const Acts::LinearizedTrack& linTrack,
-                     const double trackWeight, const int sign,
-                     Cache<nDimVertex>& cache) {
-  static_assert(nDimVertex == 3 || nDimVertex == 4,
-                "The vertex dimension must either be 3 (when fitting the "
-                "spatial coordinates) or 4 (when fitting the spatial "
-                "coordinates + time).");
-  if constexpr (nDimVertex == 3) {
-    detail::calculateUpdate3(vtxPos, vtxCov, linTrack, trackWeight, sign,
-                             cache);
-  } else if constexpr (nDimVertex == 4) {
-    detail::calculateUpdate4(vtxPos, vtxCov, linTrack, trackWeight, sign,
-                             cache);
-  }
-}
 
 /// Based on
 /// Ref. (1):
