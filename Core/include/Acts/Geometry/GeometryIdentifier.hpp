@@ -100,12 +100,12 @@ class GeometryIdentifier {
   /// (2^12)-1 = 4095 layers
   static constexpr Value kLayerMask     = 0x00000fff00000000;
   /// (2^4)-1 = 15 approach surfaces 
-  static constexpr Value kApproachMask  = 0x00000000c0000000;
+  static constexpr Value kApproachMask  = 0x00000000f0000000;
   static constexpr Value kPassiveMask   = kApproachMask;
   /// (2^20)-1 = 1048575 sensitive surfaces
-  static constexpr Value kSensitiveMask = 0x000000003ffffc00;
+  static constexpr Value kSensitiveMask = 0x000000000fffff00;
   /// (2^8)-1 = 255 extra values
-  static constexpr Value kExtraMask     = 0x00000000000003fc;
+  static constexpr Value kExtraMask     = 0x00000000000000ff;
   // clang-format on
 
   Value m_value = 0;

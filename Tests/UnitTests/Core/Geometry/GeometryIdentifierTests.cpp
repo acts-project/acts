@@ -26,20 +26,20 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_construct_encoded) {
   // not sure if it is a good idea to test for the encoding since it should be
   // an implementation detail. only the resulting functionality is relevant.
   GeometryIdentifier id = 0xa0b00c00d00affe0u;
-  BOOST_CHECK_EQUAL(id.volume(), 0xa0u);
-  BOOST_CHECK_EQUAL(id.boundary(), 0xb0u);
-  BOOST_CHECK_EQUAL(id.layer(), 0x0c0u);
-  BOOST_CHECK_EQUAL(id.approach(), 0x0du);
+  BOOST_CHECK_EQUAL(id.volume(), 0xa0bu);
+  BOOST_CHECK_EQUAL(id.boundary(), 0x00u);
+  BOOST_CHECK_EQUAL(id.layer(), 0xc00u);
+  BOOST_CHECK_EQUAL(id.approach(), 0xdu);
   BOOST_CHECK_EQUAL(id.sensitive(), 0x00affu);
   BOOST_CHECK_EQUAL(id.extra(), 0xe0u);
 }
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
   // compute maximum value for each component
-  constexpr GeometryIdentifier::Value volumeMax = (1u << 8) - 1;
+  constexpr GeometryIdentifier::Value volumeMax = (1u << 12) - 1;
   constexpr GeometryIdentifier::Value boundaryMax = (1u << 8) - 1;
   constexpr GeometryIdentifier::Value layerMax = (1u << 12) - 1;
-  constexpr GeometryIdentifier::Value approachMax = (1u << 8) - 1;
+  constexpr GeometryIdentifier::Value approachMax = (1u << 4) - 1;
   constexpr GeometryIdentifier::Value sensitiveMax = (1u << 20) - 1;
   constexpr GeometryIdentifier::Value extraMax = (1u << 8) - 1;
   // reference values non-zero values everywhere
