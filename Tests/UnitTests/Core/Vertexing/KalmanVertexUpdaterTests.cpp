@@ -302,8 +302,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx.fullPosition(),
-                                               vtx.fullCovariance(), 3);
+    KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, 3);
 
     // The old distance
     double oldDistance =

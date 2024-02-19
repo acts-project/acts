@@ -49,8 +49,7 @@ struct Cache {
 /// the chi2 of the track wrt the updated vertex position
 /// @param[out] cache A cache to store the results of this function
 template <unsigned int nDimVertex>
-void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
-                     const Acts::LinearizedTrack& linTrack,
+void calculateUpdate(const Vertex& vtx, const Acts::LinearizedTrack& linTrack,
                      const double trackWeight, const int sign,
                      Cache<nDimVertex>& cache) {
   constexpr unsigned int nBoundParams = nDimVertex + 2;
@@ -83,10 +82,12 @@ void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
           .inverse();
 
   // Retrieve current position of the vertex and its current weight matrix
-  const ActsVector<nDimVertex> oldVtxPos = vtxPos.template head<nDimVertex>();
+  const ActsVector<nDimVertex> oldVtxPos =
+      vtx.fullPosition().template head<nDimVertex>();
   // C_{k-1}^-1
   cache.oldVertexWeight =
-      (vtxCov.template block<nDimVertex, nDimVertex>(0, 0)).inverse();
+      (vtx.fullCovariance().template block<nDimVertex, nDimVertex>(0, 0))
+          .inverse();
 
   // W_k
   cache.wMat = (momJac.transpose() * (trkParamWeight * momJac)).inverse();
@@ -163,9 +164,7 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
 }
 
 template <unsigned int nDimVertex>
-void updateVertexWithTrackImpl(Vector4& vtxPos, SquareMatrix4& vtxCov,
-                               std::pair<double, double>& fitQuality,
-                               TrackAtVertexRef trk, int sign) {
+void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertexRef trk, int sign) {
   if constexpr (nDimVertex != 3 && nDimVertex != 4) {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "
@@ -178,19 +177,18 @@ void updateVertexWithTrackImpl(Vector4& vtxPos, SquareMatrix4& vtxCov,
   Cache<nDimVertex> cache;
 
   // Calculate update and save result in cache
-  calculateUpdate(vtxPos, vtxCov, trk.linearizedState, trackWeight, sign,
-                  cache);
+  calculateUpdate(vtx, trk.linearizedState, trackWeight, sign, cache);
 
   // Get fit quality parameters wrt to old vertex
   double chi2 = 0.;
   double ndf = 0.;
-  std::tie(chi2, ndf) = fitQuality;
+  std::tie(chi2, ndf) = vtx.fitQuality();
 
   // Chi2 of the track parameters
   double trkChi2 = trackParametersChi2(trk.linearizedState, cache);
 
   // Update of the chi2 of the vertex position
-  double vtxPosChi2Update = vertexPositionChi2Update(vtxPos, cache);
+  double vtxPosChi2Update = vertexPositionChi2Update(vtx.fullPosition(), cache);
 
   // Calculate new chi2
   chi2 += sign * (vtxPosChi2Update + trackWeight * trkChi2);
@@ -200,14 +198,14 @@ void updateVertexWithTrackImpl(Vector4& vtxPos, SquareMatrix4& vtxCov,
 
   // Updating the vertex
   if constexpr (nDimVertex == 3) {
-    vtxPos.head<3>() = cache.newVertexPos.template head<3>();
-    vtxCov.template topLeftCorner<3, 3>() =
+    vtx.fullPosition().head<3>() = cache.newVertexPos.template head<3>();
+    vtx.fullCovariance().template topLeftCorner<3, 3>() =
         cache.newVertexCov.template topLeftCorner<3, 3>();
   } else if constexpr (nDimVertex == 4) {
-    vtxPos = cache.newVertexPos;
-    vtxCov = cache.newVertexCov;
+    vtx.fullPosition() = cache.newVertexPos;
+    vtx.fullCovariance() = cache.newVertexCov;
   }
-  fitQuality = {chi2, ndf};
+  vtx.setFitQuality(chi2, ndf);
 
   if (sign == 1) {
     // Update track
@@ -297,9 +295,7 @@ Acts::BoundMatrix calculateTrackCovariance(
 }
 
 template <unsigned int nDimVertex>
-void updateTrackWithVertexImpl(TrackAtVertexRef track,
-                               const Vector4& vtxPosFull,
-                               const SquareMatrix4& vtxCovFull) {
+void updateTrackWithVertexImpl(TrackAtVertexRef track, const Vertex& vtx) {
   if constexpr (nDimVertex != 3 && nDimVertex != 4) {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "
@@ -318,10 +314,10 @@ void updateTrackWithVertexImpl(TrackAtVertexRef track,
 
   // Extract vertex position and covariance
   // \tilde{x_n}
-  const VertexVector vtxPos = vtxPosFull.template head<nDimVertex>();
+  const VertexVector vtxPos = vtx.fullPosition().template head<nDimVertex>();
   // C_n
   const VertexMatrix vtxCov =
-      vtxCovFull.template block<nDimVertex, nDimVertex>(0, 0);
+      vtx.fullCovariance().template block<nDimVertex, nDimVertex>(0, 0);
 
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
@@ -350,8 +346,7 @@ void updateTrackWithVertexImpl(TrackAtVertexRef track,
 
   // Calculate the update of the vertex position when the track is removed. This
   // might be unintuitive, but it is needed to compute a symmetric chi2.
-  calculateUpdate(vtxPosFull, vtxCovFull, linTrack, track.trackWeight, -1,
-                  cache);
+  calculateUpdate(vtx, linTrack, track.trackWeight, -1, cache);
 
   // Refit track momentum with the final vertex position
   Vector3 newTrkMomentum = cache.wMat * momJac.transpose() * trkParamWeight *
@@ -408,31 +403,30 @@ void updateTrackWithVertexImpl(TrackAtVertexRef track,
 
 }  // namespace
 
+// The two functions don't contain any of the actual update code, they
+// only dispatch into templated functions, effectively doing a
+// runtime-to-compile time conversion.
+
 void KalmanVertexUpdater::updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
                                                 unsigned int nDimVertex) {
-  std::pair<double, double> fitQuality = vtx.fitQuality();
-
   if (nDimVertex == 3) {
-    updateVertexWithTrackImpl<3>(vtx.fullPosition(), vtx.fullCovariance(),
-                                 fitQuality, trk, 1);
+    updateVertexWithTrackImpl<3>(vtx, trk, 1);
   } else if (nDimVertex == 4) {
-    updateVertexWithTrackImpl<4>(vtx.fullPosition(), vtx.fullCovariance(),
-                                 fitQuality, trk, 1);
+    updateVertexWithTrackImpl<4>(vtx, trk, 1);
   } else {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "
         "coordinates) or 4 (when fitting the spatial coordinates + time).");
   }
-  vtx.setFitQuality(fitQuality);
 }
 
-void Acts::KalmanVertexUpdater::updateTrackWithVertex(
-    TrackAtVertexRef track, const Vector4& vtxPosFull,
-    const SquareMatrix4& vtxCovFull, unsigned int nDimVertex) {
+void Acts::KalmanVertexUpdater::updateTrackWithVertex(TrackAtVertexRef track,
+                                                      const Vertex& vtx,
+                                                      unsigned int nDimVertex) {
   if (nDimVertex == 3) {
-    updateTrackWithVertexImpl<3>(track, vtxPosFull, vtxCovFull);
+    updateTrackWithVertexImpl<3>(track, vtx);
   } else if (nDimVertex == 4) {
-    updateTrackWithVertexImpl<4>(track, vtxPosFull, vtxCovFull);
+    updateTrackWithVertexImpl<4>(track, vtx);
   } else {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "

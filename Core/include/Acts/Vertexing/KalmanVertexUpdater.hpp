@@ -60,12 +60,10 @@ void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
 /// the vertex it has originated from
 ///
 /// @param track Track to update
-/// @param vtxPosFull full vertex position
-/// @param vtxCovFull full vertex covariance matrix
+/// @param vtx Vertex to use for updating the track
 /// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
-void updateTrackWithVertex(TrackAtVertexRef track, const Vector4& vtxPosFull,
-                           const SquareMatrix4& vtxCovFull,
+void updateTrackWithVertex(TrackAtVertexRef track, const Vertex& vtx,
                            unsigned int nDimVertex);
 
 }  // namespace KalmanVertexUpdater
