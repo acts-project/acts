@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
   Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>
       seedFinder_cpu(config);
-  Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>,
+  Acts::SeedFinder<SpacePoint,
                    Acts::Cuda>
       seedFinder_cuda(config, options);
 

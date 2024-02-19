@@ -168,9 +168,8 @@ int main(int argc, char* argv[]) {
   Acts::SeedFinder<TestSpacePoint,
                    Acts::CylindricalSpacePointGrid<TestSpacePoint>>
       seedFinder_host(sfConfig);
-  Acts::Cuda::SeedFinder<TestSpacePoint>
-      seedFinder_device(sfConfig, sfOptions, filterConfig, deviceCuts,
-                        cmdl.cudaDevice);
+  Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
+      sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
   // Perform the seed finding on the host.
