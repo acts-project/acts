@@ -93,19 +93,19 @@ class GeometryIdentifier {
 
  private:
   // clang-format off
-  /// (2^8)-1 = 255 volumes
-  static constexpr Value kVolumeMask    = 0xff00000000000000;
+  /// (2^12)-1 = 4095  volumes 
+  static constexpr Value kVolumeMask    = 0xfff0000000000000;
   /// (2^8)-1 = 255 boundaries
-  static constexpr Value kBoundaryMask  = 0x00ff000000000000;
+  static constexpr Value kBoundaryMask  = 0x000ff00000000000;
   /// (2^12)-1 = 4095 layers
-  static constexpr Value kLayerMask     = 0x0000fff000000000;
-  /// (2^8)-1 = 255 approach surfaces
-  static constexpr Value kApproachMask  = 0x0000000ff0000000;
+  static constexpr Value kLayerMask     = 0x00000fff00000000;
+  /// (2^4)-1 = 15 approach surfaces 
+  static constexpr Value kApproachMask  = 0x00000000c0000000;
   static constexpr Value kPassiveMask   = kApproachMask;
   /// (2^20)-1 = 1048575 sensitive surfaces
-  static constexpr Value kSensitiveMask = 0x000000000fffff00;
+  static constexpr Value kSensitiveMask = 0x000000003ffffc00;
   /// (2^8)-1 = 255 extra values
-  static constexpr Value kExtraMask     = 0x00000000000000ff;
+  static constexpr Value kExtraMask     = 0x00000000000003fc;
   // clang-format on
 
   Value m_value = 0;
