@@ -13,6 +13,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -46,15 +47,22 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
       stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+
+  // Setup the linearizer
+  Linearizer::Config ltConfig;
+  ltConfig.bField = m_cfg.bField;
+  ltConfig.propagator = propagator;
+  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(vertexFitterCfg,
-                            Acts::InputTrack::extractParameters);
-  VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
-  // Setup the linearizer
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+  vertexFitterCfg.extractParameters
+      .connect<&Acts::InputTrack::extractParameters>();
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
+  VertexFitter vertexFitter(vertexFitterCfg);
+  auto fieldCache = m_cfg.bField->makeCache(ctx.magFieldContext);
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
@@ -92,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     if (!m_cfg.doConstrainedFit) {
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
-      auto fitRes = vertexFitter.fit(inputTracks, linearizer, vfOptions, state);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -109,8 +117,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
                                           theConstraint);
 
-      auto fitRes =
-          vertexFitter.fit(inputTracks, linearizer, vfOptionsConstr, state);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
