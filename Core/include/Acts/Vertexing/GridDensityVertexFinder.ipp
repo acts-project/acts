@@ -29,10 +29,9 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
     }
     if (!couldRemoveTracks) {
       // No tracks were removed anymore
-      // Return empty seed, i.e. vertex at constraint position
+      // Return empty seed
       // (Note: Upstream finder should check for this break condition)
-      std::vector<Vertex> seedVec{vertexingOptions.constraint};
-      return seedVec;
+      return std::vector<Vertex>();
     }
   } else {
     state.mainGrid = MainGridVector::Zero();
@@ -94,9 +93,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
 
 template <int mainGridSize, int trkGridSize>

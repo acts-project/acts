@@ -36,7 +36,5 @@ auto Acts::TrackDensityVertexFinder<track_density_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
