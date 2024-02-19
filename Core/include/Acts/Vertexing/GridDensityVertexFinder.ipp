@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
+template <int mainGridSize, int trkGridSize>
+auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& state) const
-    -> Result<std::vector<Vertex>> {
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+  auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
@@ -98,8 +99,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
   return seedVec;
 }
 
-template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
+template <int mainGridSize, int trkGridSize>
+auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::
     doesPassTrackSelection(const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
