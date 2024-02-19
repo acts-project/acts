@@ -63,7 +63,7 @@ void updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
 /// @param vtx Vertex to use for updating the track
 /// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
 /// fit its spatial coordinates) or 4 (if we also fit time).
-void updateTrackWithVertex(TrackAtVertexRef track, const Vertex& vtx,
+void updateTrackWithVertex(TrackAtVertex& track, const Vertex& vtx,
                            unsigned int nDimVertex);
 
 }  // namespace KalmanVertexUpdater

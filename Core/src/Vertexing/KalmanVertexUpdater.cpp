@@ -164,7 +164,7 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
 }
 
 template <unsigned int nDimVertex>
-void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertexRef trk, int sign) {
+void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign) {
   if constexpr (nDimVertex != 3 && nDimVertex != 4) {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "
@@ -295,7 +295,7 @@ Acts::BoundMatrix calculateTrackCovariance(
 }
 
 template <unsigned int nDimVertex>
-void updateTrackWithVertexImpl(TrackAtVertexRef track, const Vertex& vtx) {
+void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
   if constexpr (nDimVertex != 3 && nDimVertex != 4) {
     throw std::invalid_argument(
         "The vertex dimension must either be 3 (when fitting the spatial "
@@ -420,7 +420,7 @@ void KalmanVertexUpdater::updateVertexWithTrack(Vertex& vtx, TrackAtVertex& trk,
   }
 }
 
-void Acts::KalmanVertexUpdater::updateTrackWithVertex(TrackAtVertexRef track,
+void Acts::KalmanVertexUpdater::updateTrackWithVertex(TrackAtVertex& track,
                                                       const Vertex& vtx,
                                                       unsigned int nDimVertex) {
   if (nDimVertex == 3) {
