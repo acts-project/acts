@@ -26,7 +26,6 @@ void ActsExamples::EffPlotTool::book(
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
-  PlotHelpers::Binning bDeltaR = m_cfg.varBinning.at("DeltaR");
   ACTS_DEBUG("Initialize the histograms for efficiency plots");
   // efficiency vs pT
   effPlotCache.trackEff_vs_pT = PlotHelpers::bookEff(
@@ -37,17 +36,12 @@ void ActsExamples::EffPlotTool::book(
   // efficiency vs phi
   effPlotCache.trackEff_vs_phi = PlotHelpers::bookEff(
       "trackeff_vs_phi", "Tracking efficiency;Truth #phi;Efficiency", bPhi);
-  // efficiancy vs distance to the closest truth particle
-  effPlotCache.trackEff_vs_DeltaR = PlotHelpers::bookEff(
-      "trackeff_vs_DeltaR",
-      "Tracking efficiency;Closest track #Delta R;Efficiency", bDeltaR);
 }
 
 void ActsExamples::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
   delete effPlotCache.trackEff_vs_pT;
   delete effPlotCache.trackEff_vs_eta;
   delete effPlotCache.trackEff_vs_phi;
-  delete effPlotCache.trackEff_vs_DeltaR;
 }
 
 void ActsExamples::EffPlotTool::write(
@@ -56,19 +50,16 @@ void ActsExamples::EffPlotTool::write(
   effPlotCache.trackEff_vs_pT->Write();
   effPlotCache.trackEff_vs_eta->Write();
   effPlotCache.trackEff_vs_phi->Write();
-  effPlotCache.trackEff_vs_DeltaR->Write();
 }
 
 void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
                                      const ActsFatras::Particle& truthParticle,
-                                     double deltaR, bool status) const {
+                                     bool status) const {
   const auto t_phi = phi(truthParticle.direction());
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
-  const auto t_deltaR = deltaR;
 
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_pT, t_pT, status);
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_eta, t_eta, status);
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_phi, t_phi, status);
-  PlotHelpers::fillEff(effPlotCache.trackEff_vs_DeltaR, t_deltaR, status);
 }

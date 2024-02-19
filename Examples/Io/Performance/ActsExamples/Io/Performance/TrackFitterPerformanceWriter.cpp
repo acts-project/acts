@@ -171,7 +171,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
-    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
+    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;
