@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
