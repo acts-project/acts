@@ -114,5 +114,25 @@ void calculateUpdate(const Vector4& vtxPos, const SquareMatrix4& vtxCov,
   }
 }
 
+/// Based on
+/// Ref. (1):
+/// R. Frühwirth et al.
+/// Vertex reconstruction and track bundling at the lep collider using robust
+/// algorithms
+/// Computer Physics Comm.: 96 (1996) 189
+/// Chapter 2.1
+
+/// @brief Refits a single track with the knowledge of
+/// the vertex it has originated from
+///
+/// @param track Track to update
+/// @param vtxPosFull full vertex position
+/// @param vtxCovFull full vertex covariance matrix
+/// @param nDimVertex number of dimensions of the vertex. Can be 3 (if we only
+/// fit its spatial coordinates) or 4 (if we also fit time).
+void updateTrackWithVertex(TrackAtVertexRef track, const Vector4& vtxPosFull,
+                           const SquareMatrix4& vtxCovFull,
+                           unsigned int nDimVertex);
+
 }  // namespace KalmanVertexUpdater
 }  // namespace Acts

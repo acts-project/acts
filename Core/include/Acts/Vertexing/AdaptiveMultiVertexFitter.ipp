@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Vertexing/KalmanVertexTrackUpdater.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -351,9 +350,9 @@ inline void Acts::AdaptiveMultiVertexFitter::doVertexSmoothing(
         // vertex. The second template argument corresponds to the number of
         // fitted vertex dimensions (i.e., 3 if we only fit spatial coordinates
         // and 4 if we also fit time).
-        KalmanVertexTrackUpdater::update(trkAtVtx, vtx->fullPosition(),
-                                         vtx->fullCovariance(),
-                                         m_cfg.useTime ? 4 : 3);
+        KalmanVertexUpdater::updateTrackWithVertex(
+            trkAtVtx, vtx->fullPosition(), vtx->fullCovariance(),
+            m_cfg.useTime ? 4 : 3);
       }
     }
   }
