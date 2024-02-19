@@ -22,10 +22,6 @@
 
 namespace Acts {
 
-// namespace detail {
-// template <typename derived_t>
-// }
-
 /// @class GridDensityVertexFinder
 /// @brief Vertex finder that makes use of a track density grid.
 /// Each single track is modelled as a 2(!)-dim Gaussian distribution grid
