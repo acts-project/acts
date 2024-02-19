@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory() as temp:
     runTruthTrackingGx2f(
         setup.trackingGeometry,
         setup.field,
-        setup.digiConfig,
+        # setup.digiConfig,
         outputDir=tp,
         s=s,
     )
