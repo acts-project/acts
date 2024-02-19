@@ -62,7 +62,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
       &linearizer);
   VertexFitter vertexFitter(vertexFitterCfg);
-  VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
+  auto fieldCache = m_cfg.bField->makeCache(ctx.magFieldContext);
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     if (!m_cfg.doConstrainedFit) {
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, state);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -117,7 +117,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
                                           theConstraint);
 
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, state);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
