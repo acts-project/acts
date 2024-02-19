@@ -182,8 +182,7 @@ auto main(int argc, char** argv) -> int {
       Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl));
   vecmem::sycl::host_memory_resource resource(queue.getQueue());
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
-  Acts::Sycl::SeedFinder<SpacePoint,
-                         Acts::CylindricalSpacePointGrid<SpacePoint>>
+  Acts::Sycl::SeedFinder<SpacePoint>
       syclSeedFinder(config, options, deviceAtlasCuts, queue, resource,
                      &device_resource);
   Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>
