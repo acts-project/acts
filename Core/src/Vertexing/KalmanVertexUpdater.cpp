@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
 namespace {
