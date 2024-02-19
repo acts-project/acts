@@ -103,6 +103,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+  finderCfg.field = m_cfg.bField;
   Finder finder(std::move(finderCfg), logger().clone());
   Acts::IVertexFinder::State state{std::in_place_type<Finder::State>,
                                    *m_cfg.bField, ctx.magFieldContext};
