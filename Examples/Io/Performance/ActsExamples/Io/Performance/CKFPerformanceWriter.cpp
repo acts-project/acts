@@ -232,51 +232,31 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
 
-    // Use neural network classification for duplication rate plots
-    // Currently, the network used for this example can only handle
-    // good/duplicate classification, so need to manually exclude fake tracks
-    if (m_cfg.duplicatedPredictor && !isFake) {
-      inputFeatures[0] = track.nMeasurements();
-      inputFeatures[1] = track.nOutliers();
-      inputFeatures[2] = track.chi2() * 1.0 / track.nDoF();
-      // predict if current trajectory is 'duplicate'
-      bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
-      // Add to number of duplicated particles
+    // Counting number of total trajectories
+    m_nTotalTracks++;
+  }
+
+  // Use truth-based classification for duplication rate plots
+  // Loop over all truth-matched reco tracks for duplication rate plots
+  for (auto& [particleId, matchedTracks] : matched) {
+    // Sort the reco tracks matched to this particle by the number of majority
+    // hits
+    std::sort(matchedTracks.begin(), matchedTracks.end(),
+              [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
+                return lhs.first > rhs.first;
+              });
+    for (std::size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
+      const auto& [nMajorityHits, fittedParameters] = matchedTracks.at(itrack);
+      // The tracks with maximum number of majority hits is taken as the
+      // 'real' track; others are as 'duplicated'
+      bool isDuplicated = (itrack != 0);
+      // the track is associated to the same particle
       if (isDuplicated) {
         m_nTotalDuplicateTracks++;
       }
       // Fill the duplication rate
       m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                  isDuplicated);
-    }
-    // Counting number of total trajectories
-    m_nTotalTracks++;
-  }
-
-  // Use truth-based classification for duplication rate plots
-  if (!m_cfg.duplicatedPredictor) {
-    // Loop over all truth-matched reco tracks for duplication rate plots
-    for (auto& [particleId, matchedTracks] : matched) {
-      // Sort the reco tracks matched to this particle by the number of majority
-      // hits
-      std::sort(matchedTracks.begin(), matchedTracks.end(),
-                [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-                  return lhs.first > rhs.first;
-                });
-      for (std::size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
-        const auto& [nMajorityHits, fittedParameters] =
-            matchedTracks.at(itrack);
-        // The tracks with maximum number of majority hits is taken as the
-        // 'real' track; others are as 'duplicated'
-        bool isDuplicated = (itrack != 0);
-        // the track is associated to the same particle
-        if (isDuplicated) {
-          m_nTotalDuplicateTracks++;
-        }
-        // Fill the duplication rate
-        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                   isDuplicated);
-      }
     }
   }
 
