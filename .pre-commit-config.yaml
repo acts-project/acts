@@ -3,7 +3,8 @@ repos:
     rev: 'v14.0.0'
     hooks:
       - id: clang-format
-        files: ".*\\.(cpp|hpp|ipp|cu|cuh)$"
+        types_or: [file]
+        files: \.(cpp|hpp|ipp|cu|cuh)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
