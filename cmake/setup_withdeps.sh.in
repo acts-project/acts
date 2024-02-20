@@ -45,8 +45,12 @@ if [[ -d "@DD4hep_DIR@" ]]; then
   . @DD4hep_DIR@/bin/thisdd4hep.sh
 fi
 if [[ -d "@podio_DIR@" ]]; then
-  export ROOT_INCLUDE_PATH=@podio_DIR@/include:"${ROOT_INCLUDE_PATH}"
+  export LD_LIBRARY_PATH="@podio_DIR@/lib:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="@podio_DIR@/lib:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="@podio_DIR@/include:${ROOT_INCLUDE_PATH}"
 fi
 if [[ -d "@EDM4HEP_DIR@" ]]; then
-  export ROOT_INCLUDE_PATH=@EDM4HEP_DIR@/include:"${ROOT_INCLUDE_PATH}"
+  export LD_LIBRARY_PATH="@EDM4HEP_DIR@/lib:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="@EDM4HEP_DIR@/lib:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="@EDM4HEP_DIR@/include:${ROOT_INCLUDE_PATH}"
 fi
