@@ -188,6 +188,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       if (it == hitsPerParticle.end()) {
         ACTS_DEBUG("Could not find sim hits for "
                    << particle.particleId() << " in event " << ctx.eventNumber);
+        m_numberOfHits.push_back(0);
       } else {
         // get the number of hits
         m_numberOfHits.push_back(it->second);
