@@ -56,12 +56,9 @@ namespace Acts {
 ///   from tracksAtVertex if not compatible.
 /// 5. Add vertex to vertexCollection
 /// 6. Repeat until no seedTracks are left or max. number of vertices found
-///
-////////////////////////////////////////////////////////////
-///
-/// @tparam vfitter_t Vertex fitter type
-template <typename vfitter_t>
 class IterativeVertexFinder final : public IVertexFinder {
+  using VertexFitter = FullBilloirVertexFitter;
+
  public:
   /// Configuration struct
   struct Config {
@@ -71,14 +68,14 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(vfitter_t fitter, std::shared_ptr<IVertexFinder> sfinder,
+    Config(VertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
            ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
 
     /// Vertex fitter
-    vfitter_t vertexFitter;
+    VertexFitter vertexFitter;
 
     /// Track linearizer
     TrackLinearizer trackLinearizer;

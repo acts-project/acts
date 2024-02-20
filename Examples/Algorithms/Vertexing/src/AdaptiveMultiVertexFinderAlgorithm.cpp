@@ -80,11 +80,10 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
 }
 
 auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
-    -> Acts::AdaptiveMultiVertexFinder<Fitter> {
+    -> Acts::AdaptiveMultiVertexFinder {
   std::shared_ptr<const Acts::IVertexFinder> seedFinder;
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
-    using Seeder = Acts::TrackDensityVertexFinder<Acts::GaussianTrackDensity>;
-    using Finder = Acts::AdaptiveMultiVertexFinder<Fitter>;
+    using Seeder = Acts::TrackDensityVertexFinder;
     Acts::GaussianTrackDensity::Config trkDensityCfg;
     trkDensityCfg.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
@@ -101,7 +100,6 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
 
     // Set up vertex seeder and finder
     using Seeder = Acts::AdaptiveGridDensityVertexFinder;
-    using Finder = Acts::AdaptiveMultiVertexFinder<Fitter>;
     Seeder::Config seederConfig(trkDensity);
     seederConfig.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
@@ -109,8 +107,6 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   } else {
     throw std::invalid_argument("Unknown seed finder");
   }
-
-  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter>;
 
   // Set up deterministic annealing with user-defined temperatures
   Acts::AnnealingUtility::Config annealingConfig;
@@ -128,8 +124,8 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, m_ipEstimator,
-                              m_cfg.bField);
+  Acts::AdaptiveMultiVertexFinder::Config finderConfig(
+      std::move(fitter), seedFinder, m_ipEstimator, m_cfg.bField);
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
@@ -155,7 +151,8 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
       .template connect<&Acts::InputTrack::extractParameters>();
 
   // Instantiate the finder
-  return Finder(std::move(finderConfig), logger().clone());
+  return Acts::AdaptiveMultiVertexFinder(std::move(finderConfig),
+                                         logger().clone());
 }
 
 ActsExamples::ProcessCode
