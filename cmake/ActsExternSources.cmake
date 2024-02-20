@@ -35,7 +35,7 @@ set( ACTS_GEOMODEL_SOURCE
 mark_as_advanced( ACTS_GEOMODEL_SOURCE )
 
 set( ACTS_NLOHMANNJSON_SOURCE
-   "URL;https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz;URL_HASH;SHA1=2074caa675f8097d9b03c0f4976ffc3410170937" CACHE STRING "Source to take nlohmann_json from")
+   "URL;https://github.com/nlohmann/json/archive/refs/tags/v3.11.2.tar.gz;URL_HASH;SHA1=1b0701dc7fdc068aad8ce68fc3e019a038232437" CACHE STRING "Source to take nlohmann_json from")
 mark_as_advanced( ACTS_NLOHMANN_JSON_SOURCE )
 
 string(REPLACE "." "_" _acts_boost_recommended_version_ ${_acts_boost_recommended_version})
