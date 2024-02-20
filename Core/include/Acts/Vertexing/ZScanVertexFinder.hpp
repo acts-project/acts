@@ -14,9 +14,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <unordered_map>
@@ -30,11 +30,7 @@ namespace Acts {
 /// 2. If no constraint is given, returns (0,0, z0_mode) as vertex position
 /// 3. If vertex constraint is given with x=x_constr and y=y_constr,
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
-template <typename vfitter_t>
-class ZScanVertexFinder {
-  static_assert(VertexFitterConcept<vfitter_t>,
-                "Vertex fitter does not fulfill vertex fitter concept.");
-
+class ZScanVertexFinder final : public IVertexFinder {
  public:
   /// Configuration struct
   struct Config {
@@ -99,7 +95,18 @@ class ZScanVertexFinder {
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& /*state*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {
+    // Nothing to do here
+  }
 
  private:
   Config m_cfg;
