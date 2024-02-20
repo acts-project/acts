@@ -496,8 +496,10 @@ class Gx2Fitter {
           } else if (trackStateProxy.calibratedSize() == 2) {
             collector<2>(trackStateProxy, result, *actorLogger);
           } else {
-            ACTS_WARNING(
-                "Only measurements of 1 and 2 dimensions are implemented yet.");
+            ACTS_WARNING("Found measurement with "
+                         << trackStateProxy.calibratedSize()
+                         << " dimensions. Only measurements of 1 and 2 "
+                            "dimensions are implemented yet.");
           }
 
           // Set the measurement type flag
