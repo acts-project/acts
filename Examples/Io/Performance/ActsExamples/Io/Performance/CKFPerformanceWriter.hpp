@@ -75,10 +75,6 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
 
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;
-
-    /// function to check if neural network predicted track label is
-    /// duplicate
-    std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };
 
   /// Construct from configuration and log level.
