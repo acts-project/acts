@@ -2,7 +2,6 @@ target_sources(
   ActsCore
   PRIVATE
     AdaptiveGridTrackDensity.cpp
-    KalmanVertexTrackUpdater.cpp
     KalmanVertexUpdater.cpp
     FsmwMode1dFinder.cpp
     VertexingError.cpp
