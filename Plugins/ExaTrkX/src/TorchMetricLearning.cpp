@@ -33,8 +33,8 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
     ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
     m_device = torch::Device(torch::kCUDA, cfg.deviceID);
   } else {
-    ACTS_ERROR("GPU device " << cfg.deviceID
-                             << " not available. Using CPU instead.");
+    ACTS_WARNING("GPU device " << cfg.deviceID
+                               << " not available. Using CPU instead.");
   }
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
