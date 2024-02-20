@@ -124,25 +124,6 @@ struct TrackAtVertex {
   bool isLinearized = false;
 };
 
-struct TrackAtVertexRef {
-  BoundTrackParameters& fittedParams;
-  double& chi2Track;
-  double& ndf;
-  double& vertexCompatibility;
-  double& trackWeight;
-  LinearizedTrack& linearizedState;
-  bool isLinearized;
-
-  TrackAtVertexRef(TrackAtVertex& track)
-      : fittedParams(track.fittedParams),
-        chi2Track(track.chi2Track),
-        ndf(track.ndf),
-        vertexCompatibility(track.vertexCompatibility),
-        trackWeight(track.trackWeight),
-        linearizedState(track.linearizedState),
-        isLinearized(track.isLinearized) {}
-};
-
 }  // namespace Acts
 
 template <>
