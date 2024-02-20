@@ -346,11 +346,11 @@ fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
     run_histcmp \
-        $outdir/performance_truth_tracking.root \
-        $refdir/performance_truth_tracking.root \
-        "Truth tracking" \
-        truth_tracking \
-        -c CI/physmon/truth_tracking.yml
+        $outdir/performance_gx2f.root \
+        $refdir/performance_gx2f.root \
+        "Truth tracking (GX2F)" \
+        gx2f \
+        -c CI/physmon/gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
