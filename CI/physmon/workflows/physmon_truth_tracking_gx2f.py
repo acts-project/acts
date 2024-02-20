@@ -19,10 +19,10 @@ with tempfile.TemporaryDirectory() as temp:
 
     tp = Path(temp)
     runTruthTrackingGx2f(
-        setup.trackingGeometry,
-        setup.field,
-        # setup.digiConfig,
+        trackingGeometry=setup.trackingGeometry,
+        field=setup.field,
         outputDir=tp,
+        digiConfigFile=setup.digiConfig,
         s=s,
     )
 
