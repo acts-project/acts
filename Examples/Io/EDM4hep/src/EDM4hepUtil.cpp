@@ -49,7 +49,7 @@ ActsFatras::Particle EDM4hepUtil::readParticle(
                             from.getMomentum()[2]};
   to.setDirection(momentum.normalized());
 
-  to.setAbsoluteMomentum(momentum.norm() * Acts::UnitConstants::GeV);
+  to.setAbsoluteMomentum(momentum.norm() * 1_GeV);
 
   return to;
 }
