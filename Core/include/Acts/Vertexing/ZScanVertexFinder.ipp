@@ -95,5 +95,5 @@ inline auto Acts::ZScanVertexFinder::find(
                  vertexingOptions.constraint.time());
   Vertex vtxResult = Vertex(output);
 
-  return std::vector<Vertex>{vtxResult};
+  return {vtxResult};
 }

@@ -166,7 +166,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t>::doSeeding(
   ACTS_DEBUG("Found " << seedVector.size() << " seeds");
 
   if (seedVector.empty()) {
-    return std::optional<Vertex>();
+    return std::nullopt;
   }
   Vertex seedVertex = seedVector.back();
 

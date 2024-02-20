@@ -172,7 +172,7 @@ auto Acts::IterativeVertexFinder<vfitter_t>::getVertexSeed(
   ACTS_DEBUG("Found " << seedVector.size() << " seeds");
 
   if (seedVector.empty()) {
-    return std::optional<Vertex>();
+    return std::nullopt;
   }
   const Vertex& seedVertex = seedVector.back();
 
