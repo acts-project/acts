@@ -13,10 +13,10 @@
 
 namespace Acts {
 
-auto AdaptiveMultiVertexFinder::find(const std::vector<InputTrack>& allTracks,
-                                     const VertexingOptions& vertexingOptions,
-                                     IVertexFinder::State& anyState) const
-    -> Result<std::vector<Vertex>> {
+Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
+    const std::vector<InputTrack>& allTracks,
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& anyState) const {
   if (allTracks.empty()) {
     ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
@@ -180,9 +180,9 @@ auto AdaptiveMultiVertexFinder::doSeeding(
   return seedVertex;
 }
 
-auto AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
+void AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
     Vertex& currentConstraint, bool useVertexConstraintInFit,
-    Vertex& seedVertex) const -> void {
+    Vertex& seedVertex) const {
   if (useVertexConstraintInFit) {
     if (!m_cfg.useSeedConstraint) {
       // Set seed vertex constraint to old constraint before seeding
@@ -199,9 +199,9 @@ auto AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
   }
 }
 
-auto AdaptiveMultiVertexFinder::getIPSignificance(
+Acts::Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
     const InputTrack& track, const Vertex& vtx,
-    const VertexingOptions& vertexingOptions) const -> Result<double> {
+    const VertexingOptions& vertexingOptions) const {
   // TODO: In original implementation the covariance of the given vertex is set
   // to zero. I did the same here now, but consider removing this and just
   // passing the vtx object to the estimator without changing its covariance.
@@ -238,10 +238,10 @@ auto AdaptiveMultiVertexFinder::getIPSignificance(
   return significance;
 }
 
-auto AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
+Acts::Result<void> AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
     const std::vector<InputTrack>& tracks, Vertex& vtx,
     VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const -> Result<void> {
+    const VertexingOptions& vertexingOptions) const {
   for (const auto& trk : tracks) {
     auto params = m_cfg.extractParameters(trk);
     auto pos = params.position(vertexingOptions.geoContext);
@@ -267,11 +267,11 @@ auto AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
   return {};
 }
 
-auto AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
+Acts::Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
     const Vertex& currentConstraint, VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const -> Result<bool> {
+    const VertexingOptions& vertexingOptions) const {
   // Recover from cases where no compatible tracks to vertex
   // candidate were found
   // TODO: This is for now how it's done in athena... this look a bit
@@ -321,11 +321,11 @@ auto AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
   return Result<bool>::success(true);
 }
 
-auto AdaptiveMultiVertexFinder::canPrepareVertexForFit(
+Acts::Result<bool> AdaptiveMultiVertexFinder::canPrepareVertexForFit(
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
     const Vertex& currentConstraint, VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const -> Result<bool> {
+    const VertexingOptions& vertexingOptions) const {
   // Add vertex info to fitter state
   fitterState.vtxInfoMap[&vtx] =
       VertexInfo(currentConstraint, vtx.fullPosition());
@@ -348,10 +348,9 @@ auto AdaptiveMultiVertexFinder::canPrepareVertexForFit(
   return Result<bool>::success(*resRec);
 }
 
-auto AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
+std::pair<int, bool> AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
     Vertex& vtx, const std::vector<InputTrack>& seedTracks,
-    VertexFitterState& fitterState, bool useVertexConstraintInFit) const
-    -> std::pair<int, bool> {
+    VertexFitterState& fitterState, bool useVertexConstraintInFit) const {
   bool isGoodVertex = false;
   int nCompatibleTracks = 0;
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
@@ -410,10 +409,10 @@ auto AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
   }
 }
 
-auto AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
+bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
     Vertex& vtx, std::vector<InputTrack>& seedTracks,
     VertexFitterState& fitterState, std::vector<InputTrack>& removedSeedTracks,
-    const GeometryContext& geoCtx) const -> bool {
+    const GeometryContext& geoCtx) const {
   // Try to find the track with highest compatibility
   double maxCompatibility = 0;
 
@@ -465,9 +464,9 @@ auto AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
   return true;
 }
 
-auto AdaptiveMultiVertexFinder::keepNewVertex(
+bool AdaptiveMultiVertexFinder::keepNewVertex(
     Vertex& vtx, const std::vector<Vertex*>& allVertices,
-    VertexFitterState& fitterState) const -> bool {
+    VertexFitterState& fitterState) const {
   double contamination = 0.;
   double contaminationNum = 0;
   double contaminationDeNom = 0;
@@ -492,8 +491,8 @@ auto AdaptiveMultiVertexFinder::keepNewVertex(
   return true;
 }
 
-auto AdaptiveMultiVertexFinder::isMergedVertex(
-    const Vertex& vtx, const std::vector<Vertex*>& allVertices) const -> bool {
+bool AdaptiveMultiVertexFinder::isMergedVertex(
+    const Vertex& vtx, const std::vector<Vertex*>& allVertices) const {
   const Vector4& candidatePos = vtx.fullPosition();
   const SquareMatrix4& candidateCov = vtx.fullCovariance();
 
@@ -545,10 +544,10 @@ auto AdaptiveMultiVertexFinder::isMergedVertex(
   return false;
 }
 
-auto AdaptiveMultiVertexFinder::deleteLastVertex(
+Acts::Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
     Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
     std::vector<Vertex*>& allVerticesPtr, VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const -> Result<void> {
+    const VertexingOptions& vertexingOptions) const {
   allVertices.pop_back();
   allVerticesPtr.pop_back();
 
@@ -584,9 +583,10 @@ auto AdaptiveMultiVertexFinder::deleteLastVertex(
   return {};
 }
 
-auto AdaptiveMultiVertexFinder::getVertexOutputList(
+Acts::Result<std::vector<Acts::Vertex>>
+AdaptiveMultiVertexFinder::getVertexOutputList(
     const std::vector<Vertex*>& allVerticesPtr,
-    VertexFitterState& fitterState) const -> Result<std::vector<Vertex>> {
+    VertexFitterState& fitterState) const {
   std::vector<Vertex> outputVec;
   for (auto vtx : allVerticesPtr) {
     auto& outVtx = *vtx;

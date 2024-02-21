@@ -8,10 +8,11 @@
 
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 
-auto Acts::AdaptiveGridDensityVertexFinder::find(
+Acts::Result<std::vector<Acts::Vertex>>
+Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+    IVertexFinder::State& anyState) const {
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -94,8 +95,8 @@ auto Acts::AdaptiveGridDensityVertexFinder::find(
   return std::vector<Vertex>{returnVertex};
 }
 
-auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
-    const BoundTrackParameters& trk) const -> bool {
+bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];

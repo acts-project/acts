@@ -18,10 +18,10 @@ Acts::ZScanVertexFinder::ZScanVertexFinder(const Config& cfg,
   }
 }
 
-auto Acts::ZScanVertexFinder::find(const std::vector<InputTrack>& trackVector,
-                                   const VertexingOptions& vertexingOptions,
-                                   IVertexFinder::State& /*state*/) const
-    -> Result<std::vector<Vertex>> {
+Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
+    const std::vector<InputTrack>& trackVector,
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& /*state*/) const {
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated

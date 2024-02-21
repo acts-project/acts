@@ -8,10 +8,10 @@
 
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 
-auto Acts::TrackDensityVertexFinder::find(
+Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {
+    IVertexFinder::State& /*state*/) const {
   GaussianTrackDensity::State densityState(trackVector.size());
 
   // Calculate z seed position
