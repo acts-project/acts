@@ -95,11 +95,5 @@ inline auto Acts::ZScanVertexFinder::find(
                  vertexingOptions.constraint.time());
   Vertex vtxResult = Vertex(output);
 
-  // Vector to be filled with one single vertex
-  std::vector<Vertex> vertexCollection;
-
-  // Add vertex to vertexCollection
-  vertexCollection.push_back(vtxResult);
-
-  return vertexCollection;
+  return std::vector<Vertex>{vtxResult};
 }
