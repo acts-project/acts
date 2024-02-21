@@ -74,14 +74,7 @@ class ZScanVertexFinder final : public IVertexFinder {
   /// @param logger Logging instance
   ZScanVertexFinder(const Config& cfg,
                     std::unique_ptr<const Logger> logger =
-                        getDefaultLogger("ZScanVertexFinder", Logging::INFO))
-      : m_cfg(cfg), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "ZScanVertexFinder: "
-          "No track parameter extractor provided.");
-    }
-  }
+                        getDefaultLogger("ZScanVertexFinder", Logging::INFO));
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,
@@ -119,5 +112,3 @@ class ZScanVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "ZScanVertexFinder.ipp"
