@@ -1,15 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline auto Acts::TrackDensityVertexFinder::find(
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+
+Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {
+    IVertexFinder::State& /*state*/) const {
   GaussianTrackDensity::State densityState(trackVector.size());
 
   // Calculate z seed position

@@ -6,10 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline auto Acts::AdaptiveGridDensityVertexFinder::find(
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
+
+Acts::Result<std::vector<Acts::Vertex>>
+Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+    IVertexFinder::State& anyState) const {
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -92,8 +95,8 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
   return std::vector<Vertex>{returnVertex};
 }
 
-inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
-    const BoundTrackParameters& trk) const -> bool {
+bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
