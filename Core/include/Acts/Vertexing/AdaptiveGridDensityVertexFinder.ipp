@@ -45,7 +45,7 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
     // No tracks passed selection
     // Return empty seed
     // (Note: Upstream finder should check for this break condition)
-    return {};
+    return std::vector<Vertex>{};
   }
 
   double z = 0;
@@ -89,7 +89,7 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  return {returnVertex};
+  return std::vector<Vertex>{returnVertex};
 }
 
 inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
