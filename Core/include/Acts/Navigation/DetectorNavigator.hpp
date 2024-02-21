@@ -154,6 +154,11 @@ class DetectorNavigator {
       ACTS_ERROR("panic: no detector");
       return;
     }
+
+    fillNavigationState(state, stepper, nState);
+    if (nState.currentVolume == nullptr) {
+      initializeTarget(state, stepper);
+    }
   }
 
   /// @brief Navigator pre step call
@@ -170,6 +175,8 @@ class DetectorNavigator {
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
+
+    ACTS_VERBOSE("DIRECTION: " << state.options.direction);
 
     auto& nState = state.navigation;
     fillNavigationState(state, stepper, nState);
@@ -196,9 +203,32 @@ class DetectorNavigator {
 
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
 
+      /// Seems like updating into nullptr is consistent with the
+      /// EndOfWorldReached check. Looks like a hack, though. So
+      /// it should be revisited.
+      if (nState.currentVolume == nullptr) {
+        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                    << "no volume after Portal update");
+        nState.navigationBreak = true;
+        return;
+      }
+
       initializeTarget(state, stepper);
     }
 
+    for (; nState.surfaceCandidateIndex != nState.surfaceCandidates.size();
+         ++nState.surfaceCandidateIndex) {
+      const auto& c = nState.surfaceCandidate();
+      const auto& surface =
+          (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
+
+      ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                        << "surface candidate ("
+                        << surface.center(state.geoContext).transpose()
+                        << ")");
+
+    }
+    nState.surfaceCandidateIndex = 0;
     for (; nState.surfaceCandidateIndex != nState.surfaceCandidates.size();
          ++nState.surfaceCandidateIndex) {
       // Screen output how much is left to try
@@ -215,17 +245,25 @@ class DetectorNavigator {
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                   << "next surface candidate will be "
-                                  << surface.geometryId());
+                                  << surface.geometryId() << " ("
+                                  << surface.center(state.geoContext).transpose()
+                                  << ")");
       // Estimate the surface status
       bool boundaryCheck = c.boundaryCheck.isEnabled();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, BoundaryCheck(boundaryCheck),
           state.options.surfaceTolerance, logger());
+
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper)
+                   << "surface status is " << surfaceStatus);
+
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper)
-                     << "surface reachable, step size updated to "
+                     << "surface " << surface.center(state.geoContext).transpose() 
+                     << " is reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
         break;
       }
@@ -404,9 +442,12 @@ class DetectorNavigator {
       return;
     }
 
+    /// Here we get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
 
-    // Sort properly the surface candidates
+    ACTS_VERBOSE("SURFACE CANDIDATES: " << nState.surfaceCandidates.size());
+
+    /// Sort properly the surface candidates
     auto& nCandidates = nState.surfaceCandidates;
     std::sort(nCandidates.begin(), nCandidates.end(),
               [&](const auto& a, const auto& b) {
@@ -415,7 +456,7 @@ class DetectorNavigator {
                 ActsScalar pathToB = b.objectIntersection.pathLength();
                 return pathToA < pathToB;
               });
-    // Set the surface candidate
+    /// Set the surface candidate
     nState.surfaceCandidateIndex = 0;
   }
 
@@ -423,7 +464,7 @@ class DetectorNavigator {
   void fillNavigationState(propagator_state_t& state, const stepper_t& stepper,
                            NavigationState& nState) const {
     nState.position = stepper.position(state.stepping);
-    nState.direction = stepper.direction(state.stepping);
+    nState.direction = state.options.direction*stepper.direction(state.stepping);
     nState.absMomentum = stepper.absoluteMomentum(state.stepping);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {

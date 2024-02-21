@@ -140,8 +140,8 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
   const ActsScalar cosTheta = z;
   const ActsScalar sinTheta = std::sqrt(1 - z * z);
   const ActsScalar invSinTheta = 1. / sinTheta;
-  const ActsScalar cosPhi = x * invSinTheta;
-  const ActsScalar sinPhi = y * invSinTheta;
+  const ActsScalar cosPhi = (sinTheta != 0) ? x * invSinTheta : 0;
+  const ActsScalar sinPhi = (sinTheta != 0) ? y * invSinTheta : 0;
 
   return {cosPhi, sinPhi, cosTheta, sinTheta};
 }
