@@ -1,12 +1,46 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline auto Acts::IterativeVertexFinder::find(
+#include "Acts/Vertexing/IterativeVertexFinder.hpp"
+
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
+
+Acts::IterativeVertexFinder::IterativeVertexFinder(
+    Config cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No function to extract parameters "
+        "provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No track linearizer provided.");
+  }
+
+  if (!m_cfg.seedFinder) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No seed finder provided.");
+  }
+
+  if (!m_cfg.field) {
+    throw std::invalid_argument(
+        "IterativeVertexFinder: "
+        "No magnetic field provider provided.");
+  }
+}
+
+auto Acts::IterativeVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
@@ -153,7 +187,7 @@ inline auto Acts::IterativeVertexFinder::find(
   return vertexCollection;
 }
 
-inline auto Acts::IterativeVertexFinder::getVertexSeed(
+auto Acts::IterativeVertexFinder::getVertexSeed(
     State& state, const std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions) const
     -> Result<std::optional<Vertex>> {
@@ -201,7 +235,7 @@ inline void Acts::IterativeVertexFinder::removeTracks(
   }
 }
 
-inline Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
+Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
     const BoundTrackParameters& params, const Vertex& vertex,
     const Surface& perigeeSurface, const VertexingOptions& vertexingOptions,
     State& state) const {
@@ -236,8 +270,7 @@ inline Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
   return compatibility;
 }
 
-inline Acts::Result<void>
-Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
+Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     Vertex& vertex, std::vector<InputTrack>& tracksToFit,
     std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions, State& state) const {
@@ -328,7 +361,7 @@ Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
   return {};
 }
 
-inline Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
+Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
     const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
     std::vector<InputTrack>& tracksToFitSplitVertexOut,
@@ -400,8 +433,7 @@ inline Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
   return {};
 }
 
-inline Acts::Result<bool>
-Acts::IterativeVertexFinder::reassignTracksToNewVertex(
+Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
     std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
@@ -533,7 +565,7 @@ Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   return Result<bool>::success(isGoodVertex);
 }
 
-inline int Acts::IterativeVertexFinder::countSignificantTracks(
+int Acts::IterativeVertexFinder::countSignificantTracks(
     const Vertex& vtx) const {
   return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
                        [this](const TrackAtVertex& trk) {

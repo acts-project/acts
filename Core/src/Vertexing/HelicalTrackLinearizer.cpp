@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
-inline Acts::Result<Acts::LinearizedTrack>
+Acts::Result<Acts::LinearizedTrack>
 Acts::HelicalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,

@@ -122,5 +122,3 @@ class NumericalTrackLinearizer {
 };
 
 }  // namespace Acts
-
-#include "NumericalTrackLinearizer.ipp"
