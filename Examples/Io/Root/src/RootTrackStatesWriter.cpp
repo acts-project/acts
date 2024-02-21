@@ -108,6 +108,7 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
     m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
     m_outputTree->Branch("t_eQOP", &m_t_eQOP);
     m_outputTree->Branch("t_eT", &m_t_eT);
+    m_outputTree->Branch("particle_ids", &m_particleId);
 
     m_outputTree->Branch("nStates", &m_nStates);
     m_outputTree->Branch("nMeasurements", &m_nMeasurements);
@@ -360,6 +361,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
       float truthTHETA = nan;
       float truthQOP = nan;
 
+      m_thisState_particleIds.clear();
+
       if (!state.hasUncalibratedSourceLink()) {
         m_t_x.push_back(nan);
         m_t_y.push_back(nan);
@@ -399,6 +402,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
           const auto p =
               simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
           truthQOP = truthQ / p;
+
+          // extract particle ids contributed to this track state
+          for (auto const& [key, simHitIdx] : indices) {
+            const auto& simHit = *simHits.nth(simHitIdx);
+            m_thisState_particleIds.push_back(simHit.particleId().value());
+          }
         }
 
         // fill the truth hit info
@@ -643,6 +652,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
           m_dim_hit.push_back(state.calibratedSize());
         }
       }
+      m_particleId.push_back(std::move(m_thisState_particleIds));
     }
 
     // fill the variables for one track to tree
@@ -662,6 +672,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     m_t_eTHETA.clear();
     m_t_eQOP.clear();
     m_t_eT.clear();
+    m_particleId.clear();
 
     m_volumeID.clear();
     m_layerID.clear();
