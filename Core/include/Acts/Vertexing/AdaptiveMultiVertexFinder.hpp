@@ -382,5 +382,3 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFinder.ipp"

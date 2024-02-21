@@ -127,5 +127,3 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "AdaptiveGridDensityVertexFinder.ipp"
