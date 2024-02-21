@@ -95,8 +95,8 @@ class EDM4hepReader final : public IReader {
                        std::size_t& maxGen) const;
 
   static void setSubParticleIds(
-      SimParticleContainer::sequence_type::iterator begin,
-      SimParticleContainer::sequence_type::iterator end);
+      const SimParticleContainer::sequence_type::iterator& begin,
+      const SimParticleContainer::sequence_type::iterator& end);
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
@@ -121,7 +121,7 @@ class EDM4hepReader final : public IReader {
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
   void graphviz(std::ostream& os,
-                const SimParticleContainer::sequence_type& container,
+                const SimParticleContainer::sequence_type& particles,
                 const ParentRelationship& parents) const;
 };
 

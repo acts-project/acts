@@ -494,8 +494,8 @@ void EDM4hepReader::processChildren(
 }
 
 void EDM4hepReader::setSubParticleIds(
-    SimParticleContainer::sequence_type::iterator begin,
-    SimParticleContainer::sequence_type::iterator end) {
+    const SimParticleContainer::sequence_type::iterator& begin,
+    const SimParticleContainer::sequence_type::iterator& end) {
   std::vector<std::size_t> numByGeneration;
   numByGeneration.reserve(10);
 
