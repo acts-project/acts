@@ -38,40 +38,42 @@ inline auto Acts::AdaptiveMultiVertexFinder::find(
   std::vector<InputTrack> removedSeedTracks;
   while (!seedTracks.empty() && iteration < m_cfg.maxIterations &&
          (m_cfg.addSingleTrackVertices || seedTracks.size() >= 2)) {
-    // Tracks that are used for searching compatible tracks
-    // near a vertex candidate
-    std::vector<InputTrack> searchTracks;
-    if (m_cfg.doRealMultiVertex) {
-      searchTracks = origTracks;
-    } else {
-      searchTracks = seedTracks;
-    }
     Vertex currentConstraint = vertexingOptions.constraint;
+
     // Retrieve seed vertex from all remaining seedTracks
     auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
                                 seedFinderState, removedSeedTracks);
     if (!seedResult.ok()) {
       return seedResult.error();
     }
-    allVertices.push_back(std::make_unique<Vertex>(*seedResult));
+    const auto& seedOptional = *seedResult;
 
-    Vertex& vtxCandidate = *allVertices.back();
-    allVerticesPtr.push_back(&vtxCandidate);
-
-    ACTS_DEBUG("Position of vertex candidate after seeding: "
-               << vtxCandidate.fullPosition().transpose());
-    if (vtxCandidate.position().z() ==
-        vertexingOptions.constraint.position().z()) {
+    if (!seedOptional.has_value()) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
-      allVertices.pop_back();
-      allVerticesPtr.pop_back();
       break;
     }
+    const auto& seedVertex = seedOptional.value();
+
+    ACTS_DEBUG("Position of vertex candidate after seeding: "
+               << seedVertex.fullPosition().transpose());
+
+    allVertices.push_back(std::make_unique<Vertex>(seedVertex));
+    Vertex& vtxCandidate = *allVertices.back();
+    allVerticesPtr.push_back(&vtxCandidate);
 
     // Clear the seed track collection that has been removed in last iteration
     // now after seed finding is done
     removedSeedTracks.clear();
+
+    // Tracks that are used for searching compatible tracks near a vertex
+    // candidate
+    std::vector<InputTrack> searchTracks;
+    if (m_cfg.doRealMultiVertex) {
+      searchTracks = origTracks;
+    } else {
+      searchTracks = seedTracks;
+    }
 
     auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
                                              vtxCandidate, currentConstraint,
@@ -144,7 +146,8 @@ inline auto Acts::AdaptiveMultiVertexFinder::doSeeding(
     const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& seedFinderState,
-    const std::vector<InputTrack>& removedSeedTracks) const -> Result<Vertex> {
+    const std::vector<InputTrack>& removedSeedTracks) const
+    -> Result<std::optional<Vertex>> {
   VertexingOptions seedOptions = vertexingOptions;
   seedOptions.constraint = currentConstraint;
 
@@ -157,8 +160,15 @@ inline auto Acts::AdaptiveMultiVertexFinder::doSeeding(
   if (!seedResult.ok()) {
     return seedResult.error();
   }
+  const auto& seedVector = *seedResult;
 
-  Vertex seedVertex = (*seedResult).back();
+  ACTS_DEBUG("Found " << seedVector.size() << " seeds");
+
+  if (seedVector.empty()) {
+    return std::nullopt;
+  }
+  Vertex seedVertex = seedVector.back();
+
   // Update constraints according to seed vertex
   setConstraintAfterSeeding(currentConstraint, seedOptions.useConstraintInFit,
                             seedVertex);
