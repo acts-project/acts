@@ -89,14 +89,14 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::AdaptiveMultiVertexFinder<Fitter> makeVertexFinder() const;
+  Acts::AdaptiveMultiVertexFinder makeVertexFinder() const;
 
   Config m_cfg;
 
   std::shared_ptr<const Acts::BasePropagator> m_propagator;
   Acts::ImpactPointEstimator m_ipEstimator;
   Linearizer m_linearizer;
-  Acts::AdaptiveMultiVertexFinder<Fitter> m_vertexFinder;
+  Acts::AdaptiveMultiVertexFinder m_vertexFinder;
 
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};

@@ -1,17 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename track_density_t>
-auto Acts::TrackDensityVertexFinder<track_density_t>::find(
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+
+Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& /*state*/) const -> Result<std::vector<Vertex>> {
-  typename track_density_t::State densityState(trackVector.size());
+    IVertexFinder::State& /*state*/) const {
+  GaussianTrackDensity::State densityState(trackVector.size());
 
   // Calculate z seed position
   std::pair<double, double> zAndWidth =
@@ -36,7 +37,5 @@ auto Acts::TrackDensityVertexFinder<track_density_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }

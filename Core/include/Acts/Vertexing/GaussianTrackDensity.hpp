@@ -22,7 +22,6 @@ namespace Acts {
 /// their d0 and z0 perigee parameters (mean value) and covariance
 /// matrices (determining the width of the function)
 class GaussianTrackDensity {
-  // @TODO: Remove template
  public:
   /// @brief Struct to store information for a single track
   struct TrackEntry {
@@ -202,5 +201,3 @@ class GaussianTrackDensity {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/GaussianTrackDensity.ipp"

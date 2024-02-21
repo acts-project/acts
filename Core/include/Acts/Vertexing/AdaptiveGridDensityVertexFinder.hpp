@@ -31,18 +31,16 @@ namespace Acts {
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
 class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
-  using GridDensity = AdaptiveGridTrackDensity;
-
  public:
-  using DensityMap = typename GridDensity::DensityMap;
+  using DensityMap = AdaptiveGridTrackDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
     ///@param gDensity The grid density
-    Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
+    Config(const AdaptiveGridTrackDensity& gDensity) : gridDensity(gDensity) {}
 
     // The grid density object
-    GridDensity gridDensity;
+    AdaptiveGridTrackDensity gridDensity;
 
     // Cache the main grid and the density contributions (trackGrid and z-bin)
     // for every single track.
@@ -129,5 +127,3 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "AdaptiveGridDensityVertexFinder.ipp"
