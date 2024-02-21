@@ -412,8 +412,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params &&
-              trk.trackWeight > m_cfg.minTrkWeight) {
+          if (origTrack.parameters() == params) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
