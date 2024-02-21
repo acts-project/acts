@@ -107,6 +107,10 @@ class VertexPerformanceWriter final
   /// The event number
   std::uint32_t m_eventNr{0};
 
+  // Truth vertex ID
+  std::vector<int> m_vertexPrimary;
+  std::vector<int> m_vertexSecondary;
+
   // True 4D vertex position
   std::vector<double> m_truthX;
   std::vector<double> m_truthY;

@@ -96,6 +96,9 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     // I/O parameters.
     m_outputTree->Branch("event_nr", &m_eventNr);
 
+    m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
+    m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
+
     // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
@@ -545,6 +548,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Save reconstructed/true vertex position only in the first iteration
           // to avoid duplicates
           if (count == 0) {
+            m_vertexPrimary.push_back(vtxId.vertexPrimary());
+            m_vertexSecondary.push_back(vtxId.vertexSecondary());
+
             m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
             m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
             m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
