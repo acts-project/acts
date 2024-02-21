@@ -190,7 +190,7 @@ jobs:
           && pip3 install histcmp==0.6.5 spyral-cli==1.1.1 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
-          && source build/setup_withdeps.sh
+          && source build/this_acts_withdeps.sh
           && echo "::endgroup::"
           && CI/physmon/phys_perf_mon.sh all physmon
           && cat physmon/summary.md >> $GITHUB_STEP_SUMMARY

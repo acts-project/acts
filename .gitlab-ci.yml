@@ -128,8 +128,7 @@ test_exatrkx_python:
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - source /usr/local/bin/thisroot.sh
-    - source build/python/setup.sh
+    - source build/this_acts_withdeps.sh
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
