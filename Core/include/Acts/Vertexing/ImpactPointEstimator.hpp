@@ -48,11 +48,6 @@ class ImpactPointEstimator {
  public:
   /// State struct
   struct State {
-    /// @brief The state constructor
-    ///
-    /// @param fieldCacheIn The magnetic field cache
-    State(MagneticFieldProvider::Cache fieldCacheIn)
-        : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
     MagneticFieldProvider::Cache fieldCache;
   };
