@@ -181,7 +181,7 @@ inline auto Acts::IterativeVertexFinder::getVertexSeed(
   return seedVertex;
 }
 
-void Acts::IterativeVertexFinder::removeTracks(
+inline void Acts::IterativeVertexFinder::removeTracks(
     const std::vector<InputTrack>& tracksToRemove,
     std::vector<InputTrack>& seedTracks) const {
   for (const auto& trk : tracksToRemove) {
