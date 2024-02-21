@@ -134,7 +134,8 @@ class ImpactPointEstimator {
   /// @note Confusingly, a *smaller* compatibility means that a track is *more*
   /// compatible.
   ///
-  /// @note If @p vertexPos has dimension 3 we only consider spatial dimensions; if is 4, we
+  /// @tparam nDim Number of dimensions used to compute compatibility
+  /// @note If @p nDim = 3 we only consider spatial dimensions; if nDim = 4, we
   ///       also consider time. Other values are not allowed.
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest
@@ -142,9 +143,14 @@ class ImpactPointEstimator {
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
+  template <int nDim>
   Result<double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-      const ActsDynamicVector& vertexPos) const;
+      const ActsVector<nDim>& vertexPos) const {
+    static_assert(nDim == 3 || nDim == 4,
+                  "Only 3D and 4D vertex positions allowed");
+    return getVertexCompatibility(gctx, trkParams, {vertexPos.data(), nDim});
+  }
 
   /// @brief Calculate the distance between a track and a vertex by finding the
   /// corresponding 3D PCA. Returns also the momentum direction at the 3D PCA.
@@ -154,17 +160,19 @@ class ImpactPointEstimator {
   /// tracks we use the Newton method.
   ///
   /// @tparam nDim Number of dimensions used to compute compatibility
-  /// @note If nDim = 3 we only consider spatial dimensions; if nDim = 4, we
-  /// also consider time. Other values are not allowed.
+  /// @note If @p nDim = 3 we only consider spatial dimensions; if nDim = 4, we
+  ///       also consider time. Other values are not allowed.
   /// @param gctx Geometry context
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
   /// @param state The state object
-  template <unsigned int nDim>
+  template <int nDim>
   Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
   getDistanceAndMomentum(const GeometryContext& gctx,
                          const BoundTrackParameters& trkParams,
                          const ActsVector<nDim>& vtxPos, State& state) const {
+    static_assert(nDim == 3 || nDim == 4,
+                  "Only 3D and 4D vertex positions allowed");
     auto res =
         getDistanceAndMomentum(gctx, trkParams, {vtxPos.data(), nDim}, state);
     if (!res.ok()) {
@@ -224,6 +232,10 @@ class ImpactPointEstimator {
   Result<std::pair<Acts::Vector4, Acts::Vector3>> getDistanceAndMomentum(
       const GeometryContext& gctx, const BoundTrackParameters& trkParams,
       Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const;
+
+  Result<double> getVertexCompatibility(
+      const GeometryContext& gctx, const BoundTrackParameters* trkParams,
+      Eigen::Map<const ActsDynamicVector> vertexPos) const;
 
   /// Configuration object
   const Config m_cfg;

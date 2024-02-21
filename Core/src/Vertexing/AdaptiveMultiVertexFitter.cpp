@@ -236,16 +236,17 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     }
     // Set compatibility with current vertex
     Acts::Result<double> compatibilityResult(0.);
-    ActsDynamicVector vertexPos;
     if (m_cfg.useTime) {
-      vertexPos = vtxInfo.oldPosition;
+      compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
+          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+          vtxInfo.oldPosition);
     } else {
-      vertexPos = VectorHelpers::position(vtxInfo.oldPosition);
+      Acts::Vector3 vertexPosOnly =
+          VectorHelpers::position(vtxInfo.oldPosition);
+      compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
+          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
+          vertexPosOnly);
     }
-
-    compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
-        vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-        vertexPos);
 
     if (!compatibilityResult.ok()) {
       return compatibilityResult.error();

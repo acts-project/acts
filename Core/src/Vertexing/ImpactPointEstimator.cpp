@@ -16,95 +16,8 @@
 
 namespace Acts {
 
-Result<double> ImpactPointEstimator::calculateDistance(
-    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    const Vector3& vtxPos, State& state) const {
-  auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
-
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  // Return distance
-  return res.value().first.norm();
-}
-
-Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
-    const BoundTrackParameters& trkParams, const Vector3& vtxPos,
-    State& state) const {
-  auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
-
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  // Vector pointing from vertex to 3D PCA
-  Vector3 deltaR = res.value().first;
-
-  // Get corresponding unit vector
-  deltaR.normalize();
-
-  // Momentum direction at vtxPos
-  Vector3 momDir = res.value().second;
-
-  // To understand why deltaR and momDir are not orthogonal, let us look at the
-  // x-y-plane. Since we computed the 3D PCA, the 2D distance between the vertex
-  // and the PCA is not necessarily minimal (see Fig. 4.2 in the reference). As
-  // a consequence, the momentum and the vector connecting the vertex and the
-  // PCA are not orthogonal to each other.
-  Vector3 orthogonalDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
-
-  // Vector perpendicular to momDir and orthogonalDeltaR
-  Vector3 perpDir = momDir.cross(orthogonalDeltaR);
-
-  // Cartesian coordinate system with:
-  // -) origin at the vertex position
-  // -) z-axis in momentum direction
-  // -) x-axis approximately in direction of the 3D PCA (slight deviations
-  // because it was modified to make if orthogonal to momDir)
-  // -) y-axis is calculated to be orthogonal to x- and z-axis
-  // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
-  // row.
-  Transform3 coordinateSystem;
-  // First three columns correspond to coordinate system axes
-  coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
-  coordinateSystem.matrix().block<3, 1>(0, 1) = perpDir;
-  coordinateSystem.matrix().block<3, 1>(0, 2) = momDir;
-  // Fourth column corresponds to origin of the coordinate system
-  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
-
-  // Surface with normal vector in direction of the z axis of coordinateSystem
-  std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(coordinateSystem);
-
-  auto intersection =
-      planeSurface
-          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryCheck(false))
-          .closest();
-
-  // Create propagator options
-  PropagatorOptions<> pOptions(gctx, mctx);
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
-
-  // Propagate to the surface; intersection corresponds to an estimate of the 3D
-  // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
-  auto result =
-      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
-  if (result.ok()) {
-    return *result;
-  } else {
-    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
-    ACTS_DEBUG(
-        "The plane surface to which we tried to propagate has its origin at\n"
-        << vtxPos);
-    return result.error();
-  }
-}
 namespace {
-template <unsigned int nDim, typename vector_t>
+template <int nDim, typename vector_t>
 Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
                                           vector_t vertexPos) {
@@ -240,16 +153,15 @@ Result<double> performNewtonOptimization(
 }
 
 // Note: always return Vector4, we'll chop off the last component if needed
-template <unsigned int nDim>
+template <int nDim, typename vector_t>
 Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    Eigen::Map<const ActsDynamicVector> vtxPosDyn,
-    const ImpactPointEstimator::Config& cfg, ImpactPointEstimator::State& state,
-    const Logger& logger) {
+    vector_t vtxPos, const ImpactPointEstimator::Config& cfg,
+    ImpactPointEstimator::State& state, const Logger& logger) {
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
-  Eigen::Map<const ActsVector<nDim>> vtxPos{vtxPosDyn.data()};
+  // Eigen::Map<const ActsVector<nDim>> vtxPos{vtxPosDyn.data()};
 
   // Reference point R
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
@@ -382,9 +294,99 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
 
 }  // namespace
 
+Result<double> ImpactPointEstimator::calculateDistance(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
+  auto res = getDistanceAndMomentumImpl<3>(gctx, trkParams, vtxPos, m_cfg,
+                                           state, *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Return distance
+  return res.value().first.norm();
+}
+
+Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+    State& state) const {
+  auto res = getDistanceAndMomentumImpl<3>(gctx, trkParams, vtxPos, m_cfg,
+                                           state, *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Vector pointing from vertex to 3D PCA
+  Vector3 deltaR = res.value().first.head<3>();
+
+  // Get corresponding unit vector
+  deltaR.normalize();
+
+  // Momentum direction at vtxPos
+  Vector3 momDir = res.value().second;
+
+  // To understand why deltaR and momDir are not orthogonal, let us look at the
+  // x-y-plane. Since we computed the 3D PCA, the 2D distance between the vertex
+  // and the PCA is not necessarily minimal (see Fig. 4.2 in the reference). As
+  // a consequence, the momentum and the vector connecting the vertex and the
+  // PCA are not orthogonal to each other.
+  Vector3 orthogonalDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
+
+  // Vector perpendicular to momDir and orthogonalDeltaR
+  Vector3 perpDir = momDir.cross(orthogonalDeltaR);
+
+  // Cartesian coordinate system with:
+  // -) origin at the vertex position
+  // -) z-axis in momentum direction
+  // -) x-axis approximately in direction of the 3D PCA (slight deviations
+  // because it was modified to make if orthogonal to momDir)
+  // -) y-axis is calculated to be orthogonal to x- and z-axis
+  // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
+  // row.
+  Transform3 coordinateSystem;
+  // First three columns correspond to coordinate system axes
+  coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
+  coordinateSystem.matrix().block<3, 1>(0, 1) = perpDir;
+  coordinateSystem.matrix().block<3, 1>(0, 2) = momDir;
+  // Fourth column corresponds to origin of the coordinate system
+  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
+
+  // Surface with normal vector in direction of the z axis of coordinateSystem
+  std::shared_ptr<PlaneSurface> planeSurface =
+      Surface::makeShared<PlaneSurface>(coordinateSystem);
+
+  auto intersection =
+      planeSurface
+          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
+                      BoundaryCheck(false))
+          .closest();
+
+  // Create propagator options
+  PropagatorOptions<> pOptions(gctx, mctx);
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+
+  // Propagate to the surface; intersection corresponds to an estimate of the 3D
+  // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
+  auto result =
+      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
+  if (result.ok()) {
+    return *result;
+  } else {
+    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
+    ACTS_DEBUG(
+        "The plane surface to which we tried to propagate has its origin at\n"
+        << vtxPos);
+    return result.error();
+  }
+}
+
 Result<double> ImpactPointEstimator::getVertexCompatibility(
     const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-    const ActsDynamicVector& vertexPos) const {
+    Eigen::Map<const ActsDynamicVector> vertexPos) const {
   if (vertexPos.size() == 3) {
     return getVertexCompatibilityImpl<3>(gctx, trkParams,
                                          vertexPos.template head<3>());
@@ -401,11 +403,11 @@ ImpactPointEstimator::getDistanceAndMomentum(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
     Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
   if (vtxPos.size() == 3) {
-    return getDistanceAndMomentumImpl<3>(gctx, trkParams, vtxPos, m_cfg, state,
-                                         *m_logger);
+    return getDistanceAndMomentumImpl<3>(
+        gctx, trkParams, vtxPos.template head<3>(), m_cfg, state, *m_logger);
   } else if (vtxPos.size() == 4) {
-    return getDistanceAndMomentumImpl<4>(gctx, trkParams, vtxPos, m_cfg, state,
-                                         *m_logger);
+    return getDistanceAndMomentumImpl<4>(
+        gctx, trkParams, vtxPos.template head<4>(), m_cfg, state, *m_logger);
   } else {
     return VertexingError::InvalidInput;
   }
