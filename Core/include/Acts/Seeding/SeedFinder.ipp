@@ -65,6 +65,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   // Get the middle space point candidates
   const auto& middleSPs = grid.at(middleSPsIdx);
+  // Return if somehow there are no middle sp candidates
+  if (middleSPs.size() == 0) {
+    return;
+  }
 
   // neighbours
   // clear previous results
@@ -81,6 +85,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   for (const std::size_t idx : topSPsIdx) {
     state.topNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+  }
+
+  // Return if there are no bottom or top candidates
+  if (state.bottomNeighbours.size() == 0 || state.topNeighbours.size() == 0) {
+    return;
   }
 
   for (const auto& spM : middleSPs) {

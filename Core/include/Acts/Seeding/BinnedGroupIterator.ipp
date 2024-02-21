@@ -84,7 +84,11 @@ void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
   /// Iterate on the grid till we find a not-empty bin
   /// We start from the current bin configuration and move forward
   std::size_t dimCollection = (*m_gridItr).size();
-  while (dimCollection == 0ul && ++m_gridItr != m_gridItrEnd) {
+  bool passesMask = m_gridItr != m_gridItrEnd
+                        ? m_group->mask().at(m_gridItr.globalBinIndex())
+                        : false;
+  while ((dimCollection == 0ul || !passesMask) && ++m_gridItr != m_gridItrEnd) {
     dimCollection = (*m_gridItr).size();
+    passesMask = m_group->mask().at(m_gridItr.globalBinIndex());
   }
 }
