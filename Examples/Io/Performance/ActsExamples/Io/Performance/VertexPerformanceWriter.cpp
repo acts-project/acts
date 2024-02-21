@@ -741,6 +741,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // fill the variables
   m_outputTree->Fill();
 
+  m_vertexPrimary.clear();
+  m_vertexSecondary.clear();
   m_truthX.clear();
   m_truthY.clear();
   m_truthZ.clear();
