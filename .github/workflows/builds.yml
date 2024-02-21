@@ -63,7 +63,6 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
@@ -139,12 +138,6 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
-      - name: Examples
-        shell: bash
-        run: >
-          source build/this_acts_withdeps.sh
-          && ./CI/run_examples.sh
-
       - name: Python level tests
         shell: bash
         env:
@@ -194,7 +187,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.6.3 spyral-cli==1.1.1 matplotlib
+          && pip3 install histcmp==0.6.5 spyral-cli==1.1.1 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source build/setup_withdeps.sh
@@ -411,7 +404,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF

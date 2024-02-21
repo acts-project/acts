@@ -43,8 +43,6 @@ struct ImpactParametersAndSigma {
 /// A description of the underlying mathematics can be found here:
 /// https://github.com/acts-project/acts/pull/2506
 /// TODO: Upload reference at a better place
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
  public:
   /// State struct
@@ -64,20 +62,20 @@ class ImpactPointEstimator {
     /// @param bIn The magnetic field
     /// @param prop The propagator
     Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-           std::shared_ptr<const propagator_t> prop)
+           std::shared_ptr<const BasePropagator> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
     /// @brief Config constructor without B field -> uses NullBField
     /// provided)
     ///
     /// @param prop The propagator
-    Config(std::shared_ptr<propagator_t> prop)
+    Config(std::shared_ptr<const BasePropagator> prop)
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     /// Magnetic field
     std::shared_ptr<const MagneticFieldProvider> bField;
     /// Propagator
-    std::shared_ptr<const propagator_t> propagator;
+    std::shared_ptr<const BasePropagator> propagator;
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
     /// Desired precision of deltaPhi in Newton method
@@ -99,6 +97,9 @@ class ImpactPointEstimator {
   /// @param other Impact point estimator to be cloned
   ImpactPointEstimator(const ImpactPointEstimator& other)
       : m_cfg(other.m_cfg), m_logger(other.logger().clone()) {}
+
+  /// Move constructor for impact point estimator
+  ImpactPointEstimator(ImpactPointEstimator&&) = default;
 
   /// @brief Calculates 3D distance between a track and a vertex
   ///
