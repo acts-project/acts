@@ -108,7 +108,7 @@ def runTruthTrackingGx2f(
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDir / "trackstates_fitter.root"),
+            filePath=str(outputDir / "trackstates_gx2f.root"),
         )
     )
 
@@ -118,7 +118,7 @@ def runTruthTrackingGx2f(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "tracksummary_fitter.root"),
+            filePath=str(outputDir / "tracksummary_gx2f.root"),
             writeGx2fSpecific=True,
         )
     )
@@ -140,7 +140,7 @@ def runTruthTrackingGx2f(
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "performance_track_fitter.root"),
+            filePath=str(outputDir / "performance_gx2f.root"),
         )
     )
 
