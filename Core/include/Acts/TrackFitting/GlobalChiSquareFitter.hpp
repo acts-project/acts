@@ -393,6 +393,11 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
+      if (state.navigation.navigationBreak) {
+        ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
+        result.finished = true;
+      }
+
       if (result.finished) {
         return;
       }
@@ -400,8 +405,8 @@ class Gx2Fitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      //      std::string direction = state.stepping.navDir.toString();
-      if (surface != nullptr) {
+      if (surface != nullptr &&
+          surface->associatedDetectorElement() != nullptr) {
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
