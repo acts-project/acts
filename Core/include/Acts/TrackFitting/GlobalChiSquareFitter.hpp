@@ -405,7 +405,6 @@ class Gx2Fitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr &&
           surface->associatedDetectorElement() != nullptr) {
         ++result.surfaceCount;
