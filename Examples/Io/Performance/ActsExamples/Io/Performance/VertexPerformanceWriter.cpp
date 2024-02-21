@@ -19,6 +19,7 @@
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -396,7 +397,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Containers for storing truth particles and truth vertices that contribute
     // to the reconstructed vertex
     SimParticleContainer particleAtVtx;
-    std::vector<int> contributingTruthVertices;
+    std::vector<SimBarcode> contributingTruthVertices;
 
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
@@ -412,14 +413,14 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params &&
-              trk.trackWeight > m_cfg.minTrkWeight) {
+          if (origTrack.parameters() == params) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
             particleAtVtx.insert(particle);
-            int priVtxId = particle.particleId().vertexPrimary();
-            contributingTruthVertices.push_back(priVtxId);
+            SimBarcode vtxId =
+                particle.particleId().setParticle(0).setSubParticle(0);
+            contributingTruthVertices.push_back(vtxId);
             foundMatchingParams = true;
             break;
           }
@@ -430,18 +431,19 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }  // end loop tracksAtVtx
     } else {
       for (const auto& particle : allTruthParticles) {
-        int priVtxId = particle.particleId().vertexPrimary();
-        contributingTruthVertices.push_back(priVtxId);
+        SimBarcode vtxId =
+            particle.particleId().setParticle(0).setSubParticle(0);
+        contributingTruthVertices.push_back(vtxId);
       }
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<int, int> fmap;
-    for (int priVtxId : contributingTruthVertices) {
-      fmap[priVtxId]++;
+    std::map<SimBarcode, int> fmap;
+    for (const SimBarcode& vtxId : contributingTruthVertices) {
+      ++fmap[vtxId];
     }
     int maxOccurrence = -1;
-    int maxOccurrenceId = -1;
+    SimBarcode maxOccurrenceId = -1;
     for (auto it : fmap) {
       if (it.second > maxOccurrence) {
         maxOccurrenceId = it.first;
@@ -452,8 +454,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Count number of reconstructible tracks on truth vertex
     int nTracksOnTruthVertex = 0;
     for (const auto& particle : associatedTruthParticles) {
-      int priVtxId = particle.particleId().vertexPrimary();
-      if (priVtxId == maxOccurrenceId) {
+      SimBarcode vtxId = particle.particleId().setParticle(0).setSubParticle(0);
+      if (vtxId == maxOccurrenceId) {
         ++nTracksOnTruthVertex;
       }
     }
@@ -510,14 +512,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
-        int priVtxId = particle.particleId().vertexPrimary();
-        int secVtxId = particle.particleId().vertexSecondary();
+        SimBarcode vtxId =
+            particle.particleId().setParticle(0).setSubParticle(0);
 
-        if (secVtxId != 0) {
-          // truthparticle from secondary vtx
-          continue;
-        }
-        if (priVtxId == maxOccurrenceId) {
+        if (vtxId == maxOccurrenceId) {
           // Vertex found, fill variables
 
           // Helper function for computing the pull
