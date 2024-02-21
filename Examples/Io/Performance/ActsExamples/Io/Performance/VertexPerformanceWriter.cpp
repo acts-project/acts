@@ -413,7 +413,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         for (std::size_t i = 0; i < trackParameters.size(); ++i) {
           const auto& params = trackParameters[i].parameters();
 
-          if (origTrack.parameters() == params) {
+          if (origTrack.parameters() == params &&
+              trk.trackWeight > m_cfg.minTrkWeight) {
             // We expect that the i-th associated truth particle corresponds to
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
@@ -440,7 +441,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Find true vertex that contributes most to the reconstructed vertex
     std::map<SimBarcode, int> fmap;
     for (const SimBarcode& vtxId : contributingTruthVertices) {
-      ++fmap[vtxId];
+      fmap[vtxId]++;
     }
     int maxOccurrence = -1;
     SimBarcode maxOccurrenceId = -1;
