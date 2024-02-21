@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
@@ -21,6 +22,7 @@
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
 #include <functional>
 
@@ -175,14 +177,11 @@ class IterativeVertexFinder final : public IVertexFinder {
 
   /// @brief Method that calls seed finder to retrieve a vertex seed
   ///
-  /// @param state The state object
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  ///
-  /// @return Vertex seed
-  Result<std::optional<Vertex>> getVertexSeed(
-      State& state, const std::vector<InputTrack>& seedTracks,
-      const VertexingOptions& vertexingOptions) const;
+  Result<Vertex> getVertexSeed(State& state,
+                               const std::vector<InputTrack>& seedTracks,
+                               const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks
   ///

@@ -221,7 +221,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// from seed track collection in last iteration
   ///
   /// @return The seed vertex
-  Result<std::optional<Vertex>> doSeeding(
+  Result<Vertex> doSeeding(
       const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& seedFinderState,
