@@ -238,7 +238,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Radius is a signed distance between circleCenter and first sp, which is at
   // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
   int sign = a > 0 ? -1 : 1;
-  const ActsScalar R = sign * circleCenter.norm();
+  const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
       local2.z() /
       (2.f * R * std::asin(std::hypot(local2.x(), local2.y()) / 2.f * R));
@@ -273,7 +273,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  ActsScalar qOverPt = (UnitConstants::m) / (0.3 * bFieldInTesla * R);
+  ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
 
