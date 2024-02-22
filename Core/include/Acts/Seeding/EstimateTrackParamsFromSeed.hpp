@@ -235,9 +235,10 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
   ActsScalar b = 0.5 * (local2(1) + 1. / a * sumX21);
   circleCenter(1) = -1. / a * circleCenter(0) + b;
-  // Radius is distance between circleCenter and first sp, which is at (0, 0) in
-  // the new frame
-  const ActsScalar R = circleCenter.norm();
+  // Radius is a signed distance between circleCenter and first sp, which is at
+  // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
+  int sign = a > 0 ? -1 : 1;
+  const ActsScalar R = a * circleCenter.norm();
   ActsScalar invTanTheta =
       local2.z() /
       (2.f * R * std::asin(std::hypot(local2.x(), local2.y()) / 2.f * R));
