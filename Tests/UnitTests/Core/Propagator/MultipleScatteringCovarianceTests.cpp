@@ -79,9 +79,11 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
       Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, direction);
   auto startParameters = BoundTrackParameters(
       startSurface,
-      BoundVector{0_mm, 0_mm, VectorHelpers::phi(direction),
-                  VectorHelpers::theta(direction), qOverP, 0_ns},
-      BoundVector{1_um, 1_um, 1_mrad, 1_mrad, 1 / 1_MeV, 1_ps}
+      (BoundVector() << 0_mm, 0_mm, VectorHelpers::phi(direction),
+       VectorHelpers::theta(direction), qOverP, 0_ns)
+          .finished(),
+      (BoundVector() << 1_um, 1_um, 1_mrad, 1_mrad, 1 / 1_MeV, 1_ps)
+          .finished()
           .array()
           .square()
           .matrix()
