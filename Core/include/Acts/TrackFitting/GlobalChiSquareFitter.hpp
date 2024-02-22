@@ -680,8 +680,9 @@ class Gx2Fitter {
       // Test if this removes the FPE
       constexpr std::size_t ndf = 4;
       if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
-        ACTS_INFO("Not enough measurments. Require " << ndf + 1 << ", but only "
-                                         << gx2fResult.collectorResiduals.size() << " could be used.");
+        ACTS_INFO("Not enough measurments. Require "
+                  << ndf + 1 << ", but only "
+                  << gx2fResult.collectorResiduals.size() << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
