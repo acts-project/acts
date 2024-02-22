@@ -62,14 +62,13 @@ auto Acts::IterativeVertexFinder::find(
     if (!seedRes.ok()) {
       return seedRes.error();
     }
+    const auto& seedOptional = *seedRes;
 
-    const auto& seedVertex = *seedRes;
-
-    if (seedVertex.fullPosition()[eZ] ==
-        vertexingOptions.constraint.position().z()) {
+    if (!seedOptional.has_value()) {
       ACTS_DEBUG("No more seed found. Break and stop primary vertex finding.");
       break;
     }
+    const auto& seedVertex = *seedOptional;
 
     /// End seeding
     /// Now take only tracks compatible with current seed
@@ -190,7 +189,8 @@ auto Acts::IterativeVertexFinder::find(
 
 auto Acts::IterativeVertexFinder::getVertexSeed(
     State& state, const std::vector<InputTrack>& seedTracks,
-    const VertexingOptions& vertexingOptions) const -> Result<Vertex> {
+    const VertexingOptions& vertexingOptions) const
+    -> Result<std::optional<Vertex>> {
   auto finderState = m_cfg.seedFinder->makeState(state.magContext);
   auto res = m_cfg.seedFinder->find(seedTracks, vertexingOptions, finderState);
 
@@ -199,20 +199,14 @@ auto Acts::IterativeVertexFinder::getVertexSeed(
                << seedTracks.size());
     return VertexingError::SeedingError;
   }
+  const auto& seedVector = *res;
 
-  const auto& vertexCollection = *res;
+  ACTS_DEBUG("Found " << seedVector.size() << " seeds");
 
-  if (vertexCollection.empty()) {
-    ACTS_ERROR("Empty seed collection was returned. Number of input tracks: "
-               << seedTracks.size());
-    return VertexingError::SeedingError;
+  if (seedVector.empty()) {
+    return std::nullopt;
   }
-
-  ACTS_DEBUG("Found " << vertexCollection.size() << " seeds");
-
-  // retrieve the seed vertex as the last element in
-  // the seed vertexCollection
-  Vertex seedVertex = vertexCollection.back();
+  const Vertex& seedVertex = seedVector.back();
 
   ACTS_DEBUG("Use " << seedTracks.size() << " tracks for vertex seed finding.")
   ACTS_DEBUG(

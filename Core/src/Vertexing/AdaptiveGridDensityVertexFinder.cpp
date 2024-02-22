@@ -46,10 +46,9 @@ Acts::AdaptiveGridDensityVertexFinder::find(
 
   if (state.mainDensityMap.empty()) {
     // No tracks passed selection
-    // Return empty seed, i.e. vertex at constraint position
+    // Return empty seed
     // (Note: Upstream finder should check for this break condition)
-    std::vector<Vertex> seedVec{vertexingOptions.constraint};
-    return seedVec;
+    return std::vector<Vertex>{};
   }
 
   double z = 0;
@@ -93,9 +92,7 @@ Acts::AdaptiveGridDensityVertexFinder::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
 
 bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
