@@ -495,8 +495,10 @@ class Gx2Fitter {
           } else if (trackStateProxy.calibratedSize() == 2) {
             collector<2>(trackStateProxy, result, *actorLogger);
           } else {
-            ACTS_WARNING(
-                "Only measurements of 1 and 2 dimensions are implemented yet.");
+            ACTS_WARNING("Found measurement with "
+                         << trackStateProxy.calibratedSize()
+                         << " dimensions. Only measurements of 1 and 2 "
+                            "dimensions are implemented yet.");
           }
 
           // Set the measurement type flag
@@ -674,6 +676,24 @@ class Gx2Fitter {
                    << gx2fResult.collectorCovariances.size());
       ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
                    << gx2fResult.collectorProjectedJacobians.size());
+
+      // This check takes into account the evaluated dimensions of the
+      // measurements. To fit, we need at least NDF+1 measurements. However,
+      // we n-dimensional measurements count for n measurements, reducing the
+      // effective number of needed measurements.
+      // We might encounter the case, where we cannot use some (parts of a)
+      // measurements, maybe if we do not support that kind of measurement. This
+      // is also taken into account here.
+      // `ndf = 4` is choosen, since this a minimum that makes sense for us, but
+      // a more general approach is desired.
+      // TODO genernalize for n-dimensional fit
+      constexpr std::size_t ndf = 4;
+      if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
+        ACTS_INFO("Not enough measurements. Require "
+                  << ndf + 1 << ", but only "
+                  << gx2fResult.collectorResiduals.size() << " could be used.");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
 
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
