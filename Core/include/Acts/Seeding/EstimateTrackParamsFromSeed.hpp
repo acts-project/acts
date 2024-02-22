@@ -272,7 +272,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  ActsScalar qOverPt = rho * (UnitConstants::m) / (0.3 * bFieldInTesla);
+  ActsScalar qOverPt = (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
 
