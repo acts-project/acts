@@ -42,6 +42,14 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
   std::vector<InputTrack> removedSeedTracks;
   while (!seedTracks.empty() && iteration < m_cfg.maxIterations &&
          (m_cfg.addSingleTrackVertices || seedTracks.size() >= 2)) {
+    // Tracks that are used for searching compatible tracks near a vertex
+    // candidate
+    std::vector<InputTrack> searchTracks;
+    if (m_cfg.doRealMultiVertex) {
+      searchTracks = origTracks;
+    } else {
+      searchTracks = seedTracks;
+    }
     Vertex currentConstraint = vertexingOptions.constraint;
 
     // Retrieve seed vertex from all remaining seedTracks
@@ -69,15 +77,6 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
     // Clear the seed track collection that has been removed in last iteration
     // now after seed finding is done
     removedSeedTracks.clear();
-
-    // Tracks that are used for searching compatible tracks near a vertex
-    // candidate
-    std::vector<InputTrack> searchTracks;
-    if (m_cfg.doRealMultiVertex) {
-      searchTracks = origTracks;
-    } else {
-      searchTracks = seedTracks;
-    }
 
     auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
                                              vtxCandidate, currentConstraint,
