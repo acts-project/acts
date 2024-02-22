@@ -338,6 +338,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
     // Get the trackStates on the trajectory
     m_nParams = {0, 0, 0, 0};
 
+    // particle barcodes for a given track state (size depends on a type of
+    // digitization, for smeared digitization is not more than 1)
+    std::vector<double> m_thisState_particleIds;
+
     for (const auto& state : track.trackStatesReversed()) {
       const auto& surface = state.referenceSurface();
 
