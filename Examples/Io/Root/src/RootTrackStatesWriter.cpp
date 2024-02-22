@@ -365,7 +365,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
       float truthTHETA = nan;
       float truthQOP = nan;
 
-      m_thisState_particleIds.clear();
+      particleIds.clear();
 
       if (!state.hasUncalibratedSourceLink()) {
         m_t_x.push_back(nan);
