@@ -241,7 +241,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
       local2.z() /
-      (2.f * R * std::asin(std::hypot(local2.x(), local2.y()) / 2.f * R));
+      (2.f * R * std::asin(std::hypot(local2.x(), local2.y()) / (2.f * R)));
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
