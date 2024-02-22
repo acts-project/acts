@@ -677,10 +677,19 @@ class Gx2Fitter {
       ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
                    << gx2fResult.collectorProjectedJacobians.size());
 
-      // Test if this removes the FPE
+      // This check takes into account the evaluated dimensions of the
+      // measurements. To fit, we need at least NDF+1 measurements. However,
+      // we n-dimensional measurements count for n measurements, reducing the
+      // effective number of needed measurements.
+      // We might encounter the case, where we cannot use some (parts of a)
+      // measurements, maybe if we do not support that kind of measurement. This
+      // is also taken into account here.
+      // `ndf = 4` is choosen, since this a minimum that makes sense for us, but
+      // a more general approach is desired.
+      // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
       if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
-        ACTS_INFO("Not enough measurments. Require "
+        ACTS_INFO("Not enough measurements. Require "
                   << ndf + 1 << ", but only "
                   << gx2fResult.collectorResiduals.size() << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
