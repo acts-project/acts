@@ -656,7 +656,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
           m_dim_hit.push_back(state.calibratedSize());
         }
       }
-      m_particleId.push_back(std::move(m_thisState_particleIds));
+      m_particleId.push_back(std::move(particleIds));
     }
 
     // fill the variables for one track to tree
