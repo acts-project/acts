@@ -67,9 +67,9 @@ In order to build an `Acts::Detector` object from `Geant4` input, the following 
  * a conversion of `Geant4PhysVolume` objects into `Acts::Surface`  and `Acts::DetectorVolume` objects (see before)
  * a build sequence needs to be defined and the converted objects identified
 
- There are several helper methods and tools that can be used, many of them accessible through python bindings. One core component is the selection and assignment of surfaces to dedicated volume. This can be done using e.g. a KDT structure, this can be tested with:
+There are several helper methods and tools that can be used, many of them accessible through python bindings. One core component is the selection and assignment of surfaces to dedicated volume. This can be done using e.g. a KDT structure, this can be tested with:
 
- ```python
+```python
 # Create a KDTree from all surfaces binned in z and r
 surfacesKdt = acts.KdtSurfaces2D(buildContext, surfaces, [acts.Binning.z, acts.Binning.r])
 
@@ -78,6 +78,6 @@ qrange = acts.Range2D( [-580,580], [0,200])
 selected = surfacesKdt.surfaces(qrange)
 
 # Draw, inspect the surfaces
- ```
+```
 
 Selected surfaces can be put as a layer structure into a volume
