@@ -1,25 +1,25 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
+
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
-template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack>
-Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
-    linearizeTrack(const BoundTrackParameters& params, double linPointTime,
-                   const Surface& perigeeSurface,
-                   const Acts::GeometryContext& gctx,
-                   const Acts::MagneticFieldContext& mctx,
-                   State& /*state*/) const {
+Acts::NumericalTrackLinearizer::linearizeTrack(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+    const Acts::MagneticFieldContext& mctx,
+    MagneticFieldProvider::Cache& /*fieldCache*/) const {
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -42,13 +42,14 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
   if (!result.ok()) {
     return result.error();
   }
 
   // Extracting the Perigee representation of the track wrt the reference point
-  auto endParams = *result->endParameters;
+  auto endParams = *result;
   BoundVector perigeeParams = endParams.parameters();
 
   // Covariance and weight matrix at the PCA to the reference point
@@ -124,12 +125,12 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
     // Propagate to the new PCA and extract Perigee parameters
-    auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
-                                                 perigeeSurface, pOptions);
+    auto newResult = m_cfg.propagator->propagateToSurface(
+        wiggledCurvilinearParams, perigeeSurface, pOptions);
     if (!newResult.ok()) {
       return newResult.error();
     }
-    newPerigeeParams = (*newResult->endParameters).parameters();
+    newPerigeeParams = newResult->parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
     completeJacobian.array().col(i) =

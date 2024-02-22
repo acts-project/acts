@@ -380,9 +380,8 @@ void addOutput(Context& ctx) {
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
       inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
       fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-      duplicatedPredictor, truthMatchProbMin, doubleMatching,
-      writeMatchingDetails);
+      duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
+      doubleMatching, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
