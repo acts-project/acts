@@ -677,6 +677,14 @@ class Gx2Fitter {
       ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
                    << gx2fResult.collectorProjectedJacobians.size());
 
+      // Test if this removes the FPE
+      constexpr std::size_t ndf = 4;
+      if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
+        ACTS_INFO("Not enough measurments. Require " << ndf + 1 << ", but only "
+                                         << gx2fResult.collectorResiduals.size() << " could be used.");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
+
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
       bVector = BoundVector::Zero();
