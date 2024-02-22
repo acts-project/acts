@@ -410,7 +410,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
           // extract particle ids contributed to this track state
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
-            m_thisState_particleIds.push_back(simHit.particleId().value());
+            particleIds.push_back(simHit.particleId().value());
           }
         }
 
