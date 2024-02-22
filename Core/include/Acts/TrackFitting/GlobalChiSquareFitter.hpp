@@ -684,7 +684,7 @@ class Gx2Fitter {
       // We might encounter the case, where we cannot use some (parts of a)
       // measurements, maybe if we do not support that kind of measurement. This
       // is also taken into account here.
-      // `ndf = 4` is choosen, since this a minimum that makes sense for us, but
+      // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
       // a more general approach is desired.
       // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
