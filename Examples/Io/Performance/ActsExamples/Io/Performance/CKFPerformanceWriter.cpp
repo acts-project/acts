@@ -187,10 +187,19 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     }
 
     const auto& particleMatch = imatched->second;
-    const bool isFake = !particleMatch.particle.has_value();
+    const bool isFake = !particleMatch.isFake;
+    const bool isDuplicate = particleMatch.isDuplicate;
+
+    if (isDuplicate) {
+      m_nTotalDuplicateTracks++;
+    }
 
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+
+    // Fill the duplication rate
+    m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+                               isDuplicate);
 
     // Counting number of total trajectories
     m_nTotalTracks++;

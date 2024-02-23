@@ -24,6 +24,9 @@ struct TrackMatchEntry {
   /// Number of hits on the track that are associated to a particle
   /// Sorted by decreasing number of hits
   std::vector<ParticleHitCount> contributingParticles;
+
+  bool isDuplicate{};
+  bool isFake{};
 };
 
 struct ParticleMatchEntry {
