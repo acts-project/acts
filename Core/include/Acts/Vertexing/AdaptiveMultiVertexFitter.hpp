@@ -271,5 +271,3 @@ class AdaptiveMultiVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFitter.ipp"

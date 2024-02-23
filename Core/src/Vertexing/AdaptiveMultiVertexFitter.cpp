@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
     State& state, const VertexingOptions& vertexingOptions) const {
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
@@ -111,7 +113,7 @@ inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
   return {};
 }
 
-inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
     State& state, Vertex& newVertex,
     const VertexingOptions& vertexingOptions) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
@@ -184,12 +186,12 @@ inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
   return {};
 }
 
-inline bool Acts::AdaptiveMultiVertexFitter::isAlreadyInList(
+bool Acts::AdaptiveMultiVertexFitter::isAlreadyInList(
     Vertex* vtx, const std::vector<Vertex*>& vertices) const {
   return std::find(vertices.begin(), vertices.end(), vtx) != vertices.end();
 }
 
-inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
     State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
@@ -210,8 +212,7 @@ inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
   return {};
 }
 
-inline Acts::Result<void>
-Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
   VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
@@ -251,7 +252,7 @@ Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
   return {};
 }
 
-inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
+Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
     State& state, const VertexingOptions& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
@@ -302,7 +303,7 @@ inline Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
   return {};
 }
 
-inline std::vector<double>
+std::vector<double>
 Acts::AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
     State& state, const InputTrack& trk) const {
   // Compatibilities of trk wrt all of its associated vertices
@@ -326,8 +327,7 @@ Acts::AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
   return trkToVtxCompatibilities;
 }
 
-inline bool Acts::AdaptiveMultiVertexFitter::checkSmallShift(
-    State& state) const {
+bool Acts::AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
   for (auto* vtx : state.vertexCollection) {
     Vector3 diff =
         state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
@@ -340,8 +340,7 @@ inline bool Acts::AdaptiveMultiVertexFitter::checkSmallShift(
   return true;
 }
 
-inline void Acts::AdaptiveMultiVertexFitter::doVertexSmoothing(
-    State& state) const {
+void Acts::AdaptiveMultiVertexFitter::doVertexSmoothing(State& state) const {
   for (const auto vtx : state.vertexCollection) {
     for (const auto& trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
@@ -357,7 +356,7 @@ inline void Acts::AdaptiveMultiVertexFitter::doVertexSmoothing(
   }
 }
 
-inline void Acts::AdaptiveMultiVertexFitter::logDebugData(
+void Acts::AdaptiveMultiVertexFitter::logDebugData(
     const State& state, const Acts::GeometryContext& geoContext) const {
   ACTS_DEBUG("Encountered an error when fitting the following "
              << state.vertexCollection.size() << " vertices:");
