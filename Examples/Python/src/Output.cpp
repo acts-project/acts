@@ -377,10 +377,10 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
-      doubleMatching, writeMatchingDetails);
+      inputTracks, inputParticles, inputTrackParticleMatching,
+      inputParticleTrackMatching, filePath, fileMode, effPlotToolConfig,
+      fakeRatePlotToolConfig, duplicationPlotToolConfig,
+      trackSummaryPlotToolConfig, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
