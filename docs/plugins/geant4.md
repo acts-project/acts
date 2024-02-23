@@ -17,8 +17,8 @@ Possible implementations of this type of conversions can be seen in the correspo
 ```cpp
 // Get the box
 auto nameSelector =
-  std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-      std::vector<std::string>{"yl"}, false);
+    std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+        std::vector<std::string>{"yl"}, false);
 
 Acts::Geant4DetectorSurfaceFactory::Cache cache;
 Acts::Geant4DetectorSurfaceFactory::Options options;
