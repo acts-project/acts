@@ -516,22 +516,22 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
         // Use only z significance
         significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
       } else {
-        auto candidateZtPos =
+        Vector2 candidateZtPos =
             (Vector2() << candidatePos[eZ], candidatePos[eTime]).finished();
-        auto otherZtPos =
+        Vector2 otherZtPos =
             (Vector2() << otherPos[eZ], otherPos[eTime]).finished();
 
-        auto candidateZtCov =
+        SquareMatrix2 candidateZtCov =
             (SquareMatrix2() << candidateCov(eZ, eZ), candidateCov(eZ, eTime),
              candidateCov(eTime, eZ), candidateCov(eTime, eTime))
                 .finished();
-        auto otherZtCov =
+        SquareMatrix2 otherZtCov =
             (SquareMatrix2() << otherCov(eZ, eZ), otherCov(eZ, eTime),
              otherCov(eTime, eZ), otherCov(eTime, eTime))
                 .finished();
 
         // Use 2D (z,t) information for significance
-        const Vector3 deltaPos = otherZtPos - candidateZtPos;
+        const Vector2 deltaPos = otherZtPos - candidateZtPos;
         SquareMatrix2 sumCov = candidateZtCov + otherZtCov;
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
