@@ -8,6 +8,7 @@
 
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -505,17 +506,43 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
 
     double significance = 0;
     if (!m_cfg.do3dSplitting) {
-      const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
-      const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
-      if (sumVarZ <= 0) {
-        // TODO FIXME this should never happen
-        continue;
+      if (!m_cfg.useTime) {
+        const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
+        const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
+        if (sumVarZ <= 0) {
+          // TODO FIXME this should never happen
+          continue;
+        }
+        // Use only z significance
+        significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
+      } else {
+        auto candidateZtPos =
+            (Vector2() << candidatePos[eZ], candidatePos[eTime]).finished();
+        auto otherZtPos =
+            (Vector2() << otherPos[eZ], otherPos[eTime]).finished();
+
+        auto candidateZtCov =
+            (SquareMatrix2() << candidateCov(eZ, eZ), candidateCov(eZ, eTime),
+             candidateCov(eTime, eZ), candidateCov(eTime, eTime))
+                .finished();
+        auto otherZtCov =
+            (SquareMatrix2() << otherCov(eZ, eZ), otherCov(eZ, eTime),
+             otherCov(eTime, eZ), otherCov(eTime, eTime))
+                .finished();
+
+        // Use 2D (z,t) information for significance
+        const Vector3 deltaPos = otherZtPos - candidateZtPos;
+        SquareMatrix2 sumCov = candidateZtCov + otherZtCov;
+        auto sumCovInverse = safeInverse(sumCov);
+        if (!sumCovInverse) {
+          // TODO FIXME this should never happen
+          continue;
+        }
+        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       }
-      // Use only z significance
-      significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
     } else {
       if (m_cfg.useTime) {
-        // Use 4D information for significance
+        // Use 4D (x,y,z,t) information for significance
         const Vector4 deltaPos = otherPos - candidatePos;
         SquareMatrix4 sumCov = candidateCov + otherCov;
         auto sumCovInverse = safeInverse(sumCov);
@@ -525,7 +552,7 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       } else {
-        // Use 3D information for significance
+        // Use 3D (x,y,z) information for significance
         const Vector3 deltaPos = otherPos.head<3>() - candidatePos.head<3>();
         SquareMatrix3 sumCov =
             candidateCov.topLeftCorner<3, 3>() + otherCov.topLeftCorner<3, 3>();
