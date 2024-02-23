@@ -187,7 +187,7 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     }
 
     const auto& particleMatch = imatched->second;
-    const bool isFake = particleMatch.particle.has_value();
+    const bool isFake = !particleMatch.particle.has_value();
 
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
