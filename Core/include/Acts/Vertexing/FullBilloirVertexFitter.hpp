@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -47,16 +48,6 @@ namespace Acts {
 /// Author(s) Russo, F
 class FullBilloirVertexFitter {
  public:
-  struct State {
-    /// @brief The state constructor
-    ///
-    /// @param fieldCache The magnetic field cache
-    State(MagneticFieldProvider::Cache _fieldCache)
-        : fieldCache(std::move(_fieldCache)) {}
-
-    MagneticFieldProvider::Cache fieldCache;
-  };
-
   struct Config {
     /// Maximum number of iterations in fitter
     int maxIterations = 5;
@@ -100,7 +91,7 @@ class FullBilloirVertexFitter {
   /// @return Fitted vertex
   Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
                      const VertexingOptions& vertexingOptions,
-                     State& state) const;
+                     MagneticFieldProvider::Cache& fieldCache) const;
 
  private:
   /// Configuration object
@@ -114,5 +105,3 @@ class FullBilloirVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "FullBilloirVertexFitter.ipp"

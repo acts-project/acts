@@ -1883,7 +1883,9 @@ def addVertexFitting(
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
+            inputTracks=tracks,
             inputParticles=selectedParticles,
+            inputMeasurementParticlesMap="measurement_particles_map",
             outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )

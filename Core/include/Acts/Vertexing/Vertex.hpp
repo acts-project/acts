@@ -114,5 +114,3 @@ class Vertex {
 };
 
 }  // namespace Acts
-
-#include "Vertex.ipp"
