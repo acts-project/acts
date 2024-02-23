@@ -48,6 +48,7 @@ if [[ -d "@podio_DIR@" ]]; then
   export LD_LIBRARY_PATH="@podio_DIR@/lib:${LD_LIBRARY_PATH}"
   export DYLD_LIBRARY_PATH="@podio_DIR@/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@podio_DIR@/include:${ROOT_INCLUDE_PATH}"
+  export PYTHONPATH="@podio_DIR@/python:${PYTHONPATH}"
 fi
 if [[ -d "@EDM4HEP_DIR@" ]]; then
   export LD_LIBRARY_PATH="@EDM4HEP_DIR@/lib:${LD_LIBRARY_PATH}"
