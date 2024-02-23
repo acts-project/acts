@@ -1451,8 +1451,8 @@ def addTrackWriters(
             s.addWriter(
                 acts.examples.TrackFitterPerformanceWriter(
                     level=acts.logging.INFO,
-                    inputParticles="truth_seeds_selected",
                     inputTracks=tracks,
+                    inputParticles="truth_seeds_selected",
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(
                         outputDirRoot / f"performance_track_fitter_{name}.root"
