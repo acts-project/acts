@@ -95,11 +95,6 @@ extra_histograms:
     nbins: 100
     min: 0.0
     max: 1.2
-  - expression: df["nRecoVtx"] / df["nVtxDetectorAcceptance"]
-    name: "recoOverAcc"
-    nbins: 100
-    min: 0.0
-    max: 1.2
   - expression: df["nRecoVtx"] / df["nVtxReconstructable"]
     name: "recoOverRecble"
     nbins: 100
