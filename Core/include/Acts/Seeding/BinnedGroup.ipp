@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -46,7 +47,11 @@ BinnedGroup<grid_t>::BinnedGroup(
       m_bins(std::move(navigation)) {
   // Check the elements in the mask corresponds to all the global bins in the
   // grid so that we can check if a global bin is masked
-  assert(m_mask.size() == m_grid.size(true));
+  if (m_mask.size() != m_grid.size(true)) {
+    throw std::invalid_argument(
+        "Provided mask does not match the grid. The number of entries must "
+        "correspond to the number of global bins in the grid.");
+  }
 
   /// If navigation is not defined for all axes, then we default that to a
   /// std::iota from 1ul
