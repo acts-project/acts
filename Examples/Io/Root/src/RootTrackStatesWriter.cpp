@@ -108,7 +108,6 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
     m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
     m_outputTree->Branch("t_eQOP", &m_t_eQOP);
     m_outputTree->Branch("t_eT", &m_t_eT);
-      
     m_outputTree->Branch("particle_ids", &m_particleId);
 
     m_outputTree->Branch("nStates", &m_nStates);
