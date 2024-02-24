@@ -58,10 +58,8 @@ using MagneticField = Acts::ConstantBField;
 using StraightPropagator = Acts::Propagator<StraightLineStepper>;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper>;
-using Estimator =
-    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-using StraightLineEstimator =
-    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, StraightPropagator>;
+using Estimator = Acts::ImpactPointEstimator;
+using StraightLineEstimator = Acts::ImpactPointEstimator;
 
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
@@ -218,7 +216,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   // Vertex position and vertex object
   Vector4 vtxPos(vx0, vy0, vz0, vt0);
-  Vertex<BoundTrackParameters> vtx(vtxPos, makeVertexCovariance(), {});
+  Vertex vtx(vtxPos, makeVertexCovariance(), {});
 
   // Perigee surface at vertex position
   auto vtxPerigeeSurface =
@@ -466,7 +464,7 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   trk_par[eBoundQOverP] = 1_e / 10_GeV;
 
   Vector4 ip_pos{0., 0., 0., 0.};
-  Vertex<BoundTrackParameters> ip_vtx(ip_pos, makeVertexCovariance(), {});
+  Vertex ip_vtx(ip_pos, makeVertexCovariance(), {});
 
   // Form the bound track parameters at the ip
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(ip_pos.head<3>());
@@ -525,7 +523,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   BoundTrackParameters track(perigeeSurface, par,
                              makeBoundParametersCovariance(),
                              ParticleHypothesis::pionLike(std::abs(q)));
-  Vertex<BoundTrackParameters> myConstraint(vtxPos, makeVertexCovariance(), {});
+  Vertex myConstraint(vtxPos, makeVertexCovariance(), {});
 
   // check that computed impact parameters are meaningful
   ImpactParametersAndSigma output =
