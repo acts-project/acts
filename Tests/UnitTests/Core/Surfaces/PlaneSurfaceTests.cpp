@@ -271,14 +271,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-    RotationMatrix3 rotation = RotationMatrix3::Identity();
-    double rotationAngle = M_PI_2;
-    Vector3 xPos(cos(rotationAngle), 0., -sin(rotationAngle));
-    Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(sin(rotationAngle), 0., cos(rotationAngle));
-    rotation.col(0) = xPos;
-    rotation.col(1) = yPos;
-    rotation.col(2) = zPos;
+  RotationMatrix3 rotation = RotationMatrix3::Identity();
+  double rotationAngle = M_PI_2;
+  Vector3 xPos(cos(rotationAngle), 0., -sin(rotationAngle));
+  Vector3 yPos(0., 1., 0.);
+  Vector3 zPos(sin(rotationAngle), 0., cos(rotationAngle));
+  rotation.col(0) = xPos;
+  rotation.col(1) = yPos;
+  rotation.col(2) = zPos;
 
   auto pTransform = Transform3(translation * rotation);
   auto planeSurfaceObject =
