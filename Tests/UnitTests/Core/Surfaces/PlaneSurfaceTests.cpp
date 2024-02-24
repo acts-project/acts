@@ -271,22 +271,32 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3(translation);
+    RotationMatrix3 rotation = RotationMatrix3::Identity();
+    double rotationAngle = M_PI_2;
+    Vector3 xPos(cos(rotationAngle), 0., -sin(rotationAngle));
+    Vector3 yPos(0., 1., 0.);
+    Vector3 zPos(sin(rotationAngle), 0., cos(rotationAngle));
+    rotation.col(0) = xPos;
+    rotation.col(1) = yPos;
+    rotation.col(2) = zPos;
+
+  auto pTransform = Transform3(translation * rotation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
-  const auto& rotation = pTransform.rotation();
+
   // The local frame z axis
   const Vector3 localZAxis = rotation.col(2);
-  // Check the local z axis is aligned to global z axis
-  CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
+  // Check the local z axis is aligned to global x axis
+  CHECK_CLOSE_ABS(localZAxis, Vector3(1., 0., 0.), 1e-15);
 
   // Define the track (local) position and direction
   Vector2 localPosition{1, 2};
-  Vector3 momentum{0, 0, 1};
+  Vector3 momentum{1, 0, 0};
   Vector3 direction = momentum.normalized();
   // Get the global position
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
+
   // Construct a free parameters
   FreeVector parameters = FreeVector::Zero();
   parameters.head<3>() = globalPosition;
@@ -297,7 +307,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  expAlignToPath << 0, 0, 1, 2, -1, 0;
+  expAlignToPath << 1, 0, 0, 2, -1, -2;
+
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
 
@@ -322,9 +333,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
   AlignmentToPathMatrix expAlignToloc0;
-  expAlignToloc0 << -1, 0, 0, 0, 0, 2;
+  expAlignToloc0 << 0, 0, 1, 0, 0, 0;
   AlignmentToPathMatrix expAlignToloc1;
-  expAlignToloc1 << 0, -1, 0, 0, 0, -1;
+  expAlignToloc1 << 0, -1, 0, 0, 0, 0;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);

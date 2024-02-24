@@ -139,10 +139,10 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
   // can be turned into cosine/sine
   const ActsScalar cosTheta = z;
   const ActsScalar sinTheta = std::sqrt(1 - z * z);
+  assert(sinTheta != 0 &&
+         "VectorHelpers: Vector is parallel to the z-axis "
+         "which leads to division by zero");
   const ActsScalar invSinTheta = 1. / sinTheta;
-  assert(sinTheta > 1e-6 &&
-         "Direction vector is close to the z-axis which may cause numerical "
-         "instability");
   const ActsScalar cosPhi = x * invSinTheta;
   const ActsScalar sinPhi = y * invSinTheta;
 
