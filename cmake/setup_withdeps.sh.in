@@ -36,22 +36,22 @@ export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
 
 # activate dependencies if present
 if [[ -d "@ROOT_DIR@" ]]; then
-  . @ROOT_DIR@/../bin/thisroot.sh
+  . @ROOT_BINDIR@/thisroot.sh
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
-  . @Geant4_DIR@/../../../bin/geant4.sh
+  . @Geant4_INCLUDE_DIR@/../bin/geant4.sh
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
-  . @DD4hep_DIR@/bin/thisdd4hep.sh
+  . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
 fi
 if [[ -d "@podio_DIR@" ]]; then
-  export LD_LIBRARY_PATH="@podio_DIR@/lib:${LD_LIBRARY_PATH}"
-  export DYLD_LIBRARY_PATH="@podio_DIR@/lib:${DYLD_LIBRARY_PATH}"
-  export ROOT_INCLUDE_PATH="@podio_DIR@/include:${ROOT_INCLUDE_PATH}"
-  export PYTHONPATH="@podio_DIR@/python:${PYTHONPATH}"
+  export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="@podio_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
+  export PYTHONPATH="@podio_PYTHON_DIR@:${PYTHONPATH}"
 fi
 if [[ -d "@EDM4HEP_DIR@" ]]; then
-  export LD_LIBRARY_PATH="@EDM4HEP_DIR@/lib:${LD_LIBRARY_PATH}"
-  export DYLD_LIBRARY_PATH="@EDM4HEP_DIR@/lib:${DYLD_LIBRARY_PATH}"
-  export ROOT_INCLUDE_PATH="@EDM4HEP_DIR@/include:${ROOT_INCLUDE_PATH}"
+  export LD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
