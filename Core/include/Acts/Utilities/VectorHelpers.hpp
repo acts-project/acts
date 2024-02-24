@@ -140,7 +140,7 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
   const ActsScalar cosTheta = z;
   const ActsScalar sinTheta = std::sqrt(1 - z * z);
   const ActsScalar invSinTheta = 1. / sinTheta;
-  assert(std::abs(sinTheta) > 1e-6 &&
+  assert(sinTheta > 1e-6 &&
          "Direction vector is close to the z-axis which may cause numerical "
          "instability");
   const ActsScalar cosPhi = x * invSinTheta;
