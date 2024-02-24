@@ -1812,7 +1812,6 @@ def addVertexFitting(
     field,
     tracks: Optional[str] = "tracks",
     trackParameters: Optional[str] = None,
-    associatedParticles: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
     outputVertices: str = "fittedVertices",
     seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
@@ -1832,8 +1831,6 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    associatedParticles : str, "associatedTruthParticles"
-        VertexPerformanceWriter.inputAssociatedTruthParticles
     seeder : enum member
         determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
         acts.seeder.AdaptiveGridSeeder
@@ -1876,7 +1873,6 @@ def addVertexFitting(
         trackParameters = converter.config.outputTrackParameters
 
     tracks = tracks if tracks is not None else ""
-    associatedParticles = associatedParticles if associatedParticles is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
 
@@ -1925,21 +1921,17 @@ def addVertexFitting(
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
-        if associatedParticles == selectedParticles:
-            warnings.warn(
-                "Using VertexPerformanceWriter with smeared particles is not necessarily supported. "
-                "Please get in touch with us"
-            )
         s.addWriter(
             VertexPerformanceWriter(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
                 inputParticles=inputParticles,
+                inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
                 bField=field,
-                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
+                minTrackVtxMatchFraction=0.5,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )

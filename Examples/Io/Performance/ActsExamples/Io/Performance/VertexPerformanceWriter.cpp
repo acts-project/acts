@@ -66,16 +66,16 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Collection with particles missing");
   }
+  if (m_cfg.inputSelectedParticles.empty()) {
+    throw std::invalid_argument("Collection with selected particles missing");
+  }
   if (m_cfg.inputTrackParticleMatching.empty()) {
     throw std::invalid_argument("Missing input track particles matching");
   }
-  if (m_cfg.inputParticleTrackMatching.empty()) {
-    throw std::invalid_argument("Missing input particle track matching");
-  }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSelectedParticles.initialize(m_cfg.inputSelectedParticles);
   m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
-  m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
 
   if (m_cfg.useTracks) {
     m_inputTracks.initialize(m_cfg.inputTracks);
@@ -166,6 +166,7 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
 
     m_outputTree->Branch("nTrueVtx", &m_nTrueVtx);
     m_outputTree->Branch("nRecoVtx", &m_nRecoVtx);
+    m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
     m_outputTree->Branch("nVtxReconstructable", &m_nVtxReconstructable);
   }
 }
@@ -242,15 +243,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
+  const auto& selectedParticles = m_inputSelectedParticles(ctx);
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
-  // TODO
-  // const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
 
   // Get number of generated true primary vertices
   m_nTrueVtx = getNumberOfTruePriVertices(particles);
+  // Get number of detector-accepted true primary vertices
+  m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedParticles);
 
   ACTS_VERBOSE("Number of truth particles in event : " << particles.size());
   ACTS_VERBOSE("Number of truth primary vertices : " << m_nTrueVtx);
+  ACTS_VERBOSE("Number of detector-accepted truth primary vertices : "
+               << m_nVtxDetAcceptance);
 
   const ConstTrackContainer* tracks = nullptr;
   SimParticleContainer associatedParticles;

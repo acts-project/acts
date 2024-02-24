@@ -50,10 +50,10 @@ class VertexPerformanceWriter final
     std::string inputTracks;
     /// All input truth particle collection.
     std::string inputParticles;
+    /// All input selected truth particle collection.
+    std::string inputSelectedParticles;
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
-    /// Input track-particle matching.
-    std::string inputParticleTrackMatching;
     /// Magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
@@ -195,6 +195,8 @@ class VertexPerformanceWriter final
   int m_nTrueVtx = -1;
   /// Number of reconstructed vertices
   int m_nRecoVtx = -1;
+  /// Number of vertices in detector acceptance
+  int m_nVtxDetAcceptance = -1;
   /// Max. number of reconstructable vertices (detector acceptance + tracking
   /// efficiency)
   int m_nVtxReconstructable = -1;
@@ -205,13 +207,11 @@ class VertexPerformanceWriter final
   int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-
+  ReadDataHandle<SimParticleContainer> m_inputSelectedParticles{
+      this, "InputSelectedParticles"};
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
-  ReadDataHandle<ParticleTrackMatching> m_inputParticleTrackMatching{
-      this, "InputParticleTrackMatching"};
 };
 
 }  // namespace ActsExamples
