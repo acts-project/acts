@@ -186,7 +186,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFitterPerformanceWriter, mex,
                              "TrackFitterPerformanceWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
+                             inputParticles, inputTrackParticleMatching,
                              filePath, resPlotToolConfig, effPlotToolConfig,
                              trackSummaryPlotToolConfig);
 

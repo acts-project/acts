@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -46,8 +47,8 @@ class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "performance_track_fitter.root";
     /// Plot tool configurations.
@@ -76,8 +77,8 @@ class TrackFitterPerformanceWriter final : public WriterT<ConstTrackContainer> {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "inputMeasurementParticlesMap"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
 
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;

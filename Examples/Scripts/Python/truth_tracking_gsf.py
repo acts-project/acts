@@ -148,7 +148,7 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gsf.root"),
         )
     )

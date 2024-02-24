@@ -1453,7 +1453,7 @@ def addTrackWriters(
                     level=acts.logging.INFO,
                     inputTracks=tracks,
                     inputParticles="truth_seeds_selected",
-                    inputMeasurementParticlesMap="measurement_particles_map",
+                    inputTrackParticleMatching="track_particle_matching",
                     filePath=str(
                         outputDirRoot / f"performance_track_fitter_{name}.root"
                     ),

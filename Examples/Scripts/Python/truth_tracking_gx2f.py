@@ -133,13 +133,13 @@ def runTruthTrackingGx2f(
     #         filePath=str(outputDir / "performance_track_finder.root"),
     #     )
     # )
-    #
+
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gx2f.root"),
         )
     )
