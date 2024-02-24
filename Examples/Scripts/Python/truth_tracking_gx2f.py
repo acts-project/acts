@@ -123,17 +123,6 @@ def runTruthTrackingGx2f(
         )
     )
 
-    # TODO: PerformanceWriters are not tested yet
-    # s.addWriter(
-    #     acts.examples.TrackFinderPerformanceWriter(
-    #         level=acts.logging.INFO,
-    #         inputProtoTracks="truth_particle_tracks",
-    #         inputParticles="truth_seeds_selected",
-    #         inputMeasurementParticlesMap="measurement_particles_map",
-    #         filePath=str(outputDir / "performance_track_finder.root"),
-    #     )
-    # )
-
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,

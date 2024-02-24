@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -36,6 +37,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
 
   ReadDataHandle<SimParticleContainer> inputParticles;
   ReadDataHandle<HitParticlesMap> inputMeasurementParticlesMap;
+  ReadDataHandle<ProtoTrackParticleMatching> m_inputProtoTrackParticleMatching;
 
   TFile* file = nullptr;
 
@@ -88,22 +90,29 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
       : cfg(std::move(c)),
         inputParticles{parent, "InputParticles"},
         inputMeasurementParticlesMap{parent, "InputMeasurementParticlesMap"},
+        m_inputProtoTrackParticleMatching{parent,
+                                          "InputProtoTrackParticleMatching"},
         _logger(l) {
     if (cfg.inputProtoTracks.empty()) {
       throw std::invalid_argument("Missing proto tracks input collection");
     }
+    if (cfg.inputParticles.empty()) {
+      throw std::invalid_argument("Missing particles input collection");
+    }
     if (cfg.inputMeasurementParticlesMap.empty()) {
       throw std::invalid_argument("Missing hit-particles map input collection");
     }
-    if (cfg.inputParticles.empty()) {
-      throw std::invalid_argument("Missing particles input collection");
+    if (cfg.inputProtoTrackParticleMatching.empty()) {
+      throw std::invalid_argument(
+          "Missing proto track-particle matching input collection");
     }
     if (cfg.filePath.empty()) {
       throw std::invalid_argument("Missing output filename");
     }
 
     inputParticles.initialize(cfg.inputParticles);
-    inputMeasurementParticlesMap.initialize(cfg.inputMeasurementParticlesMap);
+    m_inputProtoTrackParticleMatching.initialize(
+        cfg.inputProtoTrackParticleMatching);
 
     // the output file can not be given externally since TFile accesses to the
     // same file from multiple threads are unsafe.
@@ -145,19 +154,18 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
 
   const Acts::Logger& logger() const { return _logger; }
 
-  void write(uint64_t eventId, const SimParticleContainer& particles,
+  void write(uint64_t eventId, const ProtoTrackContainer& tracks,
+             const SimParticleContainer& particles,
              const HitParticlesMap& hitParticlesMap,
-             const ProtoTrackContainer& tracks) {
-    // compute the inverse mapping on-the-fly
+             const ProtoTrackParticleMatching& protoTrackParticleMatching) {
     const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
+
     // How often a particle was reconstructed.
     std::unordered_map<ActsFatras::Barcode, std::size_t> reconCount;
     reconCount.reserve(particles.size());
     // How often a particle was reconstructed as the majority particle.
     std::unordered_map<ActsFatras::Barcode, std::size_t> majorityCount;
     majorityCount.reserve(particles.size());
-    // For each particle within a track, how many hits did it contribute
-    std::vector<ParticleHitCount> particleHitCounts;
 
     // write per-track performance measures
     {
@@ -165,31 +173,44 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
       for (std::size_t itrack = 0; itrack < tracks.size(); ++itrack) {
         const auto& track = tracks[itrack];
 
-        identifyContributingParticles(hitParticlesMap, track,
-                                      particleHitCounts);
-        // extract per-particle reconstruction counts
-        // empty track hits counts could originate from a  buggy track finder
-        // that results in empty tracks or from purely noise track where no hits
-        // are from a particle.
-        if (!particleHitCounts.empty()) {
-          auto it = majorityCount
-                        .try_emplace(particleHitCounts.front().particleId, 0u)
-                        .first;
+        // Get the truth-matched particle
+        auto imatched = protoTrackParticleMatching.find(itrack);
+        if (imatched == protoTrackParticleMatching.end()) {
+          ACTS_DEBUG(
+              "No truth particle associated with this proto track, index = "
+              << itrack);
+          continue;
+        }
+        const auto& particleMatch = imatched->second;
+
+        // Get the barcode of the majority truth particle
+        SimBarcode majorityParticleId = particleMatch.particle.value();
+
+        if (!particleMatch.contributingParticles.empty()) {
+          auto it = majorityCount.try_emplace(majorityParticleId, 0u).first;
           it->second += 1;
         }
-        for (const auto& hc : particleHitCounts) {
+        for (const auto& hc : particleMatch.contributingParticles) {
           auto it = reconCount.try_emplace(hc.particleId, 0u).first;
           it->second += 1;
+        }
+
+        // Find the truth particle via the barcode
+        auto ip = particles.find(majorityParticleId);
+        if (ip == particles.end()) {
+          ACTS_WARNING(
+              "Majority particle not found in the particles collection.");
+          continue;
         }
 
         trkEventId = eventId;
         trkTrackId = itrack;
         trkNumHits = track.size();
-        trkNumParticles = particleHitCounts.size();
+        trkNumParticles = particleMatch.contributingParticles.size();
         trkParticleId.clear();
         trkParticleNumHitsTotal.clear();
         trkParticleNumHitsOnTrack.clear();
-        for (const auto& phc : particleHitCounts) {
+        for (const auto& phc : particleMatch.contributingParticles) {
           trkParticleId.push_back(phc.particleId.value());
           // count total number of hits for this particle
           auto trueParticleHits =
@@ -236,6 +257,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
       }
     }
   }
+
   /// Write everything to disk and close the file.
   void close() {
     if (file == nullptr) {
@@ -261,7 +283,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::ProtoTrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& hitParticlesMap = m_impl->inputMeasurementParticlesMap(ctx);
-  m_impl->write(ctx.eventNumber, particles, hitParticlesMap, tracks);
+  const auto& protoTrackParticleMatching =
+      m_impl->m_inputProtoTrackParticleMatching(ctx);
+  m_impl->write(ctx.eventNumber, tracks, particles, hitParticlesMap,
+                protoTrackParticleMatching);
   return ProcessCode::SUCCESS;
 }
 

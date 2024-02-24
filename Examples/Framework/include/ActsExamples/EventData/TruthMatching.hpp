@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -34,6 +35,9 @@ struct ParticleMatchEntry {
   std::uint32_t duplicates{};
   std::uint32_t fakes{};
 };
+
+using ProtoTrackParticleMatching = std::map<TrackIndex, TrackMatchEntry>;
+using ParticleProtoTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
 
 using TrackParticleMatching = std::map<TrackIndex, TrackMatchEntry>;
 using ParticleTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;

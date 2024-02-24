@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -23,20 +23,20 @@ namespace ActsExamples {
 
 struct AlgorithmContext;
 
-/// Matches tracks to truth particles and vice versa
-class TrackTruthMatcher final : public IAlgorithm {
+/// Matches proto track to truth particles and vice versa
+class ProtoTrackTruthMatcher final : public IAlgorithm {
  public:
   struct Config {
-    /// Input (fitted) tracks collection
-    std::string inputTracks;
+    /// Input proto tracks collection
+    std::string inputProtoTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output track-particle matching.
-    std::string outputTrackParticleMatching;
-    /// Output track-particle matching.
-    std::string outputParticleTrackMatching;
+    /// Output proto track-particle matching.
+    std::string outputProtoTrackParticleMatching;
+    /// Output particle-proto track matching.
+    std::string outputParticleProtoTrackMatching;
 
     /// Matching ratio for track to particle matching
     double matchingRatio = 0.5;
@@ -44,7 +44,7 @@ class TrackTruthMatcher final : public IAlgorithm {
     bool doubleMatching = false;
   };
 
-  TrackTruthMatcher(const Config& config, Acts::Logging::Level level);
+  ProtoTrackTruthMatcher(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -54,14 +54,15 @@ class TrackTruthMatcher final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
-  WriteDataHandle<TrackParticleMatching> m_outputTrackParticleMatching{
-      this, "OutputTrackParticleMatching"};
-  WriteDataHandle<ParticleTrackMatching> m_outputParticleTrackMatching{
-      this, "OutputParticleTrackMatching"};
+  WriteDataHandle<TrackParticleMatching> m_outputProtoTrackParticleMatching{
+      this, "OutputProtoTrackParticleMatching"};
+  WriteDataHandle<ParticleTrackMatching> m_outputParticleProtoTrackMatching{
+      this, "OutputParticleProtoTrackMatching"};
 };
 
 }  // namespace ActsExamples
