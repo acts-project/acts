@@ -1929,7 +1929,6 @@ def addVertexFitting(
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
-                inputParticleTrackMatching="particle_track_matching",
                 bField=field,
                 minTrackVtxMatchFraction=0.5,
                 treeName="vertexing",
