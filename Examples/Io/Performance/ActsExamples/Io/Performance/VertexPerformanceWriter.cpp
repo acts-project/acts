@@ -257,7 +257,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                << m_nVtxDetAcceptance);
 
   const ConstTrackContainer* tracks = nullptr;
-  SimParticleContainer associatedParticles;
+  SimParticleContainer recoParticles;
 
   // Get the event number
   m_eventNr = ctx.eventNumber;
@@ -297,23 +297,22 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
 
       if (auto particle = findParticle(track); particle.has_value()) {
-        associatedParticles.insert(*particle);
+        recoParticles.insert(*particle);
       }
     }
   } else {
     // if not using tracks, then all truth particles are associated with the
     // vertex
-    associatedParticles = particles;
+    recoParticles = particles;
   }
 
   // Get number of track-associated true primary vertices
-  m_nVtxReconstructable =
-      getNumberOfReconstructableVertices(associatedParticles);
+  m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
 
   ACTS_INFO("Number of reconstructed tracks : "
             << ((tracks != nullptr) ? tracks->size() : 0));
   ACTS_INFO("Number of reco track-associated truth particles in event : "
-            << associatedParticles.size());
+            << recoParticles.size());
   ACTS_INFO("Maximum number of reconstructible primary vertices : "
             << m_nVtxReconstructable);
 
@@ -356,21 +355,21 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
           if (origTrack.parameters() == params) {
             trackIndices.push_back(inputTrk.index());
-
-            auto particleOpt = findParticle(inputTrk);
-            if (!particleOpt.has_value()) {
-              continue;
-            }
-            const auto& particle = *particleOpt;
-
-            particleAtVtx.insert(particle);
-            SimBarcode vtxId = SimBarcode(particle.particleId())
-                                   .setParticle(0)
-                                   .setGeneration(0)
-                                   .setSubParticle(0);
-            contributingTruthVertices.insert(vtxId);
-
             foundMatchingParticle = true;
+
+            if (trk.trackWeight > m_cfg.minTrkWeight) {
+              auto particleOpt = findParticle(inputTrk);
+              if (!particleOpt.has_value()) {
+                continue;
+              }
+              const auto& particle = *particleOpt;
+
+              particleAtVtx.insert(particle);
+              SimBarcode vtxId = SimBarcode(particle.particleId())
+                                     .setParticle(0)
+                                     .setSubParticle(0);
+              contributingTruthVertices.insert(vtxId);
+            }
 
             break;
           }
@@ -386,10 +385,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     } else {
       for (const auto& particle : particles) {
-        SimBarcode vtxId = SimBarcode(particle.particleId())
-                               .setParticle(0)
-                               .setGeneration(0)
-                               .setSubParticle(0);
+        SimBarcode vtxId =
+            SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
         contributingTruthVertices.insert(vtxId);
       }
     }
@@ -410,11 +407,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
     // Count number of reconstructible tracks on truth vertex
     std::uint32_t nTracksOnTruthVertex = 0;
-    for (const auto& particle : associatedParticles) {
-      SimBarcode vtxId = SimBarcode(particle.particleId())
-                             .setParticle(0)
-                             .setGeneration(0)
-                             .setSubParticle(0);
+    for (const auto& particle : recoParticles) {
+      SimBarcode vtxId =
+          SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
       if (vtxId == maxOccurrenceId) {
         ++nTracksOnTruthVertex;
       }
@@ -490,9 +485,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           };
 
       const auto& truthVertexParticle =
-          *std::find_if(associatedParticles.begin(), associatedParticles.end(),
+          *std::find_if(particleAtVtx.begin(), particleAtVtx.end(),
                         [&](const auto& particle) {
-                          return particle.particleId() == maxOccurrenceId;
+                          SimBarcode vtxId = SimBarcode(particle.particleId())
+                                                 .setParticle(0)
+                                                 .setSubParticle(0);
+                          return vtxId == maxOccurrenceId;
                         });
 
       const Acts::ActsVector<4>& truePos = truthVertexParticle.fourPosition();
