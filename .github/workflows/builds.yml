@@ -149,7 +149,7 @@ jobs:
           && source build/this_acts_withdeps.sh
           && echo "HIHIHI"
           && cat build/this_acts_withdeps.sh
-          && echo &PYTHONPATH
+          && echo $PYTHONPATH
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pip3 install pytest-md-report
           && pytest -rFsv -k "not exatrkx" -v
