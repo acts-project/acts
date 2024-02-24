@@ -39,7 +39,7 @@ if [[ -d "@ROOT_DIR@" ]]; then
   . @ROOT_BINDIR@/thisroot.sh
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
-  . @Geant4_INCLUDE_DIR@/../bin/geant4.sh
+  . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
