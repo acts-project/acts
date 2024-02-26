@@ -144,6 +144,10 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   /// truth parameter eT
   std::vector<float> m_t_eT;
 
+  /// event-unique particle identifier a.k.a barcode for hits per each surface
+  std::vector<std::vector<double>>
+      m_particleId;  // using double (8 bytes) to save uint64_t (also 8 bytes)
+
   /// number of all states
   unsigned int m_nStates{0};
   /// number of states with measurements
