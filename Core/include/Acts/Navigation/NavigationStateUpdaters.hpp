@@ -44,7 +44,7 @@ inline void updateCandidates(const GeometryContext& gctx,
   NavigationState::SurfaceCandidates nextSurfaceCandidates;
 
   for (NavigationState::SurfaceCandidate c : nState.surfaceCandidates) {
-    // Get the surface representation: either native surfcae of portal
+    // Get the surface representation: either native surface of portal
     const Surface& sRep =
         c.surface != nullptr ? *c.surface : c.portal->surface();
 
@@ -52,11 +52,12 @@ inline void updateCandidates(const GeometryContext& gctx,
     // TODO surface tolerance
     auto sIntersection = sRep.intersect(gctx, position, direction,
                                         c.boundaryCheck, s_onSurfaceTolerance);
-    c.objectIntersection = sIntersection[c.objectIntersection.index()];
-
-    if (c.objectIntersection &&
-        c.objectIntersection.pathLength() > nState.overstepTolerance) {
-      nextSurfaceCandidates.emplace_back(std::move(c));
+    for (auto& si : sIntersection.split()) {
+      c.objectIntersection = si;
+      if (c.objectIntersection &&
+          c.objectIntersection.pathLength() > nState.overstepTolerance) {
+        nextSurfaceCandidates.emplace_back(std::move(c));
+      }
     }
   }
 
