@@ -56,7 +56,7 @@ inline void updateCandidates(const GeometryContext& gctx,
       c.objectIntersection = si;
       if (c.objectIntersection &&
           c.objectIntersection.pathLength() > nState.overstepTolerance) {
-        nextSurfaceCandidates.emplace_back(std::move(c));
+        nextSurfaceCandidates.emplace_back(c);
       }
     }
   }
