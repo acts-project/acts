@@ -151,10 +151,11 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   std::unordered_map<SimBarcode, std::vector<TrackIndex>> protoVertexTrackMap;
 
   for (const auto& [particle, trackMatch] : particleTrackMatching) {
-    auto vtxId =
-        SimBarcode(particle).setParticle(0).setGeneration(0).setSubParticle(0);
+    auto vtxId = SimBarcode(particle).setParticle(0).setSubParticle(0);
 
-    protoVertexTrackMap[vtxId].push_back(trackMatch.track.value());
+    if (trackMatch.track) {
+      protoVertexTrackMap[vtxId].push_back(trackMatch.track.value());
+    }
   }
 
   ProtoVertexContainer protoVertices;
