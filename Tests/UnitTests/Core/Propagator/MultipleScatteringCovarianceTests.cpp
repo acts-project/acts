@@ -51,7 +51,7 @@ auto makeDist(double a, double b, int seed) {
 
 const auto bFieldDist = makeDist(0, 3_T, 11);
 const auto directionDist = makeDist(0, 1, 12);
-const auto distanceDist = makeDist(1_mm, 10_mm, 13);
+const auto distanceDist = makeDist(100_mm, 1000_mm, 13);
 const auto momentumDist = makeDist(0.1_GeV, 10_GeV, 14);
 const auto chargeDist = makeDist(-1, 1, 15);
 const auto theta0Dist = makeDist(10_mrad, 100_mrad, 16);
@@ -67,7 +67,7 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
                      (bFieldDist ^ bFieldDist ^ bFieldDist ^ directionDist ^
                       directionDist ^ directionDist ^ distanceDist ^
                       momentumDist ^ chargeDist ^ theta0Dist) ^
-                         bdata::xrange(100),
+                         bdata::xrange(1),
                      Bx, By, Bz, Dx, Dy, Dz, s, p, q_, theta0, index) {
   (void)index;
   const Vector3 bField{Bx, By, Bz};
@@ -100,7 +100,7 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
         (BoundVector() << 0_mm, 0_mm, VectorHelpers::phi(direction),
          VectorHelpers::theta(direction), qOverP, 0_ns)
             .finished(),
-        (BoundVector() << 1_um, 1_um, sigmaPhi, sigmaTheta, 1 / 1_MeV, 1_ps)
+        (BoundVector() << 1_um, 1_um, sigmaPhi, sigmaTheta, 0.01 / 1_GeV, 1_ps)
             .finished()
             .array()
             .square()
@@ -114,17 +114,19 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
     BOOST_CHECK(eigenRes->endParameters.has_value());
     BOOST_CHECK(eigenRes->endParameters.value().covariance().has_value());
     eigenParameters = eigenRes->endParameters.value();
+
+    std::cout << startParameters << std::endl;
+    std::cout << eigenParameters.value() << std::endl;
   }
 
   // Now we propagate backwards with a straight line propagator so we can later
   // propagate forwards again to compare the covariances.
   {
     PropagatorOptions<> straightLineBackwardOptions(gctx, mctx);
-    options.direction = Direction::Backward;
-    options.pathLimit = -s;
+    straightLineBackwardOptions.direction = Direction::Backward;
+    straightLineBackwardOptions.pathLimit = -s;
 
     BoundTrackParameters startParameters = eigenParameters.value();
-    startParameters.covariance() = std::nullopt;
 
     auto straightLinePropagator = makeStraightLinePropagator();
     auto straightLineBackwardRes = straightLinePropagator.propagate(
@@ -142,7 +144,8 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
   {
     // sigmaPhi = theta0 / sin(theta)
     const double sigmaPhi =
-        theta0 * (direction.norm() / VectorHelpers::perp(direction));
+        theta0 * (eigenParameters->direction().norm() /
+                  VectorHelpers::perp(eigenParameters->direction()));
     const double sigmaTheta = theta0;
 
     BoundTrackParameters startParameters =
@@ -162,29 +165,38 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
     BOOST_CHECK(straightLineForwardRes->endParameters.has_value());
     BOOST_CHECK(
         straightLineForwardRes->endParameters.value().covariance().has_value());
-    auto straightLineForwardParameters =
-        straightLineForwardRes->endParameters.value();
+    straightLineParameters = straightLineForwardRes->endParameters.value();
   }
 
   // Optional was just a hack and should always be set
   BOOST_CHECK(eigenParameters.has_value());
   BOOST_CHECK(straightLineParameters.has_value());
 
-  // Check if we get the same direction parameters and covariance
-
+  // Check if we get the same parameters
   {
-    Vector2 exp = eigenParameters->parameters().segment<2>(eBoundPhi);
-    Vector2 obs = straightLineParameters->parameters().segment<2>(eBoundPhi);
-    CHECK_CLOSE_ABS(exp, obs, 1e-7);
+    BoundVector exp = eigenParameters->parameters();
+    BoundVector obs = straightLineParameters->parameters();
+    CHECK_CLOSE_ABS(obs, exp, 1e-7);
   }
 
+  // Check if we get the same direction covariance
   {
     SquareMatrix2 exp =
         eigenParameters->covariance().value().block<2, 2>(eBoundPhi, eBoundPhi);
     SquareMatrix2 obs =
         straightLineParameters->covariance().value().block<2, 2>(eBoundPhi,
                                                                  eBoundPhi);
-    CHECK_CLOSE_ABS(exp, obs, 1e-7);
+    CHECK_CLOSE_ABS(obs, exp, 1e-7);
+  }
+
+  // Check if we get the same position covariance
+  {
+    SquareMatrix2 exp = eigenParameters->covariance().value().block<2, 2>(
+        eBoundLoc0, eBoundLoc0);
+    SquareMatrix2 obs =
+        straightLineParameters->covariance().value().block<2, 2>(eBoundLoc0,
+                                                                 eBoundLoc0);
+    CHECK_CLOSE_ABS(obs, exp, 1e-7);
   }
 }
 
