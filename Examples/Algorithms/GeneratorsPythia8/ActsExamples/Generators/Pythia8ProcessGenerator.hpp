@@ -40,6 +40,10 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     bool printShortEventListing = false;
     /// Let pythia print detailed event info
     bool printLongEventListing = false;
+    /// Turn on/off the labeling of secondary vertices
+    /// TODO this is essentially broken as the current code will label any kind
+    /// of displaced vertex as secondary
+    bool labelSecondaries = false;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
