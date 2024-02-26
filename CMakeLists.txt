@@ -53,6 +53,7 @@ option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 #detray changes
 option(ACTS_SETUP_DETRAY "Explicitly set up detray for the project" ON)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_BUILD_PLUGIN_DETRAY "Build the detray plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
