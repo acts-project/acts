@@ -150,7 +150,7 @@ class DetectorNavigator {
       nState.currentDetector = m_cfg.detector;
     }
     if (nState.currentDetector == nullptr) {
-      ACTS_WARNING("Initialization: no detector assigned");
+      ACTS_VERBOSE("Initialization: no detector assigned");
       return;
     }
 
@@ -160,7 +160,7 @@ class DetectorNavigator {
           state.geoContext, nState.position);
     }
     if (nState.currentVolume == nullptr) {
-      ACTS_WARNING("Initialization: no current volume found");
+      ACTS_VERBOSE("Initialization: no current volume found");
       return;
     }
     updateCandidateSurfaces(state, stepper);
@@ -297,7 +297,7 @@ class DetectorNavigator {
       nextSurface = &nextPortal->surface();
       isPortal = true;
     } else {
-      ACTS_WARNING(volInfo(state)
+      ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
                    << "panic: not a surface not a portal - what is it?");
       return;
@@ -432,7 +432,7 @@ class DetectorNavigator {
     nState.absMomentum = stepper.absoluteMomentum(state.stepping);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
-      ACTS_WARNING(volInfo(state) << posInfo(state, stepper)
+      ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                   << "could not read from the magnetic field");
     }
     nState.magneticField = *fieldResult;
