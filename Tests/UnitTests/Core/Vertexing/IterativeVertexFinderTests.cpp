@@ -30,11 +30,11 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
@@ -124,10 +124,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
   // Number of test events
   unsigned int nEvents = 5;  // = nTest
 
-  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-    // Set up constant B-Field
-    auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
+  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up Eigenstepper
     EigenStepper<> stepper(bField);
 
@@ -140,41 +140,39 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     ltConfig.propagator = propagator;
     Linearizer linearizer(ltConfig);
 
-    using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
+    using BilloirFitter = FullBilloirVertexFitter;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
     vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+    vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
 
     BilloirFitter bFitter(vertexFitterCfg);
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-    using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
-
-    static_assert(VertexFinderConcept<ZScanSeedFinder>,
-                  "Vertex finder does not fulfill vertex finder concept.");
+    using ZScanSeedFinder = ZScanVertexFinder;
 
     ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
     seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-    ZScanSeedFinder sFinder(seedFinderCfg);
+    auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
     // Vertex Finder
-    using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
 
-    static_assert(VertexFinderConcept<VertexFinder>,
-                  "Vertex finder does not fulfill vertex finder concept.");
-
-    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder), ipEstimator);
+    IterativeVertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
+                                      ipEstimator);
+    cfg.field = bField;
+    cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-    VertexFinder finder(std::move(cfg));
-    VertexFinder::State state(*bField, magFieldContext);
+    IterativeVertexFinder finder(std::move(cfg));
+    IVertexFinder::State state{
+        IterativeVertexFinder::State(*bField, magFieldContext)};
 
     // Vector to be filled with all tracks in current event
     std::vector<std::unique_ptr<const BoundTrackParameters>> tracks;
@@ -342,10 +340,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
   // Number of test events
   unsigned int nEvents = 5;  // = nTest
 
-  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-    // Set up constant B-Field
-    auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
+  for (unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
     // Set up Eigenstepper
     EigenStepper<> stepper(bField);
 
@@ -359,7 +357,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     Linearizer linearizer(ltConfigUT);
 
     // Set up vertex fitter for user track type
-    using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
+    using BilloirFitter = FullBilloirVertexFitter;
 
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
@@ -370,27 +368,31 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
     vertexFitterCfg.extractParameters.connect(extractParameters);
+    vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+        &linearizer);
 
     BilloirFitter bFitter(vertexFitterCfg);
 
     ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
     ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-    using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
+    using ZScanSeedFinder = ZScanVertexFinder;
     ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
     seedFinderCfg.extractParameters.connect(extractParameters);
 
-    ZScanSeedFinder sFinder(seedFinderCfg);
+    auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
     // Vertex Finder
-    using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                             std::move(sFinder), ipEstimator);
+    IterativeVertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
+                                      ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
     cfg.extractParameters.connect(extractParameters);
+    cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+    cfg.field = bField;
 
-    VertexFinder finder(std::move(cfg));
-    VertexFinder::State state(*bField, magFieldContext);
+    IterativeVertexFinder finder(std::move(cfg));
+    IVertexFinder::State state{
+        IterativeVertexFinder::State(*bField, magFieldContext)};
 
     // Same for user track type tracks
     std::vector<std::unique_ptr<const InputTrackStub>> tracks;
@@ -564,42 +566,38 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
 
-  using BilloirFitter = FullBilloirVertexFitter<Linearizer>;
+  using BilloirFitter = FullBilloirVertexFitter;
 
   // Set up Billoir Vertex Fitter
   BilloirFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
 
   BilloirFitter bFitter(vertexFitterCfg);
 
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
-
-  static_assert(VertexFinderConcept<ZScanSeedFinder>,
-                "Vertex finder does not fulfill vertex finder concept.");
+  using ZScanSeedFinder = ZScanVertexFinder;
 
   ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  ZScanSeedFinder sFinder(seedFinderCfg);
+  auto sFinder = std::make_shared<ZScanSeedFinder>(seedFinderCfg);
 
-  // Vertex Finder
-  using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-
-  static_assert(VertexFinderConcept<VertexFinder>,
-                "Vertex finder does not fulfill vertex finder concept.");
-
-  VertexFinder::Config cfg(std::move(bFitter), std::move(linearizer),
-                           std::move(sFinder), ipEstimator);
+  IterativeVertexFinder::Config cfg(std::move(bFitter), std::move(sFinder),
+                                    ipEstimator);
   cfg.maxVertices = 200;
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
   cfg.extractParameters.connect<&InputTrack::extractParameters>();
+  cfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+  cfg.field = bField;
 
-  VertexFinder finder(std::move(cfg));
-  VertexFinder::State state(*bField, magFieldContext);
+  IterativeVertexFinder finder(std::move(cfg));
+  IVertexFinder::State state{
+      IterativeVertexFinder::State(*bField, magFieldContext)};
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);

@@ -18,6 +18,7 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -33,17 +34,8 @@ namespace Acts {
 ///   `Identification of b-jets and investigation of the discovery potential
 ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 ///
-///////////////////////////////////////////////////////////////////////////
-///
-/// @tparam linearizer_t Track linearizer type
-template <typename linearizer_t>
 class AdaptiveMultiVertexFitter {
-  static_assert(LinearizerConcept<linearizer_t>,
-                "Linearizer does not fulfill linearizer concept.");
-
  public:
-  using Linearizer_t = linearizer_t;
-
   /// @brief The fitter state
   struct State {
     State(const MagneticFieldProvider& field,
@@ -67,9 +59,6 @@ class AdaptiveMultiVertexFitter {
     std::multimap<InputTrack, Vertex*> trackToVerticesMultiMap;
 
     std::map<std::pair<InputTrack, Vertex*>, TrackAtVertex> tracksAtVerticesMap;
-
-    /// @brief Default State constructor
-    State() = default;
 
     // Adds a vertex to trackToVerticesMultiMap
     void addVertexToMultiMap(Vertex& vtx) {
@@ -146,6 +135,8 @@ class AdaptiveMultiVertexFitter {
 
     // Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
+
+    TrackLinearizer trackLinearizer;
   };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
@@ -164,6 +155,11 @@ class AdaptiveMultiVertexFitter {
           "AdaptiveMultiVertexFitter: No function to extract parameters "
           "from InputTrack_t provided.");
     }
+
+    if (!m_cfg.trackLinearizer.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFitter: No track linearizer provided.");
+    }
   }
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
@@ -177,23 +173,20 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param state Fitter state
   /// @param newVertex Vertex to be added to fit
-  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
   Result<void> addVtxToFit(State& state, Vertex& newVertex,
-                           const Linearizer_t& linearizer,
                            const VertexingOptions& vertexingOptions) const;
 
   /// @brief Performs a simultaneous fit of all vertices in
   /// state.vertexCollection
   ///
   /// @param state Fitter state
-  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> fit(State& state, const Linearizer_t& linearizer,
+  Result<void> fit(State& state,
                    const VertexingOptions& vertexingOptions) const;
 
  private:
@@ -241,11 +234,9 @@ class AdaptiveMultiVertexFitter {
   ///  and updates the vertices by calling the VertexUpdater
   ///
   /// @param state Fitter state
-  /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
   Result<void> setWeightsAndUpdate(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions& vertexingOptions) const;
+      State& state, const VertexingOptions& vertexingOptions) const;
 
   /// @brief Collects the compatibility values of the track `trk`
   /// wrt to all of its associated vertices
@@ -280,5 +271,3 @@ class AdaptiveMultiVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFitter.ipp"

@@ -6,11 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
+
+Acts::Result<std::vector<Acts::Vertex>>
+Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& state) const
-    -> Result<std::vector<Vertex>> {
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& anyState) const {
+  auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
@@ -43,10 +46,9 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
 
   if (state.mainDensityMap.empty()) {
     // No tracks passed selection
-    // Return empty seed, i.e. vertex at constraint position
+    // Return empty seed
     // (Note: Upstream finder should check for this break condition)
-    std::vector<Vertex> seedVec{vertexingOptions.constraint};
-    return seedVec;
+    return std::vector<Vertex>{};
   }
 
   double z = 0;
@@ -90,14 +92,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
 
-template <typename vfitter_t>
-auto Acts::AdaptiveGridDensityVertexFinder<vfitter_t>::doesPassTrackSelection(
-    const BoundTrackParameters& trk) const -> bool {
+bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];

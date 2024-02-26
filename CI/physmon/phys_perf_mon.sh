@@ -4,14 +4,13 @@ set -e
 set -x
 
 
-mode=${1:all}
+mode=${1:-all}
 if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing|simulation) ]]; then
     echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing|simulation> (outdir)"
     exit 1
 fi
 
-outdir=${2:physmon}
-[ -z "$outdir" ] && outdir=physmon
+outdir=${2:-physmon}
 mkdir -p $outdir
 
 refdir=CI/physmon/reference
@@ -59,6 +58,9 @@ if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
 fi
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_physmon_gen "Truth Tracking GSF" "truth_tracking_gsf"
+fi
+if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
+    run_physmon_gen "Truth Tracking GX2F" "truth_tracking_gx2f"
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_physmon_gen "CKF Tracking" "ckf_tracking"
@@ -339,6 +341,15 @@ if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
         "Truth tracking" \
         truth_tracking \
         -c CI/physmon/truth_tracking.yml
+fi
+
+if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
+    run_histcmp \
+        $outdir/performance_gx2f.root \
+        $refdir/performance_gx2f.root \
+        "Truth tracking (GX2F)" \
+        gx2f \
+        -c CI/physmon/gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
