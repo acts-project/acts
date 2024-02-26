@@ -14,24 +14,24 @@ The selection is hereby done by providing one or more {class}`Acts::IGeant4Physi
 
 Possible implementations of this type of conversions can be seen in the corresponding unit test `ActsUnitTestGeant4DetectorSurfaceFactory`
 
-```c++
-  // Get the box
-  auto nameSelector =
-      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          std::vector<std::string>{"yl"}, false);
+```cpp
+// Get the box
+auto nameSelector =
+    std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+        std::vector<std::string>{"yl"}, false);
 
-  Acts::Geant4DetectorSurfaceFactory::Cache cache;
-  Acts::Geant4DetectorSurfaceFactory::Options options;
-  options.sensitiveSurfaceSelector = nameSelector;
+Acts::Geant4DetectorSurfaceFactory::Cache cache;
+Acts::Geant4DetectorSurfaceFactory::Options options;
+options.sensitiveSurfaceSelector = nameSelector;
 
-  Acts::Geant4DetectorSurfaceFactory factory;
-  factory.construct(cache, nominal, *cylinderPV, options);
+Acts::Geant4DetectorSurfaceFactory factory;
+factory.construct(cache, nominal, *cylinderPV, options);
 
-  BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);
-  BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
+BOOST_CHECK_EQUAL(cache.sensitiveSurfaces.size(), 1u);
+BOOST_CHECK_EQUAL(cache.passiveSurfaces.size(), 0u);
 
-  auto [ element, surface ] = cache.sensitiveSurfaces.front();
-  BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Cylinder);
+auto [ element, surface ] = cache.sensitiveSurfaces.front();
+BOOST_CHECK_EQUAL(surface->type(), Acts::Surface::SurfaceType::Cylinder);
 ```
 
 #### Inspecting surface conversion within python
@@ -39,26 +39,26 @@ Possible implementations of this type of conversions can be seen in the correspo
 The `ActsExamples` python bindings allow to conveniently test the conversion of `Geant4` volumes into sensitive and passive surfaces, assuming you have a GDML file called `detector.gdml` where `Geant4PhysVolume` objects can be identified by a certain string, e.g. names containing the flag `Sensitive`, or `Passive`. Also, multiple match strings are allowed. The converted surfaces can then be displayed with `.obj` (part of the Core functionality) or as `.svg` files (if `ACTS_BUILD_PLUGIN_ACTSVG` is switched on)
 
 ```python
-  # import the necessary modules
-  import acts, acts.examples
-  from acts.examples import geant4 as acts_g4
-  
-  # The match criteria
-  sensitive_matches = [ 'Sensitive' ]
-  passive_matches = [ 'Passive' ]
-  [ elements, ssurfaces, psurfaces ] = acts_g4.convertSurfaces('detector.gdml', sensitive_matches, passive_matches)
+# import the necessary modules
+import acts, acts.examples
+from acts.examples import geant4 as acts_g4
 
-  # Some screen output
-  print('* Conversion yielded', len(ssurfaces))
+# The match criteria
+sensitive_matches = [ 'Sensitive' ]
+passive_matches = [ 'Passive' ]
+[ elements, ssurfaces, psurfaces ] = acts_g4.convertSurfaces('detector.gdml', sensitive_matches, passive_matches)
 
-  # Write them to an obj file 
-  drawContext = acts.GeometryContext()
-  sensitiveRgb = [ 0, 150, 150 ]
-  passiveRgb = [ 150, 150, 0]
-  # Draw the sensitive surfaces
-  acts.examples.writeSurfacesObj(ssurfaces, drawContext, sensitiveRgb, 'detector-sensitives.obj')
-  # Draw the passive surfaces
-  acts.examples.writeSurfacesObj(psurfaces, drawContext, passiveRgb, 'detector-passives.obj')
+# Some screen output
+print('* Conversion yielded', len(ssurfaces))
+
+# Write them to an obj file
+drawContext = acts.GeometryContext()
+sensitiveRgb = [ 0, 150, 150 ]
+passiveRgb = [ 150, 150, 0]
+# Draw the sensitive surfaces
+acts.examples.writeSurfacesObj(ssurfaces, drawContext, sensitiveRgb, 'detector-sensitives.obj')
+# Draw the passive surfaces
+acts.examples.writeSurfacesObj(psurfaces, drawContext, passiveRgb, 'detector-passives.obj')
 ```
 
 ## Building a Detector from Geant4 input
@@ -67,17 +67,17 @@ In order to build an `Acts::Detector` object from `Geant4` input, the following 
  * a conversion of `Geant4PhysVolume` objects into `Acts::Surface`  and `Acts::DetectorVolume` objects (see before)
  * a build sequence needs to be defined and the converted objects identified
 
- There are several helper methods and tools that can be used, many of them accessible through python bindings. One core component is the selection and assignment of surfaces to dedicated volume. This can be done using e.g. a KDT structure, this can be tested with:
+There are several helper methods and tools that can be used, many of them accessible through python bindings. One core component is the selection and assignment of surfaces to dedicated volume. This can be done using e.g. a KDT structure, this can be tested with:
 
- ```python
-  # Create a KDTree from all surfaces binned in z and r
-  surfacesKdt = acts.KdtSurfaces2D(buildContext, surfaces, [acts.Binning.z, acts.Binning.r])
+```python
+# Create a KDTree from all surfaces binned in z and r
+surfacesKdt = acts.KdtSurfaces2D(buildContext, surfaces, [acts.Binning.z, acts.Binning.r])
 
-  # Define a query range and select
-  qrange = acts.Range2D( [-580,580], [0,200])
-  selected = surfacesKdt.surfaces(qrange)
- 
-  # Draw, inspect the surfaces
- ```
+# Define a query range and select
+qrange = acts.Range2D( [-580,580], [0,200])
+selected = surfacesKdt.surfaces(qrange)
+
+# Draw, inspect the surfaces
+```
 
 Selected surfaces can be put as a layer structure into a volume
