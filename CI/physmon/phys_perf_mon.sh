@@ -59,6 +59,9 @@ fi
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_physmon_gen "Truth Tracking GSF" "truth_tracking_gsf"
 fi
+if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
+    run_physmon_gen "Truth Tracking GX2F" "truth_tracking_gx2f"
+fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_physmon_gen "CKF Tracking" "ckf_tracking"
     run_physmon_gen "Track finding ttbar" "track_finding_ttbar"
@@ -338,6 +341,15 @@ if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
         "Truth tracking" \
         truth_tracking \
         -c CI/physmon/truth_tracking.yml
+fi
+
+if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
+    run_histcmp \
+        $outdir/performance_gx2f.root \
+        $refdir/performance_gx2f.root \
+        "Truth tracking (GX2F)" \
+        gx2f \
+        -c CI/physmon/gx2f.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then

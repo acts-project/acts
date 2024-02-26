@@ -201,5 +201,3 @@ class GaussianTrackDensity {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/GaussianTrackDensity.ipp"
