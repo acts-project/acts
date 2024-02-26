@@ -150,7 +150,7 @@ class DetectorNavigator {
       nState.currentDetector = m_cfg.detector;
     }
     if (nState.currentDetector == nullptr) {
-      ACTS_VERBOSE("Initialization: no detector assigned");
+      throw std::invalid_argument("DetectorNavigator: no detector assigned");
       return;
     }
 
@@ -160,7 +160,7 @@ class DetectorNavigator {
           state.geoContext, nState.position);
     }
     if (nState.currentVolume == nullptr) {
-      ACTS_VERBOSE("Initialization: no current volume found");
+      throw std::invalid_argument("DetectorNavigator: no current volume found");
       return;
     }
     updateCandidateSurfaces(state, stepper);
@@ -297,9 +297,10 @@ class DetectorNavigator {
       nextSurface = &nextPortal->surface();
       isPortal = true;
     } else {
-      ACTS_VERBOSE(volInfo(state)
-                   << posInfo(state, stepper)
-                   << "panic: not a surface not a portal - what is it?");
+      std::string msg = "DetectorNavigator: " + volInfo(state) +
+                        posInfo(state, stepper) +
+                        "panic: not a surface not a portal - what is it?";
+      throw std::runtime_error(msg);
       return;
     }
 
@@ -432,8 +433,10 @@ class DetectorNavigator {
     nState.absMomentum = stepper.absoluteMomentum(state.stepping);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
-      ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
-                                  << "could not read from the magnetic field");
+      std::string msg = "DetectorNavigator: " + volInfo(state) +
+                        posInfo(state, stepper) +
+                        "could not read from the magnetic field";
+      throw std::runtime_error(msg);
     }
     nState.magneticField = *fieldResult;
   }

@@ -99,6 +99,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(start, options);
 
+    BOOST_CHECK_THROW(navigator.initialize(state, stepper),
+                      std::invalid_argument);
+
     navigator.preStep(state, stepper);
     auto preStepState = state.navigation;
     BOOST_CHECK_EQUAL(preStepState.currentDetector, nullptr);
@@ -132,21 +135,17 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(start, options);
 
+    navigator.initialize(state, stepper);
+
     navigator.preStep(state, stepper);
     auto preStepState = state.navigation;
-    BOOST_CHECK_EQUAL(preStepState.currentDetector, nullptr);
-    BOOST_CHECK_EQUAL(preStepState.currentVolume, nullptr);
     BOOST_CHECK_EQUAL(preStepState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(preStepState.currentPortal, nullptr);
-    BOOST_CHECK(preStepState.surfaceCandidates.empty());
 
     navigator.postStep(state, stepper);
     auto postStepState = state.navigation;
-    BOOST_CHECK_EQUAL(postStepState.currentDetector, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentVolume, nullptr);
     BOOST_CHECK_EQUAL(postStepState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(postStepState.currentPortal, nullptr);
-    BOOST_CHECK(postStepState.surfaceCandidates.empty());
   }
 
   //
@@ -172,7 +171,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     BOOST_CHECK(navigator.endOfWorldReached(state.navigation));
 
-    navigator.initialize(state, stepper);
+    BOOST_CHECK_THROW(navigator.initialize(state, stepper),
+                      std::invalid_argument);
     auto initState = state.navigation;
     BOOST_CHECK_EQUAL(initState.currentVolume, nullptr);
     BOOST_CHECK_EQUAL(initState.currentSurface, nullptr);
