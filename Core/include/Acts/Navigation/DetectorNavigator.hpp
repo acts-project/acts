@@ -298,8 +298,8 @@ class DetectorNavigator {
       isPortal = true;
     } else {
       ACTS_WARNING(volInfo(state)
-                 << posInfo(state, stepper)
-                 << "panic: not a surface not a portal - what is it?");
+                   << posInfo(state, stepper)
+                   << "panic: not a surface not a portal - what is it?");
       return;
     }
 
@@ -433,7 +433,7 @@ class DetectorNavigator {
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
       ACTS_WARNING(volInfo(state) << posInfo(state, stepper)
-                                << "could not read from the magnetic field");
+                                  << "could not read from the magnetic field");
     }
     nState.magneticField = *fieldResult;
   }
