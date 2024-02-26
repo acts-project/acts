@@ -419,7 +419,7 @@ class DetectorNavigator {
                 ActsScalar pathToB = b.objectIntersection.pathLength();
                 return pathToA < pathToB;
               });
-    /// Set the surface candidate
+    // Set the surface candidate
     nState.surfaceCandidateIndex = 0;
   }
 
