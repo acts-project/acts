@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
 /// Stadard forward and backward propagation
 /// through cubic volumes with planar surfaces
-/// and no surpises
+/// and no surprises
 BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   /// Construct a cubic detector with 3 volumes
   Acts::RotationMatrix3 rotation;
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
       pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
-  /// Has to properly handle progation in the
+  /// Has to properly handle propagation in the
   /// forward and backward direction
   auto resultFwd = propagator.propagate(start, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
