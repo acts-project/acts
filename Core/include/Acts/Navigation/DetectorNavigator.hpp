@@ -202,7 +202,7 @@ class DetectorNavigator {
 
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
 
-      /// If no Volume is found, we are at the end of the world
+      // If no Volume is found, we are at the end of the world
       if (nState.currentVolume == nullptr) {
         ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                     << "no volume after Portal update");
@@ -210,8 +210,8 @@ class DetectorNavigator {
         return;
       }
 
-      /// Switched to a new volume
-      /// Update candidate surfaces
+      // Switched to a new volume
+      // Update candidate surfaces
       updateCandidateSurfaces(state, stepper);
     }
     for (; nState.surfaceCandidateIndex != nState.surfaceCandidates.size();
@@ -405,12 +405,12 @@ class DetectorNavigator {
 
     auto& nState = state.navigation;
 
-    /// Here we get the candidate surfaces
+    // Here we get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
 
     ACTS_VERBOSE("SURFACE CANDIDATES: " << nState.surfaceCandidates.size());
 
-    /// Sort properly the surface candidates
+    // Sort properly the surface candidates
     auto& nCandidates = nState.surfaceCandidates;
     std::sort(nCandidates.begin(), nCandidates.end(),
               [&](const auto& a, const auto& b) {
