@@ -1,7 +1,7 @@
 Algebra definitions
 ===================
 
-The main algebra classes for Acts are defined in the `Acts/Definitions/Algebra.hpp` header file.
+The main algebra classes for ACTS are defined in the `Acts/Definitions/Algebra.hpp` header file.
 The basic scalar type can be defined via this file and is set per default to `double`, however, if `ACTS_CUSTOM_SCALAR` is set it will be used instead.
 
 .. code-block:: cpp
