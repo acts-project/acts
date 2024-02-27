@@ -7,12 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryWriter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepParticleReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
@@ -33,9 +33,11 @@ void addEDM4hep(Context& ctx) {
   auto mex = ctx.get("examples");
   auto edm4hep = mex.def_submodule("_edm4hep");
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepSimHitReader, edm4hep,
-                             "EDM4hepSimHitReader", inputPath, inputParticles,
-                             outputSimHits, dd4hepDetector);
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::EDM4hepReader, edm4hep, "EDM4hepReader", inputPath,
+      inputParticles, inputSimHits, outputParticlesInitial,
+      outputParticlesFinal, outputParticlesGenerator, outputSimHits,
+      graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepSimHitWriter, edm4hep,
                              "EDM4hepSimHitWriter", inputSimHits,
@@ -50,10 +52,6 @@ void addEDM4hep(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, edm4hep,
                              "EDM4hepMeasurementWriter", inputMeasurements,
                              inputClusters, outputPath);
-
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepParticleReader, edm4hep,
-                             "EDM4hepParticleReader", inputPath, inputParticles,
-                             outputParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepParticleWriter, edm4hep,
                              "EDM4hepParticleWriter", inputParticles,
