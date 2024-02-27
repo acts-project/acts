@@ -94,6 +94,4 @@ if "__main__" == __name__:
     
     det_detector = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
     acts.examples.DetrayPrinter(det_detector)
-    #print(type(det_detector))
-    print("detray converter run :)")
 
