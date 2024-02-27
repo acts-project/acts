@@ -478,7 +478,7 @@ jobs:
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DPython_EXECUTABLE=/usr/local/acts/bin/python3.10
-          -DDD4HEP_DEBUG_CMAK=ON
+          -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
