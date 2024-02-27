@@ -524,15 +524,16 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
           return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaZT.dot(*sumCovZTInverse * deltaZT));
+      } else {
+        const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
+        const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
+        if (sumVarZ <= 0) {
+          ACTS_ERROR("Variance of the vertex's z-coordinate is not positive.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
+        }
+        // Use only z significance
+        significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
       }
-      const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
-      const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
-      if (sumVarZ <= 0) {
-        ACTS_ERROR("Variance of the vertex's z-coordinate is not positive.");
-        return Result<bool>::failure(VertexingError::SingularMatrix);
-      }
-      // Use only z significance
-      significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
     } else {
       if (m_cfg.useTime) {
         // Use 4D information for significance
