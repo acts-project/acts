@@ -123,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
       "Duplicate rate with particles (nDuplicateParticles/nTrueParticles) = "
       << duplicationRate_particle);
 
-  auto write_float = [&](float f, const char* name) {
+  auto writeFloat = [&](float f, const char* name) {
     TVectorF v(1);
     v[0] = f;
     m_outputFile->WriteObject(&v, name);
@@ -135,12 +135,12 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
     m_fakeRatePlotTool.write(m_fakeRatePlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
     m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
-    write_float(eff_tracks, "eff_tracks");
-    write_float(fakeRate_tracks, "fakerate_tracks");
-    write_float(duplicationRate_tracks, "duplicaterate_tracks");
-    write_float(eff_particle, "eff_particles");
-    write_float(fakeRate_particle, "fakerate_particles");
-    write_float(duplicationRate_particle, "duplicaterate_particles");
+    writeFloat(eff_tracks, "eff_tracks");
+    writeFloat(fakeRate_tracks, "fakerate_tracks");
+    writeFloat(duplicationRate_tracks, "duplicaterate_tracks");
+    writeFloat(eff_particle, "eff_particles");
+    writeFloat(fakeRate_particle, "fakerate_particles");
+    writeFloat(duplicationRate_particle, "duplicaterate_particles");
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();
@@ -232,51 +232,31 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
 
-    // Use neural network classification for duplication rate plots
-    // Currently, the network used for this example can only handle
-    // good/duplicate classification, so need to manually exclude fake tracks
-    if (m_cfg.duplicatedPredictor && !isFake) {
-      inputFeatures[0] = track.nMeasurements();
-      inputFeatures[1] = track.nOutliers();
-      inputFeatures[2] = track.chi2() * 1.0 / track.nDoF();
-      // predict if current trajectory is 'duplicate'
-      bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
-      // Add to number of duplicated particles
+    // Counting number of total trajectories
+    m_nTotalTracks++;
+  }
+
+  // Use truth-based classification for duplication rate plots
+  // Loop over all truth-matched reco tracks for duplication rate plots
+  for (auto& [particleId, matchedTracks] : matched) {
+    // Sort the reco tracks matched to this particle by the number of majority
+    // hits
+    std::sort(matchedTracks.begin(), matchedTracks.end(),
+              [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
+                return lhs.first > rhs.first;
+              });
+    for (std::size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
+      const auto& [nMajorityHits, fittedParameters] = matchedTracks.at(itrack);
+      // The tracks with maximum number of majority hits is taken as the
+      // 'real' track; others are as 'duplicated'
+      bool isDuplicated = (itrack != 0);
+      // the track is associated to the same particle
       if (isDuplicated) {
         m_nTotalDuplicateTracks++;
       }
       // Fill the duplication rate
       m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                  isDuplicated);
-    }
-    // Counting number of total trajectories
-    m_nTotalTracks++;
-  }
-
-  // Use truth-based classification for duplication rate plots
-  if (!m_cfg.duplicatedPredictor) {
-    // Loop over all truth-matched reco tracks for duplication rate plots
-    for (auto& [particleId, matchedTracks] : matched) {
-      // Sort the reco tracks matched to this particle by the number of majority
-      // hits
-      std::sort(matchedTracks.begin(), matchedTracks.end(),
-                [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-                  return lhs.first > rhs.first;
-                });
-      for (std::size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
-        const auto& [nMajorityHits, fittedParameters] =
-            matchedTracks.at(itrack);
-        // The tracks with maximum number of majority hits is taken as the
-        // 'real' track; others are as 'duplicated'
-        bool isDuplicated = (itrack != 0);
-        // the track is associated to the same particle
-        if (isDuplicated) {
-          m_nTotalDuplicateTracks++;
-        }
-        // Fill the duplication rate
-        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                   isDuplicated);
-      }
     }
   }
 

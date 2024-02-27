@@ -47,7 +47,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
     data.vx = particle.position().x() / Acts::UnitConstants::mm;
     data.vy = particle.position().y() / Acts::UnitConstants::mm;
     data.vz = particle.position().z() / Acts::UnitConstants::mm;
-    data.vt = particle.time() / Acts::UnitConstants::ns;
+    data.vt = particle.time() / Acts::UnitConstants::mm;
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
     data.px = p * particle.direction().x();
     data.py = p * particle.direction().y();
