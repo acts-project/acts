@@ -70,6 +70,7 @@ void addAmbiguityResolution(Context& ctx);
 void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addJson(Context& ctx);
+void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
@@ -120,6 +121,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addDigitization(ctx);
   addPythia8(ctx);
   addJson(ctx);
+  addDetray(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
