@@ -161,8 +161,6 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
-  // Eigen::Map<const ActsVector<nDim>> vtxPos{vtxPosDyn.data()};
-
   // Reference point R
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
 
@@ -212,7 +210,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     }
 
     // Vector pointing from the vertex position to the 3D PCA
-    Vector4 deltaRStraightTrack;
+    Vector4 deltaRStraightTrack{Vector4::Zero()};
     deltaRStraightTrack.head<nDim>() = pcaStraightTrack - vtxPos;
 
     return std::make_pair(deltaRStraightTrack, momDirStraightTrack);
@@ -286,7 +284,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
   // Vector pointing from the vertex position to the 3D PCA
-  Vector4 deltaR;
+  Vector4 deltaR{Vector4::Zero()};
   deltaR.head<nDim>() = pca - vtxPos;
 
   return std::make_pair(deltaR, momDir);
@@ -304,8 +302,9 @@ Result<double> ImpactPointEstimator::calculateDistance(
     return res.error();
   }
 
-  // Return distance
-  return res.value().first.norm();
+  // Return distance (we get a 4D vector in all cases, but we only need the
+  // position norm)
+  return res.value().first.template head<3>().norm();
 }
 
 Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
