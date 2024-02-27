@@ -42,10 +42,8 @@ struct PathLimitReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const Logger& logger) const {
-    if (navigator.targetReached(state.navigation)) {
-      return true;
-    }
+                  const navigator_t& /*navigator*/,
+                  const Logger& logger) const {
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
@@ -54,8 +52,6 @@ struct PathLimitReached {
     if (limitReached) {
       ACTS_VERBOSE("PathLimit aborter | "
                    << "Path limit reached at distance " << distance);
-      // reaching the target means navigation break
-      navigator.targetReached(state.navigation, true);
       return true;
     }
     stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
@@ -174,7 +170,6 @@ struct EndOfWorldReached {
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    navigator.targetReached(state.navigation, endOfWorld);
     return endOfWorld;
   }
 };

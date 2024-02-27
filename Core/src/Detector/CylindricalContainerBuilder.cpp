@@ -145,6 +145,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
       dvCfg.name = child->name;
       dvCfg.externalsBuilder = vsBuilder;
       dvCfg.internalsBuilder = child->internalsBuilder;
+      dvCfg.geoIdGenerator = child->geoIdGenerator;
+      dvCfg.portalMaterialBinning = child->portalMaterialBinning;
       dvCfg.auxiliary = "*** acts auto-generated volume builder ***";
       // Add the builder
       m_cfg.builders.push_back(std::make_shared<DetectorVolumeBuilder>(
@@ -189,6 +191,7 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   m_cfg.auxiliary = "*** acts auto-generated from proxy ***";
   m_cfg.geoIdGenerator = bpNode.geoIdGenerator;
   m_cfg.rootVolumeFinderBuilder = bpNode.rootVolumeFinderBuilder;
+  m_cfg.portalMaterialBinning = bpNode.portalMaterialBinning;
 }
 
 Acts::Experimental::DetectorComponent

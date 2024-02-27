@@ -28,6 +28,7 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -94,14 +95,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
   Finder1::Config cfg1;
   cfg1.cacheGridStateForTrackRemoval = false;
+  cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
-  Finder1::State state1;
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
@@ -109,11 +110,12 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
+  cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
-  Finder2::State state2;
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -150,17 +152,17 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
-  auto res1 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
 
-  auto res2 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
@@ -206,8 +208,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
@@ -219,6 +220,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   Finder1::Config cfg(density);
   cfg.cacheGridStateForTrackRemoval = true;
+  cfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg);
 
   // Use custom grid density here with same bin size as Finder1
@@ -228,9 +230,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = true;
+  cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
 
   int mySeed = 31415;
@@ -268,18 +271,18 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
-  Finder1::State state1;
-  Finder2::State state2;
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   double zResult1 = 0;
   double zResult2 = 0;
 
-  auto res1 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
@@ -294,7 +297,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-  auto res2 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
@@ -312,18 +315,18 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   CHECK_CLOSE_REL(zResult1, zResult2, 1e-5);
 
   int trkCount = 0;
-  std::vector<const BoundTrackParameters*> removedTracks;
+  std::vector<InputTrack> removedTracks;
   for (const auto& trk : trackVec) {
     if ((trkCount % 4) != 0) {
-      removedTracks.push_back(&trk);
+      removedTracks.emplace_back(&trk);
     }
     trkCount++;
   }
 
-  state1.tracksToRemove = removedTracks;
-  state2.tracksToRemove = removedTracks;
+  state1.as<Finder1::State>().tracksToRemove = removedTracks;
+  state2.as<Finder2::State>().tracksToRemove = removedTracks;
 
-  auto res3 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res3 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -339,7 +342,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-  auto res4 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res4 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res4.ok()) {
     std::cout << res4.error().message() << std::endl;
   }
@@ -374,9 +377,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-  Vertex<BoundTrackParameters> constraintVtx;
+  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  Vertex constraintVtx;
   constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.constraint = constraintVtx;
 
@@ -384,8 +386,9 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   Finder1::Config cfg1;
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.estimateSeedWidth = true;
+  cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
-  Finder1::State state1;
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
@@ -393,12 +396,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.estimateSeedWidth = true;
+  cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
-  Finder2::State state2;
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -433,13 +437,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
                            .value());
   }
 
-  std::vector<const BoundTrackParameters*> trackPtrVec;
+  std::vector<InputTrack> inputTracks;
   for (const auto& trk : trackVec) {
-    trackPtrVec.push_back(&trk);
+    inputTracks.emplace_back(&trk);
   }
 
   // Test finder 1
-  auto res1 = finder1.find(trackPtrVec, vertexingOptions, state1);
+  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
@@ -457,7 +461,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   }
 
   // Test finder 2
-  auto res2 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
