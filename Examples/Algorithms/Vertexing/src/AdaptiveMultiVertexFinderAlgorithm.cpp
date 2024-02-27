@@ -133,6 +133,7 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
+  finderConfig.tracksMaxSignificance = 5;
   if (m_cfg.useTime) {
     // Check if vertices are merged in space and time
     // TODO rename do3dSplitting -> doFullSplitting
