@@ -36,6 +36,8 @@ option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_PODIO "Build Podio plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
+option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
+option(ACTS_USE_SYSTEM_GEOMODEL "Use a system-provided GeoModel installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
@@ -63,7 +65,6 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_BINARIES "Build the examples binaries (deprecated)" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
@@ -131,7 +132,7 @@ set_option_if(
   ACTS_BUILD_EVERYTHING)
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
-    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
+    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -146,7 +147,7 @@ set_option_if(
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
-set_option_if(ACTS_BUILD_PLUGIN_FPEMON 
+set_option_if(ACTS_BUILD_PLUGIN_FPEMON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 
 # feature tests
@@ -187,6 +188,7 @@ set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
+set(_acts_geomodel_version 4.6.0)
 set(_acts_podio_version 0.16)
 set(_acts_doxygen_version 1.9.4)
 set(_acts_eigen3_version 3.3.7)
@@ -288,6 +290,15 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(Python 3.8 REQUIRED COMPONENTS Interpreter)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+  if(ACTS_USE_SYSTEM_GEOMODEL)
+    message(STATUS "Using system installation of GeoModel")
+    find_package(GeoModel ${_acts_geomodel_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/GeoModel)
+  endif()
+endif()
+
 if(ACTS_BUILD_PLUGIN_JSON)
   if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
     message(STATUS "Using system installation of nlohmann::json")
@@ -317,7 +328,7 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     message(WARNING "CUDA not found, build Exa.TrkX plugin only for CPU")
   endif()
   if(NOT (ACTS_EXATRKX_ENABLE_ONNX OR ACTS_EXATRKX_ENABLE_TORCH))
-    message(FATAL_ERROR 
+    message(FATAL_ERROR
       "When building the Exa.TrkX plugin, at least one of ACTS_EXATRKX_ENABLE_ONNX \
       and ACTS_EXATRKX_ENABLE_TORCHSCRIPT must be enabled."
     )
@@ -354,7 +365,7 @@ if(ACTS_BUILD_EXAMPLES)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
   find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-  if(ACTS_USE_SYSTEM_PYBIND11) 
+  if(ACTS_USE_SYSTEM_PYBIND11)
     find_package(pybind11 CONFIG REQUIRED)
   else()
     add_subdirectory(thirdparty/pybind11)

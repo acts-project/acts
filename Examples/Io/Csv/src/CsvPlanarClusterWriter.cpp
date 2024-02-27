@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       hit.x = globalPos.x() / Acts::UnitConstants::mm;
       hit.y = globalPos.y() / Acts::UnitConstants::mm;
       hit.z = globalPos.z() / Acts::UnitConstants::mm;
-      hit.t = parameters[2] / Acts::UnitConstants::ns;
+      hit.t = parameters[2] / Acts::UnitConstants::mm;
       writerHits.append(hit);
 
       // write local cell information
@@ -132,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
         truth.tx = simHit.position().x() / Acts::UnitConstants::mm;
         truth.ty = simHit.position().y() / Acts::UnitConstants::mm;
         truth.tz = simHit.position().z() / Acts::UnitConstants::mm;
-        truth.tt = simHit.time() / Acts::UnitConstants::ns;
+        truth.tt = simHit.time() / Acts::UnitConstants::mm;
         // particle four-momentum before interaction
         truth.tpx = simHit.momentum4Before().x() / Acts::UnitConstants::GeV;
         truth.tpy = simHit.momentum4Before().y() / Acts::UnitConstants::GeV;

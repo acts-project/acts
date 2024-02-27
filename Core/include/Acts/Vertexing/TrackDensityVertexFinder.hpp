@@ -10,10 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 namespace Acts {
@@ -28,22 +29,12 @@ namespace Acts {
 /// of the maximum of all summed track density functions.
 ///
 /// Ref. (1): https://cds.cern.ch/record/2670380
-///
-/// @tparam vfitter_t The vertex fitter type (needed to fulfill concept)
-/// @tparam track_density_t The track density type
-template <typename vfitter_t, typename track_density_t = GaussianTrackDensity>
-class TrackDensityVertexFinder {
-  // Provided vertex fitter type should comply with the VertexFitterConcept
-  // to ensure providing an input track type InputTrack_t
-
-  // static_assert(VertexFitterConcept<vfitter_t>,
-  //              "Vertex fitter does not fulfill vertex fitter concept.");
-
+class TrackDensityVertexFinder final : public IVertexFinder {
  public:
   /// @brief The Config struct
   struct Config {
     // The track density estimator
-    track_density_t trackDensityEstimator;
+    GaussianTrackDensity trackDensityEstimator;
   };
 
   /// State struct for fulfilling interface
@@ -59,25 +50,28 @@ class TrackDensityVertexFinder {
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+                                   IVertexFinder::State& state) const override;
+
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& /*state*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {
+    // Nothing to do here
+  }
 
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
   /// @param func Function extracting BoundTrackParameters from InputTrack
   ///             object
-  TrackDensityVertexFinder(
-      const Config& cfg,
-      const std::function<BoundTrackParameters(const InputTrack&)>& func)
-      : m_cfg(cfg), m_extractParameters(func) {}
+  TrackDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  std::function<BoundTrackParameters(const InputTrack&)> m_extractParameters;
 };
 
 }  // namespace Acts
-
-#include "TrackDensityVertexFinder.ipp"
