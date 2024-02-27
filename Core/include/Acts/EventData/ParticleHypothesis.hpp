@@ -50,7 +50,7 @@ class SinglyChargedParticleHypothesis
   static SinglyChargedParticleHypothesis proton() {
     return SinglyChargedParticleHypothesis(PdgParticle::eProton);
   }
-  
+
   static SinglyChargedParticleHypothesis chargedGeantino() {
     return SinglyChargedParticleHypothesis(PdgParticle::eInvalid, 0);
   }
