@@ -187,9 +187,8 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
-add_custom_target(ActsPythonGlueCode)
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES setup.sh.in DESTINATION "python" RENAME setup.sh)
+install(FILES ${_python_dir}/setup.sh DESTINATION "python")
 
 foreach(f ${py_files})
 set(_target ${_python_dir}/acts/${f})
@@ -200,5 +199,3 @@ file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target} SYMBOLI
 endforeach()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/ DESTINATION ${_python_install_dir})
-
-add_dependencies(ActsPythonBindings ActsPythonGlueCode)
