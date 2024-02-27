@@ -45,7 +45,7 @@ class SinglyChargedParticleHypothesis
     return SinglyChargedParticleHypothesis(PdgParticle::eElectron);
   }
   static SinglyChargedParticleHypothesis kaon() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eKaon);
+    return SinglyChargedParticleHypothesis(PdgParticle::eKaonPlus);
   }
   static SinglyChargedParticleHypothesis proton() {
     return SinglyChargedParticleHypothesis(PdgParticle::eProton);

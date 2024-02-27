@@ -16,7 +16,7 @@ def test_particle_hypothesis():
     assert muon.absolutePdg() == acts.PdgParticle.eMuon
     assert pion.absolutePdg() == acts.PdgParticle.ePionPlus
     assert electron.absolutePdg() == acts.PdgParticle.eElectron
-    assert kaon.absolutePdg() == acts.PdgParticle.eKaon
+    assert kaon.absolutePdg() == acts.PdgParticle.eKaonPlus
     assert proton.absolutePdg() == acts.PdgParticle.eProton
     assert geantino.absolutePdg() == acts.PdgParticle.eInvalid
     assert chargedGeantino.absolutePdg() == acts.PdgParticle.eInvalid
