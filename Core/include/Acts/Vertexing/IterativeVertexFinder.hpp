@@ -121,7 +121,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& _magContext)
         : magContext(_magContext),
-          ipState(field.makeCache(magContext)),
+          ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 
     std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
