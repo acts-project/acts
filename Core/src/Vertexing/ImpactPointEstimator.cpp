@@ -17,10 +17,11 @@
 namespace Acts {
 
 namespace {
-template <int nDim, typename vector_t>
+template <typename vector_t>
 Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
                                           vector_t vertexPos) {
+  static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -153,11 +154,12 @@ Result<double> performNewtonOptimization(
 }
 
 // Note: always return Vector4, we'll chop off the last component if needed
-template <int nDim, typename vector_t>
+template <typename vector_t>
 Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
     vector_t vtxPos, const ImpactPointEstimator::Config& cfg,
     ImpactPointEstimator::State& state, const Logger& logger) {
+  static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -295,8 +297,8 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
 Result<double> ImpactPointEstimator::calculateDistance(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
     const Vector3& vtxPos, State& state) const {
-  auto res = getDistanceAndMomentumImpl<3>(gctx, trkParams, vtxPos, m_cfg,
-                                           state, *m_logger);
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
 
   if (!res.ok()) {
     return res.error();
@@ -311,8 +313,8 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const BoundTrackParameters& trkParams, const Vector3& vtxPos,
     State& state) const {
-  auto res = getDistanceAndMomentumImpl<3>(gctx, trkParams, vtxPos, m_cfg,
-                                           state, *m_logger);
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
 
   if (!res.ok()) {
     return res.error();
@@ -387,11 +389,11 @@ Result<double> ImpactPointEstimator::getVertexCompatibility(
     const GeometryContext& gctx, const BoundTrackParameters* trkParams,
     Eigen::Map<const ActsDynamicVector> vertexPos) const {
   if (vertexPos.size() == 3) {
-    return getVertexCompatibilityImpl<3>(gctx, trkParams,
-                                         vertexPos.template head<3>());
+    return getVertexCompatibilityImpl(gctx, trkParams,
+                                      vertexPos.template head<3>());
   } else if (vertexPos.size() == 4) {
-    return getVertexCompatibilityImpl<4>(gctx, trkParams,
-                                         vertexPos.template head<4>());
+    return getVertexCompatibilityImpl(gctx, trkParams,
+                                      vertexPos.template head<4>());
   } else {
     return VertexingError::InvalidInput;
   }
@@ -402,10 +404,10 @@ ImpactPointEstimator::getDistanceAndMomentum(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
     Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
   if (vtxPos.size() == 3) {
-    return getDistanceAndMomentumImpl<3>(
+    return getDistanceAndMomentumImpl(
         gctx, trkParams, vtxPos.template head<3>(), m_cfg, state, *m_logger);
   } else if (vtxPos.size() == 4) {
-    return getDistanceAndMomentumImpl<4>(
+    return getDistanceAndMomentumImpl(
         gctx, trkParams, vtxPos.template head<4>(), m_cfg, state, *m_logger);
   } else {
     return VertexingError::InvalidInput;
