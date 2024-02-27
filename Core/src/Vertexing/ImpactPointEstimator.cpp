@@ -20,7 +20,7 @@ namespace {
 template <typename vector_t>
 Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
-                                          vector_t vertexPos) {
+                                          const vector_t& vertexPos) {
   static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
@@ -157,7 +157,7 @@ Result<double> performNewtonOptimization(
 template <typename vector_t>
 Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    vector_t vtxPos, const ImpactPointEstimator::Config& cfg,
+    const vector_t& vtxPos, const ImpactPointEstimator::Config& cfg,
     ImpactPointEstimator::State& state, const Logger& logger) {
   static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
