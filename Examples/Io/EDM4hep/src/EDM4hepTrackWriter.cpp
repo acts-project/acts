@@ -48,6 +48,7 @@ ProcessCode EDM4hepTrackWriter::writeT(const AlgorithmContext& context,
 
   frame.put(std::move(trackCollection), m_cfg.outputTracks);
 
+  std::lock_guard guard(m_writeMutex);
   m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;

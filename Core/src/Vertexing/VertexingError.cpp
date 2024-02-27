@@ -40,6 +40,8 @@ class VertexingErrorCategory : public std::error_category {
         return "Encountered negative or zero variance.";
       case VertexingError::MatrixNotPositiveDefinite:
         return "Encountered a matrix that is not positive definite.";
+      case VertexingError::InvalidInput:
+        return "Invalid input provided.";
       default:
         return "unknown";
     }

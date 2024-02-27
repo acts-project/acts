@@ -24,6 +24,7 @@ enum class VertexingError {
   SingularMatrix,
   NonPositiveVariance,
   MatrixNotPositiveDefinite,
+  InvalidInput,
 };
 
 std::error_code make_error_code(Acts::VertexingError e);
