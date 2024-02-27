@@ -92,3 +92,5 @@ if "__main__" == __name__:
     )
 
     acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+    detrayConvBool = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
+    print(f"detray converter run :  {detrayConvBool}")

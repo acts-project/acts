@@ -77,6 +77,13 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_DETRAY)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsPluginDetray)
+  target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
+endif()
+
 if(ACTS_BUILD_PLUGIN_ACTSVG)
   target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
   target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
