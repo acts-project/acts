@@ -75,5 +75,3 @@ class TrackDensityVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "TrackDensityVertexFinder.ipp"
