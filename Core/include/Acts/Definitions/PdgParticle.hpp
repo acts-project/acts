@@ -27,7 +27,7 @@ enum PdgParticle : std::int32_t {
   ePionPlus = 211,
   ePionMinus = -ePionPlus,
   eKaonPlus = 321,
-  eKaonMinus = -eKaon,
+  eKaonMinus = -eKaonPlus,
   eNeutron = 2112,
   eAntiNeutron = -eNeutron,
   eProton = 2212,
