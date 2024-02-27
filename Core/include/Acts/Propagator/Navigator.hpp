@@ -929,7 +929,7 @@ class Navigator {
       std::sort(state.navigation.navBoundaries.begin(),
                 state.navigation.navBoundaries.end(),
                 [](const auto& a, const auto& b) {
-                  return SurfaceIntersection::forwardOrder(a.first, b.first);
+                  return SurfaceIntersection::pathLengthOrder(a.first, b.first);
                 });
 
       // Print boundary information
@@ -1132,7 +1132,7 @@ class Navigator {
         state.options.direction * stepper.direction(state.stepping), navOpts);
     std::sort(state.navigation.navSurfaces.begin(),
               state.navigation.navSurfaces.end(),
-              SurfaceIntersection::forwardOrder);
+              SurfaceIntersection::pathLengthOrder);
 
     // Print surface information
     if (logger().doPrint(Logging::VERBOSE)) {
@@ -1206,7 +1206,7 @@ class Navigator {
     std::sort(state.navigation.navLayers.begin(),
               state.navigation.navLayers.end(),
               [](const auto& a, const auto& b) {
-                return SurfaceIntersection::forwardOrder(a.first, b.first);
+                return SurfaceIntersection::pathLengthOrder(a.first, b.first);
               });
 
     // Print layer information
