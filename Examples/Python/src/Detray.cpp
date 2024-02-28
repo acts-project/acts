@@ -12,6 +12,14 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include "detray/builders/detector_builder.hpp"
+#include "detray/io/frontend/detector_reader_config.hpp"
+#include "detray/io/frontend/implementation/json_readers.hpp"
+#include "detray/io/frontend/utils/detector_components_reader.hpp"
+#include "detray/utils/consistency_checker.hpp"
+
+#include "Detray.hpp"
+
 #include <fstream>
 #include <initializer_list>
 #include <memory>
@@ -36,6 +44,9 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace ActsExamples;
+using namespace detray;
+
+using detector_t = detector<>;
 
 //example pybind lamda function
 namespace Acts::Python {
@@ -48,8 +59,16 @@ namespace Acts::Python {
                     [](const Acts::GeometryContext& gctx,
                     const Acts::Experimental::Detector& detector,
                     const std::string& name) -> bool {
-                        //pass a boolean for checking 
-                        return true;
+                        
+                        //build an empty detector
+                        detector_builder<> det_builder{};
+                        vecmem::host_memory_resource host_mr;
+                        const detector_t d = det_builder.build(host_mr);
+
+                        //call the converters from plugin 
+                        bool ret = detray_converter(d);
+
+                        return (ret);
                     });
         }
     }
