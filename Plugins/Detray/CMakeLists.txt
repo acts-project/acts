@@ -13,7 +13,12 @@ target_link_libraries(
   ActsPluginDetray 
   PUBLIC 
     ActsCore
-    detray::core)
+    detray::core
+    detray::core_array#changed i shoudl check SOS
+    detray::io
+    detray::utils
+    detray::svgtools
+    vecmem::core)
 
 install(
   TARGETS ActsPluginDetray
