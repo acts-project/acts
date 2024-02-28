@@ -1,16 +1,19 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int mainGridSize, int trkGridSize>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
-    const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
+
+namespace Acts {
+
+auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   IVertexFinder::State& anyState) const
+    -> Result<std::vector<Vertex>> {
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
@@ -34,7 +37,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
       return std::vector<Vertex>{};
     }
   } else {
-    state.mainGrid = MainGridVector::Zero();
+    state.mainGrid =
+        MainGridVector::Zero(m_cfg.gridDensity.config().mainGridSize);
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
@@ -58,7 +62,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
 
   double z = 0;
   double width = 0;
-  if (state.mainGrid != MainGridVector::Zero()) {
+  if (!state.mainGrid.isZero()) {
     if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
       auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
@@ -96,9 +100,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
   return std::vector<Vertex>{returnVertex};
 }
 
-template <int mainGridSize, int trkGridSize>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::
-    doesPassTrackSelection(const BoundTrackParameters& trk) const -> bool {
+auto GridDensityVertexFinder::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
@@ -136,3 +139,5 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::
 
   return true;
 }
+
+}  // namespace Acts
