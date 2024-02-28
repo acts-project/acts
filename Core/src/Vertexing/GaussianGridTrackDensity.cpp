@@ -12,6 +12,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
+
 namespace Acts {
 
 Result<float> GaussianGridTrackDensity::getMaxZPosition(

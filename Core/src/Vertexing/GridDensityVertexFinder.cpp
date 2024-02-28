@@ -9,6 +9,7 @@
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 
 namespace Acts {
+
 auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& anyState) const
