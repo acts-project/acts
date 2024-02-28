@@ -17,4 +17,6 @@ target_sources(
     TrackDensityVertexFinder.cpp
     GaussianTrackDensity.cpp
     ImpactPointEstimator.cpp
+    GaussianGridTrackDensity.cpp
+    GridDensityVertexFinder.cpp
 )
