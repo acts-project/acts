@@ -151,7 +151,6 @@ class DetectorNavigator {
     }
     if (nState.currentDetector == nullptr) {
       throw std::invalid_argument("DetectorNavigator: no detector assigned");
-      return;
     }
 
     fillNavigationState(state, stepper, nState);
@@ -161,7 +160,6 @@ class DetectorNavigator {
     }
     if (nState.currentVolume == nullptr) {
       throw std::invalid_argument("DetectorNavigator: no current volume found");
-      return;
     }
     updateCandidateSurfaces(state, stepper);
   }
@@ -301,7 +299,6 @@ class DetectorNavigator {
                         posInfo(state, stepper) +
                         "panic: not a surface not a portal - what is it?";
       throw std::runtime_error(msg);
-      return;
     }
 
     // TODO not sure about the boundary check
