@@ -483,6 +483,22 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
               state.smoothedCovariance() - K * H * state.smoothedCovariance();
           return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
         }
+        if (ipar == eUnbiased && !state.hasSmoothed() && state.hasPredicted() &&
+            state.hasProjector()) {
+          // Same calculation as above but using the predicted states.
+          auto m = state.effectiveCalibrated();
+          auto H = state.effectiveProjector();
+          auto V = state.effectiveCalibratedCovariance();
+          auto K =
+              (state.predictedCovariance() * H.transpose() *
+               (H * state.predictedCovariance() * H.transpose() - V).inverse())
+                  .eval();
+          auto unbiasedParamsVec =
+              state.predicted() + K * (m - H * state.predicted());
+          auto unbiasedParamsCov =
+              state.predictedCovariance() - K * H * state.predictedCovariance();
+          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+        }
         return std::nullopt;
       };
 
