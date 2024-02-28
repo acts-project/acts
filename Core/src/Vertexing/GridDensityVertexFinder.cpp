@@ -61,7 +61,7 @@ auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
 
   double z = 0;
   double width = 0;
-  if (!state.mainGrid.isZero(0)) {
+  if (!state.mainGrid.isZero()) {
     if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
       auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);

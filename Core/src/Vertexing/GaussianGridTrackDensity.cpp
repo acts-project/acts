@@ -16,7 +16,7 @@ namespace Acts {
 
 Result<float> GaussianGridTrackDensity::getMaxZPosition(
     MainGridVector& mainGrid) const {
-  if (mainGrid.isZero(0)) {
+  if (mainGrid.isZero()) {
     return VertexingError::EmptyInput;
   }
 
@@ -142,7 +142,7 @@ GaussianGridTrackDensity::createTrackGrid(float d0, float distCtrZ,
 
 Result<float> GaussianGridTrackDensity::estimateSeedWidth(
     MainGridVector& mainGrid, float maxZ) const {
-  if (mainGrid.isZero(0)) {
+  if (mainGrid.isZero()) {
     return VertexingError::EmptyInput;
   }
   // Get z bin of max density z value
