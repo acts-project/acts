@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   using Finder1 = GridDensityVertexFinder;
-  Finder1::Config cfg1{100, mainGridSize, trkGridSize};
+  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   vertexingOptions.constraint = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder;
-  Finder1::Config cfg1{100, mainGridSize, trkGridSize};
+  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.estimateSeedWidth = true;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();

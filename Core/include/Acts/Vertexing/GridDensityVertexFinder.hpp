@@ -36,11 +36,6 @@ class GridDensityVertexFinder final : public IVertexFinder {
 
   /// @brief The Config struct
   struct Config {
-    Config(float zMinMax_ = 100, int mainGridSize_ = 2000,
-           int trkGridSize_ = 15)
-        : Config{GaussianGridTrackDensity::Config{zMinMax_, mainGridSize_,
-                                                  trkGridSize_}} {}
-
     ///@param gDensity The grid density
     Config(GaussianGridTrackDensity gDensity) : gridDensity(gDensity) {}
 
