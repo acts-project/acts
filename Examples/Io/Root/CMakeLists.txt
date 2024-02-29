@@ -1,7 +1,7 @@
 add_library(
   ActsExamplesIoRootLinkDef OBJECT)
 ROOT_GENERATE_DICTIONARY(
-  ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.h)
+  ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.hpp)
 target_link_libraries(
   ActsExamplesIoRootLinkDef
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
