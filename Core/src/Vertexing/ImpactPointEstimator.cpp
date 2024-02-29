@@ -6,112 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
+
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<double> Acts::
-    ImpactPointEstimator<propagator_t, propagator_options_t>::calculateDistance(
-        const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-        const Vector3& vtxPos, State& state) const {
-  auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
+namespace Acts {
 
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  // Return distance
-  return res.value().first.norm();
-}
-
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<Acts::BoundTrackParameters>
-Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
-    estimate3DImpactParameters(const GeometryContext& gctx,
-                               const Acts::MagneticFieldContext& mctx,
-                               const BoundTrackParameters& trkParams,
-                               const Vector3& vtxPos, State& state) const {
-  auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
-
-  if (!res.ok()) {
-    return res.error();
-  }
-
-  // Vector pointing from vertex to 3D PCA
-  Vector3 deltaR = res.value().first;
-
-  // Get corresponding unit vector
-  deltaR.normalize();
-
-  // Momentum direction at vtxPos
-  Vector3 momDir = res.value().second;
-
-  // To understand why deltaR and momDir are not orthogonal, let us look at the
-  // x-y-plane. Since we computed the 3D PCA, the 2D distance between the vertex
-  // and the PCA is not necessarily minimal (see Fig. 4.2 in the reference). As
-  // a consequence, the momentum and the vector connecting the vertex and the
-  // PCA are not orthogonal to each other.
-  Vector3 orthogonalDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
-
-  // Vector perpendicular to momDir and orthogonalDeltaR
-  Vector3 perpDir = momDir.cross(orthogonalDeltaR);
-
-  // Cartesian coordinate system with:
-  // -) origin at the vertex position
-  // -) z-axis in momentum direction
-  // -) x-axis approximately in direction of the 3D PCA (slight deviations
-  // because it was modified to make if orthogonal to momDir)
-  // -) y-axis is calculated to be orthogonal to x- and z-axis
-  // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
-  // row.
-  Transform3 coordinateSystem;
-  // First three columns correspond to coordinate system axes
-  coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
-  coordinateSystem.matrix().block<3, 1>(0, 1) = perpDir;
-  coordinateSystem.matrix().block<3, 1>(0, 2) = momDir;
-  // Fourth column corresponds to origin of the coordinate system
-  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
-
-  // Surface with normal vector in direction of the z axis of coordinateSystem
-  std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(coordinateSystem);
-
-  auto intersection =
-      planeSurface
-          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryCheck(false))
-          .closest();
-
-  // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
-  pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.pathLength());
-
-  // Propagate to the surface; intersection corresponds to an estimate of the 3D
-  // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
-  auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
-  if (result.ok()) {
-    return *result->endParameters;
-  } else {
-    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
-    ACTS_DEBUG(
-        "The plane surface to which we tried to propagate has its origin at\n"
-        << vtxPos);
-    return result.error();
-  }
-}
-
-template <typename propagator_t, typename propagator_options_t>
-template <unsigned int nDim>
-Acts::Result<double>
-Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
-    getVertexCompatibility(const GeometryContext& gctx,
-                           const BoundTrackParameters* trkParams,
-                           const ActsVector<nDim>& vertexPos) const {
+namespace {
+template <typename vector_t>
+Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
+                                          const BoundTrackParameters* trkParams,
+                                          const vector_t& vertexPos) {
+  static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
+
+  static_assert(vector_t::RowsAtCompileTime == nDim,
+                "The dimension of the vertex position vector must match nDim.");
 
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
@@ -172,13 +87,21 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
   return residual.dot(weight * residual);
 }
 
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<
-    propagator_t,
-    propagator_options_t>::performNewtonOptimization(const Vector3& helixCenter,
-                                                     const Vector3& vtxPos,
-                                                     double phi, double theta,
-                                                     double rho) const {
+/// @brief Performs a Newton approximation to retrieve a point
+/// of closest approach in 3D to a reference position
+///
+/// @param helixCenter Position of the helix center
+/// @param vtxPos Vertex position
+/// @param phi Azimuthal momentum angle
+/// @note Modifying phi corresponds to moving along the track. This function
+/// optimizes phi until we reach a 3D PCA.
+/// @param theta Polar momentum angle (constant along the track)
+/// @param rho Signed helix radius
+///
+/// @return Phi value at 3D PCA
+Result<double> performNewtonOptimization(
+    const Vector3& helixCenter, const Vector3& vtxPos, double phi, double theta,
+    double rho, const ImpactPointEstimator::Config& cfg, const Logger& logger) {
   double sinPhi = std::sin(phi);
   double cosPhi = std::cos(phi);
 
@@ -195,9 +118,9 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   double yVtx = vtxPos.y();
   double zVtx = vtxPos.z();
 
-  // Iterate until convergence is reached or the maximum amount of iterations is
-  // exceeded
-  while (!hasConverged && nIter < m_cfg.maxIterations) {
+  // Iterate until convergence is reached or the maximum amount of iterations
+  // is exceeded
+  while (!hasConverged && nIter < cfg.maxIterations) {
     double derivative = rho * ((xVtx - xO) * cosPhi + (yVtx - yO) * sinPhi +
                                (zVtx - zO + rho * phi * cotTheta) * cotTheta);
     double secDerivative = rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
@@ -205,7 +128,8 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 
     if (secDerivative < 0.) {
       ACTS_ERROR(
-          "Encountered negative second derivative during Newton optimization.");
+          "Encountered negative second derivative during Newton "
+          "optimization.");
       return VertexingError::NumericFailure;
     }
 
@@ -217,7 +141,7 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 
     nIter += 1;
 
-    if (std::abs(deltaPhi) < m_cfg.precision) {
+    if (std::abs(deltaPhi) < cfg.precision) {
       hasConverged = true;
     }
   }  // end while loop
@@ -229,13 +153,13 @@ Acts::Result<double> Acts::ImpactPointEstimator<
   return phi;
 }
 
-template <typename propagator_t, typename propagator_options_t>
-template <unsigned int nDim>
-Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
-    getDistanceAndMomentum(const GeometryContext& gctx,
-                           const BoundTrackParameters& trkParams,
-                           const ActsVector<nDim>& vtxPos, State& state) const {
+// Note: always return Vector4, we'll chop off the last component if needed
+template <typename vector_t>
+Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const vector_t& vtxPos, const ImpactPointEstimator::Config& cfg,
+    ImpactPointEstimator::State& state, const Logger& logger) {
+  static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
 
@@ -248,7 +172,7 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
 
   // Z-component of the B field at the reference position.
   // Note that we assume a constant B field here!
-  auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
+  auto fieldRes = cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
     ACTS_ERROR("In getDistanceAndMomentum, the B field at\n"
                << refPoint << "\ncould not be retrieved.");
@@ -288,7 +212,8 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     }
 
     // Vector pointing from the vertex position to the 3D PCA
-    ActsVector<nDim> deltaRStraightTrack = pcaStraightTrack - vtxPos;
+    Vector4 deltaRStraightTrack{Vector4::Zero()};
+    deltaRStraightTrack.head<nDim>() = pcaStraightTrack - vtxPos;
 
     return std::make_pair(deltaRStraightTrack, momDirStraightTrack);
   }
@@ -325,7 +250,7 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
   // Use Newton optimization method to iteratively change phi until we arrive at
   // the 3D PCA
   auto res = performNewtonOptimization(helixCenter, vtxPos.template head<3>(),
-                                       phi, theta, rho);
+                                       phi, theta, rho, cfg, logger);
   if (!res.ok()) {
     return res.error();
   }
@@ -361,23 +286,143 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
   // Vector pointing from the vertex position to the 3D PCA
-  ActsVector<nDim> deltaR = pca - vtxPos;
+  Vector4 deltaR{Vector4::Zero()};
+  deltaR.head<nDim>() = pca - vtxPos;
 
   return std::make_pair(deltaR, momDir);
 }
 
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<Acts::ImpactParametersAndSigma>
-Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
-    getImpactParameters(const BoundTrackParameters& track, const Vertex& vtx,
-                        const GeometryContext& gctx,
-                        const Acts::MagneticFieldContext& mctx,
-                        bool calculateTimeIP) const {
+}  // namespace
+
+Result<double> ImpactPointEstimator::calculateDistance(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    const Vector3& vtxPos, State& state) const {
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Return distance (we get a 4D vector in all cases, but we only need the
+  // position norm)
+  return res.value().first.template head<3>().norm();
+}
+
+Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+    State& state) const {
+  auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
+                                        *m_logger);
+
+  if (!res.ok()) {
+    return res.error();
+  }
+
+  // Vector pointing from vertex to 3D PCA
+  Vector3 deltaR = res.value().first.head<3>();
+
+  // Get corresponding unit vector
+  deltaR.normalize();
+
+  // Momentum direction at vtxPos
+  Vector3 momDir = res.value().second;
+
+  // To understand why deltaR and momDir are not orthogonal, let us look at the
+  // x-y-plane. Since we computed the 3D PCA, the 2D distance between the vertex
+  // and the PCA is not necessarily minimal (see Fig. 4.2 in the reference). As
+  // a consequence, the momentum and the vector connecting the vertex and the
+  // PCA are not orthogonal to each other.
+  Vector3 orthogonalDeltaR = deltaR - (deltaR.dot(momDir)) * momDir;
+
+  // Vector perpendicular to momDir and orthogonalDeltaR
+  Vector3 perpDir = momDir.cross(orthogonalDeltaR);
+
+  // Cartesian coordinate system with:
+  // -) origin at the vertex position
+  // -) z-axis in momentum direction
+  // -) x-axis approximately in direction of the 3D PCA (slight deviations
+  // because it was modified to make if orthogonal to momDir)
+  // -) y-axis is calculated to be orthogonal to x- and z-axis
+  // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
+  // row.
+  Transform3 coordinateSystem;
+  // First three columns correspond to coordinate system axes
+  coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
+  coordinateSystem.matrix().block<3, 1>(0, 1) = perpDir;
+  coordinateSystem.matrix().block<3, 1>(0, 2) = momDir;
+  // Fourth column corresponds to origin of the coordinate system
+  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
+
+  // Surface with normal vector in direction of the z axis of coordinateSystem
+  std::shared_ptr<PlaneSurface> planeSurface =
+      Surface::makeShared<PlaneSurface>(coordinateSystem);
+
+  auto intersection =
+      planeSurface
+          ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
+                      BoundaryCheck(false))
+          .closest();
+
+  // Create propagator options
+  PropagatorOptions<> pOptions(gctx, mctx);
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
+
+  // Propagate to the surface; intersection corresponds to an estimate of the 3D
+  // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
+  auto result =
+      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
+  if (result.ok()) {
+    return *result;
+  } else {
+    ACTS_ERROR("Error during propagation in estimate3DImpactParameters.");
+    ACTS_DEBUG(
+        "The plane surface to which we tried to propagate has its origin at\n"
+        << vtxPos);
+    return result.error();
+  }
+}
+
+Result<double> ImpactPointEstimator::getVertexCompatibility(
+    const GeometryContext& gctx, const BoundTrackParameters* trkParams,
+    Eigen::Map<const ActsDynamicVector> vertexPos) const {
+  if (vertexPos.size() == 3) {
+    return getVertexCompatibilityImpl(gctx, trkParams,
+                                      vertexPos.template head<3>());
+  } else if (vertexPos.size() == 4) {
+    return getVertexCompatibilityImpl(gctx, trkParams,
+                                      vertexPos.template head<4>());
+  } else {
+    return VertexingError::InvalidInput;
+  }
+}
+
+Result<std::pair<Acts::Vector4, Acts::Vector3>>
+ImpactPointEstimator::getDistanceAndMomentum(
+    const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+    Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
+  if (vtxPos.size() == 3) {
+    return getDistanceAndMomentumImpl(
+        gctx, trkParams, vtxPos.template head<3>(), m_cfg, state, *m_logger);
+  } else if (vtxPos.size() == 4) {
+    return getDistanceAndMomentumImpl(
+        gctx, trkParams, vtxPos.template head<4>(), m_cfg, state, *m_logger);
+  } else {
+    return VertexingError::InvalidInput;
+  }
+}
+
+Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    bool calculateTimeIP) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   auto intersection = perigeeSurface
                           ->intersect(gctx, track.position(gctx),
                                       track.direction(), BoundaryCheck(false))
@@ -386,27 +431,28 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPoint
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     ACTS_ERROR("Error during propagation in getImpactParameters.");
     ACTS_DEBUG(
-        "The Perigee surface to which we tried to propagate has its origin at\n"
+        "The Perigee surface to which we tried to propagate has its origin "
+        "at\n"
         << vtx.position());
     return result.error();
   }
 
-  const auto& propRes = *result;
+  const auto& params = *result;
 
   // Check if the covariance matrix of the Perigee parameters exists
-  if (!propRes.endParameters->covariance().has_value()) {
+  if (!params.covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
 
   // Extract Perigee parameters and corresponding covariance matrix
-  auto impactParams = propRes.endParameters->impactParameters();
-  auto impactParamCovariance =
-      propRes.endParameters->impactParameterCovariance().value();
+  auto impactParams = params.impactParameters();
+  auto impactParamCovariance = params.impactParameterCovariance().value();
 
   // Vertex variances
   // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
@@ -451,29 +497,26 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
   return ipAndSigma;
 }
 
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<std::pair<double, double>>
-Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
-    getLifetimeSignOfTrack(const BoundTrackParameters& track, const Vertex& vtx,
-                           const Acts::Vector3& direction,
-                           const GeometryContext& gctx,
-                           const MagneticFieldContext& mctx) const {
+Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const Vector3& direction, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();
   }
 
-  const auto& propRes = *result;
-  const auto& params = propRes.endParameters->parameters();
+  const auto& params = (*result).parameters();
   const double d0 = params[BoundIndices::eBoundLoc0];
   const double z0 = params[BoundIndices::eBoundLoc1];
   const double phi = params[BoundIndices::eBoundPhi];
@@ -493,34 +536,33 @@ Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
   return vszs;
 }
 
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<double>
-Acts::ImpactPointEstimator<propagator_t, propagator_options_t>::
-    get3DLifetimeSignOfTrack(const BoundTrackParameters& track,
-                             const Vertex& vtx, const Acts::Vector3& direction,
-                             const GeometryContext& gctx,
-                             const MagneticFieldContext& mctx) const {
+Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
+    const BoundTrackParameters& track, const Vertex& vtx,
+    const Vector3& direction, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+  auto result =
+      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();
   }
 
-  const auto& propRes = *result;
-  const auto& params = propRes.endParameters;
-  const Vector3 trkpos = params->position(gctx);
-  const Vector3 trkmom = params->momentum();
+  const auto& params = *result;
+  const Vector3 trkpos = params.position(gctx);
+  const Vector3 trkmom = params.momentum();
 
   double sign =
       (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));
 
   return sign >= 0. ? 1. : -1.;
 }
+
+}  // namespace Acts

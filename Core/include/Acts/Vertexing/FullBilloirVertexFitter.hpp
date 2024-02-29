@@ -8,12 +8,15 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizerConcept.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -43,33 +46,16 @@ namespace Acts {
 /// ACTS White Paper: Cross-Covariance Matrices in the Billoir Vertex Fit
 /// https://acts.readthedocs.io/en/latest/white_papers/billoir-covariances.html
 /// Author(s) Russo, F
-///
-/// @tparam linearizer_t Track linearizer type
-template <typename linearizer_t>
 class FullBilloirVertexFitter {
-  static_assert(LinearizerConcept<linearizer_t>,
-                "Linearizer does not fulfill linearizer concept.");
-
  public:
-  using Propagator_t = typename linearizer_t::Propagator_t;
-  using Linearizer_t = linearizer_t;
-
-  struct State {
-    /// @brief The state constructor
-    ///
-    /// @param fieldCache The magnetic field cache
-    State(MagneticFieldProvider::Cache fieldCache)
-        : linearizerState(std::move(fieldCache)) {}
-    /// The linearizer state
-    typename Linearizer_t::State linearizerState;
-  };
-
   struct Config {
     /// Maximum number of iterations in fitter
     int maxIterations = 5;
 
     // Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
+
+    TrackLinearizer trackLinearizer;
   };
 
   /// @brief Constructor for user-defined InputTrack type
@@ -87,6 +73,12 @@ class FullBilloirVertexFitter {
           "No function to extract parameters "
           "provided.");
     }
+
+    if (!m_cfg.trackLinearizer.connected()) {
+      throw std::invalid_argument(
+          "FullBilloirVertexFitter: "
+          "No track linearizer provided.");
+    }
   }
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
@@ -98,9 +90,8 @@ class FullBilloirVertexFitter {
   ///
   /// @return Fitted vertex
   Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
-                     const linearizer_t& linearizer,
                      const VertexingOptions& vertexingOptions,
-                     State& state) const;
+                     MagneticFieldProvider::Cache& fieldCache) const;
 
  private:
   /// Configuration object
@@ -114,5 +105,3 @@ class FullBilloirVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "FullBilloirVertexFitter.ipp"

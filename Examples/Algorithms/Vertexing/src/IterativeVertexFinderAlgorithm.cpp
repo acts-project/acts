@@ -76,27 +76,37 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Fitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters
       .connect<&Acts::InputTrack::extractParameters>();
-  Fitter vertexFitter(vertexFitterCfg,
-                      logger().cloneWithSuffix("FullBilloirVertexFitter"));
   // Setup the track linearizer
-  Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
+  Linearizer::Config linearizerCfg;
+  linearizerCfg.bField = m_cfg.bField;
+  linearizerCfg.propagator = propagator;
   Linearizer linearizer(linearizerCfg,
                         logger().cloneWithSuffix("HelicalTrackLinearizer"));
+
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
+  Fitter vertexFitter(vertexFitterCfg,
+                      logger().cloneWithSuffix("FullBilloirVertexFitter"));
+
   // Setup the seed finder
-  IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
-  IPEstimator ipEst(ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
+  Acts::ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
+  Acts::ImpactPointEstimator ipEst(
+      ipEstCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
 
   Acts::GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  Seeder seeder{{{densityCfg}}};
+  auto seeder = std::make_shared<Seeder>(Seeder::Config{{densityCfg}});
   // Set up the actual vertex finder
-  Finder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
-                           seeder, ipEst);
+  Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
+  finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
+
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
+  finderCfg.field = m_cfg.bField;
   Finder finder(std::move(finderCfg), logger().clone());
-  Finder::State state(*m_cfg.bField, ctx.magFieldContext);
+  Acts::IVertexFinder::State state{std::in_place_type<Finder::State>,
+                                   *m_cfg.bField, ctx.magFieldContext};
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices

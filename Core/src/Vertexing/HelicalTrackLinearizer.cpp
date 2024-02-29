@@ -6,17 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
-template <typename propagator_t, typename propagator_options_t>
-Acts::Result<Acts::LinearizedTrack> Acts::
-    HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundTrackParameters& params, double linPointTime,
-        const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-        const Acts::MagneticFieldContext& mctx, State& state) const {
+Acts::Result<Acts::LinearizedTrack>
+Acts::HelicalTrackLinearizer::linearizeTrack(
+    const BoundTrackParameters& params, double linPointTime,
+    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+    const Acts::MagneticFieldContext& mctx,
+    MagneticFieldProvider::Cache& fieldCache) const {
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  PropagatorOptions<> pOptions(gctx, mctx);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -39,14 +41,15 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
-  if (!result.ok()) {
-    return result.error();
+  const auto res =
+      m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
+  if (!res.ok()) {
+    return res.error();
   }
+  const auto& endParams = *res;
 
   // Extracting the track parameters at said PCA - this corresponds to the
   // Perigee representation of the track wrt the reference point
-  const auto& endParams = *result->endParameters;
   BoundVector paramsAtPCA = endParams.parameters();
 
   // Extracting the 4D position of the PCA in global coordinates
@@ -91,8 +94,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   ActsScalar absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
-  auto field =
-      m_cfg.bField->getField(VectorHelpers::position(pca), state.fieldCache);
+  auto field = m_cfg.bField->getField(VectorHelpers::position(pca), fieldCache);
   if (!field.ok()) {
     return field.error();
   }

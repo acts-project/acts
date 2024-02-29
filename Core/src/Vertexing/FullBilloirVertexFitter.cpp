@@ -1,10 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -13,17 +15,17 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-namespace Acts::detail {
+namespace {
 
 /// @struct BilloirTrack
 ///
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 struct BilloirTrack {
-  BilloirTrack(const InputTrack& params) : originalTrack(params) {}
+  BilloirTrack(const Acts::InputTrack& params) : originalTrack(params) {}
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  InputTrack originalTrack;
+  Acts::InputTrack originalTrack;
   double chi2 = 0;
 
   // We drop the summation index i from Ref. (1) for better readability
@@ -52,12 +54,12 @@ struct BilloirVertex {
   Acts::Vector4 sumBCinvU = Acts::Vector4::Zero();
 };
 
-}  // namespace Acts::detail
+}  // namespace
 
-template <typename linearizer_t>
-Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
-    const std::vector<InputTrack>& paramVector, const linearizer_t& linearizer,
-    const VertexingOptions& vertexingOptions, State& state) const {
+Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
+    const std::vector<InputTrack>& paramVector,
+    const VertexingOptions& vertexingOptions,
+    MagneticFieldProvider::Cache& fieldCache) const {
   unsigned int nTracks = paramVector.size();
   double chi2 = std::numeric_limits<double>::max();
 
@@ -86,7 +88,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
     ndf += 3;
   }
 
-  std::vector<detail::BilloirTrack> billoirTracks;
+  std::vector<BilloirTrack> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
   Vector4 linPoint = vertexingOptions.constraint.fullPosition();
@@ -95,7 +97,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
     billoirTracks.clear();
     double newChi2 = 0;
-    detail::BilloirVertex billoirVertex;
+    BilloirVertex billoirVertex;
 
     Vector3 linPointPos = VectorHelpers::position(linPoint);
     // Make Perigee surface at linPointPos, transverse plane of Perigee
@@ -109,10 +111,10 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
 
       const auto& trackParams = m_cfg.extractParameters(trackContainer);
 
-      auto result = linearizer.linearizeTrack(
-          trackParams, linPoint[3], *perigeeSurface,
-          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          state.linearizerState);
+      auto result =
+          m_cfg.trackLinearizer(trackParams, linPoint[3], *perigeeSurface,
+                                vertexingOptions.geoContext,
+                                vertexingOptions.magFieldContext, fieldCache);
       if (!result.ok()) {
         return result.error();
       }
@@ -139,7 +141,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter<linearizer_t>::fit(
       double fTheta = trackMomenta[iTrack][1];
       double fQOvP = trackMomenta[iTrack][2];
       double fTime = linPoint[FreeIndices::eFreeTime];
-      detail::BilloirTrack billoirTrack(trackContainer);
+      BilloirTrack billoirTrack(trackContainer);
 
       billoirTrack.deltaQ << d0, z0, phi - fPhi, theta - fTheta, qOverP - fQOvP,
           t0 - fTime;

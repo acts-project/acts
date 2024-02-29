@@ -28,6 +28,7 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -96,12 +97,12 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-  using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  Finder1::Config cfg1;
+  using Finder1 = GridDensityVertexFinder;
+  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
-  Finder1::State state1;
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
@@ -109,12 +110,12 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
-  Finder2::State state2;
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -209,11 +210,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-  using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
+  using Finder1 = GridDensityVertexFinder;
+  using GridDensity = GaussianGridTrackDensity;
 
   // Use custom grid density here
-  GridDensity::Config densityConfig(100_mm);
+  GridDensity::Config densityConfig(100_mm, mainGridSize, trkGridSize);
   densityConfig.useHighestSumZPosition = true;
   GridDensity density(densityConfig);
 
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = true;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
@@ -275,8 +276,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     inputTracks.emplace_back(&trk);
   }
 
-  Finder1::State state1;
-  Finder2::State state2;
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   double zResult1 = 0;
   double zResult2 = 0;
@@ -322,8 +323,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     trkCount++;
   }
 
-  state1.tracksToRemove = removedTracks;
-  state2.tracksToRemove = removedTracks;
+  state1.as<Finder1::State>().tracksToRemove = removedTracks;
+  state2.as<Finder2::State>().tracksToRemove = removedTracks;
 
   auto res3 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res3.ok()) {
@@ -381,13 +382,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.constraint = constraintVtx;
 
-  using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  Finder1::Config cfg1;
+  using Finder1 = GridDensityVertexFinder;
+  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.estimateSeedWidth = true;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
-  Finder1::State state1;
+  IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
@@ -395,13 +396,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
   AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder<>;
+  using Finder2 = AdaptiveGridDensityVertexFinder;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.estimateSeedWidth = true;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
   Finder2 finder2(cfg2);
-  Finder2::State state2;
+  IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);

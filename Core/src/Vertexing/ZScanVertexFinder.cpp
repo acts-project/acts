@@ -1,16 +1,27 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename vfitter_t>
-auto Acts::ZScanVertexFinder<vfitter_t>::find(
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+Acts::ZScanVertexFinder::ZScanVertexFinder(const Config& cfg,
+                                           std::unique_ptr<const Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "ZScanVertexFinder: "
+        "No track parameter extractor provided.");
+  }
+}
+
+Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& /*state*/) const
-    -> Result<std::vector<Vertex>> {
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& /*state*/) const {
   double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated
@@ -96,11 +107,5 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
                  vertexingOptions.constraint.time());
   Vertex vtxResult = Vertex(output);
 
-  // Vector to be filled with one single vertex
-  std::vector<Vertex> vertexCollection;
-
-  // Add vertex to vertexCollection
-  vertexCollection.push_back(vtxResult);
-
-  return vertexCollection;
+  return std::vector<Vertex>{vtxResult};
 }
