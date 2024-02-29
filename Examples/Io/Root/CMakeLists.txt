@@ -31,6 +31,7 @@ add_library(
   src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
+  $<TARGET_OBJECTS:ActsExamplesIoRootLinkDef
 )
 target_include_directories(
   ActsExamplesIoRoot
@@ -43,8 +44,7 @@ target_link_libraries(
     ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
   PRIVATE
-    ROOT::Core ROOT::Hist ROOT::Tree
-    ActsExamplesIoRootLinkDef)
+    ROOT::Core ROOT::Hist ROOT::Tree)
 
 install(
   TARGETS ActsExamplesIoRoot
