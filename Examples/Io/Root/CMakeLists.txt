@@ -1,4 +1,14 @@
 add_library(
+  ActsExamplesIoRootLinkDef OBJECT)
+ROOT_GENERATE_DICTIONARY(
+  ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.h)
+target_link_libraries(
+  ActsExamplesIoRootLinkDef
+  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
+set_target_properties(
+  ActsExamplesIoRootLinkDef PROPERTIES CXX_CLANG_TIDY "")
+
+add_library(
   ActsExamplesIoRoot SHARED
   src/RootMeasurementWriter.cpp
   src/RootMaterialDecorator.cpp
@@ -26,11 +36,11 @@ target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
     ActsCore ActsPluginIdentification ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
+    ActsExamplesFramework ActsExamplesPropagation
+    ActsExamplesTruthTracking ActsExamplesMaterialMapping
+    ActsExamplesIoRootLinkDef
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
-
-ROOT_GENERATE_DICTIONARY(ActsDicts MODULE ActsExamplesIoRoot LINKDEF LinkDef.h)
 
 install(
   TARGETS ActsExamplesIoRoot
