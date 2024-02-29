@@ -1,12 +1,15 @@
 add_library(
   ActsExamplesIoRootLinkDef OBJECT)
-ROOT_GENERATE_DICTIONARY(
-  ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.hpp)
+target_include_directories(
+  ActsExamplesIoRootLinkDef
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
   ActsExamplesIoRootLinkDef
-  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
+  PRIVATE ROOT::RIO)
 set_target_properties(
   ActsExamplesIoRootLinkDef PROPERTIES CXX_CLANG_TIDY "")
+ROOT_GENERATE_DICTIONARY(
+  ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.hpp)
 
 add_library(
   ActsExamplesIoRoot SHARED
