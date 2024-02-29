@@ -38,7 +38,6 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
   m_inputFinalParticles.maybeInitialize(m_cfg.inputFinalParticles);
 
   // open root file and create the tree
@@ -80,8 +79,6 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     m_outputTree->Branch("e_loss", &m_eLoss);
     m_outputTree->Branch("total_x0", &m_pathInX0);
     m_outputTree->Branch("total_l0", &m_pathInL0);
-  }
-  if (m_inputSimHits.isInitialized()) {
     m_outputTree->Branch("number_of_hits", &m_numberOfHits);
   }
 }

@@ -77,7 +77,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
 
   ReadDataHandle<SimParticleContainer> m_inputFinalParticles{
       this, "InputFinalParticles"};
-  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 
   std::mutex m_writeMutex;
 
