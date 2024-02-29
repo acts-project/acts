@@ -14,11 +14,12 @@
 
 namespace Acts {
 
-std::pair<double, double> Acts::GaussianTrackDensity::globalMaximumWithWidth(
+Result<std::optional<std::pair<double, double>>>
+Acts::GaussianTrackDensity::globalMaximumWithWidth(
     State& state, const std::vector<InputTrack>& trackList) const {
   auto result = addTracks(state, trackList);
   if (!result.ok()) {
-    return std::make_pair(0., 0.);
+    return result.error();
   }
 
   double maxPosition = 0.;
@@ -58,15 +59,25 @@ std::pair<double, double> Acts::GaussianTrackDensity::globalMaximumWithWidth(
                       maxDensity, maxSecondDerivative);
   }
 
-  return (maxSecondDerivative == 0.)
-             ? std::make_pair(0., 0.)
-             : std::make_pair(maxPosition,
-                              std::sqrt(-(maxDensity / maxSecondDerivative)));
+  if (maxSecondDerivative == 0.) {
+    return std::nullopt;
+  }
+
+  return std::make_pair(maxPosition,
+                        std::sqrt(-(maxDensity / maxSecondDerivative)));
 }
 
-double Acts::GaussianTrackDensity::globalMaximum(
+Result<std::optional<double>> Acts::GaussianTrackDensity::globalMaximum(
     State& state, const std::vector<InputTrack>& trackList) const {
-  return globalMaximumWithWidth(state, trackList).first;
+  auto maxRes = globalMaximumWithWidth(state, trackList);
+  if (!maxRes.ok()) {
+    return maxRes.error();
+  }
+  const auto& maxOpt = *maxRes;
+  if (!maxOpt.has_value()) {
+    return std::nullopt;
+  }
+  return maxOpt->first;
 }
 
 Result<void> Acts::GaussianTrackDensity::addTracks(
