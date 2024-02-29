@@ -199,8 +199,8 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfReconstructableVertices(
 
   // traverse the array for frequency
   for (const auto& p : collection) {
-    int secVtxId = p.particleId().vertexSecondary();
-    if (secVtxId != 0) {
+    int generation = p.particleId().generation();
+    if (generation > 0) {
       // truthparticle from secondary vtx
       continue;
     }
@@ -225,8 +225,8 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
   std::set<int> allPriVtxIds;
   for (const auto& p : collection) {
     int priVtxId = p.particleId().vertexPrimary();
-    int secVtxId = p.particleId().vertexSecondary();
-    if (secVtxId != 0) {
+    int generation = p.particleId().generation();
+    if (generation > 0) {
       // truthparticle from secondary vtx
       continue;
     }
