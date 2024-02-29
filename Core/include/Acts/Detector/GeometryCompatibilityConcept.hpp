@@ -16,19 +16,19 @@ namespace Acts {
 
 namespace Concepts {
 
-// Types to check compatibility of 
+// Types to check compatibility of
 template <typename propagator_state_t, typename navigator_t>
 using ReturnTypeCurrentVolume =
     decltype(std::declval<navigator_t>().currentVolume(
         std::declval<propagator_state_t>().navigation));
 
-/// @brief Concept ensuring compatibility TrackingGeometry 
-/// and Detector navigation interfaces with the client code  
+/// @brief Concept ensuring compatibility TrackingGeometry
+/// and Detector navigation interfaces with the client code
 /// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam navigator_t Type of the navigator object
 template <typename propagator_state_t, typename navigator_t>
 struct NavigationCompatibilityConceptImpl {
-  /// @brief Ensure that the currentVolume method 
+  /// @brief Ensure that the currentVolume method
   /// returns one of the known volume types
   constexpr static bool isCurrentVolumePtr =
       (Acts::Concepts::identical_to<const TrackingVolume*,
