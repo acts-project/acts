@@ -484,15 +484,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
           return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
         }
         if (ipar == eUnbiased && !state.hasSmoothed() && state.hasPredicted() &&
-            state.hasProjector()) {
-          std::cout << "state.calibratedSize(): " << state.calibratedSize()
-                    << std::endl;
-          if (state.hasCalibrated()) {
-            std::cout << "state.hasCalibrated() is true" << std::endl;
-          } else {
-            std::cout << "state.hasCalibrated() is false" << std::endl;
-          }
-
+            state.hasProjector() && state.hasCalibrated()) {
           // Same calculation as above but using the predicted states.
           auto m = state.effectiveCalibrated();
           auto H = state.effectiveProjector();
