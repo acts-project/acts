@@ -397,7 +397,7 @@ jobs:
       # it. So we have to do the examples in separate step.
       - name: Configure Examples
         run: >
-          ${SETUP} &&
+          ${SETUP} && ${PRELOAD} && 
           cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
