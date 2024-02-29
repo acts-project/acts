@@ -7,7 +7,7 @@ target_link_libraries(
   ActsExamplesIoRootLinkDef
   PRIVATE ROOT::RIO)
 set_target_properties(
-  ActsExamplesIoRootLinkDef PROPERTIES CXX_CLANG_TIDY "")
+  ActsExamplesIoRootLinkDef PROPERTIES C_CLANG_TIDY "" CXX_CLANG_TIDY "")
 ROOT_GENERATE_DICTIONARY(
   ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.hpp)
 
