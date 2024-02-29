@@ -30,6 +30,8 @@ target_link_libraries(
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 
+ROOT_GENERATE_DICTIONARY(ActsDicts MODULE ActsExamplesIoRoot LINKDEF LinkDef.h)
+
 install(
   TARGETS ActsExamplesIoRoot
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
