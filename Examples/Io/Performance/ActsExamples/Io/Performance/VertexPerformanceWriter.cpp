@@ -20,6 +20,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
