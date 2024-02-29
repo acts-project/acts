@@ -487,6 +487,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
             state.hasProjector()) {
           std::cout << "state.calibratedSize(): " << state.calibratedSize()
                     << std::endl;
+          if (state.hasCalibrated()) {
+            std::cout << "state.hasCalibrated() is true" << std::endl;
+          } else {
+            std::cout << "state.hasCalibrated() is false" << std::endl;
+          }
 
           // Same calculation as above but using the predicted states.
           auto m = state.effectiveCalibrated();
