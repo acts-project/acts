@@ -125,6 +125,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
   aParticle.setAbsoluteMomentum(p);
+  aParticle.setNumberOfHits(eventStore().particleHitCount.at(particleId));
   return aParticle;
 }
 
