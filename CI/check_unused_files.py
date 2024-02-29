@@ -59,6 +59,8 @@ def main():
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
         "lazy_autodoc.py",
+        # ROOT LinkDef.h files are referenced by CMakeLists.txt and incorrectly detected as unused
+        "LinkDef.h",
     )
 
     suffix_header = (
