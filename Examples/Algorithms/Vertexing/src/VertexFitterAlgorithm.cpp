@@ -9,38 +9,32 @@
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/LinearizedTrack.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
 
 #include "VertexingHelpers.hpp"
 
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("VertexFit", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument(
-        "You have to either provide track parameters or trajectories");
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameter collection");
   }
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
   }
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
-
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_inputProtoVertices.initialize(m_cfg.inputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
@@ -52,33 +46,39 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
 
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
-      stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+      stepper, Acts::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+
+  // Setup the linearizer
+  Linearizer::Config ltConfig;
+  ltConfig.bField = m_cfg.bField;
+  ltConfig.propagator = propagator;
+  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
+  vertexFitterCfg.extractParameters
+      .connect<&Acts::InputTrack::extractParameters>();
+  vertexFitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(
+      &linearizer);
   VertexFitter vertexFitter(vertexFitterCfg);
-  VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
-  // Setup the linearizer
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+  auto fieldCache = m_cfg.bField->makeCache(ctx.magFieldContext);
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
-
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
   const auto& protoVertices = m_inputProtoVertices(ctx);
   ACTS_VERBOSE("Have " << protoVertices.size() << " proto vertices");
 
-  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
+  std::vector<Acts::InputTrack> inputTracks;
 
   VertexCollection fittedVertices;
 
   for (const auto& protoVertex : protoVertices) {
     // un-constrained fit requires at least two tracks
-    if ((not m_cfg.doConstrainedFit) and (protoVertex.size() < 2)) {
+    if ((!m_cfg.doConstrainedFit) && (protoVertex.size() < 2)) {
       ACTS_INFO(
           "Skip un-constrained vertex fit on proto-vertex with less than two "
           "tracks");
@@ -86,22 +86,21 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
 
     // select input tracks for the input proto vertex
-    inputTrackPtrCollection.clear();
-    inputTrackPtrCollection.reserve(protoVertex.size());
+    inputTracks.clear();
+    inputTracks.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
       if (trackIdx >= inputTrackParameters.size()) {
         ACTS_ERROR("track parameters " << trackIdx << " does not exist");
         continue;
       }
 
-      inputTrackPtrCollection.push_back(inputTrackPointers[trackIdx]);
+      inputTracks.emplace_back(&inputTrackParameters[trackIdx]);
     }
 
     if (!m_cfg.doConstrainedFit) {
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
-      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptions, state);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -109,7 +108,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       }
     } else {
       // Vertex constraint
-      Acts::Vertex<Acts::BoundTrackParameters> theConstraint;
+      Acts::Vertex theConstraint;
 
       theConstraint.setFullCovariance(m_cfg.constraintCov);
       theConstraint.setFullPosition(m_cfg.constraintPos);
@@ -118,8 +117,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
                                           theConstraint);
 
-      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptionsConstr, state);
+      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {

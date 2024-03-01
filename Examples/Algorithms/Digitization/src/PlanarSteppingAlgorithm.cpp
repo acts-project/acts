@@ -8,27 +8,36 @@
 
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
@@ -60,7 +69,7 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   if (!m_cfg.planarModuleStepper) {
@@ -141,8 +150,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
       Acts::Vector2 localIntersect =
           (invTransfrom * simHit.position()).head<2>();
-      Acts::Vector3 localDirection =
-          invTransfrom.linear() * simHit.unitDirection();
+      Acts::Vector3 localDirection = invTransfrom.linear() * simHit.direction();
 
       // compute digitization steps
       const auto thickness = dg.detectorElement->thickness();
@@ -159,7 +167,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
         continue;
       }
 
-      // lets create a cluster - centroid method
+      // Create a cluster - centroid method
       double localX = 0.;
       double localY = 0.;
       double totalPath = 0.;
@@ -185,13 +193,13 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       const Acts::Segmentation& segmentation = dg.digitizer->segmentation();
       auto binUtility = segmentation.binUtility();
       Acts::Vector2 localPosition(localX, localY);
-      // @todo remove unneccesary conversion
-      // size_t bin0 = binUtility.bin(localPosition, 0);
-      // size_t bin1 = binUtility.bin(localPosition, 1);
-      // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
+      // @todo remove unnecessary conversion
+      // std::size_t bin0 = binUtility.bin(localPosition, 0);
+      // std::size_t bin1 = binUtility.bin(localPosition, 1);
+      // std::size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
       // the covariance is currently set to some arbitrary value.
-      Acts::SymMatrix3 cov;
+      Acts::SquareMatrix3 cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
       Acts::Vector3 par(localX, localY, simHit.time());

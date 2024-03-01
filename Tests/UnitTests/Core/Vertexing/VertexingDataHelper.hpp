@@ -9,6 +9,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -20,10 +21,7 @@ namespace Acts {
 namespace Test {
 
 using namespace Acts::UnitLiterals;
-using Covariance = BoundSymMatrix;
-
-// Create a test context
-GeometryContext geoCtx = GeometryContext();
+using Covariance = BoundSquareMatrix;
 
 enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 
@@ -32,7 +30,7 @@ struct VertexInfo {
   // The position
   Vector3 position;
   // The covariance
-  SymMatrix3 covariance;
+  SquareMatrix3 covariance;
   // Number of tracks
   int nTracks = 0;
   // Weight of first track
@@ -43,7 +41,7 @@ struct VertexInfo {
   double trk1Chi2 = 0;
 };
 
-inline std::tuple<Vertex<BoundTrackParameters>, std::vector<VertexInfo>,
+inline std::tuple<Vertex, std::vector<VertexInfo>,
                   std::vector<BoundTrackParameters>>
 readTracksAndVertexCSV(const std::string& toolString,
                        const std::string& fileBase = "vertexing_event_mu20") {
@@ -66,7 +64,7 @@ readTracksAndVertexCSV(const std::string& toolString,
   std::shared_ptr<PerigeeSurface> perigeeSurface;
   std::vector<BoundTrackParameters> tracks;
   std::vector<VertexInfo> vertices;
-  Vertex<BoundTrackParameters> beamspotConstraint;
+  Vertex beamspotConstraint;
 
   // Read in beamspot data
   std::getline(beamspotData, line);  // skip header
@@ -77,7 +75,7 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::sregex_token_iterator()};
 
     Vector3 beamspotPos;
-    SymMatrix3 beamspotCov;
+    SquareMatrix3 beamspotCov;
     beamspotPos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
     beamspotCov << std::stod(row[3]), 0, 0, 0, std::stod(row[4]), 0, 0, 0,
@@ -116,7 +114,9 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::stod(row[16]), std::stod(row[20]), std::stod(row[23]),
         std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
-    tracks.emplace_back(perigeeSurface, params, std::move(covMat));
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    tracks.emplace_back(perigeeSurface, params, std::move(covMat),
+                        ParticleHypothesis::pion());
   }
 
   // Read in reference vertex data
@@ -130,7 +130,7 @@ readTracksAndVertexCSV(const std::string& toolString,
     Vector3 pos;
     pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
-    SymMatrix3 cov;
+    SquareMatrix3 cov;
     cov << std::stod(row[3]), std::stod(row[4]), std::stod(row[5]),
         std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
         std::stod(row[9]), std::stod(row[10]), std::stod(row[11]);

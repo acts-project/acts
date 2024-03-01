@@ -8,12 +8,14 @@
 
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include <Acts/Definitions/Units.hpp>
 
-#include <map>
 #include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -25,7 +27,7 @@ ActsExamples::CsvParticleWriter::CsvParticleWriter(
     : WriterT(cfg.inputParticles, "CsvParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
-    throw std::invalid_argument("Missing ouput filename stem");
+    throw std::invalid_argument("Missing output filename stem");
   }
 }
 
@@ -45,11 +47,11 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
     data.vx = particle.position().x() / Acts::UnitConstants::mm;
     data.vy = particle.position().y() / Acts::UnitConstants::mm;
     data.vz = particle.position().z() / Acts::UnitConstants::mm;
-    data.vt = particle.time() / Acts::UnitConstants::ns;
+    data.vt = particle.time() / Acts::UnitConstants::mm;
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-    data.px = p * particle.unitDirection().x();
-    data.py = p * particle.unitDirection().y();
-    data.pz = p * particle.unitDirection().z();
+    data.px = p * particle.direction().x();
+    data.py = p * particle.direction().y();
+    data.pz = p * particle.direction().z();
     data.m = particle.mass() / Acts::UnitConstants::GeV;
     data.q = particle.charge() / Acts::UnitConstants::e;
     writer.append(data);

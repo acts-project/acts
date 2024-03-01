@@ -8,13 +8,18 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <ios>
-#include <optional>
-#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

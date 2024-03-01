@@ -19,11 +19,17 @@
 #include <Acts/Utilities/Logger.hpp>
 
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 
 class TFile;
 
 namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+
 using SurfaceMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 using VolumeMaterialMap =

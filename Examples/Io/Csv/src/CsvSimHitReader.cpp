@@ -9,9 +9,15 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+
+#include <array>
+#include <stdexcept>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -39,8 +45,8 @@ std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name() const {
   return "CsvSimHitReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvSimHitReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvSimHitReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -54,7 +60,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   SimHitContainer::sequence_type unordered;
   SimHitData data;
 
+  ACTS_DEBUG("start to read hits ");
   while (reader.read(data)) {
+    ACTS_DEBUG("found a sim hit");
     const auto geometryId = Acts::GeometryIdentifier(data.geometry_id);
     // TODO validate geo id consistency
     const auto particleId = ActsFatras::Barcode(data.particle_id);
@@ -63,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
         data.tx * Acts::UnitConstants::mm,
         data.ty * Acts::UnitConstants::mm,
         data.tz * Acts::UnitConstants::mm,
-        data.tt * Acts::UnitConstants::ns,
+        data.tt * Acts::UnitConstants::mm,
     };
     ActsFatras::Hit::Vector4 mom4{
         data.tpx * Acts::UnitConstants::GeV,

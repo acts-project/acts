@@ -9,13 +9,23 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -71,6 +81,7 @@ void addDetector(Context& ctx) {
     py::class_<Config>(td, "Config")
         .def(py::init<>())
         .def_readwrite("positions", &Config::positions)
+        .def_readwrite("stereos", &Config::stereos)
         .def_readwrite("offsets", &Config::offsets)
         .def_readwrite("bounds", &Config::bounds)
         .def_readwrite("thickness", &Config::thickness)
@@ -203,6 +214,8 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(beamPipeRadius);
     ACTS_PYTHON_MEMBER(beamPipeHalflengthZ);
     ACTS_PYTHON_MEMBER(beamPipeLayerThickness);
+    ACTS_PYTHON_MEMBER(beamPipeEnvelopeR);
+    ACTS_PYTHON_MEMBER(layerEnvelopeR);
     ACTS_PYTHON_MEMBER(unitScalor);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_MEMBER(volumes);
@@ -211,4 +224,5 @@ void addDetector(Context& ctx) {
     patchKwargsConstructor(c);
   }
 }
+
 }  // namespace Acts::Python

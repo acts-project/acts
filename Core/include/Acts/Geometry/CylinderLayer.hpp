@@ -17,8 +17,10 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace Acts {
+class CylinderBounds;
 
 /// @class CylinderLayer
 ///
@@ -39,7 +41,7 @@ class CylinderLayer : public CylinderSurface, public Layer {
   ///
   /// @todo ApproachDescriptor to unique_ptr
   ///
-  /// @return The return object is a shared poiter to the layer.
+  /// @return The return object is a shared pointer to the layer.
   static std::shared_ptr<CylinderLayer> create(
       const Transform3& transform,
       const std::shared_ptr<const CylinderBounds>& cbounds,

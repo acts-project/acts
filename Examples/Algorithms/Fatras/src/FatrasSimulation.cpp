@@ -8,25 +8,43 @@
 
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
+#include "ActsFatras/Physics/NuclearInteraction/NuclearInteractionParameters.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
-#include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
+
+#include <algorithm>
+#include <array>
+#include <map>
+#include <ostream>
+#include <stdexcept>
+#include <system_error>
+#include <utility>
+#include <vector>
+
+#include <boost/version.hpp>
 
 namespace {
 
@@ -42,9 +60,9 @@ struct HitSurfaceSelector {
     bool isSensitive = surface.associatedDetectorElement() != nullptr;
     bool isMaterial = surface.surfaceMaterial() != nullptr;
     // passive should be an orthogonal category
-    bool isPassive = not(isSensitive or isMaterial);
-    return (isSensitive and sensitive) or (isMaterial and material) or
-           (isPassive and passive);
+    bool isPassive = !(isSensitive || isMaterial);
+    return (isSensitive && sensitive) || (isMaterial && material) ||
+           (isPassive && passive);
   }
 };
 
@@ -122,16 +140,16 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
         makeStandardChargedElectroMagneticInteractions(cfg.pMin);
 
     // processes are enabled by default
-    if (not cfg.emScattering) {
+    if (!cfg.emScattering) {
       simulation.charged.interactions.template disable<StandardScattering>();
     }
-    if (not cfg.emEnergyLossIonisation) {
+    if (!cfg.emEnergyLossIonisation) {
       simulation.charged.interactions.template disable<StandardBetheBloch>();
     }
-    if (not cfg.emEnergyLossRadiation) {
+    if (!cfg.emEnergyLossRadiation) {
       simulation.charged.interactions.template disable<StandardBetheHeitler>();
     }
-    if (not cfg.emPhotonConversion) {
+    if (!cfg.emPhotonConversion) {
       simulation.neutral.interactions.template disable<PhotonConversion>();
     }
 
@@ -139,6 +157,11 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
     simulation.charged.selectHitSurface.sensitive = cfg.generateHitsOnSensitive;
     simulation.charged.selectHitSurface.material = cfg.generateHitsOnMaterial;
     simulation.charged.selectHitSurface.passive = cfg.generateHitsOnPassive;
+
+    simulation.charged.maxStepSize = cfg.maxStepSize;
+    simulation.charged.pathLimit = cfg.pathLimit;
+    simulation.neutral.maxStepSize = cfg.maxStepSize;
+    simulation.neutral.pathLimit = cfg.pathLimit;
   }
   ~FatrasSimulationT() final = default;
 
@@ -216,7 +239,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
                              inputParticles, particlesInitialUnordered,
                              particlesFinalUnordered, simHitsUnordered);
   // fatal error leads to panic
-  if (not ret.ok()) {
+  if (!ret.ok()) {
     ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
                         << ret.error());
     return ProcessCode::ABORT;
@@ -237,16 +260,36 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   ACTS_DEBUG(simHitsUnordered.size() << " simulated hits");
 
   // order output containers
+#if BOOST_VERSION >= 107800
+  SimParticleContainer particlesInitial(particlesInitialUnordered.begin(),
+                                        particlesInitialUnordered.end());
+  SimParticleContainer particlesFinal(particlesFinalUnordered.begin(),
+                                      particlesFinalUnordered.end());
+  SimHitContainer simHits(simHitsUnordered.begin(), simHitsUnordered.end());
+#else
+  // working around a nasty boost bug
+  // https://github.com/boostorg/container/issues/244
+
   SimParticleContainer particlesInitial;
   SimParticleContainer particlesFinal;
   SimHitContainer simHits;
-  particlesInitial.insert(particlesInitialUnordered.begin(),
-                          particlesInitialUnordered.end());
-  particlesFinal.insert(particlesFinalUnordered.begin(),
-                        particlesFinalUnordered.end());
-  simHits.insert(simHitsUnordered.begin(), simHitsUnordered.end());
-  // store ordered output containers
 
+  particlesInitial.reserve(particlesInitialUnordered.size());
+  particlesFinal.reserve(particlesFinalUnordered.size());
+  simHits.reserve(simHitsUnordered.size());
+
+  for (const auto &p : particlesInitialUnordered) {
+    particlesInitial.insert(p);
+  }
+  for (const auto &p : particlesFinalUnordered) {
+    particlesFinal.insert(p);
+  }
+  for (const auto &h : simHitsUnordered) {
+    simHits.insert(h);
+  }
+#endif
+
+  // store ordered output containers
   m_outputParticlesInitial(ctx, std::move(particlesInitial));
   m_outputParticlesFinal(ctx, std::move(particlesFinal));
   m_outputSimHits(ctx, std::move(simHits));

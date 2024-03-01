@@ -66,6 +66,8 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
 
   podio::ROOTFrameWriter m_writer;
 
+  std::mutex m_writeMutex;
+
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 

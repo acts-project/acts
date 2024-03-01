@@ -49,7 +49,7 @@ struct action_type_extractor {
 /**
  * The main type collector. This loops over the given tuple of actions or
  * aborters,
- * filters by predicate and uses extracter to construct a resulting output
+ * filters by predicate and uses extractor to construct a resulting output
  * set.
  */
 constexpr auto type_collector = [](auto t_, auto predicate, auto extractor) {

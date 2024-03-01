@@ -11,24 +11,37 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
-
-namespace utf = boost::unit_test;
-namespace tt = boost::test_tools;
+#include <algorithm>
+#include <cmath>
+#include <initializer_list>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <utility>
 
 namespace Acts {
+class AssertionFailureException;
 
 namespace Test {
-// using boost::test_tools::output_test_stream;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
@@ -103,10 +116,12 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   /// Test isOnSurface()
   Vector3 point3DNotInSector{0.0, 1.2, 0};
   Vector3 point3DOnSurface{1.2, 0.0, 0};
-  BOOST_CHECK(!discSurfaceObject->isOnSurface(
-      tgContext, point3DNotInSector, ignoredMomentum, true));  // passes
+  BOOST_CHECK(!discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
+                                              ignoredMomentum,
+                                              BoundaryCheck(true)));  // passes
   BOOST_CHECK(discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
-                                             ignoredMomentum, true));  // passes
+                                             ignoredMomentum,
+                                             BoundaryCheck(true)));  // passes
   //
   /// Test localToGlobal
   Vector3 returnedPosition{10.9, 8.7, 6.5};
@@ -172,7 +187,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   double projected3DMomentum = std::sqrt(3.) * 1.e6;
   Vector3 momentum{projected3DMomentum, projected3DMomentum,
                    projected3DMomentum};
-  Vector3 ignoredPosition{1.1, 2.2, 3.3};
+  Vector3 ignoredPosition = discSurfaceObject->center(tgContext);
   CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(tgContext, ignoredPosition,
                                                     momentum.normalized()),
                   std::sqrt(3), 0.01);
@@ -184,16 +199,18 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
 
   // intersect is a struct of (Vector3) position, pathLength, distance and
   // (bool) valid, it's contained in a Surface intersection
-  auto sfIntersection =
-      discSurfaceObject->intersect(tgContext, globalPosition, direction, false);
+  auto sfIntersection = discSurfaceObject
+                            ->intersect(tgContext, globalPosition, direction,
+                                        BoundaryCheck(false))
+                            .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position,
-                  expectedIntersect.position, 1e-9);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength,
-                  expectedIntersect.pathLength, 1e-9);
-  BOOST_CHECK_EQUAL(sfIntersection.object, discSurfaceObject.get());
+  CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersect.position(),
+                  1e-9);
+  CHECK_CLOSE_ABS(sfIntersection.pathLength(), expectedIntersect.pathLength(),
+                  1e-9);
+  BOOST_CHECK_EQUAL(sfIntersection.object(), discSurfaceObject.get());
 
   //
   /// Test name

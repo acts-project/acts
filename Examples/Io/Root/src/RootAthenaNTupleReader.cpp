@@ -8,19 +8,22 @@
 
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <cstdint>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 
 #include <TChain.h>
-#include <TFile.h>
-#include <TMath.h>
+#include <TMathBase.h>
 
 ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
     const ActsExamples::RootAthenaNTupleReader::Config& config,
@@ -166,10 +169,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     params[Acts::BoundIndices::eBoundQOverP] = m_branches.track_qOverP[i];
     params[Acts::BoundIndices::eBoundTime] = m_branches.track_t[i];
 
-    const double q = 1;
-
     // Construct and fill covariance matrix
-    Acts::BoundSymMatrix cov;
+    Acts::BoundSquareMatrix cov;
 
     // Variances
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundLoc0) =
@@ -225,7 +226,9 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundTheta) =
         m_branches.track_cov_tehtaqOverP[i];
 
-    Acts::BoundTrackParameters tc(surface, params, q, cov);
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    Acts::BoundTrackParameters tc(surface, params, cov,
+                                  Acts::ParticleHypothesis::pion());
     trackContainer.push_back(tc);
   }
 
@@ -242,9 +245,9 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     recoVertexContainer.push_back(vtx);
   }
 
-  Acts::Vertex<Acts::BoundTrackParameters> beamspotConstraint;
+  Acts::Vertex beamspotConstraint;
   Acts::Vector3 beamspotPos;
-  Acts::SymMatrix3 beamspotCov;
+  Acts::SquareMatrix3 beamspotCov;
 
   beamspotPos << m_branches.beamspot_x, m_branches.beamspot_y,
       m_branches.beamspot_z;

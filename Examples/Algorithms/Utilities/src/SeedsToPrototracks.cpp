@@ -8,16 +8,17 @@
 
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
+#include <utility>
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 SeedsToPrototracks::SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("SeedsToPrototracks", lvl), m_cfg(std::move(cfg)) {
   m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
@@ -25,7 +26,11 @@ SeedsToPrototracks::SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
 ProcessCode SeedsToPrototracks::execute(const AlgorithmContext& ctx) const {
   const auto seeds = m_inputSeeds(ctx);
 
-  auto tracks = seedsToPrototracks(seeds);
+  ProtoTrackContainer tracks;
+  tracks.reserve(seeds.size());
+
+  std::transform(seeds.begin(), seeds.end(), std::back_inserter(tracks),
+                 seedToPrototrack);
 
   m_outputProtoTracks(ctx, std::move(tracks));
 

@@ -9,9 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
-#include <climits>
+#include <cstddef>
+#include <ostream>
 
 namespace Acts {
 
@@ -30,8 +34,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return m_fullMaterial;
   }
 
-  const MaterialSlab& materialSlab(size_t /*bin0*/,
-                                   size_t /*bin1*/) const override {
+  const MaterialSlab& materialSlab(std::size_t /*bin0*/,
+                                   std::size_t /*bin1*/) const override {
     return m_fullMaterial;
   }
 

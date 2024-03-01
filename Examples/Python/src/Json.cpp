@@ -6,20 +6,38 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 
 #include <fstream>
+#include <initializer_list>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <vector>
 
+#include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
+namespace ActsExamples {
+class IMaterialWriter;
+class IWriter;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -132,6 +150,87 @@ void addJson(Context& ctx) {
           Acts::ProtoDetector pDetector = jDetector["detector"];
           return pDetector;
         }));
+  }
+
+  {
+    auto sjOptions = py::class_<ActsExamples::JsonSurfacesReader::Options>(
+                         mex, "SurfaceJsonOptions")
+                         .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(sjOptions,
+                             ActsExamples::JsonSurfacesReader::Options);
+    ACTS_PYTHON_MEMBER(inputFile);
+    ACTS_PYTHON_MEMBER(jsonEntryPath);
+    ACTS_PYTHON_STRUCT_END();
+
+    mex.def("readSurfaceFromJson", ActsExamples::JsonSurfacesReader::read);
+  }
+
+  {
+    mex.def("writeDetectorToJson",
+            [](const Acts::GeometryContext& gctx,
+               const Acts::Experimental::Detector& detector,
+               const std::string& name) -> void {
+              auto jDetector =
+                  Acts::DetectorJsonConverter::toJson(gctx, detector);
+              std::ofstream out;
+              out.open(name + ".json");
+              out << jDetector.dump(4);
+              out.close();
+            });
+  }
+
+  {
+    mex.def("writeDetectorToJsonDetray",
+            [](const Acts::GeometryContext& gctx,
+               const Acts::Experimental::Detector& detector,
+               const std::string& name) -> void {
+              // Detray format test - manipulate for detray
+              Acts::DetectorVolumeJsonConverter::Options detrayOptions;
+              detrayOptions.transformOptions.writeIdentity = true;
+              detrayOptions.transformOptions.transpose = true;
+              detrayOptions.surfaceOptions.transformOptions =
+                  detrayOptions.transformOptions;
+              detrayOptions.portalOptions.surfaceOptions =
+                  detrayOptions.surfaceOptions;
+
+              auto jDetector = Acts::DetectorJsonConverter::toJsonDetray(
+                  gctx, detector,
+                  Acts::DetectorJsonConverter::Options{detrayOptions});
+
+              // Write out the geometry, surface_grid, material
+              auto jGeometry = jDetector["geometry"];
+              auto jSurfaceGrids = jDetector["surface_grids"];
+              auto jMaterial = jDetector["material"];
+
+              std::ofstream out;
+              out.open(name + "_geometry_detray.json");
+              out << jGeometry.dump(4);
+              out.close();
+
+              out.open(name + "_surface_grids_detray.json");
+              out << jSurfaceGrids.dump(4);
+              out.close();
+
+              out.open(name + "_material_detray.json");
+              out << jMaterial.dump(4);
+              out.close();
+            });
+  }
+
+  {
+    mex.def(
+        "readDetectorFromJson",
+        [](const Acts::GeometryContext& gctx,
+           const std::string& fileName) -> auto{
+          auto in = std::ifstream(fileName,
+                                  std::ifstream::in | std::ifstream::binary);
+          nlohmann::json jDetectorIn;
+          in >> jDetectorIn;
+          in.close();
+
+          return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
+        });
   }
 }
 }  // namespace Acts::Python

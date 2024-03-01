@@ -8,12 +8,17 @@
 
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
+
+#include <cstddef>
+#include <ostream>
+#include <unordered_map>
+#include <utility>
 
 #include <G4Material.hh>
 #include <G4RunManager.hh>
@@ -27,9 +32,6 @@ ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
 
 void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     const G4Step* step) {
-  // Get the event data
-  auto& eventData = EventStoreRegistry::eventData();
-
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
   if (material == nullptr) {
@@ -40,7 +42,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   std::string materialName = material->GetName();
   for (const auto& emat : m_cfg.excludeMaterials) {
     if (emat == materialName) {
-      ACTS_VERBOSE("Exclude step in material '" << materialName << ".");
+      ACTS_VERBOSE("Exclude step in material '" << materialName << "'.");
       return;
     }
   }
@@ -62,14 +64,14 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   // the Geant4 docs). Need to compute average manually.
   const G4ElementVector* elements = material->GetElementVector();
   const G4double* fraction = material->GetFractionVector();
-  size_t nElements = material->GetNumberOfElements();
+  std::size_t nElements = material->GetNumberOfElements();
   double Ar = 0.;
   double Z = 0.;
   if (nElements == 1) {
     Ar = material->GetA() / (CLHEP::gram / CLHEP::mole);
     Z = material->GetZ();
   } else {
-    for (size_t i = 0; i < nElements; i++) {
+    for (std::size_t i = 0; i < nElements; i++) {
       Ar += elements->at(i)->GetA() * fraction[i] / (CLHEP::gram / CLHEP::mole);
       Z += elements->at(i)->GetZ() * fraction[i];
     }
@@ -93,8 +95,8 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
   mInteraction.pathCorrection = (step->GetStepLength() / CLHEP::mm);
 
   G4Track* g4Track = step->GetTrack();
-  size_t trackID = g4Track->GetTrackID();
-  auto& materialTracks = eventData.materialTracks;
+  std::size_t trackID = g4Track->GetTrackID();
+  auto& materialTracks = eventStore().materialTracks;
   if (materialTracks.find(trackID - 1) == materialTracks.end()) {
     Acts::RecordedMaterialTrack rmTrack;
     const auto& g4Vertex = g4Track->GetVertexPosition();

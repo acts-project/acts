@@ -8,7 +8,7 @@
 
 #pragma once
 
-// This workround does not work on libc++. To detect libc++, we include
+// This workaround does not work on libc++. To detect libc++, we include
 // one STL header and then check if _LIBCPP_VERSION is defined.
 
 #include <any>

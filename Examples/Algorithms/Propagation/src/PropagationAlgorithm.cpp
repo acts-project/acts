@@ -8,7 +8,14 @@
 
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+
+#include <stdexcept>
 
 namespace ActsExamples {
 
@@ -39,18 +46,18 @@ ProcessCode PropagationAlgorithm::execute(
   propagationSteps.reserve(m_cfg.ntests);
 
   // Output (optional): the recorded material
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> recordedMaterial;
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> recordedMaterial;
 
   // loop over number of particles
-  for (size_t it = 0; it < m_cfg.ntests; ++it) {
+  for (std::size_t it = 0; it < m_cfg.ntests; ++it) {
     /// get the d0 and z0
     double d0 = m_cfg.d0Sigma * gauss(rng);
     double z0 = m_cfg.z0Sigma * gauss(rng);
     double phi = phiDist(rng);
     double eta = etaDist(rng);
-    double theta = 2 * atan(exp(-eta));
+    double theta = 2 * std::atan(std::exp(-eta));
     double pt = ptDist(rng);
-    double p = pt / sin(theta);
+    double p = pt / std::sin(theta);
     double charge = qDist(rng) > 0.5 ? 1. : -1.;
     double qop = charge / p;
     double t = m_cfg.tSigma * gauss(rng);
@@ -59,44 +66,25 @@ ProcessCode PropagationAlgorithm::execute(
     pars << d0, z0, phi, theta, qop, t;
     // some screen output
 
-    Acts::Vector3 sPosition(0., 0., 0.);
-    Acts::Vector3 sMomentum(0., 0., 0.);
-
     // The covariance generation
     auto cov = generateCovariance(rng, gauss);
 
     // execute the test for charged particles
-    PropagationOutput pOutput;
-    if (charge != 0.0) {
-      // charged extrapolation - with hit recording
-      Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov));
-      sPosition = startParameters.position(context.geoContext);
-      sMomentum = startParameters.momentum();
-      pOutput = m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
-                                              startParameters);
-    } else {
-      // execute the test for neutral particles
-      Acts::NeutralBoundTrackParameters neutralParameters(surface, pars,
-                                                          std::move(cov));
-      sPosition = neutralParameters.position(context.geoContext);
-      sMomentum = neutralParameters.momentum();
-      pOutput = m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
-                                              neutralParameters);
-    }
+    Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov),
+                                               m_cfg.particleHypothesis);
+    Acts::Vector3 sPosition = startParameters.position(context.geoContext);
+    Acts::Vector3 sMomentum = startParameters.momentum();
+    PropagationOutput pOutput = m_cfg.propagatorImpl->execute(
+        context, m_cfg, logger(), startParameters);
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
     if (m_cfg.recordMaterialInteractions &&
         !pOutput.second.materialInteractions.empty()) {
-      // Create a recorded material track
-      RecordedMaterialTrack rmTrack;
-      // Start position
-      rmTrack.first.first = std::move(sPosition);
-      // Start momentum
-      rmTrack.first.second = std::move(sMomentum);
-      // The material
-      rmTrack.second = std::move(pOutput.second);
-      // push it it
-      recordedMaterial[it] = (std::move(rmTrack));
+      // Create a recorded material track with start position, momentum and the
+      // material
+      recordedMaterial.emplace(
+          it, std::make_pair(std::make_pair(sPosition, sMomentum),
+                             std::move(pOutput.second)));
     }
   }
 
@@ -111,20 +99,20 @@ ProcessCode PropagationAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-std::optional<Acts::BoundSymMatrix> PropagationAlgorithm::generateCovariance(
+std::optional<Acts::BoundSquareMatrix> PropagationAlgorithm::generateCovariance(
     ActsExamples::RandomEngine& rnd,
     std::normal_distribution<double>& gauss) const {
   if (m_cfg.covarianceTransport) {
     // We start from the correlation matrix
-    Acts::BoundSymMatrix newCov(m_cfg.correlations);
+    Acts::BoundSquareMatrix newCov(m_cfg.correlations);
     // Then we draw errors according to the error values
     Acts::BoundVector covs_smeared = m_cfg.covariances;
-    for (size_t k = 0; k < size_t(covs_smeared.size()); ++k) {
+    for (std::size_t k = 0; k < std::size_t(covs_smeared.size()); ++k) {
       covs_smeared[k] *= gauss(rnd);
     }
     // and apply a double loop
-    for (size_t i = 0; i < size_t(newCov.rows()); ++i) {
-      for (size_t j = 0; j < size_t(newCov.cols()); ++j) {
+    for (std::size_t i = 0; i < std::size_t(newCov.rows()); ++i) {
+      for (std::size_t j = 0; j < std::size_t(newCov.cols()); ++j) {
         (newCov)(i, j) *= covs_smeared[i];
         (newCov)(i, j) *= covs_smeared[j];
       }

@@ -8,14 +8,29 @@
 
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
+#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <map>
+#include <cmath>
+#include <cstddef>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
@@ -28,35 +43,25 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  if (not m_cfg.magneticField) {
+  if (!m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
   }
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);
+  m_inputTracks.maybeInitialize(m_cfg.inputProtoTracks);
+
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+  m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
+  m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
-  m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
-      m_cfg.sigmaLoc0;
-  m_covariance(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      m_cfg.initialVarInflation[Acts::eBoundLoc1] * cfg.sigmaLoc1 *
-      m_cfg.sigmaLoc1;
-  m_covariance(Acts::eBoundPhi, Acts::eBoundPhi) =
-      m_cfg.initialVarInflation[Acts::eBoundPhi] * cfg.sigmaPhi *
-      m_cfg.sigmaPhi;
-  m_covariance(Acts::eBoundTheta, Acts::eBoundTheta) =
-      m_cfg.initialVarInflation[Acts::eBoundTheta] * cfg.sigmaTheta *
-      m_cfg.sigmaTheta;
-  m_covariance(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-      m_cfg.initialVarInflation[Acts::eBoundQOverP] * cfg.sigmaQOverP *
-      m_cfg.sigmaQOverP;
-  m_covariance(Acts::eBoundTime, Acts::eBoundTime) =
-      m_cfg.initialVarInflation[Acts::eBoundTime] * m_cfg.sigmaT0 *
-      m_cfg.sigmaT0;
+  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+    m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
+                         m_cfg.initialSigmas[i];
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
@@ -67,10 +72,30 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   TrackParametersContainer trackParameters;
   trackParameters.reserve(seeds.size());
 
+  std::optional<SimSeedContainer> outputSeeds;
+  if (m_outputSeeds.isInitialized()) {
+    outputSeeds->reserve(seeds.size());
+  }
+
+  const ProtoTrackContainer* inputTracks = nullptr;
+  std::optional<ProtoTrackContainer> outputTracks;
+  if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
+    const auto& inputTracksRef = m_inputTracks(ctx);
+    if (seeds.size() != inputTracksRef.size()) {
+      ACTS_FATAL("Inconsistent number of seeds and prototracks");
+      return ProcessCode::ABORT;
+    }
+    inputTracks = &inputTracksRef;
+    outputTracks.emplace();
+    outputTracks->reserve(seeds.size());
+  }
+
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
+  IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
+
   // Loop over all found seeds to estimate track parameters
-  for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
+  for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
@@ -79,11 +104,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       continue;
     }
     const auto& sourceLink = bottomSP->sourceLinks()[0];
-    auto geoId = sourceLink.geometryId();
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+    const Acts::Surface* surface = surfaceAccessor(sourceLink);
+
     if (surface == nullptr) {
-      ACTS_WARNING("surface with geoID "
-                   << geoId << " is not found in the tracking gemetry");
+      ACTS_WARNING(
+          "Surface from source link is not found in the tracking geometry");
       continue;
     }
 
@@ -100,20 +125,40 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
         m_cfg.bFieldMin, logger());
-    if (not optParams.has_value()) {
+    if (!optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
       continue;
-    } else {
-      const auto& params = optParams.value();
-      double charge = std::copysign(1, params[Acts::eBoundQOverP]);
-      trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                   m_covariance);
+    }
+
+    const auto& params = optParams.value();
+
+    Acts::BoundSquareMatrix cov = m_covariance;
+    if (!bottomSP->t().has_value()) {
+      // Inflate the time uncertainty if no time measurement is available
+      cov(Acts::eBoundTime, Acts::eBoundTime) *= m_cfg.noTimeVarInflation;
+    }
+
+    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
+                                 m_cfg.particleHypothesis);
+    if (outputSeeds) {
+      outputSeeds->push_back(seed);
+    }
+    if (outputTracks && inputTracks != nullptr) {
+      outputTracks->push_back(inputTracks->at(iseed));
     }
   }
 
   ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
+  if (m_outputSeeds.isInitialized()) {
+    m_outputSeeds(ctx, std::move(*outputSeeds));
+  }
+
+  if (m_outputTracks.isInitialized()) {
+    m_outputTracks(ctx, std::move(*outputTracks));
+  }
+
   return ProcessCode::SUCCESS;
 }

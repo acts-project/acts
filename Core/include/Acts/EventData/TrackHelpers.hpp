@@ -33,7 +33,7 @@ void calculateTrackQuantities(
   track.nSharedHits() = 0;
   track.nOutliers() = 0;
 
-  for (const auto& trackState : track.trackStates()) {
+  for (const auto& trackState : track.trackStatesReversed()) {
     auto typeFlags = trackState.typeFlags();
 
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {

@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
@@ -20,7 +19,9 @@
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
@@ -208,7 +209,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   void buildSurfaceBounds();
 
   /// Templated dumpT method
-  /// @tparam stream_t The type fo the dump stream
+  /// @tparam stream_t The type for the dump stream
   /// @param dt The dump stream object
   template <class stream_t>
   stream_t& dumpT(stream_t& dt) const;
@@ -264,14 +265,14 @@ inline std::vector<double> CylinderVolumeBounds::values() const {
 }
 
 inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) >= get(eMaxR)) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) >= get(eMaxR)) {
     throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
   }
   if (get(eHalfLengthZ) <= 0) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid longitudinal input.");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument(
         "CylinderVolumeBounds: invalid phi sector setup.");
   }

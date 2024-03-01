@@ -16,6 +16,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
+#include <cstddef>
+#include <system_error>
+
 namespace Acts {
 
 /// Kalman trajectory smoother based on gain matrix formalism.
@@ -31,13 +35,13 @@ class GainMatrixSmoother {
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
-  template <typename D>
-  Result<void> operator()(const GeometryContext& gctx,
-                          MultiTrajectory<D>& trajectory, size_t entryIndex,
+  template <typename traj_t>
+  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
+                          std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
     (void)gctx;
 
-    using TrackStateProxy = typename MultiTrajectory<D>::TrackStateProxy;
+    using TrackStateProxy = typename traj_t::TrackStateProxy;
 
     GetParameters filtered;
     GetCovariance filteredCovariance;
@@ -97,15 +101,15 @@ class GainMatrixSmoother {
       // covariances.
       assert(ts.hasFiltered());
       assert(ts.hasPredicted());
-      assert(ts.hasJacobian());
 
       // previous trackstate should have smoothed and predicted
       assert(prev_ts.hasSmoothed());
       assert(prev_ts.hasPredicted());
+      assert(prev_ts.hasJacobian());
 
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-      ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+      ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
 
       if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
                                smoothed, predicted, predictedCovariance,

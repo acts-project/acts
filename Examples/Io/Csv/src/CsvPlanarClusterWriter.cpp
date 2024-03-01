@@ -8,16 +8,26 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -32,7 +42,7 @@ ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
 
@@ -55,13 +65,13 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       perEventFilepath(m_cfg.outputDir, "truth.csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<HitData> writerHits(pathHits, m_cfg.outputPrecision);
-  dfe::NamedTupleCsvWriter<CellData> writerCells(pathCells,
-                                                 m_cfg.outputPrecision);
+  dfe::NamedTupleCsvWriter<CellDataLegacy> writerCells(pathCells,
+                                                       m_cfg.outputPrecision);
   dfe::NamedTupleCsvWriter<TruthHitData> writerTruth(pathTruth,
                                                      m_cfg.outputPrecision);
 
   HitData hit;
-  CellData cell;
+  CellDataLegacy cell;
   TruthHitData truth;
   // will be reused as hit counter
   hit.hit_id = 0;
@@ -90,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       hit.x = globalPos.x() / Acts::UnitConstants::mm;
       hit.y = globalPos.y() / Acts::UnitConstants::mm;
       hit.z = globalPos.z() / Acts::UnitConstants::mm;
-      hit.t = parameters[2] / Acts::UnitConstants::ns;
+      hit.t = parameters[2] / Acts::UnitConstants::mm;
       writerHits.append(hit);
 
       // write local cell information
@@ -98,7 +108,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       for (auto& c : cluster.digitizationCells()) {
         cell.channel0 = c.channel0;
         cell.channel1 = c.channel1;
-        // TODO store digitial timestamp once added to the cell definition
+        // TODO store digital timestamp once added to the cell definition
         cell.timestamp = 0;
         cell.value = c.data;
         writerCells.append(cell);
@@ -122,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
         truth.tx = simHit.position().x() / Acts::UnitConstants::mm;
         truth.ty = simHit.position().y() / Acts::UnitConstants::mm;
         truth.tz = simHit.position().z() / Acts::UnitConstants::mm;
-        truth.tt = simHit.time() / Acts::UnitConstants::ns;
+        truth.tt = simHit.time() / Acts::UnitConstants::mm;
         // particle four-momentum before interaction
         truth.tpx = simHit.momentum4Before().x() / Acts::UnitConstants::GeV;
         truth.tpy = simHit.momentum4Before().y() / Acts::UnitConstants::GeV;

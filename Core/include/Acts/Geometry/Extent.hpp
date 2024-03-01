@@ -32,7 +32,7 @@ constexpr ExtentEnvelope zeroEnvelopes = {
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
 
-/// A class representing the geometric extent of an object in its possbile
+/// A class representing the geometric extent of an object in its possible
 /// dimensions, these can be all dimensions that are described as BinningValues
 ///
 /// The extent object can have an optional envelope in all of those values
@@ -47,7 +47,7 @@ class Extent {
   bool operator==(const Extent& e) const;
 
   /// Define a comparison operator
-  bool operator!=(const Extent& e) const { return (not operator==(e)); }
+  bool operator!=(const Extent& e) const { return (!operator==(e)); }
 
   /// Extend with a position vertex
   ///
@@ -154,7 +154,7 @@ class Extent {
 
   /// Return the histogram store
   ///
-  /// The histogram stroe can be used for automated binning detection
+  /// The histogram store can be used for automated binning detection
   const std::array<std::vector<ActsScalar>, binValues>& valueHistograms() const;
 
   /// Access the minimum parameter
@@ -174,7 +174,7 @@ class Extent {
     return 0.5 * (m_range[bValue].min() + m_range[bValue].max());
   }
 
-  /// Access the parameter internval
+  /// Access the parameter interval (i.e. the range span)
   ///
   /// @param bValue the binning identification
   ActsScalar interval(BinningValue bValue) const {
@@ -189,6 +189,13 @@ class Extent {
   ///
   /// @return true if the rhs is contained
   bool contains(const Extent& rhs, BinningValue bValue = binValues) const;
+
+  /// Contains check for a single point
+  ///
+  /// @param vtx the point that is check if it is contained
+  ///
+  /// @return true if the rhs is contained
+  bool contains(const Vector3& vtx) const;
 
   /// Intersection checks
   ///

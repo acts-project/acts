@@ -77,7 +77,7 @@ struct CompareGeometryId {
 /// The container stores an arbitrary number of elements for any geometry
 /// id. Elements can be retrieved via the geometry id; elements can be selected
 /// for a specific geometry id or for a larger range, e.g. a volume or a layer
-/// within the geometry hierachy using the helper functions below. Elements can
+/// within the geometry hierarchy using the helper functions below. Elements can
 /// also be accessed by index that uniquely identifies each element regardless
 /// of geometry id.
 template <typename T>
@@ -192,8 +192,8 @@ template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator>
 selectLowestNonZeroGeometryObject(const GeometryIdMultiset<T>& container,
                                   Acts::GeometryIdentifier geoId) {
-  assert((geoId.boundary() == 0u) and "Boundary component must be zero");
-  assert((geoId.approach() == 0u) and "Approach component must be zero");
+  assert((geoId.boundary() == 0u) && "Boundary component must be zero");
+  assert((geoId.approach() == 0u) && "Approach component must be zero");
 
   if (geoId.sensitive() != 0u) {
     return selectModule(container, geoId);

@@ -371,13 +371,13 @@ def _do_material_recording(d: Path):
         getOpenDataDetectorDirectory()
     )
 
-    dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
-        detector
+    detectorConstructionFactory = (
+        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
     )
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
+    runMaterialRecording(detectorConstructionFactory, str(d), tracksPerEvent=100, s=s)
     s.run()
 
 
@@ -390,7 +390,6 @@ def material_recording_session():
         pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
-
         p = multiprocessing.Process(target=_do_material_recording, args=(d,))
         p.start()
         p.join()
@@ -405,11 +404,3 @@ def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
     yield target
-
-
-@pytest.fixture(autouse=True)
-def fpe_monitoring():
-    print("Enabling FPE monitoring")
-    with acts.FpeMonitor():
-        yield
-    print("Disabling FPE monitoring")

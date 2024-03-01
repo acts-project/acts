@@ -9,14 +9,17 @@
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 using namespace Acts::UnitLiterals;
 namespace ActsExamples::Contextual {
@@ -27,7 +30,7 @@ auto AlignedDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   ContextDecorators aContextDecorators;
 
-  // Let's create a reandom number service
+  // Let's create a random number service
   ActsExamples::RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = cfg.seed;
   auto randomNumberSvc =
@@ -38,7 +41,7 @@ auto AlignedDetector::finalize(
     config.flushSize = cfg.flushSize;
     config.doGarbageCollection = cfg.doGarbageCollection;
 
-    // The misalingments
+    // The misalignments
     config.gSigmaX = cfg.sigmaInPlane;
     config.gSigmaY = cfg.sigmaInPlane;
     config.gSigmaZ = cfg.sigmaOutPlane;

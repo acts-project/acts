@@ -8,15 +8,20 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -24,6 +29,8 @@ class TrackingGeometry;
 class Layer;
 class LayerCreator;
 class Surface;
+class ITrackingVolumeHelper;
+class TrackingVolume;
 
 /// A Tracking Geometry builder restricted to cylindrical geometries
 ///
@@ -37,13 +44,13 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   struct Config {
     /// The tracking volume helper for detector construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
-    /// The layer crator - for sensitives
+    /// The layer creator - for sensitives
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// The created surfaces
     std::vector<std::shared_ptr<Surface>> surfaces = {};
     /// The proto tracking geometry description
     ProtoDetector protoDetector;
-    /// Optional geometry identfier hook to be used during closure
+    /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<GeometryIdentifierHook>();
     /// For screen output
@@ -82,7 +89,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
   /// Private construction cache
   struct Cache {
-    size_t surfaceCounter = 0;
+    std::size_t surfaceCounter = 0;
   };
 
   /// Translate a proto tracking volume into a Acts::TrackingVolume
@@ -103,7 +110,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// @param cCache is a cache used to extract the built detector elements
   /// @param gctx is the current geometry context at building
   /// @param kdt is the pre-filled kdt tree for the surface query
-  /// @param plVolume the proto volume representaion a layer to be translated
+  /// @param plVolume the proto volume representation a layer to be translated
   /// @param indent is a screen output indentation
   ///
   /// @return a new tracking volume

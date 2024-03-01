@@ -8,7 +8,7 @@
 
 #pragma once
 
-// This header is used to disable GCC errors that could be occuring in
+// This header is used to disable GCC errors that could be occurring in
 // nlohmann/json.hpp
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"

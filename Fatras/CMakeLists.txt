@@ -1,6 +1,6 @@
 add_library(
   ActsFatras SHARED
-  src/Digitization/Channelizer.cpp
+  src/Digitization/Segmentizer.cpp
   src/Digitization/DigitizationError.cpp
   src/Digitization/PlanarSurfaceMask.cpp
   src/Digitization/PlanarSurfaceDrift.cpp
@@ -11,8 +11,7 @@ add_library(
   src/Physics/NuclearInteraction/NuclearInteraction.cpp
   src/Physics/PhotonConversion.cpp
   src/Physics/StandardInteractions.cpp
-  src/Utilities/LandauDistribution.cpp
-  src/Utilities/ParticleData.cpp)
+  src/Utilities/LandauDistribution.cpp)
 target_include_directories(
   ActsFatras
   PUBLIC

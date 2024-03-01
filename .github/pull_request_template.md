@@ -19,17 +19,23 @@ REQUEST.
 
     - [ ] Does the PR title contain a `!` to indicate a breaking change?
     - [ ] Is there section starting with `BREAKING CHANGE:` in the PR body
-        that explains the breaking change?
+          that explains the breaking change?
 
 - [ ] Is the PR ready to be merged?
 
-    - [ ] If not: is it marked as work-in-progress using the `WIP` label?
-
-- [ ] Is the PR assigned to a milestone? This should be `next` unless you
-    target a specific release.
+    - [ ] If not: is it marked as a draft PR?
 
 - [ ] Does this PR close an existing issue?
 
     - [ ] Is the issue correctly linked so it will be automatically closed
         upon successful merge (See closing keywords link in the sidebar)?
-    - [ ] Does the PR milestone match the issue milestone?
+
+- The CI will initially report a missing milestone. One of the maintainers will
+  handle assigning a milestone for book-keeping.
+
+- An automated workflow will assign labels based on changed files, and whether
+  or not reference files were changed. These do not have to be set manually.
+
+- If you push updates, and you know they will be superceded later on, consider adding
+  `[skip ci]` in the commit message. This will instruct the CI system not to run any
+  jobs on this commit.

@@ -8,6 +8,11 @@
 
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+
+#include <algorithm>
+
 namespace Acts {
 
 double MeasurementSelector::calculateChi2(
@@ -20,7 +25,7 @@ double MeasurementSelector::calculateChi2(
                      false>::Projector projector,
     unsigned int calibratedSize) const {
   return visit_measurement(calibratedSize, [&](auto N) -> double {
-    constexpr size_t kMeasurementSize = decltype(N)::value;
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
         fullCalibrated};

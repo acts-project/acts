@@ -8,15 +8,17 @@
 
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+
+#include <ostream>
+#include <stdexcept>
 
 #include "G4VPhysicalVolume.hh"
 
@@ -31,7 +33,7 @@ auto ActsExamples::Geant4::Geant4Detector::constructDetector(
 
   ACTS_INFO("Building an Acts::Detector called '"
             << cfg.name << "' from the Geant4PhysVolume '"
-            << cfg.g4World->GetName());
+            << cfg.g4World->GetName() << "'");
 
   DetectorPtr detector = nullptr;
   ContextDecorators decorators = {};
@@ -52,13 +54,13 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
 
   ACTS_INFO("Building an Acts::TrackingGeometry called '"
             << cfg.name << "' from the Geant4PhysVolume '"
-            << cfg.g4World->GetName());
+            << cfg.g4World->GetName() << "'");
 
   ContextDecorators decorators = {};
 
   auto [surfaces, elements] = convertGeant4Volumes(cfg, logger);
 
-  // Surface array creatorr
+  // Surface array creator
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(), logger.clone("SurfaceArrayCreator"));
   // Layer Creator

@@ -8,9 +8,16 @@
 
 #include "Acts/Plugins/Json/ExtentJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
+
+#include <array>
+#include <iterator>
+#include <vector>
 
 void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
   const auto& bValueNames = binningValueNames();

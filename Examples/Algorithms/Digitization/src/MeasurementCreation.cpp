@@ -8,9 +8,17 @@
 
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+
+#include <stdexcept>
+#include <string>
+#include <utility>
+
 ActsExamples::Measurement ActsExamples::createMeasurement(
     const DigitizedParameters& dParams, const IndexSourceLink& isl) {
-  Acts::SourceLink sl{isl.geometryId(), isl};
+  Acts::SourceLink sl{isl};
   switch (dParams.indices.size()) {
     case 1u: {
       auto [indices, par, cov] = measurementConstituents<1>(dParams);
@@ -32,9 +40,9 @@ ActsExamples::Measurement ActsExamples::createMeasurement(
       return Acts::Measurement<Acts::BoundIndices, 4>(std::move(sl), indices,
                                                       par, cov);
     };
+    default:
+      std::string errorMsg = "Invalid/mismatching measurement dimension: " +
+                             std::to_string(dParams.indices.size());
+      throw std::runtime_error(errorMsg.c_str());
   }
-  std::string errorMsg = "Invalid/mismatching measurement dimension: " +
-                         std::to_string(dParams.indices.size());
-
-  throw std::runtime_error(errorMsg.c_str());
 }

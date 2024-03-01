@@ -8,15 +8,22 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <random>
+#include <utility>
 #include <vector>
 
 namespace ActsFatras {
@@ -237,7 +244,7 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
   const auto psi =
       std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
 
-  Acts::Vector3 direction = particle.unitDirection();
+  Acts::Vector3 direction = particle.direction();
   // construct the combined rotation to the scattered direction
   Acts::RotationMatrix3 rotation(
       // rotation of the scattering deflector axis relative to the reference
@@ -274,13 +281,15 @@ std::array<Particle, 2> PhotonConversion::generateChildren(
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum1)
-          .setProcess(ProcessType::ePhotonConversion),
+          .setProcess(ProcessType::ePhotonConversion)
+          .setReferenceSurface(photon.referenceSurface()),
       Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
                kElectronMass)
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum2)
-          .setProcess(ProcessType::ePhotonConversion),
+          .setProcess(ProcessType::ePhotonConversion)
+          .setReferenceSurface(photon.referenceSurface()),
   };
   return children;
 }

@@ -17,8 +17,11 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <utility>
 
 // clang-format off
 /// @brief macro to use a local Acts::Logger object
@@ -299,7 +302,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration. See "
-          "https://acts.readthedocs.io/en/latest/core/"
+          "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
     }
   }
@@ -569,7 +572,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
           "ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration, bailing out. See "
-          "https://acts.readthedocs.io/en/latest/core/"
+          "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
     }
   }
@@ -652,7 +655,7 @@ class Logger {
   /// @return the level
   Logging::Level level() const { return m_filterPolicy->level(); }
 
-  /// Return the name of the print policy of thi logger
+  /// Return the name of the print policy of this logger
   /// @return the name
   const std::string& name() const { return m_printPolicy->name(); }
 

@@ -9,17 +9,24 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
 #include <limits>
+#include <memory>
+#include <optional>
 #include <string>
 
 namespace ActsExamples {
+class RandomNumbers;
+struct AlgorithmContext;
 
 /// Create track states by smearing truth particle information.
 ///
@@ -52,10 +59,18 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.05;
+    /// Optional. Initial covariance matrix diagonal. Overwrites the default if
+    /// set.
+    std::optional<std::array<double, 6>> initialSigmas = std::array<double, 6>{
+        1 * Acts::UnitConstants::mm,     1 * Acts::UnitConstants::mm,
+        1 * Acts::UnitConstants::degree, 1 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,  1 * Acts::UnitConstants::ns};
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+    /// Optional particle hypothesis override.
+    std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
   };
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);

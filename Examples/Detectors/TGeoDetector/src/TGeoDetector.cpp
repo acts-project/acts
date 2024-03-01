@@ -11,27 +11,37 @@
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/SurfaceBinningMatcher.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <fstream>
+#include <functional>
+#include <initializer_list>
+#include <limits>
 #include <list>
+#include <optional>
 
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
+
+#include "TGeoManager.h"
 
 namespace ActsExamples {
 using namespace Options;
@@ -56,7 +66,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
-        static_cast<size_t>(Acts::binValues), {0., 0.});
+        static_cast<std::size_t>(Acts::binValues), {0., 0.});
     binTolerances[Acts::binR] = {volume.binToleranceR.lower.value_or(0.),
                                  volume.binToleranceR.upper.value_or(0.)};
     binTolerances[Acts::binZ] = {volume.binToleranceZ.lower.value_or(0.),
@@ -82,6 +92,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       lConfig.volumeName = volume.subVolumeName.at(ncp);
       lConfig.sensorNames = volume.sensitiveNames.at(ncp);
       lConfig.localAxes = volume.sensitiveAxes.at(ncp);
+      lConfig.envelope = {config.layerEnvelopeR, config.layerEnvelopeR};
 
       auto rR = volume.rRange.at(ncp);
       auto rMin = rR.lower.value_or(0.);
@@ -203,8 +214,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
     bpvConfig.volumeName = "BeamPipe";
     bpvConfig.layerBuilder = beamPipeBuilder;
-    bpvConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
-                                1. * Acts::UnitConstants::mm};
+    bpvConfig.layerEnvelopeR = {config.beamPipeEnvelopeR,
+                                config.beamPipeEnvelopeR};
     bpvConfig.buildToRadiusZero = true;
     auto beamPipeVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
@@ -266,14 +277,14 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
     volumeConfig.volumeName = lbc.configurationName;
     volumeConfig.buildToRadiusZero = volumeBuilders.empty();
-    volumeConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
-                                   5. * Acts::UnitConstants::mm};
+    volumeConfig.layerEnvelopeR = {config.layerEnvelopeR,
+                                   config.layerEnvelopeR};
     auto ringLayoutConfiguration =
         [&](const std::vector<Acts::TGeoLayerBuilder::LayerConfig>& lConfigs)
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == Acts::binR and scfg.second > 0.) {
+          if (scfg.first == Acts::binR && scfg.second > 0.) {
             volumeConfig.ringTolerance =
                 std::max(volumeConfig.ringTolerance, scfg.second);
             volumeConfig.checkRingLayout = true;
@@ -284,7 +295,6 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     ringLayoutConfiguration(lbc.layerConfigurations[0]);
     ringLayoutConfiguration(lbc.layerConfigurations[2]);
     volumeConfig.layerBuilder = layerBuilder;
-    volumeConfig.volumeSignature = 0;
     auto volumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
         volumeConfig, logger.clone(lbc.configurationName + "VolumeBuilder",
                                    config.volumeLogLevel));
@@ -363,10 +373,10 @@ auto TGeoDetector::finalize(
   TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
       cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
 
-  ContextDecorators tgeoContextDeocrators = {};
+  ContextDecorators tgeoContextDecorators = {};
   // Return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgeoTrackingGeometry), std::move(tgeoContextDeocrators));
+      std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators));
 }
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

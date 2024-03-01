@@ -9,13 +9,11 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <ios>
 #include <optional>
 #include <stdexcept>
 
@@ -28,13 +26,13 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
     Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("CsvTrackParameterWriter", level)) {
-  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTracks.empty()) {
     throw std::invalid_argument(
-        "You have to either provide track parameters or trajectories");
+        "You have to either provide track parameters or tracks");
   }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+  m_inputTracks.maybeInitialize(m_cfg.inputTracks);
 }
 
 ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
@@ -50,22 +48,20 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     const AlgorithmContext& ctx) {
-  std::vector<Acts::BoundTrackParameters> inputTrackParameters;
+  TrackParametersContainer inputTrackParameters;
 
   if (!m_cfg.inputTrackParameters.empty()) {
     const auto& tmp = m_inputTrackParameters(ctx);
     inputTrackParameters = tmp;
   } else {
-    const auto& inputTrajectories = m_inputTrajectories(ctx);
+    const auto& inputTracks = m_inputTracks(ctx);
 
-    for (const auto& trajectories : inputTrajectories) {
-      for (auto tip : trajectories.tips()) {
-        if (!trajectories.hasTrackParameters(tip)) {
-          continue;
-        }
-        const auto& trackParam = trajectories.trackParameters(tip);
-        inputTrackParameters.push_back(trackParam);
+    for (const auto& track : inputTracks) {
+      if (!track.hasReferenceSurface()) {
+        continue;
       }
+      auto trackParam = track.createParametersAtReference();
+      inputTrackParameters.push_back(trackParam);
     }
   }
 

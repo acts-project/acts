@@ -9,17 +9,29 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
 #include <limits>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class DetectorElementBase;
+class PlanarBounds;
+class SurfaceBounds;
 
 /// @class PlaneSurface
 ///
@@ -28,12 +40,10 @@ class DetectorElementBase;
 /// The PlaneSurface extends the Surface class with the possibility to
 /// convert local to global positions (vice versa).
 ///
-/// @image html figures/PlaneSurface.png
+/// @image html PlaneSurface.png
 ///
-class PlaneSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+class PlaneSurface : public RegularSurface {
+  friend class Surface;
 
  protected:
   /// Copy Constructor
@@ -45,7 +55,7 @@ class PlaneSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transform is the additional transfrom applied after copying
+  /// @param transform is the additional transform applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
@@ -58,9 +68,9 @@ class PlaneSurface : public Surface {
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
-  /// @param pbounds are the provided planar bounds (shared)
+  /// @param pbounds are the provided planar bounds
   /// @param detelement is the linked detector element to this surface
-  PlaneSurface(const std::shared_ptr<const PlanarBounds>& pbounds,
+  PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                const DetectorElementBase& detelement);
 
   /// Constructor for Planes with (optional) shared bounds object
@@ -79,7 +89,12 @@ class PlaneSurface : public Surface {
   /// @param other The source PlaneSurface for assignment
   PlaneSurface& operator=(const PlaneSurface& other);
 
-  /// Normal vector return
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
+  using RegularSurface::normal;
+
+  /// Get the normal vector of this surface at a given local position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
@@ -88,10 +103,20 @@ class PlaneSurface : public Surface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
-  /// Normal vector return without argument
-  using Surface::normal;
+  /// Get the normal vector of this surface at a given global position
+  /// @note The @p position is required to be on-surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global positiono (for @ref PlaneSurface this is ignored)
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& position) const final;
 
-  /// The binning position is the position calcualted
+  /// Get the normal vector, independent of the location
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx) const;
+
+  /// The binning position is the position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -108,43 +133,38 @@ class PlaneSurface : public Surface {
   const SurfaceBounds& bounds() const override;
 
   /// Local to global transformation
-  /// For planar surfaces the momentum is ignroed in the local to global
+  ///
+  /// @note For planar surfaces the momentum direction is ignored in the local to global
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return the global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const override;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const override;
 
   /// Global to local transformation
-  /// For planar surfaces the momentum is ignroed in the global to local
+  ///
+  /// @note For planar surfaces the momentum direction is ignored in the global to local
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
-  /// method symmetry)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
-  /// @param direction global 3D momentum direction (ignored for PlaneSurface)
-  /// @note this is the final implementation of the pathCorrection function
-  ///
+  /// @param position global 3D position (ignored for @ref PlaneSurface)
+  /// @param direction global 3D momentum direction (ignored for @ref PlaneSurface)
   /// @return a double representing the scaling factor
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const final;
@@ -153,9 +173,10 @@ class PlaneSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The start position of the intersection attempt
-  /// @param direction The direction of the interesection attempt,
+  /// @param direction The direction of the intersection attempt,
   /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -174,11 +195,12 @@ class PlaneSurface : public Surface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return the SurfaceIntersection object
-  SurfaceIntersection intersect(
+  /// @return the @c SurfaceMultiIntersection object
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///
@@ -189,7 +211,7 @@ class PlaneSurface : public Surface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+                                      std::size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
@@ -198,7 +220,7 @@ class PlaneSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
@@ -211,5 +233,7 @@ class PlaneSurface : public Surface {
 
  private:
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
 
 }  // end of namespace Acts

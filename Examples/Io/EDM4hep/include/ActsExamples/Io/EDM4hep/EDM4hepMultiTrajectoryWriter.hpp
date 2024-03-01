@@ -41,7 +41,10 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
     /// Where to place output file
     std::string outputPath;
     /// B field in the longitudinal direction
-    double Bz;
+    double Bz{};
+    /// Particle hypothesis
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
   };
 
   /// constructor
@@ -65,6 +68,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  private:
   Config m_cfg;
 
+  std::mutex m_writeMutex;
   podio::ROOTFrameWriter m_writer;
 
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>

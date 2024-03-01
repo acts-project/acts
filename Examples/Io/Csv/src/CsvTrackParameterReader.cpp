@@ -8,18 +8,17 @@
 
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <fstream>
-#include <ios>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -47,7 +46,7 @@ ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader::name() const {
   return "CsvTrackParameterReader";
 }
 
-std::pair<size_t, size_t>
+std::pair<std::size_t, std::size_t>
 ActsExamples::CsvTrackParameterReader::availableEvents() const {
   return m_eventsRange;
 }
@@ -72,9 +71,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
     params[Acts::eBoundTheta] = d.theta;
     params[Acts::eBoundQOverP] = d.qop;
 
-    int q = params[Acts::eBoundQOverP] >= 0 ? 1 : -1;
-
-    Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
+    Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
     cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = d.var_d0;
     cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = d.var_z0;
     cov(Acts::eBoundPhi, Acts::eBoundPhi) = d.var_phi;
@@ -107,7 +104,9 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
     cov(Acts::eBoundQOverP, Acts::eBoundPhi) = d.cov_qopphi;
     cov(Acts::eBoundQOverP, Acts::eBoundTheta) = d.cov_qoptheta;
 
-    trackParameters.emplace_back(surface, params, q, cov);
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    trackParameters.emplace_back(surface, params, cov,
+                                 Acts::ParticleHypothesis::pion());
   }
 
   m_outputTrackParameters(ctx, std::move(trackParameters));

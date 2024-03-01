@@ -14,12 +14,7 @@
 namespace Acts {
 
 /// @class Vertex
-///
 /// @brief Class for storing vertex objects
-///
-/// @tparam input_track_t Track object type
-///
-template <typename input_track_t>
 class Vertex {
  public:
   /// @brief Default constructor
@@ -40,16 +35,16 @@ class Vertex {
   /// @param position Vertex position
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector3& position, const SymMatrix3& covariance,
-         const std::vector<TrackAtVertex<input_track_t>>& tracks);
+  Vertex(const Vector3& position, const SquareMatrix3& covariance,
+         std::vector<TrackAtVertex> tracks);
 
   /// @brief Vertex constructor
   ///
   /// @param position Full vertex position
   /// @param covariance 4x4 covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector4& position, const SymMatrix4& covariance,
-         const std::vector<TrackAtVertex<input_track_t>>& tracks);
+  Vertex(const Vector4& position, const SquareMatrix4& covariance,
+         std::vector<TrackAtVertex> tracks);
 
   /// @return Returns 3-position
   Vector3 position() const;
@@ -59,15 +54,17 @@ class Vertex {
 
   /// @return Returns 4-position
   const Vector4& fullPosition() const;
+  Vector4& fullPosition();
 
   /// @return Returns position covariance
-  SymMatrix3 covariance() const;
+  SquareMatrix3 covariance() const;
 
   /// @return Returns 4x4 covariance
-  const SymMatrix4& fullCovariance() const;
+  const SquareMatrix4& fullCovariance() const;
+  SquareMatrix4& fullCovariance();
 
   /// @return Returns vector of tracks associated with the vertex
-  const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
+  const std::vector<TrackAtVertex>& tracks() const;
 
   /// @return Returns pair of (chi2, numberDoF)
   std::pair<double, double> fitQuality() const;
@@ -91,16 +88,15 @@ class Vertex {
   /// @brief Sets 3x3 covariance
   ///
   /// @param covariance Position covariance matrix
-  void setCovariance(const SymMatrix3& covariance);
+  void setCovariance(const SquareMatrix3& covariance);
 
   /// @brief Sets 4x4 covariance
   ///
   /// @param covariance The 4x4 covariance matrix
-  void setFullCovariance(const SymMatrix4& covariance);
+  void setFullCovariance(const SquareMatrix4& covariance);
 
   /// @param tracks Vector of tracks at vertex
-  void setTracksAtVertex(
-      const std::vector<TrackAtVertex<input_track_t>>& tracks);
+  void setTracksAtVertex(std::vector<TrackAtVertex> tracks);
 
   /// @param chiSquared Chi2 of fit
   /// @param numberDoF Number of degrees of freedom
@@ -111,12 +107,10 @@ class Vertex {
 
  private:
   Vector4 m_position = Vector4::Zero();
-  SymMatrix4 m_covariance = SymMatrix4::Zero();
-  std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
+  SquareMatrix4 m_covariance = SquareMatrix4::Zero();
+  std::vector<TrackAtVertex> m_tracksAtVertex;
   double m_chiSquared = 0.;  // chi2 of the fit
   double m_numberDoF = 0.;   // number of degrees of freedom
 };
 
 }  // namespace Acts
-
-#include "Vertex.ipp"

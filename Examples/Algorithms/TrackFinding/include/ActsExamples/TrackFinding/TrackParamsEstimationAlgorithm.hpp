@@ -10,16 +10,21 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
+#include <algorithm>
+#include <array>
 #include <functional>
 #include <memory>
 #include <string>
@@ -27,9 +32,11 @@
 
 namespace Acts {
 class TrackingGeometry;
-}
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Estimate track parameters for track seeds.
 ///
@@ -46,28 +53,34 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
+    /// Input prototracks (optional)
+    std::string inputProtoTracks;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
+    /// Output seed collection - only seeds with successful parameter estimation
+    /// are propagated (optional)
+    std::string outputSeeds;
+    /// Output prototrack collection - only tracks with successful parameter
+    /// estimation are propagated (optional)
+    std::string outputProtoTracks;
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
-    /// Constant term of the loc0 resolution.
-    double sigmaLoc0 = 25 * Acts::UnitConstants::um;
-    /// Constant term of the loc1 resolution.
-    double sigmaLoc1 = 100 * Acts::UnitConstants::um;
-    /// Phi angular resolution.
-    double sigmaPhi = 0.02 * Acts::UnitConstants::degree;
-    /// Theta angular resolution.
-    double sigmaTheta = 0.02 * Acts::UnitConstants::degree;
-    /// q/p resolution.
-    double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
-    /// Time resolution.
-    double sigmaT0 = 1400 * Acts::UnitConstants::s;
-    /// Inflate tracks
+    /// Initial covariance matrix diagonal.
+    std::array<double, 6> initialSigmas = {
+        1 * Acts::UnitConstants::mm,     1 * Acts::UnitConstants::mm,
+        1 * Acts::UnitConstants::degree, 1 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,  1 * Acts::UnitConstants::ns};
+    /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    /// Inflate time covariance if no time measurement is available.
+    double noTimeVarInflation = 100.;
+    /// Particle hypothesis.
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
   };
 
   /// Construct the track parameters making algorithm.
@@ -90,12 +103,15 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
   /// The track parameters covariance (assumed to be the same for all estimated
   /// track parameters for the moment)
-  Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
+  Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
 
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<ProtoTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

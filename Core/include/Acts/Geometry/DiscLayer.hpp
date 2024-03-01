@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <memory>
+#include <utility>
 
 namespace Acts {
 

@@ -8,29 +8,44 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <map>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 
-#include "DD4hep/Detector.h"
+#include "DD4hep/Alignments.h"
+#include "DD4hep/DetElement.h"
+#include "DD4hep/Volumes.h"
 #include "DDRec/DetectorData.h"
+#include "RtypesCore.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 
@@ -143,7 +158,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           pl.envelope[Acts::binZ] = {0., 0.};
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
-                                          << " senstive surfaces.");
+                                          << " sensitive surfaces.");
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[Acts::binZ] = {std::abs(zMin - pl.min(Acts::binZ)),
@@ -165,14 +180,15 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // Check if DD4hep pre-defines the surface binning
       bool hasSurfaceBinning =
           getParamOr<bool>("surface_binning", detElement, true);
-      size_t nPhi = 1;
-      size_t nR = 1;
+      std::size_t nPhi = 1;
+      std::size_t nR = 1;
       if (hasSurfaceBinning) {
         if (params.contains("surface_binning_n_phi")) {
-          nPhi = static_cast<size_t>(params.get<int>("surface_binning_n_phi"));
+          nPhi = static_cast<std::size_t>(
+              params.get<int>("surface_binning_n_phi"));
         }
         if (params.contains("surface_binning_n_r")) {
-          nR = static_cast<size_t>(params.get<int>("surface_binning_n_r"));
+          nR = static_cast<std::size_t>(params.get<int>("surface_binning_n_r"));
         }
         hasSurfaceBinning = nR * nPhi > 1;
       }
@@ -377,7 +393,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr, nullptr);
+                                      isDisc, nullptr);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();

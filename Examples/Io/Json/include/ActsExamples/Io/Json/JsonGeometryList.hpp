@@ -11,7 +11,10 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
+#include <string>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace ActsExamples {
 

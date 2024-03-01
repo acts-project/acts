@@ -8,31 +8,35 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const PlaneSurface& other,
                                  const Transform3& transform)
     : GeometryObject(),
-      Surface(gctx, other, transform),
+      RegularSurface(gctx, other, transform),
       m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
-    : Surface(), m_bounds(nullptr) {
+    : RegularSurface(), m_bounds(nullptr) {
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T
@@ -52,17 +56,16 @@ Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
   m_transform.pretranslate(center);
 }
 
-Acts::PlaneSurface::PlaneSurface(
-    const std::shared_ptr<const PlanarBounds>& pbounds,
-    const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(pbounds) {
+Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
+                                 const Acts::DetectorElementBase& detelement)
+    : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
   /// surfaces representing a detector element must have bounds
-  throw_assert(pbounds, "PlaneBounds must not be nullptr");
+  throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
 
 Acts::PlaneSurface::PlaneSurface(const Transform3& transform,
                                  std::shared_ptr<const PlanarBounds> pbounds)
-    : Surface(transform), m_bounds(std::move(pbounds)) {}
+    : RegularSurface(transform), m_bounds(std::move(pbounds)) {}
 
 Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
@@ -77,15 +80,14 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 }
 
 Acts::Vector3 Acts::PlaneSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*momentum*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   return transform(gctx) *
          Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/, double tolerance) const {
+    double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -105,7 +107,7 @@ const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -124,7 +126,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     if (isEllipse) {
       exactPolyhedron = false;
       auto vStore = bounds().values();
-      innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon and
+      innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon &&
                     vStore[EllipseBounds::eInnerRy] > s_epsilon;
       coversFull =
           std::abs(vStore[EllipseBounds::eHalfPhiSector] - M_PI) < s_epsilon;
@@ -132,14 +134,14 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     // All of those can be described as convex
     // @todo same as for Discs: coversFull is not the right criterium
     // for triangulation
-    if (not isEllipse or not innerExists or not coversFull) {
+    if (!isEllipse || !innerExists || !coversFull) {
       auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
-      // are needed to descibe the mesh, @todo investigate merging flag
+      // are needed to describe the mesh, @todo investigate merging flag
       auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
@@ -153,9 +155,16 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
                                          const Vector2& /*lpos*/) const {
-  // fast access via tranform matrix (and not rotation())
-  const auto& tMatrix = transform(gctx).matrix();
-  return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  return normal(gctx);
+}
+
+Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
+                                         const Vector3& /*pos*/) const {
+  return normal(gctx);
+}
+
+Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx) const {
+  return transform(gctx).linear().col(2);
 }
 
 Acts::Vector3 Acts::PlaneSurface::binningPosition(
@@ -164,32 +173,38 @@ Acts::Vector3 Acts::PlaneSurface::binningPosition(
 }
 
 double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3& position,
+                                          const Vector3& /*position*/,
                                           const Vector3& direction) const {
   // We can ignore the global position here
-  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
+  if (intersection.status() != Intersection3D::Status::unreachable &&
+      bcheck.isEnabled()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
-    const Vector3 vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
-    if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
-                         bcheck)) {
-      intersection.status = Intersection3D::Status::missed;
+    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
+    if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
+                      bcheck)) {
+      status = Intersection3D::Status::missed;
     }
   }
-  return {intersection, this};
+  return {{Intersection3D(intersection.position(), intersection.pathLength(),
+                          status),
+           Intersection3D::invalid()},
+          this};
 }
 
 Acts::ActsMatrix<2, 3> Acts::PlaneSurface::localCartesianToBoundLocalDerivative(

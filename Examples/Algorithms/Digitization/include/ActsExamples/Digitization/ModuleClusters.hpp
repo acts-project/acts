@@ -9,15 +9,23 @@
 #pragma once
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <set>
 #include <unordered_map>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace ActsExamples {
+struct DigitizedParameters;
 
 struct ModuleValue {
   std::vector<Acts::BoundIndices> paramIndices = {};
@@ -56,7 +64,8 @@ class ModuleClusters {
   std::vector<ModuleValue> createCellCollection();
   void merge();
   ModuleValue squash(std::vector<ModuleValue>& values);
-  std::vector<size_t> nonGeoEntries(std::vector<Acts::BoundIndices>& indices);
+  std::vector<std::size_t> nonGeoEntries(
+      std::vector<Acts::BoundIndices>& indices);
   std::vector<std::vector<ModuleValue>> mergeParameters(
       std::vector<ModuleValue> values);
 };

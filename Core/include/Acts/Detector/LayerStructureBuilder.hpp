@@ -9,18 +9,32 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Detector/ProtoSupport.hpp"
+#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cstddef>
 #include <functional>
+#include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {
 
 /// @brief This is a builder of layer structures to be contained
-/// within a DetectorVolume.
+/// within a DetectorVolume, it extends the IInternalStructureBuilder
+/// interface and provides the internal structure components of
+/// DetectorVolume objects to be constructed.
 ///
 /// It uses the IndexedSurfaceGrid to bin the internal surfaces,
 /// and allows for additional support surfaces that are added to the
@@ -28,32 +42,35 @@ namespace Experimental {
 /// also be approximated by planar surfaces, in order to facilitate
 /// vectorization of surface intersection calls.
 ///
+/// The binning can be chosen with a so called `expansion`, a number
+/// which indicates the configured expanded bin window in which the
+/// surfaces are going to be filled, the details to this strategy
+/// can be found in the IndexedGridFiller and IndexedSurfacesGenerator
+/// classes.
+///
 /// No sub volumes are added to this structure builders, hence,
 /// the DetectorVolumeFinder navigation delegate uses the "NoopFinder"
 /// breakpoint to indicate the bottom of the volume hierarchy.
 ///
 class LayerStructureBuilder : public IInternalStructureBuilder {
  public:
-  /// @brief Support parameter defintions
-  struct Support {
-    /// Define whether you want to build support structures
-    std::array<ActsScalar, 5u> values = {};
-    /// The surface type to be built
-    Surface::SurfaceType type = Surface::SurfaceType::Other;
-    /// Define in which values the support should be constrained
-    std::vector<BinningValue> constraints = s_binningValues;
-    /// Potential splits into planar approximations
-    unsigned int splits = 1u;
-    /// The (optional) layer transform
-    std::optional<Transform3> transform = std::nullopt;
-  };
+  /// @brief A holder struct for surfaces
+  class SurfacesHolder final : public ISurfacesProvider {
+   public:
+    /// Constructor with predefined surfaces
+    /// @param isurfaces is the vector of surfaces
+    SurfacesHolder(std::vector<std::shared_ptr<Surface>> isurfaces)
+        : m_surfaces(std::move(isurfaces)) {}
 
-  /// @brief The surface binning definition
-  struct Binning {
-    /// Define the binning
-    BinningData data;
-    /// An expansion for the filling
-    size_t expansion = 0u;
+    /// Return the surfaces from the holder
+    /// @param gctx is the geometry context
+    std::vector<std::shared_ptr<Surface>> surfaces(
+        [[maybe_unused]] const GeometryContext& gctx) const final {
+      return m_surfaces;
+    }
+
+   private:
+    std::vector<std::shared_ptr<Surface>> m_surfaces = {};
   };
 
   /// @brief Configuration struct for the LayerStructureBuilder
@@ -64,22 +81,28 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// - a definition of supports to be built
   struct Config {
     /// Connection point for a function to provide surfaces
-    std::function<std::vector<std::shared_ptr<Surface>>()> surfaces;
+    std::shared_ptr<ISurfacesProvider> surfacesProvider = nullptr;
     /// Definition of Supports
-    std::vector<Support> supports = {};
+    std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
-    std::vector<Binning> binnings = {};
+    std::vector<ProtoBinning> binnings = {};
+    /// Optional extent (if already parsed), will trigger binning autorange
+    /// check
+    std::optional<Extent> extent = std::nullopt;
+    /// Minimum number of surfaces to build an internal structure
+    /// - otherwise the tryAll options is used
+    unsigned int nMinimalSurfaces = 4u;
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
-    /// Extra information
-    std::string auxilliary = "";
+    /// Extra information, mainly for screen output
+    std::string auxiliary = "";
   };
 
   /// Constructor
   ///
-  /// @param lConfig is the configuration struct
+  /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
-  LayerStructureBuilder(const Config& lConfig,
+  LayerStructureBuilder(const Config& cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "LayerStructureBuilder", Logging::INFO));
 
@@ -87,17 +110,23 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   ///
   /// @param gctx the geometry context at the creation of the internal structure
   ///
+  /// This will take the surfaces from the surfaces provider and use the binning
+  /// description to create an internal indexed surface structure.
+  ///
+  /// @note if the configuration provides an extent, the range of the binning
+  ///      will be checked againstit and adapted if necessary
+  ///
   /// @return a consistent set of detector volume internals
-  InternalStructure create(const GeometryContext& gctx) const final;
+  InternalStructure construct(const GeometryContext& gctx) const final;
 
  private:
-  /// configuration object
+  /// Configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
-  /// logging instance
+  /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 };
 

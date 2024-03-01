@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
+#include "Acts/Vertexing/DummyVertexFitter.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include "DummyVertexFitter.hpp"
+#include <unordered_map>
 
 namespace Acts {
 
@@ -28,31 +30,17 @@ namespace Acts {
 /// with the highest track density is returned as a vertex candidate.
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
-///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int trkGridSize = 15, typename vfitter_t = DummyVertexFitter<>>
-class AdaptiveGridDensityVertexFinder {
-  // Assert odd trkGridSize
-  static_assert(trkGridSize % 2);
-
-  using InputTrack_t = typename vfitter_t::InputTrack_t;
-  using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
-
+class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
  public:
-  using TrackGridVector = typename GridDensity::TrackGridVector;
+  using DensityMap = AdaptiveGridTrackDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
-    ///@param binSize Bin size of grid in mm
-    Config(float binSize = 0.1)
-        : gridDensity(typename GridDensity::Config(binSize)) {}
     ///@param gDensity The grid density
-    Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
+    Config(const AdaptiveGridTrackDensity& gDensity) : gridDensity(gDensity) {}
 
     // The grid density object
-    GridDensity gridDensity;
+    AdaptiveGridTrackDensity gridDensity;
 
     // Cache the main grid and the density contributions (trackGrid and z-bin)
     // for every single track.
@@ -70,28 +58,24 @@ class AdaptiveGridDensityVertexFinder {
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
     bool estimateSeedWidth = false;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief The State struct
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // The main density vector
-    std::vector<float> mainGridDensity;
-    // Vector holding corresponding z bin values
-    std::vector<int> mainGridZValues;
+    // Map from the z bin values to the corresponding track density
+    DensityMap mainDensityMap;
 
-    // Map to store z-bin and track grid (i.e. the density contribution of
-    // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*, std::pair<int, TrackGridVector>>
-        binAndTrackGridMap;
-
-    // Map to store bool if track has passed track selection or not
-    std::map<const InputTrack_t*, bool> trackSelectionMap;
+    // Map from input track to corresponding track density map
+    std::unordered_map<InputTrack, DensityMap> trackDensities;
 
     // Store tracks that have been removed from track collection. These
-    // track will be removed from the main grid
-    std::vector<const InputTrack_t*> tracksToRemove;
+    // tracks will be removed from the main grid
+    std::vector<InputTrack> tracksToRemove;
 
     bool isInitialized = false;
   };
@@ -100,53 +84,35 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// @param trackVector Input track collection
   /// @param vertexingOptions Vertexing options
-  /// @param state The state object to cache the density grid
+  /// @param anyState The state object to cache the density grid
   /// and density contributions of each track, to be used
   /// if cacheGridStateForTrackRemoval == true
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
+      const VertexingOptions& vertexingOptions,
+      IVertexFinder::State& anyState) const override;
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
+  IVertexFinder::State makeState(
+      const Acts::MagneticFieldContext& /*mctx*/) const override {
+    return IVertexFinder::State{State{}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& anyState,
+      const std::vector<InputTrack>& removedTracks) const override {
+    auto& state = anyState.template as<State>();
+    state.tracksToRemove = removedTracks;
+  }
+
+  /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveGridDensityVertexFinder(const Config& cfg)
-      : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
-
-  /// @brief Default constructor used if InputTrack_t type ==
-  /// BoundTrackParameters
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveGridDensityVertexFinder()
-      : m_extractParameters([](T params) { return params; }) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  AdaptiveGridDensityVertexFinder(
-      const Config& cfg,
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
-      : m_cfg(cfg), m_extractParameters(func) {}
-
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters with default Config object
-  ///
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
-  AdaptiveGridDensityVertexFinder(
-      const std::function<BoundTrackParameters(InputTrack_t)>& func)
-      : m_extractParameters(func) {}
+  /// @param func Function extracting BoundTrackParameters from InputTrack
+  ///             object
+  AdaptiveGridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   /// @brief Checks if a track passes the selection criteria for seeding
@@ -158,13 +124,6 @@ class AdaptiveGridDensityVertexFinder {
 
   // The configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 };
 
 }  // namespace Acts
-
-#include "AdaptiveGridDensityVertexFinder.ipp"

@@ -8,16 +8,19 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
-
-namespace tt = boost::test_tools;
 
 // the test positions in 3D
 Vector3 xyzPosition(0.5, 1.5, 2.5);
@@ -44,11 +47,11 @@ BinningData rData_eq(open, binR, 10, 0., 10.);
 // bin boundaries
 // > -M_PI | -3/5 M_PI | -1/5 M_PI | 1/5 M_PI | 3/5 M_PI | M_PI <
 BinningData phiData_eq(closed, binPhi, 5, -M_PI, M_PI);
-BinningData rPhiData_eq(closed, binRPhi, 5, -M_PI, M_PI);
+// BinningData rPhiData_eq(closed, binRPhi, 5, -M_PI, M_PI);
 // h/etaData
 // bin boundaries
 // | 0 | 2 | 4 | 6 | 8 | 10 |
-BinningData hData_eq(open, binH, 5, 0., 10.);
+// BinningData hData_eq(open, binH, 5, 0., 10.);
 // | -2.5 | -1.5 | -0.5 | 0.5 | 1.5 | 2.5 |
 BinningData etaData_eq(open, binEta, 5, -2.5, 2.5);
 
@@ -67,7 +70,7 @@ BinningData phiData_arb(closed, binPhi, phiValues);
 
 // the binnings - arbitrary when switching to binary search - for boundary
 // sizes >= 50
-size_t nBins_binary = 59;
+std::size_t nBins_binary = 59;
 double valueMin = 0.;
 double phiMin = -M_PI;
 double delta = 0.5;
@@ -93,7 +96,7 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   // sizes >= 50
   std::vector<float> values_binary;
   std::vector<float> phiValues_binary;
-  for (size_t i = 0; i <= nBins_binary; i++) {
+  for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
@@ -103,17 +106,17 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   /// x/y/zData
   /// check the global position requests
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-  BOOST_CHECK_EQUAL(xData_eq.bins(), size_t(10));
+  BOOST_CHECK_EQUAL(xData_eq.bins(), std::size_t(10));
   // | 0 | 1 | 2 | 3 | 4 | 10 |
-  BOOST_CHECK_EQUAL(xData_arb.bins(), size_t(5));
+  BOOST_CHECK_EQUAL(xData_arb.bins(), std::size_t(5));
   // | 0 | 1 | 1.5 | 2 | 3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
-  BOOST_CHECK_EQUAL(xData_mult.bins(), size_t(12));
+  BOOST_CHECK_EQUAL(xData_mult.bins(), std::size_t(12));
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
-  BOOST_CHECK_EQUAL(xData_add.bins(), size_t(6));
+  BOOST_CHECK_EQUAL(xData_add.bins(), std::size_t(6));
   BOOST_CHECK_EQUAL(xData_arb_binary.bins(), nBins_binary);
 
   BOOST_CHECK(xData_eq_copy == xData_eq_copy);
-  BOOST_CHECK(not(xData_eq == yData_eq));
+  BOOST_CHECK(!(xData_eq == yData_eq));
 
   /// check the global position requests
   BOOST_CHECK_EQUAL(xData_eq.value(xyzPosition), 0.5);
@@ -134,16 +137,15 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   BOOST_CHECK_EQUAL(xData_arb_binary.value(xyPosition), 0.5);
 
   // r/phi/rphiData
-  CHECK_CLOSE_REL(rData_eq.value(xyzPosition), sqrt(0.5 * 0.5 + 1.5 * 1.5),
-                  1e-5);
+  CHECK_CLOSE_REL(rData_eq.value(xyzPosition), std::hypot(0.5, 1.5), 1e-5);
   BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
 
   CHECK_SMALL(phiData_eq.value(phi0Position), 1e-6 * M_PI);
   CHECK_CLOSE_REL(phiData_eq.value(phiPihPosition), M_PI / 2, 1e-5);
 
-  BOOST_CHECK_EQUAL(phiData_eq.bins(), size_t(5));
-  BOOST_CHECK_EQUAL(phiData_arb.bins(), size_t(5));
-  BOOST_CHECK_EQUAL(phiData_arb_binary.bins(), size_t(nBins_binary));
+  BOOST_CHECK_EQUAL(phiData_eq.bins(), std::size_t(5));
+  BOOST_CHECK_EQUAL(phiData_arb.bins(), std::size_t(5));
+  BOOST_CHECK_EQUAL(phiData_arb_binary.bins(), std::size_t(nBins_binary));
 
   // h/etaData
   CHECK_SMALL(etaData_eq.value(eta0Position), 1e-5);
@@ -155,7 +157,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
   // sizes >= 50
   std::vector<float> values_binary;
   std::vector<float> phiValues_binary;
-  for (size_t i = 0; i <= nBins_binary; i++) {
+  for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
@@ -165,55 +167,55 @@ BOOST_AUTO_TEST_CASE(BinningData_bins) {
   /// x/y/zData
   /// check the global position requests
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-  BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPosition), size_t(0));
-  BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPosition), size_t(1));
-  BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPosition), size_t(2));
+  BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPosition), std::size_t(1));
+  BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPosition), std::size_t(2));
   // | 0 | 1 | 2 | 3 | 4 | 10 |
-  BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPosition), size_t(0));
-  BOOST_CHECK_EQUAL(xData_arb.search(6.), size_t(4));
-  BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPosition), size_t(0));
+  BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_arb.search(6.), std::size_t(4));
+  BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPosition), std::size_t(0));
   BOOST_CHECK_EQUAL(xData_arb_binary.search(50.), (nBins_binary - 1));
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
-  BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), size_t(0));
-  BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), size_t(0));
-  BOOST_CHECK_EQUAL(xData_add.search(0.2), size_t(0));
-  BOOST_CHECK_EQUAL(xData_add.search(1.2), size_t(1));
-  BOOST_CHECK_EQUAL(xData_add.search(1.7), size_t(2));
-  BOOST_CHECK_EQUAL(xData_add.search(2.5), size_t(3));
-  BOOST_CHECK_EQUAL(xData_add.search(3.5), size_t(4));
-  BOOST_CHECK_EQUAL(xData_add.search(4.2), size_t(5));
-  BOOST_CHECK_EQUAL(xData_add.search(7.), size_t(5));
+  BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_add.searchGlobal(xyzPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_add.search(0.2), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_add.search(1.2), std::size_t(1));
+  BOOST_CHECK_EQUAL(xData_add.search(1.7), std::size_t(2));
+  BOOST_CHECK_EQUAL(xData_add.search(2.5), std::size_t(3));
+  BOOST_CHECK_EQUAL(xData_add.search(3.5), std::size_t(4));
+  BOOST_CHECK_EQUAL(xData_add.search(4.2), std::size_t(5));
+  BOOST_CHECK_EQUAL(xData_add.search(7.), std::size_t(5));
   // | 0 | 1 | 1.5 | 2 | 3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
-  BOOST_CHECK_EQUAL(xData_mult.searchGlobal(xyzPosition), size_t(0));
-  BOOST_CHECK_EQUAL(xData_mult.search(0.2), size_t(0));
-  BOOST_CHECK_EQUAL(xData_mult.search(1.2), size_t(1));
-  BOOST_CHECK_EQUAL(xData_mult.search(1.7), size_t(2));
-  BOOST_CHECK_EQUAL(xData_mult.search(2.5), size_t(3));
-  BOOST_CHECK_EQUAL(xData_mult.search(3.5), size_t(4));
-  BOOST_CHECK_EQUAL(xData_mult.search(4.2), size_t(5));
-  BOOST_CHECK_EQUAL(xData_mult.search(4.7), size_t(6));
-  BOOST_CHECK_EQUAL(xData_mult.search(5.7), size_t(7));
-  BOOST_CHECK_EQUAL(xData_mult.search(6.5), size_t(8));
-  BOOST_CHECK_EQUAL(xData_mult.search(7.2), size_t(9));
-  BOOST_CHECK_EQUAL(xData_mult.search(7.7), size_t(10));
-  BOOST_CHECK_EQUAL(xData_mult.search(8.1), size_t(11));
+  BOOST_CHECK_EQUAL(xData_mult.searchGlobal(xyzPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_mult.search(0.2), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_mult.search(1.2), std::size_t(1));
+  BOOST_CHECK_EQUAL(xData_mult.search(1.7), std::size_t(2));
+  BOOST_CHECK_EQUAL(xData_mult.search(2.5), std::size_t(3));
+  BOOST_CHECK_EQUAL(xData_mult.search(3.5), std::size_t(4));
+  BOOST_CHECK_EQUAL(xData_mult.search(4.2), std::size_t(5));
+  BOOST_CHECK_EQUAL(xData_mult.search(4.7), std::size_t(6));
+  BOOST_CHECK_EQUAL(xData_mult.search(5.7), std::size_t(7));
+  BOOST_CHECK_EQUAL(xData_mult.search(6.5), std::size_t(8));
+  BOOST_CHECK_EQUAL(xData_mult.search(7.2), std::size_t(9));
+  BOOST_CHECK_EQUAL(xData_mult.search(7.7), std::size_t(10));
+  BOOST_CHECK_EQUAL(xData_mult.search(8.1), std::size_t(11));
 
   /// check the local position requests
-  BOOST_CHECK_EQUAL(xData_eq.searchLocal(xyPosition), size_t(0));
-  BOOST_CHECK_EQUAL(yData_eq.searchLocal(xyPosition), size_t(1));
-  BOOST_CHECK_EQUAL(zData_eq.searchLocal(rphizPosition), size_t(2));
-  BOOST_CHECK_EQUAL(xData_arb.searchLocal(xyPosition), size_t(0));
-  BOOST_CHECK_EQUAL(xData_arb_binary.searchLocal(xyPosition), size_t(0));
+  BOOST_CHECK_EQUAL(xData_eq.searchLocal(xyPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(yData_eq.searchLocal(xyPosition), std::size_t(1));
+  BOOST_CHECK_EQUAL(zData_eq.searchLocal(rphizPosition), std::size_t(2));
+  BOOST_CHECK_EQUAL(xData_arb.searchLocal(xyPosition), std::size_t(0));
+  BOOST_CHECK_EQUAL(xData_arb_binary.searchLocal(xyPosition), std::size_t(0));
 
   // r/phi/rphiData
-  BOOST_CHECK_EQUAL(rData_eq.searchGlobal(xyzPosition), size_t(1));
-  BOOST_CHECK_EQUAL(rData_eq.searchLocal(rphiPosition), size_t(3));
-  BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phi0Position), size_t(2));
-  BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phiPihPosition), size_t(3));
-  BOOST_CHECK_EQUAL(phiData_arb_binary.search(M_PI), size_t(0));
+  BOOST_CHECK_EQUAL(rData_eq.searchGlobal(xyzPosition), std::size_t(1));
+  BOOST_CHECK_EQUAL(rData_eq.searchLocal(rphiPosition), std::size_t(3));
+  BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phi0Position), std::size_t(2));
+  BOOST_CHECK_EQUAL(phiData_eq.searchGlobal(phiPihPosition), std::size_t(3));
+  BOOST_CHECK_EQUAL(phiData_arb_binary.search(M_PI), std::size_t(0));
 
   // h/etaData
-  BOOST_CHECK_EQUAL(etaData_eq.searchGlobal(eta0Position), size_t(2));
+  BOOST_CHECK_EQUAL(etaData_eq.searchGlobal(eta0Position), std::size_t(2));
 }
 
 // test inside/outside
@@ -222,7 +224,7 @@ BOOST_AUTO_TEST_CASE(BinningData_inside_outside) {
   // sizes >= 50
   std::vector<float> values_binary;
   std::vector<float> phiValues_binary;
-  for (size_t i = 0; i <= nBins_binary; i++) {
+  for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
@@ -265,7 +267,7 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
   // sizes >= 50
   std::vector<float> values_binary;
   std::vector<float> phiValues_binary;
-  for (size_t i = 0; i <= nBins_binary; i++) {
+  for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
@@ -273,22 +275,22 @@ BOOST_AUTO_TEST_CASE(BinningData_open_close) {
   BinningData xData_arb_binary(open, binX, values_binary);
   BinningData phiData_arb_binary(closed, binPhi, phiValues_binary);
   // open values
-  BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPositionOutside), size_t(9));
-  BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPositionOutside), size_t(0));
-  BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPositionOutside), size_t(9));
+  BOOST_CHECK_EQUAL(xData_eq.searchGlobal(xyzPositionOutside), std::size_t(9));
+  BOOST_CHECK_EQUAL(yData_eq.searchGlobal(xyzPositionOutside), std::size_t(0));
+  BOOST_CHECK_EQUAL(zData_eq.searchGlobal(xyzPositionOutside), std::size_t(9));
   BOOST_CHECK_EQUAL(xData_arb.searchGlobal(xyzPositionOutside) + 1,
                     xData_arb.bins());
   BOOST_CHECK_EQUAL(xData_arb_binary.searchGlobal(xyzPositionOutside) + 1,
                     xData_arb_binary.bins());
-  BOOST_CHECK_EQUAL(yData_arb.searchGlobal(xyzPositionOutside), size_t(0));
+  BOOST_CHECK_EQUAL(yData_arb.searchGlobal(xyzPositionOutside), std::size_t(0));
 
   // closed values
-  BOOST_CHECK_EQUAL(phiData_eq.search(-4.), size_t(4));
-  BOOST_CHECK_EQUAL(phiData_eq.search(4.), size_t(0));
-  BOOST_CHECK_EQUAL(phiData_arb.search(-4.), size_t(4));
-  BOOST_CHECK_EQUAL(phiData_arb.search(4.), size_t(0));
+  BOOST_CHECK_EQUAL(phiData_eq.search(-4.), std::size_t(4));
+  BOOST_CHECK_EQUAL(phiData_eq.search(4.), std::size_t(0));
+  BOOST_CHECK_EQUAL(phiData_arb.search(-4.), std::size_t(4));
+  BOOST_CHECK_EQUAL(phiData_arb.search(4.), std::size_t(0));
   BOOST_CHECK_EQUAL(phiData_arb_binary.search(-4.), (nBins_binary - 1));
-  BOOST_CHECK_EQUAL(phiData_arb_binary.search(4.), size_t(0));
+  BOOST_CHECK_EQUAL(phiData_arb_binary.search(4.), std::size_t(0));
 }
 
 // test boundaries
@@ -316,7 +318,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   // sizes >= 50
   std::vector<float> values_binary;
   std::vector<float> phiValues_binary;
-  for (size_t i = 0; i <= nBins_binary; i++) {
+  for (std::size_t i = 0; i <= nBins_binary; i++) {
     values_binary.push_back(valueMin + i * delta);
     phiValues_binary.push_back(phiMin + i * phiDelta);
   }
@@ -344,7 +346,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   // open values
   std::vector<float> center = {0.5, 1.5, 2.5, 3.5, 4.5,
                                5.5, 6.5, 7.5, 8.5, 9.5};
-  for (size_t ib = 0; ib < center.size(); ++ib) {
+  for (std::size_t ib = 0; ib < center.size(); ++ib) {
     BOOST_CHECK_EQUAL(xData_eq.center(ib), center[ib]);
   }
 
@@ -355,7 +357,7 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
       float(-M_PI + 2.5 * phiStep), float(-M_PI + 3.5 * phiStep),
       float(-M_PI + 4.5 * phiStep)};
 
-  for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
+  for (std::size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
     CHECK_CLOSE_ABS(phiData_eq.center(ib), phiCenters_eq[ib], 1e-3);
   }
 }
@@ -381,24 +383,24 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
 
   float firstAngle = (-M_PI + 1.5 * deltaPhi);
   Vector3 firstBin(cos(firstAngle), sin(firstAngle), 0.);
-  BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), size_t(0));
-  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), size_t(0));
+  BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), std::size_t(0));
+  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), std::size_t(0));
 
   float firstAngleNeg = (-M_PI + 0.5 * deltaPhi);
   Vector3 lastBinNeg(cos(firstAngleNeg), sin(firstAngleNeg), 0.);
-  BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), size_t(4));
-  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), size_t(4));
+  BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), std::size_t(4));
+  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), std::size_t(4));
 
   float lastAnglePos = (M_PI + 0.5 * deltaPhi);
   Vector3 lastBinPos(cos(lastAnglePos), sin(lastAnglePos), 0.);
-  BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), size_t(4));
-  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), size_t(4));
+  BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), std::size_t(4));
+  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), std::size_t(4));
 
   // now test the (remaining) phi scaling
   float underscaledAngle = -M_PI - 0.5 * deltaPhi;
   Vector3 underscaledPos(cos(underscaledAngle), sin(underscaledAngle), 0.);
-  BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), size_t(4));
-  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), size_t(4));
+  BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), std::size_t(4));
+  BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), std::size_t(4));
 }
 
 }  // namespace Test

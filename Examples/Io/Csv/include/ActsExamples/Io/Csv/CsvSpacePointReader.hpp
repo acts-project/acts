@@ -13,12 +13,16 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Read in a simhit collection in comma-separated-value format.
 ///
@@ -54,7 +58,7 @@ class CsvSpacePointReader final : public IReader {
   std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
@@ -68,7 +72,7 @@ class CsvSpacePointReader final : public IReader {
   WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
       this, "OutputSpacePoints"};
 
-  std::pair<size_t, size_t> m_eventsRange;
+  std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   const Acts::Logger& logger() const { return *m_logger; }

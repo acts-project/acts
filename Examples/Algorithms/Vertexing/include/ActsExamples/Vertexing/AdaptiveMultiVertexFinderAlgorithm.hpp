@@ -9,14 +9,22 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -24,42 +32,54 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <map>
+#include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using Fitter =
-      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using SeedFinder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+  using Linearizer = Acts::HelicalTrackLinearizer;
+  using Fitter = Acts::AdaptiveMultiVertexFitter;
+  using Options = Acts::VertexingOptions;
 
-  using VertexCollection = std::vector<Acts::Vertex<Fitter::InputTrack_t>>;
+  using VertexCollection = std::vector<Acts::Vertex>;
+
+  enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
   struct Config {
-    /// Optional. Input track parameters collection
+    /// Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
-    /// Output reconstruction time in ms
-    std::string outputTime = "time";
+    /// Enum member determining the choice of the vertex seed finder
+    SeedFinder seedFinder;
+    /// Use time information in vertex seeder, finder, and fitter
+    bool useTime = false;
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                      Acts::Logging::Level level);
-  /// Find vertices using the adapative multi vertex finder algorithm.
+
+  /// Find vertices using the adaptive multi vertex finder algorithm.
+  ///
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
@@ -69,18 +89,22 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  Acts::AdaptiveMultiVertexFinder makeVertexFinder() const;
+
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
+  std::shared_ptr<const Acts::BasePropagator> m_propagator;
+  Acts::ImpactPointEstimator m_ipEstimator;
+  Linearizer m_linearizer;
+  Acts::AdaptiveMultiVertexFinder m_vertexFinder;
 
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
 
   WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
-  WriteDataHandle<int> m_outputTime{this, "OutputTime"};
 };
+
 }  // namespace ActsExamples

@@ -8,27 +8,36 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <cmath>
 #include <exception>
 #include <iostream>
+#include <limits>
+#include <optional>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
 #if ((BOOST_VERSION / 100) % 1000) <= 71
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
+
 using progress_display = boost::progress_display;
 #else
 // Boost >=1.72 can use this as a replacement
 #include <boost/timer/progress_display.hpp>
+
 using progress_display = boost::timer::progress_display;
 #endif
 
 #define NLOHMANN_AVAILABLE 1
-#include <nlohmann/json.hpp>
-
 #include "trackSummaryAnalysis.C"
 
 using namespace boost::program_options;
@@ -58,7 +67,7 @@ int main(int argc, char** argv) {
     ao("output,o", value<std::string>()->default_value(""),
        "Output ROOT file with histograms");
     ao("hist-bins", value<unsigned int>()->default_value(61),
-       "Numer of bins for the residual/pull histograms");
+       "Number of bins for the residual/pull histograms");
     ao("pull-range", value<float>()->default_value(5.),
        "Number of sigmas for the pull range.");
     ao("eta-bins", value<unsigned int>()->default_value(10),
@@ -74,9 +83,9 @@ int main(int argc, char** argv) {
     ao("pt-borders", value<VariableReals>()->required(),
        "Transverse momentum borders.");
     ao("config-output", value<std::string>()->default_value(""),
-       "(Optional) output histrogram configuration json file.");
+       "(Optional) output histogram configuration json file.");
     ao("config-input", value<std::string>()->default_value(""),
-       "(Optional) input histrogram configuration json file.");
+       "(Optional) input histogram configuration json file.");
     // Define all parameters (overwrites individual parameters)
     ao("all", bool_switch(),
        "Process all residual/pull and auxiliary parameters");

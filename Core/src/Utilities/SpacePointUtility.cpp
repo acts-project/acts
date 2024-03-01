@@ -8,7 +8,18 @@
 
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
-#include <iostream>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+
 namespace Acts {
 
 Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
@@ -39,13 +50,15 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
   return Result<double>::success(diffTheta2 + diffPhi2);
 }
 
-std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
+std::tuple<Vector3, std::optional<ActsScalar>, Vector2,
+           std::optional<ActsScalar>>
+SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
-    const BoundVector& par, const BoundSymMatrix& cov) const {
-  const Surface* surface =
-      m_config.trackingGeometry->findSurface(slink.geometryId());
+    const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
+    const BoundSquareMatrix& cov) const {
+  const Surface* surface = surfaceAccessor(slink);
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
-  SymMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
+  SquareMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
   Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3());
   RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, Vector3());
@@ -75,15 +88,26 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
   ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
 
   auto gcov = Vector2(var[0], var[1]);
-  return std::make_pair(globalPos, gcov);
+
+  // optionally set time
+  // TODO the current condition of checking the covariance is not optional but
+  // should do for now
+  std::optional<ActsScalar> globalTime = par[eBoundTime];
+  std::optional<ActsScalar> tcov = cov(eBoundTime, eBoundTime);
+  if (tcov.value() <= 0) {
+    globalTime = std::nullopt;
+    tcov = std::nullopt;
+  }
+
+  return std::make_tuple(globalPos, globalTime, gcov, tcov);
 }
 
 Vector2 SpacePointUtility::calcRhoZVars(
     const GeometryContext& gctx, const SourceLink& slinkFront,
     const SourceLink& slinkBack,
-    const std::function<std::pair<const BoundVector, const BoundSymMatrix>(
-        SourceLink)>& paramCovAccessor,
-    const Vector3& globalPos, const double theta) const {
+    const SourceLinkSurfaceAccessor& surfaceAccessor,
+    const ParamCovAccessor& paramCovAccessor, const Vector3& globalPos,
+    const double theta) const {
   const auto var1 = paramCovAccessor(slinkFront).second(0, 0);
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 
@@ -94,25 +118,23 @@ Vector2 SpacePointUtility::calcRhoZVars(
   // projection to the surface with strip1.
   double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
   double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
-  SymMatrix2 lcov;
+  SquareMatrix2 lcov;
   lcov << sig_x1, 0, 0, sig_y1;
 
-  const auto geoId = slinkFront.geometryId();
+  const Surface& surface = *surfaceAccessor(slinkFront);
 
-  auto gcov = rhoZCovariance(gctx, geoId, globalPos, lcov);
+  auto gcov = rhoZCovariance(gctx, surface, globalPos, lcov);
   return gcov;
 }
 
 Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
-                                          const GeometryIdentifier& geoId,
+                                          const Surface& surface,
                                           const Vector3& globalPos,
-                                          const SymMatrix2& localCov) const {
+                                          const SquareMatrix2& localCov) const {
   Vector3 globalFakeMom(1, 1, 1);
 
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-
   RotationMatrix3 rotLocalToGlobal =
-      surface->referenceFrame(gctx, globalPos, globalFakeMom);
+      surface.referenceFrame(gctx, globalPos, globalFakeMom);
 
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];

@@ -7,22 +7,30 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
+//#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <string>
 
-namespace tt = boost::test_tools;
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
+// using boost::test_tools::output_test_stream;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -152,9 +160,9 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test isOnSurface
   Vector3 offSurface{100, 1, 2};
   BOOST_CHECK(coneSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                             momentum, true));
-  BOOST_CHECK(
-      !coneSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
+                                             momentum, BoundaryCheck(true)));
+  BOOST_CHECK(!coneSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
+                                              BoundaryCheck(true)));
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(tgContext, offSurface,
@@ -268,7 +276,5 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

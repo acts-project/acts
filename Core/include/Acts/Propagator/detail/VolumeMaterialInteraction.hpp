@@ -8,8 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -18,26 +21,26 @@ namespace detail {
 
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
-  /// Data from the propagation state
-  const TrackingVolume* volume;
+  /// The material interaction volume
+  InteractionVolume volume{};
   /// The particle current position
-  const Vector3 pos;
+  const Vector3 pos = Vector3::Zero();
   /// The particle current time
-  const double time;
+  const double time = 0;
   /// The particle current direction
-  const Vector3 dir;
-  /// The particle current momentum
-  const double momentum;
-  /// The particle current charge
-  const double q;
-  /// The particle current q/p
-  const double qOverP;
+  const Vector3 dir = Vector3::Zero();
+  /// The particle q/p at the interaction
+  const float qOverP = 0;
+  /// The absolute particle charge
+  const float absQ = 0;
+  /// The particle momentum at the interaction
+  const float momentum = 0;
   /// The particle mass
-  const double mass;
+  const float mass = 0;
   /// The particle pdg
-  const int pdg;
+  const PdgParticle absPdg = eInvalid;
   /// The covariance transport decision at the interaction
-  const bool performCovarianceTransport;
+  const bool performCovarianceTransport = false;
   /// The navigation direction
   const Direction navDir;
 
@@ -62,13 +65,13 @@ struct VolumeMaterialInteraction {
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
-        momentum(stepper.momentum(state.stepping)),
-        q(stepper.charge(state.stepping)),
-        qOverP(q / momentum),
-        mass(state.options.mass),
-        pdg(state.options.absPdgCode),
+        qOverP(stepper.qOverP(state.stepping)),
+        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
+        momentum(stepper.absoluteMomentum(state.stepping)),
+        mass(stepper.particleHypothesis(state.stepping).mass()),
+        absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
         performCovarianceTransport(state.stepping.covTransport),
-        navDir(state.stepping.navDir) {}
+        navDir(state.options.direction) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///

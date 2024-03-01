@@ -9,12 +9,15 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
 
 #include <G4UserSteppingAction.hh>
+
+class G4Step;
 
 namespace ActsExamples {
 
@@ -29,6 +32,8 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
  public:
   /// Nested configuration struct
   struct Config {
+    std::shared_ptr<EventStore> eventStore;
+
     std::vector<std::string> excludeMaterials = {};
   };
 
@@ -53,6 +58,9 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
+
+  /// Private access method to the event store
+  EventStore& eventStore() const { return *m_cfg.eventStore; }
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;

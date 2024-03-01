@@ -17,7 +17,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <vector>
 

@@ -201,7 +201,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::findNext() {
 }
 
 ///////////////////////////////////////////////////////////////////
-// Initiate frame work for seed generator
+// Initiate framework for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildFrameWork() {
@@ -384,7 +384,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildFrameWork() {
 }
 
 ///////////////////////////////////////////////////////////////////
-// Initiate beam frame work for seed generator
+// Initiate beam framework for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildBeamFrameWork() {
@@ -398,7 +398,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildBeamFrameWork() {
 }
 
 ///////////////////////////////////////////////////////////////////
-// Initiate beam frame work for seed generator
+// Initiate beam framework for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void Acts::Legacy::AtlasSeedFinder<SpacePoint>::convertToBeamFrameWork(
@@ -484,7 +484,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
         : Z > -2500. ? z = 1
                      : z = 0;
       }
-      // calculate bin nr "n" for self made r-phi-z sorted 3D array "rfz_Sorted"
+      // calculate bin nr "n" for self-made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz
       int n = f * 11 + z;
       ++m_nsaz;

@@ -3,4 +3,5 @@ target_sources(
   PRIVATE
     Common.cpp
     Direction.cpp
+    ParticleData.cpp
 )

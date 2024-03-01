@@ -18,12 +18,18 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class RootAthenaNTupleReader : public ActsExamples::IReader {
  public:
@@ -222,8 +228,8 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   WriteDataHandle<std::vector<Acts::Vector4>> m_outputRecoVtxParameters{
       this, "OutputRecoVertices"};
 
-  WriteDataHandle<Acts::Vertex<Acts::BoundTrackParameters>>
-      m_outputBeamspotConstraint{this, "OutputBeamsspotConstraint"};
+  WriteDataHandle<Acts::Vertex> m_outputBeamspotConstraint{
+      this, "OutputBeamsspotConstraint"};
 };
 
 }  // namespace ActsExamples

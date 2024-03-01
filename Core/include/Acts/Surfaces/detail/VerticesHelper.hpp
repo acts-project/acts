@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 

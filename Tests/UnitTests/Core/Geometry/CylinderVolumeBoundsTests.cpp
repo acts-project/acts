@@ -10,39 +10,47 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace Test {
-
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
   double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{M_PI / 4}, avgphi{0.};
 
-  // Test different construciton modes: solid
+  // Test different construction modes: solid
   CylinderVolumeBounds solidCylinder(0., rmax, halfz);
   BOOST_CHECK_EQUAL(solidCylinder.orientedSurfaces().size(), 3);
 
-  // Test different construciton modes: sectoral solid
+  // Test different construction modes: sectoral solid
   CylinderVolumeBounds solidCylinderSector(0., rmax, halfz, halfphi);
   BOOST_CHECK_EQUAL(solidCylinderSector.orientedSurfaces().size(), 5);
 
-  // Test different construciton modes: tube
+  // Test different construction modes: tube
   CylinderVolumeBounds tubeCylinder(rmin, rmax, halfz);
   BOOST_CHECK_EQUAL(tubeCylinder.orientedSurfaces().size(), 4);
 
-  // Test different construciton modes: sectoral tube
+  // Test different construction modes: sectoral tube
   CylinderVolumeBounds tubeCylinderSector(rmin, rmax, halfz, halfphi);
   BOOST_CHECK_EQUAL(tubeCylinderSector.orientedSurfaces().size(), 6);
 
@@ -140,12 +148,30 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
 }
 
 /// Unit test for testing the orientedSurfaces() function
-BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
-                     bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI) ^
-                         bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
-                         bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
-                         bdata::xrange(100),
-                     alpha, beta, gamma, posX, posY, posZ, index) {
+BOOST_DATA_TEST_CASE(
+    CylinderVolumeBoundsOrientedSurfaces,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::xrange(100),
+    alpha, beta, gamma, posX, posY, posZ, index) {
   (void)index;
 
   // Create a test context
@@ -281,7 +307,9 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
 
   for (auto& os : cvbOrientedSurfaces) {
     auto onSurface = os.first->binningPosition(geoCtx, binR);
-    auto osNormal = os.first->normal(geoCtx, onSurface);
+    auto locPos =
+        os.first->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
+    auto osNormal = os.first->normal(geoCtx, locPos);
     // Check if you step inside the volume with the oriented normal
     Vector3 insideCvb = onSurface + os.second * osNormal;
     Vector3 outsideCvb = onSurface - os.second * osNormal;
@@ -298,7 +326,5 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

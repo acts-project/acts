@@ -13,13 +13,13 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 
 #include <memory>
 
 namespace Acts {
-
-class Surface;
 
 /// @class BoundarySurfaceT
 ///
@@ -55,10 +55,10 @@ class BoundarySurfaceT {
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface The unqiue surface the boundary represents
-  /// @param inside The inside volume the bounday surface points to
+  /// @param surface The unique surface the boundary represents
+  /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const Surface> surface,
+  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
                    const volume_t* inside, const volume_t* outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside),
@@ -69,11 +69,11 @@ class BoundarySurfaceT {
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface The unqiue surface the boundary represents
-  /// @param inside The inside volume the bounday surface points to
+  /// @param surface The unique surface the boundary represents
+  /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const Surface> surface, VolumePtr inside,
-                   VolumePtr outside)
+  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
+                   VolumePtr inside, VolumePtr outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside.get()),
         m_alongVolume(outside.get()),
@@ -83,11 +83,11 @@ class BoundarySurfaceT {
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface The unqiue surface the boundary represents
-  /// @param insideArray The inside volume array the bounday surface points to
+  /// @param surface The unique surface the boundary represents
+  /// @param insideArray The inside volume array the boundary surface points to
   /// @param outsideArray The outside volume array the boundary surface
   /// points to
-  BoundarySurfaceT(std::shared_ptr<const Surface> surface,
+  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)
       : m_surface(std::move(surface)),
@@ -103,13 +103,12 @@ class BoundarySurfaceT {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos The global position on surface
-  /// @param mom The direction on the surface
-  /// @param dir is an aditional direction corrective
+  /// @param dir The direction on the surface
   ///
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,
-                                         const Vector3& pos, const Vector3& mom,
-                                         Direction dir) const;
+                                         const Vector3& pos,
+                                         const Vector3& dir) const;
 
   /// templated onBoundary method
   ///
@@ -123,7 +122,7 @@ class BoundarySurfaceT {
   }
 
   /// The Surface Representation of this
-  virtual const Surface& surfaceRepresentation() const;
+  virtual const RegularSurface& surfaceRepresentation() const;
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
@@ -142,7 +141,7 @@ class BoundarySurfaceT {
 
  protected:
   /// the represented surface by this
-  std::shared_ptr<const Surface> m_surface;
+  std::shared_ptr<const RegularSurface> m_surface;
   /// the inside (w.r.t. normal vector) volume to point to if only one exists
   const volume_t* m_oppositeVolume;
   /// the outside (w.r.t. normal vector) volume to point to if only one exists
@@ -154,7 +153,7 @@ class BoundarySurfaceT {
 };
 
 template <class volume_t>
-inline const Surface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
+inline const RegularSurface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
     const {
   return (*(m_surface.get()));
 }
@@ -181,11 +180,10 @@ void BoundarySurfaceT<volume_t>::attachVolumeArray(
 
 template <class volume_t>
 const volume_t* BoundarySurfaceT<volume_t>::attachedVolume(
-    const GeometryContext& gctx, const Vector3& pos, const Vector3& mom,
-    Direction dir) const {
+    const GeometryContext& gctx, const Vector3& pos, const Vector3& dir) const {
   const volume_t* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir * mom) > 0.) {
+  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir) > 0.) {
     attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
                                    : m_alongVolume;
   } else {

@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "G4RunManager.hh"
 #include "G4VUserDetectorConstruction.hh"
 
 class G4LogicalVolume;
 class G4VPhysicalVolume;
+class G4RunManager;
 
 namespace ActsFatras {
 

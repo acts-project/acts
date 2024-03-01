@@ -7,25 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"   //to get s_noBounds
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
-#include <limits>
+#include <memory>
 
 #include "SurfaceStub.hpp"
-
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
 
 namespace Acts {
 /// Mock track object with minimal methods implemented for compilation
@@ -103,19 +100,22 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
                   // "no bounds" hard-coded
   Vector3 mom{100., 200., 300.};
   // isOnSurface
-  BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));
-  BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
-                                  true));  // need to improve bounds()
+  BOOST_CHECK(
+      surface.isOnSurface(tgContext, reference, mom, BoundaryCheck(false)));
+  BOOST_CHECK(
+      surface.isOnSurface(tgContext, reference, mom,
+                          BoundaryCheck(true)));  // need to improve bounds()
   // referenceFrame()
   RotationMatrix3 unitary;
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
-  auto referenceFrame = surface.referenceFrame(
-      tgContext, reference, mom);  // need more complex case to test
+  auto referenceFrame =
+      surface.referenceFrame(tgContext, Vector3{1, 2, 3}.normalized(),
+                             mom);  // need more complex case to test
   BOOST_CHECK_EQUAL(referenceFrame, unitary);
   // normal()
-  auto normal = surface.Surface::normal(tgContext,
-                                        reference);  // needs more complex
-                                                     // test
+  auto normal = surface.normal(tgContext, Vector3{1, 2, 3}.normalized(),
+                               Vector3::UnitZ());  // needs more
+                                                   // complex test
   Vector3 zero{0., 0., 0.};
   BOOST_CHECK_EQUAL(zero, normal);
   // pathCorrection is pure virtual
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   SurfaceStub surface3(detElement2);  // 3 differs in thickness
   SurfaceStub surface4(detElement3);  // 4 has a different transform and id
   SurfaceStub surface5(detElement1);
-  surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface matrial
+  surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface material
   //
   BOOST_CHECK(surface1 == surface2);
   //
@@ -175,7 +175,5 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   BOOST_CHECK(*surfacePtr == *sharedSurfacePtr);
 }
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

@@ -1,3 +1,5 @@
+import os
+
 import acts
 import acts.examples.geant4 as actsG4
 
@@ -18,8 +20,10 @@ mockupChamberConfigOuter.name = "Outer_Detector_Chamber"
 mockupChamberConfigOuter.SensitiveNames = ["Outer_Skin"]
 mockupChamberConfigOuter.PassiveNames = ["xx"]
 
-mockupConfig.gdmlPath = (
-    "../../../../Detectors/MuonSpectrometerMockupDetector/MuonChamber.gdml"
+dirOfThisScript = os.path.dirname(__file__)
+mockupConfig.gdmlPath = os.path.join(
+    dirOfThisScript,
+    "../../../../Detectors/MuonSpectrometerMockupDetector/MuonChamber.gdml",
 )
 mockupConfig.NumberOfSectors = 8
 

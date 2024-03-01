@@ -14,7 +14,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <vector>
@@ -31,7 +30,8 @@ struct CubicBVHTrackingGeometry {
   /// @param n number of boxes in each direction
   /// @param hl Range of the volume
   /// @param octd maximum depth
-  CubicBVHTrackingGeometry(size_t n = 29, double hl = 1000, size_t octd = 5) {
+  CubicBVHTrackingGeometry(std::size_t n = 29, double hl = 1000,
+                           std::size_t octd = 5) {
     Box::Size size(Acts::Vector3(2, 2, 2));
 
     std::shared_ptr<CuboidVolumeBounds> vbds =
@@ -48,9 +48,9 @@ struct CubicBVHTrackingGeometry {
     std::vector<Box*> boxes;
     boxes.reserve(boxStore.size());
 
-    for (size_t i = 0; i <= n; i++) {
-      for (size_t j = 0; j <= n; j++) {
-        for (size_t k = 0; k <= n; k++) {
+    for (std::size_t i = 0; i <= n; i++) {
+      for (std::size_t j = 0; j <= n; j++) {
+        for (std::size_t k = 0; k <= n; k++) {
           Vector3 pos(min + i * step, min + j * step, min + k * step);
 
           auto trf = Transform3(Translation3(pos));

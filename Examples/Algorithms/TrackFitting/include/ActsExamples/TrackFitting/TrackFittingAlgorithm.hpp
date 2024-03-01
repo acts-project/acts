@@ -8,19 +8,28 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+
+#include <memory>
+#include <string>
 
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+class MeasurementCalibrator;
+class TrackFitterFunction;
+struct AlgorithmContext;
 
 class TrackFittingAlgorithm final : public IAlgorithm {
  public:
@@ -33,17 +42,21 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     std::string inputProtoTracks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
+    /// (optional) Input clusters for each measurement
+    std::string inputClusters;
     /// Output fitted tracks collection.
     std::string outputTracks;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
-    /// Tracking geometry for surface lookup
+    /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
+    // Type erased calibrator for the measurements
+    std::shared_ptr<MeasurementCalibrator> calibrator;
   };
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param config is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
   TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
 
@@ -67,6 +80,8 @@ class TrackFittingAlgorithm final : public IAlgorithm {
                                                          "InputProtoTracks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
+
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };

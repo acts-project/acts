@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Navigation/NextNavigator.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -17,11 +19,22 @@
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
+#include <algorithm>
+#include <array>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace py = pybind11;
 
@@ -76,16 +89,17 @@ void addPropagation(Context& ctx) {
   }
 
   {
-    using Config = Acts::Experimental::NextNavigator::Config;
-    auto nav = py::class_<Acts::Experimental::NextNavigator,
-                          std::shared_ptr<Acts::Experimental::NextNavigator>>(
-                   m, "NextNavigator")
-                   .def(py::init<>([](Config cfg,
-                                      Logging::Level level = Logging::INFO) {
-                          return Acts::Experimental::NextNavigator{
-                              cfg, getDefaultLogger("NextNavigator", level)};
-                        }),
-                        py::arg("cfg"), py::arg("level") = Logging::INFO);
+    using Config = Acts::Experimental::DetectorNavigator::Config;
+    auto nav =
+        py::class_<Acts::Experimental::DetectorNavigator,
+                   std::shared_ptr<Acts::Experimental::DetectorNavigator>>(
+            m, "DetectorNavigator")
+            .def(py::init<>(
+                     [](Config cfg, Logging::Level level = Logging::INFO) {
+                       return Acts::Experimental::DetectorNavigator{
+                           cfg, getDefaultLogger("DetectorNavigator", level)};
+                     }),
+                 py::arg("cfg"), py::arg("level") = Logging::INFO);
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
@@ -102,9 +116,9 @@ void addPropagation(Context& ctx) {
       propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
       energyLoss, multipleScattering, recordMaterialInteractions, ntests,
       d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
-      etaRange, ptRange, ptLoopers, maxStepSize, propagationStepCollection,
-      propagationMaterialCollection, covarianceTransport, covariances,
-      correlations);
+      etaRange, ptRange, particleHypothesis, ptLoopers, maxStepSize,
+      propagationStepCollection, propagationMaterialCollection,
+      covarianceTransport, covariances, correlations);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(
@@ -130,7 +144,7 @@ void addPropagation(Context& ctx) {
   }
 
   {
-    addPropagator<Acts::EigenStepper<>, Acts::Experimental::NextNavigator>(
+    addPropagator<Acts::EigenStepper<>, Acts::Experimental::DetectorNavigator>(
         prop, "EigenNext");
   }
 

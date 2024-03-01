@@ -9,13 +9,17 @@
 #include "HitsPrinter.hpp"
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::HitsPrinter::HitsPrinter(
@@ -56,10 +60,10 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
   // print hits selected by index
   if (0 < m_cfg.selectIndexLength) {
-    size_t ihit = m_cfg.selectIndexStart;
+    std::size_t ihit = m_cfg.selectIndexStart;
     // Saturated addition that does not overflow and exceed SIZE_MAX.
     // From http://locklessinc.com/articles/sat_arithmetic/
-    size_t nend = ihit + m_cfg.selectIndexLength;
+    std::size_t nend = ihit + m_cfg.selectIndexLength;
     nend |= -static_cast<int>(nend < ihit);
     // restrict to available hits
     nend = std::min(clusters.size(), nend);
@@ -67,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     if (nend <= ihit) {
       ACTS_WARNING("event "
                    << ctx.eventNumber << " collection '" << m_cfg.inputClusters
-                   << " hit index selection is outside the available range");
+                   << "' hit index selection is outside the available range");
     } else {
       ACTS_INFO("event " << ctx.eventNumber << " collection '"
                          << m_cfg.inputClusters << "' contains "
@@ -108,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
   } else if (m_cfg.selectVolume != 0u) {
     geoSelection = selectVolume(clusters, m_cfg.selectVolume);
   }
-  if (not geoSelection.empty()) {
+  if (!geoSelection.empty()) {
     ACTS_INFO("event " << ctx.eventNumber << " collection '"
                        << m_cfg.inputClusters << "' contains "
                        << geoSelection.size() << " hits in volume "

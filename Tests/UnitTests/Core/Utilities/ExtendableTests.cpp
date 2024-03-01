@@ -12,11 +12,10 @@
 
 #include "Acts/Utilities/detail/Extendable.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
+#include <tuple>
+#include <type_traits>
 
 namespace Acts {
-
 namespace Test {
 
 // This tests the implementation of the ActionList

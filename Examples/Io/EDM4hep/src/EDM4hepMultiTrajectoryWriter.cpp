@@ -56,12 +56,14 @@ ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
     for (const auto& trackTip : from.tips()) {
       auto to = trackCollection.create();
       EDM4hepUtil::writeTrajectory(context.geoContext, m_cfg.Bz, from, to,
-                                   trackTip, hitParticlesMap);
+                                   trackTip, m_cfg.particleHypothesis,
+                                   hitParticlesMap);
     }
   }
 
   frame.put(std::move(trackCollection), "ActsTracks");
 
+  std::lock_guard guard(m_writeMutex);
   m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;

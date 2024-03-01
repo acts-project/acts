@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
@@ -17,74 +17,6 @@
 #include <Eigen/Core>
 
 namespace Acts {
-namespace detail_lt {
-template <typename D, size_t M, bool ReadOnly>
-inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
-    ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, IndexType istate)
-    : m_traj(&trajectory), m_istate(istate) {}
-
-template <typename D, size_t M, bool ReadOnly>
-TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
-  using PM = TrackStatePropMask;
-
-  PM mask = PM::None;
-  if (hasPredicted()) {
-    mask |= PM::Predicted;
-  }
-  if (hasFiltered()) {
-    mask |= PM::Filtered;
-  }
-  if (hasSmoothed()) {
-    mask |= PM::Smoothed;
-  }
-  if (hasJacobian()) {
-    mask |= PM::Jacobian;
-  }
-  if (hasCalibrated()) {
-    mask |= PM::Calibrated;
-  }
-  return mask;
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const
-    -> ConstParameters {
-  if (hasSmoothed()) {
-    return smoothed();
-  } else if (hasFiltered()) {
-    return filtered();
-  } else {
-    return predicted();
-  }
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
-    -> ConstCovariance {
-  if (hasSmoothed()) {
-    return smoothedCovariance();
-  } else if (hasFiltered()) {
-    return filteredCovariance();
-  } else {
-    return predictedCovariance();
-  }
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
-  assert(has<hashString("projector")>());
-  return bitsetToMatrix<Projector>(
-      component<ProjectorBitset, hashString("projector")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
-    -> SourceLink {
-  assert(has<hashString("uncalibratedSourceLink")>());
-  return m_traj->getUncalibratedSourceLink(m_istate);
-}
-
-}  // namespace detail_lt
 
 template <typename D>
 template <typename F>

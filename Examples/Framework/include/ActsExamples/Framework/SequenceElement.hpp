@@ -17,6 +17,7 @@
 namespace ActsExamples {
 
 class DataHandleBase;
+struct AlgorithmContext;
 
 /// Event processing interface.
 ///

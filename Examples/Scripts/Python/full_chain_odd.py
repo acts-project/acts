@@ -1,35 +1,42 @@
 #!/usr/bin/env python3
-import os, argparse, pathlib, contextlib, acts, acts.examples
+import os, argparse, pathlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
     EtaConfig,
+    PhiConfig,
     ParticleConfig,
     addPythia8,
     addFatras,
     addGeant4,
     ParticleSelectorConfig,
     addDigitization,
+    addParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addAmbiguityResolutionML,
     AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
+    addSeedFilterML,
+    SeedFilterMLDBScanConfig,
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
+import acts.examples.edm4hep
 
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+
+parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
+parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
@@ -43,12 +50,18 @@ parser.add_argument(
     help="Use the Ml Ambiguity Solver instead of the classical one",
     action="store_true",
 )
+parser.add_argument(
+    "--MLSeedFilter",
+    help="Use the Ml seed filter to select seed after the seeding step",
+    action="store_true",
+)
 
 args = vars(parser.parse_args())
 
-ttbar_pu200 = args["ttbar"]
+ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["MLSolver"]
+seedFilter_ML = args["MLSeedFilter"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -65,44 +78,84 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-# TODO Geant4 currently crashes with FPE monitoring
-with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
-    s = acts.examples.Sequencer(
-        events=args["events"],
-        numThreads=1,
-        outputDir=str(outputDir),
+s = acts.examples.Sequencer(
+    events=args["events"],
+    skip=args["skip"],
+    numThreads=1 if g4_simulation else -1,
+    outputDir=str(outputDir),
+)
+
+if args["edm4hep"]:
+    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+        inputPath=str(args["edm4hep"]),
+        inputSimHits=[
+            "PixelBarrelReadout",
+            "PixelEndcapReadout",
+            "ShortStripBarrelReadout",
+            "ShortStripEndcapReadout",
+            "LongStripBarrelReadout",
+            "LongStripEndcapReadout",
+        ],
+        outputParticlesGenerator="particles_input",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
+        outputSimHits="simhits",
+        graphvizOutput="graphviz",
+        dd4hepDetector=detector,
+        trackingGeometry=trackingGeometry,
+        sortSimHitsInTime=True,
+        level=acts.logging.INFO,
+    )
+    s.addReader(edm4hepReader)
+    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+
+    addParticleSelection(
+        s,
+        config=ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+            eta=(-3.0, 3.0),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        ),
+        inputParticles="particles",
+        outputParticles="particles_selected",
     )
 
-    if not ttbar_pu200:
+
+else:
+    if not ttbar:
         addParticleGun(
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-            EtaConfig(-3.0, 3.0, uniform=True),
-            ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-3.0, 3.0),
+            PhiConfig(0.0, 360.0 * u.degree),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(
-                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-                ),
                 mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
-            multiplicity=50,
+            multiplicity=200,
             rnd=rnd,
         )
     else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=200,
+            npileup=50,
             vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
                 ),
-                mean=acts.Vector4(0, 0, 0, 0),
             ),
             rnd=rnd,
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
         )
+
     if g4_simulation:
         if s.config.numThreads != 1:
             raise ValueError("Geant 4 simulation does not support multi-threading")
@@ -116,16 +169,17 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             trackingGeometry,
             field,
             preSelectParticles=ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
                 eta=(-3.0, 3.0),
-                absZ=(0, 1e4),
-                rho=(0, 1e3),
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
             rnd=rnd,
-            killVolume=acts.Volume.makeCylinderVolume(r=1100, halfZ=3000),
+            killVolume=trackingGeometry.worldVolume,
+            killAfterTime=25 * u.ns,
         )
     else:
         addFatras(
@@ -133,86 +187,95 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             trackingGeometry,
             field,
             preSelectParticles=ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
                 eta=(-3.0, 3.0),
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             )
-            if ttbar_pu200
+            if ttbar
             else ParticleSelectorConfig(),
+            enableInteractions=True,
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
             rnd=rnd,
         )
 
-    addDigitization(
-        s,
-        trackingGeometry,
-        field,
-        digiConfigFile=oddDigiConfig,
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-        rnd=rnd,
-    )
+addDigitization(
+    s,
+    trackingGeometry,
+    field,
+    digiConfigFile=oddDigiConfig,
+    outputDirRoot=outputDir,
+    # outputDirCsv=outputDir,
+    rnd=rnd,
+)
 
-    addSeeding(
+addSeeding(
+    s,
+    trackingGeometry,
+    field,
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+    if ttbar
+    else TruthSeedRanges(),
+    geoSelectionConfigFile=oddSeedingSel,
+    outputDirRoot=outputDir,
+    # outputDirCsv=outputDir,
+)
+if seedFilter_ML:
+    addSeedFilterML(
         s,
-        trackingGeometry,
-        field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-        if ttbar_pu200
-        else TruthSeedRanges(),
-        geoSelectionConfigFile=oddSeedingSel,
-        outputDirRoot=outputDir,
-    )
-
-    addCKFTracks(
-        s,
-        trackingGeometry,
-        field,
-        CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
-            nMeasurementsMin=7,
+        SeedFilterMLDBScanConfig(
+            epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
         ),
-        TrackSelectorRanges(
-            pt=(1.0 * u.GeV, None),
-            absEta=(None, 3.0),
-            loc0=(-4.0 * u.mm, 4.0 * u.mm),
-        ),
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
     )
 
-    if ambiguity_MLSolver:
-        addAmbiguityResolutionML(
-            s,
-            AmbiguityResolutionMLConfig(nMeasurementsMin=7),
-            CKFPerformanceConfig(
-                ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=7
-            ),
-            outputDirRoot=outputDir,
-            # outputDirCsv=outputDir,
-            onnxModelFile=os.path.dirname(__file__)
-            + "/MLAmbiguityResolution/duplicateClassifier.onnx",
-        )
-    else:
-        addAmbiguityResolution(
-            s,
-            AmbiguityResolutionConfig(
-                maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
-            ),
-            CKFPerformanceConfig(
-                ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
-                nMeasurementsMin=7,
-            ),
-            outputDirRoot=outputDir,
-            # outputDirCsv=outputDir,
-        )
+addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar else 0.0, None),
+        absEta=(None, 3.0),
+        loc0=(-4.0 * u.mm, 4.0 * u.mm),
+        nMeasurementsMin=7,
+    ),
+    outputDirRoot=outputDir,
+    writeCovMat=True,
+    # outputDirCsv=outputDir,
+)
 
-    addVertexFitting(
+if ambiguity_MLSolver:
+    addAmbiguityResolutionML(
         s,
-        field,
-        vertexFinder=VertexFinder.Iterative,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+    )
+else:
+    addAmbiguityResolution(
+        s,
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
+        outputDirRoot=outputDir,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
     )
 
-    s.run()
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+)
+
+s.run()

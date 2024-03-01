@@ -7,12 +7,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <array>
+#include <exception>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
@@ -26,9 +32,8 @@ namespace Acts::Python {
 void addUnits(Context& ctx) {
   auto& m = ctx.get("main");
   auto u = m.def_submodule("UnitConstants");
-  using namespace Acts::UnitConstants;
 
-#define UNIT(x) u.attr(#x) = x;
+#define UNIT(x) u.attr(#x) = Acts::UnitConstants::x;
 
   UNIT(fm)
   UNIT(pm)
@@ -65,7 +70,6 @@ void addUnits(Context& ctx) {
   UNIT(g)
   UNIT(kg)
   UNIT(e)
-  UNIT(C)
   UNIT(T)
   UNIT(Gauss)
   UNIT(kGauss)
@@ -103,6 +107,7 @@ void addLogging(Acts::Python::Context& ctx) {
                        .value("WARNING", Acts::Logging::WARNING)
                        .value("ERROR", Acts::Logging::ERROR)
                        .value("FATAL", Acts::Logging::FATAL)
+                       .value("MAX", Acts::Logging::MAX)
                        .export_values();
 
   levelEnum
@@ -223,6 +228,8 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("ePionZero", Acts::PdgParticle::ePionZero)
       .value("ePionPlus", Acts::PdgParticle::ePionPlus)
       .value("ePionMinus", Acts::PdgParticle::ePionMinus)
+      .value("eKaonPlus", Acts::PdgParticle::eKaonPlus)
+      .value("eKaonMinus", Acts::PdgParticle::eKaonMinus)
       .value("eNeutron", Acts::PdgParticle::eNeutron)
       .value("eAntiNeutron", Acts::PdgParticle::eAntiNeutron)
       .value("eProton", Acts::PdgParticle::eProton)
@@ -262,6 +269,42 @@ void addAlgebra(Acts::Python::Context& ctx) {
       }))
       .def("__getitem__",
            [](const Acts::Vector4& self, Eigen::Index i) { return self[i]; });
+
+  py::class_<Acts::Transform3>(m, "Transform3")
+      .def(py::init([](std::array<double, 3> translation) {
+        Acts::Transform3 t = Acts::Transform3::Identity();
+        t.pretranslate(
+            Acts::Vector3(translation[0], translation[1], translation[2]));
+        return t;
+      }))
+      .def("getTranslation", [](const Acts::Transform3& self) {
+        return Vector3(self.translation());
+      });
+}
+
+void addBinning(Context& ctx) {
+  auto& m = ctx.get("main");
+  auto binning = m.def_submodule("Binning", "");
+
+  auto binningValue = py::enum_<Acts::BinningValue>(binning, "BinningValue")
+                          .value("x", Acts::BinningValue::binX)
+                          .value("y", Acts::BinningValue::binY)
+                          .value("z", Acts::BinningValue::binZ)
+                          .value("r", Acts::BinningValue::binR)
+                          .value("phi", Acts::BinningValue::binPhi)
+                          .export_values();
+
+  auto boundaryType =
+      py::enum_<Acts::detail::AxisBoundaryType>(binning, "AxisBoundaryType")
+          .value("bound", Acts::detail::AxisBoundaryType::Bound)
+          .value("closed", Acts::detail::AxisBoundaryType::Closed)
+          .value("open", Acts::detail::AxisBoundaryType::Open)
+          .export_values();
+
+  auto axisType = py::enum_<Acts::detail::AxisType>(binning, "AxisType")
+                      .value("equidistant", Acts::detail::AxisType::Equidistant)
+                      .value("variable", Acts::detail::AxisType::Variable)
+                      .export_values();
 }
 
 }  // namespace Acts::Python

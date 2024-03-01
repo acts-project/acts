@@ -10,11 +10,12 @@ add_library(
   src/RootParticleReader.cpp
   src/RootPropagationStepsWriter.cpp
   src/RootSimHitWriter.cpp
+  src/RootSimHitReader.cpp
   src/RootSpacepointWriter.cpp
   src/RootTrackParameterWriter.cpp
-  src/RootTrajectoryStatesWriter.cpp
-  src/RootTrajectorySummaryReader.cpp
-  src/RootTrajectorySummaryWriter.cpp
+  src/RootTrackStatesWriter.cpp
+  src/RootTrackSummaryReader.cpp
+  src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
 )

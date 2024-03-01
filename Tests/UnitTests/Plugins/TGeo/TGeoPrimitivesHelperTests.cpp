@@ -11,11 +11,10 @@
 
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
+#include <string>
+#include <vector>
 
 namespace Acts {
-
 namespace Test {
 
 /// @brief Unit test checking the match probability

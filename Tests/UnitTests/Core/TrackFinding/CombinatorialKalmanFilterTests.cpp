@@ -9,47 +9,76 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <functional>
 #include <limits>
+#include <map>
 #include <memory>
+#include <ostream>
 #include <random>
+#include <string>
+#include <system_error>
+#include <unordered_map>
+#include <utility>
 #include <vector>
+
+namespace Acts {
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace {
 
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+static const auto pion = Acts::ParticleHypothesis::pion();
 
 struct Detector {
   // expected number of measurements for the given detector
-  size_t numMeasurements = 6u;
+  std::size_t numMeasurements = 6u;
 
   // geometry
   CubicTrackingGeometry store;
@@ -195,35 +224,36 @@ struct Fixture {
     stddev[Acts::eBoundPhi] = 2_degree;
     stddev[Acts::eBoundTheta] = 2_degree;
     stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-    Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+    Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
     Acts::Vector4 mStartPos0(-3_m, 0.0, 0.0, 1_ns);
     Acts::Vector4 mStartPos1(-3_m, -15_mm, -15_mm, 2_ns);
     Acts::Vector4 mStartPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
-        {mStartPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
-        {mStartPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
-        {mStartPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
+        {mStartPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov, pion},
+        {mStartPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov, pion},
+        {mStartPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov, pion},
     };
     Acts::Vector4 mEndPos0(3_m, 0.0, 0.0, 1_ns);
     Acts::Vector4 mEndPos1(3_m, -100_mm, -100_mm, 2_ns);
     Acts::Vector4 mEndPos2(3_m, 100_mm, 100_mm, -1_ns);
     endParameters = {
-        {mEndPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov * 100},
-        {mEndPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov * 100},
-        {mEndPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov * 100},
+        {mEndPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov * 100, pion},
+        {mEndPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov * 100, pion},
+        {mEndPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov * 100, pion},
     };
 
     // create some measurements
     auto measPropagator = makeStraightPropagator(detector.geometry);
     std::default_random_engine rng(421235);
-    for (size_t trackId = 0u; trackId < startParameters.size(); ++trackId) {
+    for (std::size_t trackId = 0u; trackId < startParameters.size();
+         ++trackId) {
       auto measurements = createMeasurements(
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace(sl.geometryId(), std::move(sl));
+        sourceLinks.emplace(sl.m_geometryId, std::move(sl));
       }
     }
   }
@@ -273,13 +303,13 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
-  // this is the default option. set anyways for consistency
+  // this is the default option. set anyway for consistency
   options.propagatorPlainOptions.direction = Acts::Direction::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
-  options.referenceSurface = &(*pSurface);
+  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -290,9 +320,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
                           Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
-    if (not res.ok()) {
+    if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
@@ -302,7 +333,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   BOOST_CHECK_EQUAL(tc.size(), 3u);
 
   // check the found tracks
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     const auto track = tc.getTrack(trackId);
     const auto& params = f.startParameters[trackId];
     BOOST_TEST_INFO("initial parameters before detector:\n" << params);
@@ -311,9 +343,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
     // check purity of first found track
     // find the number of hits not originating from the right track
-    size_t numHits = 0u;
-    size_t nummismatchedHits = 0u;
-    for (const auto trackState : track.trackStates()) {
+    std::size_t numHits = 0u;
+    std::size_t nummismatchedHits = 0u;
+    for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
           trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
@@ -336,7 +368,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
-  options.referenceSurface = &(*pSurface);
+  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -347,9 +379,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
                           Acts::VectorMultiTrajectory{}};
 
   // run the CKF for all initial track states
-  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.startParameters.size();
+       ++trackId) {
     auto res = f.ckf.findTracks(f.endParameters.at(trackId), options, tc);
-    if (not res.ok()) {
+    if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
@@ -358,7 +391,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   BOOST_CHECK_EQUAL(tc.size(), 3u);
 
   // check the found tracks
-  for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
+  for (std::size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
     const auto track = tc.getTrack(trackId);
     const auto& params = f.endParameters[trackId];
     BOOST_TEST_INFO("initial parameters after detector:\n" << params);
@@ -367,9 +400,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
     // check purity of first found track
     // find the number of hits not originating from the right track
-    size_t numHits = 0u;
-    size_t nummismatchedHits = 0u;
-    for (const auto trackState : track.trackStates()) {
+    std::size_t numHits = 0u;
+    std::size_t nummismatchedHits = 0u;
+    for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
           trackState.getUncalibratedSourceLink().template get<TestSourceLink>();

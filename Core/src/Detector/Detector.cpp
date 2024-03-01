@@ -8,25 +8,27 @@
 
 #include "Acts/Detector/Detector.hpp"
 
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+
+#include <iterator>
+#include <sstream>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
 
 Acts::Experimental::Detector::Detector(
-    const std::string& name,
-    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdator&& detectorVolumeUpdator)
-    : m_name(name),
+    std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
+    DetectorVolumeUpdater detectorVolumeUpdater)
+    : m_name(std::move(name)),
       m_rootVolumes(std::move(rootVolumes)),
-      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
+      m_detectorVolumeUpdater(std::move(detectorVolumeUpdater)) {
   if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
-  if (not m_detectorVolumeUpdator.connected()) {
+  if (!m_detectorVolumeUpdater.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
@@ -49,6 +51,11 @@ Acts::Experimental::Detector::Detector(
   m_volumes = DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(
       collectVolumes());
 
+  // Fill the surface map
+  std::unordered_map<GeometryIdentifier, const Surface*> surfaceGeoIdMap;
+  // Map for the volume geometry id
+  std::unordered_map<GeometryIdentifier, const DetectorVolume*> volumeGeoIdMap;
+
   // Check for unique names and fill the volume name / index map
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
     // Assign this detector
@@ -62,16 +69,69 @@ Acts::Experimental::Detector::Detector(
                                   " detected.");
     }
     m_volumeNameIndex[vName] = iv;
+
+    // ---------------------------------------------------------------
+    // Check volume geometry id
+    auto vgeoID = v->geometryId();
+    // Check for undefined geometry id
+    if (vgeoID.value() == 0u) {
+      throw std::invalid_argument("Detector: volume '" + v->name() +
+                                  "' with undefined geometry id detected" +
+                                  ". Make sure a GeometryIdGenerator is used.");
+    }
+    if (volumeGeoIdMap.find(vgeoID) != volumeGeoIdMap.end()) {
+      std::stringstream ss;
+      ss << vgeoID;
+      throw std::invalid_argument("Detector: duplicate volume geometry id '" +
+                                  ss.str() + "' detected" +
+                                  ". Make sure a GeometryIdGenerator is used.");
+    }
+    volumeGeoIdMap.emplace(vgeoID, v.get());
+    // ---------------------------------------------------------------
+
+    for (const auto* s : v->surfaces()) {
+      auto sgeoID = s->geometryId();
+
+      // ---------------------------------------------------------------
+      // Check for undefined geometry id
+      if (sgeoID.value() == 0u) {
+        std::stringstream ss;
+        ss << s->name();
+        throw std::invalid_argument(
+            "Detector: surface '" + ss.str() + "' with undefined geometry id " +
+            "detected in volume '" + v->name() +
+            "'. Make sure a GeometryIdGenerator is used.");
+      }
+      // ---------------------------------------------------------------
+
+      if (surfaceGeoIdMap.find(sgeoID) != surfaceGeoIdMap.end()) {
+        std::stringstream ss;
+        ss << sgeoID;
+        throw std::invalid_argument(
+            "Detector: duplicate sensitive surface geometry id '" + ss.str() +
+            "' detected in volume '" + v->name() +
+            "'. Make sure a GeometryIdGenerator is used.");
+      }
+      surfaceGeoIdMap.emplace(sgeoID, s);
+    }
   }
+  // Let us transfer the surfaces into the hierarchy map
+  std::vector<std::pair<GeometryIdentifier, const Surface*>> surfaceGeoIdVec;
+  surfaceGeoIdVec.reserve(surfaceGeoIdMap.size());
+  for (auto [geoID, surface] : surfaceGeoIdMap) {
+    surfaceGeoIdVec.emplace_back(geoID, surface);
+  }
+  m_sensitiveHierarchyMap =
+      GeometryHierarchyMap<const Surface*>(std::move(surfaceGeoIdVec));
 }
 
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::makeShared(
-    const std::string& name,
-    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdator&& detectorVolumeUpdator) {
-  return std::shared_ptr<Detector>(new Detector(
-      name, std::move(rootVolumes), std::move(detectorVolumeUpdator)));
+    std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
+    DetectorVolumeUpdater detectorVolumeUpdater) {
+  return std::shared_ptr<Detector>(
+      new Detector(std::move(name), std::move(rootVolumes),
+                   std::move(detectorVolumeUpdater)));
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
@@ -95,13 +155,13 @@ Acts::Experimental::Detector::volumes() const {
 }
 
 void Acts::Experimental::Detector::updateDetectorVolumeFinder(
-    DetectorVolumeUpdator&& detectorVolumeUpdator) {
-  m_detectorVolumeUpdator = std::move(detectorVolumeUpdator);
+    DetectorVolumeUpdater detectorVolumeUpdater) {
+  m_detectorVolumeUpdater = std::move(detectorVolumeUpdater);
 }
 
-const Acts::Experimental::DetectorVolumeUpdator&
+const Acts::Experimental::DetectorVolumeUpdater&
 Acts::Experimental::Detector::detectorVolumeFinder() const {
-  return m_detectorVolumeUpdator;
+  return m_detectorVolumeUpdater;
 }
 
 const std::string& Acts::Experimental::Detector::name() const {
@@ -120,7 +180,7 @@ Acts::Experimental::Detector::getSharedPtr() const {
 
 void Acts::Experimental::Detector::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
-  m_detectorVolumeUpdator(gctx, nState);
+  m_detectorVolumeUpdater(gctx, nState);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -129,7 +189,7 @@ Acts::Experimental::Detector::findDetectorVolume(
   NavigationState nState;
   nState.currentDetector = this;
   nState.position = position;
-  m_detectorVolumeUpdator(gctx, nState);
+  m_detectorVolumeUpdater(gctx, nState);
   return nState.currentVolume;
 }
 
@@ -141,4 +201,9 @@ Acts::Experimental::Detector::findDetectorVolume(
     return m_volumes.external[vCandidate->second];
   }
   return nullptr;
+}
+
+const Acts::GeometryHierarchyMap<const Acts::Surface*>&
+Acts::Experimental::Detector::sensitiveHierarchyMap() const {
+  return m_sensitiveHierarchyMap;
 }

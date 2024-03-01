@@ -8,9 +8,15 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
 #include <algorithm>
+#include <cmath>
 #include <iterator>
+#include <ostream>
 #include <random>
+#include <utility>
 
 #include <Pythia8/Pythia.h>
 
@@ -30,7 +36,7 @@ ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
       m_pythia8(std::make_unique<Pythia8::Pythia>("", false)) {
-  // disable all output by default but allow reenable via config
+  // disable all output by default but allow re-enable via config
   m_pythia8->settings.flag("Print:quiet", true);
   for (const auto& setting : m_cfg.settings) {
     ACTS_VERBOSE("use Pythia8 setting '" << setting << "'");
@@ -56,10 +62,24 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
 
   // pythia8 is not thread safe and generation needs to be protected
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
-  // use per-thread random engine also in pythia
+// use per-thread random engine also in pythia
+#if PYTHIA_VERSION_INTEGER >= 8310
+  m_pythia8->rndm.rndmEnginePtr(std::make_shared<FrameworkRndmEngine>(rng));
+#else
   FrameworkRndmEngine rndmEngine(rng);
   m_pythia8->rndm.rndmEnginePtr(&rndmEngine);
-  m_pythia8->next();
+#endif
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
+    m_pythia8->next();
+  }
+
+  if (m_cfg.printShortEventListing) {
+    m_pythia8->process.list();
+  }
+  if (m_cfg.printLongEventListing) {
+    m_pythia8->event.list();
+  }
 
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {
@@ -70,10 +90,10 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
       continue;
     }
     // only interested in final, visible particles
-    if (not genParticle.isFinal()) {
+    if (!genParticle.isFinal()) {
       continue;
     }
-    if (not genParticle.isVisible()) {
+    if (!genParticle.isVisible()) {
       continue;
     }
 
@@ -87,7 +107,7 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
     // ensure particle identifier component is non-zero
     particleId.setParticle(1u + generated.size());
     // only secondaries have a defined vertex position
-    if (genParticle.hasVertex()) {
+    if (m_cfg.labelSecondaries && genParticle.hasVertex()) {
       // either add to existing secondary vertex if exists or create new one
       // TODO can we do this w/o the manual search and position check?
       auto it = std::find_if(

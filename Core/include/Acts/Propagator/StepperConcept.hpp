@@ -40,6 +40,8 @@ METHOD_TRAIT(reset_state_t, resetState);
 METHOD_TRAIT(get_field_t, getField);
 METHOD_TRAIT(position_t, position);
 METHOD_TRAIT(direction_t, direction);
+METHOD_TRAIT(qop_t, qOverP);
+METHOD_TRAIT(absolute_momentum_t, absoluteMomentum);
 METHOD_TRAIT(momentum_t, momentum);
 METHOD_TRAIT(charge_t, charge);
 METHOD_TRAIT(time_t, time);
@@ -52,7 +54,7 @@ METHOD_TRAIT(covariance_transport_curvilinear_t,
              transportCovarianceToCurvilinear);
 METHOD_TRAIT(step_t, step);
 METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
-METHOD_TRAIT(set_step_size_t, setStepSize);
+METHOD_TRAIT(update_step_size_t, updateStepSize);
 METHOD_TRAIT(get_step_size_t, getStepSize);
 METHOD_TRAIT(release_step_size_t, releaseStepSize);
 METHOD_TRAIT(output_step_size_t, outputStepSize);
@@ -62,8 +64,6 @@ using cov_transport_t = decltype(std::declval<T>().covTransport);
 template <typename T>
 using cov_t = decltype(std::declval<T>().cov);
 template <typename T>
-using nav_dir_t = decltype(std::declval<T>().navDir);
-template <typename T>
 using path_accumulated_t = decltype(std::declval<T>().pathAccumulated);
 template <typename T>
 using step_size_t = decltype(std::declval<T>().stepSize);
@@ -72,8 +72,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
     template <typename S>
     constexpr bool StepperStateConcept
       = require<has_member<S, cov_transport_t, bool>,
-                has_member<S, cov_t, BoundSymMatrix>,
-                has_member<S, nav_dir_t, Direction>,
+                has_member<S, cov_t, BoundSquareMatrix>,
                 has_member<S, path_accumulated_t, double>//,
 //                 has_member<S, step_size_t, ConstrainedStep>
                >;
@@ -83,7 +82,6 @@ using step_size_t = decltype(std::declval<T>().stepSize);
 template <typename S>
 constexpr bool MultiStepperStateConcept= require<
   has_member<S, cov_transport_t, bool>,
-  has_member<S, nav_dir_t, Direction>,
   has_member<S, path_accumulated_t, double>
 >;
 // clang-format on
@@ -101,13 +99,17 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(bound_state_exists, "BoundState type not found");
         constexpr static bool curvilinear_state_exists = exists<curvilinear_state_t, S>;
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
-        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const Direction, const double>;
+        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSquareMatrix&, const Surface&, const double>;
         static_assert(reset_state_exists, "resetState method not found");
         constexpr static bool position_exists = has_method<const S, Vector3, position_t, const state&>;
         static_assert(position_exists, "position method not found");
         constexpr static bool direction_exists = has_method<const S, Vector3, direction_t, const state&>;
         static_assert(direction_exists, "direction method not found");
-        constexpr static bool momentum_exists = has_method<const S, double, momentum_t, const state&>;
+        constexpr static bool qop_exists = has_method<const S, double, qop_t, const state&>;
+        static_assert(qop_exists, "qOverP method not found");
+        constexpr static bool absolute_momentum_exists = has_method<const S, double, absolute_momentum_t, const state&>;
+        static_assert(absolute_momentum_exists, "absoluteMomentum method not found");
+        constexpr static bool momentum_exists = has_method<const S, Vector3, momentum_t, const state&>;
         static_assert(momentum_exists, "momentum method not found");
         constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
         static_assert(charge_exists, "charge method not found");
@@ -122,13 +124,13 @@ constexpr bool MultiStepperStateConcept= require<
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_curvilinear_t, state&>,
                                                                     has_method<const S, void, covariance_transport_bound_t, state&, const Surface&, const FreeToBoundCorrection&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
-        constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&, const Logger&>;
+        constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, std::uint8_t, Direction, const BoundaryCheck&, ActsScalar, const Logger&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
-        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type, bool>;
-        static_assert(set_step_size_exists, "setStepSize method not found");
+        constexpr static bool update_step_size_exists = has_method<const S, void, update_step_size_t, state&, double, ConstrainedStep::Type, bool>;
+        static_assert(update_step_size_exists, "updateStepSize method not found");
         constexpr static bool get_step_size_exists = has_method<const S, double, get_step_size_t, const state &, ConstrainedStep::Type>;
         static_assert(get_step_size_exists, "getStepSize method not found");
-        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
+        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&, ConstrainedStep::Type>;
         static_assert(release_step_size_exists, "releaseStepSize method not found");
         constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;
         static_assert(output_step_size_exists, "outputStepSize method not found");
@@ -140,6 +142,8 @@ constexpr bool MultiStepperStateConcept= require<
                                               curvilinear_state_exists,
                                               position_exists,
                                               direction_exists,
+                                              qop_exists,
+                                              absolute_momentum_exists,
                                               momentum_exists,
                                               charge_exists,
                                               time_exists,
@@ -147,7 +151,7 @@ constexpr bool MultiStepperStateConcept= require<
                                               curvilinear_state_method_exists,
                                               covariance_transport_exists,
                                               update_surface_exists,
-                                              set_step_size_exists,
+                                              update_step_size_exists,
                                               release_step_size_exists,
                                               output_step_size_exists>;
 
@@ -159,8 +163,8 @@ constexpr bool MultiStepperStateConcept= require<
     template <typename S, typename state = typename S::State>
       struct SingleStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
-        static_assert(common_stepper_concept_fullfilled, "Stepper does not fullfill common stepper concept");
-        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundVector&, const BoundSymMatrix&, const Surface&>, has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
+        static_assert(common_stepper_concept_fullfilled, "Stepper does not fulfill common stepper concept");
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundVector&, const BoundSquareMatrix&, const Surface&>, has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
         // static_assert(update_method_exists, "update method not found");
         constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
         // static_assert(get_field_exists, "getField method not found");
@@ -175,14 +179,14 @@ constexpr bool MultiStepperStateConcept= require<
     template <typename S, typename state = typename S::State>
       struct MultiStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
-        static_assert(common_stepper_concept_fullfilled, "Common stepper concept not fullfilled");
+        static_assert(common_stepper_concept_fullfilled, "Common stepper concept not fulfilled");
 
-        // TODO for now we do not check if the ComponentProxy does fullfill a concept
+        // TODO for now we do not check if the ComponentProxy does fulfill a concept
         template <typename T> using component_proxy_t = typename T::ComponentProxy;
         constexpr static bool component_proxy_exists = exists<component_proxy_t, S>;
         // static_assert(component_proxy_exists, "!component_proxy_exists");
 
-        // TODO for now we do not check if the ConstComponentProxy does fullfill a concept
+        // TODO for now we do not check if the ConstComponentProxy does fulfill a concept
         template <typename T> using const_component_proxy_t = typename T::ConstComponentProxy;
         constexpr static bool const_component_proxy_exists = exists<const_component_proxy_t, S>;
         // static_assert(const_component_proxy_exists, "!const_component_proxy_exists");

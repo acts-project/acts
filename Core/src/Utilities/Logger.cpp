@@ -8,7 +8,8 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cassert>
+#include <algorithm>
+#include <cstdlib>
 
 namespace Acts {
 
@@ -65,7 +66,7 @@ void setFailureThreshold(Level /*lvl*/) {
       "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
       "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
       "override. See "
-      "https://acts.readthedocs.io/en/latest/core/"
+      "https://acts.readthedocs.io/en/latest/core/misc/"
       "logging.html#logging-thresholds"};
 }
 

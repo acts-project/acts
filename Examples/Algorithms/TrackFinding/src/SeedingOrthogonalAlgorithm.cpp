@@ -8,12 +8,20 @@
 
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include <cmath>
+#include <functional>
+#include <ostream>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
@@ -76,12 +84,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
 
-  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-      const SimSpacePoint *sp)>
+  std::function<
+      std::tuple<Acts::Vector3, Acts::Vector2, std::optional<Acts::ActsScalar>>(
+          const SimSpacePoint *sp)>
       create_coordinates = [](const SimSpacePoint *sp) {
         Acts::Vector3 position(sp->x(), sp->y(), sp->z());
         Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
-        return std::make_pair(position, variance);
+        return std::make_tuple(position, variance, sp->t());
       };
 
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,

@@ -8,9 +8,12 @@
 
 #include "ActsExamples/Geant4/ParticleKillAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
-#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "Acts/Geometry/Volume.hpp"
+
+#include <ostream>
+#include <utility>
 
 #include <G4RunManager.hh>
 #include <G4Step.hh>
@@ -25,14 +28,25 @@ ActsExamples::ParticleKillAction::ParticleKillAction(
 
 void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
+
   G4Track* track = step->GetTrack();
 
   const auto pos = convertLength * track->GetPosition();
+  const auto time = convertTime * track->GetGlobalTime();
+  const bool isSecondary =
+      track->GetDynamicParticle()->GetPrimaryParticle() == nullptr;
 
-  if (m_cfg.volume and
-      not m_cfg.volume->inside(Acts::Vector3{pos.x(), pos.y(), pos.z()})) {
-    ACTS_DEBUG("Kill track with internal track ID " << track->GetTrackID()
-                                                    << " at " << pos);
+  const bool outOfVolume = m_cfg.volume && !m_cfg.volume->inside(Acts::Vector3{
+                                               pos.x(), pos.y(), pos.z()});
+  const bool outOfTime = time > m_cfg.maxTime;
+  const bool invalidSecondary = m_cfg.secondaries && isSecondary;
+
+  if (outOfVolume || outOfTime || invalidSecondary) {
+    ACTS_DEBUG("Kill track with internal track ID "
+               << track->GetTrackID() << " at " << pos << " and global time "
+               << time / Acts::UnitConstants::ns << "ns and isSecondary "
+               << isSecondary);
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
   }
 }

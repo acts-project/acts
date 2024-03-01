@@ -8,19 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
-
-// A test context
-Acts::GeometryContext tContext;
+#include <vector>
 
 namespace Acts {
 namespace Experimental {
@@ -52,8 +49,8 @@ BOOST_AUTO_TEST_CASE(NavigationState) {
       Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
 
   // Create a few fake portals out of it
-  auto portalA = Acts::Experimental::Portal::makeShared(pSurfaceA);
-  auto portalB = Acts::Experimental::Portal::makeShared(pSurfaceB);
+  auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
+  auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
 
   std::vector<const Acts::Surface*> surfaces = {surfaceA.get(), surfaceB.get(),
                                                 surfaceC.get()};
@@ -64,14 +61,14 @@ BOOST_AUTO_TEST_CASE(NavigationState) {
   const auto volume = dVolume.get();
 
   Acts::Experimental::DetectorVolumeFiller::fill(nState, volume);
-  BOOST_CHECK(nState.currentVolume == volume);
+  BOOST_CHECK_EQUAL(nState.currentVolume, volume);
 
   Acts::Experimental::PortalsFiller::fill(nState, portals);
-  BOOST_CHECK(nState.surfaceCandidates.size() == portals.size());
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), portals.size());
 
   Acts::Experimental::SurfacesFiller::fill(nState, surfaces);
-  BOOST_CHECK(nState.surfaceCandidates.size() ==
-              portals.size() + surfaces.size());
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(),
+                    portals.size() + surfaces.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

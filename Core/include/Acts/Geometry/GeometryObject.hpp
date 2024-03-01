@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
 
@@ -25,7 +25,7 @@ namespace Acts {
 ///
 class GeometryObject {
  public:
-  /// Defaulted construrctor
+  /// Defaulted constructor
   GeometryObject() = default;
 
   /// Defaulted copy constructor
@@ -90,4 +90,5 @@ inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,
                                                    BinningValue bValue) const {
   return VectorHelpers::cast(binningPosition(gctx, bValue), bValue);
 }
+
 }  // namespace Acts

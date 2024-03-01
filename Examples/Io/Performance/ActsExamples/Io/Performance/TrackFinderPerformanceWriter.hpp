@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <memory>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write track finder performance measures.
 ///
@@ -56,6 +59,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
                      const ProtoTrackContainer& tracks) override;
 
   struct Impl;
+
   std::unique_ptr<Impl> m_impl;
 };
 

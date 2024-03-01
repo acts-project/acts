@@ -8,47 +8,57 @@
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <system_error>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class DetectorElementBase;
+}  // namespace Acts
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
                                        const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : GeometryObject(),
+      RegularSurface(gctx, other, shift),
+      m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
                                        double halfphi, double avphi,
                                        double bevelMinZ, double bevelMaxZ)
-    : Surface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
-    const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(std::move(cbounds)) {
+    const DetectorElementBase& detelement)
+    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
   /// surfaces representing a detector element must have bounds
-  assert(cbounds);
+  throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    const Transform3& transform,
-    const std::shared_ptr<const CylinderBounds>& cbounds)
-    : Surface(transform), m_bounds(cbounds) {
-  throw_assert(cbounds, "CylinderBounds must not be nullptr");
+    const Transform3& transform, std::shared_ptr<const CylinderBounds> cbounds)
+    : RegularSurface(transform), m_bounds(std::move(cbounds)) {
+  throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface& Acts::CylinderSurface::operator=(
@@ -77,7 +87,7 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
 // return the measurement frame: it's the tangential plane
 Acts::RotationMatrix3 Acts::CylinderSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the z axis
@@ -99,8 +109,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 }
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*momentum*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -110,7 +119,7 @@ Acts::Vector3 Acts::CylinderSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/, double tolerance) const {
+    double tolerance) const {
   double inttol = tolerance;
   if (tolerance == s_onSurfaceTolerance) {
     // transform default value!
@@ -138,7 +147,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2& lposition) const {
   double phi = lposition[Acts::eBoundLoc0] / m_bounds->get(CylinderBounds::eR);
   Vector3 localNormal(cos(phi), sin(phi), 0.);
-  return Vector3(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
+  return transform(gctx).linear() * localNormal;
 }
 
 Acts::Vector3 Acts::CylinderSurface::normal(
@@ -148,7 +157,7 @@ Acts::Vector3 Acts::CylinderSurface::normal(
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
   pos3D.z() = 0.;
-  // normalize and rotate back into global if needed
+  // normalize and rotate back into global
   return sfTransform.linear() * pos3D.normalized();
 }
 
@@ -165,7 +174,7 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   auto ctrans = transform(gctx);
 
   // Prepare vertices and faces
@@ -182,7 +191,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
@@ -208,9 +217,10 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   const auto& gctxTransform = transform(gctx);
 
   // Solve the quadratic equation
@@ -218,26 +228,25 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return SurfaceIntersection();
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 =
-      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
 
   // Helper method for boundary check
   auto boundaryCheck =
       [&](const Vector3& solution,
           Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
-    if (!bcheck) {
+    if (!bcheck.isEnabled()) {
       return status;
     }
     const auto& cBounds = bounds();
-    if (cBounds.coversFullAzimuth() and
+    if (cBounds.coversFullAzimuth() &&
         bcheck.type() == BoundaryCheck::Type::eAbsolute) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons
@@ -245,8 +254,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       // Create the reference vector in local
       const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc1];
-      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
+      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc1];
+      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : Intersection3D::Status::missed;
     }
@@ -254,38 +263,26 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
                 ? status
                 : Intersection3D::Status::missed);
   };
-  // Check first solution for boundary compatiblity
+  // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
-  SurfaceIntersection cIntersection(first, this);
   if (qe.solutions == 1) {
-    return cIntersection;
+    return {{first, first}, this};
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
-  Intersection3D::Status status2 =
-      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
-  // Check first solution for boundary compatiblity
+  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
+  // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
-  // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection3D::Status::missed or
-                (status1 == Intersection3D::Status::missed and
-                 status2 == Intersection3D::Status::missed);
-  // Check and (eventually) go with the first solution
-  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
-      status2 == Intersection3D::Status::missed) {
-    // And add the alternative
-    cIntersection.alternative = second;
-  } else {
-    // And add the alternative
-    cIntersection.alternative = first;
-    cIntersection.intersection = second;
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
   }
-  return cIntersection;
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(
@@ -294,6 +291,9 @@ Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
@@ -344,7 +344,7 @@ Acts::CylinderSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);

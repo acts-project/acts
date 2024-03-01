@@ -38,10 +38,10 @@ class ObjVisualization3D : public IVisualization3D {
   using VertexType = Eigen::Matrix<ValueType, 3, 1>;
 
   /// Type of a line
-  using LineType = std::pair<size_t, size_t>;
+  using LineType = std::pair<std::size_t, std::size_t>;
 
   /// Constructor that allows to set scalor and precision
-  /// @param prec The output precission with std::setprecision
+  /// @param prec The output precision with std::setprecision
   /// @param scale An (optional) scaling for the writing out
   ObjVisualization3D(unsigned int prec = 4, double scale = 1.)
       : m_outputPrecision(prec), m_outputScalor(scale) {}
@@ -84,9 +84,9 @@ class ObjVisualization3D : public IVisualization3D {
   std::vector<FaceType> m_faces;
   std::vector<LineType> m_lines;
   /// Map of colors to be written at given index position
-  std::map<size_t, ColorRGB> m_lineColors;
-  std::map<size_t, ColorRGB> m_vertexColors;
-  std::map<size_t, ColorRGB> m_faceColors;
+  std::map<std::size_t, ColorRGB> m_lineColors;
+  std::map<std::size_t, ColorRGB> m_vertexColors;
+  std::map<std::size_t, ColorRGB> m_faceColors;
 };
 
 #ifndef DOXYGEN

@@ -27,7 +27,7 @@ enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
 /// Virtual base class of surface based material description
 ///
 /// MaterialSlab that are associated to a surface,
-/// extended by certain special representations (binned, homogenous)
+/// extended by certain special representations (binned, homogeneous)
 ///
 class ISurfaceMaterial {
  public:
@@ -74,7 +74,8 @@ class ISurfaceMaterial {
   ///
   /// @param bin0 is the material bin in dimension 0
   /// @param bin1 is the material bin in dimension 1
-  virtual const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const = 0;
+  virtual const MaterialSlab& materialSlab(std::size_t bin0,
+                                           std::size_t bin1) const = 0;
 
   /// Update pre factor
   ///

@@ -9,12 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <any>
+#include <cstddef>
 #include <vector>
 
 namespace Acts {
@@ -44,7 +46,7 @@ struct NavigationState {
     const Portal* portal = nullptr;
     /// The boundary check used for the candidate, boundary checks
     /// can differ for sensitive surfaces and portals
-    BoundaryCheck boundaryCheck = true;
+    BoundaryCheck boundaryCheck = BoundaryCheck(true);
   };
 
   /// Surface candidate vector alias, this allows to use e.g. boost_small vector
@@ -60,8 +62,8 @@ struct NavigationState {
   /// The current absolute momentum
   ActsScalar absMomentum = 0.;
 
-  /// The current charge
-  ActsScalar charge = 0.;
+  /// The current absolute charge
+  ActsScalar absCharge = 0.;
 
   /// The current magnetic field
   Vector3 magneticField = Vector3(0., 0., 0.);
@@ -80,16 +82,20 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  SurfaceCandidates::iterator surfaceCandidate = surfaceCandidates.end();
+  std::size_t surfaceCandidateIndex = 0;
 
   /// Boundary directives for surfaces
-  BoundaryCheck surfaceBoundaryCheck = true;
+  BoundaryCheck surfaceBoundaryCheck = BoundaryCheck(true);
 
   /// An overstep tolerance
-  ActsScalar overstepTolerance = -0.1;
+  ActsScalar overstepTolerance = -100 * UnitConstants::um;
 
-  /// Auxilliary attached information
-  std::any auxilliary;
+  /// Auxiliary attached information
+  std::any auxiliary;
+
+  const SurfaceCandidate& surfaceCandidate() const {
+    return surfaceCandidates.at(surfaceCandidateIndex);
+  }
 };
 
 }  // namespace Experimental

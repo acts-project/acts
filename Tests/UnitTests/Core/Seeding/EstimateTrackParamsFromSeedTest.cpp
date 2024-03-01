@@ -9,10 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -25,9 +30,18 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <optional>
+#include <ostream>
+#include <random>
+#include <utility>
 #include <vector>
 
 #include "SpacePoint.hpp"
@@ -44,7 +58,6 @@ using ConstantFieldPropagator =
 
 const GeometryContext geoCtx;
 const MagneticFieldContext magCtx;
-const CalibrationContext calCtx;
 
 // detector geometry
 CylindricalTrackingGeometry geometryStore(geoCtx);
@@ -66,10 +79,11 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
-  return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
+  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
+                                    ParticleHypothesis::pionLike(std::abs(q)));
 }
 
 std::default_random_engine rng(42);
@@ -114,7 +128,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
-            const auto geoId = sl.geometryId();
+            const auto geoId = sl.m_geometryId;
             const auto& layer = geoId.layer();
             auto it = spacePoints.find(layer);
             // Avoid to use space point from the same layers
@@ -133,7 +147,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                 layer, SpacePoint{static_cast<float>(globalPos.x()),
                                   static_cast<float>(globalPos.y()),
                                   static_cast<float>(globalPos.z()), r,
-                                  static_cast<int>(geoId.layer()), 0., 0.});
+                                  static_cast<int>(geoId.layer()), 0., 0.,
+                                  std::nullopt, std::nullopt});
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
@@ -201,7 +216,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                           1e-2);
           CHECK_CLOSE_ABS(estFullParams[eBoundQOverP], expParams[eBoundQOverP],
                           1e-2);
-          CHECK_CLOSE_ABS(estFullParams[eBoundTime], expParams[eBoundTime], 1.);
+          // time is not estimated so we check if it is default zero
+          CHECK_CLOSE_ABS(estFullParams[eBoundTime], 0, 1e-6);
         }
       }
     }

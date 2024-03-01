@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <iosfwd>
 #include <memory>
@@ -69,16 +70,16 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
-    size_t binsY = 1;
+    std::size_t binsY = 1;
     // Bins in Z direction
-    size_t binsZ = 1;
+    std::size_t binsZ = 1;
     // Envelope in X
     std::array<ActsScalar, 2u> envelopeX{0, 0};
     // Envelope in Y
     std::array<ActsScalar, 2u> envelopeY{0, 0};
     // Envelope in Z
     std::array<ActsScalar, 2u> envelopeZ{0, 0};
-    // An optional rotation fo this
+    // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 
@@ -136,7 +137,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::shared_ptr<const Surface> buildSurface(const GeometryContext& gctx,
                                               const SurfaceConfig& cfg) const;
 
-  /// @brief This function creates a layer with a surface encaspulated with a
+  /// @brief This function creates a layer with a surface encapsulated with a
   /// given configuration. The surface gets a detector element attached if the
   /// template parameter is non-void.
   ///

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
 #include <limits>
@@ -32,13 +33,16 @@
 
 namespace Acts {
 
-enum class SpacePointCandidateType : short { BOTTOM, TOP };
+enum class SpacePointCandidateType : short { eBottom, eTop };
+
+enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
+  using grid_t = Acts::CylindricalSpacePointGrid<external_spacepoint_t>;
 
  public:
   struct SeedingState {
@@ -61,9 +65,11 @@ class SeedFinder {
         candidates_collector;
 
     // managing doublet candidates
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>
         bottomNeighbours;
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>
         topNeighbours;
 
     // Adding space point info
@@ -97,7 +103,7 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const grid_t& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs,
@@ -124,41 +130,46 @@ class SeedFinder {
   /// @returns a vector of seeds.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SeedFinderOptions& options, const grid_t& grid,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;
 
  private:
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
-  /// @param spacePointData object contaning the spacepoint data
+  /// @param spacePointData object containing the spacepoint data
   /// @param options frequently changing configuration (like beam position)
   /// @param grid spacepoint grid
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
   /// @param mediumSP space point candidate to be used as middle SP in a seed
-  /// @param linCircleVec vector contining inner or outer SP parameters after reference frame transformation to the u-v space
+  /// @param linCircleVec vector containing inner or outer SP parameters after reference frame transformation to the u-v space
   /// @param outVec Output object containing top or bottom SPs that are compatible with a certain middle SPs
   /// @param deltaRMinSP minimum allowed r-distance between dublet components
   /// @param deltaRMaxSP maximum allowed r-distance between dublet components
+  /// @param uIP minus one over radius of middle SP
+  /// @param uIP2 square of uIP
+  /// @param cosPhiM ratio between middle SP x position and radius
+  /// @param sinPhiM ratio between middle SP y position and radius
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       Acts::SpacePointData& spacePointData,
-      const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
+      const Acts::SeedFinderOptions& options, const grid_t& grid,
+      boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                     Acts::detail::ipow(3, grid_t::DIM)>&
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float& deltaRMinSP, const float& deltaRMaxSP) const;
+      const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
+      const float uIP2, const float cosPhiM, const float sinPhiM) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
-  /// @param spacePointData object contaning the spacepoint data
+  /// @param spacePointData object containing the spacepoint data
   /// @param SpM space point candidate to be used as middle SP in a seed
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
+  template <Acts::DetectorMeasurementInfo detailedMeasurement>
   void filterCandidates(Acts::SpacePointData& spacePointData,
                         const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,

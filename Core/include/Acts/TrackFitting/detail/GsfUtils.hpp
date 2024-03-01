@@ -8,13 +8,23 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
 #include <map>
 #include <numeric>
+#include <ostream>
+#include <tuple>
+#include <vector>
 
 namespace Acts {
 
@@ -95,11 +105,11 @@ class ScopedGsfInfoPrinterAndChecker {
         m_stepper.numberComponents(m_state.stepping) == 0;
 
     if (onStart) {
-      assert(not zeroComponents && "no cmps at the start");
+      assert(!zeroComponents && "no cmps at the start");
       assert(allFinite && "weights not finite at the start");
       assert(allNormalized && "not normalized at the start");
     } else {
-      assert(not zeroComponents && "no cmps at the end");
+      assert(!zeroComponents && "no cmps at the end");
       assert(allFinite && "weights not finite at the end");
       assert(allNormalized && "not normalized at the end");
     }
@@ -113,7 +123,7 @@ class ScopedGsfInfoPrinterAndChecker {
       : m_state(state),
         m_stepper(stepper),
         m_navigator(navigator),
-        m_p_initial(stepper.momentum(state.stepping)),
+        m_p_initial(stepper.absoluteMomentum(state.stepping)),
         m_logger{logger} {
     // Some initial printing
     checks(true);
@@ -122,15 +132,15 @@ class ScopedGsfInfoPrinterAndChecker {
                  << stepper.position(state.stepping).transpose()
                  << " with direction "
                  << stepper.direction(state.stepping).transpose()
-                 << " and momentum " << stepper.momentum(state.stepping)
+                 << " and momentum " << stepper.absoluteMomentum(state.stepping)
                  << " and charge " << stepper.charge(state.stepping));
-    ACTS_VERBOSE("Propagation is in " << state.stepping.navDir << " mode");
+    ACTS_VERBOSE("Propagation is in " << state.options.direction << " mode");
     print_component_stats();
   }
 
   ~ScopedGsfInfoPrinterAndChecker() {
     if (m_navigator.currentSurface(m_state.navigation)) {
-      const auto p_final = m_stepper.momentum(m_state.stepping);
+      const auto p_final = m_stepper.absoluteMomentum(m_state.stepping);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)
@@ -141,7 +151,7 @@ class ScopedGsfInfoPrinterAndChecker {
 };
 
 ActsScalar calculateDeterminant(
-    const double *fullCalibrated, const double *fullCalibratedCovariance,
+    const double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
@@ -152,10 +162,9 @@ ActsScalar calculateDeterminant(
 /// with non-Gaussian noise"`. See also the implementation in Athena at
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
-template <typename D>
+template <typename traj_t>
 void computePosteriorWeights(
-    const MultiTrajectory<D> &mt,
-    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    const traj_t &mt, const std::vector<MultiTrajectoryTraits::IndexType> &tips,
     std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
   // Helper Function to compute detR
 
@@ -177,15 +186,13 @@ void computePosteriorWeights(
         // This abuses an incorrectly sized vector / matrix to access the
         // data pointer! This works (don't use the matrix as is!), but be
         // careful!
-        state.template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
-            .data(),
         state
             .template calibratedCovariance<
                 MultiTrajectoryTraits::MeasurementSizeMax>()
             .data(),
         state.predictedCovariance(), state.projector(), state.calibratedSize());
 
-    const auto factor = std::sqrt(1. / detR) * std::exp(-0.5 * chi2);
+    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     // If something is not finite here, just leave the weight as it is
     if (std::isfinite(factor)) {
@@ -209,7 +216,7 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 /// and for now a std::map for the weights
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
-  const MultiTrajectory<traj_t> &mt;
+  const traj_t &mt;
   const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
 
   auto operator()(MultiTrajectoryTraits::IndexType idx) const {
@@ -224,8 +231,29 @@ struct MultiTrajectoryProjector {
       case StatesType::eSmoothed:
         return std::make_tuple(weights.at(idx), proxy.smoothed(),
                                proxy.smoothedCovariance());
+      default:
+        throw std::invalid_argument(
+            "Incorrect StatesType, should be ePredicted"
+            ", eFiltered, or eSmoothed.");
     }
   }
+};
+
+/// Small Helper class that allows to carry a temporary value until we decide to
+/// update the actual value. The temporary value is deliberately only accessible
+/// with a mutable reference
+template <typename T>
+class Updatable {
+  T m_tmp{};
+  T m_val{};
+
+ public:
+  Updatable() : m_tmp(0), m_val(0) {}
+
+  T &tmp() { return m_tmp; }
+  void update() { m_val = m_tmp; }
+
+  const T &val() const { return m_val; }
 };
 
 }  // namespace detail

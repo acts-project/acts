@@ -13,6 +13,8 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -23,6 +25,8 @@ class G4VPhysicalVolume;
 namespace Acts {
 
 class Geant4DetectorElement;
+class IGeant4PhysicalVolumeSelector;
+class Surface;
 
 /// A factory to convert Geant4 physical volumes
 /// into Geant4 detector elements
@@ -33,7 +37,7 @@ class Geant4DetectorSurfaceFactory {
   /// global lifetime configuration
   struct Config {};
 
-  // Collect the senstive surfaces
+  // Collect the sensitive surfaces
   using Geant4SensitiveSurface =
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
                  std::shared_ptr<Surface>>;
@@ -55,7 +59,7 @@ class Geant4DetectorSurfaceFactory {
     std::size_t convertedMaterials = 0;
   };
 
-  /// Nested option struct that allows per call changable configuration
+  /// Nested option struct that allows per call changeable configuration
   struct Options {
     /// Convert the length scale
     ActsScalar scaleConversion = 1.;
@@ -72,16 +76,14 @@ class Geant4DetectorSurfaceFactory {
   };
 
   /// The Geant4 detector element factory
-  ///
-  /// @param cfg the configuration struct
   Geant4DetectorSurfaceFactory() = default;
 
   /// Construction method of the detector elements
   ///
   /// @param cache [in,out] into which the Elements are filled
   /// @param g4ToGlobal the transformation to global
-  /// @param g4PhyVol the current physical volume
-  /// @param options the factory creation option
+  /// @param g4PhysVol the current physical volume
+  /// @param option the factory creation option
   ///
   void construct(Cache& cache, const G4Transform3D& g4ToGlobal,
                  const G4VPhysicalVolume& g4PhysVol, const Options& option);

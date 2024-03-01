@@ -32,7 +32,7 @@ namespace Acts {
 ///
 /// This reads in map with binning information to decorate the detector with
 /// proto-material for material mapping. This allows us to change the mapping
-/// parameters diectly in the C++ code. Takes a tracking geometry in input, all
+/// parameters directly in the C++ code. Takes a tracking geometry in input, all
 /// the surface with `mapMaterial=true` will be added to a binning map.
 class MappingMaterialDecorator : public IMaterialDecorator {
  public:
@@ -176,7 +176,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     auto bin = m_binningMap.find(surface->geometryId().value());
     Acts::BinUtility bUtility;
     if (bin == m_binningMap.end()) {
-      ACTS_ERROR("No corrresponding binning in the map to surface "
+      ACTS_ERROR("No corresponding binning in the map to surface "
                  << surface->geometryId());
     } else {
       auto binning = bin->second;

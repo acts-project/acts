@@ -8,27 +8,50 @@
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <cmath>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
 
 #include <boost/histogram.hpp>
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
-      m_cfg(std::move(config)) {
+      m_cfg(std::move(config)),
+      m_trackSelector(
+          m_cfg.trackSelectorCfg.has_value()
+              ? std::visit(
+                    [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
+                      return {cfg};
+                    },
+                    m_cfg.trackSelectorCfg.value())
+              : std::nullopt) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -61,16 +84,20 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = 100000;
+  pOptions.maxSteps = m_cfg.maxSteps;
+  pOptions.direction =
+      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
 
-  MeasurementCalibrator calibrator{measurements};
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
       extensions;
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
@@ -90,7 +117,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, &(*pSurface));
+      extensions, pOptions, pSurface.get());
+  options.smoothingTargetSurfaceStrategy =
+      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -99,16 +128,25 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
 
+  auto trackContainerTemp = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainerTemp =
+      std::make_shared<Acts::VectorMultiTrajectory>();
+
   TrackContainer tracks(trackContainer, trackStateContainer);
+  TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   tracks.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  tracksTemp.addColumn<unsigned int>("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    // Clear trackContainerTemp and trackStateContainerTemp
+    tracksTemp.clear();
+
     auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracks);
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
     m_nTotalSeeds++;
     nSeed++;
 
@@ -121,7 +159,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      seedNumber(track) = nSeed;
+      // Set the seed number, this number decrease by 1 since the seed number
+      // has already been updated
+      seedNumber(track) = nSeed - 1;
+      if (!m_trackSelector.has_value() ||
+          m_trackSelector->isValidTrack(track)) {
+        auto destProxy = tracks.getTrack(tracks.addTrack());
+        destProxy.copyFrom(track, true);  // make sure we copy track states!
+      }
     }
   }
 

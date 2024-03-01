@@ -26,7 +26,7 @@ struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
   // number of minimum top SPs in seed confirmation
-  size_t nTopSeedConf = 0;
+  std::size_t nTopSeedConf = 0;
   // radius of bottom component of seed that is used to define the number of
   // compatible top required
   float rMaxSeedConf =
@@ -83,7 +83,7 @@ class SeedFilter {
       Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
-      std::size_t& numQualitySeeds,
+      const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
@@ -98,7 +98,7 @@ class SeedFilter {
       std::vector<typename CandidatesForMiddleSp<
           const InternalSpacePoint<external_spacepoint_t>>::value_type>&
           candidates,
-      std::size_t& numQualitySeeds,
+      const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 

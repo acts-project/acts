@@ -8,6 +8,8 @@
 
 #include "Acts/Propagator/EigenStepperError.hpp"
 
+#include <string>
+
 namespace {
 
 class EigenStepperErrorCategory : public std::error_category {

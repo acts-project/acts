@@ -6,6 +6,8 @@ import tarfile
 import urllib.request
 import subprocess
 import sys
+import re
+import collections
 
 import pytest
 
@@ -18,8 +20,6 @@ from helpers import (
     exatrkxEnabled,
     onnxEnabled,
     AssertCollectionExistsAlg,
-    isCI,
-    doHashChecks,
     failure_threshold,
 )
 
@@ -31,7 +31,6 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
-    RootParticleWriter,
 )
 
 from acts.examples.odd import getOpenDataDetector
@@ -67,6 +66,7 @@ def assert_entries(root_file, tree_name, exp=None, non_zero=False):
     rf = ROOT.TFile.Open(str(root_file))
     keys = [k.GetName() for k in rf.GetListOfKeys()]
     assert tree_name in keys
+    print("Entries:", rf.Get(tree_name).GetEntries())
     if non_zero:
         assert rf.Get(tree_name).GetEntries() > 0, f"{root_file}:{tree_name}"
     if exp is not None:
@@ -114,11 +114,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     root_files = [
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
         (
@@ -162,8 +158,7 @@ def test_geant4(tmp_path, assert_root_hash):
     csv.mkdir()
 
     root_files = [
-        "particles_final.root",
-        "particles_initial.root",
+        "particles_simulation.root",
         "hits.root",
     ]
 
@@ -181,12 +176,16 @@ def test_geant4(tmp_path, assert_root_hash):
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script)],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script)],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
@@ -223,11 +222,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -280,11 +275,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -341,11 +332,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "particles_final.root",
-            "particles",
-        ),
-        (
-            "particles_initial.root",
+            "particles_simulation.root",
             "particles",
         ),
     ]
@@ -509,12 +496,16 @@ def test_event_recording(tmp_path):
     env = os.environ.copy()
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script)],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script)],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
 
@@ -546,8 +537,9 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
+@pytest.mark.parametrize("directNavigation", [False, True])
 def test_truth_tracking_kalman(
-    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
+    tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
 ):
     from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -558,7 +550,6 @@ def test_truth_tracking_kalman(
     root_files = [
         ("trackstates_fitter.root", "trackstates", 19),
         ("tracksummary_fitter.root", "tracksummary", 10),
-        ("performance_track_finder.root", "track_finder_tracks", 19),
         ("performance_track_fitter.root", None, -1),
     ]
 
@@ -572,6 +563,7 @@ def test_truth_tracking_kalman(
         digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
         reverseFilteringMomThreshold=revFiltMomThresh,
+        directNavigation=directNavigation,
         s=seq,
     )
 
@@ -587,13 +579,33 @@ def test_truth_tracking_kalman(
             assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
+    import ROOT
+
+    ROOT.PyConfig.IgnoreCommandLineOptions = True
+    ROOT.gROOT.SetBatch(True)
+    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_fitter.root"))
+    keys = [k.GetName() for k in rf.GetListOfKeys()]
+    assert "tracksummary" in keys
+    for entry in rf.Get("tracksummary"):
+        assert entry.hasFittedParams
+
 
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     from truth_tracking_gsf import runTruthTrackingGsf
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    seq = Sequencer(events=10, numThreads=1)
+    seq = Sequencer(
+        events=10,
+        numThreads=1,
+        fpeMasks=[
+            (
+                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
+                acts.FpeType.FLTUND,
+                1,
+            ),
+        ],
+    )
 
     root_files = [
         ("trackstates_gsf.root", "trackstates"),
@@ -880,8 +892,22 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         assert material_file.stat().st_size > 200
 
 
-def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
-    from digitization import configureDigitization
+DIGI_SHARE_DIR = (
+    Path(__file__).parent.parent.parent.parent
+    / "Examples/Algorithms/Digitization/share"
+)
+
+
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+    ],
+    ids=["smeared", "geometric"],
+)
+def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_file):
+    from digitization import runDigitization
 
     s = Sequencer(events=10, numThreads=-1)
 
@@ -892,7 +918,9 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(trk_geo, field, outputDir=tmp_path, s=s)
+    runDigitization(
+        trk_geo, field, outputDir=tmp_path, digiConfigFile=digi_config_file, s=s
+    )
 
     s.run()
 
@@ -901,17 +929,42 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
 
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+
     assert_entries(root_file, "vol9", 0)
     assert_entries(root_file, "vol14", 0)
-    for tn in (8, 12, 13, 16, 17, 18):
-        assert_has_entries(root_file, f"vol{tn}")
+
+    if "smearing" in digi_config_file.name:
+        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
+    else:
+        # fmt: off
+        filled_entries = [
+            'vol8', 'vol8_lay2', 'vol12_lay8_mod117', 'vol12_lay10', 'vol12_lay10_mod154',
+            'vol12_lay10_mod163', 'vol12_lay12', 'vol12_lay12_mod150', 'vol13',
+            'vol13_lay2', 'vol16_lay2_mod53', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
+            'vol16_lay10', 'vol16_lay12', 'vol17', 'vol17_lay2', 'vol18_lay2',
+            'vol18_lay2_mod1', 'vol18_lay2_mod49', 'vol18_lay2_mod86', 'vol18_lay4',
+        ]
+        # fmt: on
+
+    for entry in filled_entries:
+        assert_has_entries(root_file, entry)
 
     assert_root_hash(root_file.name, root_file)
 
 
-def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+    ],
+    ids=["smeared", "geometric"],
+)
+def test_digitization_example_input(
+    trk_geo, tmp_path, assert_root_hash, digi_config_file
+):
     from particle_gun import runParticleGun
-    from digitization import configureDigitization
+    from digitization import runDigitization
 
     ptcl_dir = tmp_path / "ptcl"
     ptcl_dir.mkdir()
@@ -933,10 +986,11 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(
+    runDigitization(
         trk_geo,
         field,
         outputDir=tmp_path,
+        digiConfigFile=digi_config_file,
         particlesInput=ptcl_dir / "particles.root",
         s=s,
         doMerge=True,
@@ -953,8 +1007,26 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     assert_entries(root_file, "vol7", 0)
     assert_entries(root_file, "vol9", 0)
 
-    for tn in (8, 12, 13, 14, 16, 17, 18):
-        assert_has_entries(root_file, f"vol{tn}")
+    if "smearing" in digi_config_file.name:
+        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
+    else:
+        # fmt: off
+        filled_entries = [
+            "vol8", "vol8_lay2", "vol12_lay8_mod120", "vol12_lay10_mod120",
+            "vol12_lay10_mod144", "vol12_lay12", "vol12_lay12_mod111",
+            "vol12_lay12_mod137", "vol12_lay12_mod170", "vol13", "vol13_lay2",
+            "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
+            "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
+            "vol14_lay4_mod152", "vol14_lay4_mod161", "vol16_lay4", "vol16_lay6",
+            "vol16_lay8", "vol16_lay10", "vol16_lay12", "vol17", "vol17_lay2",
+            "vol18_lay2", "vol18_lay2_mod71", "vol18_lay4", "vol18_lay6",
+            "vol18_lay8", "vol18_lay10"
+        ]
+        # fmt: on
+
+    for entry in filled_entries:
+        assert_has_entries(root_file, entry)
+
     assert_root_hash(root_file.name, root_file)
 
 
@@ -1082,13 +1154,17 @@ def test_full_chain_odd_example(tmp_path):
     )
     assert script.exists()
     env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script), "-n1"],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), "-n1"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
 
 @pytest.mark.skipif(
@@ -1110,13 +1186,27 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     )
     assert script.exists()
     env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        stdout = subprocess.check_output(
+            [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+        stdout = stdout.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+    # collect and compare known errors
+    errors = []
+    error_regex = re.compile(r"^\d\d:\d\d:\d\d\s+(\w+)\s+ERROR\s+", re.MULTILINE)
+    for match in error_regex.finditer(stdout):
+        (algo,) = match.groups()
+        errors.append(algo)
+    errors = collections.Counter(errors)
+    assert dict(errors) == {}, stdout
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
@@ -1140,13 +1230,17 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     )
     assert script.exists()
     env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script), "-n5", "--MLSolver"],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), "-n5", "--MLSolver"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     rfp = tmp_path / output_dir / root_file
     assert rfp.exists()
@@ -1177,8 +1271,12 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 
 
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
+@pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
-def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
+def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+    if backend == "onnx" and hardware == "cpu":
+        pytest.skip("Combination of ONNX and CPU not yet supported")
+
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
@@ -1201,12 +1299,19 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
 
-    subprocess.check_call(
-        [sys.executable, str(script), backend],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    if hardware == "cpu":
+        env["CUDA_VISIBLE_DEVICES"] = ""
+
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), backend],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     rfp = tmp_path / root_file
     assert rfp.exists()

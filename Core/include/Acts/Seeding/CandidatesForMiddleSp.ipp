@@ -16,7 +16,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
 
   // protection against default numbers
   // it may cause std::bad_alloc if we don't protect
-  if (n_high == std::numeric_limits<std::size_t>::max() or
+  if (n_high == std::numeric_limits<std::size_t>::max() ||
       n_low == std::numeric_limits<std::size_t>::max()) {
     return;
   }
@@ -43,7 +43,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::pop(
 
 template <typename external_space_point_t>
 inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
-    const std::size_t& n, const std::size_t& max_size) const {
+    const std::size_t n, const std::size_t max_size) const {
   // If the element exists, its index is lower than the current number
   // of stored elements
   return n < max_size;
@@ -84,7 +84,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
 
 template <typename external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::push(
-    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t& n_max,
+    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t n_max,
     external_space_point_t& SpB, external_space_point_t& SpM,
     external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
   // If we do not want to store candidates, returns
@@ -115,7 +115,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
-    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t& n_max,
+    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t n_max,
     value_type&& element) {
   // adds elements to the end of the collection
   if (indices.size() == n_max) {
@@ -143,14 +143,14 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     // This is done by comparing its weight with the weights of its two
     // children. Few things can happen:
     //   - there are no children
-    //   - the current weight is lower then the weight of the children
+    //   - the current weight is lower than the weight of the children
     //   - at least one of the children has a lower weight
     // In the first two cases we stop, since we are already in the correct
     // position
 
     // if there is no left child, that also means no right child is present.
     // We do nothing
-    if (not exists(left_child, actual_size)) {
+    if (!exists(left_child, actual_size)) {
       break;
     }
 
@@ -219,7 +219,7 @@ CandidatesForMiddleSp<external_space_point_t>::storage() {
   // rely on the fact that m_indices_* are both min heap trees
   // Sorting comes naturally by popping elements one by one and
   // placing this element at the end of the output vector
-  while (m_n_high != 0 or m_n_low != 0) {
+  while (m_n_high != 0 || m_n_low != 0) {
     // no entries in collection high, we attach the entire low collection
     if (m_n_high == 0) {
       std::size_t idx = m_n_low;
@@ -295,7 +295,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
 template <typename external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::ascendingByQuality(
     const value_type& i1, const value_type& i2) {
-  return not descendingByQuality(i1, i2);
+  return !descendingByQuality(i1, i2);
 }
 
 }  // namespace Acts

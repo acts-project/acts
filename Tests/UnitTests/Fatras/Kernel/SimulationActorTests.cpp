@@ -8,20 +8,34 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <memory>
 #include <random>
+#include <utility>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
@@ -50,8 +64,8 @@ struct MockInteractionList {
   struct Selection {
     double x0Limit = std::numeric_limits<double>::infinity();
     double l0Limit = std::numeric_limits<double>::infinity();
-    size_t x0Process = SIZE_MAX;
-    size_t l0Process = SIZE_MAX;
+    std::size_t x0Process = SIZE_MAX;
+    std::size_t l0Process = SIZE_MAX;
   };
 
   double energyLoss = 0;
@@ -63,7 +77,7 @@ struct MockInteractionList {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
-    return !particle;
+    return !particle.isAlive();
   }
 
   template <typename generator_t>
@@ -73,7 +87,7 @@ struct MockInteractionList {
   }
 
   template <typename generator_t>
-  bool runPointLike(generator_t & /*generator*/, size_t /*processIndex*/,
+  bool runPointLike(generator_t & /*generator*/, std::size_t /*processIndex*/,
                     Particle & /*particle*/,
                     std::vector<Particle> & /*generated*/) const {
     return false;
@@ -84,9 +98,9 @@ struct MockStepperState {
   using Scalar = Acts::ActsScalar;
   using Vector3 = Acts::ActsVector<3>;
 
-  Vector3 pos;
+  Vector3 pos = Vector3::Zero();
   Scalar time = 0;
-  Vector3 dir;
+  Vector3 dir = Vector3::Zero();
   Scalar p = 0;
 };
 
@@ -98,20 +112,21 @@ struct MockStepper {
   auto position(const State &state) const { return state.pos; }
   auto time(const State &state) const { return state.time; }
   auto direction(const State &state) const { return state.dir; }
-  auto momentum(const State &state) const { return state.p; }
-  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar p,
+  auto absoluteMomentum(const State &state) const { return state.p; }
+  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar qop,
               Scalar time) {
     state.pos = pos;
     state.time = time;
     state.dir = dir;
-    state.p = p;
+    state.p = 1 / qop;
   }
-  void setStepSize(State & /*state*/, double /*stepSize*/,
-                   Acts::ConstrainedStep::Type /*stype*/) const {}
+  void updateStepSize(State & /*state*/, double /*stepSize*/,
+                      Acts::ConstrainedStep::Type /*stype*/) const {}
 };
 
 struct MockNavigatorState {
   bool targetReached = false;
+  Acts::Surface *startSurface = nullptr;
   Acts::Surface *currentSurface = nullptr;
 };
 
@@ -119,8 +134,21 @@ struct MockNavigator {
   bool targetReached(const MockNavigatorState &state) const {
     return state.targetReached;
   }
+
+  void targetReached(MockNavigatorState &state, bool reached) const {
+    state.targetReached = reached;
+  }
+
+  const Acts::Surface *startSurface(const MockNavigatorState &state) const {
+    return state.startSurface;
+  }
+
   const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
     return state.currentSurface;
+  }
+
+  bool endOfWorldReached(const MockNavigatorState & /*state*/) const {
+    return false;
   }
 };
 
@@ -128,6 +156,7 @@ struct MockPropagatorState {
   MockNavigatorState navigation;
   MockStepperState stepping;
   Acts::GeometryContext geoContext;
+  Acts::PropagatorStage stage = Acts::PropagatorStage::invalid;
 };
 
 template <typename SurfaceSelector>
@@ -163,10 +192,11 @@ struct Fixture {
     actor.generator = &generator;
     actor.interactions.energyLoss = energyLoss;
     actor.initialParticle = particle;
+    state.stage = Acts::PropagatorStage::postStep;
     state.navigation.currentSurface = surface.get();
     state.stepping.pos = particle.position();
     state.stepping.time = particle.time();
-    state.stepping.dir = particle.unitDirection();
+    state.stepping.dir = particle.direction();
     state.stepping.p = particle.absoluteMomentum();
   }
 };
@@ -222,7 +252,7 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call.actor again: one more hit, still no secondary
@@ -247,7 +277,7 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
@@ -290,8 +320,9 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
+  CHECK_CLOSE_REL(f.state.stepping.p, f.result.particle.absoluteMomentum(),
+                  tol);
 
   // call.actor again: one more hit, one more secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -315,7 +346,7 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
@@ -357,7 +388,7 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // call.actor again: no hit, still no secondary
@@ -380,7 +411,7 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
@@ -414,8 +445,9 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
+  CHECK_CLOSE_REL(f.state.stepping.p, f.result.particle.absoluteMomentum(),
+                  tol);
 
   // call.actor again: still no hit, one more secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -437,7 +469,7 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
-  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
+  BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.direction());
   BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
 
   // particle identity should be the same as the initial input
@@ -482,7 +514,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
-  BOOST_CHECK(not f.result.isAlive);
+  BOOST_CHECK(!f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);

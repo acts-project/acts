@@ -22,8 +22,8 @@
 namespace Acts {
 
 // Note:
-// The named indices are use to access raw data vectors and matrices at the
-// lowest level. Since the interpretation of some of the components, e.g. local
+// The named indices are used to access raw data vectors and matrices at the
+// lowest level. Since the interpretation of some components, e.g. local
 // position and the inverse-momentum-like component, depend on additional
 // information the names have some ambiguity. This can only be resolved at a
 // higher logical level and no attempt is made to resolve it here.
@@ -63,14 +63,14 @@ enum BoundIndices : unsigned int {
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
 enum FreeIndices : unsigned int {
   // Spatial position
-  // The spatial position components must be stored as one continous block.
+  // The spatial position components must be stored as one continuous block.
   eFreePos0 = 0u,
   eFreePos1 = eFreePos0 + 1u,
   eFreePos2 = eFreePos0 + 2u,
   // Time
   eFreeTime = 3u,
   // (Unit) direction
-  // The direction components must be stored as one continous block.
+  // The direction components must be stored as one continuous block.
   eFreeDir0 = 4u,
   eFreeDir1 = eFreeDir0 + 1u,
   eFreeDir2 = eFreeDir0 + 2u,
@@ -89,8 +89,8 @@ namespace Acts {
 // Ensure bound track parameters definition is valid.
 static_assert(std::is_enum_v<BoundIndices>,
               "'BoundIndices' must be an enum type");
-static_assert(std::is_convertible_v<BoundIndices, size_t>,
-              "'BoundIndices' must be convertible to size_t");
+static_assert(std::is_convertible_v<BoundIndices, std::size_t>,
+              "'BoundIndices' must be convertible to std::size_t");
 // Only the order can be user-defined
 static_assert(BoundIndices::eBoundSize == 6u,
               "Bound track parameters must have six components");
@@ -98,8 +98,8 @@ static_assert(BoundIndices::eBoundSize == 6u,
 // Ensure free track parameters definition is valid.
 static_assert(std::is_enum_v<FreeIndices>,
               "'FreeIndices' must be an enum type");
-static_assert(std::is_convertible_v<FreeIndices, size_t>,
-              "'FreeIndices' must be convertible to size_t");
+static_assert(std::is_convertible_v<FreeIndices, std::size_t>,
+              "'FreeIndices' must be convertible to std::size_t");
 // Only the order can be user-defined
 static_assert(FreeIndices::eFreeSize == 8u,
               "Free track parameters must have eight components");
@@ -108,22 +108,22 @@ static_assert(FreeIndices::eFreeSize == 8u,
 static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be different");
 
 // Ensure free track parameter indices are consistently defined.
-static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continous");
-static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continous");
-static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
-static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
+static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continuous");
+static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continuous");
+static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continuous");
+static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continuous");
 
 // Shorthand vector/matrix types related to bound track parameters.
 using BoundVector = ActsVector<eBoundSize>;
 using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
-using BoundSymMatrix = ActsSymMatrix<eBoundSize>;
+using BoundSquareMatrix = ActsSquareMatrix<eBoundSize>;
 // Mapping from bound track parameters.
 using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
 // Shorthand vector/matrix types related to free track parameters.
 using FreeVector = ActsVector<eFreeSize>;
 using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
-using FreeSymMatrix = ActsSymMatrix<eFreeSize>;
+using FreeSquareMatrix = ActsSquareMatrix<eFreeSize>;
 // Mapping from free track parameters.
 using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
 using FreeToPathMatrix = ActsMatrix<1, eFreeSize>;

@@ -9,25 +9,34 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
+#include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
+#include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -35,9 +44,15 @@ namespace Acts {
 
 class GlueVolumesDescriptor;
 class VolumeBounds;
-
 template <typename object_t>
 struct NavigationOptions;
+class GeometryIdentifier;
+class IMaterialDecorator;
+class ISurfaceMaterial;
+class IVolumeMaterial;
+class Surface;
+class TrackingVolume;
+struct GeometryIdentifierHook;
 
 // master typedefs
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
@@ -54,13 +69,20 @@ using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
-// Intersection with Layer
-using LayerIntersection = ObjectIntersection<Layer, Surface>;
+/// Intersection with @c Layer
+using LayerIntersection = std::pair<SurfaceIntersection, const Layer*>;
+/// Multi-intersection with @c Layer
+using LayerMultiIntersection =
+    std::pair<SurfaceMultiIntersection, const Layer*>;
 
 /// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 /// Intersection with a @c BoundarySurface
-using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
+using BoundaryIntersection =
+    std::pair<SurfaceIntersection, const BoundarySurface*>;
+/// Multi-intersection with a @c BoundarySurface
+using BoundaryMultiIntersection =
+    std::pair<SurfaceMultiIntersection, const BoundarySurface*>;
 
 /// @class TrackingVolume
 ///
@@ -238,34 +260,89 @@ class TrackingVolume : public Volume {
   /// Return the confined dense volumes
   const MutableTrackingVolumeVector denseVolumes() const;
 
-  /// @brief Visit all sensitive surfaces
+  /// @brief Visit all reachable surfaces
   ///
   /// @tparam visitor_t Type of the callable visitor
   ///
-  /// @param visitor The callable. Will be called for each sensitive surface
-  /// that is found
+  /// @param visitor The callable. Will be called for each reachable surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
-  /// If a context is needed for the vist, the vistitor has to provide this
-  /// e.g. as a private member
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
-  void visitSurfaces(visitor_t&& visitor) const {
-    if (!m_confinedVolumes) {
+  void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
+    if (!restrictToSensitives) {
+      // Visit the boundary surfaces
+      for (const auto& bs : m_boundarySurfaces) {
+        visitor(&(bs->surfaceRepresentation()));
+      }
+    }
+
+    // Internal structure
+    if (m_confinedVolumes == nullptr) {
       // no sub volumes => loop over the confined layers
-      if (m_confinedLayers) {
+      if (m_confinedLayers != nullptr) {
         for (const auto& layer : m_confinedLayers->arrayObjects()) {
-          if (layer->surfaceArray() == nullptr) {
-            // no surface array (?)
-            continue;
+          // Surfaces contained in the surface array
+          if (layer->surfaceArray() != nullptr) {
+            for (const auto& srf : layer->surfaceArray()->surfaces()) {
+              visitor(srf);
+              continue;
+            }
           }
-          for (const auto& srf : layer->surfaceArray()->surfaces()) {
-            visitor(srf);
+          if (!restrictToSensitives) {
+            // Surfaces of the layer
+            visitor(&layer->surfaceRepresentation());
+            // Approach surfaces of the layer
+            if (layer->approachDescriptor() != nullptr) {
+              for (const auto& srf :
+                   layer->approachDescriptor()->containedSurfaces()) {
+                visitor(srf);
+              }
+            }
           }
         }
       }
     } else {
       // contains sub volumes
       for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitSurfaces(visitor);
+        volume->visitSurfaces(visitor, restrictToSensitives);
+      }
+    }
+  }
+
+  /// @brief Visit all sensitive surfaces
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found, a selection of the surfaces can be done in the visitor
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    visitSurfaces(std::forward<visitor_t>(visitor), true);
+  }
+
+  /// @brief Visit all reachable tracking volumes
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor The callable. Will be called for each reachable volume
+  /// that is found, a selection of the volumes can be done in the visitor
+  /// @param restrictToSensitives If true, only sensitive surfaces are visited
+  ///
+  /// @note If a context is needed for the visit, the vistitor has to provide
+  /// this, e.g. as a private member
+  template <ACTS_CONCEPT(TrackingVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    visitor(this);
+    if (m_confinedVolumes != nullptr) {
+      // contains sub volumes
+      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+        volume->visitVolumes(visitor);
       }
     }
   }
@@ -310,7 +387,7 @@ class TrackingVolume : public Volume {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbor is the TrackingVolume to be glued
-  /// @param bsfNeighbor is the boudnary surface of the neighbor
+  /// @param bsfNeighbor is the boundary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
                           BoundarySurfaceFace bsfMine, TrackingVolume* neighbor,
                           BoundarySurfaceFace bsfNeighbor);
@@ -322,7 +399,7 @@ class TrackingVolume : public Volume {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbors are the TrackingVolumes to be glued
-  /// @param bsfNeighbor are the boudnary surface of the neighbors
+  /// @param bsfNeighbor are the boundary surface of the neighbors
   void glueTrackingVolumes(
       const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
       const std::shared_ptr<TrackingVolumeArray>& neighbors,
@@ -331,7 +408,7 @@ class TrackingVolume : public Volume {
   /// Provide a new BoundarySurface from the glueing
   ///
   /// @param bsf is the boundary face indicater where to glue
-  /// @param bs is the new boudnary surface
+  /// @param bs is the new boundary surface
   /// @param checkmaterial is a flag how to deal with material, if true:
   /// - if the old boundary surface had a material description
   ///   but the new one has not, keep the current one
@@ -445,7 +522,7 @@ class TrackingVolume : public Volume {
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
       std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      size_t& vol, const GeometryIdentifierHook& hook,
+      std::size_t& vol, const GeometryIdentifierHook& hook,
       const Logger& logger = getDummyLogger());
 
   /// interlink the layers in this TrackingVolume

@@ -8,7 +8,22 @@
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
                                                    ActsScalar alpha_,
@@ -38,20 +53,21 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
   m_cosIncidentAngleMaxCutoff = freeToBoundCorrection.cosIncidentAngleMaxCutoff;
 }
 
-std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
+std::optional<std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
-    const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
+    const Acts::FreeSquareMatrix& freeCovariance, const Acts::Surface& surface,
     const Acts::GeometryContext& geoContext, Direction navDir,
     const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
-  Vector3 normal = surface.normal(geoContext);
+  Vector3 normal =
+      surface.normal(geoContext, freeParams.segment<3>(eFreePos0), dir);
   ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound
   // transformation
-  if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff or
+  if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff ||
       absCosIncidenceAng > m_cosIncidentAngleMaxCutoff) {
     ACTS_VERBOSE("Incident angle: " << std::acos(absCosIncidenceAng)
                                     << " is out of range for correction");
@@ -59,16 +75,16 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   }
 
   // The number of sigma points
-  size_t sampleSize = 2 * eFreeSize + 1;
+  std::size_t sampleSize = 2 * eFreeSize + 1;
   // The sampled free parameters, the weight for measurement W_m and weight for
   // covariance, W_c
   std::vector<std::tuple<FreeVector, ActsScalar, ActsScalar>> sampledFreeParams;
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
-  FreeSymMatrix covSqrt = FreeSymMatrix::Zero();
+  FreeSquareMatrix covSqrt = FreeSquareMatrix::Zero();
   // SVD decomposition: freeCovariance = U*S*U^T here
-  Eigen::JacobiSVD<FreeSymMatrix> svd(
+  Eigen::JacobiSVD<FreeSquareMatrix> svd(
       freeCovariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
   auto S = svd.singularValues();
   FreeMatrix U = svd.matrixU();
@@ -105,7 +121,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // Initialize the mean of the bound parameters
   BoundVector bpMean = BoundVector::Zero();
   // Initialize the bound covariance
-  BoundSymMatrix bv = BoundSymMatrix::Zero();
+  BoundSquareMatrix bv = BoundSquareMatrix::Zero();
 
   // The transformed bound parameters and weight for each sampled free
   // parameters
@@ -119,7 +135,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   auto nominalRes =
       detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
   // Not successful, fall back to nominal free to bound transformation
-  if (not nominalRes.ok()) {
+  if (!nominalRes.ok()) {
     ACTS_WARNING(
         "Free to bound transformation for nominal free parameters failed.");
     return std::nullopt;
@@ -136,16 +152,18 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
     // Reintersect to get the corrected free params without boundary check
     SurfaceIntersection intersection =
-        surface.intersect(geoContext, params.segment<3>(eFreePos0),
-                          navDir * params.segment<3>(eFreeDir0), false);
-    correctedFreeParams.segment<3>(eFreePos0) =
-        intersection.intersection.position;
+        surface
+            .intersect(geoContext, params.segment<3>(eFreePos0),
+                       navDir * params.segment<3>(eFreeDir0),
+                       BoundaryCheck(false))
+            .closest();
+    correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 
     // Transform the free to bound
     auto result = detail::transformFreeToBoundParameters(correctedFreeParams,
                                                          surface, geoContext);
     // Not successful, fall back to nominal free to bound transformation
-    if (not result.ok()) {
+    if (!result.ok()) {
       ACTS_WARNING(
           "Free to bound transformation for sampled free parameters: \n"
           << correctedFreeParams << " failed.");

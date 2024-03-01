@@ -8,10 +8,14 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
+
+#include <array>
 
 namespace Acts {
 
@@ -33,7 +37,7 @@ template <typename... extensions>
 struct StepperExtensionList : private detail::Extendable<extensions...> {
  private:
   // Checkout for duplicates in the extensions
-  static_assert(not detail::has_duplicates_v<extensions...>,
+  static_assert(!detail::has_duplicates_v<extensions...>,
                 "same extension type specified several times");
 
   static constexpr unsigned int nExtensions = sizeof...(extensions);

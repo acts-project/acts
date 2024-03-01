@@ -8,14 +8,15 @@
 
 #include "Acts/Surfaces/StrawSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <iomanip>
-#include <iostream>
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 Acts::StrawSurface::StrawSurface(const Transform3& transform, double radius,
                                  double halez)
@@ -47,7 +48,7 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
 }
 
 Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+    const GeometryContext& gctx, std::size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -61,7 +62,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
-      for (size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
+      for (std::size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
         int addon = (iseg == phiSegs.size() - 2) ? 1 : 0;
         /// Helper method to create the segment
         detail::VerticesHelper::createSegment(
@@ -75,7 +76,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     triangularMesh = facesMesh.second;
   }
 
-  size_t bvertices = vertices.size();
+  std::size_t bvertices = vertices.size();
   Vector3 left(0, 0, -m_bounds->get(LineBounds::eHalfLengthZ));
   Vector3 right(0, 0, m_bounds->get(LineBounds::eHalfLengthZ));
   // The central wire/straw

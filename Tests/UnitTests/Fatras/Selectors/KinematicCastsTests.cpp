@@ -8,9 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 
+#include <cmath>
 #include <limits>
 
 #include "Dataset.hpp"

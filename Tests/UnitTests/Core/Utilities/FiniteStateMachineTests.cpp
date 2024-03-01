@@ -11,11 +11,10 @@
 #include "Acts/Utilities/FiniteStateMachine.hpp"
 
 #include <iostream>
-
-namespace tt = boost::test_tools;
+#include <optional>
+#include <stdexcept>
 
 namespace Acts {
-
 namespace Test {
 
 namespace states {
@@ -37,7 +36,7 @@ struct Disconnect {};
 
 struct fsm : FiniteStateMachine<fsm, states::Disconnected, states::Connecting,
                                 states::Pinging, states::Connected> {
-  fsm() : fsm_base(states::Disconnected{}){};
+  fsm() : fsm_base(states::Disconnected{}) {}
 
   event_return on_event(const states::Disconnected& /*unused*/,
                         const events::Connect& /*unused*/) {
@@ -120,7 +119,7 @@ BOOST_AUTO_TEST_CASE(Terminted) {
 
 struct fsm2
     : FiniteStateMachine<fsm2, states::Disconnected, states::Connected> {
-  fsm2() : fsm_base(states::Disconnected{}){};
+  fsm2() : fsm_base(states::Disconnected{}) {}
 
   event_return on_event(const states::Disconnected& /*unused*/,
                         const events::Connect& /*unused*/, double f) {

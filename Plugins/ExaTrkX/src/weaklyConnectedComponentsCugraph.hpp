@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <Acts/Utilities/Logger.hpp>
+
 #include <cerrno>
 #include <cstring>
 #include <fstream>
@@ -30,12 +32,13 @@
 #define CUDA_RT_CALL(call)                                                    \
   {                                                                           \
     cudaError_t cudaStatus = call;                                            \
-    if (cudaSuccess != cudaStatus)                                            \
+    if (cudaSuccess != cudaStatus) {                                          \
       fprintf(stderr,                                                         \
               "ERROR: CUDA RT call \"%s\" in line %d of file %s failed with " \
               "%s (%d).\n",                                                   \
               #call, __LINE__, __FILE__, cudaGetErrorString(cudaStatus),      \
               cudaStatus);                                                    \
+    }                                                                         \
   }
 #endif  // CUDA_RT_CALL
 
@@ -43,29 +46,16 @@ template <typename vertex_t, typename edge_t, typename weight_t>
 __global__ void weaklyConnectedComponents(std::vector<vertex_t>& rowIndices,
                                           std::vector<vertex_t>& colIndices,
                                           std::vector<weight_t>& edgeWeights,
-                                          std::vector<vertex_t>& trackLabels) {
+                                          std::vector<vertex_t>& trackLabels,
+                                          const Acts::Logger& logger) {
   cudaStream_t stream;
   CUDA_RT_CALL(cudaStreamCreate(&stream));
 
-  // std::cout << "Weakly components Start" << std::endl;
-  // std::cout << "edge size: " << rowIndices.size() << " " << colIndices.size()
-  // << std::endl;
+  ACTS_VERBOSE("Weakly components Start");
+  ACTS_VERBOSE("edge size: " << rowIndices.size() << " " << colIndices.size());
   raft::handle_t handle{stream};
 
   cugraph::graph_t<vertex_t, edge_t, weight_t, false, false> graph(handle);
-
-  // constexpr bool renumber = true;
-  // using store_transposed = bool;
-
-#if 0
-    static int PERF = 0;
-    HighResClock hr_clock{};
-
-    if (PERF) {
-      CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
-      hr_clock.start();
-    }
-#endif
 
   // learn from matrix_market_file_utilities.cu
   vertex_t maxVertexID_row =
@@ -109,11 +99,10 @@ __global__ void weaklyConnectedComponents(std::vector<vertex_t>& rowIndices,
   rmm::device_uvector<vertex_t> d_components(
       graph_view.get_number_of_vertices(), handle.get_stream());
 
-  // std::cout << "2back from construct_graph" << std::endl;
+  ACTS_VERBOSE("2back from construct_graph");
   cugraph::weakly_connected_components(handle, graph_view, d_components.data());
 
-  // std::cout << "number of components: " << d_components.size() << std::endl;
-
+  ACTS_VERBOSE("number of components: " << d_components.size());
   raft::update_host(trackLabels.data(), d_components.data(),
                     d_components.size(), handle.get_stream());
 }

@@ -8,15 +8,24 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <array>
+#include <cmath>
 #include <fstream>
-#include <iostream>
+#include <iterator>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "EqualityHelpers.hpp"
 
@@ -42,7 +51,7 @@ bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
   bool internalValueEq = (one.internal.has_value() == two.internal.has_value());
   BOOST_CHECK(internalValueEq);
   bool internalEq = internalValueEq;
-  if (one.internal.has_value() and two.internal.has_value()) {
+  if (one.internal.has_value() && two.internal.has_value()) {
     // Check consistency of the internal structure
     const auto& itsOne = one.internal.value();
     const auto& itsTwo = two.internal.value();
@@ -52,11 +61,11 @@ bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
     bool sBinningSizeEq =
         (itsOne.surfaceBinning.size() == itsTwo.surfaceBinning.size());
     BOOST_CHECK(sBinningSizeEq);
-    internalEq = internalEq and sBinningSizeEq;
+    internalEq = internalEq && sBinningSizeEq;
     for (auto [isb, sb] : Acts::enumerate(itsOne.surfaceBinning)) {
       bool sBinningEq = isEqual(sb, itsTwo.surfaceBinning[isb], tolerance);
       BOOST_CHECK(sBinningEq);
-      internalEq = internalEq and sBinningEq;
+      internalEq = internalEq && sBinningEq;
     }
   }
   BOOST_CHECK(internalEq);
@@ -66,7 +75,7 @@ bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
       (one.container.has_value() == two.container.has_value());
   BOOST_CHECK(containerValueEq);
   bool containerEq = containerValueEq;
-  if (one.container.has_value() and two.container.has_value()) {
+  if (one.container.has_value() && two.container.has_value()) {
     // Check consistency of the container structure
     const auto& ctsOne = one.container.value();
     const auto& ctsTwo = two.container.value();
@@ -75,12 +84,12 @@ bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
     containerEq = layerContainerEq;
     bool cBinningSizeEq =
         ctsOne.constituentBinning.size() == ctsTwo.constituentBinning.size();
-    containerEq = containerEq and cBinningSizeEq;
+    containerEq = containerEq && cBinningSizeEq;
     BOOST_CHECK(cBinningSizeEq);
     for (auto [icb, cb] : Acts::enumerate(ctsOne.constituentBinning)) {
       bool cBinningEq = isEqual(cb, ctsTwo.constituentBinning[icb], tolerance);
       BOOST_CHECK(cBinningEq);
-      containerEq = containerEq and cBinningEq;
+      containerEq = containerEq && cBinningEq;
     }
     // Recursively walk down
     bool cSizeEq =
@@ -91,13 +100,13 @@ bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
       const auto& cTwo = ctsTwo.constituentVolumes[ic];
       bool cEq = isEqual(cOne, cTwo, tolerance);
       BOOST_CHECK(cEq);
-      containerEq = containerEq and cEq;
+      containerEq = containerEq && cEq;
     }
   }
   BOOST_CHECK(containerEq);
 
   // Give the overall judgement
-  return nameEq and extentEq and internalEq and containerEq;
+  return nameEq && extentEq && internalEq && containerEq;
 }
 
 }  // namespace
@@ -497,7 +506,7 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   Acts::ProtoDetector detectorIn = jdet["detector"];
 
   // Let's compare
-  BOOST_CHECK(detector.name == detectorIn.name);
+  BOOST_CHECK_EQUAL(detector.name, detectorIn.name);
 
   const auto& world = detector.worldVolume;
   const auto& worldIn = detectorIn.worldVolume;

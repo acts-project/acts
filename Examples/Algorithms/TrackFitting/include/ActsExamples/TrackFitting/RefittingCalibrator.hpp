@@ -8,16 +8,24 @@
 
 #pragma once
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
+
+namespace Acts {
+class ConstVectorMultiTrajectory;
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 namespace ActsExamples {
 
 struct RefittingCalibrator {
-  using Proxy =
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy;
-  using ConstProxy = Acts::MultiTrajectory<
-      Acts::ConstVectorMultiTrajectory>::ConstTrackStateProxy;
+  using Proxy = Acts::VectorMultiTrajectory::TrackStateProxy;
+  using ConstProxy = Acts::ConstVectorMultiTrajectory::ConstTrackStateProxy;
 
   struct RefittingSourceLink {
     ConstProxy state;
@@ -27,7 +35,9 @@ struct RefittingCalibrator {
     }
   };
 
-  void calibrate(const Acts::GeometryContext& /*gctx*/, Proxy trackState) const;
+  void calibrate(const Acts::GeometryContext& gctx,
+                 const Acts::CalibrationContext& cctx,
+                 const Acts::SourceLink& sourceLink, Proxy trackState) const;
 };
 
 }  // namespace ActsExamples

@@ -106,7 +106,7 @@ static _AnyAllocationReporter s_reporter;
 class AnyBaseAll {};
 
 /// Small opaque cache type which uses small buffer optimization
-template <size_t SIZE>
+template <std::size_t SIZE>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
 
@@ -122,7 +122,7 @@ class AnyBase : public AnyBaseAll {
         "Type needs to be copy assignable and copy constructible");
 
     m_handler = makeHandler<U>();
-    if constexpr (not heapAllocated<U>()) {
+    if constexpr (!heapAllocated<U>()) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
       _ACTS_ANY_VERBOSE(
@@ -487,18 +487,19 @@ class AnyBase : public AnyBaseAll {
     (*_to) = *_from;
   }
 
-  static constexpr size_t kMaxAlignment = std::max(alignof(std::max_align_t),
+  static constexpr std::size_t kMaxAlignment =
+      std::max(alignof(std::max_align_t),
 #if defined(__AVX512F__)
-                                                   size_t(64)
+               std::size_t(64)
 #elif defined(__AVX__)
-                                                   size_t(32)
+               std::size_t(32)
 #elif defined(__SSE__)
-                                                   size_t(16)
+               std::size_t(16)
 #else
-                                                   size_t(0)  // Neutral element
-                                                              // for maximum
+               std::size_t(0)  // Neutral element
+                               // for maximum
 #endif
-  );
+      );
 
   alignas(kMaxAlignment) std::array<std::byte, SIZE> m_data{};
   const Handler* m_handler{nullptr};

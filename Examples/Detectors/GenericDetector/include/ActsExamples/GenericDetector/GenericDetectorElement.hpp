@@ -13,6 +13,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
 
 namespace Acts {
 class Surface;
@@ -83,6 +86,9 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
 
+  /// Non-cost access to surface associated with this detector element
+  Acts::Surface& surface() override;
+
   /// Set the identifier after construction (sometimes needed)
   void assignIdentifier(const Identifier& identifier);
 
@@ -100,7 +106,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// the transform for positioning in 3D space
   std::shared_ptr<const Acts::Transform3> m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<const Acts::Surface> m_elementSurface;
+  std::shared_ptr<Acts::Surface> m_elementSurface;
   /// the element thickness
   double m_elementThickness;
   /// store either
@@ -129,6 +135,10 @@ ActsExamples::Generic::GenericDetectorElement::transform(
 
 inline const Acts::Surface&
 ActsExamples::Generic::GenericDetectorElement::surface() const {
+  return *m_elementSurface;
+}
+
+inline Acts::Surface& ActsExamples::Generic::GenericDetectorElement::surface() {
   return *m_elementSurface;
 }
 

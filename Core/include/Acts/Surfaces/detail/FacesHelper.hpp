@@ -37,7 +37,7 @@ struct FacesHelper {
     FaceVector triangularMesh;
     // Write the face
     unsigned int offset = centerLast ? 1 : 0;
-    std::vector<size_t> face(vertices.size() - offset);
+    std::vector<std::size_t> face(vertices.size() - offset);
     std::iota(face.begin(), face.end(), 0);
     faces.push_back(face);
     /// Triangular mesh construction
@@ -67,15 +67,16 @@ struct FacesHelper {
       const std::vector<Vector3>& vertices, bool fullTwoPi = true) {
     FaceVector faces;
     FaceVector triangularMesh;
-    size_t nqfaces = static_cast<size_t>(0.5 * vertices.size());
-    size_t reduce = (not fullTwoPi) ? 1 : 0;
-    for (size_t iface = 0; iface < nqfaces - reduce; ++iface) {
-      size_t p2 = (iface + 1 == nqfaces) ? 0 : iface + 1;
-      std::vector<size_t> face = {iface, p2, p2 + nqfaces, nqfaces + iface};
+    std::size_t nqfaces = static_cast<std::size_t>(0.5 * vertices.size());
+    std::size_t reduce = (!fullTwoPi) ? 1 : 0;
+    for (std::size_t iface = 0; iface < nqfaces - reduce; ++iface) {
+      std::size_t p2 = (iface + 1 == nqfaces) ? 0 : iface + 1;
+      std::vector<std::size_t> face = {iface, p2, p2 + nqfaces,
+                                       nqfaces + iface};
       faces.push_back(face);
-      std::vector<size_t> triA = {iface, p2, p2 + nqfaces};
+      std::vector<std::size_t> triA = {iface, p2, p2 + nqfaces};
       triangularMesh.push_back(triA);
-      std::vector<size_t> triB = {p2 + nqfaces, nqfaces + iface, iface};
+      std::vector<std::size_t> triB = {p2 + nqfaces, nqfaces + iface, iface};
       triangularMesh.push_back(triB);
     }
     return {faces, triangularMesh};

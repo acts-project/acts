@@ -14,8 +14,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <iostream>
+#include <array>
+#include <cmath>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -40,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
   double phiMin = std::atan2(-3_mm, 15_mm);
   double phiMax = std::atan2(3_mm, 15_mm);
-  double rMin = std::sqrt(15_mm * 15_mm + 3_mm * 3_mm);
+  double rMin = std::hypot(15_mm, 3_mm);
 
   CHECK_CLOSE_ABS(gExt.min(binX), 15_mm, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binX), 18_mm, 1e-6);
@@ -61,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   const auto& vHist = gExtHist.valueHistograms();
   auto xVals = vHist[binX];
 
-  BOOST_CHECK(xVals.size() == 6u);
+  BOOST_CHECK_EQUAL(xVals.size(), 6u);
   std::vector<ActsScalar> reference = {15_mm, 18_mm, 15_mm,
                                        15_mm, 18_mm, 15_mm};
   BOOST_CHECK(xVals == reference);
@@ -137,16 +141,43 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   CHECK_CLOSE_ABS(gExt.min(binR), 0_mm, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binR), 18_mm, 1e-6);
 
-  // Take an Extent and add an xonstrain
+  // Take an Extent and add a constraint
   Extent gExtConst;
   gExtConst.set(binR, 0., 5.);
   Extent gExtNonConst;
-  BOOST_CHECK(not gExtNonConst.constrains(binR));
+  BOOST_CHECK(!gExtNonConst.constrains(binR));
   gExtNonConst.addConstrain(gExtConst);
   BOOST_CHECK(gExtNonConst.constrains(binR));
 
   std::string tString = gExtConst.toString();
-  BOOST_CHECK(not tString.empty());
+  BOOST_CHECK(!tString.empty());
+
+  // Check single vertex containment
+  Extent gExtVertexCheck;
+  gExtVertexCheck.set(binR, 0., 5.);
+  BOOST_CHECK(gExtVertexCheck.contains(Vector3(1., 0., 0.)));
+  BOOST_CHECK(!gExtVertexCheck.contains(Vector3(6., 0., 0.)));
+}
+
+// Test that the constrains() check advances when the extend() method
+// is used with a new binning type
+BOOST_AUTO_TEST_CASE(ProtoSupportCaseTests) {
+  std::vector<Vector3> vertices = {
+      Vector3(15_mm, -3_mm, -10_mm), Vector3(18_mm, 0_mm, -10_mm),
+      Vector3(15_mm, 3_mm, -10_mm),  Vector3(15_mm, -3_mm, 10_mm),
+      Vector3(18_mm, 0_mm, 10_mm),   Vector3(15_mm, 3_mm, 10_mm)};
+
+  Extent volumeExtent;
+  volumeExtent.set(binZ, -300_mm, 300_mm);
+
+  BOOST_CHECK(volumeExtent.constrains(binZ));
+  BOOST_CHECK(!volumeExtent.constrains(binR));
+
+  for (const auto& v : vertices) {
+    volumeExtent.extend(v, {binR});
+  }
+
+  BOOST_CHECK(volumeExtent.constrains(binR));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

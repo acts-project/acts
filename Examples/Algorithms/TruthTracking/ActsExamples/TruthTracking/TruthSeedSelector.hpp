@@ -8,12 +8,23 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+
+#include <cstddef>
+#include <limits>
+#include <string>
+
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select truth particles to be used as 'seeds' of reconstruction algorithms,
 /// e.g. track fitting and track finding.
@@ -24,8 +35,8 @@ namespace ActsExamples {
 /// investigating performance of CombinatorialKalmanFilter (CKF), we might be
 /// interested in its performance for only truth particles with pT and number of
 /// recorded hits (on sensitive detectors) safistying provided criteria (input
-/// measurments of CKF are still recorded hits from all possible particles).
-/// Then we could use particles only satistying provided criteria as the 'seeds'
+/// measurements of CKF are still recorded hits from all possible particles).
+/// Then we could use particles only satisfying provided criteria as the 'seeds'
 /// of CKF instead of handling all the truth particles.
 //
 class TruthSeedSelector final : public IAlgorithm {
@@ -58,8 +69,8 @@ class TruthSeedSelector final : public IAlgorithm {
     bool keepNeutral = false;
     /// Requirement on number of recorded hits
     //@TODO: implement detector-specific requirements
-    size_t nHitsMin = 0;
-    size_t nHitsMax = std::numeric_limits<size_t>::max();
+    std::size_t nHitsMin = 0;
+    std::size_t nHitsMax = std::numeric_limits<std::size_t>::max();
   };
 
   TruthSeedSelector(const Config& config, Acts::Logging::Level level);

@@ -8,8 +8,17 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+
+#include <cstddef>
+#include <iosfwd>
+#include <string>
 
 namespace Acts {
 
@@ -19,11 +28,9 @@ namespace Acts {
 /// The Surface axis is fixed to be the z-axis of the Tracking frame.
 /// It inherits from StraingLineSurface.
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 class PerigeeSurface : public LineSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from GlobalPosition
@@ -45,7 +52,7 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   PerigeeSurface(const GeometryContext& gctx, const PerigeeSurface& other,
                  const Transform3& shift);
 
@@ -72,7 +79,7 @@ class PerigeeSurface : public LineSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
   ///
-  /// @return ostreamn obect which was streamed into
+  /// @return ostreamn object which was streamed into
   std::ostream& toStream(const GeometryContext& gctx,
                          std::ostream& sl) const final;
 
@@ -83,7 +90,9 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+                                      std::size_t lseg) const final;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, PerigeeSurface);
 
 }  // namespace Acts

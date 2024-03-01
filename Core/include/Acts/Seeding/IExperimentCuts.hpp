@@ -11,6 +11,7 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 
+#include <limits>
 #include <memory>
 
 namespace Acts {

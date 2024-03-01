@@ -13,9 +13,16 @@
 #include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
+
+class TEfficiency;
+class TH2F;
+namespace ActsFatras {
+class Particle;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
 
@@ -80,7 +87,7 @@ class FakeRatePlotTool {
   /// @param nFakeTracks the number of fake tracks
   void fill(FakeRatePlotCache& fakeRatePlotCache,
             const ActsFatras::Particle& truthParticle,
-            size_t nTruthMatchedTracks, size_t nFakeTracks) const;
+            std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
 
   /// @brief write the fake rate plots to file
   ///

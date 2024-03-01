@@ -8,7 +8,12 @@
 
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <memory>
+#include <type_traits>
 
 namespace ActsFatras {
 
@@ -53,8 +58,9 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
-  size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
-                         distribution.second.size() - 1);
+  std::size_t iBin =
+      std::min((std::size_t)std::distance(distribution.second.begin(), it),
+               distribution.second.size() - 1);
 
   // Return the corresponding bin
   return static_cast<unsigned int>(distribution.first[iBin]);
@@ -78,8 +84,9 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   }
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
-  size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
-                         distribution.second.size() - 1);
+  std::size_t iBin =
+      std::min((std::size_t)std::distance(distribution.second.begin(), it),
+               distribution.second.size() - 1);
 
   if (interpolate) {
     // Interpolate between neighbouring bins and return a diced intermediate
@@ -106,7 +113,7 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
                                 ActsFatras::Particle::Scalar theta1, float phi2,
                                 float theta2) const {
   // Rotation around the global y-axis
-  Acts::SymMatrix3 rotY = Acts::SymMatrix3::Zero();
+  Acts::SquareMatrix3 rotY = Acts::SquareMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);
   rotY(0, 2) = std::sin(theta1);
   rotY(1, 1) = 1.;
@@ -114,7 +121,7 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
   rotY(2, 2) = std::cos(theta1);
 
   // Rotation around the global z-axis
-  Acts::SymMatrix3 rotZ = Acts::SymMatrix3::Zero();
+  Acts::SquareMatrix3 rotZ = Acts::SquareMatrix3::Zero();
   rotZ(0, 0) = std::cos(phi1);
   rotZ(0, 1) = -std::sin(phi1);
   rotZ(1, 0) = std::sin(phi1);

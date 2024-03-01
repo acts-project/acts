@@ -8,9 +8,16 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <optional>
+#include <tuple>
 
 namespace Acts {
 
@@ -33,14 +40,14 @@ struct FreeToBoundCorrection {
 
   /// Construct from boolean and UKF parameters (alpha, beta)
   ///
-  /// @param apply_ Wheter to apply correction
+  /// @param apply_ Whether to apply correction
   /// @param alpha_ The UKF tuning parameter alpha
   /// @param beta_ The UKF tuning parameter beta
   FreeToBoundCorrection(bool apply_, ActsScalar alpha_, ActsScalar beta_);
 
   /// Construct from boolean only
   ///
-  /// @param apply_ Wheter to apply correction
+  /// @param apply_ Whether to apply correction
   explicit FreeToBoundCorrection(bool apply_);
 
   /// Return boolean for applying correction or not
@@ -87,8 +94,8 @@ struct CorrectedFreeToBoundTransformer {
   /// @param geoContext The geometry context
   /// @param navDir The navigation direction
   /// @param logger The logger
-  std::optional<std::tuple<BoundVector, BoundSymMatrix>> operator()(
-      const FreeVector& freeParams, const FreeSymMatrix& freeCovariance,
+  std::optional<std::tuple<BoundVector, BoundSquareMatrix>> operator()(
+      const FreeVector& freeParams, const FreeSquareMatrix& freeCovariance,
       const Surface& surface, const GeometryContext& geoContext,
       Direction navDir = Direction::Forward,
       const Logger& logger = getDummyLogger()) const;

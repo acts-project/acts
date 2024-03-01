@@ -1,20 +1,29 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -32,18 +41,31 @@
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
+#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
-#include "ActsExamples/Validation/ResPlotTool.hpp"
 
+#include <array>
 #include <memory>
-#include <string_view>
+#include <string>
+#include <tuple>
+#include <vector>
 
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class TrackingGeometry;
+namespace detail {
+struct Step;
+}  // namespace detail
+}  // namespace Acts
+namespace ActsExamples {
+class IWriter;
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -126,13 +148,34 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
+  // Bindings for the binning in e.g., CKFPerformanceWriter
+  {
+    py::class_<PlotHelpers::Binning>(mex, "Binning")
+        .def(py::init<std::string, int, double, double>(), "title"_a, "bins"_a,
+             "bMin"_a, "bMax"_a)
+        .def(py::init<std::string, std::vector<double>>(), "title"_a, "bins"_a);
+
+    py::class_<EffPlotTool::Config>(mex, "EffPlotToolConfig")
+        .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
+             "varBinning"_a);
+
+    py::class_<FakeRatePlotTool::Config>(mex, "FakeRatePlotToolConfig")
+        .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
+             "varBinning"_a);
+
+    py::class_<DuplicationPlotTool::Config>(mex, "DuplicationPlotToolConfig")
+        .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
+             "varBinning"_a);
+  }
+
   // ROOT WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPropagationStepsWriter, mex,
                              "RootPropagationStepsWriter", collection, filePath,
                              fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
-                             "RootParticleWriter", inputParticles, filePath,
+                             "RootParticleWriter", inputParticles,
+                             inputFinalParticles, inputSimHits, filePath,
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
@@ -142,7 +185,7 @@ void addOutput(Context& ctx) {
                              treeNameParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFitterPerformanceWriter, mex,
-                             "TrackFitterPerformanceWriter", inputTrajectories,
+                             "TrackFitterPerformanceWriter", inputTracks,
                              inputParticles, inputMeasurementParticlesMap,
                              filePath, resPlotToolConfig, effPlotToolConfig,
                              trackSummaryPlotToolConfig);
@@ -279,22 +322,21 @@ void addOutput(Context& ctx) {
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::RootTrajectoryStatesWriter, mex,
-      "RootTrajectoryStatesWriter", inputTrajectories, inputParticles,
-      inputSimHits, inputMeasurementParticlesMap, inputMeasurementSimHitsMap,
-      filePath, treeName, fileMode);
+      ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
+      inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
+      inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrajectorySummaryWriter, mex,
-                             "RootTrajectorySummaryWriter", inputTrajectories,
-                             inputParticles, inputMeasurementParticlesMap,
-                             filePath, treeName, fileMode);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
+      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
-      inputAllTruthParticles, inputSelectedTruthParticles, inputTrackParameters,
-      inputAssociatedTruthParticles, inputTrackParameters, inputTrajectories,
-      inputMeasurementParticlesMap, inputVertices, inputTime, filePath,
-      treeName, fileMode, minTrackVtxMatchFraction, truthMatchProbMin);
+      inputAllTruthParticles, inputSelectedTruthParticles,
+      inputAssociatedTruthParticles, inputTracks, inputMeasurementParticlesMap,
+      inputVertices, bField, filePath, treeName, fileMode,
+      minTrackVtxMatchFraction, truthMatchProbMin, useTracks);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,
@@ -319,10 +361,15 @@ void addOutput(Context& ctx) {
                              "CsvSpacepointWriter", inputSpacepoints, outputDir,
                              outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",
-      inputTrajectories, outputDir, fileName, inputMeasurementParticlesMap,
-      outputPrecision, nMeasurementsMin, truthMatchProbMin, ptMin);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackWriter, mex,
+                             "CsvTrackWriter", inputTracks, outputDir, fileName,
+                             inputMeasurementParticlesMap, outputPrecision,
+                             nMeasurementsMin, truthMatchProbMin, ptMin);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSeedWriter, mex, "CsvSeedWriter",
+                             inputTrackParameters, inputSimSeeds, inputSimHits,
+                             inputMeasurementParticlesMap,
+                             inputMeasurementSimHitsMap, fileName, outputDir);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",
@@ -331,10 +378,10 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTrajectories, inputParticles, inputMeasurementParticlesMap, filePath,
+      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
       fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
       duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
-      nMeasurementsMin, ptMin, duplicatedPredictor);
+      doubleMatching, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
@@ -345,8 +392,12 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackParameterWriter, mex,
                              "CsvTrackParameterWriter", inputTrackParameters,
-                             inputTrajectories, outputDir, outputStem,
+                             inputTracks, outputDir, outputStem,
                              outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvProtoTrackWriter, mex,
+                             "CsvProtoTrackWriter", inputSpacepoints,
+                             inputPrototracks, outputDir);
 
   {
     using Writer = ActsExamples::CsvBFieldWriter;
@@ -362,5 +413,9 @@ void addOutput(Context& ctx) {
     register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, true>(w);
     register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, false>(w);
   }
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvExaTrkXGraphWriter, mex,
+                             "CsvExaTrkXGraphWriter", inputGraph, outputDir,
+                             outputStem);
 }
 }  // namespace Acts::Python

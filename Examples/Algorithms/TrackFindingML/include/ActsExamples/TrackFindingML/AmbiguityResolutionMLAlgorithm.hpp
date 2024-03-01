@@ -32,7 +32,7 @@ class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
     std::string inputDuplicateNN;
     /// Output track collection.
     std::string outputTracks;
-    /// Minumum number of measurement to form a track.
+    /// Minimum number of measurement to form a track.
     int nMeasurementsMin = 7;
   };
 

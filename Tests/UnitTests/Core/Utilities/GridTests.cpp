@@ -8,12 +8,21 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
-#include <chrono>
-#include <random>
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -23,7 +32,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   using Point = std::array<double, 1>;
-  using indices = std::array<size_t, 1>;
+  using indices = std::array<std::size_t, 1>;
   EquidistantAxis a(0.0, 4.0, 4u);
   Grid<double, EquidistantAxis> g(std::make_tuple(std::move(a)));
 
@@ -65,11 +74,11 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
                   g.globalBinFromPosition(Point({{2.7}}))) == indices({{3}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2.}})));
   BOOST_CHECK(g.isInside(Point({{0.}})));
   BOOST_CHECK(g.isInside(Point({{2.5}})));
-  BOOST_CHECK(not g.isInside(Point({{4.}})));
-  BOOST_CHECK(not g.isInside(Point({{6.}})));
+  BOOST_CHECK(!g.isInside(Point({{4.}})));
+  BOOST_CHECK(!g.isInside(Point({{6.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1}}), Point({{0.5}}), 1e-6);
@@ -90,13 +99,13 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   CHECK_CLOSE_ABS(g.upperRightBinEdge({{4}}), Point({{4.}}), 1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{0.7}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -105,7 +114,7 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
 
 BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
   using Point = std::array<double, 2>;
-  using indices = std::array<size_t, 2>;
+  using indices = std::array<std::size_t, 2>;
   EquidistantAxis a(0.0, 4.0, 4u);
   EquidistantAxis b(0.0, 3.0, 3u);
   Grid<double, EquidistantAxis, EquidistantAxis> g(
@@ -231,18 +240,18 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
                   Point({{1.2, 0.7}}))) == indices({{2, 1}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3}})));
-  BOOST_CHECK(not g.isInside(Point({{4., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{4., 0.3}})));
-  BOOST_CHECK(not g.isInside(Point({{4., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{4., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{4., 0.3}})));
+  BOOST_CHECK(!g.isInside(Point({{4., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1}}), Point({{0.5, 0.5}}), 1e-6);
@@ -263,13 +272,13 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
   CHECK_CLOSE_ABS(g.upperRightBinEdge({{4, 2}}), Point({{4., 2.}}), 1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{0.7, 1.3}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -278,7 +287,7 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant) {
 
 BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
   using Point = std::array<double, 3>;
-  using indices = std::array<size_t, 3>;
+  using indices = std::array<std::size_t, 3>;
   EquidistantAxis a(0.0, 2.0, 2u);
   EquidistantAxis b(0.0, 3.0, 3u);
   EquidistantAxis c(0.0, 2.0, 2u);
@@ -385,18 +394,18 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
                   Point({{1.2, 0.7, 1.4}}))) == indices({{2, 1, 2}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1, -2}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1., 0.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1, -2}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1., 0.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1., 4.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3, 1.7}})));
-  BOOST_CHECK(not g.isInside(Point({{2., -1., -0.4}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 0.3, 3.4}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3., 0.8}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3., 0.5}})));
+  BOOST_CHECK(!g.isInside(Point({{2., -1., -0.4}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 0.3, 3.4}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3., 0.8}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3., 0.5}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1, 1}}), Point({{0.5, 0.5, 0.5}}), 1e-6);
@@ -421,13 +430,13 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
                   1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{0.7, 2.3, 1.3}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -436,7 +445,7 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
   using Point = std::array<double, 1>;
-  using indices = std::array<size_t, 1>;
+  using indices = std::array<std::size_t, 1>;
   VariableAxis a({0.0, 1.0, 4.0});
   Grid<double, VariableAxis> g(std::make_tuple(std::move(a)));
 
@@ -470,11 +479,11 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
                   g.globalBinFromPosition(Point({{0.8}}))) == indices({{1}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2.}})));
   BOOST_CHECK(g.isInside(Point({{0.}})));
   BOOST_CHECK(g.isInside(Point({{2.5}})));
-  BOOST_CHECK(not g.isInside(Point({{4.}})));
-  BOOST_CHECK(not g.isInside(Point({{6.}})));
+  BOOST_CHECK(!g.isInside(Point({{4.}})));
+  BOOST_CHECK(!g.isInside(Point({{6.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1}}), Point({{0.5}}), 1e-6);
@@ -489,13 +498,13 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
   CHECK_CLOSE_ABS(g.upperRightBinEdge({{2}}), Point({{4.}}), 1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{0.7}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -504,7 +513,7 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
 
 BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
   using Point = std::array<double, 2>;
-  using indices = std::array<size_t, 2>;
+  using indices = std::array<std::size_t, 2>;
   VariableAxis a({0.0, 0.5, 3.0});
   VariableAxis b({0.0, 1.0, 4.0});
   Grid<double, VariableAxis, VariableAxis> g(
@@ -581,18 +590,18 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
                   Point({{3.2, 1.8}}))) == indices({{3, 2}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3}})));
-  BOOST_CHECK(not g.isInside(Point({{3., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{3., 0.3}})));
-  BOOST_CHECK(not g.isInside(Point({{3., 4.}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 4.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 4.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{3., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{3., 0.3}})));
+  BOOST_CHECK(!g.isInside(Point({{3., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 4.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1}}), Point({{0.25, 0.5}}), 1e-6);
@@ -613,13 +622,13 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
   CHECK_CLOSE_ABS(g.upperRightBinEdge({{2, 2}}), Point({{3., 4.}}), 1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{0.7, 1.3}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -628,7 +637,7 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
 
 BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
   using Point = std::array<double, 3>;
-  using indices = std::array<size_t, 3>;
+  using indices = std::array<std::size_t, 3>;
   VariableAxis a({0.0, 1.0});
   VariableAxis b({0.0, 0.5, 3.0});
   VariableAxis c({0.0, 0.5, 3.0, 3.3});
@@ -705,18 +714,18 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
                   Point({{1.8, 0.7, 3.2}}))) == indices({{2, 2, 3}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1, -2}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1., 0.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1., 4.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1, -2}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1., 0.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1., 4.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3, 1.7}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1., -0.4}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 0.3, 3.4}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 3., 0.8}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{2., 3., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3., 0.5}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1., -0.4}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 0.3, 3.4}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 3., 0.8}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{2., 3., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3., 0.5}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1, 1}}), Point({{0.5, 0.25, 0.25}}), 1e-6);
@@ -753,13 +762,13 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
                   1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{0.7, 1.3, 3.7}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -768,7 +777,7 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
 
 BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
   using Point = std::array<double, 2>;
-  using indices = std::array<size_t, 2>;
+  using indices = std::array<std::size_t, 2>;
   EquidistantAxis a(0.0, 1.0, 4u);
   VariableAxis b({0.0, 0.5, 3.0});
   Grid<double, EquidistantAxis, VariableAxis> g(
@@ -812,7 +821,7 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
   BOOST_CHECK_EQUAL(g.globalBinFromPosition(Point({{12, 11}})), 23u);
 
   // global bin index -> local bin indices
-  using indices = std::array<size_t, 2>;
+  using indices = std::array<std::size_t, 2>;
   BOOST_CHECK(g.localBinsFromGlobalBin(0) == indices({{0, 0}}));
   BOOST_CHECK(g.localBinsFromGlobalBin(1) == indices({{0, 1}}));
   BOOST_CHECK(g.localBinsFromGlobalBin(2) == indices({{0, 2}}));
@@ -868,18 +877,18 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
                   Point({{1.1, 1.7}}))) == indices({{5, 2}}));
 
   // inside checks
-  BOOST_CHECK(not g.isInside(Point({{-2., -1}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 1.}})));
-  BOOST_CHECK(not g.isInside(Point({{-2., 5.}})));
-  BOOST_CHECK(not g.isInside(Point({{0.1, -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{6., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., -1}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 1.}})));
+  BOOST_CHECK(!g.isInside(Point({{-2., 5.}})));
+  BOOST_CHECK(!g.isInside(Point({{0.1, -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{6., -1.}})));
   BOOST_CHECK(g.isInside(Point({{0.5, 1.3}})));
-  BOOST_CHECK(not g.isInside(Point({{1., -1.}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 0.3}})));
-  BOOST_CHECK(not g.isInside(Point({{1., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{-1., 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{0.2, 3.}})));
-  BOOST_CHECK(not g.isInside(Point({{5., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., -1.}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 0.3}})));
+  BOOST_CHECK(!g.isInside(Point({{1., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{-1., 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{0.2, 3.}})));
+  BOOST_CHECK(!g.isInside(Point({{5., 3.}})));
 
   // test some bin centers
   CHECK_CLOSE_ABS(g.binCenter({{1, 1}}), Point({{0.125, 0.25}}), 1e-6);
@@ -912,13 +921,13 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
   CHECK_CLOSE_ABS(g.upperRightBinEdge({{4, 2}}), Point({{1., 3.}}), 1e-6);
 
   // initialize grid
-  for (size_t bin = 0; bin < g.size(); ++bin) {
+  for (std::size_t bin = 0; bin < g.size(); ++bin) {
     g.at(bin) = bin;
   }
 
   // consistency of access
   const auto& point = Point({{1.3, 3.7}});
-  size_t globalBin = g.globalBinFromPosition(point);
+  std::size_t globalBin = g.globalBinFromPosition(point);
   indices localBins = g.localBinsFromGlobalBin(globalBin);
 
   BOOST_CHECK_EQUAL(g.atPosition(point), g.at(globalBin));
@@ -1003,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(grid_interpolation) {
 }
 
 BOOST_AUTO_TEST_CASE(neighborhood) {
-  using bins_t = std::vector<size_t>;
+  using bins_t = std::vector<std::size_t>;
   using EAxis = EquidistantAxis;
   using Grid1_t = Grid<double, EAxis>;
   using Grid2_t = Grid<double, EAxis, EAxis>;
@@ -1146,11 +1155,11 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   a2.at(1) = std::make_pair<int, int>(
       -1, 2);  // one bin left of requested bin, the requested bin itself and 2
                // bins right of requested bin
-  std::set<size_t> returnedBins;
+  std::set<std::size_t> returnedBins;
 
   auto returnedBinsVec = g2Cl.neighborHoodIndices({{3, 2}}, a2).collectVector();
   returnedBins.insert(returnedBinsVec.begin(), returnedBinsVec.end());
-  std::set<size_t> expectedBins{{8, 9, 10, 11, 15, 16, 17, 18}};
+  std::set<std::size_t> expectedBins{{8, 9, 10, 11, 15, 16, 17, 18}};
   BOOST_CHECK(returnedBins == expectedBins);
 
   returnedBinsVec = g2Cl.neighborHoodIndices({{1, 5}}, a2).collectVector();
@@ -1190,7 +1199,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
 
 BOOST_AUTO_TEST_CASE(closestPoints) {
   using Point = std::array<double, 3>;
-  using bins_t = std::vector<size_t>;
+  using bins_t = std::vector<std::size_t>;
   using EAxis = EquidistantAxis;
   using Grid1_t = Grid<double, EAxis>;
   using Grid2_t = Grid<double, EAxis, EAxis>;
@@ -1228,7 +1237,7 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
     //using Grid3Cl_t = Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>;
     EAxisClosed   aCl(0.0, 1.0, 10u);
     EAxisClosed   bCl(0.0, 1.0, 5u);
-    EAxisClosed   cCl(0.0, 1.0, 3u);
+    // EAxisClosed   cCl(0.0, 1.0, 3u);
     Grid1Cl_t g1Cl(std::make_tuple(aCl));
     Grid2Cl_t g2Cl(std::make_tuple(std::move(aCl), std::move(bCl)));
 
@@ -1259,7 +1268,7 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 
     EAxisOpen  aOp(0.0, 1.0, 10u);
     EAxisOpen  bOp(0.0, 1.0, 5u);
-    EAxisOpen  cOp(0.0, 1.0, 3u);
+    // EAxisOpen  cOp(0.0, 1.0, 3u);
     Grid1Op_t g1Op(std::make_tuple(aOp));
     Grid2Op_t g2Op(std::make_tuple(std::move(aOp), std::move(bOp)));
 
@@ -1312,6 +1321,54 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
      */
 
   // clang-format on
+}
+
+BOOST_AUTO_TEST_CASE(grid_type_conversion) {
+  using EAxis = EquidistantAxis;
+  using VAxis = VariableAxis;
+
+  // Type conversion test
+  using Grid2Double = Grid<double, EAxis, VAxis>;
+  using Grid2Int = Grid<int, EAxis, VAxis>;
+
+  EAxis a(0.0, 1.0, 10u);
+  VAxis b({0., 1.2, 2.3, 3.4, 4.5, 5.6});
+  Grid2Double g2(std::make_tuple(a, b));
+  Grid2Double g2Copy(g2.axesTuple());
+
+  bool copyKeepsType = std::is_same<decltype(g2), decltype(g2Copy)>::value;
+  BOOST_CHECK(copyKeepsType);
+
+  auto g2ConvertedInt = g2Copy.convertType<int>();
+  bool newType = std::is_same<decltype(g2ConvertedInt), Grid2Int>::value;
+  BOOST_CHECK(newType);
+}
+
+BOOST_AUTO_TEST_CASE(grid_full_conversion) {
+  // The converter class
+  struct DoubleToInt {
+    // Declare a value tupe
+    using value_type = int;
+    // the conversion operator
+    int operator()(double d) { return static_cast<int>(d); }
+  };
+
+  using EAxis = EquidistantAxis;
+
+  // Grid conversion test
+  using Grid1Double = Grid<double, EAxis>;
+  EAxis a(0.0, 1.0, 2u);
+  Grid1Double g1(std::make_tuple(a));
+
+  using Point = std::array<double, 1>;
+  g1.atPosition(Point({{0.3}})) = 1.1;
+  g1.atPosition(Point({{0.6}})) = 2.4;
+
+  DoubleToInt d2i;
+
+  auto g1ConvertedInt = g1.convertGrid(d2i);
+  BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.3}})), 1);
+  BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
 }
 
 }  // namespace Test

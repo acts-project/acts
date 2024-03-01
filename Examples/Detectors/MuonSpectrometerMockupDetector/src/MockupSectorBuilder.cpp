@@ -8,30 +8,38 @@
 
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
 #include <algorithm>
-#include <iostream>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -47,7 +55,6 @@ ActsExamples::MockupSectorBuilder::buildChamber(
     const ActsExamples::MockupSectorBuilder::ChamberConfig& chamberConfig) {
   if (g4World == nullptr) {
     throw std::invalid_argument("MockupSector: No g4World initialized");
-    return nullptr;
   }
 
   const Acts::GeometryContext gctx;
@@ -129,7 +136,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
       mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
-      std::make_unique<Acts::CuboidVolumeBounds>(hx, hy, hz);
+      std::make_shared<Acts::CuboidVolumeBounds>(hx, hy, hz);
 
   Acts::Vector3 chamber_position = {(maxValues.x() + minValues.x()) / 2,
                                     (maxValues.y() + minValues.y()) / 2,
@@ -154,7 +161,6 @@ ActsExamples::MockupSectorBuilder::buildSector(
         detVolumes) {
   if (mCfg.NumberOfSectors > maxNumberOfSectors) {
     throw std::invalid_argument("MockupSector:Number of max sectors exceeded");
-    return nullptr;
   }
 
   const Acts::GeometryContext gctx;
@@ -198,7 +204,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   std::vector<float> rmins(detVolumesSize);
   std::vector<float> rmaxs(detVolumesSize);
   std::vector<float> halfZ(detVolumesSize);
-  std::vector<std::unique_ptr<Acts::CylinderVolumeBounds>>
+  std::vector<std::shared_ptr<Acts::CylinderVolumeBounds>>
       cylinderVolumesBounds(detVolumesSize);
 
   for (int i = 0; i < detVolumesSize; i++) {
@@ -212,13 +218,13 @@ ActsExamples::MockupSectorBuilder::buildSector(
                mCfg.toleranceOverlap;
     halfZ[i] = detVol->volumeBounds().values()[2];
 
-    cylinderVolumesBounds[i] = std::make_unique<Acts::CylinderVolumeBounds>(
+    cylinderVolumesBounds[i] = std::make_shared<Acts::CylinderVolumeBounds>(
         rmins[i], rmaxs[i], halfZ[i], sectorAngle);
   }
 
   const Acts::Vector3 pos = {0., 0., 0.};
 
-  // the transfom of the cylinder volume
+  // the transform of the cylinder volume
   Acts::AngleAxis3 rotZ(M_PI / 2, Acts::Vector3(0., 0., 1));
   auto transform = Acts::Transform3(Acts::Translation3(pos));
   transform *= rotZ;
@@ -294,7 +300,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   }  // end of cylinder volumes
 
   auto cylinderVolumesBoundsOfMother =
-      std::make_unique<Acts::CylinderVolumeBounds>(
+      std::make_shared<Acts::CylinderVolumeBounds>(
           rmins.front(), rmaxs.back(),
           *std::max_element(halfZ.begin(), halfZ.end()), sectorAngle);
 

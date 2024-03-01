@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ChargeConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -51,26 +54,34 @@ namespace Acts {
 
 /// Charge and momentum interpretation for neutral particles.
 struct Neutral {
-  Neutral() = default;
+  constexpr Neutral() = default;
+
+  // TODO remove this method after grad refactor; currently track parameters
+  // depend on it
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
-  template <typename T>
-  constexpr Neutral(T absQ) noexcept {
-    assert((absQ == static_cast<T>(0)) and "Input charge must be zero");
-    // suppress `unused variable` warning in non-debug builds
-    (void)(absQ);
+  constexpr Neutral(float absQ) noexcept {
+    assert((absQ == 0) && "Input charge must be zero");
+    (void)absQ;
   }
 
-  template <typename T>
-  constexpr T extractCharge(T /* pInv */) const noexcept {
-    return 0;
+  constexpr float absQ() const noexcept { return 0; }
+
+  constexpr float extractCharge(ActsScalar /*qOverP*/) const noexcept {
+    return 0.0f;
   }
-  template <typename T>
-  constexpr T extractMomentum(T pInv) const noexcept {
-    // the abs is not strictly needed. it is added to protect against invalid,
-    // i.e. negative, 1/p values to ensure that the output is still correct.
-    return std::abs(1 / pInv);
+
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+    assert(qOverP >= 0 && "qOverP cannot be negative");
+    return 1.0f / qOverP;
+  }
+
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert((signedQ != 0) && "charge must be 0");
+    (void)signedQ;
+    return 1.0f / momentum;
   }
 
   /// Compare for equality.
@@ -82,27 +93,37 @@ struct Neutral {
   }
 };
 
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, Neutral);
+
 /// Charge and momentum interpretation for particles with +-e charge.
 struct SinglyCharged {
-  SinglyCharged() = default;
+  constexpr SinglyCharged() = default;
+
+  // TODO remove this method after grad refactor; currently track parameters
+  // depend on it
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
-  template <typename T>
-  constexpr SinglyCharged(T absQ) noexcept {
-    assert((absQ == static_cast<T>(UnitConstants::e)) and
-           "Input charge magnitude must be e");
-    // suppress `unused variable` warning in non-debug builds
-    (void)(absQ);
+  constexpr SinglyCharged(float absQ) noexcept {
+    assert((absQ == UnitConstants::e) && "Input charge magnitude must be e");
+    (void)absQ;
   }
 
-  template <typename T>
-  constexpr T extractCharge(T qOverP) const noexcept {
-    return std::copysign(static_cast<T>(UnitConstants::e), qOverP);
+  constexpr float absQ() const noexcept { return UnitConstants::e; }
+
+  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+    return std::copysign(UnitConstants::e, qOverP);
   }
-  template <typename T>
-  constexpr T extractMomentum(T qOverP) const noexcept {
-    return std::abs(static_cast<T>(UnitConstants::e) / qOverP);
+
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+    return extractCharge(qOverP) / qOverP;
+  }
+
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert((std::abs(signedQ) == UnitConstants::e) &&
+           "absolute charge must be e");
+    return signedQ / momentum;
   }
 
   /// Compare for equality.
@@ -115,6 +136,46 @@ struct SinglyCharged {
   }
 };
 
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, SinglyCharged);
+
+/// Charge and momentum interpretation for arbitrarily charged but not neutral
+/// particles.
+class NonNeutralCharge {
+ public:
+  /// Construct with the magnitude of the input charge.
+  constexpr NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
+    assert((0 < absQ) && "Input charge magnitude must be positive");
+  }
+  constexpr NonNeutralCharge(SinglyCharged /*unused*/) noexcept
+      : m_absQ{UnitConstants::e} {}
+
+  constexpr float absQ() const noexcept { return m_absQ; }
+
+  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+    return std::copysign(m_absQ, qOverP);
+  }
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+    return extractCharge(qOverP) / qOverP;
+  }
+
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
+    return signedQ / momentum;
+  }
+
+  /// Compare for equality.
+  friend constexpr bool operator==(NonNeutralCharge lhs,
+                                   NonNeutralCharge rhs) noexcept {
+    return lhs.m_absQ == rhs.m_absQ;
+  }
+
+ private:
+  float m_absQ{};
+};
+
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, NonNeutralCharge);
+
 /// Charge and momentum interpretation for arbitrarily charged particles.
 ///
 /// Only a charge magnitude identical to zero is interpreted as representing a
@@ -122,33 +183,39 @@ struct SinglyCharged {
 /// approximate comparison with an arbitrary epsilon.
 class AnyCharge {
  public:
-  /// Delete default constructor to ensure charge is always explicitely given.
-  AnyCharge() = delete;
   /// Construct with the magnitude of the input charge.
-  template <typename T>
-  constexpr AnyCharge(T absQ) noexcept : m_magnitude(std::abs(absQ)) {
-    assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
+  constexpr AnyCharge(float absQ) noexcept : m_absQ{absQ} {
+    assert((0 <= absQ) && "Input charge magnitude must be zero or positive");
+  }
+  constexpr AnyCharge(SinglyCharged /*unused*/) noexcept
+      : m_absQ{UnitConstants::e} {}
+  constexpr AnyCharge(Neutral /*unused*/) noexcept {}
+
+  constexpr float absQ() const noexcept { return m_absQ; }
+
+  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+    return std::copysign(m_absQ, qOverP);
+  }
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+    return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
   }
 
-  template <typename T>
-  constexpr T extractCharge(T qOverP) const noexcept {
-    return std::copysign(static_cast<T>(m_magnitude), qOverP);
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
+    return (m_absQ != 0.0f) ? signedQ / momentum : 1.0f / momentum;
   }
-  template <typename T>
-  constexpr T extractMomentum(T qOverP) const noexcept {
-    return (m_magnitude != 0.0f)
-               ? std::abs(static_cast<T>(m_magnitude) / qOverP)
-               : std::abs(1 / qOverP);
-  }
-
- private:
-  float m_magnitude;
 
   /// Compare for equality.
   friend constexpr bool operator==(AnyCharge lhs, AnyCharge rhs) noexcept {
-    return lhs.m_magnitude == rhs.m_magnitude;
+    return lhs.m_absQ == rhs.m_absQ;
   }
+
+ private:
+  float m_absQ{};
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, AnyCharge);
 
 /// @}
 

@@ -5,7 +5,8 @@ add_library(
   src/TrackFittingAlgorithm.cpp
   src/KalmanFitterFunction.cpp
   src/RefittingAlgorithm.cpp
-  src/GsfFitterFunction.cpp)
+  src/GsfFitterFunction.cpp
+  src/GlobalChiSquareFitterFunction.cpp)
 target_include_directories(
   ActsExamplesTrackFitting
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

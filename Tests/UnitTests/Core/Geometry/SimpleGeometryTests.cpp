@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
@@ -18,6 +19,13 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <functional>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 
@@ -75,7 +83,6 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   bpvConfig.layerBuilder = beamPipeBuilder;
   bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
   bpvConfig.buildToRadiusZero = true;
-  bpvConfig.volumeSignature = 0;
   auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
       bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
@@ -94,7 +101,6 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   cvbConfig.layerBuilder = layerBuilder;
   cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = false;
-  cvbConfig.volumeSignature = 0;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
       cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
 

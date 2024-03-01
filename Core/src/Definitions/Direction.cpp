@@ -8,7 +8,7 @@
 
 #include "Acts/Definitions/Direction.hpp"
 
-#include <ostream>
+#include <cstdlib>
 
 std::string Acts::Direction::toString() const {
   switch (m_value) {

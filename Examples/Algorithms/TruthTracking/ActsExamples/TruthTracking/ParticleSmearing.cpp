@@ -8,15 +8,27 @@
 
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
 #include <cmath>
-#include <vector>
+#include <ostream>
+#include <random>
+#include <stdexcept>
+#include <utility>
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)
@@ -26,6 +38,14 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
   }
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output tracks parameters collection");
+  }
+  if (m_cfg.randomNumbers == nullptr) {
+    throw std::invalid_argument("Missing random numbers tool");
+  }
+
+  if (m_cfg.particleHypothesis) {
+    ACTS_INFO("Override truth particle hypothesis with "
+              << *m_cfg.particleHypothesis);
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
@@ -46,17 +66,19 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
   for (auto&& [vtxId, vtxParticles] : groupBySecondaryVertex(particles)) {
     // a group contains at least one particle by construction. assume that all
     // particles within the group originate from the same position and use it to
-    // as the refernce position for the perigee frame.
+    // as the reference position for the perigee frame.
     auto perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(
         vtxParticles.begin()->position());
 
     for (const auto& particle : vtxParticles) {
       const auto time = particle.time();
-      const auto phi = Acts::VectorHelpers::phi(particle.unitDirection());
-      const auto theta = Acts::VectorHelpers::theta(particle.unitDirection());
+      const auto phi = Acts::VectorHelpers::phi(particle.direction());
+      const auto theta = Acts::VectorHelpers::theta(particle.direction());
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
+      const auto particleHypothesis =
+          m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
       // compute momentum-dependent resolutions
       const double sigmaD0 =
@@ -85,7 +107,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundTheta] = newTheta;
       // compute smeared absolute momentum vector
       const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
-      params[Acts::eBoundQOverP] = (q != 0) ? (q / newP) : (1 / newP);
+      params[Acts::eBoundQOverP] = particleHypothesis.qOverP(newP, q);
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
@@ -96,7 +118,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                                         ctx.geoContext,
                                         Acts::Vector2{params[Acts::eBoundLoc0],
                                                       params[Acts::eBoundLoc1]},
-                                        particle.unitDirection() * p)
+                                        particle.direction() * p)
                                     .transpose()
                              << ", " << params[Acts::eBoundTime] << ", "
                              << params[Acts::eBoundPhi] << ", "
@@ -104,23 +126,32 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                              << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas
-      Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
-      cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-          m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
-      cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-          m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
-      cov(Acts::eBoundTime, Acts::eBoundTime) =
-          m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
-      cov(Acts::eBoundPhi, Acts::eBoundPhi) =
-          m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
-      cov(Acts::eBoundTheta, Acts::eBoundTheta) =
-          m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
-          sigmaTheta;
-      cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-          m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
-          sigmaQOverP;
+      Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
+      if (m_cfg.initialSigmas) {
+        // use the initial sigmas if set
+        for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+          cov(i, i) = m_cfg.initialVarInflation[i] * (*m_cfg.initialSigmas)[i] *
+                      (*m_cfg.initialSigmas)[i];
+        }
+      } else {
+        // otherwise use the smearing sigmas
+        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
+            m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
+        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
+            m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
+        cov(Acts::eBoundTime, Acts::eBoundTime) =
+            m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
+        cov(Acts::eBoundPhi, Acts::eBoundPhi) =
+            m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
+        cov(Acts::eBoundTheta, Acts::eBoundTheta) =
+            m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
+            sigmaTheta;
+        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
+            m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
+            sigmaQOverP;
+      }
 
-      parameters.emplace_back(perigee, params, q, cov);
+      parameters.emplace_back(perigee, params, cov, particleHypothesis);
     }
   }
 

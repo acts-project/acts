@@ -16,12 +16,14 @@
 #include <vector>
 
 namespace Acts {
+class VolumeBounds;
+
 namespace Experimental {
 
 class DetectorVolume;
 class Portal;
 
-/// The Portal genertor definition
+/// The Portal generator definition
 using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
     const Transform3&, const VolumeBounds&,
     const std::shared_ptr<DetectorVolume>&)>;
@@ -45,7 +47,7 @@ PortalGenerator defaultPortalGenerator();
 /// @brief Calls the portal generation and adds registration to sub portals
 ///
 /// This code is split off the PortalGenerator code in order to allow
-/// unit testing of the portal generation wihtout detector volume construction
+/// unit testing of the portal generation without detector volume construction
 ///
 /// @param dTransform a contextually resolved transform
 /// @param dBounds the detecor volume bounds

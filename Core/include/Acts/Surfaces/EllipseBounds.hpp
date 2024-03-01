@@ -9,19 +9,25 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
 
 /// @class EllipseBounds
+///
+/// @image html EllipseBounds.png
 ///
 /// Class to describe the bounds for a planar ellispoid
 /// surface.
@@ -89,7 +95,7 @@ class EllipseBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line, here it refers to the full 2PI Ellipse
   ///
-  /// @note the number of segements to may be altered by also providing
+  /// @note the number of segments to may be altered by also providing
   /// the extremas in all direction
   ///
   /// @return vector for vertices in 2D
@@ -121,15 +127,15 @@ inline std::vector<double> EllipseBounds::values() const {
 }
 
 inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eInnerRx) >= get(eOuterRx) or get(eInnerRx) < 0. or
+  if (get(eInnerRx) >= get(eOuterRx) || get(eInnerRx) < 0. ||
       get(eOuterRx) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along x axis");
   }
-  if (get(eInnerRy) >= get(eOuterRy) or get(eInnerRy) < 0. or
+  if (get(eInnerRy) >= get(eOuterRy) || get(eInnerRy) < 0. ||
       get(eOuterRy) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along y axis.");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

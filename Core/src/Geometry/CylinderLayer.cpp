@@ -15,9 +15,13 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
+#include <cstddef>
 #include <vector>
+
+namespace Acts {
+class CylinderBounds;
+}  // namespace Acts
 
 using Acts::VectorHelpers::phi;
 
@@ -68,7 +72,7 @@ void Acts::CylinderLayer::buildApproachDescriptor() {
 
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Surface>> aSurfaces;
-    if (bSurfaces.size() > size_t(tubeInnerCover)) {
+    if (bSurfaces.size() > std::size_t(tubeInnerCover)) {
       aSurfaces.push_back(
           bSurfaces.at(tubeInnerCover)->surfaceRepresentation().getSharedPtr());
     }

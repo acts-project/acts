@@ -6,22 +6,43 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+class SourceLink;
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace {
 
@@ -40,8 +61,7 @@ struct SimpleReverseFilteringLogic {
   double momentumThreshold = 0;
 
   bool doBackwardFiltering(
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
-          trackState) const {
+      Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
   }
@@ -61,8 +81,13 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
-      : fitter(std::move(f)), directFitter(std::move(df)) {}
+  IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
+
+  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
+                           const Acts::TrackingGeometry& trkGeo)
+      : fitter(std::move(f)),
+        directFitter(std::move(df)),
+        slSurfaceAccessor{trkGeo} {}
 
   template <typename calibrator_t>
   auto makeKfOptions(const GeneralFitterOptions& options,
@@ -82,11 +107,16 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
         options.geoContext, options.magFieldContext, options.calibrationContext,
         extensions, options.propOptions, &(*options.referenceSurface));
 
+    kfOptions.referenceSurfaceStrategy =
+        Acts::KalmanFitterTargetSurfaceStrategy::first;
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
+    kfOptions.extensions.surfaceAccessor
+        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+            &slSurfaceAccessor);
 
     return kfOptions;
   }
@@ -94,7 +124,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
                                const TrackParameters& initialParameters,
                                const GeneralFitterOptions& options,
-                               const MeasurementCalibrator& calibrator,
+                               const MeasurementCalibratorAdapter& calibrator,
                                TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options, calibrator);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
@@ -129,6 +159,7 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -148,7 +179,7 @@ ActsExamples::makeKalmanFitterFunction(
 
   // build the fitter function. owns the fitter object.
   auto fitterFunction = std::make_shared<KalmanFitterFunctionImpl>(
-      std::move(trackFitter), std::move(directTrackFitter));
+      std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringLogic.momentumThreshold =

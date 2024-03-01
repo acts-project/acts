@@ -8,7 +8,9 @@
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -24,21 +26,27 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <iosfwd>
+#include <ostream>
 #include <stdexcept>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <vector>
+
+namespace Acts {
+struct EndOfWorldReached;
+}  // namespace Acts
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,
@@ -90,7 +98,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   // Check if the volume has a proxy
   if (volumeMaterial != nullptr) {
     auto geoID = volume.geometryId();
-    size_t volumeID = geoID.volume();
+    std::size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
 
@@ -278,7 +286,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   if (remainder > 0) {
-    // We need to had an additional extra hit with the remainder length. Adjust
+    // We need to have an additional extra hit with the remainder length. Adjust
     // the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     Vector3 extraPosition = position + volumeStep * direction;
@@ -358,9 +366,10 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
-                                          mTrack.first.second,
-                                          1 / mTrack.first.second.norm());
+  NeutralCurvilinearTrackParameters start(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
@@ -421,7 +430,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
       // Check if the material point is past the entry point to the current
-      // volume (this prevent switching volume before the first volume has been
+      // volume (this prevents switching volume before the first volume has been
       // reached)
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
@@ -435,13 +444,13 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         volIter->volume->inside(rmIter->position, s_epsilon)) {
       currentID = volIter->volume->geometryId();
       direction = rmIter->direction;
-      if (not(currentID == lastID)) {
+      if (!(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
         lastPositionEnd = volIter->position;
         currentBinning = mState.materialBin.find(currentID);
       }
-      // If the curent volume has a ProtoVolumeMaterial
+      // If the current volume has a ProtoVolumeMaterial
       // and the material hit has a non 0 thickness
       if (currentBinning != mState.materialBin.end() &&
           rmIter->materialSlab.thickness() > 0) {

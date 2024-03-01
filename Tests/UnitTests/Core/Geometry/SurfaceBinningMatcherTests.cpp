@@ -14,6 +14,12 @@
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <cmath>
+#include <memory>
+#include <vector>
 
 #include <boost/format.hpp>
 

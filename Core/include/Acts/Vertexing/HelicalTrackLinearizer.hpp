@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,72 +16,44 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
+
+#include <memory>
 
 namespace Acts {
 
 /// @class HelicalTrackLinearizer
-/// Linearizes the measurement equation (dependance of track
-/// parameters on the vertex position and track momentum at vertex)
-/// at the vicinity of the user-provided linearization point.
+/// Linearizes the track parameters at the PCA to a user-provided
+/// point (linPoint). The track parameters are written as a function
+/// of the global PCA position and the momentum of the particle at
+/// the PCA. The linearization then reads (see Eq. 5.7 in Ref. (1)):
 ///
-/// The measurement equation is linearized in the following way:
+/// q = A (r - r_0) + B (p - p_0) + c,
 ///
-/// q_k= A_k (x_k - x_0k) + B_k (p_k - p_0k) + c_k
-///
-/// where q_k are the parameters at perigee nearest to the lin point,
-/// x_k is the position of the vertex, p_k the track momentum at the vertex,
-/// and c_k is the constant term of expansion. A_k and B_k are matrices
-/// of derivatives, denoted hereafter as "positionJacobian" and
+/// where q are the Perigee parameters wrt linPoint, {r_0} r is the {initial}
+/// 4D PCA position, {p_0} p is the {initial} momentum (phi, theta, q/p) at the
+/// PCA, and c is the constant term of the expansion. A and B are matrices of
+/// derivatives, denoted hereafter as "positionJacobian" and
 /// "momentumJacobian" respectively.
 ///
-/// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
+/// This class computes A and B using the analytic formulae of Ref. (1).
 ///
-/// @tparam propagator_t Propagator type
-/// @tparam propagator_options_t Propagator options type
-template <typename propagator_t,
-          typename propagator_options_t = PropagatorOptions<>>
+/// Ref. (1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 class HelicalTrackLinearizer {
  public:
-  using Propagator_t = propagator_t;
-
-  /// State struct
-  struct State {
-    /// @brief The state constructor
-    ///
-    /// @param fieldCacheIn The magnetic field cache
-    State(MagneticFieldProvider::Cache fieldCacheIn)
-        : fieldCache(std::move(fieldCacheIn)) {}
-    /// Magnetic field cache
-    MagneticFieldProvider::Cache fieldCache;
-  };
-
   /// @brief Configuration struct
   struct Config {
-    /// @ Config constructor if magnetic field is present
-    ///
-    /// @param bIn The magnetic field
-    /// @param prop The propagator
-    Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-           std::shared_ptr<const Propagator_t> prop)
-        : bField(std::move(bIn)), propagator(std::move(prop)) {}
-
-    /// @brief Config constructor without B field -> uses NullBField
-    ///
-    /// @param prop The propagator
-    Config(std::shared_ptr<const Propagator_t> prop)
-        : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
-
     // The magnetic field
-    std::shared_ptr<const MagneticFieldProvider> bField;
-    // The propagator
-    std::shared_ptr<const Propagator_t> propagator;
+    std::shared_ptr<const MagneticFieldProvider> bField =
+        std::make_shared<NullBField>();
 
-    // Minimum q/p value
-    double minQoP = 1e-15;
-    // Maximum curvature value
-    double maxRho = 1e+15;
+    std::shared_ptr<const BasePropagator> propagator;
+
+    /// Tolerance determining how close we need to get to the Perigee surface to
+    /// reach it during propagation
+    ActsScalar targetTolerance = 1e-12;
   };
 
   /// @brief Constructor
@@ -91,23 +63,30 @@ class HelicalTrackLinearizer {
   HelicalTrackLinearizer(const Config& config,
                          std::unique_ptr<const Logger> _logger =
                              getDefaultLogger("HelTrkLinProp", Logging::INFO))
-      : m_cfg(config), m_logger{std::move(_logger)} {}
+      : m_cfg(config), m_logger{std::move(_logger)} {
+    if (!m_cfg.propagator) {
+      throw std::invalid_argument("HelicalTrackLinearizer: propagator is null");
+    }
+  }
 
   /// @brief Function that linearizes BoundTrackParameters at
-  /// given linearization point
+  /// the PCA to a given Perigee surface
   ///
   /// @param params Parameters to linearize
-  /// @param linPoint Linearization point
-  /// @param gctx The geometry context
-  /// @param mctx The magnetic field context
-  /// @param state The state object
+  /// @param linPointTime Time associated to the linearization point
+  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
+  /// parallel to the global x-y plane
+  /// @param perigeeSurface Perigee surface belonging to @p linPoint
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
+  /// @param fieldCache Magnetic field cache
   ///
   /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
-                                         const Vector4& linPoint,
-                                         const Acts::GeometryContext& gctx,
-                                         const Acts::MagneticFieldContext& mctx,
-                                         State& state) const;
+  Result<LinearizedTrack> linearizeTrack(
+      const BoundTrackParameters& params, double linPointTime,
+      const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+      const Acts::MagneticFieldContext& mctx,
+      MagneticFieldProvider::Cache& fieldCache) const;
 
  private:
   /// Configuration object
@@ -119,5 +98,3 @@ class HelicalTrackLinearizer {
 };
 
 }  // namespace Acts
-
-#include "HelicalTrackLinearizer.ipp"

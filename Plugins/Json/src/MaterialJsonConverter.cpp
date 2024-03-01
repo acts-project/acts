@@ -8,10 +8,12 @@
 
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
@@ -19,6 +21,18 @@
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Grid.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <iosfwd>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
   if (!t) {
@@ -81,10 +95,10 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     // by default the protoMaterial is not used for mapping
     jMaterial[Acts::jsonKey().mapkey] = false;
     // write the bin utility
-    bUtility = &(psMaterial->binUtility());
+    bUtility = &(psMaterial->binning());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
-    for (size_t ibin = 0; ibin < binningData.size(); ++ibin) {
+    for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
       if (binningData[ibin].bins() > 1) {
         jMaterial[Acts::jsonKey().mapkey] = true;
         break;
@@ -165,13 +179,13 @@ void Acts::from_json(const nlohmann::json& j,
   Acts::MaterialSlabMatrix mpMatrix;
   Acts::MappingType mapType = Acts::MappingType::Default;
   for (auto& [key, value] : jMaterial.items()) {
-    if (key == Acts::jsonKey().binkey and not value.empty()) {
+    if (key == Acts::jsonKey().binkey && !value.empty()) {
       from_json(value, bUtility);
     }
-    if (key == Acts::jsonKey().datakey and not value.empty()) {
+    if (key == Acts::jsonKey().datakey && !value.empty()) {
       from_json(value, mpMatrix);
     }
-    if (key == Acts::jsonKey().maptype and not value.empty()) {
+    if (key == Acts::jsonKey().maptype && !value.empty()) {
       from_json(value, mapType);
     }
   }
@@ -199,7 +213,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     bUtility = &(pvMaterial->binUtility());
     // Check in the number of bin is different from 1
     auto& binningData = bUtility->binningData();
-    for (size_t ibin = 0; ibin < binningData.size(); ++ibin) {
+    for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
       if (binningData[ibin].bins() > 1) {
         jMaterial[Acts::jsonKey().mapkey] = true;
         break;
@@ -238,7 +252,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     // convert the data
     nlohmann::json mmat = nlohmann::json::array();
     Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
-    for (size_t bin = 0; bin < grid.size(); bin++) {
+    for (std::size_t bin = 0; bin < grid.size(); bin++) {
       nlohmann::json jmat(Material(grid.at(bin)));
       mmat.push_back(jmat);
     }
@@ -261,7 +275,7 @@ void Acts::to_json(nlohmann::json& j, const volumeMaterialPointer& material) {
     // convert the data
     nlohmann::json mmat = nlohmann::json::array();
     Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
-    for (size_t bin = 0; bin < grid.size(); bin++) {
+    for (std::size_t bin = 0; bin < grid.size(); bin++) {
       nlohmann::json jmat(Material(grid.at(bin)));
       mmat.push_back(jmat);
     }
@@ -288,10 +302,10 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
   Acts::BinUtility bUtility;
   std::vector<Acts::Material> mmat;
   for (auto& [key, value] : jMaterial.items()) {
-    if (key == Acts::jsonKey().binkey and not value.empty()) {
+    if (key == Acts::jsonKey().binkey && !value.empty()) {
       from_json(value, bUtility);
     }
-    if (key == Acts::jsonKey().datakey and not value.empty()) {
+    if (key == Acts::jsonKey().datakey && !value.empty()) {
       for (const auto& bin : value) {
         Acts::Material mat(bin.get<Acts::Material>());
         mmat.push_back(mat);
@@ -321,7 +335,7 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     // Build the grid and fill it with data
     Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
-    for (size_t bin = 0; bin < mmat.size(); bin++) {
+    for (std::size_t bin = 0; bin < mmat.size(); bin++) {
       mGrid.at(bin) = mmat[bin].parameters();
     }
     Acts::MaterialMapper<Acts::MaterialGrid2D> matMap(transfoGlobalToLocal,
@@ -346,7 +360,7 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
     // Build the grid and fill it with data
     Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
-    for (size_t bin = 0; bin < mmat.size(); bin++) {
+    for (std::size_t bin = 0; bin < mmat.size(); bin++) {
       mGrid.at(bin) = mmat[bin].parameters();
     }
     Acts::MaterialMapper<Acts::MaterialGrid3D> matMap(transfoGlobalToLocal,

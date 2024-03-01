@@ -12,8 +12,11 @@
 #include "G4LogicalVolume.hh"
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
+#include "G4RunManager.hh"
 #include "G4ThreeVector.hh"
 #include "QGSP_BERT.hh"
+
+class G4VUserPhysicsList;
 
 G4RunManager* ActsFatras::ensureGeant4RunManager() {
   // Test if there's already a G4RunManager

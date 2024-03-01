@@ -9,12 +9,17 @@
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -26,7 +31,7 @@ ActsExamples::CsvSimHitWriter::CsvSimHitWriter(
     : WriterT(config.inputSimHits, "CsvSimHitWriter", level), m_cfg(config) {
   // inputSimHits is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
-    throw std::invalid_argument("Missing ouput filename stem");
+    throw std::invalid_argument("Missing output filename stem");
   }
 }
 
@@ -53,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     simhit.tx = globalPos4[Acts::ePos0] / Acts::UnitConstants::mm;
     simhit.ty = globalPos4[Acts::ePos1] / Acts::UnitConstants::mm;
     simhit.tz = globalPos4[Acts::ePos2] / Acts::UnitConstants::mm;
-    simhit.tt = globalPos4[Acts::eTime] / Acts::UnitConstants::ns;
+    simhit.tt = globalPos4[Acts::eTime] / Acts::UnitConstants::mm;
     // particle four-momentum before interaction
     simhit.tpx = momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV;
     simhit.tpy = momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV;

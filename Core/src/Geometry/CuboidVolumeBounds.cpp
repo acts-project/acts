@@ -8,12 +8,14 @@
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
-#include <iostream>
+#include <type_traits>
+#include <utility>
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
                                              double halez)
@@ -100,4 +102,15 @@ void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthZ));
   m_zxBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthZ),
                                                        get(eHalfLengthX));
+}
+
+double Acts::CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
+  if (bValue <= binZ) {
+    return m_values[bValue];
+  }
+  if (bValue == binR) {
+    return std::sqrt(m_values[binX] * m_values[binX] +
+                     m_values[binY] * m_values[binY]);
+  }
+  return 0.0;
 }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <system_error>
+#include <type_traits>
 
 namespace Acts {
 
@@ -20,6 +21,7 @@ enum class VertexingError {
   NotConverged,
   ElementNotFound,
   NoCovariance,
+  InvalidInput,
 };
 
 std::error_code make_error_code(Acts::VertexingError e);

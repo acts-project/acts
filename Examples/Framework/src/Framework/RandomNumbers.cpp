@@ -16,6 +16,8 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+
 ActsExamples::RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
 
 ActsExamples::RandomEngine ActsExamples::RandomNumbers::spawnGenerator(

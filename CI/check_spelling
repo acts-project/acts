@@ -1,0 +1,19 @@
+#!/bin/bash
+
+codespell -S "*.ipynb,*.onnx,_build,*.svg" -I ./CI/codespell_ignore.txt ./Core ./Examples ./Tests ./Plugins ./docs
+
+RETVAL=$?
+
+if [[ $RETVAL -ne 0 ]]; then
+    echo ""
+    echo "codespell detected incorrect spelling. You have two options how to deal with this:"
+    echo ""
+    echo "1) Apply one suggestion of codespell"
+    echo "2) If this is a false-positive, add the word to './CI/codespell_ignore.txt'"
+    echo "   (Note that you need to add the word in lower case)"
+    echo ""
+    echo "You can apply suggestions interactively with"
+    echo "\`codespell -wi3 -I ./CI/codespell_ignore.txt <directory>\`"
+fi
+
+exit $RETVAL

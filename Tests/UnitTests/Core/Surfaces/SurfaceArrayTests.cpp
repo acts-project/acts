@@ -12,26 +12,33 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <boost/format.hpp>
 
-using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
-
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
 
@@ -47,12 +54,12 @@ struct SurfaceArrayFixture {
   SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
   ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10) {
     SrfVec res;
 
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
       Transform3 trans;
@@ -101,11 +108,11 @@ struct SurfaceArrayFixture {
   }
 
   SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      std::size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
       const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       Transform3 trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
@@ -146,7 +153,7 @@ struct SurfaceArrayFixture {
 
     os << std::fixed << std::setprecision(4);
 
-    size_t nVtx = 0;
+    std::size_t nVtx = 0;
     for (const auto& srfx : surfaces) {
       std::shared_ptr<const PlaneSurface> srf =
           std::dynamic_pointer_cast<const PlaneSurface>(srfx);
@@ -161,7 +168,7 @@ struct SurfaceArrayFixture {
 
       // connect them
       os << "f";
-      for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+      for (std::size_t i = 1; i <= bounds->vertices().size(); ++i) {
         os << " " << nVtx + i;
       }
       os << "\n";
@@ -248,6 +255,25 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
+  double w = 3, h = 4;
+  auto bounds = std::make_shared<const RectangleBounds>(w, h);
+  auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+  auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+
+  std::vector<const Surface*> sfPointers = {srf0.get(), srf1.get()};
+  std::vector<std::shared_ptr<const Surface>> surfaces = {srf0, srf1};
+
+  auto singleLookUp =
+      std::make_unique<Acts::SurfaceArray::SingleElementLookup>(sfPointers);
+
+  SurfaceArray sa(std::move(singleLookUp), surfaces);
+
+  auto binContent = sa.at(Vector3(42, 42, 42));
+  BOOST_CHECK_EQUAL(binContent.size(), 2u);
+  BOOST_CHECK_EQUAL(sa.surfaces().size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

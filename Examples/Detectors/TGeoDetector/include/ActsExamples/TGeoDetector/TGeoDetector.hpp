@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <cstddef>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -72,17 +75,19 @@ struct TGeoDetector {
     double beamPipeRadius{0};
     double beamPipeHalflengthZ{0};
     double beamPipeLayerThickness{0};
+    double beamPipeEnvelopeR{1.0};
+    double layerEnvelopeR{1.0};
 
     double unitScalor = 1.0;
 
     Acts::TGeoLayerBuilder::ElementFactory elementFactory =
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
-    /// Optional geometry identfier hook to be used during closure
+    /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
 
-    enum SubVolume : size_t { Negative = 0, Central, Positive };
+    enum SubVolume : std::size_t { Negative = 0, Central, Positive };
 
     template <typename T>
     struct LayerTriplet {

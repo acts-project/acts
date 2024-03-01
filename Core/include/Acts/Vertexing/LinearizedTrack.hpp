@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 namespace Acts {
 
 /// @class LinearizedTrack
@@ -44,8 +46,9 @@ struct LinearizedTrack {
   /// @param momentum Momentum at point of closest approach
   /// @param constTerm Constant term in taylor expansion
   LinearizedTrack(const BoundVector& paramsAtPCA,
-                  const BoundSymMatrix& parCovarianceAtPCA,
-                  const BoundSymMatrix& parWeightAtPCA, const Vector4& linPoint,
+                  const BoundSquareMatrix& parCovarianceAtPCA,
+                  const BoundSquareMatrix& parWeightAtPCA,
+                  const Vector4& linPoint,
                   const ActsMatrix<eBoundSize, 4>& posJacobian,
                   const ActsMatrix<eBoundSize, 3>& momJacobian,
                   const Vector4& position, const Vector3& momentum,
@@ -61,8 +64,8 @@ struct LinearizedTrack {
         constantTerm(constTerm) {}
 
   BoundVector parametersAtPCA{BoundVector::Zero()};
-  BoundSymMatrix covarianceAtPCA{BoundSymMatrix::Zero()};
-  BoundSymMatrix weightAtPCA{BoundSymMatrix::Zero()};
+  BoundSquareMatrix covarianceAtPCA{BoundSquareMatrix::Zero()};
+  BoundSquareMatrix weightAtPCA{BoundSquareMatrix::Zero()};
   Vector4 linearizationPoint{Vector4::Zero()};
   ActsMatrix<eBoundSize, 4> positionJacobian{ActsMatrix<eBoundSize, 4>::Zero()};
   ActsMatrix<eBoundSize, 3> momentumJacobian{ActsMatrix<eBoundSize, 3>::Zero()};

@@ -15,8 +15,7 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addVertexFitting,
@@ -62,7 +61,11 @@ addFatras(
     field,
     rnd=rnd,
     preSelectParticles=ParticleSelectorConfig(
-        eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True
+        rho=(0.0 * u.mm, 28.0 * u.mm),
+        absZ=(0.0 * u.mm, 1.0 * u.m),
+        eta=(-4.0, 4.0),
+        pt=(150 * u.MeV, None),
+        removeNeutral=True,
     )
     if ttbar_pu200
     else ParticleSelectorConfig(),
@@ -89,6 +92,15 @@ addSeeding(
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
+    initialSigmas=[
+        1 * u.mm,
+        1 * u.mm,
+        1 * u.degree,
+        1 * u.degree,
+        0.1 / u.GeV,
+        1 * u.ns,
+    ],
+    initialVarInflation=[1.0] * 6,
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
@@ -97,15 +109,23 @@ addCKFTracks(
     s,
     trackingGeometry,
     field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
+    trackSelectorConfig=(
+        # fmt: off
+        TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxSharedHits=2),
+        # fmt: on
+    ),
     outputDirRoot=outputDir,
 )
 
 addAmbiguityResolution(
     s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    AmbiguityResolutionConfig(
+        maximumSharedHits=3,
+        maximumIterations=10000,
+        nMeasurementsMin=6,
+    ),
     outputDirRoot=outputDir,
 )
 

@@ -6,11 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -36,7 +42,11 @@ void addPythia8(Context& ctx) {
       .def_readwrite("pdgBeam0", &Gen::Config::pdgBeam0)
       .def_readwrite("pdgBeam1", &Gen::Config::pdgBeam1)
       .def_readwrite("cmsEnergy", &Gen::Config::cmsEnergy)
-      .def_readwrite("settings", &Gen::Config::settings);
+      .def_readwrite("settings", &Gen::Config::settings)
+      .def_readwrite("printShortEventListing",
+                     &Gen::Config::printShortEventListing)
+      .def_readwrite("printLongEventListing",
+                     &Gen::Config::printLongEventListing);
 
   patchClassesWithConfig(p8);
 }

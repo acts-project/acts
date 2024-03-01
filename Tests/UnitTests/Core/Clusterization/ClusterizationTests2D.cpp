@@ -11,8 +11,15 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cstdlib>
+#include <iostream>
+#include <iterator>
+#include <memory>
 #include <random>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <boost/functional/hash.hpp>
@@ -45,7 +52,7 @@ std::vector<Rectangle> segment(int x0, int y0, int x1, int y1, RNG& rng) {
   int ymax = y1 - 3;
 
   // terminal case 1
-  if (xmax < xmin or ymax < ymin) {
+  if (xmax < xmin || ymax < ymin) {
     return {{x0, y0, x1, y1}};
   }
 
@@ -54,18 +61,18 @@ std::vector<Rectangle> segment(int x0, int y0, int x1, int y1, RNG& rng) {
   bool splity = cointoss(rng);
 
   // terminal case 2
-  if (not(splitx or splity)) {
+  if (!(splitx || splity)) {
     return {{x0, y0, x1, y1}};
   }
 
-  int x_ = std::uniform_int_distribution(xmin, xmax)(rng);
-  int y_ = std::uniform_int_distribution(ymin, ymax)(rng);
+  int x_ = std::uniform_int_distribution<std::int32_t>(xmin, xmax)(rng);
+  int y_ = std::uniform_int_distribution<std::int32_t>(ymin, ymax)(rng);
 
-  if (splitx and not splity) {
+  if (splitx && !splity) {
     return concat({segment(x0, y0, x_, y1, rng), segment(x_, y0, x1, y1, rng)});
-  } else if (not splitx and splity) {
+  } else if (!splitx && splity) {
     return concat({segment(x0, y0, x1, y_, rng), segment(x0, y_, x1, y1, rng)});
-  } else if (splitx and splity) {
+  } else if (splitx && splity) {
     return concat({segment(x0, y0, x_, y_, rng), segment(x_, y0, x1, y_, rng),
                    segment(x0, y_, x_, y1, rng), segment(x_, y_, x1, y1, rng)});
   }
@@ -91,7 +98,7 @@ Ccl::Label& getCellLabel(Cell2D& cell) {
 }
 
 bool operator==(const Cell2D& left, const Cell2D& right) {
-  return left.row == right.row and left.col == right.col;
+  return left.row == right.row && left.col == right.col;
 }
 
 bool cellComp(const Cell2D& left, const Cell2D& right) {
@@ -100,7 +107,7 @@ bool cellComp(const Cell2D& left, const Cell2D& right) {
 
 struct Cluster2D {
   std::vector<Cell2D> cells;
-  size_t hash{0};
+  std::size_t hash{0};
 };
 
 void clusterAddCell(Cluster2D& cl, const Cell2D& cell) {
@@ -127,7 +134,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
 
   auto maybe_add = [&](int x_, int y_) {
     Cell2D c(x_, y_);
-    if (std::uniform_real_distribution<double>()(rng) < startp and
+    if (std::uniform_real_distribution<double>()(rng) < startp &&
         std::find(cells.begin(), cells.end(), c) == cells.end()) {
       cells.push_back(c);
       add.push_back(c);
@@ -139,7 +146,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
     maybe_add(x, y + 1);
   }
   // NORTHEAST
-  if (x < x1 and y < y1) {
+  if (x < x1 && y < y1) {
     maybe_add(x + 1, y + 1);
   }
   // EAST
@@ -147,7 +154,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
     maybe_add(x + 1, y);
   }
   // SOUTHEAST
-  if (x < x1 and y > y0) {
+  if (x < x1 && y > y0) {
     maybe_add(x + 1, y - 1);
   }
   // SOUTH
@@ -155,7 +162,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
     maybe_add(x, y - 1);
   }
   // SOUTHWEST
-  if (x > x0 and y > y0) {
+  if (x > x0 && y > y0) {
     maybe_add(x - 1, y - 1);
   }
   // WEST
@@ -163,7 +170,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
     maybe_add(x - 1, y);
   }
   // NORTHWEST
-  if (x > x0 and y < y1) {
+  if (x > x0 && y < y1) {
     maybe_add(x - 1, y + 1);
   }
 
@@ -181,8 +188,8 @@ Cluster2D gencluster(int x0, int y0, int x1, int y1, RNG& rng,
   int y0_ = y0 + 1;
   int y1_ = y1 - 1;
 
-  int x = std::uniform_int_distribution(x0_, x1_)(rng);
-  int y = std::uniform_int_distribution(y0_, y1_)(rng);
+  int x = std::uniform_int_distribution<std::int32_t>(x0_, x1_)(rng);
+  int y = std::uniform_int_distribution<std::int32_t>(y0_, y1_)(rng);
 
   std::vector<Cell2D> cells = {Cell2D(x, y)};
   genclusterw(x, y, x0_, y0_, x1_, y1_, cells, rng, startp, decayp);
@@ -199,10 +206,10 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   using Cluster = Cluster2D;
   using ClusterC = std::vector<Cluster>;
 
-  size_t sizeX = 1000;
-  size_t sizeY = 1000;
-  size_t startSeed = 71902647;
-  size_t ntries = 100;
+  std::size_t sizeX = 1000;
+  std::size_t sizeY = 1000;
+  std::size_t startSeed = 71902647;
+  std::size_t ntries = 100;
 
   std::cout << "Grid_2D_rand test with parameters: " << std::endl;
   std::cout << " sizeX = " << sizeX << std::endl;
@@ -235,7 +242,7 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
     std::sort(newCls.begin(), newCls.end(), clHashComp);
 
     BOOST_CHECK_EQUAL(cls.size(), newCls.size());
-    for (size_t i = 0; i < cls.size(); i++) {
+    for (std::size_t i = 0; i < cls.size(); i++) {
       BOOST_CHECK_EQUAL(cls.at(i).hash, newCls.at(i).hash);
     }
   }

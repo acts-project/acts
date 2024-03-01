@@ -11,9 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 namespace Acts {
 
@@ -31,8 +30,6 @@ struct Options {
   Style style;
   /// Indicate if you want to draw this as a template surface
   bool templateSurface = false;
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Convert into a svg::proto surface
@@ -90,7 +87,7 @@ static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
 ///
-/// @note it captures the the radii[0u] element for plotting
+/// @note it captures the radii[0u] element for plotting
 ///
 /// @return an svg object that can be written out directly to disc
 static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,

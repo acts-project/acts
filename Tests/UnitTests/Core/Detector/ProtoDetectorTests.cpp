@@ -9,18 +9,26 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <cmath>
-#include <sstream>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace {
 
 /// @brief This method creates a world volume with
 /// some sub structure, this detector is not yet
-/// syncrhonized, it can then be typed into the
+/// synchronized, it can then be typed into the
 /// Detector or the TrackGeometry description
 ///
 /// @return a proto world volume
@@ -109,18 +117,18 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   CHECK_CLOSE_ABS(detectorVolume.extent.max(Acts::binR), 200.,
                   std::numeric_limits<ActsScalar>::epsilon());
 
-  // The detector cotainer should have binning in R
+  // The detector container should have binning in R
   BOOST_CHECK(detectorVolume.container.has_value());
-  BOOST_CHECK(not detectorVolume.internal.has_value());
+  BOOST_CHECK(!detectorVolume.internal.has_value());
 
   auto& cts = detectorVolume.container.value();
 
-  BOOST_CHECK(cts.constituentBinning.size() == 1u);
-  BOOST_CHECK(cts.constituentBinning[0].type == Acts::arbitrary);
-  BOOST_CHECK(cts.constituentBinning[0].binvalue == Acts::binR);
+  BOOST_CHECK_EQUAL(cts.constituentBinning.size(), 1u);
+  BOOST_CHECK_EQUAL(cts.constituentBinning[0].type, Acts::arbitrary);
+  BOOST_CHECK_EQUAL(cts.constituentBinning[0].binvalue, Acts::binR);
 
   const auto& binBoundaries = cts.constituentBinning[0].boundaries();
-  BOOST_CHECK(binBoundaries.size() == 3u);
+  BOOST_CHECK_EQUAL(binBoundaries.size(), 3u);
   CHECK_CLOSE_ABS(binBoundaries[0u], 0.,
                   std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(binBoundaries[1u], 35.,
@@ -129,10 +137,10 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
                   std::numeric_limits<ActsScalar>::epsilon());
 
   // The first volume is the beam pipe, it should have gotten the
-  // the z dimension
+  // z dimension
   auto& beamPipe = cts.constituentVolumes[0u];
 
-  BOOST_CHECK(beamPipe.name == "beam-pipe");
+  BOOST_CHECK_EQUAL(beamPipe.name, "beam-pipe");
   CHECK_CLOSE_ABS(beamPipe.extent.min(Acts::binZ), -2000.,
                   std::numeric_limits<ActsScalar>::epsilon());
 
@@ -145,9 +153,9 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   // The second volume is the pixel detector
   auto& pixelContainer = cts.constituentVolumes[1u];
-  BOOST_CHECK(pixelContainer.name == "pixel-container");
+  BOOST_CHECK_EQUAL(pixelContainer.name, "pixel-container");
 
-  // Pixel contaienr should have fitting boundaries
+  // Pixel container should have fitting boundaries
   CHECK_CLOSE_ABS(pixelContainer.extent.min(Acts::binR), 35.,
                   std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(pixelContainer.extent.max(Acts::binR), 200.,
@@ -172,12 +180,12 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   }
 
   // The binning should have been estimated
-  BOOST_CHECK(cts1.constituentBinning.size() == 1u);
-  BOOST_CHECK(cts1.constituentBinning[0].type == Acts::arbitrary);
-  BOOST_CHECK(cts1.constituentBinning[0].binvalue == Acts::binZ);
+  BOOST_CHECK_EQUAL(cts1.constituentBinning.size(), 1u);
+  BOOST_CHECK_EQUAL(cts1.constituentBinning[0].type, Acts::arbitrary);
+  BOOST_CHECK_EQUAL(cts1.constituentBinning[0].binvalue, Acts::binZ);
 
   const auto& binBoundariesZ = cts1.constituentBinning[0].boundaries();
-  BOOST_CHECK(binBoundariesZ.size() == 4u);
+  BOOST_CHECK_EQUAL(binBoundariesZ.size(), 4u);
   CHECK_CLOSE_ABS(binBoundariesZ[0u], -2000.,
                   std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(binBoundariesZ[1u], -575,
@@ -189,7 +197,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   // The second volume is the pixel barrel
   auto& pixelBarrel = cts1.constituentVolumes[1u];
-  BOOST_CHECK(pixelBarrel.name == "pixel-barrel");
+  BOOST_CHECK_EQUAL(pixelBarrel.name, "pixel-barrel");
 
   // It is a container volume value
   BOOST_CHECK(pixelBarrel.container.has_value());

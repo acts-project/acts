@@ -8,23 +8,32 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <exception>
+#include <cstddef>
 #include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 /// Unpack to shared - simply to test the getSharedPtr mechanism
 ///
@@ -76,14 +85,14 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
       portalGenerator, tContext, "FullCylinderVolume", nominal,
       std::move(fullCylinderBounds), tryAllPortals());
 
-  BOOST_CHECK(fullCylinderVolume ==
-              unpackToShared<DetectorVolume>(*fullCylinderVolume));
-  BOOST_CHECK(fullCylinderVolume ==
-              unpackToShared<const DetectorVolume>(*fullCylinderVolume));
+  BOOST_CHECK_EQUAL(fullCylinderVolume,
+                    unpackToShared<DetectorVolume>(*fullCylinderVolume));
+  BOOST_CHECK_EQUAL(fullCylinderVolume,
+                    unpackToShared<const DetectorVolume>(*fullCylinderVolume));
 
   BOOST_CHECK(fullCylinderVolume->surfaces().empty());
   BOOST_CHECK(fullCylinderVolume->volumes().empty());
-  BOOST_CHECK(fullCylinderVolume->portals().size() == 3u);
+  BOOST_CHECK_EQUAL(fullCylinderVolume->portals().size(), 3u);
 
   // A tube cylinder
   auto tubeCylinderBounds =
@@ -95,13 +104,13 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   BOOST_CHECK(tubeCylinderVolume->surfaces().empty());
   BOOST_CHECK(tubeCylinderVolume->volumes().empty());
-  BOOST_CHECK(tubeCylinderVolume->portals().size() == 4u);
+  BOOST_CHECK_EQUAL(tubeCylinderVolume->portals().size(), 4u);
 
   // Let's test the resizing, first inside test: OK
   BOOST_CHECK(tubeCylinderVolume->inside(tContext, Acts::Vector3(50., 0., 0.)));
   // Outside
   BOOST_CHECK(
-      not tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
+      !tubeCylinderVolume->inside(tContext, Acts::Vector3(150., 0., 0.)));
 
   // Check the extent
   auto volumeExtent = tubeCylinderVolume->extent(tContext, 1);
@@ -126,11 +135,12 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
   auto cylinderSurface =
       Acts::Surface::makeShared<Acts::CylinderSurface>(nominal, 10., 100.);
 
-  auto cylinderPortal = Acts::Experimental::Portal::makeShared(cylinderSurface);
+  auto cylinderPortal =
+      std::make_shared<Acts::Experimental::Portal>(cylinderSurface);
 
   fullCylinderVolume->updatePortal(cylinderPortal, 2u);
 
-  BOOST_CHECK(fullCylinderVolume->portals()[2u] == cylinderPortal.get());
+  BOOST_CHECK_EQUAL(fullCylinderVolume->portals()[2u], cylinderPortal.get());
 }
 
 BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
@@ -174,8 +184,142 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 
   outerBox->updateNavigationState(tContext, nState);
 
-  // We should have 12 candidates, 6 inner, 6 outer portals
-  BOOST_CHECK(nState.surfaceCandidates.size() == 12u);
+  // We should have 12 candidates, 6 inner, 6 outer portals but only 3 are
+  // reachable
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);
+
+  // Check surface visiting - const access
+  // Test the visitor pattern for surfaces
+  std::size_t nSurfaces = 0;
+  outerBox->visitSurfaces([&nSurfaces](const auto* s) {
+    if (s != nullptr) {
+      nSurfaces++;
+    }
+  });
+  // 6 portlas outer box, 6 portals inner box
+  BOOST_CHECK_EQUAL(nSurfaces, 12u);
+
+  // Check volume visiting - const access
+  std::size_t nVolumes = 0;
+  outerBox->visitVolumes([&nVolumes](const auto* v) {
+    if (v != nullptr) {
+      nVolumes++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumes, 2u);
+
+  // Check surface visiting - non-const access
+  // Test visitor pattern - non-const access
+  struct SetMaterial {
+    /// The material to set
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> surfaceMaterial =
+        std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
+
+    std::shared_ptr<Acts::HomogeneousVolumeMaterial> volumeMaterial =
+        std::make_shared<Acts::HomogeneousVolumeMaterial>(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.));
+
+    /// The visitor call: set surface material
+    void operator()(Acts::Surface* s) {
+      if (s != nullptr) {
+        s->assignSurfaceMaterial(surfaceMaterial);
+      }
+    }
+
+    /// The visitor call : set volume material
+    void operator()(DetectorVolume* v) {
+      if (v != nullptr) {
+        v->assignVolumeMaterial(volumeMaterial);
+      }
+    }
+  };
+
+  SetMaterial setMaterial;
+  outerBox->visitMutableSurfaces(setMaterial);
+  outerBox->visitMutableVolumes(setMaterial);
+
+  // Count surfaces with material
+  std::size_t nSurfacesWithMaterial = 0;
+  outerBox->visitSurfaces([&nSurfacesWithMaterial](const auto* s) {
+    if (s != nullptr && s->surfaceMaterial() != nullptr) {
+      nSurfacesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nSurfacesWithMaterial, 12u);
+
+  // Count volumes with material
+  std::size_t nVolumesWithMaterial = 0;
+  outerBox->visitVolumes([&nVolumesWithMaterial](const auto* v) {
+    if (v != nullptr && v->volumeMaterial() != nullptr) {
+      nVolumesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumesWithMaterial, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
+  auto portalGenerator = defaultPortalGenerator();
+
+  std::vector<Acts::ActsScalar> radii = {100, 102, 104, 106, 108, 110};
+  auto cylinderVoumeBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+  for (const auto& r : radii) {
+    surfaces.push_back(Acts::Surface::makeShared<Acts::CylinderSurface>(
+        Acts::Transform3::Identity(),
+        std::make_shared<Acts::CylinderBounds>(r, 190)));
+  }
+
+  // A full cylinder
+  auto cylinderVolume = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "CylinderVolume", Acts::Transform3::Identity(),
+      std::move(cylinderVoumeBounds), surfaces, {}, tryNoVolumes(),
+      tryAllPortalsAndSurfaces());
+
+  // The navigation state
+  NavigationState nState;
+  AllPortalsExtractor allPortals;
+  AllSurfacesExtractor allSurfaces;
+  IndexedSurfacesExtractor indexedSurfaces;
+
+  // First check exception behaviour
+  BOOST_CHECK_THROW(allPortals.extract(tContext, nState), std::runtime_error);
+  BOOST_CHECK_THROW(allSurfaces.extract(tContext, nState), std::runtime_error);
+  BOOST_CHECK_THROW(indexedSurfaces.extract(tContext, nState, {0u, 1u}),
+                    std::runtime_error);
+
+  // A volume needs to be set
+  nState.currentVolume = cylinderVolume.get();
+
+  // This extracts all portals as candidates
+  auto eportals = allPortals.extract(tContext, nState);
+  BOOST_CHECK_EQUAL(eportals.size(), 4u);
+
+  auto esurfaces = allSurfaces.extract(tContext, nState);
+  BOOST_CHECK_EQUAL(esurfaces.size(), 6u);
+
+  esurfaces = indexedSurfaces.extract(tContext, nState, {2u, 4u});
+  BOOST_CHECK_EQUAL(esurfaces.size(), 2u);
+  BOOST_CHECK_EQUAL(esurfaces[0u], surfaces[2u].get());
+  BOOST_CHECK_EQUAL(esurfaces[1u], surfaces[4u].get());
+
+  // Test the visitor pattern for surfaces
+  struct CountSurfaces {
+    unsigned int counter = 0;
+
+    void operator()(const Acts::Surface* s) {
+      if (s != nullptr) {
+        counter++;
+      }
+    }
+  };
+
+  CountSurfaces countSurfaces;
+  cylinderVolume->visitSurfaces(countSurfaces);
+
+  // 6 internal surfaces, 4 portals -> 10 surfaces counted
+  BOOST_CHECK_EQUAL(countSurfaces.counter, 10u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

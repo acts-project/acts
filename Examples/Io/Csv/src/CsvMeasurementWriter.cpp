@@ -8,22 +8,23 @@
 
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Intersection.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
-#include <ios>
+#include <array>
 #include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <variant>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -67,7 +68,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
       pathMeasurements, m_cfg.outputPrecision);
 
   std::optional<dfe::NamedTupleCsvWriter<CellData>> writerCells{std::nullopt};
-  if (not m_cfg.inputClusters.empty()) {
+  if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
     clusters = m_inputClusters(ctx);
@@ -83,23 +84,24 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   MeasurementData meas;
   CellData cell;
 
-  // Will be reused as hit counter
+  // Will be reused as measurement counter
   meas.measurement_id = 0;
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurements in this event.");
 
-  for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
-    const auto& measurement = measurements[hitIdx];
+  for (Index measIdx = 0u; measIdx < measurements.size(); ++measIdx) {
+    const auto& measurement = measurements[measIdx];
 
-    auto simHitIndices = makeRange(measurementSimHitsMap.equal_range(hitIdx));
+    auto simHitIndices = makeRange(measurementSimHitsMap.equal_range(measIdx));
     for (auto [_, simHitIdx] : simHitIndices) {
-      writerMeasurementSimHitMap.append({hitIdx, simHitIdx});
+      writerMeasurementSimHitMap.append({measIdx, simHitIdx});
     }
 
     std::visit(
         [&](const auto& m) {
-          Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+          Acts::GeometryIdentifier geoId =
+              m.sourceLink().template get<IndexSourceLink>().geometryId();
           // MEASUREMENT information ------------------------------------
 
           // Encoded geometry identifier. same for all hits on the module
@@ -107,11 +109,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           meas.local_key = 0;
           // Create a full set of parameters
           auto parameters = (m.expander() * m.parameters()).eval();
-          meas.local0 = parameters[Acts::eBoundLoc0];
-          meas.local1 = parameters[Acts::eBoundLoc1];
-          meas.phi = parameters[Acts::eBoundPhi];
-          meas.theta = parameters[Acts::eBoundTheta];
-          meas.time = parameters[Acts::eBoundTime] / Acts::UnitConstants::ns;
+          meas.local0 = parameters[Acts::eBoundLoc0] / Acts::UnitConstants::mm;
+          meas.local1 = parameters[Acts::eBoundLoc1] / Acts::UnitConstants::mm;
+          meas.phi = parameters[Acts::eBoundPhi] / Acts::UnitConstants::rad;
+          meas.theta = parameters[Acts::eBoundTheta] / Acts::UnitConstants::rad;
+          meas.time = parameters[Acts::eBoundTime] / Acts::UnitConstants::mm;
 
           auto covariance =
               (m.expander() * m.covariance() * m.expander().transpose()).eval();
@@ -130,14 +132,14 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           writerMeasurements.append(meas);
 
           // CLUSTER / channel information ------------------------------
-          if (not clusters.empty() && writerCells) {
-            auto cluster = clusters[hitIdx];
+          if (!clusters.empty() && writerCells) {
+            auto cluster = clusters[measIdx];
             cell.geometry_id = meas.geometry_id;
-            cell.hit_id = meas.measurement_id;
+            cell.measurement_id = meas.measurement_id;
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
               cell.channel1 = c.bin[1];
-              // TODO store digitial timestamp once added to the cell definition
+              // TODO store digital timestamp once added to the cell definition
               cell.timestamp = 0;
               cell.value = c.activation;
               writerCells->append(cell);

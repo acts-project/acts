@@ -30,10 +30,10 @@ class ObjPropagationStepsWriter
     : public WriterT<std::vector<std::vector<step_t>>> {
  public:
   struct Config {
-    std::string collection;      ///< which collection to write
-    std::string outputDir;       ///< where to place output files
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    std::string collection;           ///< which collection to write
+    std::string outputDir;            ///< where to place output files
+    double outputScalor = 1.0;        ///< scale output values
+    std::size_t outputPrecision = 6;  ///< floating point precision
   };
 
   /// Constructor with arguments
@@ -60,7 +60,7 @@ class ObjPropagationStepsWriter
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  ///!< Internal configuration represenation
+  Config m_cfg;  ///!< Internal configuration representation
 
  protected:
   /// This implementation holds the actual writing method
@@ -91,7 +91,7 @@ class ObjPropagationStepsWriter
              << m_cfg.outputScalor * step.position.z() << '\n';
         }
         // Write out the line - only if we have at least two points created
-        size_t vBreak = vCounter + steps.size() - 1;
+        std::size_t vBreak = vCounter + steps.size() - 1;
         for (; vCounter < vBreak; ++vCounter) {
           os << "l " << vCounter << " " << vCounter + 1 << '\n';
         }

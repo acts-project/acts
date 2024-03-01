@@ -15,7 +15,13 @@
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -23,6 +29,7 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 namespace Contextual {
 
@@ -78,7 +85,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
 
   std::mutex m_iovMutex;
 
-  size_t m_eventsSeen{0};
+  std::size_t m_eventsSeen{0};
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

@@ -9,36 +9,43 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
-#include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
+#include <functional>
+#include <map>
+#include <memory>
 #include <random>
+#include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -206,8 +213,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<> disX(0., 3_m);
-  std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
+  std::uniform_real_distribution<double> disX(0., 3_m);
+  std::uniform_real_distribution<double> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
@@ -231,7 +238,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
     return {pos.x(), pos.y(), pos.z()};
   };
 
-  // Walk over each properties
+  // Walk over each property
   for (const auto& rm : matRecord) {
     // Walk over each point associated with the properties
     for (const auto& point : rm.second) {
@@ -254,7 +261,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector4 pos4(0., 0., 0., 42_ns);
   Vector3 dir(1., 0., 0.);
-  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
+  CurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV, std::nullopt,
+                                  ParticleHypothesis::pion0());
 
   MagneticFieldContext mc;
   // Launch propagation and gather result

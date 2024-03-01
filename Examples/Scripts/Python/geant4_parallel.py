@@ -17,7 +17,7 @@ from functools import partial
 #   (the naming of the csv-files should be equivalent to a sequential run)
 #
 # * In principle it is not difficult to extend this for ROOT files as well. One would need to
-#   write the root-files into seperate directory per chunk, and then use ROOT's hadd to combine
+#   write the root-files into separate directory per chunk, and then use ROOT's hadd to combine
 #   the output files.
 #
 

@@ -11,18 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
 
-namespace tt = boost::test_tools;
+#include <cmath>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
 using namespace UnitLiterals;
-
-// Create a test context
-GeometryContext tgContext = GeometryContext();
 
 namespace Test {
 
@@ -82,8 +81,6 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
 }
 
 BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
-  GeometryContext tgContext = GeometryContext();
-
   ConeVolumeBounds hcone(10_mm, 0.45, 80_mm, 50_mm, 0., M_PI);
 
   auto cvbOrientedSurfaces = hcone.orientedSurfaces(Transform3::Identity());

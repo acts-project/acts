@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include "G4VUserDetectorConstruction.hh"
@@ -29,6 +30,17 @@ class TelescopeG4DetectorConstruction final
   TelescopeDetector::Config m_cfg;
 
   G4VPhysicalVolume* m_world{};
+};
+
+class TelescopeG4DetectorConstructionFactory final
+    : public DetectorConstructionFactory {
+ public:
+  TelescopeG4DetectorConstructionFactory(const TelescopeDetector::Config& cfg);
+
+  std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
+
+ private:
+  TelescopeDetector::Config m_cfg;
 };
 
 }  // namespace Telescope

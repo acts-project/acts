@@ -46,6 +46,6 @@ class TestHostCuts : public Acts::IExperimentCuts<TestSpacePoint> {
   cutPerMiddleSP(
       std::vector<typename Acts::CandidatesForMiddleSp<
           const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
-          seedCandidates) const final override;
+          seedCandidates) const final;
 
 };  // struct TestHostCuts

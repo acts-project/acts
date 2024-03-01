@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -15,12 +16,19 @@
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootMaterialTrackReader
 ///
@@ -54,7 +62,7 @@ class RootMaterialTrackReader : public IReader {
   std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
@@ -74,17 +82,17 @@ class RootMaterialTrackReader : public IReader {
   /// The config class
   Config m_cfg;
 
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;
 
   /// The number of events
-  size_t m_events = 0;
+  std::size_t m_events = 0;
 
   /// The batch size (number of track per events)
-  size_t m_batchSize = 0;
+  std::size_t m_batchSize = 0;
 
   /// The input tree name
   TChain* m_inputChain = nullptr;
@@ -122,16 +130,16 @@ class RootMaterialTrackReader : public IReader {
       new std::vector<float>;  ///< step material rho
 
   std::vector<std::uint64_t>* m_sur_id =
-      new std::vector<std::uint64_t>;  ///< ID of the suface associated with the
-                                       ///< step
+      new std::vector<std::uint64_t>;  ///< ID of the surface associated with
+                                       ///< the step
   std::vector<float>* m_sur_x =
-      new std::vector<float>;  ///< x position of the center of the suface
+      new std::vector<float>;  ///< x position of the center of the surface
                                ///< associated with the step
   std::vector<float>* m_sur_y =
-      new std::vector<float>;  ///< y position of the center of the suface
+      new std::vector<float>;  ///< y position of the center of the surface
                                ///< associated with the step
   std::vector<float>* m_sur_z =
-      new std::vector<float>;  ///< z position of the center of the suface
+      new std::vector<float>;  ///< z position of the center of the surface
                                ///< associated with the step
   std::vector<float>* m_sur_pathCorrection =
       new std::vector<float>;  ///< path correction when associating

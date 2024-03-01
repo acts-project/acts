@@ -8,10 +8,20 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
+#include <memory>
+
+#include <nlohmann/json.hpp>
+
+namespace Acts {
+class IVolumeMaterial;
+}  // namespace Acts
 
 class DummyDecorator : public Acts::IVolumeMaterialJsonDecorator {
  public:

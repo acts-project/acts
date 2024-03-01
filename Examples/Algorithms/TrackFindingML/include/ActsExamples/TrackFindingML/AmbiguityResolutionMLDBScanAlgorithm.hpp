@@ -34,7 +34,7 @@ class AmbiguityResolutionMLDBScanAlgorithm final
     std::string inputDuplicateNN;
     /// Output trajectories collection.
     std::string outputTracks;
-    /// Minumum number of measurement to form a track.
+    /// Minimum number of measurement to form a track.
     int nMeasurementsMin = 7;
     /// Maximum distance between 2 tracks to be clustered in the DBScan
     float epsilonDBScan = 0.07;

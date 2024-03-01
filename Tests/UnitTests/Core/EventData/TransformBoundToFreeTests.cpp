@@ -9,13 +9,18 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-#include <cmath>
+#include <algorithm>
 #include <limits>
+#include <utility>
+#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -35,7 +40,7 @@ BOOST_DATA_TEST_CASE(
   GeometryContext geoCtx;
 
   Vector2 loc(l0, l1);
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
   // transform reference position
   Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
 

@@ -10,8 +10,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -19,8 +21,18 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -53,7 +65,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<ActsScalar> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   // Fill surfaces from cylinder layers
-  for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
         pModuleThickness[ilp], pModuleTiltPhi[ilp], pLayerRadii[ilp], 2_mm,
@@ -77,7 +89,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   std::vector<ActsScalar> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
   std::vector<ActsScalar> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
-  for (size_t ilp = 0; ilp < discZ.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
         detectorStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp],
         dModuleHalfY[ilp], dModuleThickness[ilp], dModuleTilt[ilp],
@@ -196,7 +208,7 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
 
   auto logLevel = Acts::Logging::VERBOSE;
 
-  // Surface array creatorr
+  // Surface array creator
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(),
       Acts::getDefaultLogger("SurfaceArrayCreator", logLevel));

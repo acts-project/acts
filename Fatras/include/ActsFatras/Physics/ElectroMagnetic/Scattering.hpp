@@ -20,13 +20,12 @@
 #include <random>
 
 namespace ActsFatras {
-namespace detail {
 
 /// Simulate (multiple) scattering using a configurable scattering model.
 ///
 /// @tparam scattering_model_t Model implementation to draw a scattering angle.
 template <typename scattering_model_t>
-struct ScatteringImpl {
+struct GenericScattering {
   /// The scattering formula
   scattering_model_t angle;
 
@@ -58,7 +57,7 @@ struct ScatteringImpl {
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);
 
-    Acts::Vector3 direction = particle.unitDirection();
+    Acts::Vector3 direction = particle.direction();
     // construct the combined rotation to the scattered direction
     Acts::RotationMatrix3 rotation(
         // rotation of the scattering deflector axis relative to the reference
@@ -73,11 +72,8 @@ struct ScatteringImpl {
   }
 };
 
-}  // namespace detail
-
-using GaussianMixtureScattering =
-    detail::ScatteringImpl<detail::GaussianMixture>;
-using GeneralMixtureScattering = detail::ScatteringImpl<detail::GeneralMixture>;
-using HighlandScattering = detail::ScatteringImpl<detail::Highland>;
+using GaussianMixtureScattering = GenericScattering<detail::GaussianMixture>;
+using GeneralMixtureScattering = GenericScattering<detail::GeneralMixture>;
+using HighlandScattering = GenericScattering<detail::Highland>;
 
 }  // namespace ActsFatras

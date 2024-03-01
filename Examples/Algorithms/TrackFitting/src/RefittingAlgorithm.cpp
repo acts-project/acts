@@ -8,16 +8,29 @@
 
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <functional>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
                                                      Acts::Logging::Level level)
@@ -31,6 +44,7 @@ ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
   }
 
   m_inputTracks.initialize(m_cfg.inputTracks);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
@@ -49,8 +63,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
   auto itrack = 0ul;
   for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > -1 and
-        m_cfg.pickTrack != static_cast<int>(itrack++)) {
+    if (m_cfg.pickTrack > -1 && m_cfg.pickTrack != static_cast<int>(itrack++)) {
       continue;
     }
 
@@ -60,15 +73,15 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     const Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance());
+        track.covariance(), track.particleHypothesis());
 
     trackSourceLinks.clear();
     surfSequence.clear();
 
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       surfSequence.push_back(&state.referenceSurface());
 
-      if (not state.hasCalibrated()) {
+      if (!state.hasCalibrated()) {
         continue;
       }
 
@@ -83,7 +96,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     ACTS_VERBOSE("Initial parameters: "
                  << initialParams.fourPosition(ctx.geoContext).transpose()
-                 << " -> " << initialParams.unitDirection().transpose());
+                 << " -> " << initialParams.direction().transpose());
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
     auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,

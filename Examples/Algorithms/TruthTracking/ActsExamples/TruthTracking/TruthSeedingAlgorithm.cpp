@@ -8,13 +8,26 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
     ActsExamples::TruthSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -55,6 +68,7 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
@@ -70,7 +84,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
-  size_t nSpacePoints = 0;
+  std::size_t nSpacePoints = 0;
   for (const auto& isp : m_inputSpacePoints) {
     nSpacePoints += (*isp)(ctx).size();
   }
@@ -143,21 +157,21 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
                        std::hypot(rhs->r(), rhs->z());
               });
 
-    // Loop over the found space points to find the seed with maxium deltaR
-    // betweent the bottom and top space point
+    // Loop over the found space points to find the seed with maximum deltaR
+    // between the bottom and top space point
     // @todo add the check of deltaZ
     bool seedFound = false;
-    std::array<size_t, 3> bestSPIndices{};
+    std::array<std::size_t, 3> bestSPIndices{};
     double maxDeltaR = std::numeric_limits<double>::min();
-    for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
-      for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
-        for (size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
+    for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
+      for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
+        for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
           double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
                                      spacePointsOnTrack[ib]->r());
           double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
                                      spacePointsOnTrack[im]->r());
-          if (bmDeltaR >= m_cfg.deltaRMin and bmDeltaR <= m_cfg.deltaRMax and
-              mtDeltaR >= m_cfg.deltaRMin and mtDeltaR <= m_cfg.deltaRMax) {
+          if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
+              mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax) {
             if ((bmDeltaR + mtDeltaR) > maxDeltaR) {
               maxDeltaR = bmDeltaR + mtDeltaR;
               bestSPIndices = {ib, im, it};
@@ -184,6 +198,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
 
   m_outputParticles(ctx, std::move(seededParticles));
+  m_outputProtoTracks(ctx, std::move(tracks));
   m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;

@@ -11,50 +11,32 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <string>
 #include <vector>
 
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
 namespace Test {
-
-struct StepVolumeCollector {
-  ///
-  /// @brief Data container for result analysis
-  ///
-  struct this_result {
-    // Position of the propagator after each step
-    std::vector<Vector3> position;
-    // Volume of the propagator after each step
-    std::vector<TrackingVolume const*> volume;
-  };
-
-  using result_type = this_result;
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result) const {
-    result.position.push_back(stepper.position(state.stepping));
-    result.volume.push_back(navigator.currentVolume(state.navigation));
-  }
-};
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Construct builder
@@ -105,7 +87,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Test that 4 surfaces can be built
   for (const auto& cfg : surfaceConfig) {
     std::shared_ptr<const Surface> pSur = cvb.buildSurface(tgContext, cfg);
-    BOOST_CHECK_NE(pSur, nullptr);
+    BOOST_REQUIRE_NE(pSur, nullptr);
     CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
     BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
     BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
@@ -126,7 +108,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Test that 4 layers with surfaces can be built
   for (auto& cfg : layerConfig) {
     LayerPtr layer = cvb.buildLayer(tgContext, cfg);
-    BOOST_CHECK_NE(layer, nullptr);
+    BOOST_REQUIRE_NE(layer, nullptr);
     BOOST_CHECK(!cfg.surfaces.empty());
     BOOST_CHECK_EQUAL(layer->surfaceArray()->surfaces().size(), 1u);
     BOOST_CHECK_EQUAL(layer->layerType(), LayerType::active);

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -16,6 +17,13 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
+
+class TH1F;
+class TH2F;
+namespace ActsFatras {
+class Particle;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
 
@@ -106,7 +114,7 @@ class ResPlotTool {
   /// @param resPlotCache the cache object for residual/pull histograms
   void write(const ResPlotCache& resPlotCache) const;
 
-  /// @brief delele the histograms
+  /// @brief delete the histograms
   ///
   /// @param resPlotCache the cache object for residual/pull histograms
   void clear(ResPlotCache& resPlotCache) const;

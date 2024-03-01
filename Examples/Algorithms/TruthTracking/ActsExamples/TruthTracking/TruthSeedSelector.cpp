@@ -8,16 +8,21 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
+#include <functional>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 
@@ -52,24 +57,24 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
   selectedParticles.reserve(inputParticles.size());
 
   auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
+    return (min <= x) && (x < max);
   };
   auto isValidparticle = [&](const auto& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.unitDirection());
-    const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
+    const auto eta = Acts::VectorHelpers::eta(p.direction());
+    const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // find the corresponding hits for this particle
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));
     // number of recorded hits
-    size_t nHits = hits.size();
-    return within(rho, 0., m_cfg.rhoMax) and
-           within(p.position().z(), m_cfg.zMin, m_cfg.zMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(phi, m_cfg.phiMin, m_cfg.phiMax) and
-           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(nHits, m_cfg.nHitsMin, m_cfg.nHitsMax) and
-           (m_cfg.keepNeutral or (p.charge() != 0));
+    std::size_t nHits = hits.size();
+    return within(rho, 0., m_cfg.rhoMax) &&
+           within(p.position().z(), m_cfg.zMin, m_cfg.zMax) &&
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
+           within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
+           within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
+           within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
+           within(nHits, m_cfg.nHitsMin, m_cfg.nHitsMax) &&
+           (m_cfg.keepNeutral || (p.charge() != 0));
   };
 
   // create prototracks for all input particles

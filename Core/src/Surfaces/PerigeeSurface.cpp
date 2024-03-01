@@ -8,9 +8,12 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
+
 #include <iomanip>
 #include <iostream>
-#include <utility>
+#include <memory>
+#include <vector>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3& gp)
     : LineSurface(Transform3(Translation3(gp.x(), gp.y(), gp.z())), nullptr) {}
@@ -55,7 +58,7 @@ std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
 }
 
 Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t /*lseg*/) const {
+    const GeometryContext& gctx, std::size_t /*lseg*/) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;

@@ -10,18 +10,29 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+class RandomNumbers;
+struct AlgorithmContext;
+
 namespace detail {
 struct FatrasSimulation;
 }
@@ -67,12 +78,17 @@ class FatrasSimulation final : public IAlgorithm {
     /// have associated material.
     bool generateHitsOnPassive = false;
 
+    /// Absolute maximum step size
+    double maxStepSize = 1 * Acts::UnitConstants::m;
+    /// Absolute maximum path length
+    double pathLimit = 30 * Acts::UnitConstants::m;
+
     /// Expected average number of hits generated per particle.
     ///
     /// This is just a performance optimization hint and has no impact on the
     /// algorithm function. It is used to guess the amount of memory to
     /// pre-allocate to avoid allocation during event simulation.
-    size_t averageHitsPerParticle = 16u;
+    std::size_t averageHitsPerParticle = 16u;
   };
 
   /// Construct the algorithm from a config.

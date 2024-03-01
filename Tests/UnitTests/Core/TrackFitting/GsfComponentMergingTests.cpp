@@ -8,16 +8,37 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
+#include "Acts/Utilities/Identity.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <functional>
+#include <initializer_list>
+#include <memory>
 #include <random>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <Eigen/Eigenvalues>
 
@@ -32,7 +53,7 @@ template <int D>
 struct DummyComponent {
   Acts::ActsScalar weight = 0;
   Acts::ActsVector<D> boundPars;
-  Acts::ActsSymMatrix<D> boundCov;
+  Acts::ActsSquareMatrix<D> boundCov;
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -124,13 +145,13 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
   return mean;
 }
 
-// This general boundCovariance estimator can be equiped with a custom
+// This general boundCovariance estimator can be equipped with a custom
 // subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,
               const ActsVector<D> &mu, const subtract_t &sub = subtract_t{})
-    -> ActsSymMatrix<D> {
-  ActsSymMatrix<D> boundCov = ActsSymMatrix<D>::Zero();
+    -> ActsSquareMatrix<D> {
+  ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {
     boundCov += sub(smpl, mu) * sub(smpl, mu).transpose();
@@ -173,6 +194,17 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
 
   mean.segment<3>(eFreeDir0).normalize();
 
+  // Project the position on the surface.
+  // This is mainly necessary for the perigee surface, where
+  // the mean might not fulfill the perigee condition.
+  Vector3 position = mean.head<3>();
+  Vector3 direction = mean.segment<3>(eFreeDir0);
+  auto intersection = surface
+                          .intersect(GeometryContext{}, position, direction,
+                                     BoundaryCheck(false))
+                          .closest();
+  mean.head<3>() = intersection.position();
+
   return *detail::transformFreeToBoundParameters(mean, surface,
                                                  GeometryContext{});
 }
@@ -206,7 +238,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
           a.boundPars[eBoundTheta] = theta + dtheta;
 
           // We don't look at covariance in this test
-          a.boundCov = BoundSymMatrix::Zero();
+          a.boundCov = BoundSquareMatrix::Zero();
 
           cmps.push_back(a);
           ++p_it;
@@ -214,7 +246,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
       }
 
       const auto [mean_approx, cov_approx] =
-          detail::combineGaussianMixture(cmps, proj, desc);
+          detail::gaussianMixtureMeanCov(cmps, proj, desc);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -240,7 +272,7 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto boundCov_data = boundCov(samples, mean_data);
 
   const auto [mean_test, boundCov_test] =
-      detail::combineGaussianMixture(cmps, Identity{}, std::tuple<>{});
+      detail::gaussianMixtureMeanCov(cmps, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
@@ -271,7 +303,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   using detail::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
   const auto [mean_test, boundCov_test] =
-      detail::combineGaussianMixture(cmps, Identity{}, d);
+      detail::gaussianMixtureMeanCov(cmps, Identity{}, d);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[0], mean_test[0],
                                                    2 * M_PI)) < 1.e-1);
@@ -337,5 +369,5 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   const LocPosArray p{{{d, z}, {d, -z}, {2 * d, z}, {2 * d, -z}}};
 
   // Here we expect a very bad approximation
-  test_surface(*surface, desc, p, 1.);
+  test_surface(*surface, desc, p, 1.1);
 }

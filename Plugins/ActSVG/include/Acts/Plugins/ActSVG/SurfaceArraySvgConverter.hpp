@@ -12,8 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/meta.hpp>
 
 #include <tuple>
 #include <vector>
@@ -27,7 +26,7 @@ namespace Svg {
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoSurfaces = std::vector<ProtoSurface>;
 using ProtoGrid = actsvg::proto::grid;
-using ProtoAssociations = std::vector<std::vector<size_t>>;
+using ProtoAssociations = std::vector<std::vector<std::size_t>>;
 
 namespace SurfaceArrayConverter {
 
@@ -35,9 +34,6 @@ namespace SurfaceArrayConverter {
 struct Options {
   /// Hierarchy map of styles
   GeometryHierarchyMap<Style> surfaceStyles;
-
-  /// ACTS Logging level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Convert a surface array into needed constituents

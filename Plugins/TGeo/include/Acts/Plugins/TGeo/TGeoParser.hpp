@@ -12,7 +12,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "TGeoMatrix.h"
@@ -71,7 +73,7 @@ struct TGeoParser {
   };
 
   /// The parsing module, it takes the top Volume and recursively steps down
-  /// @param state [out] The parseing state configuration, passed through
+  /// @param state [out] The parsing state configuration, passed through
   /// @param options [in] The parsing options as requiremed
   /// @param gmatrix The current built-up transform to global at this depth
   static void select(State& state, const Options& options,

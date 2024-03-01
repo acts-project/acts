@@ -17,7 +17,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourcelinks,
     const start_parameters_t& sParameters, const fit_options_t& fitOptions,
-    const std::unordered_map<const Acts::Surface*, size_t>& idxedAlignSurfaces,
+    const std::unordered_map<const Acts::Surface*, std::size_t>&
+        idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask) const {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -29,7 +30,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   // Perform the fit
   auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
 
-  if (not fitRes.ok()) {
+  if (!fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
   }
@@ -59,14 +60,14 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const fit_options_t& fitOptions,
     ActsAlignment::AlignmentResult& alignResult,
     const ActsAlignment::AlignmentMask& alignMask) const {
-  // The number of trajectories must be eual to the number of starting
+  // The number of trajectories must be equal to the number of starting
   // parameters
   assert(trajectoryCollection.size() == startParametersCollection.size());
 
   // The total alignment degree of freedom
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
-  // Initialize derivative of chi2 w.r.t. aligment parameters for all tracks
+  // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
   Acts::ActsDynamicVector sumChi2Derivative =
       Acts::ActsDynamicVector::Zero(alignResult.alignmentDof);
   Acts::ActsDynamicMatrix sumChi2SecondDerivative =
@@ -89,7 +90,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourcelinks, sParameters,
         fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
-    if (not evaluateRes.ok()) {
+    if (!evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
       continue;
@@ -97,7 +98,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const auto& alignState = evaluateRes.value();
     for (const auto& [rowSurface, rows] : alignState.alignedSurfaces) {
       const auto& [dstRow, srcRow] = rows;
-      // Fill the results into full chi2 derivative matrixs
+      // Fill the results into full chi2 derivative matrix
       sumChi2Derivative.segment<Acts::eAlignmentSize>(dstRow *
                                                       Acts::eAlignmentSize) +=
           alignState.alignmentToChi2Derivative.segment(
@@ -122,7 +123,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // Get the inverse of chi2 second derivative matrix (we need this to
   // calculate the covariance of the alignment parameters)
   // @Todo: use more stable method for solving the inverse
-  size_t alignDof = alignResult.alignmentDof;
+  std::size_t alignDof = alignResult.alignmentDof;
   Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
       Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
@@ -200,7 +201,7 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
                  << deltaAlignmentParam);
     bool updated = alignedTransformUpdater(alignedDetElements.at(index), gctx,
                                            newTransform);
-    if (not updated) {
+    if (!updated) {
       ACTS_ERROR("Update alignment parameters for detector element failed");
       return AlignmentError::AlignmentParametersUpdateFailure;
     }
@@ -262,7 +263,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       if (std::abs(recentChi2ONdf.front() - alignResult.averageChi2ONdf) <=
           alignOptions.deltaAverageChi2ONdfCutOff.second) {
         ACTS_INFO(
-            "Alignment has converaged with change of chi2/ndf < "
+            "Alignment has converged with change of chi2/ndf < "
             << alignOptions.deltaAverageChi2ONdfCutOff.second << " in the last "
             << alignOptions.deltaAverageChi2ONdfCutOff.first << " iterations"
             << " after " << iIter << " iteration(s)");
@@ -273,7 +274,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     }
     // 2. or the average chi2/ndf (is this correct?)
     if (alignResult.averageChi2ONdf <= alignOptions.averageChi2ONdfCutOff) {
-      ACTS_INFO("Alignment has converaged with average chi2/ndf < "
+      ACTS_INFO("Alignment has converged with average chi2/ndf < "
                 << alignOptions.averageChi2ONdfCutOff << " after " << iIter
                 << " iteration(s)");
       converged = true;
@@ -289,7 +290,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     auto updateRes = updateAlignmentParameters(
         alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
         alignOptions.alignedTransformUpdater, alignResult);
-    if (not updateRes.ok()) {
+    if (!updateRes.ok()) {
       ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
       return updateRes.error();
     }
@@ -297,7 +298,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   }  // end of all iterations
 
   // Alignment failure if not converged
-  if (not converged) {
+  if (!converged) {
     ACTS_ERROR("Alignment is not converged.");
     alignResult.result = AlignmentError::ConvergeFailure;
   }
@@ -320,7 +321,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       ACTS_VERBOSE("Center (cenX, cenY, cenZ) = " << translation.transpose());
       ACTS_VERBOSE(
           "Euler angles (rotZ, rotY, rotX) = " << rotAngles.transpose());
-      ACTS_VERBOSE("Rotation marix = \n" << rotation);
+      ACTS_VERBOSE("Rotation matrix = \n" << rotation);
     }
   } else {
     ACTS_DEBUG("Alignment parameters is not updated.");

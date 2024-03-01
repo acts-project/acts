@@ -8,13 +8,19 @@
 
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <cstdint>
 #include <iostream>
+#include <stdexcept>
 
 #include <TChain.h>
-#include <TFile.h>
-#include <TMath.h>
+#include <TMathBase.h>
 #include <TTree.h>
 
 ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
@@ -37,7 +43,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   }
 
   // get the number of entries, which also loads the tree
-  size_t nentries = m_inputChain->GetEntries();
+  std::size_t nentries = m_inputChain->GetEntries();
 
   bool eventIdPresent =
       (TTree::kMatch == m_inputChain->SetBranchAddress("event_id", &m_eventId));
@@ -72,9 +78,10 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     m_inputChain->SetBranchAddress("sur_pathCorrection", &m_sur_pathCorrection);
   }
 
-  m_events = eventIdPresent
-                 ? static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1)
-                 : nentries;
+  m_events =
+      eventIdPresent
+          ? static_cast<std::size_t>(m_inputChain->GetMaximum("event_id") + 1)
+          : nentries;
   m_batchSize = nentries / m_events;
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
@@ -84,8 +91,8 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
             << std::endl;
 
   // If the events are not in order, get the entry numbers for ordered events
-  if (not m_cfg.orderedEvents) {
-    if (not eventIdPresent) {
+  if (!m_cfg.orderedEvents) {
+    if (!eventIdPresent) {
       throw std::invalid_argument{
           "'event_id' branch is missing in your tree. This is not compatible "
           "with unordered events."};
@@ -126,7 +133,7 @@ std::string ActsExamples::RootMaterialTrackReader::name() const {
   return "RootMaterialTrackReader";
 }
 
-std::pair<size_t, size_t>
+std::pair<std::size_t, std::size_t>
 ActsExamples::RootMaterialTrackReader::availableEvents() const {
   return {0u, m_events};
 }
@@ -141,13 +148,14 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // now read
 
     // The collection to be written
-    std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection;
+    std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
+        mtrackCollection;
 
     // Loop over the entries for this event
-    for (size_t ib = 0; ib < m_batchSize; ++ib) {
+    for (std::size_t ib = 0; ib < m_batchSize; ++ib) {
       // Read the correct entry: startEntry + ib
       auto entry = m_batchSize * context.eventNumber + ib;
-      if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
+      if (!m_cfg.orderedEvents && entry < m_entryNumbers.size()) {
         entry = m_entryNumbers[entry];
       }
       ACTS_VERBOSE("Reading event: " << context.eventNumber
@@ -163,13 +171,13 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
       ACTS_VERBOSE("Track momentum:" << rmTrack.first.second);
 
       // Fill the individual steps
-      size_t msteps = m_step_length->size();
+      std::size_t msteps = m_step_length->size();
       ACTS_VERBOSE("Reading " << msteps << " material steps.");
       rmTrack.second.materialInteractions.reserve(msteps);
       rmTrack.second.materialInX0 = 0.;
       rmTrack.second.materialInL0 = 0.;
 
-      for (size_t is = 0; is < msteps; ++is) {
+      for (std::size_t is = 0; is < msteps; ++is) {
         ACTS_VERBOSE("====================");
         ACTS_VERBOSE("[" << is + 1 << "/" << msteps << "] STEP INFORMATION: ");
 

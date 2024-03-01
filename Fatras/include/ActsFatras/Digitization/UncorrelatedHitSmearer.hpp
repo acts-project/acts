@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -38,18 +39,18 @@ using SingleParameterSmearFunction =
 ///
 /// The smearer takes a single simulated `Hit` and generates a smeared parameter
 /// vector and associated covariance matrix.
-template <typename generator_t, size_t kSize>
+template <typename generator_t, std::size_t kSize>
 struct BoundParametersSmearer {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
   std::array<Acts::BoundIndices, kSize> indices{};
   std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions{};
 
-  static constexpr size_t size() { return kSize; }
+  static constexpr std::size_t size() { return kSize; }
 
   /// Generate smeared measured for configured parameters.
   ///
@@ -62,12 +63,20 @@ struct BoundParametersSmearer {
   Result operator()(generator_t& rng, const Hit& hit,
                     const Acts::Surface& surface,
                     const Acts::GeometryContext& geoCtx) const {
+    // We use the thickness of the detector element as tolerance, because Geant4
+    // treats the Surfaces as volumes and thus it is not ensured, that each hit
+    // lies exactly on the Acts::Surface
+    const auto tolerance =
+        surface.associatedDetectorElement() != nullptr
+            ? surface.associatedDetectorElement()->thickness()
+            : Acts::s_onSurfaceTolerance;
+
     // construct full bound parameters. they are probably not all needed, but it
     // is easier to just create them all and then select the requested ones.
     Acts::Result<Acts::BoundVector> boundParamsRes =
-        Acts::detail::transformFreeToBoundParameters(hit.position(), hit.time(),
-                                                     hit.unitDirection(), 0,
-                                                     surface, geoCtx);
+        Acts::detail::transformFreeToBoundParameters(
+            hit.position(), hit.time(), hit.direction(), 0, surface, geoCtx,
+            tolerance);
 
     if (!boundParamsRes.ok()) {
       return boundParamsRes.error();
@@ -79,7 +88,7 @@ struct BoundParametersSmearer {
     CovarianceMatrix cov = CovarianceMatrix::Zero();
     for (int i = 0; i < static_cast<int>(kSize); ++i) {
       auto res = smearFunctions[i](boundParams[indices[i]], rng);
-      if (not res.ok()) {
+      if (!res.ok()) {
         return Result::failure(res.error());
       }
       auto [value, stddev] = res.value();
@@ -101,18 +110,18 @@ struct BoundParametersSmearer {
 ///
 /// @note Uncorrelated smearing of the direction using each components
 ///   individually is not recommended
-template <typename generator_t, size_t kSize>
+template <typename generator_t, std::size_t kSize>
 struct FreeParametersSmearer {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
   std::array<Acts::FreeIndices, kSize> indices{};
   std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions;
 
-  static constexpr size_t size() { return kSize; }
+  static constexpr std::size_t size() { return kSize; }
 
   /// Generate smeared measured for configured parameters.
   ///
@@ -127,14 +136,14 @@ struct FreeParametersSmearer {
     Acts::FreeVector freeParams;
     freeParams.segment<3>(Acts::eFreePos0) = hit.position();
     freeParams[Acts::eFreeTime] = hit.time();
-    freeParams.segment<3>(Acts::eFreeDir0) = hit.unitDirection();
+    freeParams.segment<3>(Acts::eFreeDir0) = hit.direction();
     freeParams[Acts::eFreeQOverP] = 0;
 
     ParametersVector par = ParametersVector::Zero();
     CovarianceMatrix cov = CovarianceMatrix::Zero();
-    for (size_t i = 0; i < kSize; ++i) {
+    for (std::size_t i = 0; i < kSize; ++i) {
       auto res = smearFunctions[i](freeParams[indices[i]], rng);
-      if (not res.ok()) {
+      if (!res.ok()) {
         return Result::failure(res.error());
       }
       auto [value, stddev] = res.value();

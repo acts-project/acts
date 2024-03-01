@@ -8,10 +8,12 @@
 
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <cstdint>
+#include <ostream>
 #include <stdexcept>
 
 ActsExamples::EventGenerator::EventGenerator(const Config& cfg,
@@ -34,8 +36,8 @@ std::string ActsExamples::EventGenerator::name() const {
   return "EventGenerator";
 }
 
-std::pair<size_t, size_t> ActsExamples::EventGenerator::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::EventGenerator::availableEvents() const {
   return {0u, SIZE_MAX};
 }
 
@@ -45,12 +47,13 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
 
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
-  size_t nPrimaryVertices = 0;
-  for (size_t iGenerate = 0; iGenerate < m_cfg.generators.size(); ++iGenerate) {
+  std::size_t nPrimaryVertices = 0;
+  for (std::size_t iGenerate = 0; iGenerate < m_cfg.generators.size();
+       ++iGenerate) {
     auto& generate = m_cfg.generators[iGenerate];
 
     // generate the primary vertices from this generator
-    for (size_t n = (*generate.multiplicity)(rng); 0 < n; --n) {
+    for (std::size_t n = (*generate.multiplicity)(rng); 0 < n; --n) {
       nPrimaryVertices += 1;
 
       // generate primary vertex position

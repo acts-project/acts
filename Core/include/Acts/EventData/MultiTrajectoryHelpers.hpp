@@ -24,19 +24,19 @@ namespace MultiTrajectoryHelpers {
 /// @brief Struct for brief trajectory summary info
 ///
 struct TrajectoryState {
-  size_t nStates = 0;
-  size_t nMeasurements = 0;
-  size_t nOutliers = 0;
-  size_t nHoles = 0;
+  std::size_t nStates = 0;
+  std::size_t nMeasurements = 0;
+  std::size_t nOutliers = 0;
+  std::size_t nHoles = 0;
   double chi2Sum = 0;
   std::vector<double> measurementChi2 = {};
   std::vector<double> outlierChi2 = {};
-  size_t NDF = 0;
+  std::size_t NDF = 0;
   std::vector<unsigned int> measurementVolume = {};
   std::vector<unsigned int> measurementLayer = {};
   std::vector<unsigned int> outlierVolume = {};
   std::vector<unsigned int> outlierLayer = {};
-  size_t nSharedHits = 0;
+  std::size_t nSharedHits = 0;
 };
 
 // Container for trajectory summary info at a specific volume
@@ -50,8 +50,8 @@ using VolumeTrajectoryStateContainer =
 ///
 /// @return The trajectory summary info
 template <typename traj_t>
-TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
-                                size_t entryIndex) {
+TrajectoryState trajectoryState(const traj_t& multiTraj,
+                                std::size_t entryIndex) {
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
@@ -59,7 +59,6 @@ TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     trajState.nStates++;
-    trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
@@ -70,6 +69,7 @@ TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
       trajState.chi2Sum += state.chi2();
+      trajState.NDF += state.calibratedSize();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
       trajState.outlierChi2.push_back(state.chi2());
@@ -95,7 +95,7 @@ TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
 /// different volumes)
 template <typename traj_t>
 VolumeTrajectoryStateContainer trajectoryState(
-    const Acts::MultiTrajectory<traj_t>& multiTraj, size_t entryIndex,
+    const traj_t& multiTraj, std::size_t entryIndex,
     const std::vector<GeometryIdentifier::Value>& volumeIds) {
   VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {

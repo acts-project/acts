@@ -9,14 +9,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Range1D.hpp"
 
+#include <cmath>
 #include <fstream>
-#include <iostream>
+#include <initializer_list>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "EqualityHelpers.hpp"
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +35,7 @@ class SeedFinder {
   /// Create a CUDA backed seed finder object
   ///
   /// @param commonConfig Configuration shared with @c Acts::SeedFinder
-  /// @param seedFinderOptions options als shared with Acts::SeedFinder
+  /// @param seedFinderOptions options also shared with Acts::SeedFinder
   /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering
@@ -60,13 +60,13 @@ class SeedFinder {
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
       Acts::SpacePointData& spacePointData,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;
 
   /// set logging instance
   ///
-  /// @param [in] newLogger is the logging istance to be set
+  /// @param [in] newLogger is the logging instance to be set
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
  private:

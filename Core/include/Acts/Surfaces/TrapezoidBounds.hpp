@@ -9,10 +9,17 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <iosfwd>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
@@ -20,10 +27,9 @@ namespace Acts {
 ///
 /// Bounds for a trapezoidal, planar Surface.
 ///
-/// @image html figures/TrapezoidBounds.gif
+/// @image html TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
-
 class TrapezoidBounds : public PlanarBounds {
  public:
   enum BoundValues {
@@ -113,7 +119,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note the number of segements is ignored in this representation
+  /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
@@ -146,7 +152,7 @@ inline std::vector<double> TrapezoidBounds::values() const {
 }
 
 inline void TrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) <= 0. or get(eHalfLengthXposY) <= 0.) {
+  if (get(eHalfLengthXnegY) <= 0. || get(eHalfLengthXposY) <= 0.) {
     throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
   }
   if (get(eHalfLengthY) <= 0.) {

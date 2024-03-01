@@ -11,21 +11,50 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+
+namespace Acts {
+class Logger;
+}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
@@ -37,7 +66,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {
@@ -68,7 +97,7 @@ struct SurfaceObserver {
 
   /// Simple result struct to be returned
   struct this_result {
-    size_t surfaces_passed = 0;
+    std::size_t surfaces_passed = 0;
     double surface_passed_r = std::numeric_limits<double>::max();
   };
 
@@ -86,10 +115,13 @@ struct SurfaceObserver {
       const double distance =
           surface
               ->intersect(state.geoContext, stepper.position(state.stepping),
-                          stepper.direction(state.stepping), true)
-              .intersection.pathLength;
+                          stepper.direction(state.stepping),
+                          BoundaryCheck(true))
+              .closest()
+              .pathLength();
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(distance, ConstrainedStep::actor);
+      state.stepping.stepSize.update(distance * state.options.direction,
+                                     ConstrainedStep::actor);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;
@@ -102,9 +134,6 @@ struct SurfaceObserver {
 };
 
 // Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
@@ -139,21 +168,24 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 
 BOOST_DATA_TEST_CASE(
     cylinder_passage_observer_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -185,7 +217,9 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
-  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom.normalized(),
+                                   q / mom.norm(), std::nullopt,
+                                   ParticleHypothesis::pion());
   // propagate to the cylinder surface
   const auto& result = epropagator.propagate(start, *cSurface, options).value();
   auto& sor = result.get<so_result>();
@@ -196,21 +230,24 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_DATA_TEST_CASE(
     curvilinear_additive_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -237,8 +274,9 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q,
-                                   cov);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom.normalized(),
+                                   q / mom.norm(), cov,
+                                   ParticleHypothesis::pion());
   // propagate to a path length of 100 with two steps of 50
   const auto& mid_parameters =
       epropagator.propagate(start, options_2s).value().endParameters;
@@ -272,21 +310,24 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_DATA_TEST_CASE(
     cylinder_additive_,
-    bdata::random((bdata::seed = 0,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.4_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 1,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.4_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 2,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 3,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 4,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_ns,
+                                                                  1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
   double dcharge = -1 + 2 * charge;
@@ -313,8 +354,9 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q,
-                                   cov);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom.normalized(),
+                                   q / mom.norm(), cov,
+                                   ParticleHypothesis::pion());
   // propagate to a final surface with one stop in between
   const auto& mid_parameters =
       epropagator.propagate(start, *mSurface, options_2s).value().endParameters;
@@ -349,5 +391,99 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
+BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
+  auto field = std::make_shared<ConstantBField>(Vector3{0, 0, 2_T});
+  EigenStepper<> eigenStepper{field};
+  VoidNavigator navigator{};
+
+  auto startSurface =
+      Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX());
+  auto targetSurface = Surface::makeShared<PlaneSurface>(
+      Vector3::UnitX() * 20_mm, Vector3::UnitX());
+
+  BoundVector startPars;
+  startPars << 0, 0, 0, M_PI / 2, 1 / 1_GeV, 0;
+
+  BoundTrackParameters startParameters{startSurface, startPars, std::nullopt,
+                                       ParticleHypothesis::pion()};
+
+  CurvilinearTrackParameters startCurv{Vector4::Zero(), Vector3::UnitX(),
+                                       1. / 1_GeV, std::nullopt,
+                                       ParticleHypothesis::pion()};
+
+  GeometryContext gctx;
+  MagneticFieldContext mctx;
+  PropagatorOptions<> options{gctx, mctx};
+
+  {
+    Propagator propagator{eigenStepper, navigator};
+    static_assert(std::is_base_of_v<BasePropagator, decltype(propagator)>,
+                  "Propagator does not inherit from BasePropagator");
+    const BasePropagator* base =
+        static_cast<const BasePropagator*>(&propagator);
+
+    // Ensure the propagation does the same thing
+    auto result =
+        propagator.propagate(startParameters, *targetSurface, options);
+    BOOST_REQUIRE(result.ok());
+    BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
+                      targetSurface.get());
+
+    auto resultBase =
+        base->propagateToSurface(startParameters, *targetSurface, options);
+
+    BOOST_REQUIRE(resultBase.ok());
+    BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
+                      targetSurface.get());
+
+    BOOST_CHECK_EQUAL(result.value().endParameters.value().parameters(),
+                      resultBase.value().parameters());
+
+    // Propagation call with curvilinear also works
+    auto resultCurv =
+        base->propagateToSurface(startCurv, *targetSurface, options);
+    BOOST_CHECK(resultCurv.ok());
+  }
+
+  StraightLineStepper slStepper{};
+  {
+    Propagator propagator{slStepper, navigator};
+    static_assert(std::is_base_of_v<BasePropagator, decltype(propagator)>,
+                  "Propagator does not inherit from BasePropagator");
+    const BasePropagator* base =
+        static_cast<const BasePropagator*>(&propagator);
+
+    // Ensure the propagation does the same thing
+    auto result =
+        propagator.propagate(startParameters, *targetSurface, options);
+    BOOST_REQUIRE(result.ok());
+    BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
+                      targetSurface.get());
+
+    auto resultBase =
+        base->propagateToSurface(startParameters, *targetSurface, options);
+
+    BOOST_REQUIRE(resultBase.ok());
+    BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
+                      targetSurface.get());
+
+    BOOST_CHECK_EQUAL(result.value().endParameters.value().parameters(),
+                      resultBase.value().parameters());
+
+    // Propagation call with curvilinear also works
+    auto resultCurv =
+        base->propagateToSurface(startCurv, *targetSurface, options);
+    BOOST_CHECK(resultCurv.ok());
+  }
+
+  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>
+      denseEigenStepper{field};
+
+  {
+    Propagator propagator{denseEigenStepper, navigator};
+    static_assert(!std::is_base_of_v<BasePropagator, decltype(propagator)>,
+                  "Propagator unexpectedly inherits from BasePropagator");
+  }
+}
 }  // namespace Test
 }  // namespace Acts

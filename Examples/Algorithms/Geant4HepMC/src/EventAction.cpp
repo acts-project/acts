@@ -125,7 +125,7 @@ namespace ActsExamples::Geant4::HepMC3 {
 EventAction* EventAction::s_instance = nullptr;
 
 EventAction* EventAction::instance() {
-  // Static acces function via G4RunManager
+  // Static access function via G4RunManager
   return s_instance;
 }
 

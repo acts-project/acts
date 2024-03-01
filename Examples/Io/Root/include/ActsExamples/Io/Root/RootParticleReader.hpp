@@ -16,12 +16,18 @@
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootParticleReader
 ///
@@ -52,7 +58,7 @@ class RootParticleReader : public IReader {
   std::string name() const override { return "RootParticleReader"; }
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
@@ -83,7 +89,7 @@ class RootParticleReader : public IReader {
   std::mutex m_read_mutex;
 
   /// The number of events
-  size_t m_events = 0;
+  std::size_t m_events = 0;
 
   /// The input tree name
   TChain* m_inputChain = nullptr;

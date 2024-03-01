@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 
 #include <fstream>
+#include <initializer_list>
 
 void ActsExamples::from_json(const nlohmann::json& data,
                              Acts::GeometryIdentifier& geoId) {

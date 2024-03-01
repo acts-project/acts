@@ -10,6 +10,8 @@
 
 #include "Acts/Material/Material.hpp"
 
+#include <cmath>
+
 Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
                                               const MaterialSlab& slab2) {
   const auto& mat1 = slab1.material();
@@ -32,7 +34,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   double thickness = static_cast<double>(slab1.thickness()) +
                      static_cast<double>(slab2.thickness());
 
-  // if the two materials are the same there is not need for aditional
+  // if the two materials are the same there is no need for additional
   // computation
   if (mat1 == mat2) {
     return {mat1, static_cast<float>(thickness)};
@@ -55,11 +57,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   double molarAmount = molarAmount1 + molarAmount2;
 
   // handle vacuum specially
-  if (not(0.0 < molarAmount)) {
+  if (!(0.0 < molarAmount)) {
     return {Material(), static_cast<float>(thickness)};
   }
 
-  // compute average molar density by divding the total amount-of-substance by
+  // compute average molar density by dividing the total amount-of-substance by
   // the total volume for the same unit area, i.e. volume = totalThickness*1*1
   float molarDensity = molarAmount / thickness;
 
@@ -70,7 +72,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //
   //     A = (N1*A1 + N2*A2) / (N1+N2) = (N1/N)*A1 + (N2/N)*A2 = W1*A1 + W2*A2
   //
-  // the number of atoms/molecues in a given volume V with molar density rho is
+  // the number of atoms/molecules in a given volume V with molar density rho is
   //
   //     N = V * rho * Na
   //
@@ -91,7 +93,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // This mean excitation energy will then be used to compute energy loss
   // which will be proportional to :
   //     Eloss ~ ln(1/I)*thickness
-  // In the case of two sucessive material :
+  // In the case of two successive material :
   //     Eloss = El1 + El2
   //           ~ ln(Z1)*t1 + ln(Z2)*t2
   //           ~ ln(Z)*t

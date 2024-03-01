@@ -9,12 +9,10 @@
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <cmath>
-#include <iostream>
-#include <tuple>
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2& s0, const Vector2& s1, const Vector2& origin,
@@ -25,7 +23,7 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
   Vector2 edge(s1 - s0);
   ActsScalar det = edge.x() * dir.y() - edge.y() * dir.x();
   if (std::abs(det) < s_epsilon) {
-    return Intersection2D();
+    return Intersection2D::invalid();
   }
 
   auto line = Line(origin, dir);
@@ -35,7 +33,7 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
   Intersection2D::Status status = Intersection2D::Status::reachable;
   if (boundCheck) {
     auto edgeToSol = intersection - s0;
-    if (edgeToSol.dot(edge) < 0. or edgeToSol.norm() > (edge).norm()) {
+    if (edgeToSol.dot(edge) < 0. || edgeToSol.norm() > (edge).norm()) {
       status = Intersection2D::Status::unreachable;
     }
   }
@@ -76,9 +74,9 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     } else if (std::abs(D) < s_epsilon) {
       return {Intersection2D(Vector2(solx, 0.), -origin.y(),
                              Intersection2D::Status::reachable),
-              Intersection2D()};
+              Intersection2D::invalid()};
     }
-    return {Intersection2D(), Intersection2D()};
+    return {Intersection2D::invalid(), Intersection2D::invalid()};
   } else if (std::abs(dir.y()) < s_epsilon) {
     ActsScalar soly = origin.y();
     ActsScalar D = 1. - soly * soly / (Ry * Ry);
@@ -90,9 +88,9 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     } else if (std::abs(D) < s_epsilon) {
       return {Intersection2D(Vector2(0., soly), -origin.x(),
                              Intersection2D::Status::reachable),
-              Intersection2D()};
+              Intersection2D::invalid()};
     }
-    return {Intersection2D(), Intersection2D()};
+    return {Intersection2D::invalid(), Intersection2D::invalid()};
   }
   // General solution
   ActsScalar k = dir.y() / dir.x();
@@ -108,7 +106,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     Vector2 toSolD(sol - origin);
     ActsScalar solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
     return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
-            Intersection2D()};
+            Intersection2D::invalid()};
   } else if (solver.solutions > 1) {
     ActsScalar x0 = solver.first;
     ActsScalar x1 = solver.second;
@@ -116,7 +114,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     Vector2 alt(x1, k * x1 + d);
     return createSolution(sol, alt);
   }
-  return {Intersection2D(), Intersection2D()};
+  return {Intersection2D::invalid(), Intersection2D::invalid()};
 }
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
@@ -124,12 +122,12 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
     const Vector2& dir) {
   auto intersections = intersectCircle(R, origin, dir);
   for (const auto& candidate : intersections) {
-    if (candidate.pathLength > 0.) {
-      ActsScalar phi = Acts::VectorHelpers::phi(candidate.position);
-      if (phi > phiMin and phi < phiMax) {
+    if (candidate.pathLength() > 0.) {
+      ActsScalar phi = Acts::VectorHelpers::phi(candidate.position());
+      if (phi > phiMin && phi < phiMax) {
         return candidate;
       }
     }
   }
-  return Intersection2D();
+  return Intersection2D::invalid();
 }

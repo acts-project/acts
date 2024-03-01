@@ -10,21 +10,23 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/ConeLayer.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
-#include "LayerStub.hpp"
-
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
+#include <cmath>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
-
 namespace Test {
 namespace Layers {
 BOOST_AUTO_TEST_SUITE(Layers)
@@ -39,7 +41,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   double alpha(M_PI / 8.0);
   const bool symmetric(false);
   auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
-  // for some reason, this one doesnt exist
+  // for some reason, this one doesn't exist
   // auto         pConeLayer = ConeLayer::create(pTransform, pCone);
   // BOOST_CHECK_EQUAL(pConeLayer->layerType(), LayerType::passive);
   // next level: need an array of Surfaces;
@@ -73,5 +75,4 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Layers
 }  // namespace Test
-
 }  // namespace Acts
