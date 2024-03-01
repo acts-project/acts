@@ -138,8 +138,8 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
     // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
     // maximum chi2 that a track can have to be associated with a vertex).
     finderConfig.tracksMaxSignificance = 7.5;
-    // Check if vertices are merged in space and time
-    finderConfig.doFullSplitting = true;
+    // TODO rename do3dSplitting -> doFullSplitting
+    finderConfig.do3dSplitting = true;
     // Reset the maximum significance that two vertices can have before they
     // are considered as merged. The default value 3 is tuned for comparing
     // the vertices' z-coordinates. Since we consider 4 dimensions here, we
