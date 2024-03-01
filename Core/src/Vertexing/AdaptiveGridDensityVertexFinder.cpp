@@ -1,107 +1,102 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int mainGridSize, int trkGridSize>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::find(
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
+
+Acts::Result<std::vector<Acts::Vertex>>
+Acts::AdaptiveGridDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+    IVertexFinder::State& anyState) const {
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
-    // Bool to check if removable tracks, that pass selection, still exist
-    bool couldRemoveTracks = false;
     for (auto trk : state.tracksToRemove) {
-      if (!state.trackSelectionMap.at(trk)) {
+      auto it = state.trackDensities.find(trk);
+      if (it == state.trackDensities.end()) {
         // Track was never added to grid, so cannot remove it
         continue;
       }
-      couldRemoveTracks = true;
-      auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
-      m_cfg.gridDensity.removeTrackGridFromMainGrid(
-          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
-    }
-    if (!couldRemoveTracks) {
-      // No tracks were removed anymore
-      // Return empty seed, i.e. vertex at constraint position
-      // (Note: Upstream finder should check for this break condition)
-      std::vector<Vertex> seedVec{vertexingOptions.constraint};
-      return seedVec;
+      m_cfg.gridDensity.subtractTrack(it->second, state.mainDensityMap);
     }
   } else {
-    state.mainGrid = MainGridVector::Zero();
+    state.mainDensityMap = DensityMap();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
       // Take only tracks that fulfill selection criteria
       if (!doesPassTrackSelection(trkParams)) {
-        if (m_cfg.cacheGridStateForTrackRemoval) {
-          state.trackSelectionMap[trk] = false;
-        }
         continue;
       }
-      auto binAndTrackGrid =
-          m_cfg.gridDensity.addTrack(trkParams, state.mainGrid);
+      auto trackDensityMap =
+          m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        state.binAndTrackGridMap[trk] = binAndTrackGrid;
-        state.trackSelectionMap[trk] = true;
+        state.trackDensities[trk] = std::move(trackDensityMap);
       }
     }
     state.isInitialized = true;
   }
 
-  double z = 0;
-  double width = 0;
-  if (state.mainGrid != MainGridVector::Zero()) {
-    if (!m_cfg.estimateSeedWidth) {
-      // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
-
-      if (!maxZres.ok()) {
-        return maxZres.error();
-      }
-      z = *maxZres;
-    } else {
-      // Get z value of highest density bin and width
-      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainGrid);
-
-      if (!maxZres.ok()) {
-        return maxZres.error();
-      }
-      z = (*maxZres).first;
-      width = (*maxZres).second;
-    }
+  if (state.mainDensityMap.empty()) {
+    // No tracks passed selection
+    // Return empty seed
+    // (Note: Upstream finder should check for this break condition)
+    return std::vector<Vertex>{};
   }
 
-  // Construct output vertex
-  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
+  double z = 0;
+  double t = 0;
+  double zWidth = 0;
+
+  if (!m_cfg.estimateSeedWidth) {
+    // Get z value of highest density bin
+    auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(state.mainDensityMap);
+
+    if (!maxZTRes.ok()) {
+      return maxZTRes.error();
+    }
+    z = (*maxZTRes).first;
+    t = (*maxZTRes).second;
+  } else {
+    // Get z value of highest density bin and width
+    auto maxZTResAndWidth =
+        m_cfg.gridDensity.getMaxZTPositionAndWidth(state.mainDensityMap);
+
+    if (!maxZTResAndWidth.ok()) {
+      return maxZTResAndWidth.error();
+    }
+    z = (*maxZTResAndWidth).first.first;
+    t = (*maxZTResAndWidth).first.second;
+    zWidth = (*maxZTResAndWidth).second;
+  }
+
+  // Construct output vertex, t will be 0 if temporalTrkGridSize == 1
+  Vector4 seedPos =
+      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
 
   Vertex returnVertex = Vertex(seedPos);
 
   SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
-  if (width != 0.) {
+  if (zWidth != 0.) {
     // Use z-constraint from seed width
-    seedCov(2, 2) = width * width;
+    seedCov(2, 2) = zWidth * zWidth;
   }
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
 
-template <int mainGridSize, int trkGridSize>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::
-    doesPassTrackSelection(const BoundTrackParameters& trk) const -> bool {
+bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
@@ -124,7 +119,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize>::
     return false;
   }
 
-  // Calculate track density quantities
+  // Calculate track density quantities to check if track can easily
+  // be considered as 2-dim Gaussian distribution without causing problems
   double constantTerm =
       -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
       (2. * covDeterminant);

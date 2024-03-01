@@ -40,7 +40,7 @@ class AdaptiveMultiVertexFitter {
   struct State {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
-        : ipState(field.makeCache(magContext)),
+        : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
     // Vertex collection to be fitted
     std::vector<Vertex*> vertexCollection;
@@ -271,5 +271,3 @@ class AdaptiveMultiVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFitter.ipp"

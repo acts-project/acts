@@ -5,4 +5,18 @@ target_sources(
     KalmanVertexUpdater.cpp
     FsmwMode1dFinder.cpp
     VertexingError.cpp
+    IterativeVertexFinder.cpp
+    AdaptiveMultiVertexFitter.cpp
+    AdaptiveGridDensityVertexFinder.cpp
+    ZScanVertexFinder.cpp
+    HelicalTrackLinearizer.cpp
+    FullBilloirVertexFitter.cpp
+    AdaptiveMultiVertexFinder.cpp
+    Vertex.cpp
+    NumericalTrackLinearizer.cpp
+    TrackDensityVertexFinder.cpp
+    GaussianTrackDensity.cpp
+    ImpactPointEstimator.cpp
+    GaussianGridTrackDensity.cpp
+    GridDensityVertexFinder.cpp
 )
