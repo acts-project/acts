@@ -34,6 +34,8 @@ class VertexingErrorCategory : public std::error_category {
         return "Unable to find element.";
       case VertexingError::NoCovariance:
         return "No covariance provided.";
+      case VertexingError::InvalidInput:
+        return "Invalid input provided.";
       default:
         return "unknown";
     }

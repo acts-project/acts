@@ -58,6 +58,7 @@ class Vertex {
 
   /// @return Returns 4D position of the vertex seed
   const Vector4& fullSeedPosition() const;
+  Vector4& fullSeedPosition();
 
   /// @return Returns position covariance
   SquareMatrix3 covariance() const;
@@ -118,5 +119,3 @@ class Vertex {
 };
 
 }  // namespace Acts
-
-#include "Vertex.ipp"

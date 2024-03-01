@@ -154,6 +154,9 @@ class VertexPerformanceWriter final
   std::vector<double> m_covYT;
   std::vector<double> m_covZT;
 
+  // Sum pT^2 of all tracks associated with the vertex
+  std::vector<double> m_sumPt2;
+
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner
   // vectors contain the values of all tracks corresponding to one vertex. The
