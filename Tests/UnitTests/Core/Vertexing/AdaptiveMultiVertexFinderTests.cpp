@@ -413,8 +413,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = GridDensityVertexFinder<4000, 55>;
-  SeedFinder::Config seedFinderCfg(250);
+  using SeedFinder = GridDensityVertexFinder;
+  SeedFinder::Config seedFinderCfg{{{250, 4000, 55}}};
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
