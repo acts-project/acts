@@ -73,7 +73,6 @@ void addJson(Context& ctx);
 void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
-void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
@@ -124,7 +123,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addDetray(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
-  addEDM4hep(ctx);
   addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);
