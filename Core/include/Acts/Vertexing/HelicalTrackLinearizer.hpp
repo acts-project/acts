@@ -98,5 +98,3 @@ class HelicalTrackLinearizer {
 };
 
 }  // namespace Acts
-
-#include "HelicalTrackLinearizer.ipp"

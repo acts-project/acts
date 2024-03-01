@@ -128,8 +128,7 @@ test_exatrkx_python:
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - source /usr/local/bin/thisroot.sh
-    - source build/python/setup.sh
+    - source build/this_acts_withdeps.sh
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -205,12 +204,7 @@ linux_test_examples:
     - cd ..
 
     - /usr/local/bin/geant4-config --install-datasets
-    - "source /usr/local/bin/thisroot.sh || true"
-    - "source /usr/local/bin/thisdd4hep_only.sh || true"
-    - "source /usr/local/bin/geant4.sh || true"
-    - source build/python/setup.sh
-    - export PYTHONPATH=/usr/local/python:$PYTHONPATH
-    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - source build/this_acts_withdeps.sh
     - cd src
     - pip3 install -r Examples/Python/tests/requirements.txt
     - pytest -rFsv -k "not exatrkx" -v
@@ -237,16 +231,11 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
+    - pip3 install histcmp==0.6.5 spyral-cli==1.1.0 matplotlib
     - pip3 install -r src/Examples/Scripts/requirements.txt
     - /usr/local/bin/geant4-config --install-datasets
-    - "source /usr/local/bin/thisroot.sh || true"
-    - "source /usr/local/bin/thisdd4hep_only.sh || true"
-    - "source /usr/local/bin/geant4.sh || true"
-    - source build/python/setup.sh
-    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - source build/this_acts_withdeps.sh
     - cd src
-    - export PYTHONPATH="${PYTHONPATH}":"${PWD}/Examples/Scripts/Python"
     - CI/physmon/phys_perf_mon.sh all physmon
 
 ###############################

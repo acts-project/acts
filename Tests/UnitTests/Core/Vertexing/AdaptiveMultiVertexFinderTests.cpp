@@ -32,6 +32,7 @@
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
@@ -111,20 +112,17 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
-
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  SeedFinder seedFinder{{densityCfg}};
+  auto seedFinder = std::make_shared<TrackDensityVertexFinder>(
+      TrackDensityVertexFinder::Config{densityCfg});
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
-
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              bField);
+  AdaptiveMultiVertexFinder::Config finderConfig(std::move(fitter), seedFinder,
+                                                 ipEstimator, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Finder finder(std::move(finderConfig));
-  Finder::State state;
+  AdaptiveMultiVertexFinder finder(std::move(finderConfig));
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   std::vector<BoundTrackParameters> tracks = std::get<TracksData>(csvData);
@@ -272,20 +270,17 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = TrackDensityVertexFinder<Fitter, GaussianTrackDensity>;
-
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);
-  SeedFinder seedFinder({densityCfg});
+  auto seedFinder = std::make_shared<TrackDensityVertexFinder>(
+      TrackDensityVertexFinder::Config{densityCfg});
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
-
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              bField);
+  AdaptiveMultiVertexFinder::Config finderConfig(
+      std::move(fitter), std::move(seedFinder), ipEstimator, bField);
   finderConfig.extractParameters.connect(extractParameters);
-  Finder::State state;
 
-  Finder finder(std::move(finderConfig));
+  AdaptiveMultiVertexFinder finder(std::move(finderConfig));
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -418,21 +413,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  using SeedFinder = GridDensityVertexFinder<4000, 55>;
-  SeedFinder::Config seedFinderCfg(250);
+  using SeedFinder = GridDensityVertexFinder;
+  SeedFinder::Config seedFinderCfg{{{250, 4000, 55}}};
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  SeedFinder seedFinder(seedFinderCfg);
+  auto seedFinder = std::make_shared<SeedFinder>(seedFinderCfg);
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
-
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
-                              bField);
+  AdaptiveMultiVertexFinder::Config finderConfig(
+      std::move(fitter), std::move(seedFinder), ipEst, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Finder finder(std::move(finderConfig));
-  Finder::State state;
+  AdaptiveMultiVertexFinder finder(std::move(finderConfig));
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
@@ -577,21 +570,19 @@ BOOST_AUTO_TEST_CASE(
   gridDensityCfg.spatialBinExtent = 0.05;
   AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
 
-  using SeedFinder = AdaptiveGridDensityVertexFinder<>;
+  using SeedFinder = AdaptiveGridDensityVertexFinder;
   SeedFinder::Config seedFinderCfg(gridDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
-  SeedFinder seedFinder(seedFinderCfg);
+  auto seedFinder = std::make_shared<SeedFinder>(seedFinderCfg);
 
-  using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
-
-  Finder::Config finderConfig(std::move(fitter), std::move(seedFinder), ipEst,
-                              bField);
+  AdaptiveMultiVertexFinder::Config finderConfig(
+      std::move(fitter), std::move(seedFinder), ipEst, bField);
   finderConfig.extractParameters.connect<&InputTrack::extractParameters>();
 
-  Finder finder(std::move(finderConfig));
-  Finder::State state;
+  AdaptiveMultiVertexFinder finder(std::move(finderConfig));
+  IVertexFinder::State state = finder.makeState(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);

@@ -1,22 +1,30 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename vfitter_t, typename track_density_t>
-auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+
+Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& /*state*/) const
-    -> Result<std::vector<Vertex>> {
-  typename track_density_t::State densityState(trackVector.size());
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& /*state*/) const {
+  GaussianTrackDensity::State densityState(trackVector.size());
 
   // Calculate z seed position
-  std::pair<double, double> zAndWidth =
-      m_cfg.trackDensityEstimator.globalMaximumWithWidth(densityState,
-                                                         trackVector);
+  auto zAndWidthRes = m_cfg.trackDensityEstimator.globalMaximumWithWidth(
+      densityState, trackVector);
+  if (!zAndWidthRes.ok()) {
+    return zAndWidthRes.error();
+  }
+  const auto& zAndWidthOpt = *zAndWidthRes;
+  if (!zAndWidthOpt) {
+    return std::vector<Vertex>();
+  }
+  const auto& zAndWidth = *zAndWidthOpt;
 
   double z = zAndWidth.first;
 
@@ -36,7 +44,5 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }

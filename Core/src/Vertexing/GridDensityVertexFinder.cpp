@@ -1,16 +1,20 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
-    const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions, State& state) const
+#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
+
+namespace Acts {
+
+auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   IVertexFinder::State& anyState) const
     -> Result<std::vector<Vertex>> {
+  auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
@@ -28,13 +32,13 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     }
     if (!couldRemoveTracks) {
       // No tracks were removed anymore
-      // Return empty seed, i.e. vertex at constraint position
+      // Return empty seed
       // (Note: Upstream finder should check for this break condition)
-      std::vector<Vertex> seedVec{vertexingOptions.constraint};
-      return seedVec;
+      return std::vector<Vertex>{};
     }
   } else {
-    state.mainGrid = MainGridVector::Zero();
+    state.mainGrid =
+        MainGridVector::Zero(m_cfg.gridDensity.config().mainGridSize);
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
@@ -58,7 +62,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   double z = 0;
   double width = 0;
-  if (state.mainGrid != MainGridVector::Zero()) {
+  if (!state.mainGrid.isZero()) {
     if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
       auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
@@ -93,14 +97,11 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
 
-template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
-    doesPassTrackSelection(const BoundTrackParameters& trk) const -> bool {
+auto GridDensityVertexFinder::doesPassTrackSelection(
+    const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
@@ -138,3 +139,5 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
 
   return true;
 }
+
+}  // namespace Acts

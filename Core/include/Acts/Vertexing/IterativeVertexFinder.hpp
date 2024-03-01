@@ -10,18 +10,19 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+#include <functional>
 
 namespace Acts {
 
@@ -53,15 +54,8 @@ namespace Acts {
 ///   from tracksAtVertex if not compatible.
 /// 5. Add vertex to vertexCollection
 /// 6. Repeat until no seedTracks are left or max. number of vertices found
-///
-////////////////////////////////////////////////////////////
-///
-/// @tparam vfitter_t Vertex fitter type
-/// @tparam sfinder_t Seed finder type
-template <typename vfitter_t, typename sfinder_t>
-class IterativeVertexFinder {
-  static_assert(VertexFitterConcept<vfitter_t>,
-                "Vertex fitter does not fulfill vertex fitter concept.");
+class IterativeVertexFinder final : public IVertexFinder {
+  using VertexFitter = FullBilloirVertexFitter;
 
  public:
   /// Configuration struct
@@ -72,19 +66,20 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(vfitter_t fitter, sfinder_t sfinder, ImpactPointEstimator est)
+    Config(VertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
+           ImpactPointEstimator est)
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEst(std::move(est)) {}
 
     /// Vertex fitter
-    vfitter_t vertexFitter;
+    VertexFitter vertexFitter;
 
     /// Track linearizer
     TrackLinearizer trackLinearizer;
 
     /// Vertex seed finder
-    sfinder_t seedFinder;
+    std::shared_ptr<IVertexFinder> seedFinder;
 
     /// ImpactPointEstimator
     ImpactPointEstimator ipEst;
@@ -114,21 +109,25 @@ class IterativeVertexFinder {
     /// decide if a track should be checked for reassignment to other vertices
     double cutOffTrackWeightReassign = 1;
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
+
+    /// Magnetic field provider
+    std::shared_ptr<MagneticFieldProvider> field;
   };
 
   /// State struct
   struct State {
     State(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& magContext)
-        : ipState(field.makeCache(magContext)),
-          fitterState(field.makeCache(magContext)),
+          const Acts::MagneticFieldContext& _magContext)
+        : magContext(_magContext),
+          ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
+
+    std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
+
     /// The IP estimator state
     ImpactPointEstimator::State ipState;
-    /// The fitter state
-    typename vfitter_t::State fitterState;
 
     MagneticFieldProvider::Cache fieldCache;
   };
@@ -139,32 +138,30 @@ class IterativeVertexFinder {
   /// @param logger The logging instance
   IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No function to extract parameters "
-          "provided.");
-    }
-
-    if (!m_cfg.trackLinearizer.connected()) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No track linearizer provided.");
-    }
-  }
+                            "IterativeVertexFinder", Logging::INFO));
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
   /// @param trackVector Input tracks
   /// @param vertexingOptions Vertexing options
-  /// @param state State for fulfilling interfaces
+  /// @param anyState State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
-  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
-                                   const VertexingOptions& vertexingOptions,
-                                   State& state) const;
+  Result<std::vector<Vertex>> find(
+      const std::vector<InputTrack>& trackVector,
+      const VertexingOptions& vertexingOptions,
+      IVertexFinder::State& anyState) const override;
+
+  IVertexFinder::State makeState(
+      const MagneticFieldContext& mctx) const override {
+    return IVertexFinder::State{State{*m_cfg.field, mctx}};
+  }
+
+  void setTracksToRemove(
+      IVertexFinder::State& /*anyState*/,
+      const std::vector<InputTrack>& /*removedTracks*/) const override {
+    // Nothing to do here
+  }
 
  private:
   /// Configuration object
@@ -178,10 +175,14 @@ class IterativeVertexFinder {
 
   /// @brief Method that calls seed finder to retrieve a vertex seed
   ///
+  /// @param state The state object
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex> getVertexSeed(const std::vector<InputTrack>& seedTracks,
-                               const VertexingOptions& vertexingOptions) const;
+  ///
+  /// @return Vertex seed
+  Result<std::optional<Vertex>> getVertexSeed(
+      State& state, const std::vector<InputTrack>& seedTracks,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks
   ///
@@ -259,5 +260,3 @@ class IterativeVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "IterativeVertexFinder.ipp"
