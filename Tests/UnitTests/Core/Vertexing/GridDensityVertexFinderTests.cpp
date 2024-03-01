@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-  using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  Finder1::Config cfg1;
+  using Finder1 = GridDensityVertexFinder;
+  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
@@ -210,11 +210,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-  using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
+  using Finder1 = GridDensityVertexFinder;
+  using GridDensity = GaussianGridTrackDensity;
 
   // Use custom grid density here
-  GridDensity::Config densityConfig(100_mm);
+  GridDensity::Config densityConfig(100_mm, mainGridSize, trkGridSize);
   densityConfig.useHighestSumZPosition = true;
   GridDensity density(densityConfig);
 
@@ -382,8 +382,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.constraint = constraintVtx;
 
-  using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
-  Finder1::Config cfg1;
+  using Finder1 = GridDensityVertexFinder;
+  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.estimateSeedWidth = true;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
