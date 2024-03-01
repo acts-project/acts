@@ -117,7 +117,7 @@ class GaussianTrackDensity {
   /// InputTrack
   ///
   /// @return Pair of position of global maximum and Gaussian width
-  std::pair<double, double> globalMaximumWithWidth(
+  Result<std::optional<std::pair<double, double>>> globalMaximumWithWidth(
       State& state, const std::vector<InputTrack>& trackList) const;
 
   /// @brief Calculates the z position of the global maximum
@@ -128,8 +128,8 @@ class GaussianTrackDensity {
   /// InputTrack
   ///
   /// @return z position of the global maximum
-  double globalMaximum(State& state,
-                       const std::vector<InputTrack>& trackList) const;
+  Result<std::optional<double>> globalMaximum(
+      State& state, const std::vector<InputTrack>& trackList) const;
 
  private:
   /// The configuration
