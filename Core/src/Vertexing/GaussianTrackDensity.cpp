@@ -63,8 +63,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
     return std::nullopt;
   }
 
-  return std::make_pair(maxPosition,
-                        std::sqrt(-(maxDensity / maxSecondDerivative)));
+  return std::pair{maxPosition, std::sqrt(-(maxDensity / maxSecondDerivative))};
 }
 
 Result<std::optional<double>> Acts::GaussianTrackDensity::globalMaximum(
