@@ -112,9 +112,13 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     // Include also single track vertices
     bool addSingleTrackVertices = false;
 
-    // Use 3d information for evaluating the vertex distance significance
-    // for vertex merging/splitting
-    bool do3dSplitting = false;
+    // If doFullSplitting == true, we check the 3D distance (if useTime ==
+    // false) or the 4D distance (if useTime == true) of the vertices to
+    // determine whether their are merged.
+    // If doFullSplitting == false, we check the z distance (if useTime ==
+    // false) or the z-t distance (if useTime == true) of the vertices to
+    // determine whether they are merged.
+    bool doFullSplitting = false;
 
     // Maximum vertex contamination value
     double maximumVertexContamination = 0.5;
