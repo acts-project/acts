@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Optional
 import math
-from math import sqrt
 
 import acts
 import acts.examples
@@ -118,7 +117,7 @@ def buildITkGeometry(
     # Set the extra byte to encode which digitization config to apply
     def geoid_hook(geoid, surface):
         if geoid.volume() in volumeRadiusCutsMap:
-            r = sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
+            r = math.sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
 
             # The surface center lies outside of the annulus bounds.
             # Use r-bounds instead

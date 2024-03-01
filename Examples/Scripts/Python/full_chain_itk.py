@@ -24,7 +24,7 @@ from acts.examples.reconstruction import (
 
 ttbar_pu200 = False
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-itk")
+geo_dir = pathlib.Path("/Users/andreas/cern/source/acts/acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
