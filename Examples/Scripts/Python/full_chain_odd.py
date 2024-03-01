@@ -11,6 +11,7 @@ from acts.examples.simulation import (
     addGeant4,
     ParticleSelectorConfig,
     addDigitization,
+    addParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -28,10 +29,14 @@ from acts.examples.reconstruction import (
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
+import acts.examples.edm4hep
 
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
 
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+
+parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
+parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
@@ -75,81 +80,126 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 s = acts.examples.Sequencer(
     events=args["events"],
-    numThreads=1,
+    skip=args["skip"],
+    numThreads=1 if g4_simulation else -1,
     outputDir=str(outputDir),
 )
 
-if not ttbar:
-    addParticleGun(
-        s,
-        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-        EtaConfig(-3.0, 3.0),
-        PhiConfig(0.0, 360.0 * u.degree),
-        ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
-        vtxGen=acts.examples.GaussianVertexGenerator(
-            mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
-        ),
-        multiplicity=200,
-        rnd=rnd,
+if args["edm4hep"]:
+    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+        inputPath=str(args["edm4hep"]),
+        inputSimHits=[
+            "PixelBarrelReadout",
+            "PixelEndcapReadout",
+            "ShortStripBarrelReadout",
+            "ShortStripEndcapReadout",
+            "LongStripBarrelReadout",
+            "LongStripEndcapReadout",
+        ],
+        outputParticlesGenerator="particles_input",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
+        outputSimHits="simhits",
+        graphvizOutput="graphviz",
+        dd4hepDetector=detector,
+        trackingGeometry=trackingGeometry,
+        sortSimHitsInTime=True,
+        level=acts.logging.INFO,
     )
-else:
-    addPythia8(
-        s,
-        hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=50,
-        vtxGen=acts.examples.GaussianVertexGenerator(
-            mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
-        ),
-        rnd=rnd,
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-    )
-if g4_simulation:
-    if s.config.numThreads != 1:
-        raise ValueError("Geant 4 simulation does not support multi-threading")
+    s.addReader(edm4hepReader)
+    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
 
-    # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
-    # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
-    # For more detail see issue #1578
-    addGeant4(
+    addParticleSelection(
         s,
-        detector,
-        trackingGeometry,
-        field,
-        preSelectParticles=ParticleSelectorConfig(
+        config=ParticleSelectorConfig(
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-        rnd=rnd,
-        killVolume=trackingGeometry.worldVolume,
-        killAfterTime=25 * u.ns,
+        inputParticles="particles",
+        outputParticles="particles_selected",
     )
+
+
 else:
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-            removeNeutral=True,
+    if not ttbar:
+        addParticleGun(
+            s,
+            MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+            EtaConfig(-3.0, 3.0),
+            PhiConfig(0.0, 360.0 * u.degree),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
+            ),
+            multiplicity=200,
+            rnd=rnd,
         )
-        if ttbar
-        else ParticleSelectorConfig(),
-        enableInteractions=True,
-        outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
-        rnd=rnd,
-    )
+    else:
+        addPythia8(
+            s,
+            hardProcess=["Top:qqbar2ttbar=on"],
+            npileup=50,
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                ),
+            ),
+            rnd=rnd,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+        )
+
+    if g4_simulation:
+        if s.config.numThreads != 1:
+            raise ValueError("Geant 4 simulation does not support multi-threading")
+
+        # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
+        # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
+        # For more detail see issue #1578
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            preSelectParticles=ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            ),
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+            rnd=rnd,
+            killVolume=trackingGeometry.worldVolume,
+            killAfterTime=25 * u.ns,
+        )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            preSelectParticles=ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            )
+            if ttbar
+            else ParticleSelectorConfig(),
+            enableInteractions=True,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+            rnd=rnd,
+        )
 
 addDigitization(
     s,
@@ -214,9 +264,7 @@ else:
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
-            maximumSharedHits=3,
-            maximumIterations=1000000,
-            nMeasurementsMin=7,
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
         writeCovMat=True,

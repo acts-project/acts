@@ -8,7 +8,9 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/Io/Csv/CsvDriftCircleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
+#include "ActsExamples/Io/Csv/CsvMuonSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
@@ -67,6 +69,12 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvSimHitReader, mex,
                              "CsvSimHitReader", inputDir, inputStem,
                              outputSimHits);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMuonSimHitReader, mex,
+                             "CsvMuonSimHitReader", inputDir, inputStem,
+                             outputSimHits);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvDriftCircleReader, mex,
+                             "CsvDriftCircleReader", inputDir, inputStem,
+                             outputDriftCircles);
 
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::CsvSpacePointReader, mex, "CsvSpacePointReader", inputDir,

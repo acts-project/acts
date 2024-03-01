@@ -66,7 +66,7 @@ if "__main__" == __name__:
             detector,
             "odd-xy",
             [[ivol, volumeOptions]],
-            [["xy", viewRange]],
+            [["xy", ["sensitives"], viewRange]],
             "vol_" + str(ivol),
         )
 
@@ -78,7 +78,7 @@ if "__main__" == __name__:
         detector,
         "odd",
         [[ivol, volumeOptions] for ivol in range(detector.number_volumes())],
-        [["xy", xyRange], ["zr", zrRange]],
+        [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
         "detector",
     )
 
