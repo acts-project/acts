@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // Set up ImpactPointEstimator, used for comparisons later
   ImpactPointEstimator::Config ip3dEstConfig(bField, propagator);
   ImpactPointEstimator ip3dEst(ip3dEstConfig);
-  ImpactPointEstimator::State state(bField->makeCache(magFieldContext));
+  ImpactPointEstimator::State state{bField->makeCache(magFieldContext)};
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
   // Linearizer for BoundTrackParameters type test
