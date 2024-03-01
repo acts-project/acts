@@ -31,7 +31,7 @@ add_library(
   src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
-  $<TARGET_OBJECTS:ActsExamplesIoRootLinkDef
+  $<TARGET_OBJECTS:ActsExamplesIoRootLinkDef>
 )
 target_include_directories(
   ActsExamplesIoRoot
