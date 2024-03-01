@@ -21,9 +21,7 @@ namespace Acts {
 /// @brief Class to model tracks as 2D density functions based on
 /// their d0 and z0 perigee parameters (mean value) and covariance
 /// matrices (determining the width of the function)
-template <typename input_track_t>
 class GaussianTrackDensity {
-  // @TODO: Remove template
  public:
   /// @brief Struct to store information for a single track
   struct TrackEntry {
@@ -78,6 +76,9 @@ class GaussianTrackDensity {
     // Corresponding cut values
     double d0SignificanceCut;
     double z0SignificanceCut;
+
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
   };
 
   /// @brief The State struct
@@ -88,11 +89,14 @@ class GaussianTrackDensity {
     std::vector<TrackEntry> trackEntries;
   };
 
-  /// Default constructor
-  GaussianTrackDensity() = default;
-
   /// Constructor with config
-  GaussianTrackDensity(const Config& cfg) : m_cfg(cfg) {}
+  GaussianTrackDensity(const Config& cfg) : m_cfg(cfg) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "GaussianTrackDensity: "
+          "No parameter extractor provided.");
+    }
+  }
 
   /// @brief Calculates z position of global maximum with Gaussian width
   /// for density function.
@@ -114,9 +118,7 @@ class GaussianTrackDensity {
   ///
   /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(
-      State& state, const std::vector<InputTrack>& trackList,
-      const std::function<BoundTrackParameters(const InputTrack&)>&
-          extractParameters) const;
+      State& state, const std::vector<InputTrack>& trackList) const;
 
   /// @brief Calculates the z position of the global maximum
   ///
@@ -126,10 +128,8 @@ class GaussianTrackDensity {
   /// InputTrack
   ///
   /// @return z position of the global maximum
-  double globalMaximum(
-      State& state, const std::vector<InputTrack>& trackList,
-      const std::function<BoundTrackParameters(const InputTrack&)>&
-          extractParameters) const;
+  double globalMaximum(State& state,
+                       const std::vector<InputTrack>& trackList) const;
 
  private:
   /// The configuration
@@ -141,10 +141,8 @@ class GaussianTrackDensity {
   /// @param trackList All input tracks
   /// @param extractParameters Function extracting BoundTrackParameters from
   /// InputTrack
-  Result<void> addTracks(
-      State& state, const std::vector<InputTrack>& trackList,
-      const std::function<BoundTrackParameters(const InputTrack&)>&
-          extractParameters) const;
+  Result<void> addTracks(State& state,
+                         const std::vector<InputTrack>& trackList) const;
 
   /// @brief Evaluate the density function and its two first
   /// derivatives at the specified coordinate along the beamline
@@ -203,5 +201,3 @@ class GaussianTrackDensity {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/GaussianTrackDensity.ipp"

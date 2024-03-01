@@ -130,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_vz.push_back(Acts::clampValue<float>(particle.fourPosition().z() /
                                            Acts::UnitConstants::mm));
     m_vt.push_back(Acts::clampValue<float>(particle.fourPosition().w() /
-                                           Acts::UnitConstants::ns));
+                                           Acts::UnitConstants::mm));
     // momentum
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_p.push_back(Acts::clampValue<float>(p));
@@ -186,8 +186,9 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       // get the sim hits
       auto it = hitsPerParticle.find(particle.particleId());
       if (it == hitsPerParticle.end()) {
-        ACTS_INFO("Could not find sim hits for "
-                  << particle.particleId() << " in event " << ctx.eventNumber);
+        ACTS_DEBUG("Could not find sim hits for "
+                   << particle.particleId() << " in event " << ctx.eventNumber);
+        m_numberOfHits.push_back(0);
       } else {
         // get the number of hits
         m_numberOfHits.push_back(it->second);

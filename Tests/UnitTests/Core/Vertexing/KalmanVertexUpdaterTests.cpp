@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -51,7 +52,7 @@ namespace Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer = HelicalTrackLinearizer<Propagator>;
+using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -104,9 +105,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Linearizer for BoundTrackParameters type test
-  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig);
-  Linearizer::State state(bField->makeCache(magFieldContext));
+  auto fieldCache = bField->makeCache(magFieldContext);
 
   // Create perigee surface at origin
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -156,7 +159,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     LinearizedTrack linTrack =
         linearizer
             .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
-                            state)
+                            fieldCache)
             .value();
 
     // Create TrackAtVertex
@@ -172,8 +175,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters, 3>(
-        vtx, trkAtVtx);
+    KalmanVertexUpdater::updateVertexWithTrack(vtx, trkAtVtx, 3);
 
     if (debug) {
       std::cout << "Old vertex position: " << vtxPos << std::endl;
@@ -196,6 +198,132 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // TrackAtVertex list. Has to be done manually after calling
     // the update method.
     BOOST_CHECK(vtx.tracks().empty());
+
+  }  // end for loop
+
+}  // end test case
+
+///
+/// @brief Unit test for KalmanVertexTrackUpdater
+///
+BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
+  bool debug = true;
+
+  // Number of tests
+  unsigned int nTests = 10;
+
+  // Set up RNG
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
+
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
+
+  // Set up Eigenstepper
+  EigenStepper<> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // Set up ImpactPointEstimator, used for comparisons later
+  ImpactPointEstimator::Config ip3dEstConfig(bField, propagator);
+  ImpactPointEstimator ip3dEst(ip3dEstConfig);
+  ImpactPointEstimator::State state{bField->makeCache(magFieldContext)};
+
+  // Set up HelicalTrackLinearizer, needed for linearizing the tracks
+  // Linearizer for BoundTrackParameters type test
+  Linearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
+  Linearizer linearizer(ltConfig);
+  auto fieldCache = bField->makeCache(magFieldContext);
+
+  // Create perigee surface at origin
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
+
+  // Create random tracks around origin and a random vertex.
+  // Update tracks with the assumption that they originate from
+  // the vertex position and check if they are closer to the
+  // vertex after the update process
+  for (unsigned int i = 0; i < nTests; ++i) {
+    // Construct positive or negative charge randomly
+    double q = qDist(gen) < 0 ? -1. : 1.;
+
+    // Construct random track parameters
+    BoundTrackParameters::ParametersVector paramVec;
+
+    paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
+        q / pTDist(gen), 0.;
+
+    if (debug) {
+      std::cout << "Creating track parameters: " << paramVec << std::endl;
+    }
+
+    // Fill vector of track objects with simple covariance matrix
+    Covariance covMat;
+
+    // Resolutions
+    double res_d0 = resIPDist(gen);
+    double res_z0 = resIPDist(gen);
+    double res_ph = resAngDist(gen);
+    double res_th = resAngDist(gen);
+    double res_qp = resQoPDist(gen);
+
+    covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
+        0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
+        res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
+        0., 0., 0., 1.;
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+                                ParticleHypothesis::pion());
+
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+
+    // Linearized state of the track
+    LinearizedTrack linTrack =
+        linearizer
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            fieldCache)
+            .value();
+
+    // Create TrackAtVertex
+    TrackAtVertex trkAtVtx(0., params, InputTrack{&params});
+
+    // Set linearized state of trackAtVertex
+    trkAtVtx.linearizedState = linTrack;
+    trkAtVtx.isLinearized = true;
+
+    // Copy parameters for later comparison of old and new version
+    auto fittedParamsCopy = trkAtVtx.fittedParams;
+
+    // Create a vertex
+    Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
+    Vertex vtx(vtxPos);
+
+    // Update trkAtVertex with assumption of originating from vtx
+    KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, 3);
+
+    // The old distance
+    double oldDistance =
+        ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
+            .value();
+
+    // The new distance after update
+    double newDistance =
+        ip3dEst
+            .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
+            .value();
+    if (debug) {
+      std::cout << "Old distance: " << oldDistance << std::endl;
+      std::cout << "New distance: " << newDistance << std::endl;
+    }
+
+    // Parameters should have changed
+    BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
+
+    // After update, track should be closer to the vertex
+    BOOST_CHECK_LT(newDistance, oldDistance);
 
   }  // end for loop
 

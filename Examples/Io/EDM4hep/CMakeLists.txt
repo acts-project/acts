@@ -3,11 +3,10 @@ add_library(
   src/EDM4hepMeasurementReader.cpp
   src/EDM4hepMeasurementWriter.cpp
   src/EDM4hepMultiTrajectoryWriter.cpp
+  src/EDM4hepReader.cpp
   src/EDM4hepTrackWriter.cpp
   src/EDM4hepTrackReader.cpp
-  src/EDM4hepParticleReader.cpp
   src/EDM4hepParticleWriter.cpp
-  src/EDM4hepSimHitReader.cpp
   src/EDM4hepSimHitWriter.cpp
   src/EDM4hepUtil.cpp)
 target_include_directories(

@@ -1,0 +1,48 @@
+checks:
+  "*":
+    Chi2Test:
+      threshold: 0.01
+    KolmogorovTest:
+      threshold: 0.68
+    RatioCheck:
+      threshold: 3
+    ResidualCheck:
+      threshold: 3
+    IntegralCheck:
+      threshold: 3
+
+  "nStates_*":
+    KolmogorovTest: null
+  "nMeasurements_*":
+    KolmogorovTest: null
+
+  pullmean_phi_vs_eta:
+    IntegralCheck:
+      threshold: 4
+  pullmean_theta_vs_eta:
+    IntegralCheck: null
+  pullmean_z0_vs_eta:
+    IntegralCheck: null
+
+  pullwidth_phi_vs_eta:
+    IntegralCheck:
+      threshold: 4.3
+  reswidth_d0_vs_eta:
+    IntegralCheck:
+      threshold: 4
+  resmean_d0_vs_eta:
+    IntegralCheck:
+      threshold: 4
+
+  pullwidth_*:
+    Chi2Test: null
+    KolmogorovTest: null
+  pullmean_*:
+    Chi2Test: null
+    KolmogorovTest: null
+  reswidth_*:
+    Chi2Test: null
+    KolmogorovTest: null
+  resmean_*:
+    Chi2Test: null
+    KolmogorovTest: null

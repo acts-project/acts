@@ -44,13 +44,14 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
       m_cfg(std::move(config)),
-      m_trackSelector([this]() -> std::optional<Acts::TrackSelector> {
-        if (m_cfg.trackSelectorCfg.has_value()) {
-          return {m_cfg.trackSelectorCfg.value()};
-        } else {
-          return std::nullopt;
-        }
-      }()) {
+      m_trackSelector(
+          m_cfg.trackSelectorCfg.has_value()
+              ? std::visit(
+                    [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
+                      return {cfg};
+                    },
+                    m_cfg.trackSelectorCfg.value())
+              : std::nullopt) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
