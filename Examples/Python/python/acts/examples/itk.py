@@ -24,6 +24,7 @@ class InputSpacePointsType(Enum):
     PixelSpacePoints = 0
     StripSpacePoints = 1
 
+
 def buildITkGeometry(
     geo_dir: Path,
     customMaterialFile: Optional[str] = None,
@@ -70,11 +71,10 @@ def buildITkGeometry(
     # radial cuts that describe different module segmentation regions within a
     # volume, e.g. endcap rings
     volumeRadiusCutsMap = {
-        8:  [[0.0, 78.0],         # Pixel negative z
-            [78.0, 130.0]],       # Pixel negative z
-        10: [[0.0, 78.0],         # Pixel positive z
-            [78.0, 130.0]],       # Pixel positive z
-        22: [[384.5, 403.481],   # Strip negative z, Ring 0, Row 0
+        8: [[0.0, 78.0], [78.0, 130.0]],  # Pixel negative z
+        10: [[0.0, 78.0], [78.0, 130.0]],  # Pixel positive z
+        22: [
+            [384.5, 403.481],  # Strip negative z, Ring 0, Row 0
             [403.481, 427.462],  # Strip negative z, Ring 0, Row 1
             [427.462, 456.442],  # Strip negative z, Ring 0, Row 2
             [456.442, 488.423],  # Strip negative z, Ring 0, Row 3
@@ -91,8 +91,10 @@ def buildITkGeometry(
             [756.901, 811.482],  # Strip negative z, Ring 4, Row 0
             [811.482, 866.062],  # Strip negative z, Ring 4, Row 1
             [867.462, 907.623],  # Strip negative z, Ring 5, Row 0
-            [907.623, 967.785]], # Strip negative z, Ring 5, Row 1
-        24: [[384.5, 403.481],   # Strip positive z, Ring 0, Row 0
+            [907.623, 967.785],  # Strip negative z, Ring 5, Row 1
+        ],
+        24: [
+            [384.5, 403.481],  # Strip positive z, Ring 0, Row 0
             [403.481, 427.462],  # Strip positive z, Ring 0, Row 1
             [427.462, 456.442],  # Strip positive z, Ring 0, Row 2
             [456.442, 488.423],  # Strip positive z, Ring 0, Row 3
@@ -109,7 +111,8 @@ def buildITkGeometry(
             [756.901, 811.482],  # Strip positive z, Ring 4, Row 0
             [811.482, 866.062],  # Strip positive z, Ring 4, Row 1
             [867.462, 907.623],  # Strip positive z, Ring 5, Row 0
-            [907.623, 967.785]], # Strip positive z, Ring 5, Row 1
+            [907.623, 967.785],  # Strip positive z, Ring 5, Row 1
+        ],
     }
 
     # Set the extra byte to encode which digitization config to apply
@@ -119,11 +122,11 @@ def buildITkGeometry(
 
             # The surface center lies outside of the annulus bounds.
             # Use r-bounds instead
-            bounds = surface.Bounds()
-            if bounds.type() == Acts.SurfaceBounds.eAnnulus:
+            bounds = surface.bounds()
+            if bounds.type() == acts.SurfaceBoundsType.Annulus:
                 bound_values = bounds.values()
-                minR = bound_values[Acts.AnnulusBounds.eMinR]
-                maxR = bound_values[Acts.AnnulusBounds.eMaxR]
+                minR = bound_values[acts.AnnulusBoundValues.MinR]
+                maxR = bound_values[acts.AnnulusBoundValues.MaxR]
                 r = minR + 0.5 * (maxR - minR)
 
             # Enumerate the digi config by subrange in the volume

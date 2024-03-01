@@ -34,24 +34,6 @@ class IContextDecorator;
 
 namespace ActsExamples {
 
-/// Adds specialized functionality for stereo annulus bounds to the geoID hook.
-/*struct ITkGeometryIdentifierHelper {
-  Acts::GeometryIdentifier operator()(const Acts::Surface& s) const {
-    // Use the surface placement to check the radial constraint
-    const Acts::GeometryContext g{};
-    Acts::ActsScalar r{std::hypot(s.center(g)[0], s.center(g)[1])};
-
-    const Acts::SurfaceBounds& sBounds = s.bounds();
-    if (sBounds.type() == Acts::SurfaceBounds::eAnnulus) {
-      const auto& boundValues = sBounds.values();
-      const Acts::ActsScalar minR = boundValues[Acts::AnnulusBounds::eMinR];
-      const Acts::ActsScalar maxR = boundValues[Acts::AnnulusBounds::eMaxR];
-      r = minR + 0.5 * (maxR - minR);
-    }
-    return r;
-  }
-};*/
-
 struct TGeoDetector {
   using DetectorElementPtr = std::shared_ptr<const Acts::TGeoDetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
