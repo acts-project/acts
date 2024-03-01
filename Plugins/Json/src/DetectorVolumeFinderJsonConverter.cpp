@@ -8,11 +8,11 @@
 
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <array>
 #include <memory>
@@ -32,13 +32,13 @@ struct IndexedVolumesGenerator {
   /// @param bv the bin value array
   /// @param transform the transform for the indexed volumes inmplementaiton
   ///
-  /// @return a connected DetectorVolumeUpdator object
+  /// @return a connected DetectorVolumeUpdater object
   template <typename grid_type>
-  Acts::Experimental::DetectorVolumeUpdator createUpdator(
+  Acts::Experimental::DetectorVolumeUpdater createUpdater(
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
-    using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdatorImpl<
+    using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
         grid_type, Acts::Experimental::IndexedDetectorVolumeExtractor,
         Acts::Experimental::DetectorVolumeFiller>;
 
@@ -47,7 +47,7 @@ struct IndexedVolumesGenerator {
                                                            transform);
 
     // Create the delegate and connect it
-    Acts::Experimental::DetectorVolumeUpdator vFinder;
+    Acts::Experimental::DetectorVolumeUpdater vFinder;
     vFinder.connect<&IndexedDetectorVolumesImpl::update>(
         std::move(indexedDetectorVolumeImpl));
     return vFinder;
@@ -56,12 +56,12 @@ struct IndexedVolumesGenerator {
 
 }  // namespace
 
-Acts::Experimental::SurfaceCandidatesUpdator
+Acts::Experimental::SurfaceCandidatesUpdater
 Acts::DetectorVolumeFinderJsonConverter::fromJson(
     const nlohmann::json& jVolumeFinder) {
   // The return object
   auto vFinder = IndexedGridJsonHelper::generateFromJson<
-      Experimental::DetectorVolumeUpdator, IndexedVolumesGenerator>(
+      Experimental::DetectorVolumeUpdater, IndexedVolumesGenerator>(
       jVolumeFinder, "IndexedVolumes");
   if (vFinder.connected()) {
     return vFinder;

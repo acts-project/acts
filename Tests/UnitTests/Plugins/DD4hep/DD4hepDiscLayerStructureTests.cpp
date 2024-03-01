@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
         discStructure.builder(dd4hepStore, tContext, world, lsOptions);
 
     // Build the internal volume structure
-    auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+    auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
         discInternalsBuilder->construct(tContext);
 
     // All surfaces are filled
@@ -167,9 +167,9 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     // No volumes are added
     BOOST_CHECK(volumes.empty());
     // The surface updator is connected
-    BOOST_CHECK(surfacesUpdator.connected());
+    BOOST_CHECK(surfacesUpdater.connected());
     // The volume updator is connected
-    BOOST_CHECK(volumeUpdator.connected());
+    BOOST_CHECK(volumeUpdater.connected());
 
     // Kill that instance before going into the next test
     lcdd->destroyInstance();

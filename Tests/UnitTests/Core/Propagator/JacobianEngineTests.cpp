@@ -20,8 +20,6 @@
 #include <cmath>
 #include <memory>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
 namespace Test {
 
@@ -92,16 +90,6 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
   CHECK_CLOSE_REL(c2fJacobian(eFreeDir2, eBoundTheta), -sinTheta, 1e-5);
   // Q/P parameter: stays as is
   CHECK_CLOSE_REL(c2fJacobian(eFreeQOverP, eBoundQOverP), 1, 1e-5);
-
-  // (3) Test angle - directio relational jacobians
-  direction = Vector3(2., 3., 4.).normalized();
-
-  ActsMatrix<7, 8> d2aJacobian = detail::directionToAnglesJacobian(direction);
-  ActsMatrix<8, 7> a2dJacobian = detail::anglesToDirectionJacobian(direction);
-
-  auto roundTrip = a2dJacobian * d2aJacobian;
-  BOOST_CHECK_EQUAL(roundTrip.cols(), 8);
-  BOOST_CHECK_EQUAL(roundTrip.rows(), 8);
 }
 
 /// These tests do not test for a correct covariance transport but only for the
@@ -148,38 +136,33 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
 
   // (1) curvilinear/bound to bound transport jacobian
   // a) test without actual transport into the same surface
-  BoundMatrix b2bTransportJacobian = detail::boundToBoundTransportJacobian(
-      tgContext, freeParameters, boundToFreeJacobian, noTransportJacobian,
-      freeToPathDerivatives, *pSurface);
+  BoundMatrix b2bTransportJacobian;
+  detail::boundToBoundTransportJacobian(
+      tgContext, *pSurface, freeParameters, boundToFreeJacobian,
+      noTransportJacobian, freeToPathDerivatives, b2bTransportJacobian);
   BoundSquareMatrix newBoundCovariance =
       b2bTransportJacobian * boundCovariance * b2bTransportJacobian.transpose();
   BOOST_CHECK(boundCovariance.isApprox(newBoundCovariance));
   // b) test without actual transport but to a new surface
-  b2bTransportJacobian = detail::boundToBoundTransportJacobian(
-      tgContext, freeParameters, boundToFreeJacobian, noTransportJacobian,
-      freeToPathDerivatives, *oSurface);
+  detail::boundToBoundTransportJacobian(
+      tgContext, *oSurface, freeParameters, boundToFreeJacobian,
+      noTransportJacobian, freeToPathDerivatives, b2bTransportJacobian);
   newBoundCovariance =
       b2bTransportJacobian * boundCovariance * b2bTransportJacobian.transpose();
   BOOST_CHECK(!boundCovariance.isApprox(newBoundCovariance));
   // c) test to "the same" surface with transport
   // (not really senseful, but should give a different result)
-  b2bTransportJacobian = detail::boundToBoundTransportJacobian(
-      tgContext, freeParameters, boundToFreeJacobian, realTransportJacobian,
-      freeToPathDerivatives, *pSurface);
+  detail::boundToBoundTransportJacobian(
+      tgContext, *pSurface, freeParameters, boundToFreeJacobian,
+      realTransportJacobian, freeToPathDerivatives, b2bTransportJacobian);
   newBoundCovariance =
       b2bTransportJacobian * boundCovariance * b2bTransportJacobian.transpose();
   BOOST_CHECK(!boundCovariance.isApprox(newBoundCovariance));
 
-  // (2) free to bound transport jacobian
-  const ActsMatrix<7, 8>& directionToAnglesJacobian =
-      detail::directionToAnglesJacobian(direction);
-  const ActsMatrix<8, 7>& anglesToDirectionJacobian =
-      detail::anglesToDirectionJacobian(direction);
-
-  FreeToBoundMatrix f2bTransportJacobian = detail::freeToBoundTransportJacobian(
-      tgContext, freeParameters, directionToAnglesJacobian,
-      anglesToDirectionJacobian, noTransportJacobian, freeToPathDerivatives,
-      *pSurface);
+  FreeToBoundMatrix f2bTransportJacobian;
+  detail::freeToBoundTransportJacobian(
+      tgContext, *pSurface, freeParameters, noTransportJacobian,
+      freeToPathDerivatives, f2bTransportJacobian);
 
   newBoundCovariance =
       f2bTransportJacobian * freeCovariance * f2bTransportJacobian.transpose();
@@ -225,31 +208,24 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
 
   // (1) curvilinear/bound to curvilinear transport jacobian
   // a) test without actual transport into the same surface
-  BoundMatrix b2cTransportJacobian =
-      detail::boundToCurvilinearTransportJacobian(
-          direction, boundToFreeJacobian, noTransportJacobian,
-          freeToPathDerivatives);
+  BoundMatrix b2cTransportJacobian;
+  detail::boundToCurvilinearTransportJacobian(
+      direction, boundToFreeJacobian, noTransportJacobian,
+      freeToPathDerivatives, b2cTransportJacobian);
   BoundSquareMatrix newBoundCovariance =
       b2cTransportJacobian * boundCovariance * b2cTransportJacobian.transpose();
   BOOST_CHECK(boundCovariance.isApprox(newBoundCovariance));
   // b) test to another curvilinear frame at the same point (no transport)
-  b2cTransportJacobian = detail::boundToCurvilinearTransportJacobian(
+  detail::boundToCurvilinearTransportJacobian(
       Vector3(4., 5., 6.).normalized(), boundToFreeJacobian,
-      noTransportJacobian, freeToPathDerivatives);
+      noTransportJacobian, freeToPathDerivatives, b2cTransportJacobian);
   newBoundCovariance =
       b2cTransportJacobian * boundCovariance * b2cTransportJacobian.transpose();
   BOOST_CHECK(!boundCovariance.isApprox(newBoundCovariance));
 
-  // (2) free to bound transport jacobian
-  const ActsMatrix<7, 8>& directionToAnglesJacobian =
-      detail::directionToAnglesJacobian(direction);
-  const ActsMatrix<8, 7>& anglesToDirectionJacobian =
-      detail::anglesToDirectionJacobian(direction);
-
   FreeToBoundMatrix f2cTransportJacobian =
-      detail::freeToCurvilinearTransportJacobian(
-          direction, directionToAnglesJacobian, anglesToDirectionJacobian,
-          noTransportJacobian, freeToPathDerivatives);
+      detail::freeToCurvilinearTransportJacobian(direction, noTransportJacobian,
+                                                 freeToPathDerivatives);
 
   newBoundCovariance =
       f2cTransportJacobian * freeCovariance * f2cTransportJacobian.transpose();

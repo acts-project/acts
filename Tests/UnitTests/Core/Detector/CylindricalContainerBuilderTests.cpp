@@ -13,13 +13,14 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -176,6 +177,12 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   tripleZCfg.builders = {negDisc, barrel, posDisc};
   tripleZCfg.binning = {binZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
+  // Create a materialBinning
+  tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
+      {ProtoBinning(binZ, Acts::detail::AxisBoundaryType::Bound, 50),
+       ProtoBinning(binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI,
+                    12)}};
+
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
 
@@ -189,6 +196,13 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   BOOST_CHECK_EQUAL(roots.volumes[0]->geometryId().volume(), 3u);
   BOOST_CHECK_EQUAL(roots.volumes[1]->geometryId().volume(), 2u);
   BOOST_CHECK_EQUAL(roots.volumes[2]->geometryId().volume(), 1u);
+
+  // The outside surface should have a proto material description now
+  BOOST_CHECK_NE(portals[2u]->surface().surfaceMaterial(), nullptr);
+  // others should not have a proto material description
+  BOOST_CHECK_EQUAL(portals[0u]->surface().surfaceMaterial(), nullptr);
+  BOOST_CHECK_EQUAL(portals[1u]->surface().surfaceMaterial(), nullptr);
+  BOOST_CHECK_EQUAL(portals[3u]->surface().surfaceMaterial(), nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {

@@ -20,6 +20,7 @@
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
@@ -29,6 +30,7 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <type_traits>
 
 namespace Acts {
 
@@ -272,15 +274,14 @@ class EigenStepper {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -296,8 +297,9 @@ class EigenStepper {
   /// Release the Step size
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+    state.stepSize.release(stype);
   }
 
   /// Output the Step Size - single component
@@ -420,6 +422,11 @@ class EigenStepper {
   /// Overstep limit
   double m_overstepLimit;
 };
+
+template <typename navigator_t>
+struct SupportsBoundParameters<EigenStepper<>, navigator_t>
+    : public std::true_type {};
+
 }  // namespace Acts
 
 #include "Acts/Propagator/EigenStepper.ipp"

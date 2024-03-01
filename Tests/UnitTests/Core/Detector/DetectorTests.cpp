@@ -11,15 +11,20 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 
@@ -87,6 +92,16 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
+
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes012) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
   auto det012 = Acts::Experimental::Detector::makeShared(
       "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
@@ -100,6 +115,75 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
                     unpackToShared<Acts::Experimental::Detector>(*det012));
   BOOST_CHECK_EQUAL(
       det012, unpackToShared<const Acts::Experimental::Detector>(*det012));
+
+  // Check surface visiting
+  // Test the visitor pattern for surfaces
+  std::size_t nSurfaces = 0;
+  det012->visitSurfaces([&nSurfaces](const auto* s) {
+    if (s != nullptr) {
+      nSurfaces++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nSurfaces, 11u);
+
+  // Check the volume visiting
+  std::size_t nVolumes = 0;
+  det012->visitVolumes([&nVolumes](const auto* v) {
+    if (v != nullptr) {
+      nVolumes++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumes, 3u);
+
+  // Check surface visiting - non-const access
+  // Test visitor pattern - non-const access
+  struct SetMaterial {
+    /// The material to set
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> surfaceMaterial =
+        std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
+
+    std::shared_ptr<Acts::HomogeneousVolumeMaterial> volumeMaterial =
+        std::make_shared<Acts::HomogeneousVolumeMaterial>(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.));
+
+    /// The visitor call: set surface material
+    void operator()(Acts::Surface* s) {
+      if (s != nullptr) {
+        s->assignSurfaceMaterial(surfaceMaterial);
+      }
+    }
+
+    /// The visitor call : set volume material
+    void operator()(Acts::Experimental::DetectorVolume* v) {
+      if (v != nullptr) {
+        v->assignVolumeMaterial(volumeMaterial);
+      }
+    }
+  };
+
+  SetMaterial setMaterial;
+  det012->visitMutableSurfaces(setMaterial);
+  det012->visitMutableVolumes(setMaterial);
+
+  // Count surfaces with material
+  std::size_t nSurfacesWithMaterial = 0;
+  det012->visitSurfaces([&nSurfacesWithMaterial](const auto* s) {
+    if (s != nullptr && s->surfaceMaterial() != nullptr) {
+      nSurfacesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nSurfacesWithMaterial, 11u);
+
+  // Count volumes with material
+  std::size_t nVolumesWithMaterial = 0;
+
+  det012->visitVolumes([&nVolumesWithMaterial](const auto* v) {
+    if (v != nullptr && v->volumeMaterial() != nullptr) {
+      nVolumesWithMaterial++;
+    }
+  });
+  BOOST_CHECK_EQUAL(nVolumesWithMaterial, 3u);
 
   // Check the inside function with positions
   Acts::Experimental::NavigationState nState;
@@ -127,11 +211,13 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   BOOST_CHECK_EQUAL(findNull, nullptr);
 
   // Misconfigured - unkonnected finder
-  Acts::Experimental::DetectorVolumeUpdator unconnected;
+  Acts::Experimental::DetectorVolumeUpdater unconnected;
   BOOST_CHECK_THROW(
       Acts::Experimental::Detector::makeShared("Det012_unconnected", volumes012,
                                                std::move(unconnected)),
       std::invalid_argument);
+
+  generator.assignGeometryId(cache, *cyl0nameDup);
 
   // Misconfigured - duplicate name
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes002 =
@@ -165,6 +251,14 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
       std::move(cylinderVoumeBounds), surfaces, {},
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
+
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+
+  auto cache = generator.generateCache();
+  generator.assignGeometryId(cache, *cylVolume);
 
   auto det = Acts::Experimental::Detector::makeShared(
       "DetWithSurfaces", {cylVolume}, Acts::Experimental::tryRootVolumes());

@@ -10,6 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -148,8 +149,8 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
-      stepper.setStepSize(state.stepping, stepSize,
-                          Acts::ConstrainedStep::user);
+      stepper.updateStepSize(state.stepping, stepSize,
+                             Acts::ConstrainedStep::user);
     }
 
     // arm the point-like interaction limits in the first step
@@ -158,7 +159,7 @@ struct SimulationActor {
     }
 
     // If we are on target, everything should have been done
-    if (navigator.targetReached(state.navigation)) {
+    if (state.stage == Acts::PropagatorStage::postPropagation) {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do

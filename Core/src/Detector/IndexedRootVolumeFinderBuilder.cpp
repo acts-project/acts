@@ -10,9 +10,9 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 namespace {
 
@@ -55,15 +55,14 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::
   }
 }
 
-Acts::Experimental::DetectorVolumeUpdator
+Acts::Experimental::DetectorVolumeUpdater
 Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes) const {
   auto rzphis =
       detail::CylindricalDetectorHelper::rzphiBoundaries(gctx, rootVolumes);
 
-  using AxesGeneratorType =
-      Acts::Experimental::detail::GridAxisGenerators::VarBoundVarBound;
+  using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
 
   AxesGeneratorType zrAxes{rzphis[1], rzphis[0]};
 
@@ -78,7 +77,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =
-      IndexedUpdatorImpl<GridType, IndexedDetectorVolumeExtractor,
+      IndexedUpdaterImpl<GridType, IndexedDetectorVolumeExtractor,
                          DetectorVolumeFiller>;
 
   auto indexedDetectorVolumeImpl =
@@ -86,7 +85,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
                                                          casts);
 
   // Return the root volume finder
-  DetectorVolumeUpdator rootVolumeFinder;
+  DetectorVolumeUpdater rootVolumeFinder;
   rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumeImpl));
   return rootVolumeFinder;

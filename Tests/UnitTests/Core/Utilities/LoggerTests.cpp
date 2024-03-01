@@ -37,9 +37,6 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-std::string failure_msg(const std::string& expected, const std::string& found) {
-  return std::string("'") + expected + "' != '" + found + "'";
-}
 }  // namespace detail
 /// @endcond
 

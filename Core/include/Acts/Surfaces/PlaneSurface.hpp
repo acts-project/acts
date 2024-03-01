@@ -17,7 +17,9 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -231,5 +233,7 @@ class PlaneSurface : public RegularSurface {
 
  private:
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
 
 }  // end of namespace Acts

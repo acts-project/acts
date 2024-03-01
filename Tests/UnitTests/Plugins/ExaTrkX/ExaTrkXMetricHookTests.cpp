@@ -29,7 +29,7 @@ void testTruthTestGraph(std::vector<int64_t> &truthGraph,
                        {static_cast<long>(testGraph.size() / 2), 2}, opts)
           .transpose(0, 1);
 
-  hook({}, edgeTensor);
+  hook({}, edgeTensor, {});
 
   const auto str = ss.str();
 

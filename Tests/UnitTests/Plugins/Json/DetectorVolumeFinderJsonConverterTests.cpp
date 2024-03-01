@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <fstream>
 #include <memory>
@@ -25,8 +25,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   std::vector<Acts::ActsScalar> zBoundaries = {-1000., -500, 150.};
   std::vector<Acts::ActsScalar> rBoundaries = {0., 10., 30., 35.};
 
-  using AxesGeneratorType =
-      Acts::Experimental::detail::GridAxisGenerators::VarBoundVarBound;
+  using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
 
   AxesGeneratorType zrAxes{zBoundaries, rBoundaries};
 
@@ -54,7 +53,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
 
   auto casts = std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR};
 
-  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdatorImpl<
+  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
       GridType, Acts::Experimental::IndexedDetectorVolumeExtractor,
       Acts::Experimental::DetectorVolumeFiller>;
 
@@ -63,7 +62,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
                                                          casts);
 
   // Return the root volume finder
-  Acts::Experimental::DetectorVolumeUpdator rootVolumeFinder;
+  Acts::Experimental::DetectorVolumeUpdater rootVolumeFinder;
   rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumesImpl));
 

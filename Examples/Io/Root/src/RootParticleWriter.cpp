@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,9 +16,12 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <ios>
+#include <limits>
 #include <ostream>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -34,6 +37,9 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
+
+  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
+  m_inputFinalParticles.maybeInitialize(m_cfg.inputFinalParticles);
 
   // open root file and create the tree
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
@@ -69,6 +75,15 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("particle", &m_particle);
   m_outputTree->Branch("generation", &m_generation);
   m_outputTree->Branch("sub_particle", &m_subParticle);
+
+  if (m_inputFinalParticles.isInitialized()) {
+    m_outputTree->Branch("e_loss", &m_eLoss);
+    m_outputTree->Branch("total_x0", &m_pathInX0);
+    m_outputTree->Branch("total_l0", &m_pathInL0);
+  }
+  if (m_inputSimHits.isInitialized()) {
+    m_outputTree->Branch("number_of_hits", &m_numberOfHits);
+  }
 }
 
 ActsExamples::RootParticleWriter::~RootParticleWriter() {
@@ -93,6 +108,15 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
+  auto nan = std::numeric_limits<float>::quiet_NaN();
+
+  std::unordered_map<ActsFatras::Barcode, std::uint32_t> hitsPerParticle;
+  if (m_inputSimHits.isInitialized()) {
+    for (const auto& simHit : m_inputSimHits(ctx)) {
+      ++hitsPerParticle[simHit.particleId()];
+    }
+  }
+
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
     m_particleId.push_back(particle.particleId().value());
@@ -106,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_vz.push_back(Acts::clampValue<float>(particle.fourPosition().z() /
                                            Acts::UnitConstants::mm));
     m_vt.push_back(Acts::clampValue<float>(particle.fourPosition().w() /
-                                           Acts::UnitConstants::ns));
+                                           Acts::UnitConstants::mm));
     // momentum
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_p.push_back(Acts::clampValue<float>(p));
@@ -131,6 +155,47 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_particle.push_back(particle.particleId().particle());
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
+
+    if (m_inputFinalParticles.isInitialized()) {
+      const auto& finalParticles = m_inputFinalParticles(ctx);
+      // get the final particle
+      auto it = finalParticles.find(particle);
+      if (it == finalParticles.end()) {
+        ACTS_ERROR("Could not find final particle for "
+                   << particle.particleId() << " in event " << ctx.eventNumber);
+      } else {
+        const auto& finalParticle = *it;
+        // get the energy loss
+        m_eLoss.push_back(Acts::clampValue<float>(
+            (particle.energy() - finalParticle.energy()) /
+            Acts::UnitConstants::GeV));
+        // get the path in X0
+        m_pathInX0.push_back(Acts::clampValue<float>(finalParticle.pathInX0() /
+                                                     Acts::UnitConstants::mm));
+        // get the path in L0
+        m_pathInL0.push_back(Acts::clampValue<float>(finalParticle.pathInL0() /
+                                                     Acts::UnitConstants::mm));
+      }
+    } else {
+      m_eLoss.push_back(nan);
+      m_pathInX0.push_back(nan);
+      m_pathInL0.push_back(nan);
+    }
+
+    if (m_inputSimHits.isInitialized()) {
+      // get the sim hits
+      auto it = hitsPerParticle.find(particle.particleId());
+      if (it == hitsPerParticle.end()) {
+        ACTS_DEBUG("Could not find sim hits for "
+                   << particle.particleId() << " in event " << ctx.eventNumber);
+        m_numberOfHits.push_back(0);
+      } else {
+        // get the number of hits
+        m_numberOfHits.push_back(it->second);
+      }
+    } else {
+      m_numberOfHits.push_back(-1);
+    }
   }
 
   m_outputTree->Fill();
@@ -156,6 +221,10 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   m_particle.clear();
   m_generation.clear();
   m_subParticle.clear();
+  m_eLoss.clear();
+  m_numberOfHits.clear();
+  m_pathInX0.clear();
+  m_pathInL0.clear();
 
   return ProcessCode::SUCCESS;
 }

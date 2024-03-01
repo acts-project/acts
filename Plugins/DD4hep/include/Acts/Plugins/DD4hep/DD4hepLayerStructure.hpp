@@ -66,7 +66,7 @@ class DD4hepLayerStructure {
     // The extent structure - optionally
     std::optional<Extent> extent = std::nullopt;
     /// The extent constraints - optionally
-    std::vector<BinningValue> extentContraints = {};
+    std::vector<BinningValue> extentConstraints = {};
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
     /// Patch the binning with the extent if possible
@@ -82,7 +82,7 @@ class DD4hepLayerStructure {
   /// It takes the detector element from DD4hep and some optional parameters
   ///
   /// @param dd4hepStore [in, out] the detector store for the built elements
-  /// @param gcxt the geometry context
+  /// @param gctx the geometry context
   /// @param dd4hepElement the dd4hep detector element
   /// @param options containing the optional descriptions
   ///

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,7 +39,7 @@ template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const grid_t& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
@@ -197,16 +197,21 @@ template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
 inline void
 SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     Acts::SpacePointData& spacePointData,
-    const Acts::SeedFinderOptions& options,
-    const Acts::SpacePointGrid<external_spacepoint_t>& grid,
-    boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
-        otherSPsNeighbours,
+    const Acts::SeedFinderOptions& options, const grid_t& grid,
+    boost::container::small_vector<
+        Acts::Neighbour<
+            typename SeedFinder<external_spacepoint_t, platform_t>::grid_t>,
+        Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
     const float uIP2, const float cosPhiM, const float sinPhiM) const {
   float impactMax = m_config.impactMax;
-  if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+
+  constexpr bool isBottomCandidate =
+      candidateType == Acts::SpacePointCandidateType::eBottom;
+
+  if constexpr (isBottomCandidate) {
     impactMax = -impactMax;
   }
 
@@ -252,7 +257,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // the iterator so we don't need to look at the other SPs again
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if constexpr (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
         if ((rM - otherSP->radius()) <= deltaRMaxSP) {
           break;
@@ -272,7 +277,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
 
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if constexpr (isBottomCandidate) {
         deltaR = (rM - otherSP->radius());
 
         // if r-distance is too small, try next SP in bin
@@ -288,7 +293,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         }
       }
 
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if constexpr (isBottomCandidate) {
         deltaZ = (zM - otherSP->z());
       } else {
         deltaZ = (otherSP->z() - zM);
@@ -379,6 +384,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         const float iDeltaR = std::sqrt(iDeltaR2);
         const float cotTheta = deltaZ * iDeltaR;
 
+        // discard bottom-middle dublets in a certain (r, eta) region according
+        // to detector specific cuts
+        if constexpr (isBottomCandidate) {
+          if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
+            continue;
+          }
+        }
+
         const float Er =
             ((varianceZM + otherSP->varianceZ()) +
              (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
@@ -419,6 +432,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
+
+      // discard bottom-middle dublets in a certain (r, eta) region according
+      // to detector specific cuts
+      if constexpr (isBottomCandidate) {
+        if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
+          continue;
+        }
+      }
 
       const float Er =
           ((varianceZM + otherSP->varianceZ()) +
@@ -800,8 +821,7 @@ template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options,
-    const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const Acts::SeedFinderOptions& options, const grid_t& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
   SeedingState state;

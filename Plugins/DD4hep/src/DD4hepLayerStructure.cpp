@@ -37,7 +37,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   DD4hepDetectorSurfaceFactory::Cache fCache;
   fCache.sExtent = options.extent;
   fCache.pExtent = options.extent;
-  fCache.extentContraints = options.extentContraints;
+  fCache.extentConstraints = options.extentConstraints;
   fCache.nExtentSegments = options.nSegments;
   m_surfaceFactory->construct(fCache, gctx, dd4hepElement,
                               options.conversionOptions);
@@ -59,6 +59,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   // Surfaces are prepared for creating the builder
   LayerStructureBuilder::Config lsbConfig;
   lsbConfig.auxiliary = "*** DD4hep auto-generated builder for: ";
+  lsbConfig.extent = fCache.sExtent;
   lsbConfig.auxiliary += options.name;
 
   // Patch the binning to the extent parameters

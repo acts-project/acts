@@ -4,7 +4,7 @@
 ## Geometry module rosetta stone
 
 :::{todo}
-Describe replacements of `TrackingGeometry`, `TrackingVolume` etc and how the classes map to one another.
+Describe replacements of `TrackingGeometry`, `TrackingVolume` etc. and how the classes map to one another.
 :::
 
 
@@ -70,14 +70,14 @@ Illustration of a shared direct portal between two volumes, the arrows indicate 
 Illustration of a shared extended portal between several volumes, the arrows indicate the direction of attachment.
 :::
 
-The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::DetectorVolumeUpdator` delegate.
+The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::DetectorVolumeUpdater` delegate.
 
 ### The Detector volume object
 
 A detector volume has to contain:
 
 - a list of bounding portal objects (that can be shared with other volumes)
-- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdator` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
+- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdater` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
 - a unique name string
 
 :::{note}
@@ -111,7 +111,7 @@ The detector object is the holder class of all geometry objects, it has to conta
 - a volume finder delegate (as `Acts::Experimental::DetectorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
 
 :::{note}
-When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometyIdGenerator` tool(s) which will guarantee some level of uniqueness.
+When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometryIdGenerator` tool(s) which will guarantee some level of uniqueness.
 :::
 
 :::{figure} ../figures/ODD_Detector.png
