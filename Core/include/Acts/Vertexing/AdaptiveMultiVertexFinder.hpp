@@ -114,7 +114,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
     // If doFullSplitting == true, we check the 3D distance (if useTime ==
     // false) or the 4D distance (if useTime == true) of the vertices to
-    // determine whether their are merged.
+    // determine whether they are merged.
     // If doFullSplitting == false, we check the z distance (if useTime ==
     // false) or the z-t distance (if useTime == true) of the vertices to
     // determine whether they are merged.
