@@ -271,21 +271,16 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  RotationMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = M_PI_2;
-  Vector3 xPos(cos(rotationAngle), 0., -sin(rotationAngle));
-  Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(sin(rotationAngle), 0., cos(rotationAngle));
-  rotation.col(0) = xPos;
-  rotation.col(1) = yPos;
-  rotation.col(2) = zPos;
+  AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
+  RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 
-  auto pTransform = Transform3(translation * rotation);
+  auto pTransform = Transform3(translation * rotationMat);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
 
   // The local frame z axis
-  const Vector3 localZAxis = rotation.col(2);
+  const Vector3 localZAxis = rotationMat.col(2);
   // Check the local z axis is aligned to global x axis
   CHECK_CLOSE_ABS(localZAxis, Vector3(1., 0., 0.), 1e-15);
 
