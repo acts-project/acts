@@ -1,7 +1,19 @@
 #!/bin/bash
 
 set -e
-set -x
+
+# helper function to selectively print and run commands without a subshell
+function run() {
+    set -x
+    "$@"
+    { set +x;   } 2> /dev/null
+
+}
+
+export run
+
+
+shopt -s extglob
 
 
 mode=${1:-all}
@@ -22,10 +34,49 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 histcmp_results=$outdir/histcmp_results.csv
 echo -n "" > $histcmp_results
 
-SPYRAL_BIN=${SPYRAL_BIN:=spyral}
-SPYRAL="${SPYRAL_BIN} run -i 0.05 --summary"
+memory_dir=${outdir}/memory
+mkdir -p "$memory_dir"
 
-mkdir -p ${outdir}/memory
+if [ "$(uname)" == "Darwin" ]; then
+    function measure {
+        label=$1
+        shift
+        slug=$2
+        shift
+        echo "Measure Darwin $label"
+        tmp=$(mktemp)
+        /usr/bin/time -l "$@" 2> "$tmp"
+
+        of="${memory_dir}/mem_${slug}.csv"
+        {
+            echo "# spyral-label: $label"
+            echo "# spyral-cmd: $*"
+            echo "time,rss,vms"
+            grep -E "maximum resident set size" "$tmp" | awk '{printf $1}'
+            printf ","
+            grep -E "real" "$tmp" | awk '{printf $1}'
+            printf ",0\n"
+        } > "$of"
+    }
+    export measure
+elif [ "$(uname)" == "Linux" ]; then
+    function measure {
+        echo "Measure Linux"
+        /usr/bin/time -v $@
+    }
+    export measure
+else
+    echo "Not Linux or Darwin!"
+    function measure {
+        $@
+    }
+    export measure
+fi
+
+
+measure sleep sleep sleep 2;echo "yo"
+exit 0
+
 
 set +e
 ec=0
@@ -38,7 +89,7 @@ function run_physmon_gen() {
 
     script=CI/physmon/workflows/physmon_${slug}.py
 
-    $SPYRAL -l "$title" -o "$outdir/memory/mem_${slug}.csv" -- ${script} $outdir 2>&1 > $outdir/run_${slug}.log
+    measure "$title" ${script} $outdir 2>&1 > $outdir/run_${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
@@ -46,10 +97,10 @@ function run_physmon_gen() {
     if [ $this_ec -ne 0 ]; then
       echo "::error::🟥 Dataset generation failed: ${script} -> ec=$this_ec"
     else
-      echo "::notice::✅ Dataset generation succeeded: ${script}"   
+      echo "::notice::✅ Dataset generation succeeded: ${script}"
     fi
 
-    $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
+    # $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
 }
 
 echo "::group::Generate validation dataset"
@@ -124,7 +175,7 @@ function full_chain() {
         config="CI/physmon/default.yml"
     fi
     echo $config
-    
+
     if [ $suffix != truth_smeared ]; then
       run_histcmp \
         $outdir/performance_seeding_${suffix}.root \
@@ -133,7 +184,7 @@ function full_chain() {
         seeding_${suffix} \
         -c $config
     fi
-    
+
     run_histcmp \
         $outdir/performance_ckf_${suffix}.root \
         $refdir/performance_ckf_${suffix}.root \
