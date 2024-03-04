@@ -125,10 +125,8 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
         break;
       }
     }
-    // MARK: fpeMaskBegin(FLTUND, 1, #2590)
     auto keepNewVertexResult =
         keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
-    // MARK: fpeMaskEnd(FLTUND)
     if (!keepNewVertexResult.ok()) {
       return keepNewVertexResult.error();
     }
@@ -479,7 +477,9 @@ Result<bool> AdaptiveMultiVertexFinder::keepNewVertex(
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
     double trackWeight = trkAtVtx.trackWeight;
     contaminationNum += trackWeight * (1. - trackWeight);
+    // MARK: fpeMaskBegin(FLTUND, 1, #2590)
     contaminationDeNom += trackWeight * trackWeight;
+    // MARK: fpeMaskEnd(FLTUND)
   }
   if (contaminationDeNom != 0) {
     contamination = contaminationNum / contaminationDeNom;
