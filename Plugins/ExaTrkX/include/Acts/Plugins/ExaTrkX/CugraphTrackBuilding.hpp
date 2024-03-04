@@ -22,10 +22,10 @@ class CugraphTrackBuilding final : public Acts::TrackBuildingBase {
   CugraphTrackBuilding(std::unique_ptr<const Logger> logger)
       : m_logger(std::move(logger)), m_device(torch::Device(torch::kCPU)) {}
 
-  std::vector<std::vector<int>> operator()(std::any nodes, std::any edges,
-                                           std::any edge_weights,
-                                           std::vector<int> &spacepointIDs,
-                                           torch::Device device) override;
+  std::vector<std::vector<int>> operator()(
+      std::any nodes, std::any edges, std::any edge_weights,
+      std::vector<int> &spacepointIDs,
+      torch::Device device = torch::Device(torch::kCPU)) override;
   torch::Device device() const override { return m_device; };
 
  private:

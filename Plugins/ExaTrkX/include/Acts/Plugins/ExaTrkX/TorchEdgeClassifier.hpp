@@ -40,7 +40,8 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   ~TorchEdgeClassifier();
 
   std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, torch::Device device) override;
+      std::any nodes, std::any edges,
+      torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }
   torch::Device device() const override { return m_device; };

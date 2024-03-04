@@ -32,7 +32,7 @@ class GraphConstructionBase {
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
-      torch::Device device) = 0;
+      torch::Device device = torch::Device(torch::kCPU)) = 0;
 
   virtual torch::Device device() const = 0;
 
@@ -49,7 +49,8 @@ class EdgeClassificationBase {
   ///
   /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, torch::Device device) = 0;
+      std::any nodes, std::any edges,
+      torch::Device device = torch::Device(torch::kCPU)) = 0;
 
   virtual torch::Device device() const = 0;
 
@@ -69,7 +70,8 @@ class TrackBuildingBase {
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
-      std::vector<int> &spacepointIDs, torch::Device device) = 0;
+      std::vector<int> &spacepointIDs,
+      torch::Device device = torch::Device(torch::kCPU)) = 0;
 
   virtual torch::Device device() const = 0;
 
