@@ -551,7 +551,6 @@ def addSimWriters(
                 level=customLogLevel(),
                 inputParticles=particlesInitial,
                 inputFinalParticles=particlesFinal,
-                inputSimHits=simHits,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
