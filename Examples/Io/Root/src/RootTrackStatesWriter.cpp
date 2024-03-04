@@ -485,6 +485,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
         }
         if (ipar == eUnbiased && !state.hasSmoothed() && state.hasFiltered() &&
             state.hasProjector()) {
+          std::cout << "state.calibratedSize(): " << state.calibratedSize()
+                    << std::endl;
+          if (state.hasCalibrated()) {
+            std::cout << "state.hasCalibrated()" << std::endl;
+          } else {
+            std::cout << "!state.hasCalibrated()" << std::endl;
+          }
           // Same calculation as above but using the filtered states.
           auto m = state.effectiveCalibrated();
           auto H = state.effectiveProjector();
