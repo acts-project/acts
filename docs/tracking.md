@@ -115,7 +115,7 @@ $\sigma^2(X)$ are the regular variances. As the covariance matrix $C$ is
 symmetric, only the upper right half is shown in the matrix above. The
 uncertainties associated with the local position, as well as the momentum
 direction are indicated in {numref}`parameters` (a) as an ellipse and a cone
-around the momentum vector $\vec p$, respectively. 
+around the momentum vector $\vec p$, respectively.
 
 (particle_propagation)=
 ## Particle propagation
@@ -483,7 +483,7 @@ detectors, the readout can either be performed in a binary way, only recording
 which segments fired, or the amount of charges measured in the segment can be
 recorded, e.g. via *time-over-threshold* readout. In all cases, the readout is
 attached to an identifier uniquely locating the segment on the corresponding
-sensor. 
+sensor.
 
 As a next step, these raw readouts need to be *clustered*, in order to
 extract an estimate of where particles intersect with the sensor. The general
@@ -495,7 +495,7 @@ either consider all eight surrounding pixels as neighboring a central one, or
 only consider the four non-diagonal ones, as shown in
 {numref}`clustering_cca`. The figure only shows the simplest possible
 cluster starting from the central pixel. In reality, the CCA will iteratively
-continue from the pixels on the cluster edges. 
+continue from the pixels on the cluster edges.
 
 (clustering_cca)=
 :::{figure} /figures/tracking/cca.svg
@@ -519,7 +519,7 @@ $$
 $$
 
 Here, $\vec l_i$ is the local position of the $i$-th segment while
-$q_i$ is its charge. 
+$q_i$ is its charge.
 
 An illustration of the clusterization can be found in {numref}`clustering_image`,
 where a pixel sensor is shown to be intersected by a charged particle,
@@ -528,7 +528,7 @@ with a red frame receive energy from the particle, but the amount is under
 the readout threshold. Four other cells receive energy above the threshold
 and are read out. The clustering will then group these four cells into a
 cluster, and subsequently estimate the cluster position based on the energy
-deposited in the cells. In case no charge information is not available 
+deposited in the cells. In case no charge information is not available
 for a given detector, the calculation is purely geometric.
 
 
@@ -559,8 +559,9 @@ mitigated by allowing tracks to share clusters with other particles, which
 comes at the price of allowing duplicated tracks to some extent.
 Additionally, merged clusters typically feature worse position resolution,
 which manifests itself since it negatively affects the final fit of the
-track. 
+track.
 
+(tracking_sp_formation)=
 ## Spacepoint formation
 
 The basic input to most forms of pattern recognition algorithms for tracking
@@ -651,7 +652,7 @@ $$
 
 with the charge $q$ and the magnetic field $B$. An intersection
 between the straight line in the $rz$-plane with the $z$-axis gives an
-estimate of the longitudinal impact parameter. 
+estimate of the longitudinal impact parameter.
 An illustration of seeds in the transverse plane is found in
 {numref}`seeding_figure`. Note that seeds can incorporate hits spread across all of
 the layers shown, although this can be a configuration parameter.
@@ -876,7 +877,7 @@ $$
 and a filtered residual
 
 $$
-  \vec r_k = \vec m_k - \mathbf H_k \vec x_k 
+  \vec r_k = \vec m_k - \mathbf H_k \vec x_k
   ,
 $$
 
@@ -885,7 +886,7 @@ the measurement $\vec m_k$. Using the filtered residual, an effective
 $\chi^2$ increment
 
 $$
-  \chi^2_+ = \vec r_k^\mathrm{T} 
+  \chi^2_+ = \vec r_k^\mathrm{T}
   \left[ \left( \mathbb 1 - \mathbf H_k  \mathbf K_k \right)  \mathbf V_k \right]^{-1}
   \vec r_k
 $$
@@ -952,53 +953,80 @@ See [](vertexing_core) for a dedicated description of the vertexing as
 implemented in ACTS.
 :::
 
-One very immediate use case for tracks is the reconstruction of interaction
-vertices in the event. These are needed for many aspects of higher-level
-reconstruction algorithms. Vertices are used in different ways. As shown in
-{numref}`vertexing_illust`, a single event can have a primary vertex, usually
-associated with the hard-scatter event, as well as a number of secondary
-vertices. Typically, the primary vertex will be located in the luminous
-region. The reconstruction of secondary vertices can help with the
-identification of particles, for instance in the form of *$b$-tagging*
-jets originating from $b$-quarks. Here, a characteristic displaced vertex
-located inside a jet is a sign for a $b$-hadron decay. Additionally, pile-up
-interactions can produce vertices that are not associated with the
-interaction of interest. Signatures from pile-up interactions can be
-rejected, if they can be associated to a pile-up vertex.
-
+A vertex is a point within the detector, where an interaction or a 
+decay occurred. We distinguish between primary vertices (from 
+collisions/interactions) and secondary vertices (from subsequent particle 
+decays), see {numref}`vertexing_illust`. Primary vertices are further divided 
+into hard-scatter and pile-up vertices. While primary vertices are located in 
+the luminous region, secondary vertices are slightly displaced due to the finite
+ life time of the decaying particle. 
 
 (vertexing_illust)=
 :::{figure} /figures/tracking/vertexing.svg
 :width: 400px
 :align: center
 Illustration of a set of three vertices in a proton-proton
-collision. A primary vertex and a secondary vertex are shown in addition to
-a pile-up vertex.
+collision. We distinguish between primary hard-scatter, primary pile-up, and 
+secondary vertices.
 :::
 
-Vertex reconstruction can be divided into two stages: vertex finding and
-vertex fitting, in close analogy to the reconstruction of tracks themselves.
-Reconstruction begins with a seeding stage. Vertex seeding can be performed
-in a number of ways. Algorithms differ for primary and secondary vertex
-reconstruction. For primary vertex seeding, one option is an algorithm, which
-uses a histogram approach to cluster tracks in the $z$-axis. This is based on
-the assumption that primary vertices will align with the beam spot. Other
-approaches include the use of a Gaussian track density to identify regions
-with high track multiplicity as vertex seeds. For secondary vertexing,
-seeds are formed from pairs of reconstructed tracks, as the constraint to the
-beam spot does not apply.
+Vertices play an important role in higher-level reconstruction algorithms. For 
+example, secondary vertices can help with the identification of particles: 
+During *$b$-tagging*, a displaced vertex located inside a jet is a sign for the 
+decay of a $b$-hadron.
 
-With a set of vertex seeds determined, tracks compatible with the vertex are
-selected. Using a linearized approximation of the helical trajectories in the
-vicinity of the vertex, a fitting procedure based on the Kalman formalism can
-estimate the vertex parameters.
+In analogy to track reconstruction, vertex reconstruction can be divided into 
+two stages: vertex finding and vertex fitting. As a first step of vertex 
+finding, we compute a rough estimate of the vertex position from a set of 
+tracks. This first estimate can be calculated in many different ways, and is
+referred to as "vertex seed". Seeding algorithms differ for primary and 
+secondary vertexing. For primary vertex seeding, one option is to use a 
+histogram approach to cluster tracks on the $z$-axis[^phd:piacquadio:2010]. 
+This is based on the assumption that primary vertices will be close to the 
+beamline. Other approaches model tracks as multivariate Gaussian distributions 
+and identify regions of high track density as vertex seeds[^phd:schlag:2022]. 
+For secondary vertexing, seeds are formed from pairs of reconstructed tracks as 
+the constraint to the beamline does not apply.
 
-One issue with an approach like this is the fact that the assignment of tracks
-to vertices is not unambiguous. Improvements exist, where tracks that turn out
-to be a bad fit with the vertex in question are weighted down, avoiding
-degradation in the obtained result. On the other hand, multi-vertex fit methods
-can reassign such outlier tracks to a more compatible vertex, yielding improved
-results for both vertices.
+Once a vertex seed is determined, tracks that are compatible with it are 
+selected as part of the vertex finding.
+
+Before the vertex fit, we linearize tracks in the vicinity of the vertex seed
+under assuming that they follow a helical (for constant magnetic field) or
+straight (for no magnetic field) trajectory[^phd:piacquadio:2010]. The vertex 
+fitter then uses this linearization to improve the position of the vertex seed. 
+Furthermore, the track momenta are refitted under the assumption that the tracks 
+originate at the vertex[^Fruhwirth:1987fm] [^billoirfitting:1992] . 
+
+One issue with an approach like this is that the assignment of tracks to 
+vertices is ambiguous. As an improvement, one can perform a multi-vertex fit,
+where vertices compete for tracks. This means that one track can be assigned to 
+several vertices. Their contribution to each vertex fit is determined by a
+weight factor, which, in turn, depends on the tracks' compatibility with respect
+to all vertices[^fruwirth:amvfitting:2004].
+
+A flowchart of a multi-vertex reconstruction chain is shown in 
+{numref}`vertexing_flowchart`.
+
+(vertexing_flowchart)=
+:::{figure} /figures/tracking/vertexing_flowchart.svg
+:width: 600px
+:align: center
+Simplified flowchart of multi-vertex reconstruction. From a set of seed tracks, 
+we first compute a rough estimate of the vertex position, i.e., the vertex seed. 
+Then, we evaluate the compatibility of all tracks with the the latter. If a 
+track is deemed compatible, it is assigned a weight and attached to the vertex 
+seed. Next, the vertex seed and all previously found vertices that share tracks 
+with it are (re-)fitted. Finally, after convergence of the fit, we check whether
+the vertex candidate is merged with other vertices and discard it if that is the 
+case. For the next iteration, all tracks that were assigned to the vertex seed 
+and that have a weight above a certain threshold are removed from the seed 
+tracks.
+:::
 
 [^phd:gessinger:2021]: Gessinger-Befurt, Paul, 30.04.2021. Development and improvement of track reconstruction software and search for disappearing tracks with the ATLAS experiment. [10.25358/openscience-5901](https://doi.org/10.25358/openscience-5901)
-[^Fruhwirth:1987fm]: F. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [11.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
+[^Fruhwirth:1987fm]: R. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [11.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
+[^phd:piacquadio:2010]: G. Piacquadio, 2010, Identification of b-jets and investigation of the discovery potential of a Higgs boson in the $W H \rightarrow l \nu \bar{b} b$ channel with the ATLAS experiment.
+[^phd:schlag:2022]: B. Schlag, 2022, Advanced Algorithms and Software for Primary Vertex Reconstruction and Search for Flavor-Violating Supersymmetry with the ATLAS Experiment.
+[^billoirfitting:1992]: P. Billoir et al., 2022, Fast vertex fitting with a local parametrization of tracks.
+[^fruwirth:amvfitting:2004]: R. Frühwirth et al., 2004, Adaptive Multi-Vertex fitting.
