@@ -31,15 +31,15 @@ struct TrackMatchEntry {
 };
 
 struct ParticleMatchEntry {
-  std::optional<TrackIndex> track;
+  std::optional<TrackIndexType> track;
   std::uint32_t duplicates{};
   std::uint32_t fakes{};
 };
 
-using ProtoTrackParticleMatching = std::map<TrackIndex, TrackMatchEntry>;
+using ProtoTrackParticleMatching = std::map<TrackIndexType, TrackMatchEntry>;
 using ParticleProtoTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
 
-using TrackParticleMatching = std::map<TrackIndex, TrackMatchEntry>;
+using TrackParticleMatching = std::map<TrackIndexType, TrackMatchEntry>;
 using ParticleTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
 
 }  // namespace ActsExamples

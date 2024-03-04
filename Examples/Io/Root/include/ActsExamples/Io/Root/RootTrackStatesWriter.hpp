@@ -48,8 +48,6 @@ struct AlgorithmContext;
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
  public:
-  using HitSimHitsMap = IndexMultimap<Index>;
-
   struct Config {
     /// Input (fitted) tracks collection
     std::string inputTracks;

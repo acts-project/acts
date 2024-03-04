@@ -30,6 +30,6 @@ using ConstTrackContainer =
     Acts::TrackContainer<Acts::ConstVectorTrackContainer,
                          Acts::ConstVectorMultiTrajectory, std::shared_ptr>;
 
-using TrackIndex = TrackContainer::IndexType;
+using TrackIndexType = TrackContainer::IndexType;
 
 }  // namespace ActsExamples

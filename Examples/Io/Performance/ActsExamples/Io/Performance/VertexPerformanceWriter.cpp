@@ -408,7 +408,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
     // Count number of reconstructible tracks on truth vertex
     std::uint32_t nTracksOnTruthVertex = 0;
-    for (const auto& particle : recoParticles) {
+    for (const auto& particle : selectedParticles) {
       SimBarcode vtxId =
           SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
       if (vtxId == maxOccurrenceId) {
@@ -467,8 +467,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
       // Helper function for computing the pull
       auto pull =
-          [&](const Acts::ActsScalar& diff, const Acts::ActsScalar& variance,
-              const std::string& variableStr, const bool& afterFit = true) {
+          [this](const Acts::ActsScalar& diff, const Acts::ActsScalar& variance,
+                 const std::string& variableStr, const bool& afterFit = true) {
             if (variance <= 0) {
               std::string tempStr;
               if (afterFit) {

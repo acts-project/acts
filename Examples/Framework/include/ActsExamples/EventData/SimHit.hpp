@@ -21,4 +21,6 @@ using SimHitContainer = GeometryIdMultiset<SimHit>;
 
 using HitParticlesMap = IndexMultimap<SimBarcode>;
 
+using HitSimHitsMap = IndexMultimap<Index>;
+
 }  // namespace ActsExamples

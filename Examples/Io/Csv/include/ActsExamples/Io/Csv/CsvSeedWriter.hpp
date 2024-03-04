@@ -36,8 +36,6 @@ namespace ActsExamples {
 /// and each line in the file corresponds to one seed.
 class CsvSeedWriter : public WriterT<TrackParametersContainer> {
  public:
-  using HitSimHitsMap = IndexMultimap<Index>;
-
   struct Config {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
