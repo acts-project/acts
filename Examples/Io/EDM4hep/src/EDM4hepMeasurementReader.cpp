@@ -33,9 +33,7 @@ EDM4hepMeasurementReader::EDM4hepMeasurementReader(
     throw std::invalid_argument("Missing measurement output collection");
   }
 
-  m_reader.openFile(m_cfg.inputPath);
-
-  m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
+  m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
@@ -59,7 +57,7 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
 
-  podio::Frame frame = m_reader.readEntry("events", ctx.eventNumber);
+  podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
 
   const auto& trackerHitPlaneCollection =
       frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
@@ -85,6 +83,16 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   }
 
   return ProcessCode::SUCCESS;
+}
+
+podio::ROOTFrameReader& EDM4hepMeasurementReader::reader() {
+  bool exists = false;
+  auto& reader = m_reader.local(exists);
+  if (!exists) {
+    reader.openFile(m_cfg.inputPath);
+  }
+
+  return reader;
 }
 
 }  // namespace ActsExamples
