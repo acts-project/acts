@@ -10,6 +10,8 @@ ROOT_GENERATE_DICTIONARY(
   ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.hpp)
 set_target_properties(
   ActsExamplesIoRootLinkDef PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(
+  ActsDicts PROPERTIES CXX_CLANG_TIDY "")
 
 add_library(
   ActsExamplesIoRoot SHARED
