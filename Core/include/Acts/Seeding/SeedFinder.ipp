@@ -13,8 +13,8 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t, typename platform_t>
-SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
+SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config)
     : m_config(config) {
   if (!config.isInInternalUnits) {
@@ -35,9 +35,9 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
   }
 }
 
-template <typename external_spacepoint_t, typename platform_t>
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
-void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     const grid_t& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
@@ -192,16 +192,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }  // loop on mediums
 }
 
-template <typename external_spacepoint_t, typename platform_t>
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
 inline void
-SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
+SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderOptions& options, const grid_t& grid,
-    boost::container::small_vector<
-        Acts::Neighbour<
-            typename SeedFinder<external_spacepoint_t, platform_t>::grid_t>,
-        Acts::detail::ipow(3, grid_t::DIM)>& otherSPsNeighbours,
+    boost::container::small_vector<Acts::Neighbour<grid_t>,
+                                   Acts::detail::ipow(3, grid_t::DIM)>&
+        otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
@@ -456,9 +455,10 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   }
 }
 
-template <typename external_spacepoint_t, typename platform_t>
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <Acts::DetectorMeasurementInfo detailedMeasurement>
-inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
+inline void
+SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     Acts::SpacePointData& spacePointData,
     const InternalSpacePoint<external_spacepoint_t>& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
@@ -817,10 +817,10 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   }  // loop on bottoms
 }
 
-template <typename external_spacepoint_t, typename platform_t>
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
-SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, const grid_t& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
