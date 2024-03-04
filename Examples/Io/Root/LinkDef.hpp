@@ -10,19 +10,25 @@
 
 #ifdef __CLING__
 
-#pragma link C++ class vector < vector < int>> + ;
-#pragma link C++ class vector < vector < long>> + ;
+// clang-format off
 
-#pragma link C++ class vector < vector < unsigned int>> + ;
-#pragma link C++ class vector < vector < unsigned long>> + ;
+#pragma link C++ class std::vector<std::vector<int>>+;
+#pragma link C++ class std::vector<std::vector<long>>+;
 
-#pragma link C++ class vector < vector < std::int32_t>> + ;
-#pragma link C++ class vector < vector < std::int64_t>> + ;
+#pragma link C++ class std::vector<std::vector<unsigned int>>+;
+#pragma link C++ class std::vector<std::vector<unsigned long>>+;
 
-#pragma link C++ class vector < vector < std::uint32_t>> + ;
-#pragma link C++ class vector < vector < std::uint64_t>> + ;
+#pragma link C++ class std::vector<std::vector<std::int32_t>>+;
+#pragma link C++ class std::vector<std::vector<std::int64_t>>+;
 
-#pragma link C++ class vector < vector < float>> + ;
-#pragma link C++ class vector < vector < double>> + ;
+#pragma link C++ class std::vector<std::vector<std::uint32_t>>+;
+#pragma link C++ class std::vector<std::vector<std::uint64_t>>+;
+
+#pragma link C++ class std::vector<std::vector<std::size_t>>+;
+
+#pragma link C++ class std::vector<std::vector<float>>+;
+#pragma link C++ class std::vector<std::vector<double>>+;
+
+// clang-format on
 
 #endif
