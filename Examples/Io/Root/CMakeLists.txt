@@ -1,19 +1,4 @@
 add_library(
-  ActsExamplesIoRootLinkDef OBJECT)
-target_include_directories(
-  ActsExamplesIoRootLinkDef
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-target_link_libraries(
-  ActsExamplesIoRootLinkDef
-  PRIVATE ROOT::RIO)
-ROOT_GENERATE_DICTIONARY(
-  ActsDicts MODULE ActsExamplesIoRootLinkDef LINKDEF LinkDef.hpp)
-set_target_properties(
-  ActsExamplesIoRootLinkDef PROPERTIES CXX_CLANG_TIDY "")
-set_target_properties(
-  ActsDicts PROPERTIES CXX_CLANG_TIDY "")
-
-add_library(
   ActsExamplesIoRoot SHARED
   src/RootMeasurementWriter.cpp
   src/RootMaterialDecorator.cpp
@@ -33,7 +18,6 @@ add_library(
   src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
-  $<TARGET_OBJECTS:ActsExamplesIoRootLinkDef>
 )
 target_include_directories(
   ActsExamplesIoRoot
@@ -47,6 +31,11 @@ target_link_libraries(
     Threads::Threads
   PRIVATE
     ROOT::Core ROOT::Hist ROOT::Tree)
+
+ROOT_GENERATE_DICTIONARY(
+  ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp)
+set_target_properties(
+  ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
 
 install(
   TARGETS ActsExamplesIoRoot
