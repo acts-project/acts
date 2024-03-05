@@ -242,11 +242,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     m_NDF.push_back(track.nDoF());
     {
       std::vector<double> measurementChi2;
-      std::vector<double> measurementVolume;
-      std::vector<double> measurementLayer;
+      std::vector<std::uint32_t> measurementVolume;
+      std::vector<std::uint32_t> measurementLayer;
       std::vector<double> outlierChi2;
-      std::vector<double> outlierVolume;
-      std::vector<double> outlierLayer;
+      std::vector<std::uint32_t> outlierVolume;
+      std::vector<std::uint32_t> outlierLayer;
       for (const auto& state : track.trackStatesReversed()) {
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
