@@ -34,18 +34,16 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 histcmp_results=$outdir/histcmp_results.csv
 echo -n "" > $histcmp_results
 
-SPYRAL_BIN=${SPYRAL_BIN:=spyral}
-
 memory_dir=${outdir}/memory
 mkdir -p "$memory_dir"
 
 if [ "$(uname)" == "Darwin" ]; then
     function measure {
         label=$1
-        shift
         slug=$2
         shift
-        echo "Measure Darwin $label"
+        shift
+        echo "Measure Darwin $label ($slug)" >&2
         tmp=$(mktemp)
         echo "+ $@" >&2
         /usr/bin/time -l -o "$tmp" "$@"
@@ -66,10 +64,10 @@ if [ "$(uname)" == "Darwin" ]; then
 elif [ "$(uname)" == "Linux" ]; then
     function measure {
         label=$1
-        shift
         slug=$2
         shift
-        echo "Measure Linux $label"
+        shift
+        echo "Measure Linux $label ($slug)" >&2
         tmp=$(mktemp)
         echo "+ $@" >&2
         /usr/bin/time -v -o  "$tmp" "$@"
@@ -124,8 +122,6 @@ function run_physmon_gen() {
     else
       echo "::notice::✅ Dataset generation succeeded: ${script}"
     fi
-
-    run $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
 }
 
 echo "::group::Generate validation dataset"
