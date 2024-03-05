@@ -409,7 +409,7 @@ jobs:
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
-        run: ${SETUP} && cmake --build build
+        run: ${SETUP} && ${PRELOAD} && cmake --build build
       - name: Install Examples
         run: ${SETUP} && cmake --build build --target install
       - name: Run Examples
