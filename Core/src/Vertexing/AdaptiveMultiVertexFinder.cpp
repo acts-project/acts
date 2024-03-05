@@ -125,10 +125,12 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
         break;
       }
     }
-    // MARK: fpeMaskBegin(FLTUND, 1, #2590)
-    bool keepVertex = isGoodVertex &&
-                      keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
-    // MARK: fpeMaskEnd(FLTUND)
+    auto keepNewVertexResult =
+        keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
+    if (!keepNewVertexResult.ok()) {
+      return keepNewVertexResult.error();
+    }
+    bool keepVertex = isGoodVertex && *keepNewVertexResult;
     ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
@@ -464,7 +466,7 @@ bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
   return true;
 }
 
-bool AdaptiveMultiVertexFinder::keepNewVertex(
+Result<bool> AdaptiveMultiVertexFinder::keepNewVertex(
     Vertex& vtx, const std::vector<Vertex*>& allVertices,
     VertexFitterState& fitterState) const {
   double contamination = 0.;
@@ -475,23 +477,30 @@ bool AdaptiveMultiVertexFinder::keepNewVertex(
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
     double trackWeight = trkAtVtx.trackWeight;
     contaminationNum += trackWeight * (1. - trackWeight);
+    // MARK: fpeMaskBegin(FLTUND, 1, #2590)
     contaminationDeNom += trackWeight * trackWeight;
+    // MARK: fpeMaskEnd(FLTUND)
   }
   if (contaminationDeNom != 0) {
     contamination = contaminationNum / contaminationDeNom;
   }
   if (contamination > m_cfg.maximumVertexContamination) {
-    return false;
+    return Result<bool>::success(false);
   }
 
-  if (isMergedVertex(vtx, allVertices)) {
-    return false;
+  auto isMergedVertexResult = isMergedVertex(vtx, allVertices);
+  if (!isMergedVertexResult.ok()) {
+    return Result<bool>::failure(isMergedVertexResult.error());
   }
 
-  return true;
+  if (*isMergedVertexResult) {
+    return Result<bool>::success(false);
+  }
+
+  return Result<bool>::success(true);
 }
 
-bool AdaptiveMultiVertexFinder::isMergedVertex(
+Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
     const Vertex& vtx, const std::vector<Vertex*>& allVertices) const {
   const Vector4& candidatePos = vtx.fullPosition();
   const SquareMatrix4& candidateCov = vtx.fullCovariance();
@@ -505,14 +514,26 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
 
     double significance = 0;
     if (!m_cfg.doFullSplitting) {
-      const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
-      const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
-      if (sumVarZ <= 0) {
-        // TODO FIXME this should never happen
-        continue;
+      if (m_cfg.useTime) {
+        const Vector2 deltaZT = otherPos.tail<2>() - candidatePos.tail<2>();
+        SquareMatrix2 sumCovZT = candidateCov.bottomRightCorner<2, 2>() +
+                                 otherCov.bottomRightCorner<2, 2>();
+        auto sumCovZTInverse = safeInverse(sumCovZT);
+        if (!sumCovZTInverse) {
+          ACTS_ERROR("Vertex z-t covariance matrix is singular.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
+        }
+        significance = std::sqrt(deltaZT.dot(*sumCovZTInverse * deltaZT));
+      } else {
+        const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
+        const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
+        if (sumVarZ <= 0) {
+          ACTS_ERROR("Variance of the vertex's z-coordinate is not positive.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
+        }
+        // Use only z significance
+        significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
       }
-      // Use only z significance
-      significance = std::abs(deltaZPos) / std::sqrt(sumVarZ);
     } else {
       if (m_cfg.useTime) {
         // Use 4D information for significance
@@ -520,8 +541,8 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
         SquareMatrix4 sumCov = candidateCov + otherCov;
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
-          // TODO FIXME this should never happen
-          continue;
+          ACTS_ERROR("Vertex 4D covariance matrix is singular.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       } else {
@@ -531,17 +552,25 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
             candidateCov.topLeftCorner<3, 3>() + otherCov.topLeftCorner<3, 3>();
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
-          // TODO FIXME this should never happen
-          continue;
+          ACTS_ERROR("Vertex 3D covariance matrix is singular.");
+          return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       }
     }
+    if (significance < 0.) {
+      ACTS_ERROR(
+          "Found a negative significance (i.e., a negative chi2) when checking "
+          "if vertices are merged. This should never happen since the vertex "
+          "covariance should be positive definite, and thus its inverse "
+          "should be positive definite as well.");
+      return Result<bool>::failure(VertexingError::MatrixNotPositiveDefinite);
+    }
     if (significance < m_cfg.maxMergeVertexSignificance) {
-      return true;
+      return Result<bool>::success(true);
     }
   }
-  return false;
+  return Result<bool>::success(false);
 }
 
 Acts::Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
