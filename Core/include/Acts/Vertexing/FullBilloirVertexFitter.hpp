@@ -15,7 +15,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -105,5 +104,3 @@ class FullBilloirVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "FullBilloirVertexFitter.ipp"

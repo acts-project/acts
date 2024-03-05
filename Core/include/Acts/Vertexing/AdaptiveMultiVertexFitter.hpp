@@ -16,7 +16,6 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -40,7 +39,7 @@ class AdaptiveMultiVertexFitter {
   struct State {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
-        : ipState(field.makeCache(magContext)),
+        : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
     // Vertex collection to be fitted
     std::vector<Vertex*> vertexCollection;
@@ -271,5 +270,3 @@ class AdaptiveMultiVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFitter.ipp"

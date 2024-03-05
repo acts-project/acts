@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
@@ -22,7 +21,6 @@
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
 #include <functional>
 
@@ -123,7 +121,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& _magContext)
         : magContext(_magContext),
-          ipState(field.makeCache(magContext)),
+          ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 
     std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
@@ -140,33 +138,7 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param logger The logging instance
   IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "IterativeVertexFinder", Logging::INFO))
-      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
-    if (!m_cfg.extractParameters.connected()) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No function to extract parameters "
-          "provided.");
-    }
-
-    if (!m_cfg.trackLinearizer.connected()) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No track linearizer provided.");
-    }
-
-    if (!m_cfg.seedFinder) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No seed finder provided.");
-    }
-
-    if (!m_cfg.field) {
-      throw std::invalid_argument(
-          "IterativeVertexFinder: "
-          "No magnetic field provider provided.");
-    }
-  }
+                            "IterativeVertexFinder", Logging::INFO));
 
   /// @brief Finds vertices corresponding to input trackVector
   ///
@@ -203,11 +175,14 @@ class IterativeVertexFinder final : public IVertexFinder {
 
   /// @brief Method that calls seed finder to retrieve a vertex seed
   ///
+  /// @param state The state object
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex> getVertexSeed(State& state,
-                               const std::vector<InputTrack>& seedTracks,
-                               const VertexingOptions& vertexingOptions) const;
+  ///
+  /// @return Vertex seed
+  Result<std::optional<Vertex>> getVertexSeed(
+      State& state, const std::vector<InputTrack>& seedTracks,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks
   ///
@@ -285,5 +260,3 @@ class IterativeVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "IterativeVertexFinder.ipp"

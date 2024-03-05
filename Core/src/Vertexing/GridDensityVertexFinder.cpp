@@ -6,96 +6,101 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline auto Acts::AdaptiveGridDensityVertexFinder::find(
-    const std::vector<InputTrack>& trackVector,
-    const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
+#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
+
+namespace Acts {
+
+auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
+                                   const VertexingOptions& vertexingOptions,
+                                   IVertexFinder::State& anyState) const
+    -> Result<std::vector<Vertex>> {
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&
       !state.tracksToRemove.empty()) {
+    // Bool to check if removable tracks, that pass selection, still exist
+    bool couldRemoveTracks = false;
     for (auto trk : state.tracksToRemove) {
-      auto it = state.trackDensities.find(trk);
-      if (it == state.trackDensities.end()) {
+      if (!state.trackSelectionMap.at(trk)) {
         // Track was never added to grid, so cannot remove it
         continue;
       }
-      m_cfg.gridDensity.subtractTrack(it->second, state.mainDensityMap);
+      couldRemoveTracks = true;
+      auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
+      m_cfg.gridDensity.removeTrackGridFromMainGrid(
+          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGrid);
+    }
+    if (!couldRemoveTracks) {
+      // No tracks were removed anymore
+      // Return empty seed
+      // (Note: Upstream finder should check for this break condition)
+      return std::vector<Vertex>{};
     }
   } else {
-    state.mainDensityMap = DensityMap();
+    state.mainGrid =
+        MainGridVector::Zero(m_cfg.gridDensity.config().mainGridSize);
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
       // Take only tracks that fulfill selection criteria
       if (!doesPassTrackSelection(trkParams)) {
+        if (m_cfg.cacheGridStateForTrackRemoval) {
+          state.trackSelectionMap[trk] = false;
+        }
         continue;
       }
-      auto trackDensityMap =
-          m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
+      auto binAndTrackGrid =
+          m_cfg.gridDensity.addTrack(trkParams, state.mainGrid);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        state.trackDensities[trk] = std::move(trackDensityMap);
+        state.binAndTrackGridMap[trk] = binAndTrackGrid;
+        state.trackSelectionMap[trk] = true;
       }
     }
     state.isInitialized = true;
   }
 
-  if (state.mainDensityMap.empty()) {
-    // No tracks passed selection
-    // Return empty seed, i.e. vertex at constraint position
-    // (Note: Upstream finder should check for this break condition)
-    std::vector<Vertex> seedVec{vertexingOptions.constraint};
-    return seedVec;
-  }
-
   double z = 0;
-  double t = 0;
-  double zWidth = 0;
+  double width = 0;
+  if (!state.mainGrid.isZero()) {
+    if (!m_cfg.estimateSeedWidth) {
+      // Get z value of highest density bin
+      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);
 
-  if (!m_cfg.estimateSeedWidth) {
-    // Get z value of highest density bin
-    auto maxZTRes = m_cfg.gridDensity.getMaxZTPosition(state.mainDensityMap);
+      if (!maxZres.ok()) {
+        return maxZres.error();
+      }
+      z = *maxZres;
+    } else {
+      // Get z value of highest density bin and width
+      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainGrid);
 
-    if (!maxZTRes.ok()) {
-      return maxZTRes.error();
+      if (!maxZres.ok()) {
+        return maxZres.error();
+      }
+      z = (*maxZres).first;
+      width = (*maxZres).second;
     }
-    z = (*maxZTRes).first;
-    t = (*maxZTRes).second;
-  } else {
-    // Get z value of highest density bin and width
-    auto maxZTResAndWidth =
-        m_cfg.gridDensity.getMaxZTPositionAndWidth(state.mainDensityMap);
-
-    if (!maxZTResAndWidth.ok()) {
-      return maxZTResAndWidth.error();
-    }
-    z = (*maxZTResAndWidth).first.first;
-    t = (*maxZTResAndWidth).first.second;
-    zWidth = (*maxZTResAndWidth).second;
   }
 
-  // Construct output vertex, t will be 0 if temporalTrkGridSize == 1
-  Vector4 seedPos =
-      vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
+  // Construct output vertex
+  Vector3 seedPos = vertexingOptions.constraint.position() + Vector3(0., 0., z);
 
   Vertex returnVertex = Vertex(seedPos);
 
   SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
-  if (zWidth != 0.) {
+  if (width != 0.) {
     // Use z-constraint from seed width
-    seedCov(2, 2) = zWidth * zWidth;
+    seedCov(2, 2) = width * width;
   }
 
   returnVertex.setFullCovariance(seedCov);
 
-  std::vector<Vertex> seedVec{returnVertex};
-
-  return seedVec;
+  return std::vector<Vertex>{returnVertex};
 }
 
-inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
+auto GridDensityVertexFinder::doesPassTrackSelection(
     const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
@@ -119,8 +124,7 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
     return false;
   }
 
-  // Calculate track density quantities to check if track can easily
-  // be considered as 2-dim Gaussian distribution without causing problems
+  // Calculate track density quantities
   double constantTerm =
       -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
       (2. * covDeterminant);
@@ -135,3 +139,5 @@ inline auto Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
 
   return true;
 }
+
+}  // namespace Acts
