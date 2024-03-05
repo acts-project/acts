@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/CuboidalContainerBuilder.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
@@ -275,6 +276,37 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
+    using Range1D = Acts::RangeXD<1u, Acts::ActsScalar>;
+    using KdtSurfaces1D = Acts::Experimental::KdtSurfaces<1u, 100u>;
+    using KdtSurfacesProvider1D =
+        Acts::Experimental::KdtSurfacesProvider<1u, 100u>;
+
+    py::class_<Range1D>(m, "Range1D")
+        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& irange) {
+          Range1D range;
+          range[0].shrink(irange[0], irange[1]);
+          return range;
+        }));
+
+    py::class_<KdtSurfaces1D, std::shared_ptr<KdtSurfaces1D>>(m,
+                                                              "KdtSurfaces1D")
+        .def(py::init<const GeometryContext&,
+                      const std::vector<std::shared_ptr<Acts::Surface>>&,
+                      const std::array<Acts::BinningValue, 1u>&>())
+        .def("surfaces", [](KdtSurfaces1D& self, const Range1D& range) {
+          return self.surfaces(range);
+        });
+
+    py::class_<KdtSurfacesProvider1D, Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<KdtSurfacesProvider1D>>(m,
+                                                       "KdtSurfacesProvider1D")
+        .def(py::init(
+            [](std::shared_ptr<KdtSurfaces1D> kdt, const Extent& extent) {
+              return std::make_shared<KdtSurfacesProvider1D>(kdt, extent);
+            }));
+  }
+
+  {
     using Range2D = Acts::RangeXD<2u, Acts::ActsScalar>;
     using KdtSurfaces2D = Acts::Experimental::KdtSurfaces<2u, 100u>;
     using KdtSurfacesProvider2D =
@@ -436,6 +468,35 @@ void addExperimentalGeometry(Context& ctx) {
             .def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
+    ACTS_PYTHON_MEMBER(builders);
+    ACTS_PYTHON_MEMBER(binning);
+    ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
+    ACTS_PYTHON_MEMBER(geoIdGenerator);
+    ACTS_PYTHON_MEMBER(geoIdReverseGen);
+    ACTS_PYTHON_MEMBER(auxiliary);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    // Cuboidal container builder
+    auto ccBuilder =
+        py::class_<CuboidalContainerBuilder,
+                   Acts::Experimental::IDetectorComponentBuilder,
+                   std::shared_ptr<CuboidalContainerBuilder>>(
+            m, "CuboidalContainerBuilder")
+            .def(py::init([](const CuboidalContainerBuilder::Config& config,
+                             const std::string& name,
+                             Acts::Logging::Level level) {
+              return std::make_shared<CuboidalContainerBuilder>(
+                  config, getDefaultLogger(name, level));
+            }))
+            .def("construct", &CuboidalContainerBuilder::construct);
+
+    auto ccConfig =
+        py::class_<CuboidalContainerBuilder::Config>(ccBuilder, "Config")
+            .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CuboidalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
     ACTS_PYTHON_MEMBER(binning);
     ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
