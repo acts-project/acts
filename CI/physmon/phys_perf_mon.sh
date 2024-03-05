@@ -7,7 +7,6 @@ function run() {
     set -x
     "$@"
     { set +x;   } 2> /dev/null
-
 }
 
 export run
