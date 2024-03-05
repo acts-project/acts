@@ -34,6 +34,8 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 histcmp_results=$outdir/histcmp_results.csv
 echo -n "" > $histcmp_results
 
+SPYRAL_BIN=${SPYRAL_BIN:=spyral}
+
 memory_dir=${outdir}/memory
 mkdir -p "$memory_dir"
 
@@ -45,38 +47,56 @@ if [ "$(uname)" == "Darwin" ]; then
         shift
         echo "Measure Darwin $label"
         tmp=$(mktemp)
-        /usr/bin/time -l "$@" 2> "$tmp"
+        /usr/bin/time -l -o "$tmp" "$@" 
 
         of="${memory_dir}/mem_${slug}.csv"
         {
             echo "# spyral-label: $label"
             echo "# spyral-cmd: $*"
             echo "time,rss,vms"
-            grep -E "maximum resident set size" "$tmp" | awk '{printf $1}'
-            printf ","
+            # in bytes
             grep -E "real" "$tmp" | awk '{printf $1}'
+            printf ","
+            grep -E "maximum resident set size" "$tmp" | awk '{printf $1}'
             printf ",0\n"
         } > "$of"
     }
     export measure
 elif [ "$(uname)" == "Linux" ]; then
     function measure {
-        echo "Measure Linux"
-        /usr/bin/time -v $@
+        label=$1
+        shift
+        slug=$2
+        shift
+        echo "Measure Linux $label"
+        tmp=$(mktemp)
+        /usr/bin/time -v -o  "$tmp" "$@"
+        # in kbytes
+        max_rss=$(grep "Maximum resident set size (kbytes):" "$tmp" | awk '{printf $(NF)}')
+        max_rss=$(( 1000*max_rss ))
+        wall_time=$(grep "Elapsed (wall clock)" "$tmp" | awk '{printf $(NF)}')
+        echo $max_rss
+        wall_time=$(python3 -c "i='${wall_time}';p=i.split(':');p = p if len(p) == 3 else ['0', *p];t=float(p[0])*60*60 + float(p[1])*60 + float(p[2]);print(t)")
+        echo $wall_time
+
+        of="${memory_dir}/mem_${slug}.csv"
+        {
+            echo "# spyral-label: $label"
+            echo "# spyral-cmd: $*"
+            echo "time,rss,vms"
+            echo "${wall_time},${max_rss},0"
+        } > "$of"
     }
     export measure
 else
-    echo "Not Linux or Darwin!"
     function measure {
-        $@
+        echo "Not measuring because unknown environment"
+        shift
+        shift
+        "$@"
     }
     export measure
 fi
-
-
-measure sleep sleep sleep 2;echo "yo"
-exit 0
-
 
 set +e
 ec=0
@@ -100,7 +120,7 @@ function run_physmon_gen() {
       echo "::notice::✅ Dataset generation succeeded: ${script}"
     fi
 
-    # $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
+    $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
 }
 
 echo "::group::Generate validation dataset"
