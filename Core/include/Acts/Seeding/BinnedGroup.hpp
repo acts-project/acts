@@ -40,6 +40,12 @@ class BinnedGroup {
               std::array<std::vector<std::size_t>, DIM> navigation =
                   std::array<std::vector<std::size_t>, DIM>());
 
+  BinnedGroup(grid_t&& grid, std::vector<bool> mask,
+              const Acts::GridBinFinder<DIM>& bottomFinder,
+              const Acts::GridBinFinder<DIM>& topFinder,
+              std::array<std::vector<std::size_t>, DIM> navigation =
+                  std::array<std::vector<std::size_t>, DIM>());
+
   BinnedGroup(grid_t& grid, const Acts::GridBinFinder<DIM>& bottomFinder,
               const Acts::GridBinFinder<DIM>& topFinder,
               std::array<std::vector<std::size_t>, DIM> navigation =
@@ -72,6 +78,11 @@ class BinnedGroup {
   /// @return Mutable reference to the stored grid
   grid_t& grid();
 
+  /// @brief Retrieve the mask
+  /// Only const accessor is supported
+  /// @return The mask
+  const std::vector<bool>& mask() const;
+
   /// @brief Get the begin iterator
   /// @return The iterator
   Acts::BinnedGroupIterator<grid_t> begin() const;
@@ -82,6 +93,9 @@ class BinnedGroup {
  private:
   /// @brief The N-dimentional grid
   grid_t m_grid;
+  /// @brief The mask to be applied to the grid. The size of this vector
+  /// corresponds to the global bins in the grid
+  std::vector<bool> m_mask{};
   /// @brief The Grid Bin Finder for bottom candidates
   const Acts::GridBinFinder<DIM>* m_bottomBinFinder{nullptr};
   /// @brief The Grid Bin Finder for top candidates
