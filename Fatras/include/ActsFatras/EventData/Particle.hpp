@@ -284,6 +284,17 @@ class Particle {
         fourPosition(), direction(), qOverP(), std::nullopt, hypothesis());
   }
 
+  /// Set the number of hits.
+  ///
+  /// @param nHits number of hits
+  constexpr Particle &setNumberOfHits(std::uint32_t nHits) {
+    m_numberOfHits = nHits;
+    return *this;
+  }
+
+  /// Number of hits.
+  constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -299,12 +310,14 @@ class Particle {
   Vector3 m_direction = Vector3::UnitZ();
   Scalar m_absMomentum = Scalar(0);
   Vector4 m_position4 = Vector4::Zero();
-  // proper time in the particle rest frame
+  /// proper time in the particle rest frame
   Scalar m_properTime = Scalar(0);
   // accumulated material
   Scalar m_pathInX0 = Scalar(0);
   Scalar m_pathInL0 = Scalar(0);
-  // reference surface
+  /// number of hits
+  std::uint32_t m_numberOfHits = 0;
+  /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
 };
 

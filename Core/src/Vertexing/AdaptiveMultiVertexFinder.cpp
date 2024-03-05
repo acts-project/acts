@@ -504,7 +504,7 @@ bool AdaptiveMultiVertexFinder::isMergedVertex(
     const SquareMatrix4& otherCov = otherVtx->fullCovariance();
 
     double significance = 0;
-    if (!m_cfg.do3dSplitting) {
+    if (!m_cfg.doFullSplitting) {
       const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
       const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
       if (sumVarZ <= 0) {
