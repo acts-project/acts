@@ -47,7 +47,8 @@ if [ "$(uname)" == "Darwin" ]; then
         shift
         echo "Measure Darwin $label"
         tmp=$(mktemp)
-        /usr/bin/time -l -o "$tmp" "$@" 
+        echo "+ $@" >&2
+        /usr/bin/time -l -o "$tmp" "$@"
 
         of="${memory_dir}/mem_${slug}.csv"
         {
@@ -70,6 +71,7 @@ elif [ "$(uname)" == "Linux" ]; then
         shift
         echo "Measure Linux $label"
         tmp=$(mktemp)
+        echo "+ $@" >&2
         /usr/bin/time -v -o  "$tmp" "$@"
         # in kbytes
         max_rss=$(grep "Maximum resident set size (kbytes):" "$tmp" | awk '{printf $(NF)}')
@@ -98,7 +100,10 @@ else
     export measure
 fi
 
-set +e
+if [ -n "$CI" ]; then
+    echo "CI mode, do not abort immediately on failure"
+    set +e
+fi
 ec=0
 
 source $SCRIPT_DIR/setup.sh
@@ -109,7 +114,7 @@ function run_physmon_gen() {
 
     script=CI/physmon/workflows/physmon_${slug}.py
 
-    measure "$title" ${script} $outdir 2>&1 > $outdir/run_${slug}.log
+    measure "$title" "$slug" ${script} $outdir 2>&1 > $outdir/run_${slug}.log
 
     this_ec=$?
     ec=$(($ec | $this_ec))
@@ -120,7 +125,7 @@ function run_physmon_gen() {
       echo "::notice::✅ Dataset generation succeeded: ${script}"
     fi
 
-    $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
+    run $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
 }
 
 echo "::group::Generate validation dataset"
@@ -166,7 +171,7 @@ function run_histcmp() {
       ec=1
     fi
 
-    histcmp $a $b \
+    run histcmp $a $b \
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
@@ -212,7 +217,7 @@ function full_chain() {
         ckf_${suffix} \
         -c $config
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/performance_ivf_${suffix}.root \
         vertexing \
         $outdir/performance_ivf_${suffix}_hist.root \
@@ -229,7 +234,7 @@ function full_chain() {
         "IVF ${suffix}" \
         ivf_${suffix}
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/performance_amvf_${suffix}.root \
         vertexing \
         $outdir/performance_amvf_${suffix}_hist.root \
@@ -247,7 +252,7 @@ function full_chain() {
         amvf_${suffix}
 
     if [ $suffix == seeded ]; then
-	    Examples/Scripts/generic_plotter.py \
+	    run Examples/Scripts/generic_plotter.py \
             $outdir/performance_amvf_gridseeder_${suffix}.root \
             vertexing \
             $outdir/performance_amvf_gridseeder_${suffix}_hist.root \
@@ -265,7 +270,7 @@ function full_chain() {
             amvf_gridseeder_${suffix}
     fi
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_${suffix}.root \
         tracksummary \
         $outdir/tracksummary_ckf_${suffix}_hist.root \
@@ -289,7 +294,7 @@ function simulation() {
 
     config="CI/physmon/simulation_config.yml"
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/particles_${suffix}.root \
         particles \
         $outdir/particles_${suffix}_hist.root \
@@ -345,7 +350,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         "Ambisolver " \
         ambi_ttbar
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/performance_amvf_ttbar.root \
         vertexing \
         $outdir/performance_amvf_ttbar_hist.root \
@@ -353,7 +358,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         --config CI/physmon/vertexing_ttbar_config.yml
     ec=$(($ec | $?))
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_ttbar.root \
         tracksummary \
         $outdir/tracksummary_ckf_ttbar_hist.root \
@@ -378,7 +383,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         "AMVF ttbar" \
         amvf_ttbar
 
-    Examples/Scripts/generic_plotter.py \
+    run Examples/Scripts/generic_plotter.py \
         $outdir/performance_amvf_gridseeder_ttbar.root \
         vertexing \
         $outdir/performance_amvf_gridseeder_ttbar_hist.root \
@@ -424,7 +429,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
 fi
 
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
-    Examples/Scripts/vertex_mu_scan.py \
+    run Examples/Scripts/vertex_mu_scan.py \
         $outdir/performance_vertexing_*mu*.root \
         $outdir/vertexing_mu_scan.pdf
 
@@ -436,7 +441,7 @@ if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     simulation geant4
 fi
 
-CI/physmon/summary.py $histcmp_results \
+run CI/physmon/summary.py $histcmp_results \
   --md $outdir/summary.md \
   --html $outdir/summary.html
 ec=$(($ec | $?))
