@@ -50,15 +50,13 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   MultiLayerSurfacesUpdaterImpl() = delete;
 
   void update(const GeometryContext& gctx, NavigationState& nState) const {
-
-    //get the local position and direction
-    auto lposition = transform*nState.position;
-    auto ldirection = transform.linear()*nState.direction;
+    // get the local position and direction
+    auto lposition = transform * nState.position;
+    auto ldirection = transform.linear() * nState.direction;
 
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +
                           std::pow(grid.binWidth()[1], 2));
-    auto path = pgenerator(lposition, ldirection, step,
-                           grid.numLocalBins()[1]);
+    auto path = pgenerator(lposition, ldirection, step, grid.numLocalBins()[1]);
 
     std::vector<const Acts::Surface*> surfCandidates = {};
 
@@ -81,7 +79,6 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param position is the position of the update call
   std::array<ActsScalar, grid_type::DIM> castPosition(
       const Vector3& position) const {
-
     std::array<ActsScalar, grid_type::DIM> casted{};
     fillCasts(position, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
@@ -124,7 +121,8 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
 
 struct PathGridSurfacesGenerator {
   std::vector<Vector3> operator()(Vector3 lstartPosition,
-                                  const Vector3& ldirection, ActsScalar stepSize,
+                                  const Vector3& ldirection,
+                                  ActsScalar stepSize,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
