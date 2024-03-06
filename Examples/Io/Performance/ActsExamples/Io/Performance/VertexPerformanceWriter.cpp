@@ -456,7 +456,7 @@ ProcessCode VertexPerformanceWriter::writeT(
     for (const SimBarcode& vtxId : contributingTruthVertices) {
       fmap[vtxId]++;
     }
-    double maxOccurrence = -1;
+    int maxOccurrence = -1;
     SimBarcode maxOccurrenceId = -1;
     for (const auto& [vtxId, occurrence] : fmap) {
       if (occurrence > maxOccurrence) {
