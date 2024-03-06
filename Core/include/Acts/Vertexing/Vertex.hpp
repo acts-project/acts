@@ -56,6 +56,10 @@ class Vertex {
   const Vector4& fullPosition() const;
   Vector4& fullPosition();
 
+  /// @return Returns 4D position of the vertex seed
+  const Vector4& fullSeedPosition() const;
+  Vector4& fullSeedPosition();
+
   /// @return Returns position covariance
   SquareMatrix3 covariance() const;
 
@@ -107,6 +111,7 @@ class Vertex {
 
  private:
   Vector4 m_position = Vector4::Zero();
+  Vector4 m_seedPosition = Vector4::Zero();
   SquareMatrix4 m_covariance = SquareMatrix4::Zero();
   std::vector<TrackAtVertex> m_tracksAtVertex;
   double m_chiSquared = 0.;  // chi2 of the fit

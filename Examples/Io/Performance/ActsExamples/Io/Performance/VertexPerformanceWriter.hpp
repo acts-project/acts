@@ -123,11 +123,22 @@ class VertexPerformanceWriter final
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
 
+  // 4D position of the vertex seed. x and y coordinate are 0 in current
+  // implementations, we save them here as a check.
+  std::vector<double> m_seedX;
+  std::vector<double> m_seedY;
+  std::vector<double> m_seedZ;
+  std::vector<double> m_seedT;
+
   // Difference of reconstructed and true vertex 4D position
   std::vector<double> m_resX;
   std::vector<double> m_resY;
   std::vector<double> m_resZ;
   std::vector<double> m_resT;
+
+  // Difference between the seed and the true vertex z and t coordinate
+  std::vector<double> m_resSeedZ;
+  std::vector<double> m_resSeedT;
 
   // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
   std::vector<double> m_pullX;

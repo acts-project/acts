@@ -111,10 +111,18 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("recoZ", &m_recoZ);
     m_outputTree->Branch("recoT", &m_recoT);
 
+    m_outputTree->Branch("seedX", &m_seedX);
+    m_outputTree->Branch("seedY", &m_seedY);
+    m_outputTree->Branch("seedZ", &m_seedZ);
+    m_outputTree->Branch("seedT", &m_seedT);
+
     m_outputTree->Branch("resX", &m_resX);
     m_outputTree->Branch("resY", &m_resY);
     m_outputTree->Branch("resZ", &m_resZ);
     m_outputTree->Branch("resT", &m_resT);
+
+    m_outputTree->Branch("resSeedZ", &m_resSeedZ);
+    m_outputTree->Branch("resSeedT", &m_resSeedT);
 
     m_outputTree->Branch("pullX", &m_pullX);
     m_outputTree->Branch("pullY", &m_pullY);
@@ -560,11 +568,25 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
             m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
 
+            m_seedX.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos0]);
+            m_seedY.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos1]);
+            m_seedZ.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos2]);
+            m_seedT.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreeTime]);
+
             const Acts::ActsVector<4> diffPos = vtx.fullPosition() - truePos;
             m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
             m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
             m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
             m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
+
+            const Acts::ActsVector<4> diffSeedPos =
+                vtx.fullSeedPosition() - truePos;
+            m_resSeedZ.push_back(diffSeedPos[Acts::FreeIndices::eFreePos2]);
+            m_resSeedT.push_back(diffSeedPos[Acts::FreeIndices::eFreeTime]);
 
             Acts::ActsScalar varX = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0);
@@ -750,10 +772,16 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_recoY.clear();
   m_recoZ.clear();
   m_recoT.clear();
+  m_seedX.clear();
+  m_seedY.clear();
+  m_seedZ.clear();
+  m_seedT.clear();
   m_resX.clear();
   m_resY.clear();
   m_resZ.clear();
   m_resT.clear();
+  m_resSeedZ.clear();
+  m_resSeedT.clear();
   m_pullX.clear();
   m_pullY.clear();
   m_pullZ.clear();
