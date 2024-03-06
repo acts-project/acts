@@ -101,18 +101,18 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   /// @brief Constructor for indexed surface material
   /// @param grid the index grid steering the access to the material vector
   /// @param materialAccessor the material accessor: from grid, from indexed vector
-  /// @param gcasts global casts -> casts a grid position from global
-  /// @param laccessors local accessors -> accessors to the local grid
+  /// @param gcasts global casts -> casts a grid position from global to grid frame
+  /// @param laccessors local casts/access -> cast a local position to the grid frame
   /// @param transform  transform from global frame into map frame
-  GridSurfaceMaterialT(grid_type&& grid,
-                       material_accessor_type&& materialAccessor,
-                       const std::vector<BinningValue>& gcasts,
-                       const std::vector<std::size_t>& laccessors,
-                       const Transform3& transform = Transform3::Identity())
+  GridSurfaceMaterialT(
+      grid_type&& grid, material_accessor_type&& materialAccessor,
+      const std::vector<BinningValue>& gcasts,
+      const std::vector<GridAccessHelpers::LocalAccess>& laccessors,
+      const Transform3& transform = Transform3::Identity())
       : m_grid(std::move(grid)),
         m_materialAccessor(std::move(materialAccessor)),
         m_globalCasts(gcasts),
-        m_localAccessors(laccessors),
+        m_localAccess(laccessors),
         m_transform(transform) {
     if (gcasts.size() != grid_type::DIM) {
       throw std::invalid_argument(
@@ -128,8 +128,7 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final {
     return m_materialAccessor.slab(
-        m_grid,
-        GridAccessHelpers::accessLocal<grid_type>(lp, m_localAccessors));
+        m_grid, GridAccessHelpers::castLocal<grid_type>(lp, m_localAccess));
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
@@ -142,13 +141,27 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
 
   /// @copydoc ISurfaceMaterial::materialSlab(std::size_t bin0, std::size_t bin1) const
   ///
+  /// @note this method should not be used as it assumes implicit meaning of bin0 and bin1
+  /// to be removed eventually
+  ///
   /// The ISurface material class expects bins in [ 0 - n ] x [ 0, m ], we will
   /// convert into this format, but it is gonna be slow
   const MaterialSlab& materialSlab(std::size_t bin0,
                                    std::size_t bin1) const final {
     // Access via bin0 and bin1
-    Acts::Vector2 lposition =
-        GridAccessHelpers::toLocal(m_grid, bin0, bin1, m_localAccessors[0u]);
+    auto gridAxes = m_grid.axes();
+    const auto& edges0 = gridAxes[0u]->getBinEdges();
+    ActsScalar pval0 = 0.5 * (edges0[bin0] + edges0[bin0 + 1u]);
+    Acts::Vector2 lposition = {};
+    lposition[m_localAccess[0].localIndex] = pval0;
+    if (m_localAccess.size() == 2) {
+      const auto& edges1 = gridAxes[1u]->getBinEdges();
+      ActsScalar pval1 = 0.5 * (edges1[bin1] + edges1[bin1 + 1u]);
+      lposition[m_localAccess[1].localIndex] = pval1;
+    } else {
+      throw std::invalid_argument(
+          "The number of local accessors must be 1 or 2");
+    }
     return materialSlab(lposition);
   }
 
@@ -166,6 +179,25 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
     return sl;
   }
 
+  /// @brief Return the grid
+  const grid_type& grid() const { return m_grid; }
+
+  /// @brief Return the material accessor
+  const material_accessor_type& materialAccessor() const {
+    return m_materialAccessor;
+  }
+
+  /// @brief Return the global casts
+  const std::vector<BinningValue>& globalCasts() const { return m_globalCasts; }
+
+  /// @brief Return the local accessors
+  const std::vector<GridAccessHelpers::LocalAccess>& localAccess() const {
+    return m_localAccess;
+  }
+
+  /// @brief Return the transform
+  const Transform3& transform() const { return m_transform; }
+
  private:
   /// @brief The grid
   grid_type m_grid;
@@ -177,7 +209,7 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   std::vector<BinningValue> m_globalCasts;
 
   /// @brief Local accessors - empty assumes direct translation
-  std::vector<std::size_t> m_localAccessors;
+  std::vector<GridAccessHelpers::LocalAccess> m_localAccess;
 
   /// @brief The transform to the local frame
   Transform3 m_transform;

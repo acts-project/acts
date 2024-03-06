@@ -10,6 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -18,7 +19,54 @@ using namespace Acts;
 
 namespace bd = boost::unit_test::data;
 
+using LocalAccess = GridAccessHelpers::LocalAccess;
+
 BOOST_AUTO_TEST_SUITE(GridAccessHelpersTests)
+
+BOOST_AUTO_TEST_CASE(LocalAccess_test) {
+  // Pick out the x coordinate
+  LocalAccess lAccess{0u};
+  Vector2 position{3., 4.};
+
+  BOOST_CHECK_EQUAL(lAccess.toGridLocal(position), 3.);
+
+  // Assuma a cylindrical surface with a phi - z grid on it
+  ActsScalar radius = 100;
+  ActsScalar phiValue = 0.25;
+  ActsScalar zValue = 55.;
+
+  LocalAccess rphiToPhi{0u, 0., 1. / radius};
+  LocalAccess zToZ{1u};
+  std::vector<LocalAccess> lAccessors = {rphiToPhi, zToZ};
+
+  Acts::GridAxisGenerators::EqClosedEqBound eqClosedEqBound{
+      {-M_PI, M_PI}, 20, {-100, 100}, 21};
+  using GridType =
+      Acts::GridAxisGenerators::EqClosedEqBound::grid_type<std::size_t>;
+
+  Vector2 rphiPosition{radius * phiValue, zValue};
+  auto rphiAccess =
+      GridAccessHelpers::castLocal<GridType>(rphiPosition, lAccessors);
+
+  BOOST_CHECK_EQUAL(rphiAccess.size(), 2u);
+  BOOST_CHECK_EQUAL(rphiAccess[0u], phiValue);
+  BOOST_CHECK_EQUAL(rphiAccess[1u], zValue);
+
+  // Check the reverse
+  ActsScalar zFrame = zToZ.toFrameLocal(zValue);
+  BOOST_CHECK_EQUAL(zFrame, zValue);
+
+  ActsScalar loc0Frame = rphiToPhi.toFrameLocal(phiValue);
+  CHECK_CLOSE_ABS(loc0Frame, phiValue * radius, 1e-6);
+
+  // Assume the same cylidner, but someone maps a z - phi grid onto it
+  std::vector<LocalAccess> lAccessorsRev = {zToZ, rphiToPhi};
+  auto rphiAccessRev =
+      GridAccessHelpers::castLocal<GridType>(rphiPosition, lAccessorsRev);
+  BOOST_CHECK_EQUAL(rphiAccessRev.size(), 2u);
+  BOOST_CHECK_EQUAL(rphiAccessRev[0u], zValue);
+  BOOST_CHECK_EQUAL(rphiAccessRev[1u], phiValue);
+}
 
 BOOST_AUTO_TEST_CASE(Grid1DAccess) {
   Acts::GridAxisGenerators::EqBound eqBound{{0., 10.}, 10};
@@ -31,14 +79,12 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
   }
 
   // Local access
-  std::vector<std::size_t> fAccessor = {0u};
-  std::vector<std::size_t> sAccessor = {1u};
+  std::vector<LocalAccess> fAccessor = {LocalAccess{0u}};
+  std::vector<LocalAccess> sAccessor = {LocalAccess{1u}};
 
   Vector2 lPosition{3.5, 6.5};
-  auto flAccess =
-      GridAccessHelpers::accessLocal<GridType>(lPosition, fAccessor);
-  auto slAccess =
-      GridAccessHelpers::accessLocal<GridType>(lPosition, sAccessor);
+  auto flAccess = GridAccessHelpers::castLocal<GridType>(lPosition, fAccessor);
+  auto slAccess = GridAccessHelpers::castLocal<GridType>(lPosition, sAccessor);
 
   // This should take out local 1D either first or second
   BOOST_CHECK_EQUAL(grid.atPosition(flAccess), 3u);
@@ -56,14 +102,6 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 0u);
   BOOST_CHECK_EQUAL(grid.atPosition(sgAccess), 3u);
   BOOST_CHECK_EQUAL(grid.atPosition(tgAccess), 6u);
-
-  // Binned access
-  Vector2 flbPosition = GridAccessHelpers::toLocal(grid, 1u, 0u, 0u);
-  auto flbAccess =
-      GridAccessHelpers::accessLocal<GridType>(flbPosition, fAccessor);
-  BOOST_CHECK_EQUAL(grid.atPosition(flbAccess), 1u);
-  BOOST_CHECK_THROW(GridAccessHelpers::toLocal(grid, 1u, 0u, 3u),
-                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DAccess) {
@@ -80,10 +118,9 @@ BOOST_AUTO_TEST_CASE(Grid2DAccess) {
   }
 
   // Local access
-  std::vector<std::size_t> fAccessor = {0u, 1u};
+  std::vector<LocalAccess> fAccessor = {LocalAccess{0u}, LocalAccess{1u}};
   Vector2 lPosition{3.5, 6.5};
-  auto flAccess =
-      GridAccessHelpers::accessLocal<GridType>(lPosition, fAccessor);
+  auto flAccess = GridAccessHelpers::castLocal<GridType>(lPosition, fAccessor);
   BOOST_CHECK_EQUAL(grid.atPosition(flAccess), 603u);
 
   // Global access
@@ -91,30 +128,6 @@ BOOST_AUTO_TEST_CASE(Grid2DAccess) {
   std::vector<BinningValue> fCast = {Acts::binX, Acts::binY};
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 300u);
-
-  // Binned access
-  Vector2 lbPosition = GridAccessHelpers::toLocal(grid, 4u, 9u);
-  auto lbAccess =
-      GridAccessHelpers::accessLocal<GridType>(lbPosition, fAccessor);
-  BOOST_CHECK_EQUAL(grid.atPosition(lbAccess), 904u);
-}
-
-BOOST_AUTO_TEST_CASE(Grid3DAccess) {
-  using EAxis = Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                   Acts::detail::AxisBoundaryType::Bound>;
-  using EGrid = Acts::Grid<std::size_t, EAxis, EAxis, EAxis>;
-
-  auto xAxis = EAxis(0., 10., 10);
-  auto yAxis = EAxis(0., 10., 10);
-  auto zAxis = EAxis(0., 10., 10);
-
-  EGrid grid({xAxis, yAxis, zAxis});
-
-  BOOST_CHECK_THROW(GridAccessHelpers::accessLocal<EGrid>({1., 1.}, {0u, 1u});
-                    , std::invalid_argument);
-
-  BOOST_CHECK_THROW(GridAccessHelpers::toLocal(grid, 4u, 9u),
-                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

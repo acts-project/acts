@@ -14,6 +14,9 @@ Acts::DD4hepBinningHelpers::convertBinning(
   // Return proto binning vector
   std::vector<Experimental::ProtoBinning> protoBinnings;
 
+  // Temporarily until local access is a bit refined
+  std::size_t lAcc = 0u;
+
   for (const auto &[ab, bVal] : allowedBinnings) {
     auto type =
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
@@ -33,8 +36,9 @@ Acts::DD4hepBinningHelpers::convertBinning(
       // Equidistant binning
       if (aType == detail::AxisType::Equidistant) {
         if (autoRange) {
-          protoBinnings.push_back(
-              Experimental::ProtoBinning(bVal, bType, nBins, nExpansion));
+          protoBinnings.push_back(Experimental::ProtoBinning(
+              bVal, GridAccessHelpers::LocalAccess{lAcc++}, bType, nBins,
+              nExpansion));
         } else {
           // Equidistant binning
           ActsScalar minDefault = bVal == binPhi ? -M_PI : 0.;
@@ -48,7 +52,8 @@ Acts::DD4hepBinningHelpers::convertBinning(
             bType = Acts::detail::AxisBoundaryType::Closed;
           }
           protoBinnings.push_back(Experimental::ProtoBinning(
-              bVal, bType, min, max, nBins, nExpansion));
+              bVal, GridAccessHelpers::LocalAccess{lAcc++}, bType, min, max,
+              nBins, nExpansion));
         }
       } else {
         // Variable binning
@@ -61,8 +66,9 @@ Acts::DD4hepBinningHelpers::convertBinning(
         if (bVal == binPhi && (edges.back() - edges.front()) > 1.9 * M_PI) {
           bType = Acts::detail::AxisBoundaryType::Closed;
         }
-        protoBinnings.push_back(
-            Experimental::ProtoBinning(bVal, bType, edges, nExpansion));
+        protoBinnings.push_back(Experimental::ProtoBinning(
+            bVal, GridAccessHelpers::LocalAccess{lAcc++}, bType, edges,
+            nExpansion));
       }
     }
   }

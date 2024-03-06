@@ -76,10 +76,12 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   mlCfg.mlSurfaces = strawSurfaces;
 
   mlCfg.mlBinning = {
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound,
-                   -vBounds[0], vBounds[0], nSurfacesX, 1u),
-      ProtoBinning(Acts::binY, Acts::detail::AxisBoundaryType::Bound,
-                   -vBounds[1], vBounds[1], nSurfacesY, 0u)};
+      ProtoBinning(Acts::binX, GridAccessHelpers::LocalAccess{0u},
+                   Acts::detail::AxisBoundaryType::Bound, -vBounds[0],
+                   vBounds[0], nSurfacesX, 1u),
+      ProtoBinning(Acts::binY, GridAccessHelpers::LocalAccess{1u},
+                   Acts::detail::AxisBoundaryType::Bound, -vBounds[1],
+                   vBounds[1], nSurfacesY, 0u)};
   mlCfg.mlBounds = vBounds;
 
   MultiWireStructureBuilder mlBuilder(mlCfg);

@@ -223,16 +223,6 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    // Be able to construct a proto binning
-    py::class_<ProtoBinning>(m, "ProtoBinning")
-        .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                      const std::vector<Acts::ActsScalar>&, std::size_t>())
-        .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                      Acts::ActsScalar, Acts::ActsScalar, std::size_t,
-                      std::size_t>());
-  }
-
-  {
     // The internal layer structure builder
     py::class_<Acts::Experimental::IInternalStructureBuilder,
                std::shared_ptr<Acts::Experimental::IInternalStructureBuilder>>(

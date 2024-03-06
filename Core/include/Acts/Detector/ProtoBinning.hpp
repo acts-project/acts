@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <sstream>
@@ -28,8 +29,10 @@ namespace Experimental {
 /// only for convenience that the binning can be defined and then
 /// translated into concrete axis types
 struct ProtoBinning {
-  /// The binning value of this
+  /// The binning value of this - used for global cast
   BinningValue binValue = BinningValue::binValues;
+  /// The local access - used for local cast
+  GridAccessHelpers::LocalAccess lAccess = GridAccessHelpers::LocalAccess{0u};
   /// The axis type: equidistant or variable
   Acts::detail::AxisType axisType = Acts::detail::AxisType::Equidistant;
   /// The axis boundary type: Open, Bound or Closed
@@ -45,12 +48,15 @@ struct ProtoBinning {
   /// Convenience constructors - for variable binning
   ///
   /// @param bValue the value/cast in which this is binned
+  /// @param lAccessor the local accessor
   /// @param bType the axis boundary type
   /// @param e the bin edges (variable binning)
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
+  ProtoBinning(BinningValue bValue, GridAccessHelpers::LocalAccess lAccessor,
+               Acts::detail::AxisBoundaryType bType,
                const std::vector<ActsScalar>& e, std::size_t exp = 0u)
       : binValue(bValue),
+        lAccess(lAccessor),
         axisType(Acts::detail::AxisType::Variable),
         boundaryType(bType),
         edges(e),
@@ -64,15 +70,19 @@ struct ProtoBinning {
   /// Convenience constructors - for equidistant binning
   ///
   /// @param bValue the value/cast in which this is binned
+  /// @param lAccessor the local accessor
   /// @param bType the axis boundary type
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
-               ActsScalar minE, ActsScalar maxE, std::size_t nbins,
-               std::size_t exp = 0u)
-      : binValue(bValue), boundaryType(bType), expansion(exp) {
+  ProtoBinning(BinningValue bValue, GridAccessHelpers::LocalAccess lAccessor,
+               Acts::detail::AxisBoundaryType bType, ActsScalar minE,
+               ActsScalar maxE, std::size_t nbins, std::size_t exp = 0u)
+      : binValue(bValue),
+        lAccess(lAccessor),
+        boundaryType(bType),
+        expansion(exp) {
     if (minE >= maxE) {
       std::string msg = "ProtoBinning: Invalid binning for value '";
       msg += binningValueNames()[bValue];
@@ -100,12 +110,15 @@ struct ProtoBinning {
   /// for equidistant binning obviously
   ///
   /// @param bValue the value/cast in which this is binned
+  /// @param lAccessor the local accessor
   /// @param bType the axis boundary type
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
-               std::size_t nbins, std::size_t exp = 0u)
+  ProtoBinning(BinningValue bValue, GridAccessHelpers::LocalAccess lAccessor,
+               Acts::detail::AxisBoundaryType bType, std::size_t nbins,
+               std::size_t exp = 0u)
       : binValue(bValue),
+        lAccess(lAccessor),
         boundaryType(bType),
         edges(nbins + 1, 0.),
         expansion(exp),
@@ -130,10 +143,36 @@ struct ProtoBinning {
   }
 };
 
-/// @brief A binning description, it helps for screen output
+/// @brief A binning description
 struct BinningDescription {
   /// The contained binnings
   std::vector<ProtoBinning> binning;
+
+  // A transform from global 3D to the local 3D frame
+  Transform3 transform = Transform3::Identity();
+
+  /// Forward the size
+  std::size_t size() const { return binning.size(); }
+
+  /// Return the cast vector
+  std::vector<BinningValue> casts() const {
+    std::vector<BinningValue> c;
+    c.reserve(binning.size());
+    for (const auto& b : binning) {
+      c.push_back(b.binValue);
+    }
+    return c;
+  }
+
+  /// Return the local Accessors
+  std::vector<GridAccessHelpers::LocalAccess> localAccess() const {
+    std::vector<GridAccessHelpers::LocalAccess> l;
+    l.reserve(binning.size());
+    for (const auto& b : binning) {
+      l.push_back(b.lAccess);
+    }
+    return l;
+  }
 
   // Screen output
   std::string toString() const {

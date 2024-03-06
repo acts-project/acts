@@ -17,27 +17,27 @@ BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(ProtoBinningPlaceHolderEquidistant) {
   // A valid placeholder binning
-  auto peq =
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 5u);
+  auto peq = ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                          Acts::detail::AxisBoundaryType::Bound, 5u);
   BOOST_CHECK_EQUAL(peq.bins(), 5u);
 }
 
 BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
   // An invalid binning, 0 bins given
   BOOST_CHECK_THROW(
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 15., 20.,
-                   0),
+      ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                   Acts::detail::AxisBoundaryType::Bound, 15., 20., 0),
       std::invalid_argument);
 
   // Another invalid binning, min/max swapped
   BOOST_CHECK_THROW(
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 150., 20.,
-                   10),
+      ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                   Acts::detail::AxisBoundaryType::Bound, 150., 20., 10),
       std::invalid_argument);
 
   // A valid binning
-  auto eq = ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 0.,
-                         10., 5u);
+  auto eq = ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                         Acts::detail::AxisBoundaryType::Bound, 0., 10., 5u);
 
   std::vector<Acts::ActsScalar> reference = {0., 2., 4., 6., 8., 10.};
   BOOST_CHECK_EQUAL(eq.bins(), 5u);
@@ -52,13 +52,14 @@ BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
   // An invalid binning, edge size < 2u
   std::vector<Acts::ActsScalar> iedges = {12.};
   BOOST_CHECK_THROW(
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, iedges),
+      ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                   Acts::detail::AxisBoundaryType::Bound, iedges),
       std::invalid_argument);
 
   // A valid binning
   std::vector<Acts::ActsScalar> varEdges = {0., 12., 13., 15., 20.};
-  auto var =
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, varEdges);
+  auto var = ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                          Acts::detail::AxisBoundaryType::Bound, varEdges);
 
   BOOST_CHECK_EQUAL(var.bins(), 4u);
   BOOST_CHECK_EQUAL(var.binValue, Acts::binX);
@@ -66,6 +67,24 @@ BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
   BOOST_CHECK(var.boundaryType == Acts::detail::AxisBoundaryType::Bound);
   BOOST_CHECK_EQUAL_COLLECTIONS(var.edges.begin(), var.edges.end(),
                                 varEdges.begin(), varEdges.end());
+}
+
+BOOST_AUTO_TEST_CASE(BinningDescriptionTest) {
+  auto eqX = ProtoBinning(Acts::binX, Acts::GridAccessHelpers::LocalAccess{0u},
+                          Acts::detail::AxisBoundaryType::Bound, 0., 10., 5u);
+
+  auto eqY = ProtoBinning(Acts::binY, Acts::GridAccessHelpers::LocalAccess{1u},
+                          Acts::detail::AxisBoundaryType::Bound, 0., 10., 5u);
+
+  auto dqXeqY = BinningDescription{{eqX, eqY}};
+
+  // Check size
+  BOOST_CHECK_EQUAL(dqXeqY.size(), 2u);
+  // Check the casts
+  std::vector<Acts::BinningValue> refCasts = {Acts::binX, Acts::binY};
+  BOOST_CHECK(dqXeqY.casts() == refCasts);
+  // Check the local accessors
+  BOOST_CHECK_EQUAL(dqXeqY.localAccess().size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

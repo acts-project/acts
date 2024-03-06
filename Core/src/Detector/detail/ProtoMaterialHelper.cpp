@@ -17,9 +17,6 @@ Acts::Experimental::BinningDescription
 Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
     const BinningDescription& bDescription) {
-  // Shorthand definition
-  using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<BinningDescription>;
-
   // The binning description, with eventually fixed range
   BinningDescription fbDescription;
   // Measure the surface
@@ -29,8 +26,8 @@ Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
     // Check if the binning needs to be fixed
     if (fBinning.autorange) {
       auto range = sExtent.range(b.binValue);
-      fBinning = ProtoBinning(b.binValue, b.boundaryType, range.min(),
-                              range.max(), b.bins(), b.expansion);
+      fBinning = ProtoBinning(b.binValue, b.lAccess, b.boundaryType,
+                              range.min(), range.max(), b.bins(), b.expansion);
     }
     fbDescription.binning.push_back(fBinning);
   }

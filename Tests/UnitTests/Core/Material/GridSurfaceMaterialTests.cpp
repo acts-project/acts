@@ -11,14 +11,18 @@
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <vector>
+
+using LocalAccess = Acts::GridAccessHelpers::LocalAccess;
 
 BOOST_AUTO_TEST_SUITE(Material)
 
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   std::vector<Acts::MaterialSlab> material;
+
   material.emplace_back(Acts::Material(), 0.0);  // vacuum
   material.emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
@@ -42,7 +46,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
 
   Acts::IndexedSurfaceMaterial<EqGrid> ism(
       std::move(eqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
-      {Acts::binX}, {0u});
+      {Acts::binX}, {LocalAccess{0u}});
 
   // Global access test
   Acts::Vector3 g0(0.5, 0., 0.);
@@ -134,7 +138,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   // Let's shift it by 10
   Acts::IndexedSurfaceMaterial<EqEqGrid> ism(
       std::move(eqeqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
-      {Acts::binZ, Acts::binPhi}, {0u, 1u},
+      {Acts::binZ, Acts::binPhi}, {LocalAccess{0u}, LocalAccess{1u}},
       Acts::Transform3::Identity() * Acts::Translation3(0., 0., 10.));
 
   // Global access test, both should give material 1
