@@ -135,7 +135,7 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   finderConfig.useTime = m_cfg.useTime;
   finderConfig.tracksMaxSignificance = 5;
   // This should be used consistently with and without time
-  finderConfig.doFullSplitting = false;
+  finderConfig.doFullSplitting = true;
   finderConfig.maxMergeVertexSignificance = 3;
   if (m_cfg.useTime) {
     // When using time, we have an extra contribution to the chi2 by the time
