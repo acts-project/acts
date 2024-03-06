@@ -198,7 +198,7 @@ struct SimulationActor {
         }
       }
     }
-    const Particle &after = result.particle;
+    Particle &after = result.particle;
 
     // store results of this interaction step, including potential hits
     if (selectHitSurface(surface)) {
@@ -207,6 +207,8 @@ struct SimulationActor {
           // the interaction could potentially modify the particle position
           Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
+
+      after.setNumberOfHits(result.hits.size());
     }
 
     if (after.absoluteMomentum() == 0.0) {

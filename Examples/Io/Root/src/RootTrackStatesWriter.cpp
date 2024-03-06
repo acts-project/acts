@@ -340,7 +340,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
 
     // particle barcodes for a given track state (size depends on a type of
     // digitization, for smeared digitization is not more than 1)
-    std::vector<double> particleIds;
+    std::vector<std::uint64_t> particleIds;
 
     for (const auto& state : track.trackStatesReversed()) {
       const auto& surface = state.referenceSurface();
@@ -481,6 +481,39 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
               state.smoothed() + K * (m - H * state.smoothed());
           auto unbiasedParamsCov =
               state.smoothedCovariance() - K * H * state.smoothedCovariance();
+          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+        }
+        if (ipar == eUnbiased && !state.hasSmoothed() && state.hasFiltered() &&
+            state.hasProjector() && state.hasCalibrated()) {
+          // Same calculation as above but using the filtered states.
+          auto m = state.effectiveCalibrated();
+          auto H = state.effectiveProjector();
+          auto V = state.effectiveCalibratedCovariance();
+          auto K =
+              (state.filteredCovariance() * H.transpose() *
+               (H * state.filteredCovariance() * H.transpose() - V).inverse())
+                  .eval();
+          auto unbiasedParamsVec =
+              state.filtered() + K * (m - H * state.filtered());
+          auto unbiasedParamsCov =
+              state.filteredCovariance() - K * H * state.filteredCovariance();
+          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+        }
+        if (ipar == eUnbiased && !state.hasSmoothed() && !state.hasFiltered() &&
+            state.hasPredicted() && state.hasProjector() &&
+            state.hasCalibrated()) {
+          // Same calculation as above but using the predicted states.
+          auto m = state.effectiveCalibrated();
+          auto H = state.effectiveProjector();
+          auto V = state.effectiveCalibratedCovariance();
+          auto K =
+              (state.predictedCovariance() * H.transpose() *
+               (H * state.predictedCovariance() * H.transpose() - V).inverse())
+                  .eval();
+          auto unbiasedParamsVec =
+              state.predicted() + K * (m - H * state.predicted());
+          auto unbiasedParamsCov =
+              state.predictedCovariance() - K * H * state.predictedCovariance();
           return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
         }
         return std::nullopt;

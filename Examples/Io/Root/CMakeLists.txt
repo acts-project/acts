@@ -26,9 +26,16 @@ target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
     ActsCore ActsPluginIdentification ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
+    ActsExamplesFramework ActsExamplesPropagation
+    ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
-  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
+  PRIVATE
+    ROOT::Core ROOT::Hist ROOT::Tree)
+
+ROOT_GENERATE_DICTIONARY(
+  ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp)
+set_target_properties(
+  ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
 
 install(
   TARGETS ActsExamplesIoRoot
