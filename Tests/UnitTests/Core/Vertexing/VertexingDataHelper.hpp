@@ -9,6 +9,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -40,7 +41,7 @@ struct VertexInfo {
   double trk1Chi2 = 0;
 };
 
-inline std::tuple<Vertex<BoundTrackParameters>, std::vector<VertexInfo>,
+inline std::tuple<Vertex, std::vector<VertexInfo>,
                   std::vector<BoundTrackParameters>>
 readTracksAndVertexCSV(const std::string& toolString,
                        const std::string& fileBase = "vertexing_event_mu20") {
@@ -63,7 +64,7 @@ readTracksAndVertexCSV(const std::string& toolString,
   std::shared_ptr<PerigeeSurface> perigeeSurface;
   std::vector<BoundTrackParameters> tracks;
   std::vector<VertexInfo> vertices;
-  Vertex<BoundTrackParameters> beamspotConstraint;
+  Vertex beamspotConstraint;
 
   // Read in beamspot data
   std::getline(beamspotData, line);  // skip header

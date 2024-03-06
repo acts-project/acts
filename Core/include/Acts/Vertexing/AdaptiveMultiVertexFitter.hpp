@@ -10,13 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -32,64 +33,41 @@ namespace Acts {
 ///   `Identification of b-jets and investigation of the discovery potential
 ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
 ///
-///////////////////////////////////////////////////////////////////////////
-///
-/// @tparam input_track_t Track object type
-/// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, typename linearizer_t>
 class AdaptiveMultiVertexFitter {
-  static_assert(LinearizerConcept<linearizer_t>,
-                "Linearizer does not fulfill linearizer concept.");
-
- public:
-  using InputTrack_t = input_track_t;
-  using Propagator_t = typename linearizer_t::Propagator_t;
-  using Linearizer_t = linearizer_t;
-
- private:
-  using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
-
  public:
   /// @brief The fitter state
   struct State {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
-        : ipState(field.makeCache(magContext)),
-          linearizerState(field.makeCache(magContext)) {}
+        : ipState{field.makeCache(magContext)},
+          fieldCache(field.makeCache(magContext)) {}
     // Vertex collection to be fitted
-    std::vector<Vertex<InputTrack_t>*> vertexCollection;
+    std::vector<Vertex*> vertexCollection;
 
     // Annealing state
     AnnealingUtility::State annealingState;
 
-    // IPEstimator state
-    typename IPEstimator::State ipState;
+    ImpactPointEstimator::State ipState;
 
-    // Linearizer state
-    typename Linearizer_t::State linearizerState;
+    MagneticFieldProvider::Cache fieldCache;
 
     // Map to store vertices information
-    std::map<Vertex<InputTrack_t>*, VertexInfo<InputTrack_t>> vtxInfoMap;
+    // @TODO Does this have to be a mutable pointer?
+    std::map<Vertex*, VertexInfo> vtxInfoMap;
 
-    std::multimap<const InputTrack_t*, Vertex<InputTrack_t>*>
-        trackToVerticesMultiMap;
+    std::multimap<InputTrack, Vertex*> trackToVerticesMultiMap;
 
-    std::map<std::pair<const InputTrack_t*, Vertex<InputTrack_t>*>,
-             TrackAtVertex<InputTrack_t>>
-        tracksAtVerticesMap;
-
-    /// @brief Default State constructor
-    State() = default;
+    std::map<std::pair<InputTrack, Vertex*>, TrackAtVertex> tracksAtVerticesMap;
 
     // Adds a vertex to trackToVerticesMultiMap
-    void addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
+    void addVertexToMultiMap(Vertex& vtx) {
       for (auto trk : vtxInfoMap[&vtx].trackLinks) {
         trackToVerticesMultiMap.emplace(trk, &vtx);
       }
     }
 
     // Removes a vertex from trackToVerticesMultiMap
-    void removeVertexFromMultiMap(Vertex<InputTrack_t>& vtx) {
+    void removeVertexFromMultiMap(Vertex& vtx) {
       for (auto iter = trackToVerticesMultiMap.begin();
            iter != trackToVerticesMultiMap.end();) {
         if (iter->second == &vtx) {
@@ -100,7 +78,7 @@ class AdaptiveMultiVertexFitter {
       }
     }
 
-    Result<void> removeVertexFromCollection(Vertex<InputTrack_t>& vtxToRemove,
+    Result<void> removeVertexFromCollection(Vertex& vtxToRemove,
                                             const Logger& logger) {
       auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
                           &vtxToRemove);
@@ -119,10 +97,10 @@ class AdaptiveMultiVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(IPEstimator est) : ipEst(std::move(est)) {}
+    Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPointEstimator
-    IPEstimator ipEst;
+    ImpactPointEstimator ipEst;
 
     /// Annealing tool used for a thermodynamic annealing scheme for the
     /// track weight factors in such a way that with high temperature values
@@ -153,37 +131,35 @@ class AdaptiveMultiVertexFitter {
 
     // Use time information when calculating the vertex compatibility
     bool useTime{false};
-  };
 
-  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
-  ///
-  /// @param cfg Configuration object
-  /// @param logger The logging instance
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  AdaptiveMultiVertexFitter(Config cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFitter",
-                                                 Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters([](T params) { return params; }),
-        m_logger(std::move(logger)) {}
+    // Function to extract parameters from InputTrack
+    InputTrack::Extractor extractParameters;
+
+    TrackLinearizer trackLinearizer;
+  };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFitter(
-      Config cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
-      : m_cfg(std::move(cfg)),
-        m_extractParameters(func),
-        m_logger(std::move(logger)) {}
+  AdaptiveMultiVertexFitter(Config cfg,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("AdaptiveMultiVertexFitter",
+                                                 Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+    if (!m_cfg.extractParameters.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFitter: No function to extract parameters "
+          "from InputTrack_t provided.");
+    }
+
+    if (!m_cfg.trackLinearizer.connected()) {
+      throw std::invalid_argument(
+          "AdaptiveMultiVertexFitter: No track linearizer provided.");
+    }
+  }
 
   /// @brief Adds a new vertex to an existing multi-vertex fit.
   /// 1. The 3D impact parameters are calculated for all tracks associated
@@ -196,35 +172,25 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param state Fitter state
   /// @param newVertex Vertex to be added to fit
-  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> addVtxToFit(
-      State& state, Vertex<InputTrack_t>& newVertex,
-      const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<void> addVtxToFit(State& state, Vertex& newVertex,
+                           const VertexingOptions& vertexingOptions) const;
 
   /// @brief Performs a simultaneous fit of all vertices in
   /// state.vertexCollection
   ///
   /// @param state Fitter state
-  /// @param linearizer Track linearizer
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> fit(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<void> fit(State& state,
+                   const VertexingOptions& vertexingOptions) const;
 
  private:
   /// Configuration object
   const Config m_cfg;
-
-  /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -238,9 +204,8 @@ class AdaptiveMultiVertexFitter {
   /// @param verticesVec Vector of vertices to search
   ///
   /// @return True if vtx is already in verticesVec
-  bool isAlreadyInList(
-      Vertex<InputTrack_t>* vtx,
-      const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
+  bool isAlreadyInList(Vertex* vtx,
+                       const std::vector<Vertex*>& verticesVec) const;
 
   /// @brief 1) Calls ImpactPointEstimator::estimate3DImpactParameters
   /// for all tracks that are associated with vtx (i.e., all elements
@@ -251,8 +216,8 @@ class AdaptiveMultiVertexFitter {
   /// @param vtx Vertex object
   /// @param vertexingOptions Vertexing options
   Result<void> prepareVertexForFit(
-      State& state, Vertex<InputTrack_t>* vtx,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+      State& state, Vertex* vtx,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Sets the vertexCompatibility for all TrackAtVertex objects
   /// at the current vertex
@@ -261,18 +226,16 @@ class AdaptiveMultiVertexFitter {
   /// @param currentVtx Current vertex
   /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
-      State& state, Vertex<InputTrack_t>* currentVtx,
-      const VertexingOptions<input_track_t>& vertexingOptions) const;
+      State& state, Vertex* currentVtx,
+      const VertexingOptions& vertexingOptions) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
   ///
   /// @param state Fitter state
-  /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
   Result<void> setWeightsAndUpdate(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<input_track_t>& vertexingOptions) const;
+      State& state, const VertexingOptions& vertexingOptions) const;
 
   /// @brief Collects the compatibility values of the track `trk`
   /// wrt to all of its associated vertices
@@ -282,7 +245,7 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Vector of compatibility values
   std::vector<double> collectTrackToVertexCompatibilities(
-      State& state, const InputTrack_t* trk) const;
+      State& state, const InputTrack& trk) const;
 
   /// @brief Determines if any vertex position has shifted more than
   /// m_cfg.maxRelativeShift in the last iteration
@@ -307,5 +270,3 @@ class AdaptiveMultiVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/AdaptiveMultiVertexFitter.ipp"

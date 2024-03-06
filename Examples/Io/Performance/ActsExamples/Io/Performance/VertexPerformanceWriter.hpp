@@ -40,7 +40,7 @@ struct AlgorithmContext;
 /// Additionally it matches the reco vertices to their truth vertices
 /// and write out the difference in x,y and z position.
 class VertexPerformanceWriter final
-    : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
+    : public WriterT<std::vector<Acts::Vertex>> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
@@ -95,10 +95,8 @@ class VertexPerformanceWriter final
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices)
-      override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const std::vector<Acts::Vertex>& vertices) override;
 
  private:
   Config m_cfg;             ///< The config class
@@ -121,11 +119,22 @@ class VertexPerformanceWriter final
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
 
-  /// Difference of reconstructed and true vertex 4D position
+  // 4D position of the vertex seed. x and y coordinate are 0 in current
+  // implementations, we save them here as a check.
+  std::vector<double> m_seedX;
+  std::vector<double> m_seedY;
+  std::vector<double> m_seedZ;
+  std::vector<double> m_seedT;
+
+  // Difference of reconstructed and true vertex 4D position
   std::vector<double> m_resX;
   std::vector<double> m_resY;
   std::vector<double> m_resZ;
   std::vector<double> m_resT;
+
+  // Difference between the seed and the true vertex z and t coordinate
+  std::vector<double> m_resSeedZ;
+  std::vector<double> m_resSeedT;
 
   // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
   std::vector<double> m_pullX;
@@ -144,6 +153,9 @@ class VertexPerformanceWriter final
   std::vector<double> m_covYZ;
   std::vector<double> m_covYT;
   std::vector<double> m_covZT;
+
+  // Sum pT^2 of all tracks associated with the vertex
+  std::vector<double> m_sumPt2;
 
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner

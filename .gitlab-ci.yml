@@ -105,7 +105,7 @@ build_exatrkx:
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
     - ccache -z
-    - cmake --build build -- -j3
+    - cmake --build build -- -j2
     - ccache -s
 
 test_exatrkx_unittests:
@@ -128,8 +128,7 @@ test_exatrkx_python:
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - source /usr/local/bin/thisroot.sh
-    - source build/python/setup.sh
+    - source build/this_acts_withdeps.sh
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -205,12 +204,7 @@ linux_test_examples:
     - cd ..
 
     - /usr/local/bin/geant4-config --install-datasets
-    - "source /usr/local/bin/thisroot.sh || true"
-    - "source /usr/local/bin/thisdd4hep_only.sh || true"
-    - "source /usr/local/bin/geant4.sh || true"
-    - source build/python/setup.sh
-    - export PYTHONPATH=/usr/local/python:$PYTHONPATH
-    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - source build/this_acts_withdeps.sh
     - cd src
     - pip3 install -r Examples/Python/tests/requirements.txt
     - pytest -rFsv -k "not exatrkx" -v
@@ -237,16 +231,11 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
+    - pip3 install histcmp==0.6.5 spyral-cli==1.1.0 matplotlib
     - pip3 install -r src/Examples/Scripts/requirements.txt
     - /usr/local/bin/geant4-config --install-datasets
-    - "source /usr/local/bin/thisroot.sh || true"
-    - "source /usr/local/bin/thisdd4hep_only.sh || true"
-    - "source /usr/local/bin/geant4.sh || true"
-    - source build/python/setup.sh
-    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - source build/this_acts_withdeps.sh
     - cd src
-    - export PYTHONPATH="${PYTHONPATH}":"${PWD}/Examples/Scripts/Python"
     - CI/physmon/phys_perf_mon.sh all physmon
 
 ###############################
@@ -363,7 +352,7 @@ linux_ubuntu_2204_clang:
     # Figure out LCG platform name based on version number and OS
     - >
       if [ "$OS" = "alma9"  ]; then
-        if [ "$LCG_VERSION" = "104" ]; then
+        if [ "$LCG_VERSION" -ge "104" ]; then
           export LCG_PLATFORM="el9"
         else
           export LCG_PLATFORM="centos9"
@@ -407,7 +396,6 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_PLUGIN_JSON=ON
       -DACTS_BUILD_FATRAS=ON
       -DACTS_BUILD_PLUGIN_LEGACY=ON
-      -DACTS_BUILD_PLUGIN_AUTODIFF=OFF
       -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
       -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
       -DACTS_BUILD_EXAMPLES_GEANT4=ON
@@ -442,6 +430,19 @@ lcg_104:
 
   variables:
     LCG_VERSION: "104"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - clang16
+
+lcg_105:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "105"
 
   parallel:
     matrix:
