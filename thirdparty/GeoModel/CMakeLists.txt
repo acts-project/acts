@@ -15,6 +15,9 @@ message( STATUS "Building GeoModel as part of the ACTS project" )
 
 set( GEOMODEL_VERSION "${_acts_geomodel_version}")
 
+set( GEOMODEL_SETUP_JSON OFF CACHE BOOL "Skip setting up json completely" )
+
+
 # Declare where to get VecMem from.
 set( ACTS_GEOMODEL_GIT_REPOSITORY "https://gitlab.cern.ch/GeoModelDev/GeoModel"
    CACHE STRING "Git repository to take GeoModel from" )
@@ -22,7 +25,9 @@ set( ACTS_GEOMODEL_GIT_TAG "${GEOMODEL_VERSION}" CACHE STRING "Version of GeoMod
 mark_as_advanced( ACTS_GEOMODEL_GIT_REPOSITORY ACTS_GEOMODEL_GIT_TAG )
 FetchContent_Declare( geomodel
    GIT_REPOSITORY "${ACTS_GEOMODEL_GIT_REPOSITORY}"
-   GIT_TAG "${ACTS_GEOMODEL_GIT_TAG}" )
+   GIT_TAG "${ACTS_GEOMODEL_GIT_TAG}"
+   PATCH_COMMAND git am ${CMAKE_CURRENT_SOURCE_DIR}/0001-Add-option-to-skip-setting-up-json-completely.patch
+)
 
 # Now set up its build.
 FetchContent_MakeAvailable( geomodel )
