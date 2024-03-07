@@ -105,7 +105,7 @@ build_exatrkx:
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
     - ccache -z
-    - cmake --build build -- -j3
+    - cmake --build build -- -j2
     - ccache -s
 
 test_exatrkx_unittests:
@@ -186,7 +186,7 @@ build_linux_ubuntu:
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
-    - cmake --build build -- -j3
+    - cmake --build build -- -j2
     - ccache -s
 
 linux_test_examples:
@@ -292,7 +292,7 @@ linux_physmon:
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
-    - cmake --build build -- -j3
+    - cmake --build build -- -j2
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
@@ -420,7 +420,7 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
-    - cmake --build build -- -j3
+    - cmake --build build -- -j2
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
