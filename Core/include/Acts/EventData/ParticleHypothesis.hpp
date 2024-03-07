@@ -44,6 +44,9 @@ class SinglyChargedParticleHypothesis
   static SinglyChargedParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis(PdgParticle::eElectron);
   }
+  static SinglyChargedParticleHypothesis kaon() {
+    return SinglyChargedParticleHypothesis(PdgParticle::eKaonPlus);
+  }
   static SinglyChargedParticleHypothesis proton() {
     return SinglyChargedParticleHypothesis(PdgParticle::eProton);
   }
@@ -106,6 +109,9 @@ class NonNeutralChargedParticleHypothesis
   static NonNeutralChargedParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis::electron();
   }
+  static NonNeutralChargedParticleHypothesis kaon() {
+    return SinglyChargedParticleHypothesis::kaon();
+  }
   static NonNeutralChargedParticleHypothesis proton() {
     return SinglyChargedParticleHypothesis::proton();
   }
@@ -146,6 +152,9 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   }
   static ParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis::electron();
+  }
+  static ParticleHypothesis kaon() {
+    return SinglyChargedParticleHypothesis::kaon();
   }
   static ParticleHypothesis proton() {
     return SinglyChargedParticleHypothesis::proton();
