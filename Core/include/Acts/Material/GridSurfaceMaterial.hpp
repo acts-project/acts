@@ -158,7 +158,7 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
       const auto& edges1 = gridAxes[1u]->getBinEdges();
       ActsScalar pval1 = 0.5 * (edges1[bin1] + edges1[bin1 + 1u]);
       lposition[m_localAccess[1].localIndex] = pval1;
-    } 
+    }
     return materialSlab(lposition);
   }
 
