@@ -16,8 +16,7 @@ set_target_properties(ActsTestsDD4hepFactories PROPERTIES LIBRARY_OUTPUT_DIRECTO
 dd4hep_set_version(ActsTestsDD4hepFactories MAJOR 1 MINOR 0 PATCH 0)
 dd4hep_generate_rootmap(ActsTestsDD4hepFactories)
 
-find_library(dd4hep_core_plugins_library DDCorePlugins REQUIRED)
-cmake_path(GET dd4hep_core_plugins_library PARENT_PATH DD4HEP_LIBRARY_PATH)
+find_library(dd4hep_core_library DDCore)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
   set(factory_path "$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>")
@@ -25,7 +24,9 @@ else()
   set(factory_path "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
-if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
+
+if (NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
+  cmake_path(GET dd4hep_core_library PARENT_PATH DD4HEP_LIBRARY_PATH)
   # set test library dependencies
   set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
   set(dd4hep_tests DD4hepDetectorElement DD4hepCylinderLayerStructure DD4hepDiscLayerStructure DD4hepCylindricalDetector)
@@ -41,5 +42,5 @@ if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
     endif()
   endforeach()
 else()
-    message(WARNING "DD4hep libraries not found under ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR}, DD4hep tests will not be built.")
+    message(WARNING "DD4hep libraries not found, DD4hep tests will not be built.")
 endif()
