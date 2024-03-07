@@ -154,7 +154,7 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
     ActsScalar pval0 = 0.5 * (edges0[bin0] + edges0[bin0 + 1u]);
     Acts::Vector2 lposition = {};
     lposition[m_localAccess[0].localIndex] = pval0;
-    if (m_localAccess.size() == 2) {
+    if constexpr (grid_type::DIM == 2) {
       const auto& edges1 = gridAxes[1u]->getBinEdges();
       ActsScalar pval1 = 0.5 * (edges1[bin1] + edges1[bin1 + 1u]);
       lposition[m_localAccess[1].localIndex] = pval1;
