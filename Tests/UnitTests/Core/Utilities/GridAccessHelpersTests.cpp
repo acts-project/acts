@@ -39,8 +39,6 @@ BOOST_AUTO_TEST_CASE(LocalAccess_test) {
   LocalAccess zToZ{1u};
   std::vector<LocalAccess> lAccessors = {rphiToPhi, zToZ};
 
-  Acts::GridAxisGenerators::EqClosedEqBound eqClosedEqBound{
-      {-M_PI, M_PI}, 20, {-100, 100}, 21};
   using GridType =
       Acts::GridAxisGenerators::EqClosedEqBound::grid_type<std::size_t>;
 
