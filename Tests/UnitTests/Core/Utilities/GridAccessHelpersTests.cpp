@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(LocalAccess_test) {
 
   BOOST_CHECK_EQUAL(lAccess.toGridLocal(position), 3.);
 
-  // Assuma a cylindrical surface with a phi - z grid on it
+  // Assume a cylindrical surface with a phi - z grid on it
   ActsScalar radius = 100;
   ActsScalar phiValue = 0.25;
   ActsScalar zValue = 55.;

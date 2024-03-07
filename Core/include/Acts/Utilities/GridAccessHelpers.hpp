@@ -24,7 +24,7 @@ namespace GridAccessHelpers {
 ///
 /// Eg. for a cartesian 2 dimensional this would just take x and y, as they
 /// map directly onto the grid structure. For a cylindrical surface with a z/phi
-/// grid, however the local accesor needs to divide by the radius
+/// grid, however the local accessor needs to divide by the radius
 ///
 /// @brief Shift, Scale and Access
 ///
