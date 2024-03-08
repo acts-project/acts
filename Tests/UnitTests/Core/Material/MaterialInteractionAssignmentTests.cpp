@@ -174,7 +174,8 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
 
   // Veto in a specific one
   struct VetoThisOne {
-    bool operator()(const MaterialInteraction&, const SurfaceHit&) const {
+    bool operator()(const MaterialInteraction& /*unused*/,
+                    const SurfaceHit& /*unused*/) const {
       return true;
     }
   };
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
 
   // Veto in a specific one
   struct ReAssignToNeighbor {
-    void operator()(MaterialInteraction& m, const SurfaceHit&,
+    void operator()(MaterialInteraction& m, const SurfaceHit& /*unused*/,
                     const SurfaceHit& n) const {
       auto [surface, position, direction] = n;
       m.surface = surface;
