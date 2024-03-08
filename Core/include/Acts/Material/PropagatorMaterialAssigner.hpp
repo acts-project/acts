@@ -128,7 +128,6 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
 
     // Prepare Action list and abort list
     using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
-    using InteractionVolumeCollector = InteractionVolumeCollector;
     using ActionList =
         ActionList<MaterialSurfaceCollector, InteractionVolumeCollector>;
     using AbortList = AbortList<EndOfWorldReached>;
