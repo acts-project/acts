@@ -19,6 +19,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstdint>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -107,29 +108,15 @@ class VertexPerformanceWriter final
   /// The event number
   std::uint32_t m_eventNr{0};
 
-  // True 4D vertex position
-  std::vector<double> m_truthX;
-  std::vector<double> m_truthY;
-  std::vector<double> m_truthZ;
-  std::vector<double> m_truthT;
+  // Truth vertex ID
+  std::vector<int> m_vertexPrimary;
+  std::vector<int> m_vertexSecondary;
 
   // Reconstructed 4D vertex position
   std::vector<double> m_recoX;
   std::vector<double> m_recoY;
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
-
-  // Difference of reconstructed and true vertex 4D position
-  std::vector<double> m_resX;
-  std::vector<double> m_resY;
-  std::vector<double> m_resZ;
-  std::vector<double> m_resT;
-
-  // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
-  std::vector<double> m_pullX;
-  std::vector<double> m_pullY;
-  std::vector<double> m_pullZ;
-  std::vector<double> m_pullT;
 
   // Vertex covariance
   std::vector<double> m_covXX;
@@ -143,54 +130,37 @@ class VertexPerformanceWriter final
   std::vector<double> m_covYT;
   std::vector<double> m_covZT;
 
+  // 4D position of the vertex seed. x and y coordinate are 0 in current
+  // implementations, we save them here as a check.
+  std::vector<double> m_seedX;
+  std::vector<double> m_seedY;
+  std::vector<double> m_seedZ;
+  std::vector<double> m_seedT;
+
+  // True 4D vertex position
+  std::vector<double> m_truthX;
+  std::vector<double> m_truthY;
+  std::vector<double> m_truthZ;
+  std::vector<double> m_truthT;
+
+  // Difference of reconstructed and true vertex 4D position
+  std::vector<double> m_resX;
+  std::vector<double> m_resY;
+  std::vector<double> m_resZ;
+  std::vector<double> m_resT;
+
+  // Difference between the seed and the true vertex z and t coordinate
+  std::vector<double> m_resSeedZ;
+  std::vector<double> m_resSeedT;
+
+  // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
+  std::vector<double> m_pullX;
+  std::vector<double> m_pullY;
+  std::vector<double> m_pullZ;
+  std::vector<double> m_pullT;
+
   // Sum pT^2 of all tracks associated with the vertex
   std::vector<double> m_sumPt2;
-
-  //--------------------------------------------------------------
-  // Track-related variables are contained in a vector of vectors: The inner
-  // vectors contain the values of all tracks corresponding to one vertex. The
-  // outer vector can then have the same length as the flat vectors of
-  // vertex-related variables (see above). E.g.,
-  // m_truthPhi = ((truthPhi of 1st trk belonging to vtx 1,
-  //                truthPhi of 2nd trk belonging to vtx 1, ...),
-  //               (truthPhi of 1st trk belonging to vtx 2,
-  //                truthPhi of 2nd trk belonging to vtx 2, ...),
-  //                ...)
-  //
-  // True track momenta at the vertex
-  std::vector<std::vector<double>> m_truthPhi;
-  std::vector<std::vector<double>> m_truthTheta;
-  std::vector<std::vector<double>> m_truthQOverP;
-
-  // Reconstructed track momenta at the vertex before and after the vertex fit
-  std::vector<std::vector<double>> m_recoPhi;
-  std::vector<std::vector<double>> m_recoPhiFitted;
-  std::vector<std::vector<double>> m_recoTheta;
-  std::vector<std::vector<double>> m_recoThetaFitted;
-  std::vector<std::vector<double>> m_recoQOverP;
-  std::vector<std::vector<double>> m_recoQOverPFitted;
-
-  // Difference between reconstructed momenta and true momenta
-  std::vector<std::vector<double>> m_resPhi;
-  std::vector<std::vector<double>> m_resPhiFitted;
-  std::vector<std::vector<double>> m_resTheta;
-  std::vector<std::vector<double>> m_resThetaFitted;
-  std::vector<std::vector<double>> m_resQOverP;
-  std::vector<std::vector<double>> m_resQOverPFitted;
-  std::vector<std::vector<double>> m_momOverlap;
-  std::vector<std::vector<double>> m_momOverlapFitted;
-
-  // Pulls
-  std::vector<std::vector<double>> m_pullPhi;
-  std::vector<std::vector<double>> m_pullPhiFitted;
-  std::vector<std::vector<double>> m_pullTheta;
-  std::vector<std::vector<double>> m_pullThetaFitted;
-  std::vector<std::vector<double>> m_pullQOverP;
-  std::vector<std::vector<double>> m_pullQOverPFitted;
-
-  // Track weights from vertex fit, will be set to 1 if we do unweighted vertex
-  // fitting
-  std::vector<std::vector<double>> m_trkWeight;
 
   // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;
@@ -208,22 +178,64 @@ class VertexPerformanceWriter final
   /// efficiency)
   int m_nVtxReconstructable = -1;
 
-  int getNumberOfReconstructableVertices(
-      const SimParticleContainer& collection) const;
+  //--------------------------------------------------------------
+  // Track-related variables are contained in a vector of vectors: The inner
+  // vectors contain the values of all tracks corresponding to one vertex. The
+  // outer vector can then have the same length as the flat vectors of
+  // vertex-related variables (see above). E.g.,
+  // m_truthPhi = ((truthPhi of 1st trk belonging to vtx 1,
+  //                truthPhi of 2nd trk belonging to vtx 1, ...),
+  //               (truthPhi of 1st trk belonging to vtx 2,
+  //                truthPhi of 2nd trk belonging to vtx 2, ...),
+  //                ...)
 
-  int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
+  // Track weights from vertex fit, will be set to 1 if we do unweighted vertex
+  // fitting
+  std::vector<std::vector<double>> m_trkWeight;
+
+  // Reconstructed track momenta at the vertex before and after the vertex fit
+  std::vector<std::vector<double>> m_recoPhi;
+  std::vector<std::vector<double>> m_recoTheta;
+  std::vector<std::vector<double>> m_recoQOverP;
+
+  std::vector<std::vector<double>> m_recoPhiFitted;
+  std::vector<std::vector<double>> m_recoThetaFitted;
+  std::vector<std::vector<double>> m_recoQOverPFitted;
+
+  std::vector<std::vector<std::uint64_t>> m_trkParticleId;
+
+  // True track momenta at the vertex
+  std::vector<std::vector<double>> m_truthPhi;
+  std::vector<std::vector<double>> m_truthTheta;
+  std::vector<std::vector<double>> m_truthQOverP;
+
+  // Difference between reconstructed momenta and true momenta
+  std::vector<std::vector<double>> m_resPhi;
+  std::vector<std::vector<double>> m_resTheta;
+  std::vector<std::vector<double>> m_resQOverP;
+  std::vector<std::vector<double>> m_momOverlap;
+
+  std::vector<std::vector<double>> m_resPhiFitted;
+  std::vector<std::vector<double>> m_resThetaFitted;
+  std::vector<std::vector<double>> m_resQOverPFitted;
+  std::vector<std::vector<double>> m_momOverlapFitted;
+
+  // Pulls
+  std::vector<std::vector<double>> m_pullPhi;
+  std::vector<std::vector<double>> m_pullTheta;
+  std::vector<std::vector<double>> m_pullQOverP;
+
+  std::vector<std::vector<double>> m_pullPhiFitted;
+  std::vector<std::vector<double>> m_pullThetaFitted;
+  std::vector<std::vector<double>> m_pullQOverPFitted;
 
   ReadDataHandle<SimParticleContainer> m_inputAllTruthParticles{
       this, "InputAllTruthParticles"};
-
   ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
       this, "InputSelectedTruthParticles"};
-
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-
   ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
       this, "InputAssociatedTruthParticles"};
-
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
 };
