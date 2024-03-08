@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 
 #include <type_traits>
@@ -327,13 +329,30 @@ Acts::Result<Acts::BoundTrackParameters>
 Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
     const BoundTrackParameters& start, const Surface& target,
     const Options& options) const {
-  auto res = static_cast<const derived_t*>(this)
-                 ->template propagate<BoundTrackParameters, PropagatorOptions<>,
-                                      SurfaceReached, PathLimitReached>(
-                     start, target, options);
+  using ResultType = Result<typename derived_t::template action_list_t_result_t<
+      BoundTrackParameters, ActionList<>>>;
+
+  // dummy initialization
+  ResultType res = ResultType::failure(PropagatorError::Failure);
+
+  // Due to the geometry of the perigee surface the overstepping tolerance
+  // is sometimes not met.
+  if (target.type() == Surface::SurfaceType::Perigee) {
+    res = static_cast<const derived_t*>(this)
+              ->template propagate<BoundTrackParameters, PropagatorOptions<>,
+                                   ForcedSurfaceReached, PathLimitReached>(
+                  start, target, options);
+  } else {
+    res = static_cast<const derived_t*>(this)
+              ->template propagate<BoundTrackParameters, PropagatorOptions<>,
+                                   SurfaceReached, PathLimitReached>(
+                  start, target, options);
+  }
 
   if (res.ok()) {
-    // @TODO: Return optional?
+    // Without errors we can expect a valid endParameters when propagating to a
+    // target surface
+    assert((*res).endParameters);
     return std::move((*res).endParameters.value());
   } else {
     return res.error();
