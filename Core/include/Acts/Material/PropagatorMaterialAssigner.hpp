@@ -115,10 +115,11 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
                        const MagneticFieldContext& mctx,
                        const Vector3& position,
                        const Vector3& direction) const {
-    // Return container
-    std::pair<std::vector<IAssignmentFinder::SurfaceAssignment>,
-              std::vector<IAssignmentFinder::VolumeAssignment>>
-        candidates;
+    final
+        // Return container
+        std::pair<std::vector<IAssignmentFinder::SurfaceAssignment>,
+                  std::vector<IAssignmentFinder::VolumeAssignment>>
+            candidates;
 
     using VectorHelpers::makeVector4;
     // Neutral curvilinear parameters
