@@ -18,11 +18,7 @@
 
 namespace Acts {
 
-<<<<<<< HEAD
 /// @brief Interface for the material mapping that seeks the possible
-=======
-/// @brief Interface for the material mapping that seeks the possibile
->>>>>>> c915213c4 (adding new DetectorAssigners)
 /// assignment candidates for the material interactiosn
 class IAssignmentFinder {
  public:
@@ -30,7 +26,6 @@ class IAssignmentFinder {
   virtual ~IAssignmentFinder() = default;
 
   /// @brief SurfaceAssignment is a surface, a position and a direction
-<<<<<<< HEAD
   struct SurfaceAssignment {
     /// The surface to which the material interaction is assigned to
     const Surface* surface = nullptr;
@@ -51,15 +46,6 @@ class IAssignmentFinder {
   };
 
   /// @brief Interface method for generating assignment candidates for the
-=======
-  using SurfaceAssignment = std::tuple<const Surface*, Vector3, Vector3>;
-
-  /// @brief VolumeAssignment is a volume and a entry and exit of the volume
-  using VolumeAssignment =
-      std::tuple<const InteractionVolume, Vector3, Vector3>;
-
-  /// @brief Interface method for generating assigment candidates for the
->>>>>>> c915213c4 (adding new DetectorAssigners)
   /// material interaction assignment to surfaces or volumes
   ///
   /// @param gctx is the geometry context
