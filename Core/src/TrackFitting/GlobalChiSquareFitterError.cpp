@@ -26,6 +26,10 @@ class GlobalChiSquareFitterErrorCategory : public std::error_category {
     switch (static_cast<GlobalChiSquareFitterError>(c)) {
       case GlobalChiSquareFitterError::AIsNotInvertible:
         return "Gx2f: aMatrix is not invertible.";
+      case GlobalChiSquareFitterError::DidNotConverge:
+        return "Gx2f: Did not converge in 'nUpdateMax' updates.";
+      case GlobalChiSquareFitterError::NotEnoughMeasurements:
+        return "Gx2f: Not enough measurements.";
       default:
         return "unknown";
     }

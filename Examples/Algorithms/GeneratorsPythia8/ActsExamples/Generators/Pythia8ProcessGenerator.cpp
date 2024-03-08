@@ -107,7 +107,7 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
     // ensure particle identifier component is non-zero
     particleId.setParticle(1u + generated.size());
     // only secondaries have a defined vertex position
-    if (genParticle.hasVertex()) {
+    if (m_cfg.labelSecondaries && genParticle.hasVertex()) {
       // either add to existing secondary vertex if exists or create new one
       // TODO can we do this w/o the manual search and position check?
       auto it = std::find_if(

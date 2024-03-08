@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -51,7 +52,6 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSquareMatrix;
-using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -95,8 +95,8 @@ std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
 std::uniform_int_distribution<std::uint32_t> nTracksDist(3, 10);
 
 // Dummy user-defined InputTrack type
-struct InputTrack {
-  InputTrack(const BoundTrackParameters& params) : m_parameters(params) {}
+struct InputTrackStub {
+  InputTrackStub(const BoundTrackParameters& params) : m_parameters(params) {}
 
   const BoundTrackParameters& parameters() const { return m_parameters; }
 
@@ -122,12 +122,14 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
-  Linearizer::Config ltConfig(bField, propagator);
-  Linearizer linearizer(ltConfig);
+  HelicalTrackLinearizer::Config ltConfig;
+  ltConfig.bField = bField;
+  ltConfig.propagator = propagator;
+  HelicalTrackLinearizer linearizer(ltConfig);
 
   // Constraint for vertex fit
-  Vertex<BoundTrackParameters> constraint;
-  Vertex<InputTrack> customConstraint;
+  Vertex constraint;
+  Vertex customConstraint;
   // Some arbitrary values
   SquareMatrix4 covMatVtx = SquareMatrix4::Zero();
   double ns2 = Acts::UnitConstants::ns * Acts::UnitConstants::ns;
@@ -141,39 +143,42 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   customConstraint.setFullPosition(Vector4(0, 0, 0, 0));
 
   // Set up Billoir vertex fitter with default tracks
-  using VertexFitter =
-      FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
+  using VertexFitter = FullBilloirVertexFitter;
   VertexFitter::Config vertexFitterCfg;
+  vertexFitterCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  vertexFitterCfg.trackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
   VertexFitter billoirFitter(vertexFitterCfg);
-  VertexFitter::State state(bField->makeCache(magFieldContext));
+  auto fieldCache = bField->makeCache(magFieldContext);
   // Vertexing options for default tracks
-  VertexingOptions<BoundTrackParameters> vfOptions(geoContext, magFieldContext);
-  VertexingOptions<BoundTrackParameters> vfOptionsConstr(
-      geoContext, magFieldContext, constraint);
+  VertexingOptions vfOptions(geoContext, magFieldContext);
+  VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
-  std::function<BoundTrackParameters(InputTrack)> extractParameters =
-      [](const InputTrack& params) { return params.parameters(); };
+  auto extractParameters = [](const InputTrack& params) {
+    return params.as<InputTrackStub>()->parameters();
+  };
 
   // Set up Billoir vertex fitter with user-defined input tracks
-  using CustomVertexFitter = FullBilloirVertexFitter<InputTrack, Linearizer>;
-  CustomVertexFitter::Config customVertexFitterCfg;
-  CustomVertexFitter customBilloirFitter(customVertexFitterCfg,
-                                         extractParameters);
-  CustomVertexFitter::State customState(bField->makeCache(magFieldContext));
+  VertexFitter::Config customVertexFitterCfg;
+  customVertexFitterCfg.extractParameters.connect(extractParameters);
+  customVertexFitterCfg.trackLinearizer
+      .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
+  VertexFitter customBilloirFitter(customVertexFitterCfg);
   // Vertexing options for custom tracks
-  VertexingOptions<InputTrack> customVfOptions(geoContext, magFieldContext);
-  VertexingOptions<InputTrack> customVfOptionsConstr(
-      geoContext, magFieldContext, customConstraint);
+  VertexingOptions customVfOptions(geoContext, magFieldContext);
+  VertexingOptions customVfOptionsConstr(geoContext, magFieldContext,
+                                         customConstraint);
 
   BOOST_TEST_CONTEXT(
       "Testing FullBilloirVertexFitter when input track vector is empty.") {
     const std::vector<const BoundTrackParameters*> emptyVector;
+    const std::vector<InputTrack> emptyVectorInput;
 
     // Without constraint
-    Vertex<BoundTrackParameters> fittedVertex =
-        billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
+    Vertex fittedVertex =
+        billoirFitter.fit(emptyVectorInput, vfOptions, fieldCache).value();
 
     Vector3 origin(0., 0., 0.);
     SquareMatrix4 zeroMat = SquareMatrix4::Zero();
@@ -182,7 +187,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
     // With constraint
     fittedVertex =
-        billoirFitter.fit(emptyVector, linearizer, vfOptionsConstr, state)
+        billoirFitter.fit(emptyVectorInput, vfOptionsConstr, fieldCache)
             .value();
 
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
@@ -211,7 +216,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
     // Vector to store track objects used for vertex fit
     std::vector<BoundTrackParameters> tracks;
-    std::vector<InputTrack> customTracks;
+    std::vector<InputTrackStub> customTracks;
 
     // Calculate random track emerging from vicinity of vertex position
     for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
@@ -245,20 +250,20 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
                                ParticleHypothesis::pion()));
     }
 
-    std::vector<const BoundTrackParameters*> tracksPtr;
+    std::vector<InputTrack> inputTracks;
     for (const auto& trk : tracks) {
-      tracksPtr.push_back(&trk);
+      inputTracks.push_back(InputTrack{&trk});
     }
 
-    std::vector<const InputTrack*> customTracksPtr;
+    std::vector<InputTrack> customInputTracks;
     for (const auto& trk : customTracks) {
-      customTracksPtr.push_back(&trk);
+      customInputTracks.push_back(InputTrack{&trk});
     }
 
-    auto fit = [&trueVertex, &nTracks](const auto& fitter, const auto& trksPtr,
-                                       const auto& lin, const auto& vfOpts,
-                                       auto& vfState) {
-      auto fittedVertex = fitter.fit(trksPtr, lin, vfOpts, vfState).value();
+    auto fit = [&trueVertex, &nTracks, &fieldCache](const auto& fitter,
+                                                    const auto& trksPtr,
+                                                    const auto& vfOpts) {
+      auto fittedVertex = fitter.fit(trksPtr, vfOpts, fieldCache).value();
       if (!fittedVertex.tracks().empty()) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
         auto tracksAtVtx = fittedVertex.tracks();
@@ -274,23 +279,21 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
     BOOST_TEST_CONTEXT(
         "Testing FullBilloirVertexFitter without vertex constraint.") {
-      fit(billoirFitter, tracksPtr, linearizer, vfOptions, state);
+      fit(billoirFitter, inputTracks, vfOptions);
     }
     BOOST_TEST_CONTEXT(
         "Testing FullBilloirVertexFitter with vertex constraint.") {
-      fit(billoirFitter, tracksPtr, linearizer, vfOptionsConstr, state);
+      fit(billoirFitter, inputTracks, vfOptionsConstr);
     }
     BOOST_TEST_CONTEXT(
         "Testing FullBilloirVertexFitter with custom tracks (no vertex "
         "constraint).") {
-      fit(customBilloirFitter, customTracksPtr, linearizer, customVfOptions,
-          customState);
+      fit(customBilloirFitter, customInputTracks, customVfOptions);
     }
     BOOST_TEST_CONTEXT(
         "Testing FullBilloirVertexFitter with custom tracks (with vertex "
         "constraint).") {
-      fit(customBilloirFitter, customTracksPtr, linearizer,
-          customVfOptionsConstr, customState);
+      fit(customBilloirFitter, customInputTracks, customVfOptionsConstr);
     }
   }
 }

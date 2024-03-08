@@ -19,6 +19,7 @@
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -94,6 +95,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters.
+    m_outputTree->Branch("event_nr", &m_eventNr);
+
     // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
@@ -105,10 +108,18 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("recoZ", &m_recoZ);
     m_outputTree->Branch("recoT", &m_recoT);
 
+    m_outputTree->Branch("seedX", &m_seedX);
+    m_outputTree->Branch("seedY", &m_seedY);
+    m_outputTree->Branch("seedZ", &m_seedZ);
+    m_outputTree->Branch("seedT", &m_seedT);
+
     m_outputTree->Branch("resX", &m_resX);
     m_outputTree->Branch("resY", &m_resY);
     m_outputTree->Branch("resZ", &m_resZ);
     m_outputTree->Branch("resT", &m_resT);
+
+    m_outputTree->Branch("resSeedZ", &m_resSeedZ);
+    m_outputTree->Branch("resSeedT", &m_resSeedT);
 
     m_outputTree->Branch("pullX", &m_pullX);
     m_outputTree->Branch("pullY", &m_pullY);
@@ -125,6 +136,8 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("covYZ", &m_covYZ);
     m_outputTree->Branch("covYT", &m_covYT);
     m_outputTree->Branch("covZT", &m_covZT);
+
+    m_outputTree->Branch("sumPt2", &m_sumPt2);
 
     // Branches related to track momenta at vertex
     m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
@@ -191,8 +204,8 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfReconstructableVertices(
 
   // traverse the array for frequency
   for (const auto& p : collection) {
-    int secVtxId = p.particleId().vertexSecondary();
-    if (secVtxId != 0) {
+    int generation = p.particleId().generation();
+    if (generation > 0) {
       // truthparticle from secondary vtx
       continue;
     }
@@ -217,8 +230,8 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
   std::set<int> allPriVtxIds;
   for (const auto& p : collection) {
     int priVtxId = p.particleId().vertexPrimary();
-    int secVtxId = p.particleId().vertexSecondary();
-    if (secVtxId != 0) {
+    int generation = p.particleId().generation();
+    if (generation > 0) {
       // truthparticle from secondary vtx
       continue;
     }
@@ -230,8 +243,7 @@ int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
 }
 
 ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
-    const AlgorithmContext& ctx,
-    const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
+    const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -261,6 +273,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   TrackParametersContainer trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
 
   // The i-th entry in associatedTruthParticles corresponds to the i-th entry in
   // trackParameters. If we know the truth particles associated to the track
@@ -390,12 +405,13 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Containers for storing truth particles and truth vertices that contribute
     // to the reconstructed vertex
     SimParticleContainer particleAtVtx;
-    std::vector<int> contributingTruthVertices;
+    std::vector<SimBarcode> contributingTruthVertices;
 
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
         // Track parameters before the vertex fit
-        Acts::BoundTrackParameters origTrack = *(trk.originalParams);
+        const Acts::BoundTrackParameters& origTrack =
+            *trk.originalParams.as<Acts::BoundTrackParameters>();
 
         // Finding the matching parameters in the container of all track
         // parameters. This allows us to identify the corresponding particle,
@@ -411,8 +427,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
             particleAtVtx.insert(particle);
-            int priVtxId = particle.particleId().vertexPrimary();
-            contributingTruthVertices.push_back(priVtxId);
+            SimBarcode vtxId =
+                particle.particleId().setParticle(0).setSubParticle(0);
+            contributingTruthVertices.push_back(vtxId);
             foundMatchingParams = true;
             break;
           }
@@ -423,18 +440,19 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }  // end loop tracksAtVtx
     } else {
       for (const auto& particle : allTruthParticles) {
-        int priVtxId = particle.particleId().vertexPrimary();
-        contributingTruthVertices.push_back(priVtxId);
+        SimBarcode vtxId =
+            particle.particleId().setParticle(0).setSubParticle(0);
+        contributingTruthVertices.push_back(vtxId);
       }
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<int, int> fmap;
-    for (int priVtxId : contributingTruthVertices) {
-      fmap[priVtxId]++;
+    std::map<SimBarcode, int> fmap;
+    for (const SimBarcode& vtxId : contributingTruthVertices) {
+      fmap[vtxId]++;
     }
     int maxOccurrence = -1;
-    int maxOccurrenceId = -1;
+    SimBarcode maxOccurrenceId = -1;
     for (auto it : fmap) {
       if (it.second > maxOccurrence) {
         maxOccurrenceId = it.first;
@@ -445,8 +463,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Count number of reconstructible tracks on truth vertex
     int nTracksOnTruthVertex = 0;
     for (const auto& particle : associatedTruthParticles) {
-      int priVtxId = particle.particleId().vertexPrimary();
-      if (priVtxId == maxOccurrenceId) {
+      SimBarcode vtxId = particle.particleId().setParticle(0).setSubParticle(0);
+      if (vtxId == maxOccurrenceId) {
         ++nTracksOnTruthVertex;
       }
     }
@@ -503,14 +521,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
-        int priVtxId = particle.particleId().vertexPrimary();
-        int secVtxId = particle.particleId().vertexSecondary();
+        SimBarcode vtxId =
+            particle.particleId().setParticle(0).setSubParticle(0);
 
-        if (secVtxId != 0) {
-          // truthparticle from secondary vtx
-          continue;
-        }
-        if (priVtxId == maxOccurrenceId) {
+        if (vtxId == maxOccurrenceId) {
           // Vertex found, fill variables
 
           // Helper function for computing the pull
@@ -548,11 +562,25 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
             m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
 
+            m_seedX.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos0]);
+            m_seedY.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos1]);
+            m_seedZ.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos2]);
+            m_seedT.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreeTime]);
+
             const Acts::ActsVector<4> diffPos = vtx.fullPosition() - truePos;
             m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
             m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
             m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
             m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
+
+            const Acts::ActsVector<4> diffSeedPos =
+                vtx.fullSeedPosition() - truePos;
+            m_resSeedZ.push_back(diffSeedPos[Acts::FreeIndices::eFreePos2]);
+            m_resSeedT.push_back(diffSeedPos[Acts::FreeIndices::eFreeTime]);
 
             Acts::ActsScalar varX = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0);
@@ -587,6 +615,16 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreeTime));
             m_covZT.push_back(vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
+
+            double sumPt2 = 0;
+            for (const auto& trk : tracksAtVtx) {
+              if (trk.trackWeight > m_cfg.minTrkWeight) {
+                double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
+                                ->transverseMomentum();
+                sumPt2 += pt * pt;
+              }
+            }
+            m_sumPt2.push_back(sumPt2);
 
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
             m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
@@ -629,7 +667,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Check if they correspond to a track that contributed to the vertex.
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
-            if (trk.originalParams->parameters() == params) {
+            const auto& boundParams =
+                *trk.originalParams.as<Acts::BoundTrackParameters>();
+            if (boundParams.parameters() == params) {
               innerTrkWeight.push_back(trk.trackWeight);
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
@@ -640,7 +680,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               innerTruthQOverP.push_back(trueMom[2]);
 
               // Save track parameters before the vertex fit
-              const auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
+              const auto paramsAtVtx = propagateToVtx(boundParams);
               if (paramsAtVtx != std::nullopt) {
                 Acts::ActsVector<3> recoMom =
                     paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
@@ -724,10 +764,16 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_recoY.clear();
   m_recoZ.clear();
   m_recoT.clear();
+  m_seedX.clear();
+  m_seedY.clear();
+  m_seedZ.clear();
+  m_seedT.clear();
   m_resX.clear();
   m_resY.clear();
   m_resZ.clear();
   m_resT.clear();
+  m_resSeedZ.clear();
+  m_resSeedT.clear();
   m_pullX.clear();
   m_pullY.clear();
   m_pullZ.clear();
@@ -742,6 +788,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_covYZ.clear();
   m_covYT.clear();
   m_covZT.clear();
+  m_sumPt2.clear();
   m_truthPhi.clear();
   m_truthTheta.clear();
   m_truthQOverP.clear();

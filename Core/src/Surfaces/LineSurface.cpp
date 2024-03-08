@@ -181,7 +181,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck && m_bounds) {
+  if (bcheck.isEnabled() && m_bounds) {
     // At closest approach: check inside R or and inside Z
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);
@@ -207,6 +207,8 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -251,6 +253,9 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
@@ -281,6 +286,9 @@ Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
   Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
