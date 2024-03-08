@@ -58,7 +58,7 @@ Acts::MaterialInteractionAssignment::assign(
       cDistance = nDistance;
     }
 
-    // Settled on the right interection
+    // Settled on the right intersection
     auto [surface, position, direction] = intersectedSurfaces[is];
 
     // Calculate the path correction
@@ -82,7 +82,7 @@ Acts::MaterialInteractionAssignment::assign(
     assignedMaterialInteraction.position = position;
     assignedMaterialInteraction.direction = direction;
     assignedMaterialInteraction.intersectionID = intersectionID;
-    // Check for possbile reassignment
+    // Check for possible reassignment
     if (is + 1u < intersectedSurfaces.size() &&
         options.reAssignments.find(intersectionID) !=
             options.reAssignments.end()) {

@@ -28,7 +28,8 @@ namespace MaterialInteractionAssignment {
 using GlobalVeto = std::function<bool(const MaterialInteraction&)>;
 
 /// @brief definition of a local veto on a material interaction
-/// This can take already the suggestes surface assignment into account
+///
+/// This can take already the suggested surface assignment into account
 /// return true if the assignment should be vetoed
 using LocalVeto =
     std::function<bool(const MaterialInteraction&,
@@ -40,7 +41,7 @@ using LocalVeto =
 ///
 /// The provided parameters are the mutable material interaction, the suggested
 /// assignment and the next possible assignment, due to the ordered nature of
-/// the material interactions, assigment to previous is excluded
+/// the material interactions, assignment to previous is excluded
 ///
 /// @note this changes the MaterialInteraction if the re-assignment is accepted
 using ReAssignment = std::function<void(
@@ -50,11 +51,11 @@ using ReAssignment = std::function<void(
 /// @brief Options for the material interaction matcher
 /// The options are used to specify the vetos for the assignment
 struct Options {
-  /// Allow global vetos for the assignemnt, e.g. restricting
+  /// Allow global vetos for the assignment, e.g. restricting
   /// the assignment to a specific volume
   std::vector<GlobalVeto> globalVetos = {};
 
-  /// Allow specific vetoes for the assigment, e.g. only locally to
+  /// Allow specific vetoes for the assignment, e.g. only locally to
   /// surface, rest to next mapper (e.g. volume mapper)
   GeometryHierarchyMap<LocalVeto> localVetos = {};
 
