@@ -100,7 +100,7 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
   PropagatorMaterialAssigner(propagator_t propagator)
       : m_propagator(std::move(propagator)) {}
 
-  /// @brief Mthod for generating assigment candidates for the
+  /// @brief Method for generating assignment candidates for the
   /// material interaction assignment to surfaces or volumes
   ///
   /// @param gctx is the geometry context

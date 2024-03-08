@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-/// @brief Interface for the material mapping that seeks the possibile
+/// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
 class IAssignmentFinder {
  public:
@@ -32,7 +32,7 @@ class IAssignmentFinder {
   using VolumeAssignment =
       std::tuple<const InteractionVolume, Vector3, Vector3>;
 
-  /// @brief Interface method for generating assigment candidates for the
+  /// @brief Interface method for generating assignment candidates for the
   /// material interaction assignment to surfaces or volumes
   ///
   /// @param gctx is the geometry context

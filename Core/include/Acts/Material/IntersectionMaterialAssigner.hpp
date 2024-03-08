@@ -46,7 +46,7 @@ class IntersectionMaterialAssigner final : public IAssignmentFinder {
   /// @brief Construct with the configuration
   IntersectionMaterialAssigner(const Config& cfg) : m_cfg(cfg) {}
 
-  /// @brief Mthod for generating assigment candidates for the
+  /// @brief Method for generating assignment candidates for the
   /// material interaction assignment to surfaces or volumes
   ///
   /// @param gctx is the geometry context
