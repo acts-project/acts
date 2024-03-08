@@ -14,10 +14,7 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 
 #include <array>
-<<<<<<< HEAD
 #include <functional>
-=======
->>>>>>> 41ac3282c (surface assignment for material mapping)
 #include <optional>
 #include <tuple>
 #include <vector>
