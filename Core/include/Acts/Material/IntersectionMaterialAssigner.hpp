@@ -59,7 +59,8 @@ class IntersectionMaterialAssigner final : public IAssignmentFinder {
             std::vector<IAssignmentFinder::VolumeAssignment>>
   assignmentCandidates(const GeometryContext& gctx,
                        const MagneticFieldContext& mctx,
-                       const Vector3& position, const Vector3& direction) const;
+                       const Vector3& position,
+                       const Vector3& direction) const final;
 
  private:
   /// The configuration
