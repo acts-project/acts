@@ -160,7 +160,7 @@ struct SurfaceReached {
 /// This can be used to force the propagation to the target surface.
 struct ForcedSurfaceReached : SurfaceReached {
   ForcedSurfaceReached()
-      : SurfaceReached(-std::numeric_limits<double>::max()) {}
+      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
 };
 
 /// This is the condition that the end of World has been reached
