@@ -161,7 +161,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs time
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
