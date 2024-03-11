@@ -415,7 +415,7 @@ class TrackingVolume : public Volume {
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   /// @param hook Identifier hook to be applied to surfaces
-  /// @param logger A @c LoggerWrapper instance
+  /// @param logger A @c Logger instance
   ///
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
