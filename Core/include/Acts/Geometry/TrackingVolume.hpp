@@ -200,21 +200,6 @@ class TrackingVolume : public Volume {
       const Vector3& direction, const NavigationOptions<Surface>& options,
       const Logger& logger = getDummyLogger()) const;
 
-  /// @brief Return surfaces in given direction from bounding volume hierarchy
-  /// @tparam options_t Type of navigation options object for decomposition
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position to start from
-  /// @param direction The direction towards which to test
-  /// @param angle The opening angle
-  /// @param options The templated navigation options
-  ///
-  /// @return Vector of surface candidates
-  std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, double angle,
-      const NavigationOptions<Surface>& options) const;
-
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
   /// @param gctx The current geometry context object, e.g. alignment
