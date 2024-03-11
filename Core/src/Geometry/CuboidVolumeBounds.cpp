@@ -17,21 +17,22 @@
 #include <type_traits>
 #include <utility>
 
-Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
-                                             double halez)
+namespace Acts {
+
+CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
-Acts::CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
+CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
     : VolumeBounds(),
       m_values(bobo.m_values),
       m_xyBounds(bobo.m_xyBounds),
       m_yzBounds(bobo.m_yzBounds),
       m_zxBounds(bobo.m_zxBounds) {}
 
-Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
+CuboidVolumeBounds& CuboidVolumeBounds::operator=(
     const CuboidVolumeBounds& bobo) {
   if (this != &bobo) {
     m_values = bobo.m_values;
@@ -81,12 +82,17 @@ Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
-  return dumpT(sl);
+std::ostream& CuboidVolumeBounds::toStream(std::ostream& os) const {
+  os << std::setiosflags(std::ios::fixed);
+  os << std::setprecision(5);
+  os << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";
+  os << "(" << get(eHalfLengthX) << ", " << get(eHalfLengthY) << ", "
+     << get(eHalfLengthZ) << ")";
+  return os;
 }
 
-Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Vector3& envelope,
+Volume::BoundingBox CuboidVolumeBounds::boundingBox(
+    const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   Vector3 vmin(-get(eHalfLengthX), -get(eHalfLengthY), -get(eHalfLengthZ));
   Vector3 vmax(get(eHalfLengthX), get(eHalfLengthY), get(eHalfLengthZ));
@@ -95,7 +101,7 @@ Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
+void CuboidVolumeBounds::buildSurfaceBounds() {
   m_xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
                                                        get(eHalfLengthY));
   m_yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),
@@ -104,7 +110,7 @@ void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-double Acts::CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
+double CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue <= binZ) {
     return m_values[bValue];
   }
@@ -114,3 +120,24 @@ double Acts::CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   }
   return 0.0;
 }
+
+bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
+  return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
+          std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
+          std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
+}
+
+std::vector<double> CuboidVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void CuboidVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eHalfLengthX) <= 0 || get(eHalfLengthY) <= 0 ||
+      get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument(
+        "CuboidVolumeBounds: invalid input, zero or negative.");
+  }
+}
+}  // namespace Acts

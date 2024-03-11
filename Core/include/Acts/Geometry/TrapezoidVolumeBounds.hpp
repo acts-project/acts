@@ -136,7 +136,8 @@ class TrapezoidVolumeBounds : public VolumeBounds {
                                   const Volume* entity = nullptr) const final;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const override;
+  /// @param os is the output stream
+  std::ostream& toStream(std::ostream& os) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
@@ -162,43 +163,6 @@ class TrapezoidVolumeBounds : public VolumeBounds {
 
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();
-
-  /// Templated dump methods
-  /// @tparam stream_t The type of the stream for dumping
-  /// @param dt The stream object
-  template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
 };
-
-template <class stream_t>
-stream_t& TrapezoidVolumeBounds::dumpT(stream_t& dt) const {
-  dt << std::setiosflags(std::ios::fixed);
-  dt << std::setprecision(5);
-  dt << "Acts::TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
-        "= ";
-  dt << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
-     << get(eHalfLengthY) << ", " << get(eHalfLengthZ);
-  dt << ", " << get(eAlpha) << ", " << get(eBeta) << ")";
-  return dt;
-}
-
-inline std::vector<double> TrapezoidVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) < 0. || get(eHalfLengthXposY) < 0.) {
-    throw std::invalid_argument(
-        "TrapezoidVolumeBounds: invalid trapezoid parameters in x.");
-  }
-  if (get(eHalfLengthY) <= 0.) {
-    throw std::invalid_argument("TrapezoidVolumeBounds: invalid y extrusion.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("TrapezoidVolumeBounds: invalid z extrusion.");
-  }
-}
 
 }  // namespace Acts

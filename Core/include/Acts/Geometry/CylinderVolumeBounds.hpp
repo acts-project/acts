@@ -183,7 +183,8 @@ class CylinderVolumeBounds : public VolumeBounds {
   double binningBorder(BinningValue bValue) const override;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const override;
+  /// @param os is the output stream
+  std::ostream& toStream(std::ostream& os) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
@@ -207,85 +208,6 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();
-
-  /// Templated dumpT method
-  /// @tparam stream_t The type for the dump stream
-  /// @param dt The dump stream object
-  template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
 };
-
-inline bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
-  using VectorHelpers::perp;
-  using VectorHelpers::phi;
-  double ros = perp(pos);
-  bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
-  bool insideR = insidePhi
-                     ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
-                     : false;
-  bool insideZ =
-      insideR ? (std::abs(pos.z()) <= get(eHalfLengthZ) + tol) : false;
-  return (insideZ && insideR && insidePhi);
-}
-
-inline Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
-    const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
-    return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
-  }
-  return VolumeBounds::binningOffset(bValue);
-}
-
-inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::binR) {
-    return 0.5 * (get(eMaxR) - get(eMinR));
-  }
-  if (bValue == Acts::binZ) {
-    return get(eHalfLengthZ);
-  }
-  return VolumeBounds::binningBorder(bValue);
-}
-
-template <class stream_t>
-stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
-  dt << std::setiosflags(std::ios::fixed);
-  dt << std::setprecision(5);
-  dt << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
-        "averagePhi, minBevelZ, maxBevelZ) = ";
-  dt << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ) << ", "
-     << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", "
-     << get(eBevelMinZ) << ", " << get(eBevelMaxZ);
-  return dt;
-}
-
-inline std::vector<double> CylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) >= get(eMaxR)) {
-    throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
-  }
-  if (get(eHalfLengthZ) <= 0) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid longitudinal input.");
-  }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid phi positioning.");
-  }
-  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
-  }
-  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
-  }
-}
 
 }  // namespace Acts

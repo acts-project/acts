@@ -20,9 +20,10 @@
 #include <cstddef>
 #include <utility>
 
-Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                                   double maxhalex,
-                                                   double haley, double halez)
+namespace Acts {
+
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double maxhalex,
+                                             double haley, double halez)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthXposY] = maxhalex;
@@ -34,9 +35,9 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   buildSurfaceBounds();
 }
 
-Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                                   double haley, double halez,
-                                                   double alpha, double beta)
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley,
+                                             double halez, double alpha,
+                                             double beta)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthY] = haley;
@@ -51,7 +52,7 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   buildSurfaceBounds();
 }
 
-Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
+std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
@@ -113,7 +114,7 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {
+void TrapezoidVolumeBounds::buildSurfaceBounds() {
   m_faceXYTrapezoidBounds = std::make_shared<const TrapezoidBounds>(
       get(eHalfLengthXnegY), get(eHalfLengthXposY), get(eHalfLengthY));
 
@@ -130,7 +131,7 @@ void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthZ), get(eHalfLengthXposY));
 }
 
-bool Acts::TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   if (std::abs(pos.z()) > get(eHalfLengthZ) + tol) {
     return false;
   }
@@ -143,12 +144,19 @@ bool Acts::TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   return inside;
 }
 
-std::ostream& Acts::TrapezoidVolumeBounds::toStream(std::ostream& sl) const {
-  return dumpT<std::ostream>(sl);
+std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
+  os << std::setiosflags(std::ios::fixed);
+  os << std::setprecision(5);
+  os << "TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
+        "= ";
+  os << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
+     << get(eHalfLengthY) << ", " << get(eHalfLengthZ);
+  os << ", " << get(eAlpha) << ", " << get(eBeta) << ")";
+  return os;
 }
 
-Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Vector3& envelope,
+Volume::BoundingBox TrapezoidVolumeBounds::boundingBox(
+    const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   double minx = get(eHalfLengthXnegY);
   double maxx = get(eHalfLengthXposY);
@@ -180,3 +188,24 @@ Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
 
   return {entity, vmin - envelope, vmax + envelope};
 }
+
+std::vector<double> TrapezoidVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eHalfLengthXnegY) < 0. || get(eHalfLengthXposY) < 0.) {
+    throw std::invalid_argument(
+        "TrapezoidVolumeBounds: invalid trapezoid parameters in x.");
+  }
+  if (get(eHalfLengthY) <= 0.) {
+    throw std::invalid_argument("TrapezoidVolumeBounds: invalid y extrusion.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("TrapezoidVolumeBounds: invalid z extrusion.");
+  }
+}
+
+}  // namespace Acts

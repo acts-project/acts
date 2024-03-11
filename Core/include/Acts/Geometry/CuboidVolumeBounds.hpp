@@ -135,16 +135,10 @@ class CuboidVolumeBounds : public VolumeBounds {
 
   /// Output Method for std::ostream
   ///
-  /// @param sl is ostream operator to be dumped into
-  std::ostream& toStream(std::ostream& sl) const override;
+  /// @param os is ostream operator to be dumped into
+  std::ostream& toStream(std::ostream& os) const override;
 
  private:
-  /// Templated dumpT method
-  /// @tparam stream_t The type for the dump stream
-  /// @param dt The dump stream object
-  template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
-
   /// The bound values ordered in a fixed size array
   std::array<double, eSize> m_values;
 
@@ -159,34 +153,4 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
-  return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
-          std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
-          std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
-}
-
-inline std::vector<double> CuboidVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthX) <= 0 || get(eHalfLengthY) <= 0 ||
-      get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument(
-        "CuboidVolumeBounds: invalid input, zero or negative.");
-  }
-}
-
-template <class stream_t>
-stream_t& CuboidVolumeBounds::dumpT(stream_t& dt) const {
-  dt << std::setiosflags(std::ios::fixed);
-  dt << std::setprecision(5);
-  dt << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";
-  dt << "(" << get(eHalfLengthX) << ", " << get(eHalfLengthY) << ", "
-     << get(eHalfLengthZ) << ")";
-  return dt;
-}
 }  // namespace Acts

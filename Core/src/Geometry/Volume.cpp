@@ -75,3 +75,10 @@ Acts::Volume::BoundingBox Acts::Volume::boundingBox(
 const Acts::Volume::BoundingBox& Acts::Volume::orientedBoundingBox() const {
   return m_orientedBoundingBox;
 }
+
+void Acts::Volume::setVolumeBounds(
+    std::shared_ptr<const Acts::VolumeBounds> volbounds) {
+  m_volumeBounds = std::move(volbounds);
+  m_orientedBoundingBox =
+      m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this);
+}

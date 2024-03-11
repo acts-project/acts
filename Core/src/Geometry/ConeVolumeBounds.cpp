@@ -28,10 +28,11 @@
 #include <type_traits>
 #include <utility>
 
-Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
-                                         double outerAlpha, double outerOffsetZ,
-                                         double halflengthZ, double averagePhi,
-                                         double halfPhiSector) noexcept(false)
+namespace Acts {
+ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
+                                   double outerAlpha, double outerOffsetZ,
+                                   double halflengthZ, double averagePhi,
+                                   double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
   m_values[eInnerAlpha] = innerAlpha;
   m_values[eInnerOffsetZ] = innerOffsetZ;
@@ -44,10 +45,10 @@ Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
   checkConsistency();
 }
 
-Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
-                                         double offsetZ, double halflengthZ,
-                                         double averagePhi,
-                                         double halfPhiSector) noexcept(false)
+ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
+                                   double offsetZ, double halflengthZ,
+                                   double averagePhi,
+                                   double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
   m_values[eInnerAlpha] = 0.;
   m_values[eInnerOffsetZ] = 0.;
@@ -170,7 +171,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
+void ConeVolumeBounds::checkConsistency() noexcept(false) {
   if (innerRmin() > outerRmin() || innerRmax() > outerRmax()) {
     throw std::invalid_argument("ConeVolumeBounds: invalid radial input.");
   }
@@ -190,7 +191,7 @@ void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
@@ -237,7 +238,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   return true;
 }
 
-void Acts::ConeVolumeBounds::buildSurfaceBounds() {
+void ConeVolumeBounds::buildSurfaceBounds() {
   // Build inner cone or inner cylinder
   if (get(eInnerAlpha) > s_epsilon) {
     m_innerTanAlpha = std::tan(get(eInnerAlpha));
@@ -288,16 +289,54 @@ void Acts::ConeVolumeBounds::buildSurfaceBounds() {
   }
 }
 
-// ostream operator overload
-std::ostream& Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
-  return dumpT(sl);
+std::ostream& ConeVolumeBounds::toStream(std::ostream& os) const {
+  os << std::setiosflags(std::ios::fixed);
+  os << std::setprecision(5);
+  os << "Acts::ConeVolumeBounds : (innerAlpha, innerOffsetZ, outerAlpha,";
+  os << "  outerOffsetZ, halflenghZ, averagePhi, halfPhiSector) = ";
+  os << get(eInnerAlpha) << ", " << get(eInnerOffsetZ) << ", ";
+  os << get(eOuterAlpha) << ", " << get(eOuterOffsetZ) << ", ";
+  os << get(eHalfLengthZ) << ", " << get(eAveragePhi) << std::endl;
+  return os;
 }
 
-Acts::Volume::BoundingBox Acts::ConeVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Vector3& envelope,
-    const Volume* entity) const {
+Volume::BoundingBox ConeVolumeBounds::boundingBox(const Transform3* trf,
+                                                  const Vector3& envelope,
+                                                  const Volume* entity) const {
   Vector3 vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
   Vector3 vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);
 }
+
+double ConeVolumeBounds::innerRmin() const {
+  return m_innerRmin;
+}
+
+double ConeVolumeBounds::innerRmax() const {
+  return m_innerRmax;
+}
+
+double ConeVolumeBounds::innerTanAlpha() const {
+  return m_innerTanAlpha;
+}
+
+double ConeVolumeBounds::outerRmin() const {
+  return m_outerRmin;
+}
+
+double ConeVolumeBounds::outerRmax() const {
+  return m_outerRmax;
+}
+
+double ConeVolumeBounds::outerTanAlpha() const {
+  return m_outerTanAlpha;
+}
+
+std::vector<double> ConeVolumeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+}  // namespace Acts

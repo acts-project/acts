@@ -20,7 +20,6 @@
 namespace Acts {
 
 class VolumeBounds;
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class Volume
 ///
@@ -40,7 +39,8 @@ class Volume : public virtual GeometryObject {
   /// @param volbounds is the volume boundary definitions
   /// @note This will automatically build an oriented bounding box with an
   /// envelope value of (0.05, 0.05, 0.05)mm
-  Volume(const Transform3& transform, VolumeBoundsPtr volbounds);
+  Volume(const Transform3& transform,
+         std::shared_ptr<const VolumeBounds> volbounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -69,6 +69,9 @@ class Volume : public virtual GeometryObject {
 
   /// returns the volumeBounds()
   const VolumeBounds& volumeBounds() const;
+
+  /// Set volume bounds and update volume bounding boxes implicitly
+  void setVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -101,7 +104,7 @@ class Volume : public virtual GeometryObject {
   Transform3 m_transform;
   Transform3 m_itransform;
   Vector3 m_center;
-  VolumeBoundsPtr m_volumeBounds;
+  std::shared_ptr<const VolumeBounds> m_volumeBounds;
   BoundingBox m_orientedBoundingBox;
 };
 
