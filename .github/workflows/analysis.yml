@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache build
         uses: actions/cache@v3
@@ -76,7 +76,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2204:v41
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
       - name: Configure
@@ -91,7 +91,7 @@ jobs:
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results
         run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: cmakeperf
           path: perf.csv
@@ -101,10 +101,10 @@ jobs:
     needs: build_performance
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: cmakeperf
       - name: Run collection
