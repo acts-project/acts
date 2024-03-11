@@ -445,9 +445,9 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.67dd08d.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.32bca8c.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
-          && python3 -m pip install pyyaml jinja2
+          && /usr/local/acts/bin/python3.10 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v3
@@ -467,7 +467,8 @@ jobs:
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DPython_EXECUTABLE=$(command -v python3)
+          -DPython_EXECUTABLE=/usr/local/acts/bin/python3.10
+          -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
