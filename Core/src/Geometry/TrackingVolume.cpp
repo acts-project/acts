@@ -628,7 +628,11 @@ const TrackingVolume* TrackingVolume::motherVolume() const {
   return m_motherVolume;
 }
 
-void TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
+TrackingVolume* TrackingVolume::motherVolume() {
+  return m_motherVolume;
+}
+
+void TrackingVolume::setMotherVolume(TrackingVolume* mvol) {
   m_motherVolume = mvol;
 }
 

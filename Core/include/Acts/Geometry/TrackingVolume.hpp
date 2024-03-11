@@ -398,10 +398,13 @@ class TrackingVolume : public Volume {
   /// Return the MotherVolume - if it exists
   const TrackingVolume* motherVolume() const;
 
+  /// Return the MotherVolume - if it exists
+  TrackingVolume* motherVolume();
+
   /// Set the MotherVolume
   ///
   /// @param mvol is the mother volume
-  void setMotherVolume(const TrackingVolume* mvol);
+  void setMotherVolume(TrackingVolume* mvol);
 
  protected:
   /// Constructor for a container Volume
@@ -474,7 +477,7 @@ class TrackingVolume : public Volume {
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
   /// Remember the mother volume
-  const TrackingVolume* m_motherVolume{nullptr};
+  TrackingVolume* m_motherVolume{nullptr};
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
