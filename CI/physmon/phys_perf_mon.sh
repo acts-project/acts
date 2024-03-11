@@ -50,6 +50,8 @@ if [ "$(uname)" == "Darwin" ]; then
         tmp=$(mktemp)
         echo "+ $@" >&2
         /usr/bin/time -l -o "$tmp" "$@"
+        # save exit code
+        rec=$?
 
         of="${memory_dir}/mem_${slug}.csv"
         {
@@ -62,6 +64,8 @@ if [ "$(uname)" == "Darwin" ]; then
             grep -E "maximum resident set size" "$tmp" | awk '{printf $1}'
             printf ",0\n"
         } > "$of"
+        # restore exit code
+        (exit $rec)
     }
     export measure
 elif [ "$(uname)" == "Linux" ]; then
@@ -74,6 +78,8 @@ elif [ "$(uname)" == "Linux" ]; then
         tmp=$(mktemp)
         echo "+ $@" >&2
         /usr/bin/time -v -o  "$tmp" "$@"
+        # save exit code
+        rec=$?
         # in kbytes
         max_rss=$(grep "Maximum resident set size (kbytes):" "$tmp" | awk '{printf $(NF)}')
         max_rss=$(( 1000*max_rss ))
@@ -89,6 +95,8 @@ elif [ "$(uname)" == "Linux" ]; then
             echo "time,rss,vms"
             echo "${wall_time},${max_rss},0"
         } > "$of"
+        # restore exit code
+        (exit $rec)
     }
     export measure
 else
