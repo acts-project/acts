@@ -17,13 +17,13 @@ namespace Acts {
 
 /// @brief The binned surface material accumulater
 ///
-/// It consumes the assignmed material interactions and then accumulates
+/// It consumes the assigned material interactions and then accumulates
 /// the material on the surfaces in prepared binned containers for averaging
 
 class BinnedSurfaceMaterialAccumulater final
     : public ISurfaceMaterialAccumulater {
  public:
-  /// @brief Nested confit struct
+  /// @brief Nested config struct
   struct Config {
     GeometryContext geoContext;
 

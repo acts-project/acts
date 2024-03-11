@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  // First is homogenous
+  // First is homogeneous
   MaterialSlab mp;
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
@@ -77,11 +77,11 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   }
 
   // Accepted materials are:
-  // - homogenous
+  // - homogeneous
   // - Prot0
   // - Binned (remapping)
 
-  // First is homogenous
+  // First is homogeneous
   MaterialSlab mp;
   surfaces[0u]->assignSurfaceMaterial(
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   BOOST_CHECK(m2Itr->second != nullptr);
 
   // Check the material
-  // map0 should be homogenous
+  // map0 should be homogeneous
   auto m0 = m0Itr->second;
   const HomogeneousSurfaceMaterial* hm0 =
       dynamic_cast<const HomogeneousSurfaceMaterial*>(m0.get());

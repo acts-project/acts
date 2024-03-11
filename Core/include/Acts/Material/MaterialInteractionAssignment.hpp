@@ -24,7 +24,7 @@ class Surface;
 
 namespace MaterialInteractionAssignment {
 
-/// Surface assignement definition
+/// Surface assignment definition
 using SurfaceAssignment = std::tuple<const Surface*, Vector3, Vector3>;
 
 /// @brief definition of a global veo on a material interaction

@@ -31,7 +31,7 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
     const ISurfaceMaterial* surfaceMaterial = surface->surfaceMaterial();
     if (surfaceMaterial == nullptr) {
       throw std::invalid_argument(
-          "Surface material is not set, inconsitent configuration.");
+          "Surface material is not set, inconsistent configuration.");
     }
 
     // We need a dynamic_cast to either a surface material proxy or
@@ -99,7 +99,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
     auto accMaterial = cState->accumulatedMaterial.find(geoID);
     if (accMaterial == cState->accumulatedMaterial.end()) {
       throw std::invalid_argument(
-          "Surface material is not found, inconsitent configuration.");
+          "Surface material is not found, inconsistent configuration.");
     }
     // Accumulate the material - remember the touched bin
     auto tBin = accMaterial->second.accumulate(mi.position, mi.materialSlab,
@@ -121,7 +121,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
           cState->accumulatedMaterial.find(surface->geometryId());
       if (missedMaterial == cState->accumulatedMaterial.end()) {
         throw std::invalid_argument(
-            "Surface material is not found, inconsitent configuration.");
+            "Surface material is not found, inconsistent configuration.");
       }
       // Apply empty hit correction
       missedMaterial->second.trackAverage(position, true);
