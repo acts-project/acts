@@ -24,6 +24,9 @@ class Surface;
 
 namespace MaterialInteractionAssignment {
 
+/// Surface assignement definition
+using SurfaceAssignment = std::tuple<const Surface*, Vector3, Vector3>;
+
 /// @brief definition of a global veo on a material interaction
 using GlobalVeto = std::function<bool(const MaterialInteraction&)>;
 
@@ -32,8 +35,7 @@ using GlobalVeto = std::function<bool(const MaterialInteraction&)>;
 /// This can take already the suggested surface assignment into account
 /// return true if the assignment should be vetoed
 using LocalVeto =
-    std::function<bool(const MaterialInteraction&,
-                       const std::tuple<const Surface*, Vector3, Vector3>&)>;
+    std::function<bool(const MaterialInteraction&, const SurfaceAssignment&)>;
 
 /// @brief definition of possible re-assignments to next, this could e.g.
 /// be used for respecting pre/post mappint directives that are not fully
@@ -45,8 +47,7 @@ using LocalVeto =
 ///
 /// @note this changes the MaterialInteraction if the re-assignment is accepted
 using ReAssignment = std::function<void(
-    MaterialInteraction&, const std::tuple<const Surface*, Vector3, Vector3>&,
-    const std::tuple<const Surface*, Vector3, Vector3>&)>;
+    MaterialInteraction&, const SurfaceAssignment&, const SurfaceAssignment&)>;
 
 /// @brief Options for the material interaction matcher
 /// The options are used to specify the vetos for the assignment
@@ -71,13 +72,13 @@ struct Options {
 /// @param intersectedSurfaces is the geometry identifier
 /// @param options are the options for the assignment
 ///
-/// @return a pair of vectors of assigned and unassigned material interactions
-std::array<std::vector<MaterialInteraction>, 2u> assign(
-    const GeometryContext& gctx,
-    const std::vector<MaterialInteraction>& materialInteractions,
-    const std::vector<std::tuple<const Surface*, Vector3, Vector3>>&
-        intersectedSurfaces,
-    const Options& options = Options());
+/// @return a tuple of [ Assigned, NotAssigned, Surfaces with no assignments ]
+std::tuple<std::vector<MaterialInteraction>, std::vector<MaterialInteraction>,
+           std::vector<SurfaceAssignment>>
+assign(const GeometryContext& gctx,
+       const std::vector<MaterialInteraction>& materialInteractions,
+       const std::vector<SurfaceAssignment>& intersectedSurfaces,
+       const Options& options = Options());
 
 }  // namespace MaterialInteractionAssignment
 

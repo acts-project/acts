@@ -65,12 +65,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest) {
   MaterialInteractionAssignment::Options options;
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfacesLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
   BOOST_CHECK_EQUAL(assigned.size(), materialInteractions.size());
   BOOST_CHECK_EQUAL(unassigned.size(), 0u);
+  BOOST_CHECK_EQUAL(surfacesLeft.size(), 0u);
 
   // Check that it is assigned to the closest surface always
   for (const auto& mi : assigned) {
@@ -131,12 +133,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
   options.globalVetos.push_back(RadialVeto{40});
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfacesLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
   BOOST_CHECK_EQUAL(assigned.size(), 40u);
   BOOST_CHECK_EQUAL(unassigned.size(), 9u);
+  BOOST_CHECK_EQUAL(surfacesLeft.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
@@ -190,12 +194,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
   options.localVetos = localVetos;
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfacesLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
-  BOOST_CHECK_EQUAL(assigned.size(), 34);
-  BOOST_CHECK_EQUAL(unassigned.size(), 15);
+  BOOST_CHECK_EQUAL(assigned.size(), 34u);
+  BOOST_CHECK_EQUAL(unassigned.size(), 15u);
+  BOOST_CHECK_EQUAL(surfacesLeft.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
@@ -255,12 +261,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
   options.reAssignments = reassignments;
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfaceLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
-  BOOST_CHECK_EQUAL(assigned.size(), 49);
-  BOOST_CHECK_EQUAL(unassigned.size(), 0);
+  BOOST_CHECK_EQUAL(assigned.size(), 49u);
+  BOOST_CHECK_EQUAL(unassigned.size(), 0u);
+  BOOST_CHECK_EQUAL(surfaceLeft.size(), 1u);
 
   // Check that the geoid with number 2 never shows up
   for (const auto& mi : assigned) {
@@ -289,12 +297,14 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
 
   MaterialInteractionAssignment::Options options;
 
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, {materialInteraction}, {surfaceHit}, options);
+  auto [assigned, unassigned, surfaceLeft] =
+      MaterialInteractionAssignment::assign(tContext, {materialInteraction},
+                                            {surfaceHit}, options);
 
   // Check that the material interaction was assigned
-  BOOST_CHECK_EQUAL(assigned.size(), 1);
-  BOOST_CHECK_EQUAL(unassigned.size(), 0);
+  BOOST_CHECK_EQUAL(assigned.size(), 1u);
+  BOOST_CHECK_EQUAL(unassigned.size(), 0u);
+  BOOST_CHECK_EQUAL(surfaceLeft.size(), 0u);
 
   // Check that the path correction is set
   BOOST_CHECK_NE(assigned[0].pathCorrection, 0.);
