@@ -303,7 +303,7 @@ class KDTree {
     range_t r;
 
     for (std::size_t j = 0; j < Dims; ++j) {
-      r[j] = {min_v[j], nextRepresentable(max_v[j])};
+      r[j] = Range1D<Scalar>{min_v[j], nextRepresentable(max_v[j])};
     }
 
     return r;
