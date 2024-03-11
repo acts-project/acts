@@ -22,7 +22,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
@@ -31,9 +30,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
-#define NBOXES 10
-#define NTESTS 20
-#include "BVHDataTestCase.hpp"
+// @TODO: Add TrackingVolume tests
 
 BOOST_AUTO_TEST_SUITE_END()
 
