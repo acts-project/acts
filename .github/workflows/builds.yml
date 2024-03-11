@@ -440,6 +440,9 @@ jobs:
           submodules: true
           lfs: true
 
+      - name: Print architecture
+        run: uname -p
+
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja ccache
