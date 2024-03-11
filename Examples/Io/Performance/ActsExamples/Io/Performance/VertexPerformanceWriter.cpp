@@ -410,12 +410,12 @@ ProcessCode VertexPerformanceWriter::writeT(
     for (SimBarcode vtxId : contributingTruthVertices) {
       fmap[vtxId]++;
     }
-    std::uint32_t maxOccurrence = 0;
-    SimBarcode maxOccurrenceId;
-    for (const auto& [vtxId, count] : fmap) {
-      if (count > maxOccurrence) {
+    std::uint32_t maxOccurrence = -1;
+    SimBarcode maxOccurrenceId = -1;
+    for (const auto& [vtxId, occurrence] : fmap) {
+      if (occurrence > maxOccurrence) {
         maxOccurrenceId = vtxId;
-        maxOccurrence = count;
+        maxOccurrence = occurrence;
       }
     }
 
@@ -636,6 +636,7 @@ ProcessCode VertexPerformanceWriter::writeT(
             continue;
           }
           const auto& particle = *particleOpt;
+          innerTrkParticleId.push_back(particle.particleId().value());
 
           const auto& trueUnitDir = particle.direction();
           Acts::ActsVector<3> trueMom;

@@ -104,17 +104,23 @@ class VertexPerformanceWriter final
   std::vector<int> m_vertexPrimary;
   std::vector<int> m_vertexSecondary;
 
-  // True 4D vertex position
-  std::vector<double> m_truthX;
-  std::vector<double> m_truthY;
-  std::vector<double> m_truthZ;
-  std::vector<double> m_truthT;
-
   // Reconstructed 4D vertex position
   std::vector<double> m_recoX;
   std::vector<double> m_recoY;
   std::vector<double> m_recoZ;
   std::vector<double> m_recoT;
+
+  // Vertex covariance
+  std::vector<double> m_covXX;
+  std::vector<double> m_covYY;
+  std::vector<double> m_covZZ;
+  std::vector<double> m_covTT;
+  std::vector<double> m_covXY;
+  std::vector<double> m_covXZ;
+  std::vector<double> m_covXT;
+  std::vector<double> m_covYZ;
+  std::vector<double> m_covYT;
+  std::vector<double> m_covZT;
 
   // 4D position of the vertex seed. x and y coordinate are 0 in current
   // implementations, we save them here as a check.
@@ -122,6 +128,12 @@ class VertexPerformanceWriter final
   std::vector<double> m_seedY;
   std::vector<double> m_seedZ;
   std::vector<double> m_seedT;
+
+  // True 4D vertex position
+  std::vector<double> m_truthX;
+  std::vector<double> m_truthY;
+  std::vector<double> m_truthZ;
+  std::vector<double> m_truthT;
 
   // Difference of reconstructed and true vertex 4D position
   std::vector<double> m_resX;
@@ -138,18 +150,6 @@ class VertexPerformanceWriter final
   std::vector<double> m_pullY;
   std::vector<double> m_pullZ;
   std::vector<double> m_pullT;
-
-  // Vertex covariance
-  std::vector<double> m_covXX;
-  std::vector<double> m_covYY;
-  std::vector<double> m_covZZ;
-  std::vector<double> m_covTT;
-  std::vector<double> m_covXY;
-  std::vector<double> m_covXZ;
-  std::vector<double> m_covXT;
-  std::vector<double> m_covYZ;
-  std::vector<double> m_covYT;
-  std::vector<double> m_covZT;
 
   // Sum pT^2 of all tracks associated with the vertex
   std::vector<double> m_sumPt2;
