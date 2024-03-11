@@ -12,6 +12,7 @@ target_sources(
     Interactions.cpp
     IntersectionMaterialAssigner.cpp
     Material.cpp
+    MaterialMapper.cpp
     MaterialGridHelper.cpp
     MaterialInteractionAssignment.cpp
     MaterialMapUtils.cpp
