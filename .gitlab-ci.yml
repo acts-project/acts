@@ -221,7 +221,7 @@ linux_physmon:
     expire_in: 1 week
 
   script:
-    - apt-get update && apt-get install -y git-lfs time
+    - apt-get update && apt-get install -y git-lfs
 
     - git clone $CLONE_URL src
     - cd src
