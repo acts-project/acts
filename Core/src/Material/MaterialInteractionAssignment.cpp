@@ -12,13 +12,12 @@ Acts::MaterialInteractionAssignment::Result
 Acts::MaterialInteractionAssignment::assign(
     const GeometryContext& gctx,
     const std::vector<MaterialInteraction>& materialInteractions,
-    const std::vector<std::tuple<const Surface*, Vector3, Vector3>>&
-        intersectedSurfaces,
+    const std::vector<SurfaceAssignment>& intersectedSurfaces,
     const Options& options) {
-  // Assume a high assignment rate
+  // Return container: Assume a high assignment rate
   std::vector<MaterialInteraction> assignedMaterialInteractions;
   assignedMaterialInteractions.reserve(materialInteractions.size());
-
+  // Return container: The unassigned materials
   std::vector<MaterialInteraction> unassignedMaterialInteractions;
 
   /// Simple matching of material interactions to surfaces - no pre/post
@@ -93,6 +92,23 @@ Acts::MaterialInteractionAssignment::assign(
     assignedMaterialInteractions.push_back(assignedMaterialInteraction);
   }
 
+  // Check which candidate surfaces had an assignment
+  std::set<const Surface*> assignedSurfaces;
+  for (const auto& assignedMaterialInteraction : assignedMaterialInteractions) {
+    assignedSurfaces.insert(assignedMaterialInteraction.surface);
+  }
+
+  // Return container: Surfaces without assignments
+  // (empty bin correction can use this information)
+  std::vector<SurfaceAssignment> surfacesWithoutAssignments;
+  for (const auto& intersectedSurface : intersectedSurfaces) {
+    if (assignedSurfaces.find(std::get<0>(intersectedSurface)) ==
+        assignedSurfaces.end()) {
+      surfacesWithoutAssignments.push_back(intersectedSurface);
+    }
+  }
+
   // return the pair of assigned and unassigned material interactions
-  return {assignedMaterialInteractions, unassignedMaterialInteractions};
+  return {assignedMaterialInteractions, unassignedMaterialInteractions,
+          surfacesWithoutAssignments};
 }
