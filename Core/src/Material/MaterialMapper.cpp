@@ -60,6 +60,17 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
   m_cfg.surfaceMaterialAccumulater->accumulate(
       *state.surfaceMaterialAccumulaterState.get(), assigned, emptyBinSurfaces);
 
+  // The calcualte the total material before returning
+  auto calculateTotalMaterial = [](RecordedMaterialTrack& rTrack) -> void {
+    for (const auto& mi : rTrack.second.materialInteractions) {
+      rTrack.second.materialInX0 += mi.materialSlab.thicknessInX0();
+      rTrack.second.materialInL0 += mi.materialSlab.thicknessInL0();
+    }
+  };
+
+  calculateTotalMaterial(mappedMaterial);
+  calculateTotalMaterial(unmappedMaterial);
+  // Return the mapped and unmapped material
   return {mappedMaterial, unmappedMaterial};
 }
 
