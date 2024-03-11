@@ -6,7 +6,11 @@ set -e
 function run() {
     set -x
     "$@"
+    # save exit code
+    { rec=$?; } 2> /dev/null
     { set +x;   } 2> /dev/null
+    # restore exit code
+    (exit $rec)
 }
 
 export run
