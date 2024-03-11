@@ -51,7 +51,8 @@ class BinnedSurfaceMaterialAccumulater final
           getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
 
   /// Factory for creating the state
-  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState() const;
+  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState()
+      const override;
 
   /// @brief Accumulate the material interaction on the surface
   ///
@@ -60,10 +61,10 @@ class BinnedSurfaceMaterialAccumulater final
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
-  void accumulate(
-      ISurfaceMaterialAccumulater::State& state,
-      const std::vector<MaterialInteraction>& interactions,
-      const std::vector<SurfaceAssignment>& surfacesWithoutAssignment) const;
+  void accumulate(ISurfaceMaterialAccumulater::State& state,
+                  const std::vector<MaterialInteraction>& interactions,
+                  const std::vector<SurfaceAssignment>&
+                      surfacesWithoutAssignment) const override;
 
   /// Finalize the surface material maps
   ///
@@ -71,7 +72,7 @@ class BinnedSurfaceMaterialAccumulater final
   ///
   /// @note this does the run average over the (binned) material
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const;
+  finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override;
 
  private:
   /// Access method to the logger
