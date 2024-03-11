@@ -511,47 +511,4 @@ class TrackingVolume : public Volume {
   std::string m_name;
 };
 
-inline const std::string& TrackingVolume::volumeName() const {
-  return m_name;
-}
-
-inline const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
-  return m_volumeMaterial.get();
-}
-
-inline const std::shared_ptr<const IVolumeMaterial>&
-TrackingVolume::volumeMaterialSharedPtr() const {
-  return m_volumeMaterial;
-}
-
-inline void TrackingVolume::assignVolumeMaterial(
-    std::shared_ptr<const IVolumeMaterial> material) {
-  m_volumeMaterial = std::move(material);
-}
-
-inline const LayerArray* TrackingVolume::confinedLayers() const {
-  return m_confinedLayers.get();
-}
-
-inline const MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
-  return m_confinedDenseVolumes;
-}
-
-inline std::shared_ptr<const TrackingVolumeArray>
-TrackingVolume::confinedVolumes() const {
-  return m_confinedVolumes;
-}
-
-inline const TrackingVolume* TrackingVolume::motherVolume() const {
-  return m_motherVolume;
-}
-
-inline void TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
-  m_motherVolume = mvol;
-}
-
-#ifndef DOXYGEN
-#include "Acts/Geometry/detail/TrackingVolume.ipp"
-#endif
-
 }  // namespace Acts
