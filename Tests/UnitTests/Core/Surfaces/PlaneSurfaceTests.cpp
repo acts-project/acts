@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -37,6 +38,7 @@
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 
@@ -272,16 +274,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 }
 
 BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
-  double shortHalfX{100.}, longHalfX{200.}, halfY{300.},
-      rotAngle{45. * (M_PI / 180)};
+  double shortHalfX{100.}, longHalfX{200.}, halfY{300.}, rotAngle{45._degree};
   std::shared_ptr<TrapezoidBounds> bounds =
       std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY, rotAngle);
 
   Vector2 edgePoint{longHalfX - 10., halfY};
 
-  BOOST_CHECK_EQUAL(bounds->inside(edgePoint, BoundaryCheck(true)), false);
-  BOOST_CHECK_EQUAL(
-      bounds->inside(Eigen::Rotation2D{-rotAngle} * edgePoint, BoundaryCheck(true)), true);
+  BOOST_CHECK(!bounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(bounds->inside(Eigen::Rotation2D{-rotAngle} * edgePoint,
+                             BoundaryCheck(true)));
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives
