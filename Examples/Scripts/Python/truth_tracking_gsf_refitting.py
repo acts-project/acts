@@ -38,8 +38,8 @@ gsfOptions = {
 s.addAlgorithm(
     acts.examples.RefittingAlgorithm(
         acts.logging.INFO,
-        inputTracks="kfTracks",
-        outputTracks="gsfTracks",
+        inputTracks="kf_tracks",
+        outputTracks="gsf_tracks",
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
 )
