@@ -191,7 +191,7 @@ struct Span {
   const_iterator cbegin() const { return ptr; }
   const_iterator cend() const { return ptr + S; }
 
-  auto operator[](std::size_t i) const { return ptr[i]; }
+  auto &operator[](std::size_t i) const { return ptr[i]; }
 };
 
 template <std::size_t Dim>
