@@ -237,7 +237,7 @@ struct BuildEdgesKDTree {
 
       Acts::RangeXD<Dim, float, Span> range;
       for (auto j = 0ul; j < Dim; ++j) {
-        range[j] = Acts::Range1D(self[j] - rVal, self[j] + rVal);
+        range[j] = Acts::Range1D<float>(self[j] - rVal, self[j] + rVal);
       }
 
       tree.rangeSearchMapDiscard(
