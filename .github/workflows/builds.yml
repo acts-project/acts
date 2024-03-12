@@ -431,7 +431,7 @@ jobs:
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-11
+    runs-on: macos-13
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
@@ -440,12 +440,15 @@ jobs:
           submodules: true
           lfs: true
 
+      - name: Print architecture
+        run: uname -p
+
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.32bca8c.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.80e4e05.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
           && /usr/local/acts/bin/python3.10 -m pip install pyyaml jinja2
 
