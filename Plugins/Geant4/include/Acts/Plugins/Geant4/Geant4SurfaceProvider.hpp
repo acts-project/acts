@@ -55,7 +55,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     /// Converted material thickness (< 0 indicates keeping original thickness)
     ActsScalar convertedMaterialThickness = -1;
 
-    /// Transformation to aplly to the
+    /// Transformation to apply to the
     /// G4World volume
     G4Transform3D worldTransform = G4Transform3D();
 
