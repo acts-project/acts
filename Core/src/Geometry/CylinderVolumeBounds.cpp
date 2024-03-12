@@ -62,7 +62,7 @@ CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
 
 std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
 
   Translation3 vMinZ(0., 0., -get(eHalfLengthZ));

@@ -31,8 +31,6 @@ struct OrientedSurface {
   Direction direction;
 };
 
-using OrientedSurfaces = std::vector<OrientedSurface>;
-
 // Planar definitions to help construct the boundary surfaces
 static const Transform3 s_planeXY = Transform3::Identity();
 static const Transform3 s_planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
@@ -105,7 +103,7 @@ class VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  virtual OrientedSurfaces orientedSurfaces(
+  virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
 
   /// Construct bounding box for this shape

@@ -63,9 +63,10 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
   return true;
 }
 
-Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
+std::vector<Acts::OrientedSurface>
+Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
 
   // approximate cog of the volume
   Vector3 cog(0, 0, 0);

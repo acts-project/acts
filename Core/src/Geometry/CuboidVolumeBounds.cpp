@@ -44,9 +44,9 @@ CuboidVolumeBounds& CuboidVolumeBounds::operator=(
   return *this;
 }
 
-Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
+std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
   // Face surfaces xy -------------------------------------
   //   (1) - at negative local z

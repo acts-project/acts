@@ -91,9 +91,9 @@ ConeVolumeBounds::ConeVolumeBounds(ActsScalar cylinderR, ActsScalar alpha,
   checkConsistency();
 }
 
-Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
+std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
 
   // Create an inner Cone

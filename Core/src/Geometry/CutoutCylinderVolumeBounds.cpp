@@ -48,9 +48,10 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
   return !insideRInner || !insideZInner;  // we are not, inside bounds
 }
 
-Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
+std::vector<Acts::OrientedSurface>
+Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
 
   if (get(eMinR) == 0.) {
     oSurfaces.resize(6);  // exactly six surfaces (no choke inner cover)

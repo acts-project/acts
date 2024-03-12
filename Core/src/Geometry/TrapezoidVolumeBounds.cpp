@@ -56,7 +56,7 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(ActsScalar minhalex,
 
 std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
 
   // Face surfaces xy
