@@ -111,10 +111,10 @@ auto gctx = Acts::GeometryContext();
 auto [physWorld, names] = ConstructGeant4World();
 
 BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
-    /// Read the gdml file and get the world volume
-    G4GDMLParser parser;
-    parser.Read(gdmlPath.string(), false);
-    auto world = parser.GetWorldVolume();
+  /// Read the gdml file and get the world volume
+  G4GDMLParser parser;
+  parser.Read(gdmlPath.string(), false);
+  auto world = parser.GetWorldVolume();
 
   // Default template parameters are fine
   // when using names as identifiers
@@ -192,10 +192,10 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
-    /// Read the gdml file and get the world volume
-    G4GDMLParser parser;
-    parser.Read(gdmlPath.string(), false);
-    auto world = parser.GetWorldVolume();
+  /// Read the gdml file and get the world volume
+  G4GDMLParser parser;
+  parser.Read(gdmlPath.string(), false);
+  auto world = parser.GetWorldVolume();
 
   // 1D selection -- select only the second row
   auto sp1DCfg = Acts::Experimental::Geant4SurfaceProvider<1>::Config();
