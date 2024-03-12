@@ -67,12 +67,12 @@ class VertexPerformanceWriter final
     std::string treeName = "vertextree";
     /// File access mode.
     std::string fileMode = "RECREATE";
-    /// Minimum fraction of tracks matched between truth
-    /// and reco vertices to be matched for resolution plots.
-    double minTrackVtxMatchFraction = 0.5;
-    /// Minimum fraction of hits associated to particle to consider
+    /// Minimum fraction of track weight matched between truth
+    /// and reco vertices to consider as truth matched.
+    double vertexMatchThreshold = 0.7;
+    /// Minimum fraction of hits associated to particle to consider track
     /// as truth matched.
-    double truthMatchProbMin = 0.5;
+    double trackMatchThreshold = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
     /// minimum track weight for track to be considered as part of the fit
@@ -166,7 +166,7 @@ class VertexPerformanceWriter final
   std::vector<int> m_nTracksOnTruthVertex;
   std::vector<int> m_nTracksOnRecoVertex;
 
-  std::vector<double> m_trackVtxMatchFraction;
+  std::vector<double> m_truthVertexMatchRatio;
 
   /// Number of reconstructed vertices
   int m_nRecoVtx = -1;
