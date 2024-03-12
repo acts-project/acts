@@ -72,10 +72,10 @@ void Acts::DiscLayer::buildApproachDescriptor() {
             m_representingVolume->transform());
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Surface>> aSurfaces;
-    aSurfaces.push_back(bSurfaces.at(negativeFaceXY).surface);
-    aSurfaces.push_back(bSurfaces.at(positiveFaceXY).surface);
-    aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);
-    aSurfaces.push_back(bSurfaces.at(tubeOuterCover).surface);
+    aSurfaces.push_back(bSurfaces.at(negativeFaceXY).first);
+    aSurfaces.push_back(bSurfaces.at(positiveFaceXY).first);
+    aSurfaces.push_back(bSurfaces.at(tubeInnerCover).first);
+    aSurfaces.push_back(bSurfaces.at(tubeOuterCover).first);
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor =
         std::make_unique<const GenericApproachDescriptor>(std::move(aSurfaces));

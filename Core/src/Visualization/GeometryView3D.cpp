@@ -193,7 +193,7 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                       const ViewConfig& viewConfig) {
   auto bSurfaces = volume.volumeBounds().orientedSurfaces(volume.transform());
   for (const auto& bs : bSurfaces) {
-    drawSurface(helper, *bs.surface, gctx, transform, viewConfig);
+    drawSurface(helper, *bs.first, gctx, transform, viewConfig);
   }
 }
 
