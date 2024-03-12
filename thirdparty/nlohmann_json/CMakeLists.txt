@@ -4,6 +4,9 @@ include( FetchContent )
 # Tell the user what's happening.
 message( STATUS "Building nlohmann_json as part of the ACTS project" )
 
+if(POLICY CMP0135)
+   cmake_policy(SET CMP0135 NEW)
+endif()
 
 # Declare where to get VecMem from.
 set( ACTS_NLOHMANN_JSON_GIT_TAG "v3.10.5" CACHE STRING "Version of nlohmann_json to build" )
