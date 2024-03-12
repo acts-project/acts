@@ -156,7 +156,7 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(negSectorPlane), Direction::Positive});
+        OrientedSurface{std::move(negSectorPlane), Direction::AlongNormal});
 
     Transform3 posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
@@ -166,7 +166,7 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
 
     oSurfaces.push_back(
-        OrientedSurface{std::move(posSectorPlane), Direction::Negative});
+        OrientedSurface{std::move(posSectorPlane), Direction::OppositeNormal});
   }
   return oSurfaces;
 }
