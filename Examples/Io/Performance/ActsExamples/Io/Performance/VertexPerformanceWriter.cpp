@@ -19,6 +19,7 @@
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -40,18 +41,64 @@
 #include <TFile.h>
 #include <TTree.h>
 
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
-    const ActsExamples::VertexPerformanceWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+namespace {
+
+int getNumberOfReconstructableVertices(const SimParticleContainer& collection) {
+  // map for finding frequency
+  std::map<int, int> fmap;
+
+  std::vector<int> reconstructableTruthVertices;
+
+  // traverse the array for frequency
+  for (const auto& p : collection) {
+    int generation = p.particleId().generation();
+    if (generation > 0) {
+      // truthparticle from secondary vtx
+      continue;
+    }
+    int priVtxId = p.particleId().vertexPrimary();
+    fmap[priVtxId]++;
+  }
+
+  // iterate over the map
+  for (auto it : fmap) {
+    // Require at least 2 tracks
+    if (it.second > 1) {
+      reconstructableTruthVertices.push_back(it.first);
+    }
+  }
+
+  return reconstructableTruthVertices.size();
+}
+
+int getNumberOfTruePriVertices(const SimParticleContainer& collection) {
+  // Vector to store indices of all primary vertices
+  std::set<int> allPriVtxIds;
+  for (const auto& p : collection) {
+    int priVtxId = p.particleId().vertexPrimary();
+    int generation = p.particleId().generation();
+    if (generation > 0) {
+      // truthparticle from secondary vtx
+      continue;
+    }
+    // Insert to set, removing duplicates
+    allPriVtxIds.insert(priVtxId);
+  }
+  // Size of set corresponds to total number of primary vertices
+  return allPriVtxIds.size();
+}
+
+}  // namespace
+
+VertexPerformanceWriter::VertexPerformanceWriter(
+    const VertexPerformanceWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputVertices, "VertexPerformanceWriter", level),
       m_cfg(config) {
   if (m_cfg.filePath.empty()) {
@@ -92,93 +139,107 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  } else {
-    // I/O parameters.
-    m_outputTree->Branch("event_nr", &m_eventNr);
-
-    // Branches related to the 4D vertex position
-    m_outputTree->Branch("truthX", &m_truthX);
-    m_outputTree->Branch("truthY", &m_truthY);
-    m_outputTree->Branch("truthZ", &m_truthZ);
-    m_outputTree->Branch("truthT", &m_truthT);
-
-    m_outputTree->Branch("recoX", &m_recoX);
-    m_outputTree->Branch("recoY", &m_recoY);
-    m_outputTree->Branch("recoZ", &m_recoZ);
-    m_outputTree->Branch("recoT", &m_recoT);
-
-    m_outputTree->Branch("resX", &m_resX);
-    m_outputTree->Branch("resY", &m_resY);
-    m_outputTree->Branch("resZ", &m_resZ);
-    m_outputTree->Branch("resT", &m_resT);
-
-    m_outputTree->Branch("pullX", &m_pullX);
-    m_outputTree->Branch("pullY", &m_pullY);
-    m_outputTree->Branch("pullZ", &m_pullZ);
-    m_outputTree->Branch("pullT", &m_pullT);
-
-    m_outputTree->Branch("covXX", &m_covXX);
-    m_outputTree->Branch("covYY", &m_covYY);
-    m_outputTree->Branch("covZZ", &m_covZZ);
-    m_outputTree->Branch("covTT", &m_covTT);
-    m_outputTree->Branch("covXY", &m_covXY);
-    m_outputTree->Branch("covXZ", &m_covXZ);
-    m_outputTree->Branch("covXT", &m_covXT);
-    m_outputTree->Branch("covYZ", &m_covYZ);
-    m_outputTree->Branch("covYT", &m_covYT);
-    m_outputTree->Branch("covZT", &m_covZT);
-
-    m_outputTree->Branch("sumPt2", &m_sumPt2);
-
-    // Branches related to track momenta at vertex
-    m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
-    m_outputTree->Branch("trk_truthTheta", &m_truthTheta);
-    m_outputTree->Branch("trk_truthQOverP", &m_truthQOverP);
-
-    m_outputTree->Branch("trk_recoPhi", &m_recoPhi);
-    m_outputTree->Branch("trk_recoPhiFitted", &m_recoPhiFitted);
-    m_outputTree->Branch("trk_recoTheta", &m_recoTheta);
-    m_outputTree->Branch("trk_recoThetaFitted", &m_recoThetaFitted);
-    m_outputTree->Branch("trk_recoQOverP", &m_recoQOverP);
-    m_outputTree->Branch("trk_recoQOverPFitted", &m_recoQOverPFitted);
-
-    m_outputTree->Branch("trk_resPhi", &m_resPhi);
-    m_outputTree->Branch("trk_resPhiFitted", &m_resPhiFitted);
-    m_outputTree->Branch("trk_resTheta", &m_resTheta);
-    m_outputTree->Branch("trk_resThetaFitted", &m_resThetaFitted);
-    m_outputTree->Branch("trk_resQOverP", &m_resQOverP);
-    m_outputTree->Branch("trk_resQOverPFitted", &m_resQOverPFitted);
-    m_outputTree->Branch("trk_momOverlap", &m_momOverlap);
-    m_outputTree->Branch("trk_momOverlapFitted", &m_momOverlapFitted);
-
-    m_outputTree->Branch("trk_pullPhi", &m_pullPhi);
-    m_outputTree->Branch("trk_pullPhiFitted", &m_pullPhiFitted);
-    m_outputTree->Branch("trk_pullTheta", &m_pullTheta);
-    m_outputTree->Branch("trk_pullThetaFitted", &m_pullThetaFitted);
-    m_outputTree->Branch("trk_pullQOverP", &m_pullQOverP);
-    m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
-
-    m_outputTree->Branch("trk_weight", &m_trkWeight);
-
-    m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
-    m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
-
-    m_outputTree->Branch("trkVtxMatch", &m_trackVtxMatchFraction);
-
-    m_outputTree->Branch("nRecoVtx", &m_nRecoVtx);
-    m_outputTree->Branch("nTrueVtx", &m_nTrueVtx);
-    m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
-    m_outputTree->Branch("nVtxReconstructable", &m_nVtxReconstructable);
   }
+
+  m_outputTree->Branch("event_nr", &m_eventNr);
+
+  m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
+  m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
+
+  m_outputTree->Branch("recoX", &m_recoX);
+  m_outputTree->Branch("recoY", &m_recoY);
+  m_outputTree->Branch("recoZ", &m_recoZ);
+  m_outputTree->Branch("recoT", &m_recoT);
+
+  m_outputTree->Branch("covXX", &m_covXX);
+  m_outputTree->Branch("covYY", &m_covYY);
+  m_outputTree->Branch("covZZ", &m_covZZ);
+  m_outputTree->Branch("covTT", &m_covTT);
+  m_outputTree->Branch("covXY", &m_covXY);
+  m_outputTree->Branch("covXZ", &m_covXZ);
+  m_outputTree->Branch("covXT", &m_covXT);
+  m_outputTree->Branch("covYZ", &m_covYZ);
+  m_outputTree->Branch("covYT", &m_covYT);
+  m_outputTree->Branch("covZT", &m_covZT);
+
+  m_outputTree->Branch("seedX", &m_seedX);
+  m_outputTree->Branch("seedY", &m_seedY);
+  m_outputTree->Branch("seedZ", &m_seedZ);
+  m_outputTree->Branch("seedT", &m_seedT);
+
+  m_outputTree->Branch("truthX", &m_truthX);
+  m_outputTree->Branch("truthY", &m_truthY);
+  m_outputTree->Branch("truthZ", &m_truthZ);
+  m_outputTree->Branch("truthT", &m_truthT);
+
+  m_outputTree->Branch("resX", &m_resX);
+  m_outputTree->Branch("resY", &m_resY);
+  m_outputTree->Branch("resZ", &m_resZ);
+  m_outputTree->Branch("resT", &m_resT);
+
+  m_outputTree->Branch("resSeedZ", &m_resSeedZ);
+  m_outputTree->Branch("resSeedT", &m_resSeedT);
+
+  m_outputTree->Branch("pullX", &m_pullX);
+  m_outputTree->Branch("pullY", &m_pullY);
+  m_outputTree->Branch("pullZ", &m_pullZ);
+  m_outputTree->Branch("pullT", &m_pullT);
+
+  m_outputTree->Branch("sumPt2", &m_sumPt2);
+
+  m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
+  m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
+
+  m_outputTree->Branch("trkVtxMatch", &m_trackVtxMatchFraction);
+
+  m_outputTree->Branch("nRecoVtx", &m_nRecoVtx);
+  m_outputTree->Branch("nTrueVtx", &m_nTrueVtx);
+  m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
+  m_outputTree->Branch("nVtxReconstructable", &m_nVtxReconstructable);
+
+  // Branches related to track momenta at vertex
+  m_outputTree->Branch("trk_weight", &m_trkWeight);
+
+  m_outputTree->Branch("trk_recoPhi", &m_recoPhi);
+  m_outputTree->Branch("trk_recoTheta", &m_recoTheta);
+  m_outputTree->Branch("trk_recoQOverP", &m_recoQOverP);
+
+  m_outputTree->Branch("trk_recoPhiFitted", &m_recoPhiFitted);
+  m_outputTree->Branch("trk_recoThetaFitted", &m_recoThetaFitted);
+  m_outputTree->Branch("trk_recoQOverPFitted", &m_recoQOverPFitted);
+
+  m_outputTree->Branch("trk_particleId", &m_trkParticleId);
+
+  m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
+  m_outputTree->Branch("trk_truthTheta", &m_truthTheta);
+  m_outputTree->Branch("trk_truthQOverP", &m_truthQOverP);
+
+  m_outputTree->Branch("trk_resPhi", &m_resPhi);
+  m_outputTree->Branch("trk_resTheta", &m_resTheta);
+  m_outputTree->Branch("trk_resQOverP", &m_resQOverP);
+  m_outputTree->Branch("trk_momOverlap", &m_momOverlap);
+
+  m_outputTree->Branch("trk_resPhiFitted", &m_resPhiFitted);
+  m_outputTree->Branch("trk_resThetaFitted", &m_resThetaFitted);
+  m_outputTree->Branch("trk_resQOverPFitted", &m_resQOverPFitted);
+  m_outputTree->Branch("trk_momOverlapFitted", &m_momOverlapFitted);
+
+  m_outputTree->Branch("trk_pullPhi", &m_pullPhi);
+  m_outputTree->Branch("trk_pullTheta", &m_pullTheta);
+  m_outputTree->Branch("trk_pullQOverP", &m_pullQOverP);
+
+  m_outputTree->Branch("trk_pullPhiFitted", &m_pullPhiFitted);
+  m_outputTree->Branch("trk_pullThetaFitted", &m_pullThetaFitted);
+  m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
 }
 
-ActsExamples::VertexPerformanceWriter::~VertexPerformanceWriter() {
+VertexPerformanceWriter::~VertexPerformanceWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::finalize() {
+ProcessCode VertexPerformanceWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -186,54 +247,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-int ActsExamples::VertexPerformanceWriter::getNumberOfReconstructableVertices(
-    const SimParticleContainer& collection) const {
-  // map for finding frequency
-  std::map<int, int> fmap;
-
-  std::vector<int> reconstructableTruthVertices;
-
-  // traverse the array for frequency
-  for (const auto& p : collection) {
-    int secVtxId = p.particleId().vertexSecondary();
-    if (secVtxId != 0) {
-      // truthparticle from secondary vtx
-      continue;
-    }
-    int priVtxId = p.particleId().vertexPrimary();
-    fmap[priVtxId]++;
-  }
-
-  // iterate over the map
-  for (auto it : fmap) {
-    // Require at least 2 tracks
-    if (it.second > 1) {
-      reconstructableTruthVertices.push_back(it.first);
-    }
-  }
-
-  return reconstructableTruthVertices.size();
-}
-
-int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
-    const SimParticleContainer& collection) const {
-  // Vector to store indices of all primary vertices
-  std::set<int> allPriVtxIds;
-  for (const auto& p : collection) {
-    int priVtxId = p.particleId().vertexPrimary();
-    int secVtxId = p.particleId().vertexSecondary();
-    if (secVtxId != 0) {
-      // truthparticle from secondary vtx
-      continue;
-    }
-    // Insert to set, removing duplicates
-    allPriVtxIds.insert(priVtxId);
-  }
-  // Size of set corresponds to total number of primary vertices
-  return allPriVtxIds.size();
-}
-
-ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
+ProcessCode VertexPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -396,7 +410,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // Containers for storing truth particles and truth vertices that contribute
     // to the reconstructed vertex
     SimParticleContainer particleAtVtx;
-    std::vector<int> contributingTruthVertices;
+    std::vector<SimBarcode> contributingTruthVertices;
 
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
@@ -418,8 +432,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             // the i-th track parameters
             const auto& particle = associatedTruthParticles[i];
             particleAtVtx.insert(particle);
-            int priVtxId = particle.particleId().vertexPrimary();
-            contributingTruthVertices.push_back(priVtxId);
+            SimBarcode vtxId =
+                particle.particleId().setParticle(0).setSubParticle(0);
+            contributingTruthVertices.push_back(vtxId);
             foundMatchingParams = true;
             break;
           }
@@ -430,30 +445,31 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }  // end loop tracksAtVtx
     } else {
       for (const auto& particle : allTruthParticles) {
-        int priVtxId = particle.particleId().vertexPrimary();
-        contributingTruthVertices.push_back(priVtxId);
+        SimBarcode vtxId =
+            particle.particleId().setParticle(0).setSubParticle(0);
+        contributingTruthVertices.push_back(vtxId);
       }
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<int, int> fmap;
-    for (int priVtxId : contributingTruthVertices) {
-      fmap[priVtxId]++;
+    std::map<SimBarcode, int> fmap;
+    for (const SimBarcode& vtxId : contributingTruthVertices) {
+      fmap[vtxId]++;
     }
     int maxOccurrence = -1;
-    int maxOccurrenceId = -1;
-    for (auto it : fmap) {
-      if (it.second > maxOccurrence) {
-        maxOccurrenceId = it.first;
-        maxOccurrence = it.second;
+    SimBarcode maxOccurrenceId = -1;
+    for (const auto& [vtxId, occurrence] : fmap) {
+      if (occurrence > maxOccurrence) {
+        maxOccurrenceId = vtxId;
+        maxOccurrence = occurrence;
       }
     }
 
     // Count number of reconstructible tracks on truth vertex
     int nTracksOnTruthVertex = 0;
     for (const auto& particle : associatedTruthParticles) {
-      int priVtxId = particle.particleId().vertexPrimary();
-      if (priVtxId == maxOccurrenceId) {
+      SimBarcode vtxId = particle.particleId().setParticle(0).setSubParticle(0);
+      if (vtxId == maxOccurrenceId) {
         ++nTracksOnTruthVertex;
       }
     }
@@ -475,9 +491,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       int count = 0;
       // Get references to inner vectors where all track variables corresponding
       // to the current vertex will be saved
-      auto& innerTruthPhi = m_truthPhi.emplace_back();
-      auto& innerTruthTheta = m_truthTheta.emplace_back();
-      auto& innerTruthQOverP = m_truthQOverP.emplace_back();
+
+      auto& innerTrkParticleId = m_trkParticleId.emplace_back();
+
+      auto& innerTrkWeight = m_trkWeight.emplace_back();
 
       auto& innerRecoPhi = m_recoPhi.emplace_back();
       auto& innerRecoTheta = m_recoTheta.emplace_back();
@@ -486,6 +503,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerRecoPhiFitted = m_recoPhiFitted.emplace_back();
       auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
       auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
+
+      auto& innerTruthPhi = m_truthPhi.emplace_back();
+      auto& innerTruthTheta = m_truthTheta.emplace_back();
+      auto& innerTruthQOverP = m_truthQOverP.emplace_back();
 
       auto& innerResPhi = m_resPhi.emplace_back();
       auto& innerResTheta = m_resTheta.emplace_back();
@@ -506,18 +527,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
       auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
 
-      auto& innerTrkWeight = m_trkWeight.emplace_back();
-
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
-        int priVtxId = particle.particleId().vertexPrimary();
-        int secVtxId = particle.particleId().vertexSecondary();
+        SimBarcode vtxId =
+            particle.particleId().setParticle(0).setSubParticle(0);
 
-        if (secVtxId != 0) {
-          // truthparticle from secondary vtx
-          continue;
-        }
-        if (priVtxId == maxOccurrenceId) {
+        if (vtxId == maxOccurrenceId) {
           // Vertex found, fill variables
 
           // Helper function for computing the pull
@@ -545,21 +560,13 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Save reconstructed/true vertex position only in the first iteration
           // to avoid duplicates
           if (count == 0) {
-            m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
-            m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
-            m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
-            m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
+            m_vertexPrimary.push_back(vtxId.vertexPrimary());
+            m_vertexSecondary.push_back(vtxId.vertexSecondary());
 
             m_recoX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0]);
             m_recoY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1]);
             m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
             m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
-
-            const Acts::ActsVector<4> diffPos = vtx.fullPosition() - truePos;
-            m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
-            m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
-            m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
-            m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
 
             Acts::ActsScalar varX = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0);
@@ -569,15 +576,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreePos2);
             Acts::ActsScalar varTime = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime);
-            m_pullX.push_back(
-                pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
-            m_pullY.push_back(
-                pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
-            m_pullZ.push_back(
-                pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
-            m_pullT.push_back(
-                pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
-
             m_covXX.push_back(varX);
             m_covYY.push_back(varY);
             m_covZZ.push_back(varZ);
@@ -594,6 +592,40 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreeTime));
             m_covZT.push_back(vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreeTime));
+
+            m_seedX.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos0]);
+            m_seedY.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos1]);
+            m_seedZ.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos2]);
+            m_seedT.push_back(
+                vtx.fullSeedPosition()[Acts::FreeIndices::eFreeTime]);
+
+            m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
+            m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
+            m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
+            m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
+
+            const Acts::ActsVector<4> diffPos = vtx.fullPosition() - truePos;
+            m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
+            m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
+            m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
+            m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
+
+            const Acts::ActsVector<4> diffSeedPos =
+                vtx.fullSeedPosition() - truePos;
+            m_resSeedZ.push_back(diffSeedPos[Acts::FreeIndices::eFreePos2]);
+            m_resSeedT.push_back(diffSeedPos[Acts::FreeIndices::eFreeTime]);
+
+            m_pullX.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
+            m_pullY.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
+            m_pullZ.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
+            m_pullT.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
 
             double sumPt2 = 0;
             for (const auto& trk : tracksAtVtx) {
@@ -650,6 +682,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 *trk.originalParams.as<Acts::BoundTrackParameters>();
             if (boundParams.parameters() == params) {
               innerTrkWeight.push_back(trk.trackWeight);
+
+              innerTrkParticleId.push_back(particle.particleId().value());
+
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
               trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
@@ -735,22 +770,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // fill the variables
   m_outputTree->Fill();
 
-  m_truthX.clear();
-  m_truthY.clear();
-  m_truthZ.clear();
-  m_truthT.clear();
+  m_vertexPrimary.clear();
+  m_vertexSecondary.clear();
   m_recoX.clear();
   m_recoY.clear();
   m_recoZ.clear();
   m_recoT.clear();
-  m_resX.clear();
-  m_resY.clear();
-  m_resZ.clear();
-  m_resT.clear();
-  m_pullX.clear();
-  m_pullY.clear();
-  m_pullZ.clear();
-  m_pullT.clear();
   m_covXX.clear();
   m_covYY.clear();
   m_covZZ.clear();
@@ -761,37 +786,55 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_covYZ.clear();
   m_covYT.clear();
   m_covZT.clear();
+  m_seedX.clear();
+  m_seedY.clear();
+  m_seedZ.clear();
+  m_seedT.clear();
+  m_truthX.clear();
+  m_truthY.clear();
+  m_truthZ.clear();
+  m_truthT.clear();
+  m_resX.clear();
+  m_resY.clear();
+  m_resZ.clear();
+  m_resT.clear();
+  m_resSeedZ.clear();
+  m_resSeedT.clear();
+  m_pullX.clear();
+  m_pullY.clear();
+  m_pullZ.clear();
+  m_pullT.clear();
   m_sumPt2.clear();
+  m_nTracksOnTruthVertex.clear();
+  m_nTracksOnRecoVertex.clear();
+  m_trackVtxMatchFraction.clear();
+  m_trkParticleId.clear();
+  m_trkWeight.clear();
+  m_recoPhi.clear();
+  m_recoTheta.clear();
+  m_recoQOverP.clear();
+  m_recoPhiFitted.clear();
+  m_recoThetaFitted.clear();
+  m_recoQOverPFitted.clear();
   m_truthPhi.clear();
   m_truthTheta.clear();
   m_truthQOverP.clear();
-  m_recoPhi.clear();
-  m_recoPhiFitted.clear();
-  m_recoTheta.clear();
-  m_recoThetaFitted.clear();
-  m_recoQOverP.clear();
-  m_recoQOverPFitted.clear();
   m_resPhi.clear();
-  m_resPhiFitted.clear();
   m_resTheta.clear();
-  m_resThetaFitted.clear();
   m_resQOverP.clear();
-  m_resQOverPFitted.clear();
   m_momOverlap.clear();
+  m_resPhiFitted.clear();
+  m_resThetaFitted.clear();
+  m_resQOverPFitted.clear();
   m_momOverlapFitted.clear();
   m_pullPhi.clear();
-  m_pullPhiFitted.clear();
   m_pullTheta.clear();
-  m_pullThetaFitted.clear();
   m_pullQOverP.clear();
+  m_pullPhiFitted.clear();
+  m_pullThetaFitted.clear();
   m_pullQOverPFitted.clear();
-
-  m_trkWeight.clear();
-
-  m_nTracksOnTruthVertex.clear();
-  m_nTracksOnRecoVertex.clear();
-
-  m_trackVtxMatchFraction.clear();
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
