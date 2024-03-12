@@ -10,6 +10,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -50,24 +51,12 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param halfY half length Y - defined at x=0
   /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
   TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
-                  double rotAngle = 0.) noexcept(false)
-      : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
-        m_boundingBox(std::max(halfXnegY, halfXposY), halfY),
-        m_rotMat{Eigen::Rotation2D<double>(rotAngle)} {
-    checkConsistency();
-  }
+                  double rotAngle = 0.) noexcept(false);
 
   /// Constructor for symmetric Trapezoid - from fixed size array
   ///
   /// @param values the values to be stream in
-  TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false)
-      : m_values(values),
-        m_boundingBox(
-            std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
-            values[eHalfLengthY]),
-        m_rotMat{Eigen::Rotation2D<double>(values[eRotationAngle])} {
-    checkConsistency();
-  }
+  TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false);
 
   ~TrapezoidBounds() override;
 
@@ -144,7 +133,6 @@ class TrapezoidBounds : public PlanarBounds {
  private:
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
-  RotationMatrix2 m_rotMat{RotationMatrix2::Identity()};
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

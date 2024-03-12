@@ -13,6 +13,42 @@
 #include <iomanip>
 #include <iostream>
 
+/// Constructor for symmetric Trapezoid
+///
+/// @param halfXnegY minimal half length X, definition at negative Y
+/// @param halfXposY maximal half length X, definition at positive Y
+/// @param halfY half length Y - defined at x=0
+/// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
+Acts::TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
+                                       double halfY,
+                                       double rotAngle) noexcept(false)
+    : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
+      m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
+  if (rotAngle != 0.) {
+    m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
+  }
+
+  checkConsistency();
+}
+
+/// Constructor for symmetric Trapezoid - from fixed size array
+///
+/// @param values the values to be stream in
+Acts::TrapezoidBounds::TrapezoidBounds(
+    const std::array<double, eSize>& values) noexcept(false)
+    : m_values(values),
+      m_boundingBox(
+          std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
+          values[eHalfLengthY]) {
+  const double rotAngle = get(eRotationAngle);
+
+  if (rotAngle != 0.) {
+    m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
+  }
+
+  checkConsistency();
+}
+
 Acts::TrapezoidBounds::~TrapezoidBounds() = default;
 
 Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
@@ -21,17 +57,18 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
 
 bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
-  const Acts::Vector2 extPosition = m_rotMat * lposition;
+  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+
+  const Acts::Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
   const double x = extPosition[0];
   const double y = extPosition[1];
 
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
-  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-
   if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
-    double tolX = bcheck.tolerance()[eBoundLoc0];
-    double tolY = bcheck.tolerance()[eBoundLoc1];
+    const double tolX = bcheck.tolerance()[eBoundLoc0];
+    const double tolY = bcheck.tolerance()[eBoundLoc1];
 
     if (std::abs(y) - hlY > tolY) {
       // outside y range
@@ -58,10 +95,17 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
-  double minhx = get(TrapezoidBounds::eHalfLengthXnegY);
-  double maxhx = get(TrapezoidBounds::eHalfLengthXposY);
-  double hy = get(TrapezoidBounds::eHalfLengthY);
-  return {{-minhx, -hy}, {minhx, -hy}, {maxhx, hy}, {-maxhx, hy}};
+  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+
+  std::vector<Acts::Vector2> vertices = {
+      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+  for (auto& v : vertices) {
+    v = Eigen::Rotation2Dd(-rotAngle) * v;
+  }
+  return vertices;
 }
 
 const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
@@ -73,7 +117,7 @@ std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(7);
   sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
      << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
-     << get(eHalfLengthY) << ", " << get(eRotationAngle)<< ")";
-   sl << std::setprecision(-1);
+     << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
+  sl << std::setprecision(-1);
   return sl;
 }
