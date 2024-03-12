@@ -14,7 +14,7 @@
 #include <iostream>
 #include <utility>
 
-using namespace UnitLiterals;
+using namespace Acts::UnitLiterals;
 
 namespace Acts {
 
