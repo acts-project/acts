@@ -115,7 +115,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     auto srfTrf = transform * vol2srf.inverse();
     auto srf = Surface::makeShared<PlaneSurface>(srfTrf, polyBounds);
 
-    oSurfaces.push_back(OrientedSurface(std::move(srf), dir));
+    oSurfaces.push_back(OrientedSurface{std::move(srf), dir});
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);

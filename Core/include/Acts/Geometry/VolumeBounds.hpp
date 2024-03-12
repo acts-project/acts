@@ -26,7 +26,11 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
-using OrientedSurface = std::pair<std::shared_ptr<RegularSurface>, Direction>;
+struct OrientedSurface {
+  std::shared_ptr<RegularSurface> surface;
+  Direction direction;
+};
+
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces
