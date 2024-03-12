@@ -131,7 +131,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
         auto gapName = node.name + "_gap_" + std::to_string(igap);
         auto gapTransform = Transform3::Identity();
         gapTransform.rotate(node.transform.rotation());
-        gapTransform.translate(0.5 * (neg + negC));
+        gapTransform.pretranslate(0.5 * (neg + negC));
         auto gap = std::make_unique<Blueprint::Node>(
             gapName, gapTransform, VolumeBounds::eCylinder,
             std::vector<ActsScalar>{cInnerR, cOuterR, 0.5 * gapSpan});
@@ -148,7 +148,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
       auto gapName = node.name + "_gap_" + std::to_string(igap);
       auto gapTransform = Transform3::Identity();
       gapTransform.rotate(node.transform.rotation());
-      gapTransform.translate(0.5 * (negC + posC));
+      gapTransform.pretranslate(0.5 * (negC + posC));
       auto gap = std::make_unique<Blueprint::Node>(
           gapName, gapTransform, VolumeBounds::eCylinder,
           std::vector<ActsScalar>{cInnerR, cOuterR, 0.5 * gapSpan});
@@ -247,7 +247,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
       auto gapName = node.name + "_gap_" + std::to_string(igap);
       auto gapTransform = Transform3::Identity();
       gapTransform.rotate(node.transform.rotation());
-      gapTransform.translate(0.5 * (neg + negC));
+      gapTransform.pretranslate(0.5 * (neg + negC));
       std::vector<ActsScalar> gapBounds{0, 0, 0};
       gapBounds[binVal] = 0.5 * gapSpan;
       for (auto bv : allowedBinVals) {
@@ -270,7 +270,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
     auto gapName = node.name + "_gap_" + std::to_string(igap);
     auto gapTransform = Transform3::Identity();
     gapTransform.rotate(node.transform.rotation());
-    gapTransform.translate(0.5 * (negC + posC));
+    gapTransform.pretranslate(0.5 * (negC + posC));
     std::vector<ActsScalar> gapBounds{0, 0, 0};
     gapBounds[binVal] = 0.5 * gapSpan;
     for (auto bv : allowedBinVals) {
