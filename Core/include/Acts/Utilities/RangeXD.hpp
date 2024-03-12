@@ -46,7 +46,7 @@ class RangeXD {
   /// @brief The type used to describe coordinates in our range
   using coordinate_t = Vector<Type, Dims>;
 
-  RangeXD() : m_minima{}, m_maxima{} {
+  RangeXD() {
     for (std::size_t i = 0; i < Dims; ++i) {
       min(i) = std::numeric_limits<Type>::lowest();
       max(i) = std::numeric_limits<Type>::max();
