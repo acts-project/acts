@@ -29,7 +29,6 @@ from acts.examples.reconstruction import (
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
-import acts.examples.edm4hep
 
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
 
@@ -86,6 +85,7 @@ s = acts.examples.Sequencer(
 )
 
 if args["edm4hep"]:
+    import acts.examples.edm4hep
     edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
         inputPath=str(args["edm4hep"]),
         inputSimHits=[
