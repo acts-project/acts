@@ -10,7 +10,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
-#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -134,24 +133,11 @@ class TrapezoidBounds : public PlanarBounds {
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
 
+  void rotateBoundingBox() noexcept(false);
+
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> TrapezoidBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void TrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) <= 0. || get(eHalfLengthXposY) <= 0.) {
-    throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
-  }
-  if (get(eHalfLengthY) <= 0.) {
-    throw std::invalid_argument("TrapezoidBounds: invalid local y setup");
-  }
-}
 
 }  // namespace Acts

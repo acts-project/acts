@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -24,10 +25,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
                                        double rotAngle) noexcept(false)
     : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
       m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
-  if (rotAngle != 0.) {
-    m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
-  }
-
+  rotateBoundingBox();
   checkConsistency();
 }
 
@@ -40,12 +38,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(
       m_boundingBox(
           std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
           values[eHalfLengthY]) {
-  const double rotAngle = get(eRotationAngle);
-
-  if (rotAngle != 0.) {
-    m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
-  }
-
+  rotateBoundingBox();
   checkConsistency();
 }
 
@@ -120,4 +113,27 @@ std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
      << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+std::vector<double> Acts::TrapezoidBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void Acts::TrapezoidBounds::rotateBoundingBox() noexcept(false) {
+  const double rotAngle = get(eRotationAngle);
+
+  if (rotAngle != 0.) {
+    m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
+  }
+}
+
+void Acts::TrapezoidBounds::checkConsistency() noexcept(false) {
+  if (get(eHalfLengthXnegY) <= 0. || get(eHalfLengthXposY) <= 0.) {
+    throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
+  }
+  if (get(eHalfLengthY) <= 0.) {
+    throw std::invalid_argument("TrapezoidBounds: invalid local y setup");
+  }
 }
