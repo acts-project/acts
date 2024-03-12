@@ -10,12 +10,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <limits>
 #include <sstream>
 #include <string>
-
-// @TODO: Replace with std::span once available
-#include <boost/core/span.hpp>
 
 namespace Acts {
 /// @brief An orthogonal range in an arbitrary number of dimensions
@@ -30,6 +28,20 @@ namespace Acts {
 template <std::size_t Dims, typename Type,
           template <typename, std::size_t> typename Vector = std::array>
 class RangeXD {
+ private:
+  // @TODO: Replace with std::span or boost::span once available
+  template <typename, std::size_t>
+  struct SingleElementContainer {
+    Type* element;
+
+    Type& operator[](std::size_t i) {
+      (void)i;
+      assert(i == 0);
+
+      return *element;
+    }
+  };
+
  public:
   /// @brief The type used to describe coordinates in our range
   using coordinate_t = Vector<Type, Dims>;
@@ -64,8 +76,8 @@ class RangeXD {
 
   /// @brief Determine whether this range is degenerate
   ///
-  /// A degenerate multi-dimensional range has no volume and cannot contain any
-  /// values. This is the case if any of its dimensions are degenerate.
+  /// A degenerate multi-dimensional range has no volume and cannot contain
+  /// any values. This is the case if any of its dimensions are degenerate.
   ///
   /// @return true The range is degenerate
   /// @return false The range is not degenerate
@@ -101,9 +113,8 @@ class RangeXD {
   ///
   /// @param i The index of the dimension to access
   /// @return A reference to the dimension contained in this range
-  RangeXD<1, Type, boost::span> operator[](const std::size_t& i) {
-    return RangeXD<1, Type, boost::span>{boost::span<Type, 1>{&min(i), 1},
-                                         boost::span<Type, 1>{&max(i), 1}};
+  RangeXD<1, Type, SingleElementContainer> operator[](const std::size_t& i) {
+    return RangeXD<1, Type, SingleElementContainer>{{&min(i)}, {&max(i)}};
   }
 
   /// @brief Access one of the dimensional ranges of the volume
@@ -300,8 +311,8 @@ class RangeXD {
   ///
   /// Shrink a range by increasing the minimum value as well as decreasing the
   /// maximum value. If either of the values are already smaller or larger
-  /// (respectively) than the proposed values, then that particular boundary of
-  /// the interval is not shrunk.
+  /// (respectively) than the proposed values, then that particular boundary
+  /// of the interval is not shrunk.
   ///
   /// @note After this operation, the range is always equal to or smaller than
   /// [min, max].
@@ -338,8 +349,8 @@ class RangeXD {
   ///
   /// Expand a range by decreasing the minimum value as well as increasing the
   /// maximum value. If either of the values are already larger or smaller
-  /// (respectively) than the proposed values, then that particular boundary of
-  /// the interval is not expanded.
+  /// (respectively) than the proposed values, then that particular boundary
+  /// of the interval is not expanded.
   ///
   /// @note After this operation, the range is always equal to or larger than
   /// [min, max].
@@ -442,8 +453,8 @@ class RangeXD {
   ///
   /// Expand a range by decreasing the minimum value as well as increasing the
   /// maximum value. If either of the values are already larger or smaller
-  /// (respectively) than the proposed values, then that particular boundary of
-  /// the interval is not expanded.
+  /// (respectively) than the proposed values, then that particular boundary
+  /// of the interval is not expanded.
   ///
   /// @note After this operation, the range is always equal to or larger than
   /// [min, max].
@@ -484,8 +495,8 @@ class RangeXD {
   ///
   /// Shrink a range by increasing the minimum value as well as decreasing the
   /// maximum value. If either of the values are already smaller or larger
-  /// (respectively) than the proposed values, then that particular boundary of
-  /// the interval is not shrunk.
+  /// (respectively) than the proposed values, then that particular boundary
+  /// of the interval is not shrunk.
   ///
   /// @note After this operation, the range is always equal to or smaller than
   /// [min, max].
