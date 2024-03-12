@@ -133,19 +133,21 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
-  // corresponds to a p-value of 0.92 using `chi2(x=5,ndf=2)`
+  // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
   finderConfig.tracksMaxSignificance = 5;
   // This should be used consistently with and without time
   finderConfig.doFullSplitting = false;
-  // corresponds to a p-value of 0.92 using `chi2(x=3,ndf=1)`
+  // 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
   finderConfig.maxMergeVertexSignificance = 3;
   if (m_cfg.useTime) {
     // When using time, we have an extra contribution to the chi2 by the time
     // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
     // maximum chi2 that a track can have to be associated with a vertex).
     // Using the same p-value for 3 dof instead of 2.
+    // 6.7 corresponds to a p-value of ~0.92 using `chi2(x=6.7,ndf=3)`
     finderConfig.tracksMaxSignificance = 6.7;
     // Using the same p-value for 2 dof instead of 1.
+    // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
     finderConfig.maxMergeVertexSignificance = 5;
   }
   finderConfig.extractParameters
