@@ -32,6 +32,10 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 
 // @TODO: Add TrackingVolume tests
 
+BOOST_AUTO_TEST_CASE(placeholder) {
+  BOOST_CHECK(true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
