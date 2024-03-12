@@ -26,8 +26,6 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
-
 using OrientedSurface = std::pair<std::shared_ptr<RegularSurface>, Direction>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
