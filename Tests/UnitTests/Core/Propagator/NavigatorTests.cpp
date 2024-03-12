@@ -50,8 +50,6 @@ class Layer;
 struct FreeToBoundCorrection;
 }  // namespace Acts
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
@@ -159,9 +157,9 @@ struct PropagatorState {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(State& state, double stepSize,
-                     ConstrainedStep::Type stype = ConstrainedStep::actor,
-                     bool release = true) const {
+    void updateStepSize(State& state, double stepSize,
+                        ConstrainedStep::Type stype,
+                        bool release = true) const {
       state.previousStepSize = state.stepSize.value();
       state.stepSize.update(stepSize, stype, release);
     }
@@ -170,8 +168,8 @@ struct PropagatorState {
       return state.stepSize.value(stype);
     }
 
-    void releaseStepSize(State& state) const {
-      state.stepSize.release(ConstrainedStep::actor);
+    void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+      state.stepSize.release(stype);
     }
 
     std::string outputStepSize(const State& state) const {
@@ -234,8 +232,8 @@ struct PropagatorState {
     bool debug = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    std::size_t debugPfxWidth = 30;
+    std::size_t debugMsgWidth = 50;
 
     Direction direction = Direction::Forward;
 
@@ -284,8 +282,9 @@ void step(stepper_state_t& sstate) {
 /// @param [in] navLay Number of navigation layers
 /// @param [in] navBound Number of navigation boundaries
 /// @param [in] extSurf Number of external surfaces
-bool testNavigatorStateVectors(Navigator::State& state, size_t navSurf,
-                               size_t navLay, size_t navBound, size_t extSurf) {
+bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
+                               std::size_t navLay, std::size_t navBound,
+                               std::size_t extSurf) {
   return ((state.navSurfaces.size() == navSurf) &&
           (state.navLayers.size() == navLay) &&
           (state.navBoundaries.size() == navBound) &&
@@ -459,15 +458,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navCfg.resolvePassive = false;
   Navigator navigator{navCfg};
 
-  // create a navigator for the Bounding Volume Hierarchy test
-  CubicBVHTrackingGeometry grid(20, 1000, 5);
-  Navigator::Config bvhNavCfg;
-  bvhNavCfg.trackingGeometry = grid.trackingGeometry;
-  bvhNavCfg.resolveSensitive = true;
-  bvhNavCfg.resolveMaterial = true;
-  bvhNavCfg.resolvePassive = false;
-  Navigator BVHNavigator{bvhNavCfg};
-
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
@@ -507,9 +497,9 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // A layer has been found
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The index should points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().position());
+  double beamPipeR = perp(state.navigation.navLayer().first.position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -533,7 +523,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The layer number has not changed
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
   // The index still points to the begin
-  BOOST_CHECK(state.navigation.navLayerIndex == 0);
+  BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
@@ -576,7 +566,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on first layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (5-9) re-entering navigator:
     // POST STEP
@@ -608,7 +598,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 5; ++isf) {
+  for (std::size_t isf = 0; isf < 5; ++isf) {
     step(state.stepping);
     // (11-15) re-entering navigator:
     // POST STEP
@@ -640,7 +630,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on third layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (17-19) re-entering navigator:
     // POST STEP
@@ -672,7 +662,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // Step through the surfaces on second layer
-  for (size_t isf = 0; isf < 3; ++isf) {
+  for (std::size_t isf = 0; isf < 3; ++isf) {
     step(state.stepping);
     // (21-23) re-entering navigator:
     // POST STEP
@@ -702,6 +692,17 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     std::cout << state.options.debugString << std::endl;
     state.options.debugString = "";
   }
+}
+
+BOOST_AUTO_TEST_CASE(Navigator_target_methods_BVH) {
+  // create a navigator for the Bounding Volume Hierarchy test
+  CubicBVHTrackingGeometry grid(20, 1000, 5);
+  Navigator::Config bvhNavCfg;
+  bvhNavCfg.trackingGeometry = grid.trackingGeometry;
+  bvhNavCfg.resolveSensitive = true;
+  bvhNavCfg.resolveMaterial = true;
+  bvhNavCfg.resolvePassive = false;
+  Navigator bvhNavigator{bvhNavCfg};
 
   // test the navigation in a bounding volume hierarchy
   // ----------------------------------------------
@@ -711,37 +712,37 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   }
 
   // position and direction vector
-  Vector4 BVHPosition4(0., 0., 0, 0);
-  Vector3 BVHMomentum(1., 1., 0.);
+  Vector4 bvhPosition4(0., 0., 0, 0);
+  Vector3 bvhMomentum(1., 1., 0.);
 
   // the propagator cache
-  PropagatorState BVHState;
-  BVHState.options.debug = debug;
+  PropagatorState bvhState;
+  bvhState.options.debug = debug;
 
   // the stepper cache
-  BVHState.stepping.pos4 = BVHPosition4;
-  BVHState.stepping.dir = BVHMomentum.normalized();
+  bvhState.stepping.pos4 = bvhPosition4;
+  bvhState.stepping.dir = bvhMomentum.normalized();
 
   // Stepper
-  PropagatorState::Stepper BVHStepper;
+  PropagatorState::Stepper bvhStepper;
 
-  BVHNavigator.initialize(BVHState, BVHStepper);
+  bvhNavigator.initialize(bvhState, bvhStepper);
 
   // Check that the currentVolume is set
-  BOOST_CHECK_NE(BVHState.navigation.currentVolume, nullptr);
+  BOOST_CHECK_NE(bvhState.navigation.currentVolume, nullptr);
   // Check that the currentVolume is the startVolume
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentVolume,
-                    BVHState.navigation.startVolume);
+  BOOST_CHECK_EQUAL(bvhState.navigation.currentVolume,
+                    bvhState.navigation.startVolume);
   // Check that the currentSurface is reset to:
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(bvhState.navigation.currentSurface, nullptr);
   // No layer has been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
+  BOOST_CHECK_EQUAL(bvhState.navigation.navLayers.size(), 0u);
   // ACTORS-ABORTERS-TARGET
-  navigator.preStep(BVHState, BVHStepper);
+  bvhNavigator.preStep(bvhState, bvhStepper);
   // Still no layer
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
+  BOOST_CHECK_EQUAL(bvhState.navigation.navLayers.size(), 0u);
   // Surfaces have been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navSurfaces.size(), 42u);
+  BOOST_CHECK_EQUAL(bvhState.navigation.navSurfaces.size(), 42u);
 }
 
 }  // namespace Test

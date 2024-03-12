@@ -37,11 +37,7 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 GeometryContext tgContext = GeometryContext();
@@ -73,16 +69,16 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   // Check the 4 possible ways
   std::vector<std::string> axesTypes = {"XZ*", "xZ*", "xz*", "Xz*"};
 
-  size_t itrd = 0;
+  std::size_t itrd = 0;
   for (const auto &axes : axesTypes) {
     auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
         *vol->GetShape(), *gGeoIdentity, axes, 1);
-    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_REQUIRE_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
     CHECK_CLOSE_ABS(thickness, 2 * ht, s_epsilon);
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
-    BOOST_CHECK_NE(bounds, nullptr);
+    BOOST_REQUIRE_NE(bounds, nullptr);
     double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
     double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
     double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
@@ -140,16 +136,16 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   // Check the 4 possible ways
   std::vector<std::string> axesTypes = {"YZ*", "yZ*", "yz*", "Yz*"};
 
-  size_t itrd = 0;
+  std::size_t itrd = 0;
   for (const auto &axes : axesTypes) {
     auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
         *vol->GetShape(), *gGeoIdentity, axes, 1);
-    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_REQUIRE_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
     CHECK_CLOSE_ABS(thickness, 2 * ht, s_epsilon);
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
-    BOOST_CHECK_NE(bounds, nullptr);
+    BOOST_REQUIRE_NE(bounds, nullptr);
     double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
     double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
     double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
@@ -185,5 +181,4 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
 }
 
 }  // namespace Test
-
 }  // namespace Acts

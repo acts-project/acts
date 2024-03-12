@@ -38,14 +38,10 @@
 #include <string>
 #include <utility>
 
-namespace utf = boost::unit_test;
-namespace tt = boost::test_tools;
-
 namespace Acts {
 class AssertionFailureException;
 
 namespace Test {
-// using boost::test_tools::output_test_stream;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
@@ -191,7 +187,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   double projected3DMomentum = std::sqrt(3.) * 1.e6;
   Vector3 momentum{projected3DMomentum, projected3DMomentum,
                    projected3DMomentum};
-  Vector3 ignoredPosition{1.1, 2.2, 3.3};
+  Vector3 ignoredPosition = discSurfaceObject->center(tgContext);
   CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(tgContext, ignoredPosition,
                                                     momentum.normalized()),
                   std::sqrt(3), 0.01);

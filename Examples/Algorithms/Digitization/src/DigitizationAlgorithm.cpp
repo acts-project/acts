@@ -80,7 +80,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   // Create the digitizers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
 
-  for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
+  for (std::size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
     GeometricConfig geoCfg;
     Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
 
@@ -151,7 +151,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   // Some statistics
-  size_t skippedHits = 0;
+  std::size_t skippedHits = 0;
 
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(simHits)) {
@@ -205,16 +205,20 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               ACTS_VERBOSE("Configured to geometric digitize "
                            << digitizer.geometric.indices.size()
                            << " parameters.");
-              auto channels = channelizing(digitizer.geometric, simHit,
-                                           *surfacePtr, ctx.geoContext, rng);
-              if (channels.empty()) {
+              const auto& cfg = digitizer.geometric;
+              Acts::Vector3 driftDir = cfg.drift(simHit.position(), rng);
+              auto channelsRes = m_channelizer.channelize(
+                  simHit, *surfacePtr, ctx.geoContext, driftDir,
+                  cfg.segmentation, cfg.thickness);
+              if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this hit.")
                 continue;
               }
-              ACTS_VERBOSE("Activated " << channels.size()
+              ACTS_VERBOSE("Activated " << channelsRes->size()
                                         << " channels for this hit.");
-              dParameters = localParameters(digitizer.geometric, channels, rng);
+              dParameters =
+                  localParameters(digitizer.geometric, *channelsRes, rng);
             }
 
             // Smearing part - (optionally) rest
@@ -292,30 +296,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-std::vector<ActsFatras::Channelizer::ChannelSegment>
-ActsExamples::DigitizationAlgorithm::channelizing(
-    const GeometricConfig& geoCfg, const SimHit& hit,
-    const Acts::Surface& surface, const Acts::GeometryContext& gctx,
-    RandomEngine& rng) const {
-  Acts::Vector3 driftDir = geoCfg.drift(hit.position(), rng);
-
-  auto driftedSegment =
-      m_surfaceDrift.toReadout(gctx, surface, geoCfg.thickness, hit.position(),
-                               hit.direction(), driftDir);
-  auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
-  if (maskedSegmentRes.ok()) {
-    auto maskedSegment = maskedSegmentRes.value();
-    // Now Channelize
-    return m_channelizer.segments(gctx, surface, geoCfg.segmentation,
-                                  maskedSegment);
-  }
-  return {};
-}
-
 ActsExamples::DigitizedParameters
 ActsExamples::DigitizationAlgorithm::localParameters(
     const GeometricConfig& geoCfg,
-    const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
+    const std::vector<ActsFatras::Segmentizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
@@ -323,10 +307,10 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
   Acts::ActsScalar totalWeight = 0.;
   Acts::Vector2 m(0., 0.);
-  size_t b0min = SIZE_MAX;
-  size_t b0max = 0;
-  size_t b1min = SIZE_MAX;
-  size_t b1max = 0;
+  std::size_t b0min = SIZE_MAX;
+  std::size_t b0max = 0;
+  std::size_t b1min = SIZE_MAX;
+  std::size_t b1max = 0;
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
@@ -334,8 +318,8 @@ ActsExamples::DigitizationAlgorithm::localParameters(
         geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
     if (geoCfg.digital || charge > geoCfg.threshold) {
       totalWeight += charge;
-      size_t b0 = bin[0];
-      size_t b1 = bin[1];
+      std::size_t b0 = bin[0];
+      std::size_t b1 = bin[1];
       m += Acts::Vector2(charge * binningData[0].center(b0),
                          charge * binningData[1].center(b1));
       b0min = std::min(b0min, b0);
@@ -355,8 +339,8 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     for (auto idx : dParameters.indices) {
       dParameters.values.push_back(m[idx]);
     }
-    size_t size0 = static_cast<size_t>(b0max - b0min + 1);
-    size_t size1 = static_cast<size_t>(b1max - b1min + 1);
+    std::size_t size0 = static_cast<std::size_t>(b0max - b0min + 1);
+    std::size_t size1 = static_cast<std::size_t>(b1max - b1min + 1);
     auto variances = geoCfg.variances(size0, size1, rng);
     if (variances.size() == dParameters.indices.size()) {
       dParameters.variances = variances;
@@ -366,11 +350,11 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     }
 
     if (dParameters.variances[0] == -1) {
-      size_t ictr = b0min + size0 / 2;
+      std::size_t ictr = b0min + size0 / 2;
       dParameters.variances[0] = std::pow(binningData[0].width(ictr), 2) / 12.0;
     }
     if (dParameters.variances[1] == -1) {
-      size_t ictr = b1min + size1 / 2;
+      std::size_t ictr = b1min + size1 / 2;
       dParameters.variances[1] = std::pow(binningData[1].width(ictr), 2) / 12.0;
     }
 

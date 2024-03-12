@@ -27,11 +27,11 @@ template <class T, class Tuple>
 struct TupleIndexOf;
 template <class T, class... Types>
 struct TupleIndexOf<T, std::tuple<T, Types...>> {
-  static constexpr size_t value = 0u;
+  static constexpr std::size_t value = 0u;
 };
 template <class T, class U, class... Types>
 struct TupleIndexOf<T, std::tuple<U, Types...>> {
-  static constexpr size_t value =
+  static constexpr std::size_t value =
       1u + TupleIndexOf<T, std::tuple<Types...>>::value;
 };
 
@@ -53,7 +53,7 @@ struct TupleIndexOf<T, std::tuple<U, Types...>> {
 //     -> TupleFilterImpl<..., kCounter=0, 0, 1, 3> // terminate
 //
 template <template <typename> typename predicate_t, typename tuple_t,
-          size_t kCounter, size_t... kIndices>
+          std::size_t kCounter, std::size_t... kIndices>
 struct TupleFilterImpl {
   static constexpr auto kIndex = kCounter - 1u;
   static constexpr bool kElementSelection =
@@ -69,7 +69,7 @@ struct TupleFilterImpl {
       std::conditional_t<kElementSelection, SelectElement, SkipElement>;
 };
 template <template <typename> typename predicate_t, typename tuple_t,
-          size_t... kIndices>
+          std::size_t... kIndices>
 struct TupleFilterImpl<predicate_t, tuple_t, 0u, kIndices...> {
   using Type = std::index_sequence<kIndices...>;
 };
@@ -185,12 +185,12 @@ class InteractionList {
         std::numeric_limits<Particle::Scalar>::infinity();
     Particle::Scalar l0Limit =
         std::numeric_limits<Particle::Scalar>::infinity();
-    size_t x0Process = SIZE_MAX;
-    size_t l0Process = SIZE_MAX;
+    std::size_t x0Process = SIZE_MAX;
+    std::size_t l0Process = SIZE_MAX;
   };
 
   /// Disable a specific process identified by index.
-  void disable(size_t process) { m_mask.set(process); }
+  void disable(std::size_t process) { m_mask.set(process); }
   /// Disable a specific process identified by type.
   ///
   /// @note Disables only the first element, if multiple elements of the same
@@ -201,7 +201,7 @@ class InteractionList {
   }
 
   /// Access a specific process identified by index.
-  template <size_t kProcess>
+  template <std::size_t kProcess>
   std::tuple_element_t<kProcess, Processes>& get() {
     return std::get<kProcess>(m_processes);
   }
@@ -257,7 +257,8 @@ class InteractionList {
   /// `armPointLike(...)` call, but this is not enforced. How to select the
   /// correct process requires more information that is not available here.
   template <typename generator_t>
-  bool runPointLike(generator_t& rng, size_t processIndex, Particle& particle,
+  bool runPointLike(generator_t& rng, std::size_t processIndex,
+                    Particle& particle,
                     std::vector<Particle>& generated) const {
     return runPointLikeImpl(rng, processIndex, particle, generated,
                             PointLikeIndices());
@@ -271,7 +272,7 @@ class InteractionList {
   // for the `runContinuous` call, we need to iterate over all available
   // processes and apply the ones that implement the continuous process
   // interface. this is done using an index-based compile-time recursive call.
-  template <typename generator_t, size_t kI0, size_t... kIs>
+  template <typename generator_t, std::size_t kI0, std::size_t... kIs>
   bool runContinuousImpl(generator_t& rng, const Acts::MaterialSlab& slab,
                          Particle& particle, std::vector<Particle>& generated,
                          std::index_sequence<kI0, kIs...> /*indices*/) const {
@@ -296,7 +297,7 @@ class InteractionList {
   // for the `armPointLike` call, we need to iterate over all available
   // processes and select the ones that generate the smallest limits. this is
   // done using an index-based compile-time recursive call.
-  template <typename generator_t, size_t kI0, size_t... kIs>
+  template <typename generator_t, std::size_t kI0, std::size_t... kIs>
   void armPointLikeImpl(generator_t& rng, const Particle& particle,
                         Selection& selection,
                         std::index_sequence<kI0, kIs...> /*indices*/) const {
@@ -325,8 +326,8 @@ class InteractionList {
   // not select a tuple element with a runtime index, we need to iterate over
   // all processes with a compile-time recursive function until we reach the
   // requested one.
-  template <typename generator_t, size_t kI0, size_t... kIs>
-  bool runPointLikeImpl(generator_t& rng, size_t processIndex,
+  template <typename generator_t, std::size_t kI0, std::size_t... kIs>
+  bool runPointLikeImpl(generator_t& rng, std::size_t processIndex,
                         Particle& particle, std::vector<Particle>& generated,
                         std::index_sequence<kI0, kIs...> /*indices*/) const {
     if (kI0 == processIndex) {
@@ -342,7 +343,7 @@ class InteractionList {
                             std::index_sequence<kIs...>());
   }
   template <typename generator_t>
-  bool runPointLikeImpl(generator_t& /*rng*/, size_t /*processIndex*/,
+  bool runPointLikeImpl(generator_t& /*rng*/, std::size_t /*processIndex*/,
                         Particle& /*particle*/,
                         std::vector<Particle>& /*generated*/,
                         std::index_sequence<> /*indices*/) const {

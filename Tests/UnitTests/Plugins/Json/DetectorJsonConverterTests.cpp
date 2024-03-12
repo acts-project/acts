@@ -21,7 +21,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -84,6 +84,15 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolumeDetector) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volume};
 
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes) {
+    generator.assignGeometryId(cache, *vol);
+  }
+
   auto detector = Acts::Experimental::Detector::makeShared(
       "Detector", volumes, Acts::Experimental::tryRootVolumes());
 
@@ -113,6 +122,15 @@ BOOST_AUTO_TEST_CASE(SingleVolumeOneSurfaceDetector) {
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volume};
+
+  Acts::Experimental::GeometryIdGenerator::Config generatorConfig;
+  Acts::Experimental::GeometryIdGenerator generator(
+      generatorConfig,
+      Acts::getDefaultLogger("SequentialIdGenerator", Acts::Logging::VERBOSE));
+  auto cache = generator.generateCache();
+  for (auto& vol : volumes) {
+    generator.assignGeometryId(cache, *vol);
+  }
 
   auto detector = Acts::Experimental::Detector::makeShared(
       "Detector", volumes, Acts::Experimental::tryRootVolumes());
@@ -337,7 +355,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   auto detectorIn =
       Acts::DetectorJsonConverter::fromJson(tContext, jDetectorIn);
 
-  BOOST_CHECK(detectorIn->name() == detector->name());
+  BOOST_CHECK_EQUAL(detectorIn->name(), detector->name());
 
   auto jDetectorInOut =
       Acts::DetectorJsonConverter::toJson(tContext, *detectorIn);

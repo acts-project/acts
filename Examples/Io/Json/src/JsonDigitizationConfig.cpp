@@ -100,7 +100,7 @@ void from_json(
   } else if (sType == "Digitial") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Uniform(std::move(bd));
+    f = Digitization::Digital(std::move(bd));
   } else if (sType == "Exact") {
     f = Digitization::Exact{};
   } else {
@@ -125,9 +125,9 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::GeometricConfig& gdc) {
-  std::vector<size_t> indices;
+  std::vector<std::size_t> indices;
   for (const auto& idx : gdc.indices) {
-    indices.push_back(static_cast<size_t>(idx));
+    indices.push_back(static_cast<std::size_t>(idx));
   }
   j["indices"] = indices;
   j["segmentation"] = nlohmann::json(gdc.segmentation);

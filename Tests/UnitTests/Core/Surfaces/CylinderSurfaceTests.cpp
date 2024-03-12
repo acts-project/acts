@@ -38,12 +38,7 @@ namespace Acts {
 class AssertionFailureException;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -199,7 +194,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // And it's path should be further away then the primary solution
   double pn = sfIntersection[0].pathLength();
   double pa = sfIntersection[1].pathLength();
-  BOOST_CHECK(std::abs(pn) < std::abs(pa));
+  BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
   BOOST_CHECK_EQUAL(sfIntersection.object(), cylinderSurfaceObject.get());
 
   //

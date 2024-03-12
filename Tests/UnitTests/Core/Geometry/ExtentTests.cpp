@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   const auto& vHist = gExtHist.valueHistograms();
   auto xVals = vHist[binX];
 
-  BOOST_CHECK(xVals.size() == 6u);
+  BOOST_CHECK_EQUAL(xVals.size(), 6u);
   std::vector<ActsScalar> reference = {15_mm, 18_mm, 15_mm,
                                        15_mm, 18_mm, 15_mm};
   BOOST_CHECK(xVals == reference);
@@ -151,6 +151,33 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
   std::string tString = gExtConst.toString();
   BOOST_CHECK(!tString.empty());
+
+  // Check single vertex containment
+  Extent gExtVertexCheck;
+  gExtVertexCheck.set(binR, 0., 5.);
+  BOOST_CHECK(gExtVertexCheck.contains(Vector3(1., 0., 0.)));
+  BOOST_CHECK(!gExtVertexCheck.contains(Vector3(6., 0., 0.)));
+}
+
+// Test that the constrains() check advances when the extend() method
+// is used with a new binning type
+BOOST_AUTO_TEST_CASE(ProtoSupportCaseTests) {
+  std::vector<Vector3> vertices = {
+      Vector3(15_mm, -3_mm, -10_mm), Vector3(18_mm, 0_mm, -10_mm),
+      Vector3(15_mm, 3_mm, -10_mm),  Vector3(15_mm, -3_mm, 10_mm),
+      Vector3(18_mm, 0_mm, 10_mm),   Vector3(15_mm, 3_mm, 10_mm)};
+
+  Extent volumeExtent;
+  volumeExtent.set(binZ, -300_mm, 300_mm);
+
+  BOOST_CHECK(volumeExtent.constrains(binZ));
+  BOOST_CHECK(!volumeExtent.constrains(binR));
+
+  for (const auto& v : vertices) {
+    volumeExtent.extend(v, {binR});
+  }
+
+  BOOST_CHECK(volumeExtent.constrains(binR));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

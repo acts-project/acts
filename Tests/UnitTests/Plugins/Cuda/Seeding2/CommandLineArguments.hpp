@@ -22,7 +22,7 @@ struct CommandLineArguments {
   /// Run the seed finding using only the GPU implementation
   bool onlyGPU = false;
   /// The number of groups to process as a maximum
-  size_t groupsToIterate = 500;
+  std::size_t groupsToIterate = 500;
   /// Look for spacepoint duplicates in the received input file, and remove them
   bool filterDuplicates = false;
 
@@ -30,7 +30,7 @@ struct CommandLineArguments {
   int cudaDevice = 0;
   /// Memory to use on the CUDA device in megabytes (by default it's 80% of the
   /// available)
-  size_t cudaDeviceMemory = 0;
+  std::size_t cudaDeviceMemory = 0;
 
   /// Interpret the command line arguments of the test executable
   void interpret(int argc, char* argv[]);

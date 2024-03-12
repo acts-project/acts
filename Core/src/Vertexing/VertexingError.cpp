@@ -34,6 +34,14 @@ class VertexingErrorCategory : public std::error_category {
         return "Unable to find element.";
       case VertexingError::NoCovariance:
         return "No covariance provided.";
+      case VertexingError::SingularMatrix:
+        return "Encountered non-invertible matrix.";
+      case VertexingError::NonPositiveVariance:
+        return "Encountered negative or zero variance.";
+      case VertexingError::MatrixNotPositiveDefinite:
+        return "Encountered a matrix that is not positive definite.";
+      case VertexingError::InvalidInput:
+        return "Invalid input provided.";
       default:
         return "unknown";
     }

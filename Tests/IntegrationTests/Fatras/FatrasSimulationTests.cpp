@@ -209,7 +209,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
 
   // ensure simulated particle containers have consistent content
   BOOST_CHECK_EQUAL(simulatedInitial.size(), simulatedFinal.size());
-  for (size_t i = 0; i < simulatedInitial.size(); ++i) {
+  for (std::size_t i = 0; i < simulatedInitial.size(); ++i) {
     const auto& initialParticle = simulatedInitial[i];
     const auto& finalParticle = simulatedFinal[i];
     // particle identify should not change during simulation

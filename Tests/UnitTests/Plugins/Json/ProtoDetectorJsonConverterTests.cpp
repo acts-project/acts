@@ -506,7 +506,7 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   Acts::ProtoDetector detectorIn = jdet["detector"];
 
   // Let's compare
-  BOOST_CHECK(detector.name == detectorIn.name);
+  BOOST_CHECK_EQUAL(detector.name, detectorIn.name);
 
   const auto& world = detector.worldVolume;
   const auto& worldIn = detectorIn.worldVolume;

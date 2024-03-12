@@ -20,7 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -59,6 +59,10 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
     for (auto [ip, p] : Acts::enumerate(dVolume->portalPtrs())) {
       portalContainer[ip] = p;
     }
+
+    Acts::GeometryIdentifier geoID;
+    geoID.setVolume(1);
+    dVolume->assignGeometryId(geoID);
 
     return Acts::Experimental::DetectorComponent{
         {dVolume},
@@ -140,7 +144,7 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_test) {
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
 
   BOOST_CHECK_EQUAL(detector->name(), "TestDetector");
-  BOOST_CHECK(detector->rootVolumes().size() == 1);
+  BOOST_CHECK_EQUAL(detector->rootVolumes().size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorBuilder_testWithSurfaces) {
@@ -166,10 +170,10 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_testWithSurfaces) {
 
   auto detector = Acts::Experimental::DetectorBuilder(dCfg).construct(tContext);
   BOOST_CHECK_EQUAL(detector->name(), "TestDetectorWithSurfaces");
-  BOOST_CHECK(detector->volumes()[0]->surfaces()[0]->geometryId().sensitive() ==
-              1);
-  BOOST_CHECK(detector->volumes()[0]->surfaces()[1]->geometryId().sensitive() ==
-              2);
+  BOOST_CHECK_EQUAL(
+      detector->volumes()[0]->surfaces()[0]->geometryId().sensitive(), 1);
+  BOOST_CHECK_EQUAL(
+      detector->volumes()[0]->surfaces()[1]->geometryId().sensitive(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

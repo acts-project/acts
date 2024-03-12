@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
   AccumulatedSurfaceMaterial material2D{binUtility2D};
   auto accMat2D = material2D.accumulatedMaterial();
   BOOST_CHECK_EQUAL(accMat2D.size(), 20u);
-  for (size_t ib = 0; ib < accMat2D.size(); ++ib) {
+  for (std::size_t ib = 0; ib < accMat2D.size(); ++ib) {
     BOOST_CHECK_EQUAL(accMat2D[ib].size(), 10u);
   }
 }
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
   MaterialSlab two(mat, 2.);
 
   AccumulatedSurfaceMaterial material0D{};
-  const std::vector<std::array<size_t, 3>> bin;
+  const std::vector<std::array<std::size_t, 3>> bin;
   // assign 2 one steps
   material0D.accumulate(Vector2{0., 0.}, one);
   material0D.accumulate(Vector2{0., 0.}, one);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
   BinUtility binUtility2D(2, -1., 1., open, binX);
   binUtility2D += BinUtility(2, -1., 1., open, binY);
   AccumulatedSurfaceMaterial material2D{binUtility2D};
-  const std::vector<std::array<size_t, 3>> bin;
+  const std::vector<std::array<std::size_t, 3>> bin;
 
   // assign in the different bins
   // event 0
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_variance_0D) {
   MaterialSlab avg(matAvg, 1.);
 
   AccumulatedSurfaceMaterial material0D{};
-  const std::vector<std::array<size_t, 3>> bin;
+  const std::vector<std::array<std::size_t, 3>> bin;
   // assign 2 one steps
   material0D.accumulate(Vector2{0., 0.}, one);
   material0D.trackVariance(bin, avg);

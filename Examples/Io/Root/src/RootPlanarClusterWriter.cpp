@@ -58,7 +58,7 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   // Setup ROOT I/O
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
@@ -149,10 +149,10 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       Acts::Vector3 mom(1, 1, 1);
       // transform local into global position information
       Acts::Vector3 pos = surface.localToGlobal(ctx.geoContext, local, mom);
-      m_x = pos.x();
-      m_y = pos.y();
-      m_z = pos.z();
-      m_t = parameters[2] / Acts::UnitConstants::ns;
+      m_x = pos.x() / Acts::UnitConstants::mm;
+      m_y = pos.y() / Acts::UnitConstants::mm;
+      m_z = pos.z() / Acts::UnitConstants::mm;
+      m_t = parameters[2] / Acts::UnitConstants::mm;
       m_lx = local.x();
       m_ly = local.y();
       m_cov_lx = 0.;  // @todo fill in

@@ -55,7 +55,7 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
   sortedTracks.reserve(protoTracks.size());
   TrackHitList trackHitList;
 
-  for (size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
+  for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     const auto& protoTrack = protoTracks[itrack];
 
     ProtoTrack sortedProtoTrack;

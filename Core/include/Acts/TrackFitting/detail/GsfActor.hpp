@@ -20,6 +20,7 @@
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -55,7 +56,10 @@ struct GsfResult {
   std::vector<const Acts::Surface*> visitedSurfaces;
   std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
 
-  std::size_t nInvalidBetheHeitler = 0;
+  /// Statistics about material encounterings
+  Updatable<std::size_t> nInvalidBetheHeitler;
+  Updatable<double> maxPathXOverX0;
+  Updatable<double> sumPathXOverX0;
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
@@ -114,7 +118,7 @@ struct GsfActor {
     bool inReversePass = false;
 
     /// How to reduce the states that are stored in the multi trajectory
-    MixtureReductionMethod reductionMethod = MixtureReductionMethod::eMaxWeight;
+    ComponentMergeMethod mergeMethod = ComponentMergeMethod::eMaxWeight;
 
     const Logger* logger{nullptr};
 
@@ -229,6 +233,15 @@ struct GsfActor {
       return;
     }
 
+    // Update the counters. Note that this should be done before potential
+    // material interactions, because if this is our last measurement this would
+    // not influence the fit anymore.
+    if (haveMeasurement) {
+      result.maxPathXOverX0.update();
+      result.sumPathXOverX0.update();
+      result.nInvalidBetheHeitler.update();
+    }
+
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       cmp.singleStepper(stepper).transportCovarianceToBound(
@@ -286,7 +299,7 @@ struct GsfActor {
       componentCache.clear();
 
       convoluteComponents(state, stepper, navigator, tmpStates, componentCache,
-                          result.nInvalidBetheHeitler);
+                          result);
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -316,7 +329,8 @@ struct GsfActor {
     // Break the navigation if we found all measurements
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
-      navigator.targetReached(state.navigation, true);
+      ACTS_VERBOSE("Stop navigation because all measurements are found");
+      navigator.navigationBreak(state.navigation, true);
     }
   }
 
@@ -326,8 +340,9 @@ struct GsfActor {
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
                            std::vector<ComponentCache>& componentCache,
-                           std::size_t& nInvalidBetheHeitler) const {
+                           result_type& result) const {
     auto cmps = stepper.componentIterable(state.stepping);
+    double pathXOverX0 = 0.0;
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
@@ -335,18 +350,23 @@ struct GsfActor {
                                  proxy.filtered(), proxy.filteredCovariance(),
                                  stepper.particleHypothesis(state.stepping));
 
-      applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                        componentCache, nInvalidBetheHeitler);
+      pathXOverX0 +=
+          applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
+                            componentCache, result);
     }
+
+    // Store average material seen by the components
+    // Should not be too broadly distributed
+    result.sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
   }
 
   template <typename propagator_state_t, typename navigator_t>
-  void applyBetheHeitler(const propagator_state_t& state,
-                         const navigator_t& navigator,
-                         const BoundTrackParameters& old_bound,
-                         const double old_weight,
-                         std::vector<ComponentCache>& componentCaches,
-                         std::size_t& nInvalidBetheHeitler) const {
+  double applyBetheHeitler(const propagator_state_t& state,
+                           const navigator_t& navigator,
+                           const BoundTrackParameters& old_bound,
+                           const double old_weight,
+                           std::vector<ComponentCache>& componentCaches,
+                           result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
 
@@ -355,22 +375,25 @@ struct GsfActor {
         old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection = surface.pathCorrection(
+    const auto pathCorrection = surface.pathCorrection(
         state.stepping.geoContext,
         old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
+    const double pathXOverX0 = slab.thicknessInX0();
+    result.maxPathXOverX0.tmp() =
+        std::max(result.maxPathXOverX0.tmp(), pathXOverX0);
+
     // Emit a warning if the approximation is not valid for this x/x0
-    if (!m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
-      ++nInvalidBetheHeitler;
+    if (!m_cfg.bethe_heitler_approx->validXOverX0(pathXOverX0)) {
+      ++result.nInvalidBetheHeitler.tmp();
       ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
-          << slab.thicknessInX0() << " at surface " << surface.geometryId());
+          << pathXOverX0 << " at surface " << surface.geometryId());
     }
 
     // Get the mixture
-    const auto mixture =
-        m_cfg.bethe_heitler_approx->mixture(slab.thicknessInX0());
+    const auto mixture = m_cfg.bethe_heitler_approx->mixture(pathXOverX0);
 
     // Create all possible new components
     for (const auto& gaussian : mixture) {
@@ -422,6 +445,8 @@ struct GsfActor {
       // Set the remaining things and push to vector
       componentCaches.push_back({new_weight, new_pars, new_cov});
     }
+
+    return pathXOverX0;
   }
 
   /// Remove components with low weights and renormalize from the component
@@ -714,15 +739,15 @@ struct GsfActor {
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      auto [prtMean, prtCov] = reduceGaussianMixture(
-          tmpStates.tips, surface, m_cfg.reductionMethod,
-          PrtProjector{tmpStates.traj, tmpStates.weights});
+      auto [prtMean, prtCov] =
+          mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
+                               PrtProjector{tmpStates.traj, tmpStates.weights});
       proxy.predicted() = prtMean;
       proxy.predictedCovariance() = prtCov;
 
       if (isMeasurement) {
-        auto [fltMean, fltCov] = reduceGaussianMixture(
-            tmpStates.tips, surface, m_cfg.reductionMethod,
+        auto [fltMean, fltCov] = mergeGaussianMixture(
+            tmpStates.tips, surface, m_cfg.mergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
@@ -744,8 +769,8 @@ struct GsfActor {
               result.surfacesVisitedBwdAgain.push_back(&surface);
 
               if (trackState.hasSmoothed()) {
-                const auto [smtMean, smtCov] = reduceGaussianMixture(
-                    tmpStates.tips, surface, m_cfg.reductionMethod,
+                const auto [smtMean, smtCov] = mergeGaussianMixture(
+                    tmpStates.tips, surface, m_cfg.mergeMethod,
                     FltProjector{tmpStates.traj, tmpStates.weights});
 
                 trackState.smoothed() = smtMean;
@@ -766,7 +791,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
-    m_cfg.reductionMethod = options.stateReductionMethod;
+    m_cfg.mergeMethod = options.componentMergeMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
   }
 };

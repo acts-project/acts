@@ -54,7 +54,7 @@ On push, a CI job should run and create an additional commit on the `releases` b
 
 By convention, we assign all open PRs and issues to the `next` milestone. When a new release is cut, all closed issues and PRs are moved over to a dedicated milestone named after the next version number. To do this, go to the *Pull Requests* view on the main repository, and click *Milestones*:
 
-:::{image} /figures/release/milestones.png
+:::{image} figures/release/milestones.png
 :width: 300px
 :alt: The milestones button
 :::
@@ -63,13 +63,13 @@ First, create a new milestone here. Name it `vX.Y.Z`, corresponding to the next 
 
 Next, go back to the list of milestones and go to the `next` milestone, and click on *closed* to get to a list of all closed PRs and issues assigned to it:
 
-:::{image} /figures/release/next_milestone.png
+:::{image} figures/release/next_milestone.png
 :alt: The next milestone, which has a "closed" button
 :::
 
 You'll be taken to a list view which shows all closed PRs and issues assigned to the `next` milestone. On the top left there should be a checkbox allowing you to select all visible items:
 
-:::{image} /figures/release/select_all_closed.png
+:::{image} figures/release/select_all_closed.png
 :alt: Checkbox to select all visible PRs and issues.
 :width: 200px
 :::
@@ -79,7 +79,7 @@ You'll be taken to a list view which shows all closed PRs and issues assigned to
 
 Towards the right there's a button called *Milestone* which allows you to select a milestone to assign. Assign all closed items to the new milestone you created above.
 
-:::{image} /figures/release/milestone_drop.png
+:::{image} figures/release/milestone_drop.png
 :alt: Dropdown to assign the selected items to a new milestone
 :width: 300px
 :::

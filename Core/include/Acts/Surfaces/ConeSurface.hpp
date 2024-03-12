@@ -16,8 +16,11 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -39,10 +42,8 @@ namespace Acts {
 /// Propagations to a cone surface will be returned in
 /// curvilinear coordinates.
 
-class ConeSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+class ConeSurface : public RegularSurface {
+  friend class Surface;
 
  protected:
   /// Constructor form HepTransform and an opening angle
@@ -134,9 +135,6 @@ class ConeSurface : public Surface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector3& position) const final;
 
-  /// Normal vector return without argument
-  using Surface::normal;
-
   // Return method for the rotational symmetry axis
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -151,24 +149,26 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
+
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
+  using RegularSurface::normal;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -279,5 +279,7 @@ class ConeSurface : public Surface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, ConeSurface);
 
 }  // namespace Acts

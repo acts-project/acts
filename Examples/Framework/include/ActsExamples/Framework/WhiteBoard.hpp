@@ -64,7 +64,7 @@ class WhiteBoard {
   /// Find similar names for suggestions with levenshtein-distance
   std::vector<std::string_view> similarNames(const std::string_view& name,
                                              int distThreshold,
-                                             size_t maxNumber) const;
+                                             std::size_t maxNumber) const;
 
   // type-erased value holder for move-constructible types
   struct IHolder {
@@ -132,7 +132,7 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
     std::stringstream ss;
     if (!names.empty()) {
       ss << ", similar ones are: [ ";
-      for (size_t i = 0; i < std::min(3ul, names.size()); ++i) {
+      for (std::size_t i = 0; i < std::min(3ul, names.size()); ++i) {
         ss << "'" << names[i] << "' ";
       }
       ss << "]";

@@ -74,13 +74,15 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     // Check the validity of the intersection
     BOOST_CHECK(aIntersection[0]);
     // The status of this one should be on surface
-    BOOST_CHECK(aIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(aIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // The intersection is at 2 meter distance
     CHECK_CLOSE_ABS(aIntersection[0].pathLength(), -2_m, s_onSurfaceTolerance);
     // There MUST be a second solution
     BOOST_CHECK(aIntersection[1]);
     // The other intersection MUST be reachable
-    BOOST_CHECK(aIntersection[1].status() == Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(aIntersection[1].status(),
+                      Intersection3D::Status::onSurface);
 
     // Intersect from the center
     auto cIntersection =
@@ -89,14 +91,16 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     // Check the validity of the intersection
     BOOST_CHECK(cIntersection[0]);
     // The status of this one MUST be reachable
-    BOOST_CHECK(cIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // There MUST be a second solution
     BOOST_CHECK(cIntersection[1]);
     // The other intersection MUST be reachable
-    BOOST_CHECK(cIntersection[1].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cIntersection[1].status(),
+                      Intersection3D::Status::reachable);
     // There MUST be one forward one backwards solution
-    BOOST_CHECK(cIntersection[1].pathLength() * cIntersection[0].pathLength() <
-                0);
+    BOOST_CHECK_LT(
+        cIntersection[1].pathLength() * cIntersection[0].pathLength(), 0);
 
     // Intersect from outside where both intersections are reachable
     auto oIntersection = aCylinder->intersect(tgContext, outCylinder, alongX,
@@ -105,14 +109,16 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     // Check the validity of the intersection
     BOOST_CHECK(oIntersection[0]);
     // The status of this one MUST be reachable
-    BOOST_CHECK(oIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(oIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // There MUST be a second solution
     BOOST_CHECK(oIntersection[1]);
     // The other intersection MUST be reachable
-    BOOST_CHECK(oIntersection[1].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(oIntersection[1].status(),
+                      Intersection3D::Status::reachable);
     // There MUST be one forward one backwards solution
-    BOOST_CHECK(oIntersection[1].pathLength() * oIntersection[0].pathLength() >
-                0);
+    BOOST_CHECK_GT(
+        oIntersection[1].pathLength() * oIntersection[0].pathLength(), 0);
 
     // Intersection from outside without chance of hitting the cylinder
     auto iIntersection = aCylinder->intersect(tgContext, outCylinder, transXY,
@@ -128,29 +134,33 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     // Check the validity of the intersection
     BOOST_CHECK(eIntersection[0]);
     // This should be the positive one
-    BOOST_CHECK(eIntersection[0].pathLength() < 0.);
+    BOOST_CHECK_LT(eIntersection[0].pathLength(), 0.);
     // The status of this one should be reachable
-    BOOST_CHECK(eIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(eIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // There MUST be a second solution
     BOOST_CHECK(eIntersection[1]);
     // The other intersection MUST be reachable
-    BOOST_CHECK(eIntersection[1].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(eIntersection[1].status(),
+                      Intersection3D::Status::reachable);
     // And be the negative one
-    BOOST_CHECK(eIntersection[1].pathLength() > 0.);
+    BOOST_CHECK_GT(eIntersection[1].pathLength(), 0.);
 
     // Now re-do with boundary check
     eIntersection =
         aCylinder->intersect(tgContext, atEdge, transTZ, BoundaryCheck(true));
     // This should be the negative one
-    BOOST_CHECK(eIntersection[0].pathLength() < 0.);
+    BOOST_CHECK_LT(eIntersection[0].pathLength(), 0.);
     // The status of this one should be reachable
-    BOOST_CHECK(eIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(eIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // There MUST be a second solution
     BOOST_CHECK(!eIntersection[1]);
     // The other intersection MUST NOT be reachable
-    BOOST_CHECK(eIntersection[1].status() == Intersection3D::Status::missed);
+    BOOST_CHECK_EQUAL(eIntersection[1].status(),
+                      Intersection3D::Status::missed);
     // And be the positive one
-    BOOST_CHECK(eIntersection[1].pathLength() > 0.);
+    BOOST_CHECK_GT(eIntersection[1].pathLength(), 0.);
   };
 
   // In a nominal world
@@ -167,8 +177,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use
-    auto aCone =
-        Surface::makeShared<ConeSurface>(transform, alpha, BoundaryCheck(true));
+    auto aCone = Surface::makeShared<ConeSurface>(transform, alpha, true);
 
     // Linear transform
     auto lTransform = transform.linear();
@@ -189,13 +198,15 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     // Check the validity of the intersection
     BOOST_CHECK(aIntersection[0]);
     // The status of this one should be on surface
-    BOOST_CHECK(aIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(aIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // The intersection is at 4 mm distance
     CHECK_CLOSE_ABS(aIntersection[0].pathLength(), -4., s_onSurfaceTolerance);
     // There MUST be a second solution
     BOOST_CHECK(aIntersection[1]);
     // The other intersection MUST be reachable
-    BOOST_CHECK(aIntersection[1].status() == Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(aIntersection[1].status(),
+                      Intersection3D::Status::onSurface);
 
     // Intersection from outside without chance of hitting the cylinder
     auto iIntersection =
@@ -245,9 +256,10 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(fIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(fIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(fIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // The path length MUST be positive
-    BOOST_CHECK(fIntersection[0].pathLength() > 0.);
+    BOOST_CHECK_GT(fIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
     BOOST_CHECK(!fIntersection[1]);
 
@@ -257,9 +269,11 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(oIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(oIntersection[0].status() == Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(oIntersection[0].status(),
+                      Intersection3D::Status::onSurface);
     // The path length MUST be positive
-    BOOST_CHECK(std::abs(oIntersection[0].pathLength()) < s_onSurfaceTolerance);
+    BOOST_CHECK_LT(std::abs(oIntersection[0].pathLength()),
+                   s_onSurfaceTolerance);
     // The intersection MUST be unique
     BOOST_CHECK(!oIntersection[1]);
 
@@ -269,9 +283,10 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(bIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(bIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(bIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // The path length MUST be negative
-    BOOST_CHECK(bIntersection[0].pathLength() < 0.);
+    BOOST_CHECK_LT(bIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
     BOOST_CHECK(!bIntersection[1]);
 
@@ -281,9 +296,10 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     // The intersection MUST NOT be valid
     BOOST_CHECK(!mIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(mIntersection[0].status() == Intersection3D::Status::missed);
+    BOOST_CHECK_EQUAL(mIntersection[0].status(),
+                      Intersection3D::Status::missed);
     // The path length MUST be negative
-    BOOST_CHECK(mIntersection[0].pathLength() > 0.);
+    BOOST_CHECK_GT(mIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
     BOOST_CHECK(!mIntersection[1]);
 
@@ -293,8 +309,8 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     // The intersection MUST NOT be valid
     BOOST_CHECK(!iIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(iIntersection[0].status() ==
-                Intersection3D::Status::unreachable);
+    BOOST_CHECK_EQUAL(iIntersection[0].status(),
+                      Intersection3D::Status::unreachable);
     // The intersection MUST be unique
     BOOST_CHECK(!iIntersection[1]);
   };
@@ -338,9 +354,10 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(fIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(fIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(fIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // The path length MUST be positive
-    BOOST_CHECK(fIntersection[0].pathLength() > 0.);
+    BOOST_CHECK_GT(fIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
     BOOST_CHECK(!fIntersection[1]);
 
@@ -350,9 +367,11 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(oIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(oIntersection[0].status() == Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(oIntersection[0].status(),
+                      Intersection3D::Status::onSurface);
     // The path length MUST be positive
-    BOOST_CHECK(std::abs(oIntersection[0].pathLength()) < s_onSurfaceTolerance);
+    BOOST_CHECK_LT(std::abs(oIntersection[0].pathLength()),
+                   s_onSurfaceTolerance);
     // The intersection MUST be unique
     BOOST_CHECK(!oIntersection[1]);
 
@@ -362,9 +381,11 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(oIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(oIntersection[0].status() == Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(oIntersection[0].status(),
+                      Intersection3D::Status::onSurface);
     // The path length MUST be positive
-    BOOST_CHECK(std::abs(oIntersection[0].pathLength()) < s_onSurfaceTolerance);
+    BOOST_CHECK_LT(std::abs(oIntersection[0].pathLength()),
+                   s_onSurfaceTolerance);
     // The intersection MUST be unique
     BOOST_CHECK(!oIntersection[1]);
 
@@ -374,9 +395,10 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST be valid
     BOOST_CHECK(bIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(bIntersection[0].status() == Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(bIntersection[0].status(),
+                      Intersection3D::Status::reachable);
     // The path length MUST be negative
-    BOOST_CHECK(bIntersection[0].pathLength() < 0.);
+    BOOST_CHECK_LT(bIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
     BOOST_CHECK(!bIntersection[1]);
 
@@ -386,9 +408,10 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST NOT be valid
     BOOST_CHECK(!mIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(mIntersection[0].status() == Intersection3D::Status::missed);
+    BOOST_CHECK_EQUAL(mIntersection[0].status(),
+                      Intersection3D::Status::missed);
     // The path length MUST be negative
-    BOOST_CHECK(mIntersection[0].pathLength() < 0.);
+    BOOST_CHECK_LT(mIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
     BOOST_CHECK(!mIntersection[1]);
 
@@ -398,8 +421,8 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST NOT be valid
     BOOST_CHECK(!iIntersection[0]);
     // The intersection MUST be reachable
-    BOOST_CHECK(iIntersection[0].status() ==
-                Intersection3D::Status::unreachable);
+    BOOST_CHECK_EQUAL(iIntersection[0].status(),
+                      Intersection3D::Status::unreachable);
     // The intersection MUST be unique
     BOOST_CHECK(!iIntersection[1]);
   };

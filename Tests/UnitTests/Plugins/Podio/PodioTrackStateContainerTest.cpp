@@ -15,11 +15,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
@@ -34,7 +34,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);
@@ -97,10 +97,6 @@ struct Factory {
   using trajectory_t = MutablePodioTrackStateContainer;
   using const_trajectory_t = ConstPodioTrackStateContainer;
 
-  // list used to have stable addresses, irrelevant for testing
-  std::list<ActsPodioEdm::TrackStateCollection> m_collections;
-  std::list<ActsPodioEdm::BoundParametersCollection> m_params;
-  std::list<ActsPodioEdm::JacobianCollection> m_jacs;
   MapHelper m_helper;
 
   MutablePodioTrackStateContainer create() { return {m_helper}; }
@@ -168,6 +164,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   ct.testTrackStateProxyCopy(rng);
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateCopyDynamicColumns) {
+  CommonTests ct;
+  ct.testTrackStateCopyDynamicColumns();
+}
+
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   CommonTests ct;
   ct.testTrackStateProxyCopyDiffMTJ();
@@ -203,8 +204,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   MapHelper helper;
 
-  // auto tmp_path = std::filesystem::temp_directory_path();
-  auto tmp_path = std::filesystem::current_path();
+  auto tmp_path = std::filesystem::temp_directory_path();
   auto outfile = tmp_path / "trackstates.root";
 
   BoundVector tv1;

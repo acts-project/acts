@@ -34,7 +34,7 @@ struct AlgorithmContext;
 class RootSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {
-    /// Input particle collection to write.
+    /// Input sim hit collection to write.
     std::string inputSimHits;
     /// Path to the output file.
     std::string filePath;

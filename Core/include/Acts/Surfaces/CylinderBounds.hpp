@@ -24,6 +24,7 @@
 namespace Acts {
 
 /// @class CylinderBounds
+/// @image html CylinderBounds.gif
 ///
 /// Bounds for a cylindrical Surface.
 ///

@@ -23,8 +23,6 @@
 namespace Acts {
 namespace Test {
 
-namespace tt = boost::test_tools;
-
 // Test Cylinder
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
   CylinderVolumeBounds bound(10, 50, 150, M_PI / 2, 0);

@@ -8,18 +8,19 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -28,40 +29,13 @@
 
 namespace Acts {
 
-namespace Experimental {
-
-using namespace detail::GridAxisGenerators;
-
-// Generate the possible axes in this case
-static auto s_possibleAxes =
-    std::tuple<EqBound, EqOpen, EqClosed,
-               // All 1D Var  options
-               VarBound, VarOpen, VarClosed,
-               // All 2D EqEq options
-               EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
-               EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
-               EqClosedEqClosed,
-               // All 2D EqVar options
-               EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed,
-               EqOpenVarBound, EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound,
-               EqClosedVarOpen, EqClosedVarClosed,
-               // All 2D VarEq options
-               VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed,
-               VarOpenEqBound, VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound,
-               VarClosedEqOpen, VarClosedEqClosed,
-               // All 2D VarEq options
-               VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
-               VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
-               VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>{};
-
-}  // namespace Experimental
-
 namespace Svg {
 
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoGrid = actsvg::proto::grid;
-using ProtoIndexedSurfaceGrid = std::tuple<std::vector<ProtoSurface>, ProtoGrid,
-                                           std::vector<std::vector<size_t>>>;
+using ProtoIndexedSurfaceGrid =
+    std::tuple<std::vector<ProtoSurface>, ProtoGrid,
+               std::vector<std::vector<std::size_t>>>;
 
 namespace IndexedSurfacesConverter {
 /// Nested options struct
@@ -121,6 +95,19 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
       }
       constrain.extend(sExtent, {binR});
     }
+    // Add center info
+    std::string centerInfo = " - center = (";
+    const Vector3& center = s->center(gctx);
+    centerInfo +=
+        std::to_string(VectorHelpers::cast(center, indexGrid.casts[0u]));
+    if (indexGrid.casts.size() > 1u) {
+      centerInfo += ", ";
+      centerInfo +=
+          std::to_string(VectorHelpers::cast(center, indexGrid.casts[1u]));
+      centerInfo += ")";
+    }
+    pSurface._aux_info["center"] = {centerInfo};
+    // Add the center info
     pSurfaces.push_back(pSurface);
   }
 
@@ -140,21 +127,27 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   auto axes = indexGrid.grid.axes();
 
   // Specify the highlight indices
-  std::vector<std::vector<size_t>> highlightIndices;
+  std::vector<std::vector<std::size_t>> highlightIndices;
 
   // 1D connections
   if constexpr (index_grid::grid_type::DIM == 1u) {
+    const auto& binEdges = axes[0u]->getBinEdges();
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       typename index_grid::grid_type::index_t lbin;
       lbin[0u] = ib0;
       highlightIndices.push_back(indexGrid.grid.atLocalBins(lbin));
       // Register the bin naming
-      pGrid._bin_ids.push_back(std::string("- bin : [") + std::to_string(ib0) +
-                               std::string("]"));
+      std::string binInfo =
+          std::string("- bin : [") + std::to_string(ib0) + std::string("]");
+      ActsScalar binCenter = 0.5 * (binEdges[ib0] + binEdges[ib0 - 1u]);
+      binInfo += "\n - center : (" + std::to_string(binCenter) + ")";
+      pGrid._bin_ids.push_back(binInfo);
     }
   }
   // 2D connections
   if constexpr (index_grid::grid_type::DIM == 2u) {
+    const auto& binEdges0 = axes[0u]->getBinEdges();
+    const auto& binEdges1 = axes[1u]->getBinEdges();
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
         typename index_grid::grid_type::index_t lbin;
@@ -162,9 +155,14 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
         lbin[1u] = ib1;
         highlightIndices.push_back(indexGrid.grid.atLocalBins(lbin));
         // Register the bin naming
-        pGrid._bin_ids.push_back(std::string("- bin : [") +
-                                 std::to_string(ib0) + std::string(", ") +
-                                 std::to_string(ib1) + std::string("]"));
+        std::string binInfo = std::string("- bin : [") + std::to_string(ib0) +
+                              std::string(", ") + std::to_string(ib1) +
+                              std::string("]");
+        ActsScalar binCenter0 = 0.5 * (binEdges0[ib0] + binEdges0[ib0 - 1u]);
+        ActsScalar binCenter1 = 0.5 * (binEdges1[ib1] + binEdges1[ib1 - 1u]);
+        binInfo += "\n - center : (" + std::to_string(binCenter0) + ", " +
+                   std::to_string(binCenter1) + ")";
+        pGrid._bin_ids.push_back(binInfo);
         if (estimateR) {
           pGrid._reference_r = constrain.medium(binR);
         }
@@ -190,10 +188,10 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 template <typename surface_container, typename instance_type>
 void convert(const GeometryContext& gctx, const surface_container& surfaces,
              const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-             const Experimental::SurfaceCandidatesUpdator& delegate,
+             const Experimental::SurfaceCandidatesUpdater& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
-      typename instance_type::template grid_type<std::vector<size_t>>;
+      typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
   using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
       GridType, Experimental::IndexedSurfacesImpl>;
@@ -216,14 +214,13 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
 /// @brief Unrolling function for catching the right instance
 ///
 /// @note parameters are as of the `convertImpl` method
-template <typename surface_container, typename tuple_type, size_t... I>
+template <typename surface_container, typename... Args>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
-                   const Experimental::SurfaceCandidatesUpdator& delegate,
-                   const tuple_type& axesTuple, std::index_sequence<I...>) {
-  (convert(gctx, surfaces, cOptions, sgi, delegate, std::get<I>(axesTuple)),
-   ...);
+                   const Experimental::SurfaceCandidatesUpdater& delegate,
+                   TypeList<Args...> /*unused*/) {
+  (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
 
 /// Convert a surface array into needed constituents
@@ -240,18 +237,16 @@ void unrollConvert(const GeometryContext& gctx,
 template <typename surface_container>
 ProtoIndexedSurfaceGrid convert(
     const GeometryContext& gctx, const surface_container& surfaces,
-    const Experimental::SurfaceCandidatesUpdator& delegate,
+    const Experimental::SurfaceCandidatesUpdater& delegate,
     const Options& cOptions) {
   // Prep work what is to be filled
   std::vector<ProtoSurface> pSurfaces;
   ProtoGrid pGrid;
-  std::vector<std::vector<size_t>> indices;
+  std::vector<std::vector<std::size_t>> indices;
   ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
   // Convert if dynamic cast happens to work
-  unrollConvert(
-      gctx, surfaces, cOptions, sgi, delegate, Experimental::s_possibleAxes,
-      std::make_index_sequence<
-          std::tuple_size<decltype(Experimental::s_possibleAxes)>::value>());
+  unrollConvert(gctx, surfaces, cOptions, sgi, delegate,
+                GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return sgi;
 }
@@ -285,7 +280,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
     }
   }
 
-  // The grid
+  // The grid as provided
   auto gOb =
       actsvg::display::grid(identification + std::string("_grid"), pGrid);
 
@@ -303,14 +298,21 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
     binText.push_back("Source:");
     binText.push_back(pGrid._bin_ids[ig]);
     binText.push_back("Target:");
-    for (const auto& sis : pIndices[ig]) {
-      binText.push_back(std::string("- object: ") + std::to_string(sis));
+    for (const auto [is, sis] : enumerate(pIndices[ig])) {
+      const auto& ps = pSurfaces[sis];
+      std::string oInfo = std::string("- object: ") + std::to_string(sis);
+      if (ps._aux_info.find("center") != ps._aux_info.end()) {
+        for (const auto& ci : ps._aux_info.at("center")) {
+          oInfo += ci;
+        }
+      }
+      binText.push_back(oInfo);
     }
     // Make the connected text
     std::string cTextId =
         identification + std::string("_ct_") + std::to_string(ig);
     auto cText = actsvg::draw::connected_text(
-        "bla", {static_cast<actsvg::scalar>(1.1 * xmax), 0}, binText,
+        cTextId, {static_cast<actsvg::scalar>(1.1 * xmax), 0}, binText,
         actsvg::style::font{}, actsvg::style::transform{}, gTile);
     xyIndexedGrid.add_object(cText);
   }

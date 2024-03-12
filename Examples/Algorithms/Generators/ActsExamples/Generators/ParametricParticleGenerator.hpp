@@ -56,7 +56,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// Randomize the charge and flip the PDG particle number sign accordingly.
     bool randomizeCharge = false;
     /// Number of particles.
-    size_t numParticles = 1;
+    std::size_t numParticles = 1;
 
     /// Overrides particle charge.
     std::optional<double> charge;

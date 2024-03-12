@@ -35,13 +35,9 @@
 #include <string>
 #include <utility>
 
-namespace tt = boost::test_tools;
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
-
 namespace Test {
 
 // Create a test context
@@ -104,14 +100,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
       binningPosition);
   //
   /// Test referenceFrame
-  Vector3 globalPosition{2.0, 2.0, 0.0};
+  Vector3 arbitraryGlobalPosition{2.0, 2.0, 2.0};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   RotationMatrix3 expectedFrame;
   expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-  CHECK_CLOSE_OR_SMALL(
-      planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
+                           tgContext, arbitraryGlobalPosition, momentum),
+                       expectedFrame, 1e-6, 1e-9);
   //
   /// Test normal, given 3D position
   Vector3 normal3D(0., 0., 1.);
@@ -123,7 +119,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2 localPosition{1.5, 1.7};
-  globalPosition =
+  Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one
@@ -291,22 +287,27 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  auto pTransform = Transform3(translation);
+  double rotationAngle = M_PI_2;
+  AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
+  RotationMatrix3 rotationMat = rotation.toRotationMatrix();
+
+  auto pTransform = Transform3(translation * rotationMat);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
-  const auto& rotation = pTransform.rotation();
+
   // The local frame z axis
-  const Vector3 localZAxis = rotation.col(2);
-  // Check the local z axis is aligned to global z axis
-  CHECK_CLOSE_ABS(localZAxis, Vector3(0., 0., 1.), 1e-15);
+  const Vector3 localZAxis = rotationMat.col(2);
+  // Check the local z axis is aligned to global x axis
+  CHECK_CLOSE_ABS(localZAxis, Vector3(1., 0., 0.), 1e-15);
 
   // Define the track (local) position and direction
   Vector2 localPosition{1, 2};
-  Vector3 momentum{0, 0, 1};
+  Vector3 momentum{1, 0, 0};
   Vector3 direction = momentum.normalized();
   // Get the global position
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
+
   // Construct a free parameters
   FreeVector parameters = FreeVector::Zero();
   parameters.head<3>() = globalPosition;
@@ -317,7 +318,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  expAlignToPath << 0, 0, 1, 2, -1, 0;
+  expAlignToPath << 1, 0, 0, 2, -1, -2;
+
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
 
@@ -342,9 +344,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
   AlignmentToPathMatrix expAlignToloc0;
-  expAlignToloc0 << -1, 0, 0, 0, 0, 2;
+  expAlignToloc0 << 0, 0, 1, 0, 0, 0;
   AlignmentToPathMatrix expAlignToloc1;
-  expAlignToloc1 << 0, -1, 0, 0, 0, -1;
+  expAlignToloc1 << 0, -1, 0, 0, 0, 0;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);

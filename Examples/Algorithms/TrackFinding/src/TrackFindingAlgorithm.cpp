@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -43,13 +44,14 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
       m_cfg(std::move(config)),
-      m_trackSelector([this]() -> std::optional<Acts::TrackSelector> {
-        if (m_cfg.trackSelectorCfg.has_value()) {
-          return {m_cfg.trackSelectorCfg.value()};
-        } else {
-          return std::nullopt;
-        }
-      }()) {
+      m_trackSelector(
+          m_cfg.trackSelectorCfg.has_value()
+              ? std::visit(
+                    [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
+                      return {cfg};
+                    },
+                    m_cfg.trackSelectorCfg.value())
+              : std::nullopt) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -135,11 +137,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
 
-  for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
@@ -157,7 +159,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
-      seedNumber(track) = nSeed;
+      // Set the seed number, this number decrease by 1 since the seed number
+      // has already been updated
+      seedNumber(track) = nSeed - 1;
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());

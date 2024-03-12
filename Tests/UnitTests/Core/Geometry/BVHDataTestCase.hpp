@@ -11,7 +11,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace bdata = boost::unit_test::data;
-using Box = Acts::Volume::BoundingBox;
 using Ray = Acts::Ray<double, 3>;
 
 GeometryContext tgContext = GeometryContext();
@@ -24,21 +23,22 @@ auto tg = grid.trackingGeometry;
 
 BOOST_DATA_TEST_CASE(
     bvhnavigation_test,
-    bdata::random((bdata::seed = 7, bdata::engine = std::mt19937(),
-                   bdata::distribution = std::uniform_real_distribution<>(-5,
-                                                                          5))) ^
-        bdata::random((bdata::seed = 2, bdata::engine = std::mt19937(),
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 7,
+         bdata::distribution = std::uniform_real_distribution<double>(-5, 5))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 3, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-100, 100))) ^
-        bdata::random((bdata::seed = 4, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(-100, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-100, 100))) ^
-        bdata::random((bdata::seed = 5, bdata::engine = std::mt19937(),
+                           std::uniform_real_distribution<double>(-100, 100))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-100, 100))) ^
+                           std::uniform_real_distribution<double>(-100, 100))) ^
         bdata::xrange(NTESTS),
     eta, phi, x, y, z, index) {
   using namespace Acts::UnitLiterals;
@@ -71,7 +71,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   // sort by path length
-  std::sort(hits.begin(), hits.end(), SurfaceIntersection::forwardOrder);
+  std::sort(hits.begin(), hits.end(), SurfaceIntersection::pathLengthOrder);
   std::vector<const Surface*> expHits;
   expHits.reserve(hits.size());
   for (const auto& hit : hits) {
@@ -119,7 +119,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   BOOST_CHECK_EQUAL(expHits.size(), actHits.size());
-  for (size_t i = 0; i < expHits.size(); i++) {
+  for (std::size_t i = 0; i < expHits.size(); i++) {
     const Surface* exp = expHits[i];
     const Surface* act = actHits[i];
 
