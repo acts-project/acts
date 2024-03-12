@@ -14,10 +14,12 @@
 #include <iostream>
 #include <utility>
 
-using namespace Acts::UnitLiterals;
+using namespace UnitLiterals;
 
-Acts::Volume::Volume(const Transform3& transform,
-                     std::shared_ptr<const VolumeBounds> volbounds)
+namespace Acts {
+
+Volume::Volume(const Transform3& transform,
+               std::shared_ptr<const VolumeBounds> volbounds)
     : GeometryObject(),
       m_transform(transform),
       m_itransform(m_transform.inverse()),
@@ -26,7 +28,7 @@ Acts::Volume::Volume(const Transform3& transform,
       m_orientedBoundingBox(m_volumeBounds->boundingBox(
           nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
 
-Acts::Volume::Volume(const Volume& vol, const Transform3& shift)
+Volume::Volume(const Volume& vol, const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * vol.m_transform),
       m_itransform(m_transform.inverse()),
@@ -35,11 +37,11 @@ Acts::Volume::Volume(const Volume& vol, const Transform3& shift)
       m_orientedBoundingBox(m_volumeBounds->boundingBox(
           nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
 
-Acts::Vector3 Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
-                                            Acts::BinningValue bValue) const {
+Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
+                                BinningValue bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
-  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
+  if (bValue == binR || bValue == binRPhi) {
     // the binning Position for R-type may have an offset
     return (center() + m_volumeBounds->binningOffset(bValue));
   }
@@ -48,7 +50,7 @@ Acts::Vector3 Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
 }
 
 // assignment operator
-Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
+Volume& Volume::operator=(const Volume& vol) {
   if (this != &vol) {
     m_transform = vol.m_transform;
     m_center = vol.m_center;
@@ -57,28 +59,44 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
   return *this;
 }
 
-bool Acts::Volume::inside(const Acts::Vector3& gpos, double tol) const {
-  Acts::Vector3 posInVolFrame((transform().inverse()) * gpos);
+bool Volume::inside(const Vector3& gpos, double tol) const {
+  Vector3 posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
 
-std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
+std::ostream& operator<<(std::ostream& sl, const Volume& vol) {
   sl << "Volume with " << vol.volumeBounds() << std::endl;
   return sl;
 }
 
-Acts::Volume::BoundingBox Acts::Volume::boundingBox(
-    const Vector3& envelope) const {
+Volume::BoundingBox Volume::boundingBox(const Vector3& envelope) const {
   return m_volumeBounds->boundingBox(&m_transform, envelope, this);
 }
 
-const Acts::Volume::BoundingBox& Acts::Volume::orientedBoundingBox() const {
+const Volume::BoundingBox& Volume::orientedBoundingBox() const {
   return m_orientedBoundingBox;
 }
 
-void Acts::Volume::setVolumeBounds(
-    std::shared_ptr<const Acts::VolumeBounds> volbounds) {
+void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
   m_volumeBounds = std::move(volbounds);
   m_orientedBoundingBox =
       m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this);
 }
+
+const Transform3& Volume::transform() const {
+  return m_transform;
+}
+
+const Transform3& Volume::itransform() const {
+  return m_itransform;
+}
+
+const Vector3& Volume::center() const {
+  return m_center;
+}
+
+const VolumeBounds& Volume::volumeBounds() const {
+  return *m_volumeBounds;
+}
+
+}  // namespace Acts

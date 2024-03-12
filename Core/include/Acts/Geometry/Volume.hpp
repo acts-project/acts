@@ -71,7 +71,7 @@ class Volume : public virtual GeometryObject {
   const VolumeBounds& volumeBounds() const;
 
   /// Set volume bounds and update volume bounding boxes implicitly
-  void setVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
+  void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -107,22 +107,6 @@ class Volume : public virtual GeometryObject {
   std::shared_ptr<const VolumeBounds> m_volumeBounds;
   BoundingBox m_orientedBoundingBox;
 };
-
-inline const Transform3& Volume::transform() const {
-  return m_transform;
-}
-
-inline const Transform3& Volume::itransform() const {
-  return m_itransform;
-}
-
-inline const Vector3& Volume::center() const {
-  return m_center;
-}
-
-inline const VolumeBounds& Volume::volumeBounds() const {
-  return (*(m_volumeBounds.get()));
-}
 
 /**Overload of << operator for std::ostream for debug output*/
 std::ostream& operator<<(std::ostream& sl, const Volume& vol);
