@@ -53,6 +53,10 @@ class Surface;
 class TrackingVolume;
 struct GeometryIdentifierHook;
 
+/// Interface types of the Gen1 geometry model
+/// @deprecated This interface is being replaced, and is subject to removal
+/// @{
+
 // master typedefs
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
@@ -82,6 +86,8 @@ using BoundaryIntersection =
 /// Multi-intersection with a @c BoundarySurface
 using BoundaryMultiIntersection =
     std::pair<SurfaceMultiIntersection, const BoundarySurface*>;
+
+/// @}
 
 /// @class TrackingVolume
 ///
@@ -146,48 +152,8 @@ class TrackingVolume : public Volume {
       MutableTrackingVolumeVector denseVolumeVector = {},
       const std::string& volumeName = "undefined");
 
-  /// Return the associated Layer to the global position
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the associated global position
-  ///
-  /// @return plain pointer to layer object
-  const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3& position) const;
-
-  /// @brief Resolves the volume into (compatible) Layers
-  ///
-  /// This is the method for the propagator/extrapolator
-  /// @tparam options_t Type of navigation options object for decomposition
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position Position for the search
-  /// @param direction Direction for the search
-  /// @param options The templated navigation options
-  ///
-  /// @return vector of compatible intersections with layers
-  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions<Layer>& options) const;
-
-  /// @brief Returns all boundary surfaces sorted by the user.
-  ///
-  /// @tparam options_t Type of navigation options object for decomposition
-  /// @tparam sorter_t Type of the boundary surface sorter
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position for searching
-  /// @param direction The direction for searching
-  /// @param options The templated navigation options
-  /// @param logger A @c Logger instance
-  ///
-  /// @return is the templated boundary intersection
-  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions<Surface>& options,
-      const Logger& logger = getDummyLogger()) const;
-
   /// Return the associated sub Volume, returns THIS if no subVolume exists
+  /// @TODO: This needs to be refactored to include Gen3 volumes
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position associated with that search
@@ -197,16 +163,6 @@ class TrackingVolume : public Volume {
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3& position,
                                              const double tol = 0.) const;
-
-  /// Return the confined static layer array - if it exists
-  /// @return the BinnedArray of static layers if exists
-  const LayerArray* confinedLayers() const;
-
-  /// Return the confined volumes of this container array - if it exists
-  std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
-
-  /// Return the confined dense volumes
-  const MutableTrackingVolumeVector denseVolumes() const;
 
   /// @brief Visit all reachable surfaces
   ///
@@ -297,14 +253,90 @@ class TrackingVolume : public Volume {
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
 
-  /// Method to return the BoundarySurfaces
-  const TrackingVolumeBoundaries& boundarySurfaces() const;
-
   /// Return the material of the volume
   const IVolumeMaterial* volumeMaterial() const;
 
   /// Return the material of the volume as shared pointer
   const std::shared_ptr<const IVolumeMaterial>& volumeMaterialSharedPtr() const;
+
+  /// Set the volume material description
+  ///
+  /// The material is usually derived in a complicated way and loaded from
+  /// a framework given source. As various volumes could potentially share the
+  /// the same material description, it is provided as a shared object
+  ///
+  /// @param material Material description of this volume
+  void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
+
+  /// Return the MotherVolume - if it exists
+  const TrackingVolume* motherVolume() const;
+
+  /// Return the MotherVolume - if it exists
+  TrackingVolume* motherVolume();
+
+  /// Set the MotherVolume
+  ///
+  /// @param mvol is the mother volume
+  void setMotherVolume(TrackingVolume* mvol);
+
+  /// Interface of @c TrackingVolume in the Gen1 geometry model
+  /// @deprecated This interface is being replaced, and is subject to removal
+  ///
+  /// @{
+
+  /// Return the associated Layer to the global position
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the associated global position
+  ///
+  /// @return plain pointer to layer object
+  const Layer* associatedLayer(const GeometryContext& gctx,
+                               const Vector3& position) const;
+
+  /// @brief Resolves the volume into (compatible) Layers
+  ///
+  /// This is the method for the propagator/extrapolator
+  /// @tparam options_t Type of navigation options object for decomposition
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position Position for the search
+  /// @param direction Direction for the search
+  /// @param options The templated navigation options
+  ///
+  /// @return vector of compatible intersections with layers
+  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
+
+  /// @brief Returns all boundary surfaces sorted by the user.
+  ///
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam sorter_t Type of the boundary surface sorter
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position for searching
+  /// @param direction The direction for searching
+  /// @param options The templated navigation options
+  /// @param logger A @c Logger instance
+  ///
+  /// @return is the templated boundary intersection
+  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Surface>& options,
+      const Logger& logger = getDummyLogger()) const;
+
+  /// Return the confined static layer array - if it exists
+  /// @return the BinnedArray of static layers if exists
+  const LayerArray* confinedLayers() const;
+
+  /// Return the confined volumes of this container array - if it exists
+  std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
+
+  /// Return the confined dense volumes
+  const MutableTrackingVolumeVector denseVolumes() const;
+
+  /// Method to return the BoundarySurfaces
+  const TrackingVolumeBoundaries& boundarySurfaces() const;
 
   /// Set the boundary surface material description
   ///
@@ -317,15 +349,6 @@ class TrackingVolume : public Volume {
   void assignBoundaryMaterial(
       std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
       BoundarySurfaceFace bsFace);
-
-  /// Set the volume material description
-  ///
-  /// The material is usually derived in a complicated way and loaded from
-  /// a framework given source. As various volumes could potentially share the
-  /// the same material description, it is provided as a shared object
-  ///
-  /// @param material Material description of this volume
-  void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -382,16 +405,7 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Return the MotherVolume - if it exists
-  const TrackingVolume* motherVolume() const;
-
-  /// Return the MotherVolume - if it exists
-  TrackingVolume* motherVolume();
-
-  /// Set the MotherVolume
-  ///
-  /// @param mvol is the mother volume
-  void setMotherVolume(TrackingVolume* mvol);
+  /// @}
 
  private:
   void connectDenseBoundarySurfaces(
