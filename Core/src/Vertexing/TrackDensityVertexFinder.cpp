@@ -15,9 +15,16 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
   GaussianTrackDensity::State densityState(trackVector.size());
 
   // Calculate z seed position
-  std::pair<double, double> zAndWidth =
-      m_cfg.trackDensityEstimator.globalMaximumWithWidth(densityState,
-                                                         trackVector);
+  auto zAndWidthRes = m_cfg.trackDensityEstimator.globalMaximumWithWidth(
+      densityState, trackVector);
+  if (!zAndWidthRes.ok()) {
+    return zAndWidthRes.error();
+  }
+  const auto& zAndWidthOpt = *zAndWidthRes;
+  if (!zAndWidthOpt) {
+    return std::vector<Vertex>();
+  }
+  const auto& zAndWidth = *zAndWidthOpt;
 
   double z = zAndWidth.first;
 
