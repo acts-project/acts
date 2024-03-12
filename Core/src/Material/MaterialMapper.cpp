@@ -12,7 +12,14 @@
 
 Acts::MaterialMapper::MaterialMapper(const Config& cfg,
                                      std::unique_ptr<const Logger> mlogger)
-    : m_cfg(cfg), m_logger(std::move(mlogger)) {}
+    : m_cfg(cfg), m_logger(std::move(mlogger)) {
+  if (m_cfg.assignmentFinder == nullptr) {
+    throw std::invalid_argument("The assignment finder is not set");
+  }
+  if (m_cfg.surfaceMaterialAccumulater == nullptr) {
+    throw std::invalid_argument("The surface material accumulater is not set");
+  }
+}
 
 std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState()
     const {
@@ -21,7 +28,7 @@ std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState()
   // Create the surface material accumulater state
   state->surfaceMaterialAccumulaterState =
       m_cfg.surfaceMaterialAccumulater->createState();
-
+  // Return the state object
   return state;
 }
 
@@ -67,7 +74,7 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
       rTrack.second.materialInL0 += mi.materialSlab.thicknessInL0();
     }
   };
-
+  // Fill the totals to the material tracks (useful for debugging)
   calculateTotalMaterial(mappedMaterial);
   calculateTotalMaterial(unmappedMaterial);
   // Return the mapped and unmapped material

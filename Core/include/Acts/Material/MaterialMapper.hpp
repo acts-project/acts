@@ -35,9 +35,9 @@ class MaterialMapper {
   /// @brief nested configuration struct
   struct Config {
     // The assignment finder
-    const std::shared_ptr<IAssignmentFinder> assignmentFinder = nullptr;
+    std::shared_ptr<const IAssignmentFinder> assignmentFinder = nullptr;
     // The material accumulater for surfaces
-    const std::shared_ptr<ISurfaceMaterialAccumulater>
+    std::shared_ptr<const ISurfaceMaterialAccumulater>
         surfaceMaterialAccumulater = nullptr;
   };
 
