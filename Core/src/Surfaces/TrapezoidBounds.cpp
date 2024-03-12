@@ -81,9 +81,9 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
 
   // at this stage, the point can only be in the triangles
   // run slow-ish polygon check
-  std::array<Vector2, 4> v{
-      Vector2{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  return bcheck.isInside(lposition, v);
+  std::vector<Acts::Vector2> vertices = {
+      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+  return bcheck.isInside(extPosition, vertices);
 }
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(

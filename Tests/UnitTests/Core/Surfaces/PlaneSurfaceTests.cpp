@@ -270,15 +270,26 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 }
 
 BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
-  double shortHalfX{100.}, longHalfX{200.}, halfY{300.}, rotAngle{45._degree};
-  std::shared_ptr<TrapezoidBounds> bounds =
-      std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY, rotAngle);
+  double shortHalfX{100.};
+  double longHalfX{200.};
+  double halfY{300.};
+  double rotAngle{45._degree};
 
   Vector2 edgePoint{longHalfX - 10., halfY};
 
-  BOOST_CHECK(!bounds->inside(edgePoint, BoundaryCheck(true)));
-  BOOST_CHECK(bounds->inside(Eigen::Rotation2D{-rotAngle} * edgePoint,
-                             BoundaryCheck(true)));
+  std::shared_ptr<TrapezoidBounds> bounds =
+      std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY);
+
+  BOOST_CHECK(bounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(!bounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
+                              BoundaryCheck(true)));
+
+  std::shared_ptr<TrapezoidBounds> rotatedBounds =
+      std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY, rotAngle);
+
+  BOOST_CHECK(!rotatedBounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(rotatedBounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
+                                    BoundaryCheck(true)));
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives
