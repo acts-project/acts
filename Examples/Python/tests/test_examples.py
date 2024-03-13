@@ -28,7 +28,7 @@ from acts.examples import (
     GenericDetector,
     AlignedDetector,
 )
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 u = acts.UnitConstants
@@ -814,7 +814,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     [
         (GenericDetector.create, 450),
         pytest.param(
-            functools.partial(getOpenDataDetector, getOpenDataDetectorDirectory()),
+            getOpenDataDetector,
             540,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),

@@ -3,7 +3,7 @@ import pytest
 from helpers import dd4hepEnabled
 
 import acts.examples
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 def count_surfaces(geo):
@@ -53,16 +53,7 @@ def test_telescope_geometry():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
-    config = acts.MaterialMapJsonConverter.Config()
-    matDeco = acts.JsonMaterialDecorator(
-        rConfig=config,
-        jFileName=str(
-            getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"
-        ),
-        level=acts.logging.WARNING,
-    )
-
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     trackingGeometry.visitSurfaces(check_extra_odd)
 

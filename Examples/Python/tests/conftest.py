@@ -364,9 +364,7 @@ def fatras(ptcl_gun, trk_geo, rng):
 def _do_material_recording(d: Path):
     from material_recording import runMaterialRecording
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     detectorConstructionFactory = (
         acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
