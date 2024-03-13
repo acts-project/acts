@@ -151,7 +151,7 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     TrackingVolume* opposite = nullptr;
     TrackingVolume* along = nullptr;
-    if (osf.direction == Direction::Negative) {
+    if (osf.direction == Direction:: OppositeNormal) {
       opposite = this;
     } else {
       along = this;
