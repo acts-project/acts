@@ -186,14 +186,14 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
     // Build TrackingVolume
-    trackVolume =
-        TrackingVolume::create(trafo, bounds, cfg.volumeMaterial, nullptr,
-                               nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume = std::make_shared<TrackingVolume>(
+        trafo, bounds, cfg.volumeMaterial, nullptr, nullptr,
+        cfg.trackingVolumes, cfg.name);
   } else {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(trafo, bounds, cfg.volumeMaterial,
-                                         std::move(layArr), nullptr,
-                                         cfg.trackingVolumes, cfg.name);
+    trackVolume = std::make_shared<TrackingVolume>(
+        trafo, bounds, cfg.volumeMaterial, std::move(layArr), nullptr,
+        cfg.trackingVolumes, cfg.name);
   }
   return trackVolume;
 }
@@ -259,7 +259,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Create world volume
   MutableTrackingVolumePtr mtvp(
-      TrackingVolume::create(trafo, volume, trVolArr, "World"));
+      std::make_shared<TrackingVolume>(trafo, volume, trVolArr, "World"));
 
   return mtvp;
 }

@@ -162,9 +162,9 @@ struct TelescopeDetector {
         BinningType::arbitrary, BinningValue::binX));
 
     // Build the tracking volume
-    auto trackVolume =
-        TrackingVolume::create(trafoVol, boundsVol, nullptr, std::move(layArr),
-                               nullptr, {}, "Telescope");
+    auto trackVolume = std::make_shared<TrackingVolume>(
+        trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
+        MutableTrackingVolumeVector{}, "Telescope");
 
     return std::make_shared<const TrackingGeometry>(trackVolume);
   }

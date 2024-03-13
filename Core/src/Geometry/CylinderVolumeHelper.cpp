@@ -156,9 +156,9 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
           ? volumeBounds
           : std::shared_ptr<const VolumeBounds>(cylinderBounds);
   // finally create the TrackingVolume
-  tVolume = TrackingVolume::create(transform, volumeBoundsFinal, volumeMaterial,
-                                   std::move(layerArray), nullptr, mtvVector,
-                                   volumeName);
+  tVolume = std::make_shared<TrackingVolume>(
+      transform, volumeBounds, volumeMaterial, std::move(layerArray), nullptr,
+      mtvVector, volumeName);
   // screen output
   ACTS_VERBOSE(
       "Created cylindrical volume at z-position :" << tVolume->center().z());
@@ -401,7 +401,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     return nullptr;
   }
   // we have the bounds and the volume array, create the volume
-  std::shared_ptr<TrackingVolume> topVolume = TrackingVolume::create(
+  std::shared_ptr<TrackingVolume> topVolume = std::make_shared<TrackingVolume>(
       topVolumeTransform, topVolumeBounds, volumeArray, volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------

@@ -152,9 +152,9 @@ ActsExamples::Telescope::buildDetector(
       Acts::BinningType::arbitrary, binValue));
 
   // Build the tracking volume
-  auto trackVolume =
-      Acts::TrackingVolume::create(trafoVol, boundsVol, nullptr,
-                                   std::move(layArr), nullptr, {}, "Telescope");
+  auto trackVolume = std::make_shared<Acts::TrackingVolume>(
+      trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
+      Acts::MutableTrackingVolumeVector{}, "Telescope");
 
   // Build and return tracking geometry
   return std::make_unique<Acts::TrackingGeometry>(trackVolume);
