@@ -122,6 +122,14 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
+  /// Get the canonical binning values, i.e. the binning values
+  /// for that fully describe the shape's extent
+  ///
+  /// @return vector of canonical binning values
+  std::vector<Acts::BinningValue> canonicalBinning() const override {
+    return {Acts::binX, Acts::binY, Acts::binZ};
+  };
+
   /// Binning borders in double
   ///
   /// @param bValue is the binning schema used
