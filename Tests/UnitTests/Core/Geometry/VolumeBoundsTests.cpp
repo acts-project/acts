@@ -13,7 +13,7 @@
 
 namespace Acts {
 namespace Test {
-BOOST_AUTO_TEST_SUITE(Volumes)
+BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(VolumeBoundsTest) {
   // Tests if the planes are correctly oriented
