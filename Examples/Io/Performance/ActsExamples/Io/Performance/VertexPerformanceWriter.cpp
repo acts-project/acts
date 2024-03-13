@@ -269,10 +269,10 @@ ProcessCode VertexPerformanceWriter::writeT(
   // Get number of detector-accepted true primary vertices
   m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedParticles);
 
-  ACTS_VERBOSE("Number of truth particles in event : " << particles.size());
-  ACTS_VERBOSE("Number of truth primary vertices : " << m_nTrueVtx);
-  ACTS_VERBOSE("Number of detector-accepted truth primary vertices : "
-               << m_nVtxDetAcceptance);
+  ACTS_DEBUG("Number of truth particles in event : " << particles.size());
+  ACTS_DEBUG("Number of truth primary vertices : " << m_nTrueVtx);
+  ACTS_DEBUG("Number of detector-accepted truth primary vertices : "
+             << m_nVtxDetAcceptance);
 
   const ConstTrackContainer* tracks = nullptr;
   SimParticleContainer recoParticles;
@@ -334,15 +334,6 @@ ProcessCode VertexPerformanceWriter::writeT(
   ACTS_INFO("Maximum number of reconstructible primary vertices : "
             << m_nVtxReconstructable);
 
-  // We compare the reconstructed momenta to the true momenta at the vertex. For
-  // this, we propagate the reconstructed tracks to the PCA of the true vertex
-  // position. Setting up propagator:
-  Acts::EigenStepper<> stepper(m_cfg.bField);
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  auto propagator = std::make_shared<Propagator>(stepper);
-  // Setting the geometry/magnetic field context for the event
-  Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
-
   // Loop over reconstructed vertices and see if they can be matched to a true
   // vertex.
   for (const auto& vtx : vertices) {
@@ -353,8 +344,7 @@ ProcessCode VertexPerformanceWriter::writeT(
 
     // Containers for storing truth particles and truth vertices that contribute
     // to the reconstructed vertex
-    SimParticleContainer particleAtVtx;
-    SimBarcodeContainer contributingTruthVertices;
+    SimParticleContainer particlesAtVtx;
 
     if (m_cfg.useTracks) {
       for (const auto& trk : tracksAtVtx) {
@@ -382,11 +372,7 @@ ProcessCode VertexPerformanceWriter::writeT(
               }
               const auto& particle = *particleOpt;
 
-              particleAtVtx.insert(particle);
-              SimBarcode vtxId = SimBarcode(particle.particleId())
-                                     .setParticle(0)
-                                     .setSubParticle(0);
-              contributingTruthVertices.insert(vtxId);
+              particlesAtVtx.insert(particle);
             }
 
             break;
@@ -394,7 +380,7 @@ ProcessCode VertexPerformanceWriter::writeT(
         }
 
         if (!foundMatchingParticle) {
-          ACTS_VERBOSE("Track has no matching truth particle.");
+          ACTS_DEBUG("Track has no matching truth particle.");
         }
       }
 
@@ -403,15 +389,15 @@ ProcessCode VertexPerformanceWriter::writeT(
       }
     } else {
       for (const auto& particle : particles) {
-        SimBarcode vtxId =
-            SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
-        contributingTruthVertices.insert(vtxId);
+        particlesAtVtx.insert(particle);
       }
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
     std::map<SimBarcode, std::uint32_t> fmap;
-    for (SimBarcode vtxId : contributingTruthVertices) {
+    for (const SimParticle& particle : particlesAtVtx) {
+      SimBarcode vtxId =
+          SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
       fmap[vtxId]++;
     }
     std::uint32_t maxOccurrence = 0;
@@ -505,7 +491,7 @@ ProcessCode VertexPerformanceWriter::writeT(
           };
 
       const auto& truthVertexParticle =
-          *std::find_if(particleAtVtx.begin(), particleAtVtx.end(),
+          *std::find_if(particlesAtVtx.begin(), particlesAtVtx.end(),
                         [&](const auto& particle) {
                           SimBarcode vtxId = SimBarcode(particle.particleId())
                                                  .setParticle(0)
@@ -602,6 +588,15 @@ ProcessCode VertexPerformanceWriter::writeT(
 
       // Write vertex track based information
       {
+        // We compare the reconstructed momenta to the true momenta at the
+        // vertex. For this, we propagate the reconstructed tracks to the PCA of
+        // the true vertex position. Setting up propagator:
+        Acts::EigenStepper<> stepper(m_cfg.bField);
+        using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+        auto propagator = std::make_shared<Propagator>(stepper);
+        // Setting the geometry/magnetic field context for the event
+        Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+
         // Saving the reconstructed/truth momenta. The reconstructed momenta
         // are taken at the PCA to the truth vertex position -> we need to
         // perform a propagation.
