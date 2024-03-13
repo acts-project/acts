@@ -149,7 +149,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   Transform3 trafo(Transform3::Identity());
   trafo.translation() = cfg.position;
   // Set bounds
-  auto bounds = std::make_shared<const CuboidVolumeBounds>(
+  auto bounds = std::make_shared<CuboidVolumeBounds>(
       cfg.length.x() * 0.5, cfg.length.y() * 0.5, cfg.length.z() * 0.5);
 
   // Gather the layers
@@ -230,7 +230,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   trafo.translation() = m_cfg.position;
 
   // Size of the volume
-  auto volume = std::make_shared<const CuboidVolumeBounds>(
+  auto volume = std::make_shared<CuboidVolumeBounds>(
       m_cfg.length.x() * 0.5, m_cfg.length.y() * 0.5, m_cfg.length.z() * 0.5);
 
   // Build vector of confined volumes

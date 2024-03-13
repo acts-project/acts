@@ -319,7 +319,7 @@ struct CylindricalTrackingGeometry {
     auto pLayerArray = layerArrayCreator->layerArray(geoContext, pLayers, 25.,
                                                      300., arbitrary, binR);
     auto pVolumeBounds =
-        std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
+        std::make_shared<CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
     auto pVolume = std::make_shared<TrackingVolume>(
         Transform3::Identity(), pVolumeBounds, nullptr, std::move(pLayerArray),

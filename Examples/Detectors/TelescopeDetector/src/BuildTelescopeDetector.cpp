@@ -128,12 +128,12 @@ ActsExamples::Telescope::buildDetector(
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs
   auto length = positions.back() - positions.front();
-  std::shared_ptr<const Acts::VolumeBounds> boundsVol = nullptr;
+  std::shared_ptr<Acts::VolumeBounds> boundsVol = nullptr;
   if (surfaceType == TelescopeSurfaceType::Plane) {
-    boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(
+    boundsVol = std::make_shared<Acts::CuboidVolumeBounds>(
         bounds[0] + 5._mm, bounds[1] + 5._mm, length + 10._mm);
   } else {
-    boundsVol = std::make_shared<const Acts::CylinderVolumeBounds>(
+    boundsVol = std::make_shared<Acts::CylinderVolumeBounds>(
         std::max(bounds[0] - 5.0_mm, 0.), bounds[1] + 5._mm, length + 10._mm);
   }
 

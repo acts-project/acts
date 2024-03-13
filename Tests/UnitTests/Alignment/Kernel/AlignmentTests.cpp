@@ -143,10 +143,9 @@ struct TelescopeDetector {
     // The volume transform
     Translation3 transVol(0, 0, 0);
     Transform3 trafoVol(rotation * transVol);
-    std::shared_ptr<const VolumeBounds> boundsVol =
-        std::make_shared<const CuboidVolumeBounds>(
-            rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
-            length + 10._mm);
+    auto boundsVol = std::make_shared<CuboidVolumeBounds>(
+        rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
+        length + 10._mm);
 
     LayerArrayCreator::Config lacConfig;
     LayerArrayCreator layArrCreator(
