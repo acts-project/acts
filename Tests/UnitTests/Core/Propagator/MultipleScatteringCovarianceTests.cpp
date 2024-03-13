@@ -49,6 +49,23 @@ auto makeDist(double a, double b, int seed) {
        bdata::distribution = std::uniform_real_distribution<double>(a, b)));
 }
 
+SquareMatrix2 makeAngleCov(double sigmaPhi, double sigmaTheta) {
+  return (Vector2() << sigmaPhi, sigmaTheta)
+      .finished()
+      .array()
+      .square()
+      .matrix()
+      .asDiagonal();
+}
+
+SquareMatrix2 makeMscAngleCov(double theta0, const Vector3& direction) {
+  // sigmaPhi = theta0 / sin(theta)
+  const double sigmaPhi =
+      theta0 * (direction.norm() / VectorHelpers::perp(direction));
+  const double sigmaTheta = theta0;
+  return makeAngleCov(sigmaPhi, sigmaTheta);
+}
+
 const auto bFieldDist = makeDist(0, 3_T, 11);
 const auto directionDist = makeDist(0, 1, 12);
 const auto distanceDist = makeDist(100_mm, 1000_mm, 13);
@@ -67,7 +84,7 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
                      (bFieldDist ^ bFieldDist ^ bFieldDist ^ directionDist ^
                       directionDist ^ directionDist ^ distanceDist ^
                       momentumDist ^ chargeDist ^ theta0Dist) ^
-                         bdata::xrange(1),
+                         bdata::xrange(1000),
                      Bx, By, Bz, Dx, Dy, Dz, s, p, q_, theta0, index) {
   (void)index;
   const Vector3 bField{Bx, By, Bz};
@@ -76,127 +93,103 @@ BOOST_DATA_TEST_CASE(angle_cov_field_invariance,
   const double q = q_ > 0 ? 1 : -1;
   const double qOverP = particle.qOverP(p, q);
 
+  std::cout << "Test " << index << " with B = " << bField.transpose() / 1_T
+            << " direction = " << direction.transpose() << " s = " << s / 1_mm
+            << " p = " << p / 1_GeV << " q = " << q
+            << " theta0 = " << theta0 / 1_mrad << std::endl;
+
+  std::cout << bField.normalized().dot(direction) << std::endl;
+
   PropagatorOptions<> options(gctx, mctx);
   options.direction = Direction::Forward;
   options.pathLimit = s;
 
   // Using optionals as there is no default constructor for BoundTrackParameters
-  std::optional<BoundTrackParameters> eigenParameters;
-  std::optional<BoundTrackParameters> straightLineBackwardParameters;
-  std::optional<BoundTrackParameters> straightLineParameters;
+  std::optional<BoundTrackParameters> referenceParameters;
+  std::optional<BoundTrackParameters> otherParameters;
+
+  // Initial track parameters
+  auto startSurface =
+      Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, direction);
+  auto startParameters = BoundTrackParameters(
+      startSurface,
+      (BoundVector() << 0_mm, 0_mm, VectorHelpers::phi(direction),
+       VectorHelpers::theta(direction), qOverP, 0_ns)
+          .finished(),
+      (BoundVector() << 1_um, 1_um, 10_mrad, 10_mrad, 0.01 / 1_GeV, 1_ps)
+          .finished()
+          .array()
+          .square()
+          .matrix()
+          .asDiagonal(),
+      particle);
 
   // Reference propagation
   {
-    // sigmaPhi = theta0 / sin(theta)
-    const double sigmaPhi =
-        theta0 * (direction.norm() / VectorHelpers::perp(direction));
-    const double sigmaTheta = theta0;
+    auto referenceStartParameters = startParameters;
+    referenceStartParameters.covariance().value().block<2, 2>(
+        eBoundPhi, eBoundPhi) += makeMscAngleCov(theta0, direction);
 
-    // Initial track parameters
-    auto startSurface =
-        Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, direction);
-    auto startParameters = BoundTrackParameters(
-        startSurface,
-        (BoundVector() << 0_mm, 0_mm, VectorHelpers::phi(direction),
-         VectorHelpers::theta(direction), qOverP, 0_ns)
-            .finished(),
-        (BoundVector() << 1_um, 1_um, sigmaPhi, sigmaTheta, 0.01 / 1_GeV, 1_ps)
-            .finished()
-            .array()
-            .square()
-            .matrix()
-            .asDiagonal(),
-        particle);
-
-    auto eigenPropagator = makeEigenPropagator(bField);
-    auto eigenRes = eigenPropagator.propagate(startParameters, options);
-    BOOST_CHECK(eigenRes.ok());
-    BOOST_CHECK(eigenRes->endParameters.has_value());
-    BOOST_CHECK(eigenRes->endParameters.value().covariance().has_value());
-    eigenParameters = eigenRes->endParameters.value();
-
-    std::cout << startParameters << std::endl;
-    std::cout << eigenParameters.value() << std::endl;
+    auto propagator = makeEigenPropagator(bField);
+    auto res = propagator.propagate(referenceStartParameters, options);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK(res->endParameters.has_value());
+    BOOST_CHECK(res->endParameters.value().covariance().has_value());
+    referenceParameters = res->endParameters.value();
   }
 
-  // Now we propagate backwards with a straight line propagator so we can later
-  // propagate forwards again to compare the covariances.
+  // Propagation without MSC and correction at the end
   {
-    PropagatorOptions<> straightLineBackwardOptions(gctx, mctx);
-    straightLineBackwardOptions.direction = Direction::Backward;
-    straightLineBackwardOptions.pathLimit = -s;
+    auto propagator = makeEigenPropagator(bField);
+    auto res = propagator.propagate(startParameters, options);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK(res->endParameters.has_value());
+    BOOST_CHECK(res->endParameters.value().covariance().has_value());
+    otherParameters = res->endParameters.value();
 
-    BoundTrackParameters startParameters = eigenParameters.value();
+    // Correct the covariance
 
-    auto straightLinePropagator = makeStraightLinePropagator();
-    auto straightLineBackwardRes = straightLinePropagator.propagate(
-        startParameters, straightLineBackwardOptions);
-    BOOST_CHECK(straightLineBackwardRes.ok());
-    BOOST_CHECK(straightLineBackwardRes->endParameters.has_value());
-    BOOST_CHECK(straightLineBackwardRes->endParameters.value()
-                    .covariance()
-                    .has_value());
-    straightLineBackwardParameters =
-        straightLineBackwardRes->endParameters.value();
-  }
-
-  // Straight line propagation
-  {
-    // sigmaPhi = theta0 / sin(theta)
-    const double sigmaPhi =
-        theta0 * (eigenParameters->direction().norm() /
-                  VectorHelpers::perp(eigenParameters->direction()));
-    const double sigmaTheta = theta0;
-
-    BoundTrackParameters startParameters =
-        straightLineBackwardParameters.value();
-    startParameters.covariance() =
-        (BoundVector() << 1_um, 1_um, sigmaPhi, sigmaTheta, 1 / 1_MeV, 1_ps)
+    SquareMatrix2 locCov =
+        (Vector2() << std::sin(theta0) * s, std::sin(theta0) * s)
             .finished()
             .array()
             .square()
             .matrix()
             .asDiagonal();
 
-    auto straightLinePropagator = makeStraightLinePropagator();
-    auto straightLineForwardRes =
-        straightLinePropagator.propagate(startParameters, options);
-    BOOST_CHECK(straightLineForwardRes.ok());
-    BOOST_CHECK(straightLineForwardRes->endParameters.has_value());
-    BOOST_CHECK(
-        straightLineForwardRes->endParameters.value().covariance().has_value());
-    straightLineParameters = straightLineForwardRes->endParameters.value();
+    otherParameters->covariance().value().block<2, 2>(eBoundPhi, eBoundPhi) +=
+        makeMscAngleCov(theta0, otherParameters->direction());
+    otherParameters->covariance().value().block<2, 2>(eBoundLoc0, eBoundLoc0) +=
+        locCov;
   }
-
-  // Optional was just a hack and should always be set
-  BOOST_CHECK(eigenParameters.has_value());
-  BOOST_CHECK(straightLineParameters.has_value());
 
   // Check if we get the same parameters
   {
-    BoundVector exp = eigenParameters->parameters();
-    BoundVector obs = straightLineParameters->parameters();
-    CHECK_CLOSE_ABS(obs, exp, 1e-7);
+    BoundVector exp = referenceParameters->parameters();
+    BoundVector obs = otherParameters->parameters();
+    CHECK_CLOSE_ABS(obs, exp, 1e-12);
   }
 
   // Check if we get the same direction covariance
   {
-    SquareMatrix2 exp =
-        eigenParameters->covariance().value().block<2, 2>(eBoundPhi, eBoundPhi);
+    SquareMatrix2 ref = referenceParameters->covariance().value().block<2, 2>(
+        eBoundPhi, eBoundPhi);
     SquareMatrix2 obs =
-        straightLineParameters->covariance().value().block<2, 2>(eBoundPhi,
-                                                                 eBoundPhi);
-    CHECK_CLOSE_ABS(obs, exp, 1e-7);
+        otherParameters->covariance().value().block<2, 2>(eBoundPhi, eBoundPhi);
+    // diagonal should be close
+    CHECK_CLOSE_REL(obs.diagonal(), ref.diagonal(), 1e-1);
+    CHECK_CLOSE_COVARIANCE(obs, ref, 1e-1);
   }
 
   // Check if we get the same position covariance
   {
-    SquareMatrix2 exp = eigenParameters->covariance().value().block<2, 2>(
+    SquareMatrix2 ref = referenceParameters->covariance().value().block<2, 2>(
         eBoundLoc0, eBoundLoc0);
-    SquareMatrix2 obs =
-        straightLineParameters->covariance().value().block<2, 2>(eBoundLoc0,
-                                                                 eBoundLoc0);
-    CHECK_CLOSE_ABS(obs, exp, 1e-7);
+    SquareMatrix2 obs = otherParameters->covariance().value().block<2, 2>(
+        eBoundLoc0, eBoundLoc0);
+    // diagonal should be close
+    CHECK_CLOSE_REL(obs.diagonal(), ref.diagonal(), 1e-1);
+    CHECK_CLOSE_COVARIANCE(obs, ref, 1e-1);
   }
 }
 
