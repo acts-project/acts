@@ -412,14 +412,6 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Register the color code
-  ///
-  /// @param icolor is a color number
-  void registerColorCode(unsigned int icolor);
-
-  /// Get the color code
-  unsigned int colorCode() const;
-
   /// Return the MotherVolume - if it exists
   const TrackingVolume* motherVolume() const;
 
@@ -519,9 +511,6 @@ class TrackingVolume : public Volume {
 
   /// Volume name for debug reasons & screen output
   std::string m_name;
-
-  /// color code for displaying
-  unsigned int m_colorCode{20};
 };
 
 inline const std::string& TrackingVolume::volumeName() const {
@@ -553,14 +542,6 @@ inline const MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
 inline std::shared_ptr<const TrackingVolumeArray>
 TrackingVolume::confinedVolumes() const {
   return m_confinedVolumes;
-}
-
-inline void TrackingVolume::registerColorCode(unsigned int icolor) {
-  m_colorCode = icolor;
-}
-
-inline unsigned int TrackingVolume::colorCode() const {
-  return m_colorCode;
 }
 
 inline const TrackingVolume* TrackingVolume::motherVolume() const {
