@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
                                              Acts::Logging::VERBOSE));
 
     Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
-    shapeConfig.boundValues = {20, 100, 10., M_PI, 0.};
+    shapeConfig.boundValues = {18, 100, 10., M_PI, 0.};
     shapeConfig.transform = Acts::Transform3(Acts::Transform3::Identity())
                                 .pretranslate(Acts::Vector3(0., 0., ep));
     shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
 
   // Central barrel
   Acts::Experimental::VolumeStructureBuilder::Config innerShapeConfig;
-  innerShapeConfig.boundValues = {20., 60., 700., M_PI, 0.};
+  innerShapeConfig.boundValues = {18., 60., 700., M_PI, 0.};
   innerShapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto innerShapeBuilder =
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
 
   // Beam Pipe
   Acts::Experimental::VolumeStructureBuilder::Config bpShapeConfig;
-  bpShapeConfig.boundValues = {0., 20., 720., M_PI, 0.};
+  bpShapeConfig.boundValues = {0., 18., 720., M_PI, 0.};
   bpShapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto bpShapeBuilder =
