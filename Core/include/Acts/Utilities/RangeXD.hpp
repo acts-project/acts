@@ -96,10 +96,8 @@ class RangeXD {
   ///
   /// @return true The coordinate is inside the range
   /// @return false The coordinate is outside the range
-  template <typename T, std::size_t D,
-            template <typename, std::size_t> typename coordinate_t,
-            std::size_t I = Dims, typename = std::enable_if_t<I == D>>
-  bool contains(const coordinate_t<T, D>& v) const {
+  template <template <typename, std::size_t> typename coordinate_t = std::array>
+  bool contains(const coordinate_t<Type, Dims>& v) const {
     for (std::size_t i = 0; i < Dims; ++i) {
       if (!(min(i) <= v[i] && v[i] < max(i))) {
         return false;
