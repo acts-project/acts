@@ -49,7 +49,7 @@ class KDTree {
   using value_t = Type;
 
   /// @brief The type describing a multi-dimensional orthogonal range.
-  using range_t = RangeXD<Dims, Scalar, Vector>;
+  using range_t = RangeXD<Dims, Scalar>;
 
   /// @brief The type of coordinates for points.
   using coordinate_t = Vector<Scalar, Dims>;
