@@ -18,8 +18,6 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
 #include <limits>
@@ -37,12 +35,12 @@ enum class SpacePointCandidateType : short { eBottom, eTop };
 
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 
-template <typename external_spacepoint_t, typename platform_t = void*>
+template <typename external_spacepoint_t, typename grid_t,
+          typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
-  using grid_t = Acts::CylindricalSpacePointGrid<external_spacepoint_t>;
 
  public:
   struct SeedingState {
@@ -83,9 +81,10 @@ class SeedFinder {
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   SeedFinder() = default;
-  SeedFinder(const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
-  SeedFinder<external_spacepoint_t, platform_t>& operator=(
-      const SeedFinder<external_spacepoint_t, platform_t>&) = default;
+  SeedFinder(const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) =
+      delete;
+  SeedFinder<external_spacepoint_t, grid_t, platform_t>& operator=(
+      const SeedFinder<external_spacepoint_t, grid_t, platform_t>&) = default;
   //@}
 
   /// Create all seeds from the space points in the three iterators.

@@ -131,14 +131,6 @@ def generate_changelog(commits, commit_parser=_default_parser) -> dict:
         )
         changes[message.type].append((commit.sha, capital_message, commit.author))
 
-        if message.breaking_descriptions:
-            for paragraph in message.breaking_descriptions:
-                changes["breaking"].append((commit.sha, paragraph, commit.author))
-        elif message.bump == 3:
-            changes["breaking"].append(
-                (commit.sha, message.descriptions[0], commit.author)
-            )
-
     return changes
 
 

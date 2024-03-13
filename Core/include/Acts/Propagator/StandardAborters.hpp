@@ -155,10 +155,12 @@ struct SurfaceReached {
   }
 };
 
-/// Similar to `SurfaceReached` aborter but ignoring the overstepping tolerance
+/// Similar to SurfaceReached, but with an infinite overstep limit.
+///
+/// This can be used to force the propagation to the target surface.
 struct ForcedSurfaceReached : SurfaceReached {
   ForcedSurfaceReached()
-      : SurfaceReached(-std::numeric_limits<double>::max()) {}
+      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
 };
 
 /// This is the condition that the end of World has been reached

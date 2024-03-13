@@ -212,7 +212,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
-  m_seedFinder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
+  m_seedFinder =
+      Acts::SeedFinder<SimSpacePoint,
+                       Acts::CylindricalSpacePointGrid<SimSpacePoint>>(
+          m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
