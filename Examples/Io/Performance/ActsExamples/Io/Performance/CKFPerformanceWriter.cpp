@@ -162,6 +162,9 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
   std::vector<float> inputFeatures(3);
 
   for (const auto& track : tracks) {
+    // Counting number of total trajectories
+    m_nTotalTracks++;
+
     // Check if the reco track has fitted track parameters
     if (!track.hasReferenceSurface()) {
       ACTS_WARNING("No fitted track parameters for track, index = "
@@ -178,30 +181,33 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
                                 track.nOutliers(), track.nHoles(),
                                 track.nSharedHits());
 
-    // Get the truth-matched particle
+    // Get the truth matching information
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth particle associated with this track, index = "
+      ACTS_DEBUG("No truth matching information for this track, index = "
                  << track.index() << " tip index = " << track.tipIndex());
       continue;
     }
 
     const auto& particleMatch = imatched->second;
 
-    if (particleMatch.isDuplicate) {
-      m_nTotalDuplicateTracks++;
-    }
-
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters,
                             particleMatch.isFake);
 
-    // Fill the duplication rate
-    m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                               particleMatch.isDuplicate);
+    if (particleMatch.isFake) {
+      m_nTotalFakeTracks++;
+    } else {
+      // Duplication flag is only meaningful for non-fake tracks
 
-    // Counting number of total trajectories
-    m_nTotalTracks++;
+      if (particleMatch.isDuplicate) {
+        m_nTotalDuplicateTracks++;
+      }
+
+      // Fill the duplication rate
+      m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+                                 particleMatch.isDuplicate);
+    }
   }
 
   // Loop over all truth particles for efficiency plots and reco details.
@@ -216,9 +222,11 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
         imatched != particleTrackMatching.end()) {
       nMatchedTracks = (imatched->second.track.has_value() ? 1 : 0) +
                        imatched->second.duplicates;
+
       // Add number for total matched tracks here
       m_nTotalMatchedTracks += nMatchedTracks;
       m_nTotalMatchedParticles += 1;
+
       // Check if the particle has more than one matched track for the duplicate
       // rate
       if (nMatchedTracks > 1) {
@@ -227,10 +235,9 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
       isReconstructed = imatched->second.track.has_value();
 
       nFakeTracks = imatched->second.fakes;
-      m_nTotalFakeTracks += nFakeTracks;
-      // unmatched is a map of majority particle id to # of tracks associated
-      // with that particle
-      m_nTotalFakeParticles += 1;
+      if (nFakeTracks > 0) {
+        m_nTotalFakeParticles += 1;
+      }
     }
 
     // Loop over all the other truth particle and find the distance to the
