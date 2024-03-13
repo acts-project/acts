@@ -26,8 +26,8 @@ fi
 ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
 ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
 
-# modify python environment to include some ACTS helpers
-export PYTHONPATH="$ACTS_SOURCE_DIR/Examples/Scripts/Python:${PYTHONPATH}"
+# make ODD available
+export ODD_PATH="${ODD_SOURCE_DIR}"
 
 # make ACTS binaries available
 export PATH="$script_dir/bin:${PATH}"

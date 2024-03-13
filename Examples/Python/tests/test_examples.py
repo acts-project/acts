@@ -13,7 +13,6 @@ import pytest
 
 from helpers import (
     geant4Enabled,
-    rootEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
@@ -23,18 +22,14 @@ from helpers import (
     failure_threshold,
 )
 
-pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
-
-
 import acts
 from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
 )
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
-from acts.examples.odd import getOpenDataDetector
-from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -150,9 +145,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
-    getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )  # just to make sure it can build
+    getOpenDataDetector()  # just to make sure it can build
 
     csv = tmp_path / "csv"
     csv.mkdir()
@@ -672,9 +665,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     from material_mapping import runMaterialMapping
 
@@ -715,7 +706,6 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
@@ -752,7 +742,6 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
@@ -796,7 +785,6 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
@@ -1141,9 +1129,7 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )  # just to make sure it can build
+    getOpenDataDetector()  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1173,9 +1159,7 @@ def test_full_chain_odd_example(tmp_path):
 @pytest.mark.slow
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )  # just to make sure it can build
+    getOpenDataDetector()  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1217,9 +1201,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )  # just to make sure it can build
+    getOpenDataDetector()  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent

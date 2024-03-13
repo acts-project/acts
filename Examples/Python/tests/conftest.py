@@ -18,13 +18,12 @@ sys.path += [
 
 import helpers
 import helpers.hash_root
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
 
 import pytest
 
 import acts
 import acts.examples
+from acts.examples.odd import getOpenDataDetector
 
 try:
     import ROOT
@@ -267,9 +266,7 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detector, trackingGeometry, decorators = getOpenDataDetector(
-            getOpenDataDetectorDirectory(), matDeco
-        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
         return DetectorConfig(
             detector,
             trackingGeometry,

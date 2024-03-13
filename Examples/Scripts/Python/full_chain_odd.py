@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os, argparse, pathlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
@@ -27,8 +28,7 @@ from acts.examples.reconstruction import (
     addSeedFilterML,
     SeedFilterMLDBScanConfig,
 )
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 import acts.examples.edm4hep
 
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
