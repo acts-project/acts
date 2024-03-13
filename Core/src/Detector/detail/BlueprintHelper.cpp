@@ -237,10 +237,6 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
   unsigned int igap = 0;
   for (auto& child : node.children) {
     auto [neg, pos] = endPointsXYZ(*child, binVal);
-    if (neg[binVal] < negC[binVal]) {
-      throw std::runtime_error("BlueprintHelper: Overlap detected for child '" +
-                               child->name + "' of node '" + node.name + "'");
-    }
     ActsScalar gapSpan = (neg - negC).norm();
     if (gapSpan > s_onSurfaceTolerance) {
       // Fill a gap node
