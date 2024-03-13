@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-import os, argparse, pathlib, acts, acts.examples
+import os
+import argparse
+import pathlib
+
+import acts
+import acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -30,10 +35,19 @@ from acts.examples.reconstruction import (
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
+
+u = acts.UnitConstants
+
+
 parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
-
+parser.add_argument(
+    "--output",
+    "-o",
+    help="Output directory",
+    type=pathlib.Path,
+    default=pathlib.Path.cwd() / "odd_output",
+)
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
-
 parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
 parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
@@ -57,13 +71,12 @@ parser.add_argument(
 
 args = vars(parser.parse_args())
 
+outputDir = args["output"]
 ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["MLSolver"]
 seedFilter_ML = args["MLSeedFilter"]
-u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
-outputDir = pathlib.Path.cwd() / "odd_output"
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = geoDir / "data/odd-material-maps.root"
@@ -85,6 +98,8 @@ s = acts.examples.Sequencer(
 )
 
 if args["edm4hep"]:
+    import acts.examples.edm4hep
+
     edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
         inputPath=str(args["edm4hep"]),
         inputSimHits=[
