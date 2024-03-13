@@ -184,7 +184,8 @@ Measurement EDM4hepUtil::readMeasurement(
       ActsFatras::Segmentizer::Bin2D bin{
           static_cast<unsigned int>(c.getType()),
           static_cast<unsigned int>(c.getQuality())};
-      ActsFatras::Segmentizer::Segment2D path2D;
+      ActsFatras::Segmentizer::Segment2D path2D{
+          {Acts::Vector2::Zero(), Acts::Vector2::Zero()}};
       double activation = c.getTime();
       ActsFatras::Segmentizer::ChannelSegment cell{bin, path2D, activation};
 
