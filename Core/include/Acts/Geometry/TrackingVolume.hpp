@@ -395,7 +395,6 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs,
       bool checkmaterial = true);
 
-  
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
   ///  - negativeFaceXY
