@@ -63,12 +63,14 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param halex is the half length of the cube in x
   /// @param haley is the half length of the cube in y
   /// @param halez is the half length of the cube in z
-  CuboidVolumeBounds(double halex, double haley, double halez) noexcept(false);
+  CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
+                     ActsScalar halez) noexcept(false);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values iw the bound values
-  CuboidVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
+  CuboidVolumeBounds(const std::array<ActsScalar, eSize>& values) noexcept(
+      false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();
@@ -91,14 +93,14 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, ActsScalar tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -122,16 +124,16 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Binning borders in double
+  /// Binning borders in ActsScalar
   ///
   /// @param bValue is the binning schema used
   ///
   /// @return float offset to be used for the binning
-  double binningBorder(BinningValue bValue) const final;
+  ActsScalar binningBorder(BinningValue bValue) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Output Method for std::ostream
   ///
@@ -140,7 +142,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
  private:
   /// The bound values ordered in a fixed size array
-  std::array<double, eSize> m_values;
+  std::array<ActsScalar, eSize> m_values;
 
   std::shared_ptr<const RectangleBounds> m_xyBounds{nullptr};
   std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};

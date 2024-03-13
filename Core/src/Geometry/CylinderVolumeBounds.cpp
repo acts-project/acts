@@ -26,9 +26,9 @@
 namespace Acts {
 
 CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
-                                           double thickness) noexcept(false)
+                                           ActsScalar thickness) noexcept(false)
     : VolumeBounds() {
-  double cR = cBounds.get(CylinderBounds::eR);
+  ActsScalar cR = cBounds.get(CylinderBounds::eR);
   if (thickness <= 0. || (cR - 0.5 * thickness) < 0.) {
     throw(std::invalid_argument(
         "CylinderVolumeBounds: invalid extrusion thickness."));
@@ -44,7 +44,7 @@ CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
-                                           double thickness) noexcept(false)
+                                           ActsScalar thickness) noexcept(false)
     : VolumeBounds() {
   if (thickness <= 0.) {
     throw(std::invalid_argument(
@@ -55,8 +55,8 @@ CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
-  m_values[eBevelMinZ] = (double)0.;
-  m_values[eBevelMaxZ] = (double)0.;
+  m_values[eBevelMinZ] = (ActsScalar)0.;
+  m_values[eBevelMaxZ] = (ActsScalar)0.;
   buildSurfaceBounds();
 }
 
@@ -68,11 +68,11 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
   Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
   // Set up transform for beveled edges if they are defined
-  double bevelMinZ = get(eBevelMinZ);
-  double bevelMaxZ = get(eBevelMaxZ);
+  ActsScalar bevelMinZ = get(eBevelMinZ);
+  ActsScalar bevelMaxZ = get(eBevelMaxZ);
   Transform3 transMinZ, transMaxZ;
   if (bevelMinZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMinZ);
+    ActsScalar sy = 1 - 1 / std::cos(bevelMinZ);
     transMinZ = transform * vMinZ *
                 Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -80,7 +80,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
     transMinZ = transform * vMinZ;
   }
   if (bevelMaxZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMaxZ);
+    ActsScalar sy = 1 - 1 / std::cos(bevelMaxZ);
     transMaxZ = transform * vMaxZ *
                 Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -170,7 +170,7 @@ std::ostream& CylinderVolumeBounds::toStream(std::ostream& os) const {
 Volume::BoundingBox CylinderVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  double xmax = 0, xmin = 0, ymax = 0, ymin = 0;
+  ActsScalar xmax = 0, xmin = 0, ymax = 0, ymin = 0;
   xmax = get(eMaxR);
 
   if (get(eHalfPhiSector) > M_PI / 2.) {
@@ -194,10 +194,10 @@ Volume::BoundingBox CylinderVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool CylinderVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  double ros = perp(pos);
+  ActsScalar ros = perp(pos);
   bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
   bool insideR = insidePhi
                      ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
@@ -215,7 +215,7 @@ Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
   return VolumeBounds::binningOffset(bValue);
 }
 
-double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
+ActsScalar CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue == Acts::binR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
@@ -225,8 +225,8 @@ double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
   return VolumeBounds::binningBorder(bValue);
 }
 
-std::vector<double> CylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
+std::vector<ActsScalar> CylinderVolumeBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

@@ -88,7 +88,7 @@ class Volume : public virtual GeometryObject {
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool inside(const Vector3& gpos, double tol = 0.) const;
+  bool inside(const Vector3& gpos, ActsScalar tol = 0.) const;
 
   /// The binning position method
   /// - as default the center is given, but may be overloaded

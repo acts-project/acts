@@ -19,7 +19,8 @@
 
 namespace Acts {
 
-CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
+CuboidVolumeBounds::CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
+                                       ActsScalar halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
   buildSurfaceBounds();
@@ -110,7 +111,7 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-double CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
+ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue <= binZ) {
     return m_values[bValue];
   }
@@ -121,14 +122,14 @@ double CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   return 0.0;
 }
 
-bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool CuboidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
 }
 
-std::vector<double> CuboidVolumeBounds::values() const {
-  std::vector<double> valvector;
+std::vector<ActsScalar> CuboidVolumeBounds::values() const {
+  std::vector<ActsScalar> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
