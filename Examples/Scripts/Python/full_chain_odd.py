@@ -291,7 +291,6 @@ addVertexFitting(
     field,
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    logLevel=acts.logging.VERBOSE,
 )
 
 s.run()
