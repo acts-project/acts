@@ -23,11 +23,8 @@ fi
 . $script_dir/python/setup.sh
 
 # set ACTS and ODD environment variables
-ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
-ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
-
-# make ODD available
-export ODD_PATH="${ODD_SOURCE_DIR}"
+export ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+export ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
 
 # make ACTS binaries available
 export PATH="$script_dir/bin:${PATH}"
