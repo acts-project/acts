@@ -132,31 +132,6 @@ class TrackingVolume : public Volume {
     return MutableTrackingVolumePtr(new TrackingVolume(
         transform, std::move(volumeBounds), containedVolumes, volumeName));
   }
-
-  /// Factory constructor for Tracking Volume with a bounding volume hierarchy
-  ///
-  /// @param transform is the global 3D transform to position the volume in
-  /// space
-  /// @param volbounds is the description of the volume boundaries
-  /// @param boxStore Vector owning the contained bounding boxes
-  /// @param descendants Vector owning the child volumes
-  /// @param top The top of the hierarchy (top node)
-  /// @param volumeMaterial is the materials of the tracking volume
-  /// @param volumeName is a string identifier
-  ///
-  /// @return shared pointer to a new TrackingVolume
-  static MutableTrackingVolumePtr create(
-      const Transform3& transform, VolumeBoundsPtr volbounds,
-      std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
-      std::vector<std::unique_ptr<const Volume>> descendants,
-      const Volume::BoundingBox* top,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      const std::string& volumeName = "undefined") {
-    return MutableTrackingVolumePtr(new TrackingVolume(
-        transform, std::move(volbounds), std::move(boxStore),
-        std::move(descendants), top, std::move(volumeMaterial), volumeName));
-  }
-
   /// Factory constructor for Tracking Volumes with content
   /// - can not be a container volume
   ///
@@ -435,11 +410,6 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Return whether this TrackingVolume has a BoundingVolumeHierarchy
-  /// associated
-  /// @return If it has a BVH or not.
-  bool hasBoundingVolumeHierarchy() const;
-
   /// Return the MotherVolume - if it exists
   const TrackingVolume* motherVolume() const;
 
@@ -460,13 +430,6 @@ class TrackingVolume : public Volume {
   TrackingVolume(const Transform3& transform, VolumeBoundsPtr volbounds,
                  const std::shared_ptr<const TrackingVolumeArray>&
                      containedVolumeArray = nullptr,
-                 const std::string& volumeName = "undefined");
-
-  TrackingVolume(const Transform3& transform, VolumeBoundsPtr volbounds,
-                 std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
-                 std::vector<std::unique_ptr<const Volume>> descendants,
-                 const Volume::BoundingBox* top,
-                 std::shared_ptr<const IVolumeMaterial> volumeMaterial,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
@@ -544,11 +507,6 @@ class TrackingVolume : public Volume {
 
   /// Volume name for debug reasons & screen output
   std::string m_name;
-
-  /// Bounding Volume Hierarchy (BVH)
-  std::vector<std::unique_ptr<const Volume::BoundingBox>> m_boundingBoxes;
-  std::vector<std::unique_ptr<const Volume>> m_descendantVolumes;
-  const Volume::BoundingBox* m_bvhTop{nullptr};
 };
 
 inline const std::string& TrackingVolume::volumeName() const {
@@ -588,10 +546,6 @@ inline const TrackingVolume* TrackingVolume::motherVolume() const {
 
 inline void TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
   m_motherVolume = mvol;
-}
-
-inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
-  return m_bvhTop != nullptr;
 }
 
 #ifndef DOXYGEN
