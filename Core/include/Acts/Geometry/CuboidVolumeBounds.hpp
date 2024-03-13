@@ -73,18 +73,17 @@ class CuboidVolumeBounds : public VolumeBounds {
       false)
       : m_values(values) {
     checkConsistency();
-    buildSurfaceBounds();
   }
 
   /// Copy Constructor
   ///
   /// @param bobo is the source volume bounds to be copied
-  CuboidVolumeBounds(const CuboidVolumeBounds& bobo);
+  CuboidVolumeBounds(const CuboidVolumeBounds& bobo) = default;
 
   /// Assignment operator
   ///
   /// @param bobo is the source volume bounds to be assigned
-  CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo);
+  CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo) = default;
 
   ~CuboidVolumeBounds() override = default;
 
@@ -143,6 +142,15 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param bValue the class nested enum for the array access
   ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
 
+  /// Set a bound value
+  /// @param bValue the bound value identifier
+  /// @param value the value to be set
+  void set(BoundValues bValue, ActsScalar value);
+
+  /// Set a range of bound values
+  /// @param keyValues the initializer list of key value pairs
+  void set(std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues);
+
   /// Output Method for std::ostream
   ///
   /// @param os is ostream operator to be dumped into
@@ -151,13 +159,6 @@ class CuboidVolumeBounds : public VolumeBounds {
  private:
   /// The bound values ordered in a fixed size array
   std::array<ActsScalar, eSize> m_values;
-
-  std::shared_ptr<const RectangleBounds> m_xyBounds{nullptr};
-  std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};
-  std::shared_ptr<const RectangleBounds> m_zxBounds{nullptr};
-
-  /// Create the surface bounds
-  void buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
