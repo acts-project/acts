@@ -102,13 +102,13 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(innerCone), Direction:: AlongNormal});
+        OrientedSurface{std::move(innerCone), Direction::AlongNormal});
   } else if (m_innerCylinderBounds != nullptr) {
     // Or alternatively the inner Cylinder
     auto innerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(innerCylinder), Direction:: AlongNormal});
+        OrientedSurface{std::move(innerCylinder), Direction::AlongNormal});
   }
 
   // Create an outer Cone
