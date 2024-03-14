@@ -18,7 +18,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <chrono>

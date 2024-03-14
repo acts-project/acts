@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <array>
@@ -122,17 +121,17 @@ class Extent {
   /// @param bValue is the binning value to be returned
   ///
   /// @return a one dimensional arrange
-  Range1D<ActsScalar>& range(BinningValue bValue);
+  auto range(BinningValue bValue) { return m_range[bValue]; }
 
   /// Return the individual 1-dimensional range
   ///
   /// @param bValue is the binning value to be returned
   ///
   /// @return a one dimensional arrange
-  const Range1D<ActsScalar>& range(BinningValue bValue) const;
+  Range1D<ActsScalar> range(BinningValue bValue) const;
 
   /// Return the N-dimension range
-  const RangeXD<binValues, ActsScalar> range() const;
+  const RangeXD<binValues, ActsScalar>& range() const;
 
   /// Return an D-dimensional sub range according to the
   /// the given @param binValues
@@ -227,16 +226,11 @@ class Extent {
   std::array<std::vector<ActsScalar>, binValues> m_valueHistograms;
 };
 
-inline Range1D<ActsScalar>& Acts::Extent::range(BinningValue bValue) {
+inline Range1D<ActsScalar> Acts::Extent::range(BinningValue bValue) const {
   return m_range[bValue];
 }
 
-inline const Range1D<ActsScalar>& Acts::Extent::range(
-    BinningValue bValue) const {
-  return m_range[bValue];
-}
-
-inline const RangeXD<binValues, ActsScalar> Extent::range() const {
+inline const RangeXD<binValues, ActsScalar>& Extent::range() const {
   return m_range;
 }
 

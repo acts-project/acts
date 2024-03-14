@@ -20,9 +20,11 @@
 #include <cstddef>
 #include <utility>
 
-Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                                   double maxhalex,
-                                                   double haley, double halez)
+namespace Acts {
+
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(ActsScalar minhalex,
+                                             ActsScalar maxhalex,
+                                             ActsScalar haley, ActsScalar halez)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthXposY] = maxhalex;
@@ -34,9 +36,9 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   buildSurfaceBounds();
 }
 
-Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                                   double haley, double halez,
-                                                   double alpha, double beta)
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(ActsScalar minhalex,
+                                             ActsScalar haley, ActsScalar halez,
+                                             ActsScalar alpha, ActsScalar beta)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthY] = haley;
@@ -44,14 +46,15 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   m_values[eAlpha] = alpha;
   m_values[eBeta] = beta;
   // now calculate the remaining max half X
-  double gamma = (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
+  ActsScalar gamma =
+      (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
   m_values[eHalfLengthXposY] = minhalex + (2. * haley) * tan(gamma);
 
   checkConsistency();
   buildSurfaceBounds();
 }
 
-Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
+std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
@@ -73,9 +76,9 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   sf = Surface::makeShared<PlaneSurface>(pzTransform, m_faceXYTrapezoidBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
 
-  double poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
-  double neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
-  double topShift = poshOffset + neghOffset;
+  ActsScalar poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
+  ActsScalar neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
+  ActsScalar topShift = poshOffset + neghOffset;
 
   // Face surfaces yz
   // (3) - At point B, attached to beta opening angle
@@ -113,7 +116,7 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {
+void TrapezoidVolumeBounds::buildSurfaceBounds() {
   m_faceXYTrapezoidBounds = std::make_shared<const TrapezoidBounds>(
       get(eHalfLengthXnegY), get(eHalfLengthXposY), get(eHalfLengthY));
 
@@ -130,7 +133,7 @@ void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthZ), get(eHalfLengthXposY));
 }
 
-bool Acts::TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool TrapezoidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
   if (std::abs(pos.z()) > get(eHalfLengthZ) + tol) {
     return false;
   }
@@ -143,17 +146,24 @@ bool Acts::TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   return inside;
 }
 
-std::ostream& Acts::TrapezoidVolumeBounds::toStream(std::ostream& sl) const {
-  return dumpT<std::ostream>(sl);
+std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
+  os << std::setiosflags(std::ios::fixed);
+  os << std::setprecision(5);
+  os << "TrapezoidVolumeBounds: (minhalfX, halfY, halfZ, alpha, beta) "
+        "= ";
+  os << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
+     << get(eHalfLengthY) << ", " << get(eHalfLengthZ);
+  os << ", " << get(eAlpha) << ", " << get(eBeta) << ")";
+  return os;
 }
 
-Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Vector3& envelope,
+Volume::BoundingBox TrapezoidVolumeBounds::boundingBox(
+    const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  double minx = get(eHalfLengthXnegY);
-  double maxx = get(eHalfLengthXposY);
-  double haley = get(eHalfLengthY);
-  double halez = get(eHalfLengthZ);
+  ActsScalar minx = get(eHalfLengthXnegY);
+  ActsScalar maxx = get(eHalfLengthXposY);
+  ActsScalar haley = get(eHalfLengthY);
+  ActsScalar halez = get(eHalfLengthZ);
 
   std::array<Vector3, 8> vertices = {{{-minx, -haley, -halez},
                                       {+minx, -haley, -halez},
@@ -180,3 +190,24 @@ Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
 
   return {entity, vmin - envelope, vmax + envelope};
 }
+
+std::vector<ActsScalar> TrapezoidVolumeBounds::values() const {
+  std::vector<ActsScalar> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eHalfLengthXnegY) < 0. || get(eHalfLengthXposY) < 0.) {
+    throw std::invalid_argument(
+        "TrapezoidVolumeBounds: invalid trapezoid parameters in x.");
+  }
+  if (get(eHalfLengthY) <= 0.) {
+    throw std::invalid_argument("TrapezoidVolumeBounds: invalid y extrusion.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("TrapezoidVolumeBounds: invalid z extrusion.");
+  }
+}
+
+}  // namespace Acts
