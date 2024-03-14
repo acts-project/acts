@@ -26,8 +26,6 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
-
 using OrientedSurface = std::pair<std::shared_ptr<RegularSurface>, Direction>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
@@ -114,6 +112,18 @@ class VolumeBounds {
   virtual Volume::BoundingBox boundingBox(
       const Transform3* trf = nullptr, const Vector3& envelope = {0, 0, 0},
       const Volume* entity = nullptr) const = 0;
+
+  /// Get the canonical binning values, i.e. the binning values
+  /// for that fully describe the shape's extent
+  ///
+  /// @return vector of canonical binning values
+  ///
+  /// @note This is the default implementation that
+  /// returns the bounding box binning. Individual shapes
+  /// should override this method
+  virtual std::vector<Acts::BinningValue> canonicalBinning() const {
+    return {Acts::binX, Acts::binY, Acts::binZ};
+  };
 
   /// Binning offset - overloaded for some R-binning types
   ///
