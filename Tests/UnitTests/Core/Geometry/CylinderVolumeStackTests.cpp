@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test_log.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -103,6 +104,34 @@ BOOST_DATA_TEST_CASE(
   } else {
     // Gap volumes were added
     BOOST_CHECK_EQUAL(volumes.size(), 5);
+    auto gap1 = volumes.at(1);
+    auto gap2 = volumes.at(3);
+
+    BOOST_TEST_MESSAGE("Gap 1: " << gap1->transform().matrix());
+    BOOST_TEST_MESSAGE("Gap 2: " << gap2->transform().matrix());
+
+    const auto* gapBounds1 =
+        dynamic_cast<const CylinderVolumeBounds*>(&gap1->volumeBounds());
+    const auto* gapBounds2 =
+        dynamic_cast<const CylinderVolumeBounds*>(&gap2->volumeBounds());
+
+    ActsScalar gapHlZ = (shift - 1.0) * hlZ;
+
+    BOOST_CHECK(std::abs(gapBounds1->get(CylinderVolumeBounds::eHalfLengthZ) -
+                         gapHlZ) < 1e-10);
+    BOOST_CHECK(std::abs(gapBounds2->get(CylinderVolumeBounds::eHalfLengthZ) -
+                         gapHlZ) < 1e-10);
+
+    ActsScalar gap1Z = (-2 * hlZ * shift) + hlZ + gapHlZ;
+    ActsScalar gap2Z = (2 * hlZ * shift) - hlZ - gapHlZ;
+
+    Transform3 gap1Transform = base * Translation3{0_mm, 0_mm, gap1Z};
+    Transform3 gap2Transform = base * Translation3{0_mm, 0_mm, gap2Z};
+
+    CHECK_CLOSE_OR_SMALL(gap1->transform().matrix(), gap1Transform.matrix(),
+                         1e-10, 1e-14);
+    CHECK_CLOSE_OR_SMALL(gap2->transform().matrix(), gap2Transform.matrix(),
+                         1e-10, 1e-14);
   }
 }
 
