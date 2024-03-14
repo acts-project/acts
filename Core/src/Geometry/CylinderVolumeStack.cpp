@@ -237,12 +237,12 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
     VolumeTuple& a, VolumeTuple& b, const Transform3& groupTransform,
     CylinderVolumeStack::AttachmentStrategy strategy, const Logger& logger) {
   ActsScalar aZ = a.localTransform.translation()[eZ];
-  ActsScalar aHlZ = a.bounds->get(CylinderVolumeBounds::eHalfLengthZ);
+  ActsScalar aHlZ = a.updatedBounds->get(CylinderVolumeBounds::eHalfLengthZ);
   ActsScalar aZMin = aZ - aHlZ;
   ActsScalar aZMax = aZ + aHlZ;
 
   ActsScalar bZ = b.localTransform.translation()[eZ];
-  ActsScalar bHlZ = b.bounds->get(CylinderVolumeBounds::eHalfLengthZ);
+  ActsScalar bHlZ = b.updatedBounds->get(CylinderVolumeBounds::eHalfLengthZ);
   ActsScalar bZMin = bZ - bHlZ;
   ActsScalar bZMax = bZ + bHlZ;
 
@@ -295,7 +295,7 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
       // break;
       // }
       case AttachmentStrategy::First: {
-        ACTS_DEBUG(" -> Strategy: First");
+        ACTS_DEBUG(" -> Strategy: Expand first volume");
         ActsScalar gapWidth = bZMin - aZMax;
         ActsScalar aZMidNew = (aZMin + bZMin) / 2.0;
         ActsScalar aHlZNew = (bZMin - aZMin) / 2.0;
@@ -311,8 +311,24 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
 
         break;
       }
+      case AttachmentStrategy::Second: {
+        ACTS_DEBUG(" -> Strategy: Expand second volume");
+        ActsScalar gapWidth = bZMin - aZMax;
+        ActsScalar bZMidNew = (aZMax + bZMax) / 2.0;
+        ActsScalar bHlZNew = (bZMax - aZMax) / 2.0;
+        ACTS_DEBUG("  - Gap width: " << gapWidth);
+        ACTS_DEBUG("  - New halflength for second volume: " << bHlZNew);
+        ACTS_DEBUG("  - New bounds for second volume: ["
+                   << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
+                   << (bZMidNew + bHlZNew) << "]");
+
+        b.localTransform = Translation3{0, 0, bZMidNew};
+        b.volume->setTransform(groupTransform * b.localTransform);
+        b.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, bHlZNew);
+        break;
+      }
       case AttachmentStrategy::Gap: {
-        ACTS_DEBUG(" -> Strategy: Gap");
+        ACTS_DEBUG(" -> Strategy: Create a gap volume");
         ActsScalar gapHlZ = (bZMin - aZMax) / 2.0;
         ActsScalar gapMidZ = (bZMin + aZMax) / 2.0;
 
