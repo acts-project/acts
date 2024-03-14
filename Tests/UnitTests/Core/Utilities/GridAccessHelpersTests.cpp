@@ -56,14 +56,6 @@ BOOST_AUTO_TEST_CASE(Grid1DAccess) {
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 0u);
   BOOST_CHECK_EQUAL(grid.atPosition(sgAccess), 3u);
   BOOST_CHECK_EQUAL(grid.atPosition(tgAccess), 6u);
-
-  // Binned access
-  Vector2 flbPosition = GridAccessHelpers::toLocal(grid, 1u, 0u, 0u);
-  auto flbAccess =
-      GridAccessHelpers::accessLocal<GridType>(flbPosition, fAccessor);
-  BOOST_CHECK_EQUAL(grid.atPosition(flbAccess), 1u);
-  BOOST_CHECK_THROW(GridAccessHelpers::toLocal(grid, 1u, 0u, 3u),
-                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Grid2DAccess) {
@@ -91,30 +83,33 @@ BOOST_AUTO_TEST_CASE(Grid2DAccess) {
   std::vector<BinningValue> fCast = {Acts::binX, Acts::binY};
   auto fgAccess = GridAccessHelpers::castPosition<GridType>(gPosition, fCast);
   BOOST_CHECK_EQUAL(grid.atPosition(fgAccess), 300u);
-
-  // Binned access
-  Vector2 lbPosition = GridAccessHelpers::toLocal(grid, 4u, 9u);
-  auto lbAccess =
-      GridAccessHelpers::accessLocal<GridType>(lbPosition, fAccessor);
-  BOOST_CHECK_EQUAL(grid.atPosition(lbAccess), 904u);
 }
 
-BOOST_AUTO_TEST_CASE(Grid3DAccess) {
-  using EAxis = Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                   Acts::detail::AxisBoundaryType::Bound>;
-  using EGrid = Acts::Grid<std::size_t, EAxis, EAxis, EAxis>;
+BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
+  Acts::GridAccess::GlobalSubSpace<binX, binY> gssXY;
 
-  auto xAxis = EAxis(0., 10., 10);
-  auto yAxis = EAxis(0., 10., 10);
-  auto zAxis = EAxis(0., 10., 10);
+  auto xy = gssXY.toGridLocal(Vector3{1., 2., 3.});
+  BOOST_CHECK_EQUAL(xy[0], 1.);
+  BOOST_CHECK_EQUAL(xy[1], 2.);
 
-  EGrid grid({xAxis, yAxis, zAxis});
+  Acts::GridAccess::GlobalSubSpace<binZ> gssZ;
+  auto z = gssZ.toGridLocal(Vector3{1., 2., 3.});
+  BOOST_CHECK_EQUAL(z[0], 3.);
 
-  BOOST_CHECK_THROW(GridAccessHelpers::accessLocal<EGrid>({1., 1.}, {0u, 1u});
-                    , std::invalid_argument);
+  Acts::GridAccess::Affine3Transformed<Acts::GridAccess::GlobalSubSpace<binZ>>
+      gssZT(gssZ, Acts::Transform3(Acts::Transform3::Identity())
+                      .pretranslate(Vector3{0., 0., 100.}));
 
-  BOOST_CHECK_THROW(GridAccessHelpers::toLocal(grid, 4u, 9u),
-                    std::invalid_argument);
+  auto zt = gssZT.toGridLocal(Vector3{1., 2., 3.});
+  BOOST_CHECK_EQUAL(zt[0], 103.);
+
+  // Invalidy checks
+  using SubSpace0 = Acts::GridAccess::GlobalSubSpace<>;
+  BOOST_CHECK_THROW(auto gss0 = SubSpace0(), std::invalid_argument);
+
+  using SubSpace4 = Acts::GridAccess::GlobalSubSpace<Acts::binX, Acts::binY,
+                                                     Acts::binZ, Acts::binPhi>;
+  BOOST_CHECK_THROW(auto gss4 = SubSpace4(), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
