@@ -37,7 +37,7 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3& transform, VolumeBoundsPtr volbounds,
+    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
     : Volume(transform, std::move(volbounds)),
@@ -52,7 +52,8 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3& transform, VolumeBoundsPtr volumeBounds,
+    const Transform3& transform,
+    std::shared_ptr<const VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
