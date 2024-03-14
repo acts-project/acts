@@ -30,8 +30,7 @@ BOOST_AUTO_TEST_SUITE(Geometry);
 BOOST_DATA_TEST_CASE(
     JoinCylinderVolumesAlongZ,
     boost::unit_test::data::xrange(-135, 180, 45) *
-        boost::unit_test::data::make(  // 0.8, 1.0,
-            1.2) *
+        boost::unit_test::data::make(0.8, 1.0, 1.2) *
         boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
                                      Vector3{20_mm, 0_mm, 0_mm},
                                      Vector3{0_mm, 20_mm, 0_mm},
@@ -80,7 +79,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMinR), 100_mm);
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMaxR), 600_mm);
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eHalfLengthZ),
-                    3 * hlZ);
+                    hlZ + 2 * hlZ * shift);
   CHECK_CLOSE_OR_SMALL(cylStack.transform().matrix(), base.matrix(), 1e-10,
                        1e-14);
 

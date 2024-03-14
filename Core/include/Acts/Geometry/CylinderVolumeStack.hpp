@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
