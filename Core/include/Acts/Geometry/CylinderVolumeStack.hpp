@@ -25,6 +25,8 @@ class CylinderVolumeStack : public Volume {
       AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
       const Logger& logger = Acts::getDummyLogger());
 
+  // @TODO: Implement assignVolumeBounds
+
  private:
   static Volume createOuterVolume(std::vector<std::shared_ptr<Volume>>& volumes,
                                   BinningValue direction,
@@ -37,7 +39,8 @@ class CylinderVolumeStack : public Volume {
       AttachmentStrategy strategy, const Logger& logger);
 
   static void printVolumeSequence(const std::vector<VolumeTuple>& volumes,
-                                  const Logger& logger);
+                                  const Logger& logger,
+                                  Acts::Logging::Level lvl);
 
   BinningValue m_direction;
   std::vector<std::shared_ptr<Volume>>& m_volumes;
