@@ -144,6 +144,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",
         seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+        useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gridseeder",
     )
