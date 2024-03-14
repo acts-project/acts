@@ -18,6 +18,24 @@
 
 namespace Acts {
 
+<<<<<<< HEAD
+=======
+namespace GridAccess {
+
+/// Interface class for owning delegate
+class IGlobalToGridLocal {
+ public:
+  virtual ~IGlobalToGridLocal() = default;
+};
+
+/// Interface class for owning delegate
+class IBoundToGridLocal {
+ public:
+  virtual ~IBoundToGridLocal() = default;
+};
+}  // namespace GridAccess
+
+>>>>>>> aa25f968d (change GridSurfaceMaterial to Delegate access)
 namespace GridAccessHelpers {
 
 /// Unroll the cast loop
