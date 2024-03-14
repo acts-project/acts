@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+
 import os
 import warnings
-from pathlib import Path
 import argparse
 
 import acts
@@ -12,13 +12,10 @@ from acts.examples import (
     EventGenerator,
     RandomNumbers,
 )
-
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
-from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
-from acts.examples.geant4 import GdmlDetectorConstructionFactory
 
 u = acts.UnitConstants
 
@@ -109,9 +106,7 @@ def main():
             acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
         )
     else:
-        detector, trackingGeometry, decorators = getOpenDataDetector(
-            getOpenDataDetectorDirectory()
-        )
+        detector, trackingGeometry, decorators = getOpenDataDetector()
 
         detectorConstructionFactory = (
             acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
