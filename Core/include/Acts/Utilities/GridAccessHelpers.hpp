@@ -10,12 +10,29 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 #include <vector>
 
 namespace Acts {
+
+namespace GridAccess {
+
+/// Interface class for owning delegate
+class IGlobalToGridLocal {
+ public:
+  virtual ~IGlobalToGridLocal() = default;
+};
+
+/// Interface class for owning delegate
+class IBoundToGridLocal {
+ public:
+  virtual ~IBoundToGridLocal() = default;
+};
+}  // namespace GridAccess
+
 namespace GridAccessHelpers {
 
 /// Unroll the cast loop

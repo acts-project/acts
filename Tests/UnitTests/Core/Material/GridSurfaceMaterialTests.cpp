@@ -12,10 +12,95 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <vector>
 
+// this is a global access to the x coordinate
+class GlobalAccessX final : public Acts::GridAccess::IGlobalToGridLocal {
+ public:
+  std::array<Acts::ActsScalar, 1u> g2X(const Acts::Vector3& global) const {
+    return {global.x()};
+  }
+};
+
+class LocalAccessX final : public Acts::GridAccess::IBoundToGridLocal {
+ public:
+  std::array<Acts::ActsScalar, 1u> l2X(const Acts::Vector2& local) const {
+    return {local.x()};
+  }
+};
+
+class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
+ public:
+  Acts::ActsScalar zShift = 0.;
+
+  GlobalToZPhi(Acts::ActsScalar shift) : zShift(shift) {}
+
+  std::array<Acts::ActsScalar, 2u> g2ZPhi(const Acts::Vector3& global) const {
+    return {global.z() + zShift, Acts::VectorHelpers::phi(global)};
+  }
+};
+
+// Local on cylinder surface is rPhi, z
+class LocalToZPhi final : public Acts::GridAccess::IBoundToGridLocal {
+ public:
+  Acts::ActsScalar radius = 1.;
+
+  LocalToZPhi(Acts::ActsScalar r) : radius(r) {}
+
+  std::array<Acts::ActsScalar, 2u> l2ZPhi(const Acts::Vector2& local) const {
+    return {local[1u], local[0u] / radius};
+  }
+};
+
 BOOST_AUTO_TEST_SUITE(Material)
+
+BOOST_AUTO_TEST_CASE(GridIndexedMaterial_invalid_bound2Grid_Unconnected) {
+  std::vector<Acts::MaterialSlab> material;
+
+  using EqBound = Acts::GridAxisGenerators::EqBound;
+  using EqGrid = EqBound::grid_type<std::size_t>;
+  using Point = EqGrid::point_t;
+
+  EqBound eqBound{{0., 5.}, 5};
+  EqGrid eqGrid{eqBound()};
+
+  Acts::IndexedSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;
+
+  auto globalX = std::make_unique<const GlobalAccessX>();
+  Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
+  gToX.connect<&GlobalAccessX::g2X>(std::move(globalX));
+
+  BOOST_CHECK_THROW(
+      auto ism = Acts::IndexedSurfaceMaterial<EqGrid>(
+          std::move(eqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
+          std::move(bToX), std::move(gToX)),
+      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(GridIndexedMaterial_invalid_global2Grid_Unconnected) {
+  std::vector<Acts::MaterialSlab> material;
+
+  using EqBound = Acts::GridAxisGenerators::EqBound;
+  using EqGrid = EqBound::grid_type<std::size_t>;
+  using Point = EqGrid::point_t;
+
+  EqBound eqBound{{0., 5.}, 5};
+  EqGrid eqGrid{eqBound()};
+
+  auto localX = std::make_unique<const LocalAccessX>();
+  Acts::IndexedSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;
+  bToX.connect<&LocalAccessX::l2X>(std::move(localX));
+
+  Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
+
+  BOOST_CHECK_THROW(
+      auto ism = Acts::IndexedSurfaceMaterial<EqGrid>(
+          std::move(eqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
+          std::move(bToX), std::move(gToX)),
+      std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   std::vector<Acts::MaterialSlab> material;
@@ -40,9 +125,17 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   eqGrid.atPosition(Point{3.5}) = 2u;  // material 2
   eqGrid.atPosition(Point{4.5}) = 3u;  // material 3
 
+  auto localX = std::make_unique<const LocalAccessX>();
+  Acts::IndexedSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;
+  bToX.connect<&LocalAccessX::l2X>(std::move(localX));
+
+  auto globalX = std::make_unique<const GlobalAccessX>();
+  Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
+  gToX.connect<&GlobalAccessX::g2X>(std::move(globalX));
+
   Acts::IndexedSurfaceMaterial<EqGrid> ism(
       std::move(eqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
-      {Acts::binX}, {0u});
+      std::move(bToX), std::move(gToX));
 
   // Global access test
   Acts::Vector3 g0(0.5, 0., 0.);
@@ -124,11 +217,20 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   eqeqGrid.atPosition(Point{0.5, M_PI * 0.25}) = 3u;   // material 3
   eqeqGrid.atPosition(Point{0.5, M_PI * 0.75}) = 0u;   // vacuum
 
-  // Let's shift it by 10
+  // With radius 20
+  auto boundToGrid = std::make_unique<const LocalToZPhi>(20.);
+  Acts::IndexedSurfaceMaterial<EqEqGrid>::BoundToGridLocalDelegate bToZPhi;
+  bToZPhi.connect<&LocalToZPhi::l2ZPhi>(std::move(boundToGrid));
+
+  // With z shift 10
+  auto globalToGrid = std::make_unique<const GlobalToZPhi>(10.);
+  Acts::IndexedSurfaceMaterial<EqEqGrid>::GlobalToGridLocalDelegate gToZphi;
+  gToZphi.connect<&GlobalToZPhi::g2ZPhi>(std::move(globalToGrid));
+
+  // Create the indexed material grid
   Acts::IndexedSurfaceMaterial<EqEqGrid> ism(
       std::move(eqeqGrid), Acts::IndexedMaterialAccessor{std::move(material)},
-      {Acts::binZ, Acts::binPhi}, {0u, 1u},
-      Acts::Transform3::Identity() * Acts::Translation3(0., 0., 10.));
+      std::move(bToZPhi), std::move(gToZphi));
 
   // Global access test, both should give material 1
   Acts::Vector3 g0(-0.5, -0.5, -10.5);
