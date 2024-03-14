@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
+
 import os
 import argparse
 from pathlib import Path
 
-
+import acts
+from acts import (
+    SurfaceMaterialMapper,
+    Navigator,
+    Propagator,
+    StraightLineStepper,
+    MaterialMapJsonConverter,
+)
 from acts.examples import (
     Sequencer,
     WhiteBoard,
@@ -15,20 +23,6 @@ from acts.examples import (
     JsonMaterialWriter,
     JsonFormat,
 )
-
-import acts
-from acts import (
-    Vector4,
-    UnitConstants as u,
-    SurfaceMaterialMapper,
-    VolumeMaterialMapper,
-    Navigator,
-    Propagator,
-    StraightLineStepper,
-    MaterialMapJsonConverter,
-)
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialMapping(
