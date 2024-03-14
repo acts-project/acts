@@ -100,7 +100,7 @@ void from_json(
   } else if (sType == "Digitial") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Uniform(std::move(bd));
+    f = Digitization::Digital(std::move(bd));
   } else if (sType == "Exact") {
     f = Digitization::Exact{};
   } else {

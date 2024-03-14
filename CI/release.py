@@ -15,11 +15,14 @@ import base64
 import aiohttp
 from gidgethub.aiohttp import GitHubAPI
 from gidgethub import InvalidField
+from semantic_release.enums import LevelBump
+from semantic_release.version import Version
+from semantic_release.commit_parser.angular import (
+    AngularCommitParser,
+    AngularParserOptions,
+)
+from semantic_release.commit_parser.token import ParseError, ParseResult
 import gidgethub
-from semantic_release.history import angular_parser, get_new_version
-from semantic_release.errors import UnknownCommitMessageStyleError
-from semantic_release.history.logs import LEVELS
-from semantic_release.history.parser_helpers import ParsedCommit
 import sh
 from dotenv import load_dotenv
 import functools
@@ -68,8 +71,13 @@ class Commit:
         message = self.message.split("\n")[0]
         return f"Commit(sha='{self.sha[:8]}', message='{message}')"
 
+    # needed for semantic_release duck typing
+    @property
+    def hexsha(self):
+        return self.sha
 
-_default_parser = angular_parser
+
+_default_parser = AngularCommitParser(AngularParserOptions())
 
 
 def evaluate_version_bump(
@@ -85,16 +93,17 @@ def evaluate_version_bump(
 
     for commit in commits:
         commit_count += 1
-        try:
-            message = commit_parser(commit.message)
-            changes.append(message.bump)
-        except UnknownCommitMessageStyleError:
+
+        message: ParseResult = commit_parser.parse(commit)
+        if isinstance(message, ParseError):
             print("Unknown commit message style!")
+        else:
+            changes.append(message.bump)
 
     if changes:
         level = max(changes)
-        if level in LEVELS:
-            bump = LEVELS[level]
+        if level in LevelBump:
+            bump = level
         else:
             print(f"Unknown bump level {level}")
 
@@ -108,26 +117,19 @@ def generate_changelog(commits, commit_parser=_default_parser) -> dict:
     changes: dict = {"breaking": []}
 
     for commit in commits:
-        try:
-            message: ParsedCommit = commit_parser(commit.message)
-            if message.type not in changes:
-                changes[message.type] = list()
+        message: ParseResult = commit_parser.parse(commit)
 
-            capital_message = (
-                message.descriptions[0][0].upper() + message.descriptions[0][1:]
-            )
-            changes[message.type].append((commit.sha, capital_message, commit.author))
-
-            if message.breaking_descriptions:
-                for paragraph in message.breaking_descriptions:
-                    changes["breaking"].append((commit.sha, paragraph, commit.author))
-            elif message.bump == 3:
-                changes["breaking"].append(
-                    (commit.sha, message.descriptions[0], commit.author)
-                )
-
-        except UnknownCommitMessageStyleError:
+        if isinstance(message, ParseError):
             print("Unknown commit message style!")
+            continue
+
+        if message.type not in changes:
+            changes[message.type] = list()
+
+        capital_message = (
+            message.descriptions[0][0].upper() + message.descriptions[0][1:]
+        )
+        changes[message.type].append((commit.sha, capital_message, commit.author))
 
     return changes
 
@@ -189,14 +191,16 @@ async def get_parsed_commit_range(
             if commit_hash == end:
                 break
 
+            commit = Commit(commit_hash, commit_message, item["author"]["login"])
+
             invalid_message = False
-            try:
-                _default_parser(commit_message)
-                # if this succeeds, do nothing
-            except UnknownCommitMessageStyleError:
+            message: ParseResult = _default_parser.parse(commit)
+
+            if isinstance(message, ParseError):
                 print("Unknown commit message style!")
                 if not commit_message.startswith("Merge"):
                     invalid_message = True
+
             if (
                 (invalid_message or edit)
                 and sys.stdout.isatty()
@@ -206,7 +210,6 @@ async def get_parsed_commit_range(
                 commit_message = typer.edit(commit_message)
                 _default_parser(commit_message)
 
-            commit = Commit(commit_hash, commit_message, item["author"]["login"])
             commits.append(commit)
 
             if invalid_message:
@@ -227,6 +230,7 @@ async def get_parsed_commit_range(
 @make_sync
 async def make_release(
     token: str = typer.Argument(..., envvar="GH_TOKEN"),
+    force_next_version: Optional[str] = typer.Option(None, "--next-version"),
     draft: bool = True,
     dry_run: bool = False,
     edit: bool = False,
@@ -255,7 +259,12 @@ async def make_release(
         if bump is None:
             print("-> nothing to do")
             return
-        next_version = get_new_version(current_version, bump)
+
+        current_version_obj = Version(*(map(int, current_version.split("."))))
+        next_version_obj = current_version_obj.bump(bump)
+        next_version = f"{next_version_obj.major}.{next_version_obj.minor}.{next_version_obj.patch}"
+        if force_next_version is not None:
+            next_version = force_next_version
         print("next version:", next_version)
         next_tag = f"v{next_version}"
 
@@ -265,18 +274,9 @@ async def make_release(
         print(md)
 
         if not dry_run:
-            version_file.write_text(next_version)
-            git.add(version_file)
+            execute_bump(next_version)
 
-            zenodo_file = Path(".zenodo.json")
-            update_zenodo(zenodo_file, repo, next_version)
-            git.add(zenodo_file)
-
-            citation_file = Path("CITATION.cff")
-            update_citation(citation_file, next_version)
-            git.add(citation_file)
-
-            git.commit(m=f"Bump to version {next_tag}")
+            git.commit(m=f"Bump to version {next_tag}", no_verify=True)
 
             target_hash = str(git("rev-parse", "HEAD")).strip()
             print("target_hash:", target_hash)
@@ -312,6 +312,33 @@ async def make_release(
                     "target_commitish": target_hash,
                 },
             )
+
+
+def execute_bump(next_version: str):
+    version_file = Path("version_number")
+
+    version_file.write_text(next_version)
+    git.add(version_file)
+
+    repo = get_repo()
+    zenodo_file = Path(".zenodo.json")
+    update_zenodo(zenodo_file, repo, next_version)
+    git.add(zenodo_file)
+
+    citation_file = Path("CITATION.cff")
+    update_citation(citation_file, next_version)
+    git.add(citation_file)
+
+
+@app.command()
+def bump(
+    next_version: str = typer.Argument(..., help="Format: X.Y.Z"), commit: bool = False
+):
+    execute_bump(next_version)
+    next_tag = f"v{next_version}"
+
+    if commit:
+        git.commit(m=f"Bump to version {next_tag}", no_verify=True)
 
 
 async def get_release_branch_version(
@@ -416,6 +443,7 @@ async def pr_action(
 
         bump = evaluate_version_bump(commits)
         print("bump:", bump)
+        current_version_obj = Version
         next_version = get_new_version(current_version, bump)
         print("next version:", next_version)
         next_tag = f"v{next_version}"

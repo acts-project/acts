@@ -1,0 +1,54 @@
+# This file is part of the Acts project.
+#
+# Copyright (C) 2024 CERN for the benefit of the Acts project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This script sets up the ACTS Examples environment in a somewhat robust way.
+
+if [ -n "$ZSH_VERSION" ]; then
+    script_dir=${0:a:h}
+elif [ -n "$BASH_VERSION" ]; then
+    script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+else
+    # If the current shell is not ZSH or Bash, we can't guarantee that the
+    # script will work, so we throw an error.
+    echo "ERROR:   neither ZSH nor Bash was detected, other shells are not supported. The environment has not been modified."
+    exit 1
+fi
+
+# source the python and ODD environment
+. $script_dir/python/setup.sh
+
+# set ACTS and ODD environment variables
+export ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+export ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
+
+# make ACTS binaries available
+export PATH="$script_dir/bin:${PATH}"
+export LD_LIBRARY_PATH="$script_dir/lib:${LD_LIBRARY_PATH}"
+export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
+
+# activate dependencies if present
+if [[ -d "@ROOT_DIR@" ]]; then
+  . @ROOT_BINDIR@/thisroot.sh
+fi
+if [[ -d "@Geant4_DIR@" ]]; then
+  . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
+fi
+if [[ -d "@DD4hep_DIR@" ]]; then
+  . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
+fi
+if [[ -d "@podio_DIR@" ]]; then
+  export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="@podio_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
+  export PYTHONPATH="@podio_PYTHON_DIR@:${PYTHONPATH}"
+fi
+if [[ -d "@EDM4HEP_DIR@" ]]; then
+  export LD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${LD_LIBRARY_PATH}"
+  export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
+  export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
+fi

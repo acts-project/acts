@@ -202,8 +202,8 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   const Transform3 transform = Transform3(Translation3(0., 0., zPosition));
   // call to the creation method with Bounds & Translation3
   return createTrackingVolume(gctx, layers, volumeMaterial,
-                              VolumeBoundsPtr(cBounds), mtvVector, transform,
-                              volumeName, bType);
+                              std::shared_ptr<const VolumeBounds>(cBounds),
+                              mtvVector, transform, volumeName, bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
