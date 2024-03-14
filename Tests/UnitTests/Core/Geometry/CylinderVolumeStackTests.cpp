@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(Geometry);
 static const std::vector<CylinderVolumeStack::AttachmentStrategy> strategies = {
     CylinderVolumeStack::AttachmentStrategy::Gap,
     CylinderVolumeStack::AttachmentStrategy::First,
-    // CylinderVolumeStack::AttachmentStrategy::Second,
+    CylinderVolumeStack::AttachmentStrategy::Second,
 };
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumesAlongZ,
@@ -166,6 +166,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesAlongZ,
 
       ActsScalar wGap = (shift - 1.0) * hlZ * 2;
 
+      // Volume 1 got bigger
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
@@ -175,6 +176,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesAlongZ,
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-14);
 
+      // Volume 2 got bigger
       auto newBounds2 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
@@ -184,6 +186,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesAlongZ,
       CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
                            expectedTransform2.matrix(), 1e-10, 1e-14);
 
+      // Volume 3 stayed the same
       auto newBounds3 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
@@ -192,22 +195,42 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesAlongZ,
       Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-14);
+    } else if (strategy == CylinderVolumeStack::AttachmentStrategy::Second) {
+      // No gap volumes were added
+      BOOST_CHECK_EQUAL(volumes.size(), 3);
+
+      ActsScalar wGap = (shift - 1.0) * hlZ * 2;
+
+      // Volume 1 stayed the same
+      auto newBounds1 =
+          dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
+      BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
+                        hlZ);
+      ActsScalar pZ1 = -2 * hlZ * shift;
+      Transform3 expectedTransform1 = base * Translation3{0_mm, 0_mm, pZ1};
+      CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
+                           expectedTransform1.matrix(), 1e-10, 1e-14);
+
+      // Volume 2 got bigger
+      auto newBounds2 =
+          dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
+      BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
+                        hlZ + wGap / 2.0);
+      ActsScalar pZ2 = -wGap / 2.0;
+      Transform3 expectedTransform2 = base * Translation3{0_mm, 0_mm, pZ2};
+      CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
+                           expectedTransform2.matrix(), 1e-10, 1e-14);
+
+      // Volume 3 got bigger
+      auto newBounds3 =
+          dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
+      BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
+                        hlZ + wGap / 2.0);
+      ActsScalar pZ3 = 2 * hlZ * shift - wGap / 2.0;
+      Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
+      CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
+                           expectedTransform3.matrix(), 1e-10, 1e-14);
     }
-    // else if (strategy == CylinderVolumeStack::AttachmentStrategy::Second) {
-    // // No gap volumes were added
-    // BOOST_CHECK_EQUAL(volumes.size(), 3);
-
-    // ActsScalar wGap = (shift - 1.0) * hlZ * 2;
-
-    // auto newBounds3 =
-    // dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
-    // BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
-    // hlZ + wGap / 2.0);
-    // ActsScalar pZ3 = 2 * hlZ * shift - wGap / 2.0;
-    // Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
-    // CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
-    // expectedTransform3.matrix(), 1e-10, 1e-14);
-    // }
   }
 }
 
