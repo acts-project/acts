@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -71,10 +72,10 @@ class Intersection {
 
   constexpr static Intersection invalid() { return Intersection(); }
 
-  /// Comparison function for forward order i.e. intersection closest to -inf
-  /// will be first.
-  constexpr static bool forwardOrder(const Intersection& aIntersection,
-                                     const Intersection& bIntersection) {
+  /// Comparison function for path length order i.e. intersection closest to
+  /// -inf will be first.
+  constexpr static bool pathLengthOrder(const Intersection& aIntersection,
+                                        const Intersection& bIntersection) {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return a < b;
@@ -98,6 +99,16 @@ class Intersection {
     return std::abs(a) < std::abs(b);
   }
 
+  /// Comparison function for closest forward order i.e. intersection closest to
+  /// 0 with positive path length will be first.
+  constexpr static bool closestForwardOrder(const Intersection& aIntersection,
+                                            const Intersection& bIntersection) {
+    auto a = aIntersection.pathLength();
+    auto b = bIntersection.pathLength();
+    return std::signbit(a) == std::signbit(b) ? std::abs(a) < std::abs(b)
+                                              : a > b;
+  }
+
  private:
   /// Position of the intersection
   Position m_position = Position::Zero();
@@ -117,38 +128,17 @@ using MultiIntersection3D =
     boost::container::static_vector<Intersection3D,
                                     s_maximumNumberOfIntersections>;
 
-/// @brief class extensions to return also the object and a representation
-template <typename object_t, typename representation_t = object_t>
+template <typename object_t>
 class ObjectIntersection {
  public:
-  /// Object intersection - symmetric setup
-  ///
-  /// @param intersection is the intersection
-  /// @param object is the object to be instersected
-  /// @param index is the intersection index
-  template <typename T = representation_t,
-            std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object, std::uint8_t index = 0)
-      : m_intersection(intersection),
-        m_object(object),
-        m_representation(object),
-        m_index(index) {}
-
   /// Object intersection
   ///
   /// @param intersection is the intersection
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   /// @param index is the intersection index
   constexpr ObjectIntersection(const Intersection3D& intersection,
-                               const object_t* object,
-                               const representation_t* representation,
-                               std::uint8_t index = 0)
-      : m_intersection(intersection),
-        m_object(object),
-        m_representation(representation),
-        m_index(index) {}
+                               const object_t* object, std::uint8_t index = 0)
+      : m_intersection(intersection), m_object(object), m_index(index) {}
 
   /// Returns whether the intersection was successful or not
   constexpr explicit operator bool() const {
@@ -173,18 +163,15 @@ class ObjectIntersection {
 
   constexpr const object_t* object() const { return m_object; }
 
-  constexpr const representation_t* representation() const {
-    return m_representation;
-  }
-
   constexpr std::uint8_t index() const { return m_index; }
 
   constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
 
-  constexpr static bool forwardOrder(const ObjectIntersection& aIntersection,
-                                     const ObjectIntersection& bIntersection) {
-    return Intersection3D::forwardOrder(aIntersection.intersection(),
-                                        bIntersection.intersection());
+  constexpr static bool pathLengthOrder(
+      const ObjectIntersection& aIntersection,
+      const ObjectIntersection& bIntersection) {
+    return Intersection3D::pathLengthOrder(aIntersection.intersection(),
+                                           bIntersection.intersection());
   }
 
   constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
@@ -193,63 +180,46 @@ class ObjectIntersection {
                                         bIntersection.intersection());
   }
 
+  constexpr static bool closestForwardOrder(
+      const ObjectIntersection& aIntersection,
+      const ObjectIntersection& bIntersection) {
+    return Intersection3D::closestForwardOrder(aIntersection.intersection(),
+                                               bIntersection.intersection());
+  }
+
  private:
   /// The intersection itself
   Intersection3D m_intersection = Intersection3D::invalid();
   /// The object that was (tried to be) intersected
   const object_t* m_object = nullptr;
-  /// The representation of this object
-  const representation_t* m_representation = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
 
   constexpr ObjectIntersection() = default;
 };
 
-/// @brief class extensions to return also the object and a representation
-template <typename object_t, typename representation_t = object_t>
+template <typename object_t>
 class ObjectMultiIntersection {
  public:
-  using SplitIntersections = boost::container::static_vector<
-      ObjectIntersection<object_t, representation_t>,
-      s_maximumNumberOfIntersections>;
-
-  /// Object intersection - symmetric setup
-  ///
-  /// @param intersections are the intersections
-  /// @param object is the object to be instersected
-  template <typename T = representation_t,
-            std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object)
-      : m_intersections(intersections),
-        m_object(object),
-        m_representation(object) {}
+  using SplitIntersections =
+      boost::container::static_vector<ObjectIntersection<object_t>,
+                                      s_maximumNumberOfIntersections>;
 
   /// Object intersection
   ///
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
-  /// @param representation is the object representation
   constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                                    const object_t* object,
-                                    const representation_t* representation)
-      : m_intersections(intersections),
-        m_object(object),
-        m_representation(representation) {}
+                                    const object_t* object)
+      : m_intersections(intersections), m_object(object) {}
 
-  constexpr ObjectIntersection<object_t, representation_t> operator[](
-      std::uint8_t index) const {
-    return {m_intersections[index], m_object, m_representation, index};
+  constexpr ObjectIntersection<object_t> operator[](std::uint8_t index) const {
+    return {m_intersections[index], m_object, index};
   }
 
   constexpr std::size_t size() const { return m_intersections.size(); }
 
   constexpr const object_t* object() const { return m_object; }
-
-  constexpr const representation_t* representation() const {
-    return m_representation;
-  }
 
   constexpr SplitIntersections split() const {
     SplitIntersections result;
@@ -259,11 +229,18 @@ class ObjectMultiIntersection {
     return result;
   }
 
-  constexpr ObjectIntersection<object_t, representation_t> closest() const {
+  constexpr ObjectIntersection<object_t> closest() const {
     auto splitIntersections = split();
-    return *std::min_element(
-        splitIntersections.begin(), splitIntersections.end(),
-        ObjectIntersection<object_t, representation_t>::closestOrder);
+    return *std::min_element(splitIntersections.begin(),
+                             splitIntersections.end(),
+                             ObjectIntersection<object_t>::closestOrder);
+  }
+
+  constexpr ObjectIntersection<object_t> closestForward() const {
+    auto splitIntersections = split();
+    return *std::min_element(splitIntersections.begin(),
+                             splitIntersections.end(),
+                             ObjectIntersection<object_t>::closestForwardOrder);
   }
 
  private:
@@ -271,8 +248,6 @@ class ObjectMultiIntersection {
   MultiIntersection3D m_intersections;
   /// The object that was (tried to be) intersected
   const object_t* m_object = nullptr;
-  /// The representation of this object
-  const representation_t* m_representation = nullptr;
 };
 
 namespace detail {
@@ -281,26 +256,25 @@ namespace detail {
 /// path-limit and overstep-limit
 ///
 /// @tparam intersection_t Type of the intersection object
-/// @tparam logger_t The logger type, which defaults to std::false_type to
-/// prevent the generation of logging code
 ///
 /// @param intersection The intersection to check
-/// @param pLimit The path-limit
-/// @param oLimit The overstep-limit
-/// @param tolerance The tolerance that is applied to the path-limit criterion
+/// @param nearLimit The minimum distance for an intersection to be considered
+/// @param farLimit The maximum distance for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
-/// at VERBOSE level
-template <typename intersection_t, typename logger_t = std::false_type>
-bool checkIntersection(const intersection_t& intersection, double pLimit,
-                       double oLimit, double tolerance,
+///               at VERBOSE level
+template <typename intersection_t>
+bool checkIntersection(const intersection_t& intersection, double nearLimit,
+                       double farLimit,
                        const Logger& logger = getDummyLogger()) {
-  const double cLimit = intersection.pathLength();
+  const double distance = intersection.pathLength();
+  // TODO why?
+  const double tolerance = s_onSurfaceTolerance;
 
-  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                              << ", " << cLimit);
+  ACTS_VERBOSE(" -> near limit, far limit, distance: "
+               << nearLimit << ", " << farLimit << ", " << distance);
 
-  const bool coCriterion = cLimit > oLimit;
-  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
+  const bool coCriterion = distance > nearLimit;
+  const bool cpCriterion = std::abs(distance) < std::abs(farLimit) + tolerance;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -310,12 +284,12 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
     ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
     if (!coCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << cLimit << " <= overstep limit " << oLimit);
+                   << distance << " <= near limit " << nearLimit);
     }
     if (!cpCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << std::abs(cLimit) << " is over the path limit "
-                   << (std::abs(pLimit) + tolerance)
+                   << std::abs(distance) << " is over the far limit "
+                   << (std::abs(farLimit) + tolerance)
                    << " (including tolerance of " << tolerance << ")");
     }
   }

@@ -93,7 +93,10 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
                      const ConstTrackContainer& tracks) override;
 
  private:
-  Config m_cfg;  ///< The config class
+  enum ParameterType { ePredicted, eFiltered, eSmoothed, eUnbiased, eSize };
+
+  /// The config class
+  Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
@@ -102,134 +105,154 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
-  std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};  ///< The output file
-  TTree* m_outputTree{nullptr};  ///< The output tree
-  uint32_t m_eventNr{0};         ///< the event number
-  uint32_t m_trackNr{0};         ///< the track number
+  /// Mutex used to protect multi-threaded writes
+  std::mutex m_writeMutex;
+  /// The output file
+  TFile* m_outputFile{nullptr};
+  /// The output tree
+  TTree* m_outputTree{nullptr};
+  /// the event number
+  uint32_t m_eventNr{0};
+  /// the track number
+  uint32_t m_trackNr{0};
 
-  std::vector<float> m_t_x;  ///< Global truth hit position x
-  std::vector<float> m_t_y;  ///< Global truth hit position y
-  std::vector<float> m_t_z;  ///< Global truth hit position z
-  std::vector<float> m_t_r;  ///< Global truth hit position r
-  std::vector<float>
-      m_t_dx;  ///< Truth particle direction x at global hit position
-  std::vector<float>
-      m_t_dy;  ///< Truth particle direction y at global hit position
-  std::vector<float>
-      m_t_dz;  ///< Truth particle direction z at global hit position
+  /// Global truth hit position x
+  std::vector<float> m_t_x;
+  /// Global truth hit position y
+  std::vector<float> m_t_y;
+  /// Global truth hit position z
+  std::vector<float> m_t_z;
+  /// Global truth hit position r
+  std::vector<float> m_t_r;
+  /// Truth particle direction x at global hit position
+  std::vector<float> m_t_dx;
+  /// Truth particle direction y at global hit position
+  std::vector<float> m_t_dy;
+  /// Truth particle direction z at global hit position
+  std::vector<float> m_t_dz;
 
-  std::vector<float> m_t_eLOC0;   ///< truth parameter eBoundLoc0
-  std::vector<float> m_t_eLOC1;   ///< truth parameter eBoundLoc1
-  std::vector<float> m_t_ePHI;    ///< truth parameter ePHI
-  std::vector<float> m_t_eTHETA;  ///< truth parameter eTHETA
-  std::vector<float> m_t_eQOP;    ///< truth parameter eQOP
-  std::vector<float> m_t_eT;      ///< truth parameter eT
+  /// truth parameter eBoundLoc0
+  std::vector<float> m_t_eLOC0;
+  /// truth parameter eBoundLoc1
+  std::vector<float> m_t_eLOC1;
+  /// truth parameter ePHI
+  std::vector<float> m_t_ePHI;
+  /// truth parameter eTHETA
+  std::vector<float> m_t_eTHETA;
+  /// truth parameter eQOP
+  std::vector<float> m_t_eQOP;
+  /// truth parameter eT
+  std::vector<float> m_t_eT;
 
-  unsigned int m_nStates{0};        ///< number of all states
-  unsigned int m_nMeasurements{0};  ///< number of states with measurements
-  std::vector<int> m_volumeID;      ///< volume identifier
-  std::vector<int> m_layerID;       ///< layer identifier
-  std::vector<int> m_moduleID;      ///< surface identifier
-  std::vector<float> m_pathLength;  ///< path length
-  std::vector<float> m_lx_hit;      ///< uncalibrated measurement local x
-  std::vector<float> m_ly_hit;      ///< uncalibrated measurement local y
-  std::vector<float> m_x_hit;       ///< uncalibrated measurement global x
-  std::vector<float> m_y_hit;       ///< uncalibrated measurement global y
-  std::vector<float> m_z_hit;       ///< uncalibrated measurement global z
-  std::vector<float> m_res_x_hit;   ///< hit residual x
-  std::vector<float> m_res_y_hit;   ///< hit residual y
-  std::vector<float> m_err_x_hit;   ///< hit err x
-  std::vector<float> m_err_y_hit;   ///< hit err y
-  std::vector<float> m_pull_x_hit;  ///< hit pull x
-  std::vector<float> m_pull_y_hit;  ///< hit pull y
-  std::vector<int> m_dim_hit;       ///< dimension of measurement
+  /// event-unique particle identifier a.k.a barcode for hits per each surface
+  std::vector<std::vector<std::uint64_t>> m_particleId;
 
-  std::array<int, 4>
-      m_nParams{};  ///< number of states which have
-                    ///< filtered/predicted/smoothed/unbiased parameters
-  std::array<std::vector<bool>, 4>
-      m_hasParams;  ///< status of the filtered/predicted/smoothed/unbiased
-                    ///< parameters
-  std::array<std::vector<float>, 4>
-      m_eLOC0;  ///< predicted/filtered/smoothed/unbiased parameter eLOC0
-  std::array<std::vector<float>, 4>
-      m_eLOC1;  ///< predicted/filtered/smoothed/unbiased parameter eLOC1
-  std::array<std::vector<float>, 4>
-      m_ePHI;  ///< predicted/filtered/smoothed/unbiased parameter ePHI
-  std::array<std::vector<float>, 4>
-      m_eTHETA;  ///< predicted/filtered/smoothed/unbiased parameter eTHETA
-  std::array<std::vector<float>, 4>
-      m_eQOP;  ///< predicted/filtered/smoothed/unbiased parameter eQOP
-  std::array<std::vector<float>, 4>
-      m_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT
-  std::array<std::vector<float>, 4>
-      m_res_eLOC0;  ///< predicted/filtered/smoothed/unbiased
-                    ///< parameter eLOC0 residual
-  std::array<std::vector<float>, 4>
-      m_res_eLOC1;  ///< predicted/filtered/smoothed/unbiased
-                    ///< parameter eLOC1 residual
-  std::array<std::vector<float>, 4>
-      m_res_ePHI;  ///< predicted/filtered/smoothed/unbiased
-                   ///< parameter ePHI residual
-  std::array<std::vector<float>, 4>
-      m_res_eTHETA;  ///< predicted/filtered/smoothed/unbiased parameter eTHETA
-                     ///< residual
-  std::array<std::vector<float>, 4>
-      m_res_eQOP;  ///< predicted/filtered/smoothed/unbiased
-                   ///< parameter eQOP residual
-  std::array<std::vector<float>, 4>
-      m_res_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT residual
-  std::array<std::vector<float>, 4>
-      m_err_eLOC0;  ///< predicted/filtered/smoothed/unbiased
-                    ///< parameter eLOC0 error
-  std::array<std::vector<float>, 4>
-      m_err_eLOC1;  ///< predicted/filtered/smoothed/unbiased
-                    ///< parameter eLOC1 error
-  std::array<std::vector<float>, 4>
-      m_err_ePHI;  ///< predicted/filtered/smoothed/unbiased
-                   ///< parameter ePHI error
-  std::array<std::vector<float>, 4>
-      m_err_eTHETA;  ///< predicted/filtered/smoothed/unbiased
-                     ///< parameter eTHETA error
-  std::array<std::vector<float>, 4>
-      m_err_eQOP;  ///< predicted/filtered/smoothed/unbiased
-                   ///< parameter eQOP error
-  std::array<std::vector<float>, 4>
-      m_err_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT error
-  std::array<std::vector<float>, 4>
-      m_pull_eLOC0;  ///< predicted/filtered/smoothed/unbiased
-                     ///< parameter eLOC0 pull
-  std::array<std::vector<float>, 4>
-      m_pull_eLOC1;  ///< predicted/filtered/smoothed/unbiased
-                     ///< parameter eLOC1 pull
-  std::array<std::vector<float>, 4>
-      m_pull_ePHI;  ///< predicted/filtered/smoothed/unbiased
-                    ///< parameter ePHI pull
-  std::array<std::vector<float>, 4>
-      m_pull_eTHETA;  ///< predicted/filtered/smoothed/unbiased
-                      ///< parameter eTHETA pull
-  std::array<std::vector<float>, 4>
-      m_pull_eQOP;  ///< predicted/filtered/smoothed/unbiased
-                    ///< parameter eQOP pull
-  std::array<std::vector<float>, 4>
-      m_pull_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT pull
-  std::array<std::vector<float>, 4>
-      m_x;  ///< predicted/filtered/smoothed/unbiased parameter global x
-  std::array<std::vector<float>, 4>
-      m_y;  ///< predicted/filtered/smoothed/unbiased parameter global y
-  std::array<std::vector<float>, 4>
-      m_z;  ///< predicted/filtered/smoothed/unbiased parameter global z
-  std::array<std::vector<float>, 4>
-      m_px;  ///< predicted/filtered/smoothed/unbiased parameter px
-  std::array<std::vector<float>, 4>
-      m_py;  ///< predicted/filtered/smoothed/unbiased parameter py
-  std::array<std::vector<float>, 4>
-      m_pz;  ///< predicted/filtered/smoothed/unbiased parameter pz
-  std::array<std::vector<float>, 4>
-      m_eta;  ///< predicted/filtered/smoothed/unbiased parameter eta
-  std::array<std::vector<float>, 4>
-      m_pT;  ///< predicted/filtered/smoothed/unbiased parameter pT
+  /// number of all states
+  unsigned int m_nStates{0};
+  /// number of states with measurements
+  unsigned int m_nMeasurements{0};
+  /// volume identifier
+  std::vector<int> m_volumeID;
+  /// layer identifier
+  std::vector<int> m_layerID;
+  /// surface identifier
+  std::vector<int> m_moduleID;
+  /// path length
+  std::vector<float> m_pathLength;
+  /// uncalibrated measurement local x
+  std::vector<float> m_lx_hit;
+  /// uncalibrated measurement local y
+  std::vector<float> m_ly_hit;
+  /// uncalibrated measurement global x
+  std::vector<float> m_x_hit;
+  /// uncalibrated measurement global y
+  std::vector<float> m_y_hit;
+  /// uncalibrated measurement global z
+  std::vector<float> m_z_hit;
+  /// hit residual x
+  std::vector<float> m_res_x_hit;
+  /// hit residual y
+  std::vector<float> m_res_y_hit;
+  /// hit err x
+  std::vector<float> m_err_x_hit;
+  /// hit err y
+  std::vector<float> m_err_y_hit;
+  /// hit pull x
+  std::vector<float> m_pull_x_hit;
+  /// hit pull y
+  std::vector<float> m_pull_y_hit;
+  /// dimension of measurement
+  std::vector<int> m_dim_hit;
+
+  /// number of states which have filtered/predicted/smoothed/unbiased
+  /// parameters
+  std::array<int, eSize> m_nParams{};
+  /// status of the filtered/predicted/smoothed/unbiased parameters
+  std::array<std::vector<bool>, eSize> m_hasParams;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC0
+  std::array<std::vector<float>, eSize> m_eLOC0;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC1
+  std::array<std::vector<float>, eSize> m_eLOC1;
+  /// predicted/filtered/smoothed/unbiased parameter ePHI
+  std::array<std::vector<float>, eSize> m_ePHI;
+  /// predicted/filtered/smoothed/unbiased parameter eTHETA
+  std::array<std::vector<float>, eSize> m_eTHETA;
+  /// predicted/filtered/smoothed/unbiased parameter eQOP
+  std::array<std::vector<float>, eSize> m_eQOP;
+  /// predicted/filtered/smoothed/unbiased parameter eT
+  std::array<std::vector<float>, eSize> m_eT;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC0 residual
+  std::array<std::vector<float>, eSize> m_res_eLOC0;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC1 residual
+  std::array<std::vector<float>, eSize> m_res_eLOC1;
+  /// predicted/filtered/smoothed/unbiased parameter ePHI residual
+  std::array<std::vector<float>, eSize> m_res_ePHI;
+  /// predicted/filtered/smoothed/unbiased parameter eTHETA residual
+  std::array<std::vector<float>, eSize> m_res_eTHETA;
+  /// predicted/filtered/smoothed/unbiased parameter eQOP residual
+  std::array<std::vector<float>, eSize> m_res_eQOP;
+  /// predicted/filtered/smoothed/unbiased parameter eT residual
+  std::array<std::vector<float>, eSize> m_res_eT;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC0 error
+  std::array<std::vector<float>, eSize> m_err_eLOC0;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC1 error
+  std::array<std::vector<float>, eSize> m_err_eLOC1;
+  /// predicted/filtered/smoothed/unbiased parameter ePHI error
+  std::array<std::vector<float>, eSize> m_err_ePHI;
+  /// predicted/filtered/smoothed/unbiased parameter eTHETA error
+  std::array<std::vector<float>, eSize> m_err_eTHETA;
+  /// predicted/filtered/smoothed/unbiased parameter eQOP error
+  std::array<std::vector<float>, eSize> m_err_eQOP;
+  /// predicted/filtered/smoothed/unbiased parameter eT error
+  std::array<std::vector<float>, eSize> m_err_eT;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC0 pull
+  std::array<std::vector<float>, eSize> m_pull_eLOC0;
+  /// predicted/filtered/smoothed/unbiased parameter eLOC1 pull
+  std::array<std::vector<float>, eSize> m_pull_eLOC1;
+  /// predicted/filtered/smoothed/unbiased parameter ePHI pull
+  std::array<std::vector<float>, eSize> m_pull_ePHI;
+  /// predicted/filtered/smoothed/unbiased parameter eTHETA pull
+  std::array<std::vector<float>, eSize> m_pull_eTHETA;
+  /// predicted/filtered/smoothed/unbiased parameter eQOP pull
+  std::array<std::vector<float>, eSize> m_pull_eQOP;
+  /// predicted/filtered/smoothed/unbiased parameter eT pull
+  std::array<std::vector<float>, eSize> m_pull_eT;
+  /// predicted/filtered/smoothed/unbiased parameter global x
+  std::array<std::vector<float>, eSize> m_x;
+  /// predicted/filtered/smoothed/unbiased parameter global y
+  std::array<std::vector<float>, eSize> m_y;
+  /// predicted/filtered/smoothed/unbiased parameter global z
+  std::array<std::vector<float>, eSize> m_z;
+  /// predicted/filtered/smoothed/unbiased parameter px
+  std::array<std::vector<float>, eSize> m_px;
+  /// predicted/filtered/smoothed/unbiased parameter py
+  std::array<std::vector<float>, eSize> m_py;
+  /// predicted/filtered/smoothed/unbiased parameter pz
+  std::array<std::vector<float>, eSize> m_pz;
+  /// predicted/filtered/smoothed/unbiased parameter eta
+  std::array<std::vector<float>, eSize> m_eta;
+  /// predicted/filtered/smoothed/unbiased parameter pT
+  std::array<std::vector<float>, eSize> m_pT;
 
   std::vector<float> m_chi2;  ///< chisq from filtering
 };

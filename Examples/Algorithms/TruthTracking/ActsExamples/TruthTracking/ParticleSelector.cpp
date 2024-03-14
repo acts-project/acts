@@ -55,7 +55,7 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
 
   // We only initialize this if we actually select on this
   if (m_cfg.measurementsMin > 0 ||
-      m_cfg.measurementsMax < std::numeric_limits<size_t>::max()) {
+      m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max()) {
     m_inputMap.initialize(m_cfg.inputMeasurementParticlesMap);
     ACTS_DEBUG("selection particle number of measurements ["
                << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
@@ -76,8 +76,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     particlesMeasMap = invertIndexMultimap(m_inputMap(ctx));
   }
 
-  size_t nInvalidCharge = 0;
-  size_t nInvalidMeasurementCount = 0;
+  std::size_t nInvalidCharge = 0;
+  std::size_t nInvalidMeasurementCount = 0;
 
   // helper functions to select tracks
   auto within = [](auto x, auto min, auto max) {
@@ -94,7 +94,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const bool validCharge = validNeutral || validCharged;
     const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
 
-    nInvalidCharge += static_cast<size_t>(!validCharge);
+    nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
     // default valid measurement count to true and only change if we have loaded
     // the measurement particles map
@@ -102,14 +102,15 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     if (particlesMeasMap) {
       auto [b, e] = particlesMeasMap->equal_range(p.particleId());
       validMeasurementCount =
-          within(static_cast<size_t>(std::distance(b, e)),
+          within(static_cast<std::size_t>(std::distance(b, e)),
                  m_cfg.measurementsMin, m_cfg.measurementsMax);
 
       ACTS_VERBOSE("Found " << std::distance(b, e) << " measurements for "
                             << p.particleId());
     }
 
-    nInvalidMeasurementCount += static_cast<size_t>(!validMeasurementCount);
+    nInvalidMeasurementCount +=
+        static_cast<std::size_t>(!validMeasurementCount);
 
     return validCharge && validSecondary && validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&

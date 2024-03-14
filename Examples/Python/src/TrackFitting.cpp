@@ -10,7 +10,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
@@ -97,36 +97,40 @@ void addTrackFitting(Context& ctx) {
         },
         py::arg("path"));
 
-    py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
-        .value("mean", Acts::MixtureReductionMethod::eMean)
-        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight);
+    py::enum_<Acts::ComponentMergeMethod>(mex, "ComponentMergeMethod")
+        .value("mean", Acts::ComponentMergeMethod::eMean)
+        .value("maxWeight", Acts::ComponentMergeMethod::eMaxWeight);
+
+    py::enum_<ActsExamples::MixtureReductionAlgorithm>(
+        mex, "MixtureReductionAlgorithm")
+        .value("weightCut", MixtureReductionAlgorithm::weightCut)
+        .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
                     &ActsExamples::BetheHeitlerApprox::loadFromFiles,
-                    py::arg("lowParametersPath"), py::arg("lowParametersPath"))
+                    py::arg("lowParametersPath"), py::arg("highParametersPath"),
+                    py::arg("lowLimit") = 0.1, py::arg("highLimit") = 0.2)
         .def_static("makeDefault",
                     []() { return Acts::makeDefaultBetheHeitlerApprox(); });
-
     mex.def(
         "makeGsfFitterFunction",
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-           BetheHeitlerApprox betheHeitlerApprox, size_t maxComponents,
-           double weightCutoff,
-           Acts::MixtureReductionMethod finalReductionMethod, bool abortOnError,
-           bool disableAllMaterialHandling, Logging::Level level) {
+           BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+           double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+           ActsExamples::MixtureReductionAlgorithm mixtureReductionAlgorithm,
+           Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
               trackingGeometry, magneticField, betheHeitlerApprox,
-              maxComponents, weightCutoff, finalReductionMethod, abortOnError,
-              disableAllMaterialHandling,
+              maxComponents, weightCutoff, componentMergeMethod,
+              mixtureReductionAlgorithm,
               *Acts::getDefaultLogger("GSFFunc", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("betheHeitlerApprox"), py::arg("maxComponents"),
-        py::arg("weightCutoff"), py::arg("finalReductionMethod"),
-        py::arg("abortOnError"), py::arg("disableAllMaterialHandling"),
-        py::arg("level"));
+        py::arg("weightCutoff"), py::arg("componentMergeMethod"),
+        py::arg("mixtureReductionAlgorithm"), py::arg("level"));
 
     mex.def(
         "makeGlobalChiSquareFitterFunction",
@@ -134,17 +138,17 @@ void addTrackFitting(Context& ctx) {
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
            Acts::FreeToBoundCorrection freeToBoundCorrection,
+           std::size_t nUpdateMax, bool zeroField, double relChi2changeCutOff,
            Logging::Level level) {
           return ActsExamples::makeGlobalChiSquareFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
-              freeToBoundCorrection, *Acts::getDefaultLogger("Gx2f", level));
+              freeToBoundCorrection, nUpdateMax, zeroField, relChi2changeCutOff,
+              *Acts::getDefaultLogger("Gx2f", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("multipleScattering"), py::arg("energyLoss"),
-        py::arg("freeToBoundCorrection"), py::arg("level"));
-
-    // TODO add other important parameters like nUpdates
-    // TODO add also in trackfitterfunction
+        py::arg("freeToBoundCorrection"), py::arg("nUpdateMax"),
+        py::arg("zeroField"), py::arg("relChi2changeCutOff"), py::arg("level"));
   }
 
   {

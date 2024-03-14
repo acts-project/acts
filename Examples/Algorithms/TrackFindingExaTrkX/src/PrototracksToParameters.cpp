@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,7 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 
-#include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/BinnedSPGroup.hpp"
+#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -46,7 +45,7 @@ PrototracksToParameters::PrototracksToParameters(Config cfg,
   }
 
   // Set up the track parameters covariance (the same for all tracks)
-  for (size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
                          m_cfg.initialSigmas[i];
   }
@@ -86,7 +85,7 @@ ProcessCode PrototracksToParameters::execute(
   // Loop over the prototracks to make seeds
   ProtoTrack tmpTrack;
   std::vector<const SimSpacePoint *> tmpSps;
-  size_t skippedTracks = 0;
+  std::size_t skippedTracks = 0;
   for (auto &track : prototracks) {
     ACTS_VERBOSE("Try to get seed from prototrack with " << track.size()
                                                          << " hits");

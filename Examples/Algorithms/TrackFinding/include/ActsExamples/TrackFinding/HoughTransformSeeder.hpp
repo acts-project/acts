@@ -128,7 +128,8 @@ namespace ActsExamples {
 /// each bin. Size m_houghHistSize_y * m_houghHistSize_x. (NOTE y is row
 /// coordinate) For now, what is stored is actually the index of the object in
 /// the vectors, so we can get the Index layer
-using HoughHist = vector2D<std::pair<int, std::unordered_set<unsigned>>>;
+using HoughHist =
+    MultiIndexedVector2D<std::pair<int, std::unordered_set<unsigned>>>;
 
 enum HoughHitType { SP = 0, MEASUREMENT = 1 };
 
@@ -298,8 +299,9 @@ class HoughTransformSeeder final : public IAlgorithm {
 
   ///////////////////////////////////////////////////////////////////////
   // Helpers
-  std::pair<unsigned, unsigned> yToXBins(size_t yBin_min, size_t yBin_max,
-                                         double r, double phi,
+  std::pair<unsigned, unsigned> yToXBins(std::size_t yBin_min,
+                                         std::size_t yBin_max, double r,
+                                         double phi,
                                          unsigned layer)
       const;  // given y bins, return x bins passed that need to be filled in
               // the HoughHist, including extensions
@@ -309,7 +311,7 @@ class HoughTransformSeeder final : public IAlgorithm {
                      unsigned y) const;  // did we pass extensions?
   void drawHoughHist(HoughHist const& houghHist,
                      std::string const& name);  // for making pretty plots
-  std::vector<std::vector<int>> getComboIndices(std::vector<size_t>& sizes)
+  std::vector<std::vector<int>> getComboIndices(std::vector<std::size_t>& sizes)
       const;  // useful to find all candidates from given bins that pass
               // (looping over hit combinatorics)
 

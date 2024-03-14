@@ -8,12 +8,16 @@
 
 #pragma once
 
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 
 #include <tuple>
 #include <vector>
@@ -54,13 +58,21 @@ class DD4hepDetectorSurfaceFactory {
     /// The created non-const surfaces - for further processing,
     std::vector<DD4hepPassiveSurface> passiveSurfaces;
     /// matching and conversion statistics: surfaces
-    size_t convertedSurfaces = 0;
+    std::size_t convertedSurfaces = 0;
     /// matching and conversion statistics: materials
-    size_t convertedMaterials = 0;
+    std::size_t convertedMaterials = 0;
     /// The collected binnings
     std::vector<Experimental::ProtoBinning> binnings = {};
     /// The collected supports
     std::vector<Experimental::ProtoSupport> supports = {};
+    /// Optionally provide an Extent object to measure the sensitives
+    std::optional<Extent> sExtent = std::nullopt;
+    /// Optionally provide an Extent object to measure the passive
+    std::optional<Extent> pExtent = std::nullopt;
+    /// Optionally provide an Extent constraints to measure the layers
+    std::vector<BinningValue> extentConstraints = {};
+    /// The approximination for extent measuring
+    std::size_t nExtentSegments = 1u;
   };
 
   /// Nested options struct to steer the conversion
@@ -70,9 +82,7 @@ class DD4hepDetectorSurfaceFactory {
     /// Convert passive surfaces
     bool convertPassive = true;
     /// Convert material directly
-    bool convertMaterial = true;
-    /// Convert proxy material - overrides convertMaterial if present
-    bool convertProxyMaterial = true;
+    bool convertMaterial = false;
     /// New reference material thickness for surfaces
     ActsScalar surfaceMaterialThickness = 1_mm;
   };
@@ -87,11 +97,13 @@ class DD4hepDetectorSurfaceFactory {
   /// Construction method of the detector elements
   ///
   /// @param cache [in,out] into which the Elements are filled
+  /// @param gctx the geometry context
   /// @param dd4hepElement the detector element representing the super structure
   /// @param options to steer the conversion
   ///
   /// @note this method will call the recursive construction
-  void construct(Cache& cache, const dd4hep::DetElement& dd4hepElement,
+  void construct(Cache& cache, const GeometryContext& gctx,
+                 const dd4hep::DetElement& dd4hepElement,
                  const Options& options);
 
  private:
@@ -108,41 +120,59 @@ class DD4hepDetectorSurfaceFactory {
   /// Construction method of the detector elements - recursive walk down
   ///
   /// @param cache [in,out] into which the Elements are filled
+  /// @param gctx the geometry context
   /// @param dd4hepElement the detector element representing the super structure
   /// @param options to steer the conversion
   /// @param level the current level of the tree, used for log message output
   ///
   /// @note this method is called recursively
-  void recursiveConstruct(Cache& cache, const dd4hep::DetElement& dd4hepElement,
+  void recursiveConstruct(Cache& cache, const GeometryContext& gctx,
+                          const dd4hep::DetElement& dd4hepElement,
                           const Options& options, int level);
 
   /// Method to convert a single sensitive detector element
   ///
+  /// @param cache [in,out] into which the Elements are filled
+  /// @param gctx the geometry context
   /// @param dd4hepElement the detector element
   /// @param options to steer the conversion
   ///
+  /// @note the cache is handed through in order to optionally measure the
+  /// extent of the sensitive surface and register it
+  ///
   /// @return a created detector element and surface
   DD4hepSensitiveSurface constructSensitiveComponents(
+      Cache& cache, const GeometryContext& gctx,
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 
   /// Method to convert a single sensitive detector element
   ///
+  /// @param cache [in,out] into which the Elements are filled
+  /// @param gctx the geometry context
   /// @param dd4hepElement the detector element
   /// @param options to steer the conversion
   ///
   /// @return a created surface
   DD4hepPassiveSurface constructPassiveComponents(
+      Cache& cache, const GeometryContext& gctx,
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 
   /// Attach surface material if present
   ///
+  /// @param gctx the geometry context
+  /// @param prefix the acts prefix for the variant parameter string
   /// @param dd4hepElement the detector element
   /// @param surface the surface to attach the material to
   /// @param thickness the thickness of the condensed component
   /// @param options to steer the conversion
   ///
+  /// @note the cache is handed through in order to optionally measure the
+  /// extent of the sensitive surface and register it
+  ///
   /// @note void function that also checks the options if the attachment should be applied
-  void attachSurfaceMaterial(const dd4hep::DetElement& dd4hepElement,
+  void attachSurfaceMaterial(const GeometryContext& gctx,
+                             const std::string& prefix,
+                             const dd4hep::DetElement& dd4hepElement,
                              Acts::Surface& surface, ActsScalar thickness,
                              const Options& options) const;
 };

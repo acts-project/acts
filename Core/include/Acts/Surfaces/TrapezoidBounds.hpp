@@ -30,14 +30,14 @@ namespace Acts {
 /// @image html TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
-
 class TrapezoidBounds : public PlanarBounds {
  public:
   enum BoundValues {
     eHalfLengthXnegY = 0,
     eHalfLengthXposY = 1,
     eHalfLengthY = 2,
-    eSize = 3
+    eRotationAngle = 3,
+    eSize = 4
   };
 
   TrapezoidBounds() = delete;
@@ -47,23 +47,14 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param halfXnegY minimal half length X, definition at negative Y
   /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
-  TrapezoidBounds(double halfXnegY, double halfXposY,
-                  double halfY) noexcept(false)
-      : m_values({halfXnegY, halfXposY, halfY}),
-        m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
-    checkConsistency();
-  }
+  /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
+  TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
+                  double rotAngle = 0.) noexcept(false);
 
   /// Constructor for symmetric Trapezoid - from fixed size array
   ///
   /// @param values the values to be stream in
-  TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false)
-      : m_values(values),
-        m_boundingBox(
-            std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
-            values[eHalfLengthY]) {
-    checkConsistency();
-  }
+  TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false);
 
   ~TrapezoidBounds() override;
 
@@ -141,24 +132,11 @@ class TrapezoidBounds : public PlanarBounds {
   std::array<double, eSize> m_values;
   RectangleBounds m_boundingBox;
 
+  void rotateBoundingBox() noexcept(false);
+
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> TrapezoidBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void TrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) <= 0. || get(eHalfLengthXposY) <= 0.) {
-    throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
-  }
-  if (get(eHalfLengthY) <= 0.) {
-    throw std::invalid_argument("TrapezoidBounds: invalid local y setup");
-  }
-}
 
 }  // namespace Acts

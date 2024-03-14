@@ -27,7 +27,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <array>
@@ -180,14 +179,15 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // Check if DD4hep pre-defines the surface binning
       bool hasSurfaceBinning =
           getParamOr<bool>("surface_binning", detElement, true);
-      size_t nPhi = 1;
-      size_t nR = 1;
+      std::size_t nPhi = 1;
+      std::size_t nR = 1;
       if (hasSurfaceBinning) {
         if (params.contains("surface_binning_n_phi")) {
-          nPhi = static_cast<size_t>(params.get<int>("surface_binning_n_phi"));
+          nPhi = static_cast<std::size_t>(
+              params.get<int>("surface_binning_n_phi"));
         }
         if (params.contains("surface_binning_n_r")) {
-          nR = static_cast<size_t>(params.get<int>("surface_binning_n_r"));
+          nR = static_cast<std::size_t>(params.get<int>("surface_binning_n_r"));
         }
         hasSurfaceBinning = nR * nPhi > 1;
       }

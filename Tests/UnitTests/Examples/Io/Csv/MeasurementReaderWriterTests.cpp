@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   ////////////////////////////
   // Create some dummy data //
   ////////////////////////////
-  const size_t nMeasurements = 3;
+  const std::size_t nMeasurements = 3;
   Acts::GeometryIdentifier someGeoId{298453};
 
   std::mt19937 gen(23);
-  std::uniform_int_distribution<unsigned> disti(1, 10);
+  std::uniform_int_distribution<std::uint32_t> disti(1, 10);
   std::uniform_real_distribution<double> distf(0.0, 1.0);
 
   for (auto i = 0ul; i < nMeasurements; ++i) {

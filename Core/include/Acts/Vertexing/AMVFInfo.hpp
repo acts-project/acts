@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 #include <map>
@@ -17,19 +18,17 @@
 namespace Acts {
 
 /// @brief Helper struct for storing vertex related information
-template <typename input_track_t>
 struct VertexInfo {
   VertexInfo() = default;
 
-  VertexInfo(const Acts::Vertex<input_track_t>& constr,
-             const Acts::Vector4& pos)
+  VertexInfo(const Acts::Vertex& constr, const Acts::Vector4& pos)
       : constraint(constr),
         linPoint(pos),
         oldPosition(pos),
         seedPosition(pos) {}
 
   // Vertex constraint
-  Acts::Vertex<input_track_t> constraint;
+  Acts::Vertex constraint;
 
   // Point where all associated tracks are linearized
   Acts::Vector4 linPoint{Acts::Vector4::Zero()};
@@ -46,9 +45,9 @@ struct VertexInfo {
   bool relinearize = true;
 
   // Vector of all tracks that are currently assigned to vertex
-  std::vector<const input_track_t*> trackLinks;
+  std::vector<InputTrack> trackLinks;
 
-  std::map<const input_track_t*, BoundTrackParameters> impactParams3D;
+  std::map<InputTrack, const BoundTrackParameters> impactParams3D;
 };
 
 }  // namespace Acts

@@ -14,15 +14,16 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 
 #include <algorithm>
 #include <array>
@@ -40,6 +41,8 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
+using namespace Acts::HashedStringLiteral;
 namespace bd = boost::unit_test::data;
 
 using ParametersVector = BoundTrackParameters::ParametersVector;
@@ -74,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   VectorMultiTrajectory t;
   auto i0 = t.addTrackState();
 
-  BOOST_CHECK(!t.ReadOnly);
+  BOOST_CHECK(!IsReadOnlyMultiTrajectory<decltype(t)>::value);
 
   {
     VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
@@ -160,6 +163,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   ct.testTrackStateProxyCopy(rng);
 }
 
+BOOST_AUTO_TEST_CASE(TrackStateCopyDynamicColumns) {
+  CommonTests ct;
+  ct.testTrackStateCopyDynamicColumns();
+}
+
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   CommonTests ct;
   ct.testTrackStateProxyCopyDiffMTJ();
@@ -236,6 +244,33 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
       }
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(Accessors) {
+  VectorMultiTrajectory mtj;
+  mtj.addColumn<unsigned int>("ndof");
+  mtj.addColumn<double>("super_chi2");
+
+  auto ts = mtj.getTrackState(mtj.addTrackState());
+
+  ProxyAccessor<unsigned int> ndof("ndof");
+  ConstProxyAccessor<unsigned int> ndofConst("ndof");
+  ProxyAccessor<double> superChi2("super_chi2");
+  ConstProxyAccessor<double> superChi2Const("super_chi2");
+
+  ndof(ts) = 65;
+  BOOST_CHECK_EQUAL((ts.component<unsigned int, "ndof"_hash>()), 65);
+  BOOST_CHECK_EQUAL(ndofConst(ts), 65);
+
+  // should not compile
+  // ndofConst(ts) = 66;
+
+  superChi2(ts) = 123.45;
+  BOOST_CHECK_EQUAL((ts.component<double, "super_chi2"_hash>()), 123.45);
+  BOOST_CHECK_EQUAL(superChi2Const(ts), 123.45);
+
+  // should not compile
+  // superChi2Const(ts) = 66.66;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

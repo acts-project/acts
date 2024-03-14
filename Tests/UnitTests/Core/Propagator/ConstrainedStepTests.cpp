@@ -14,11 +14,7 @@
 
 #include <limits>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 
 // This tests the implementation of the AbortList

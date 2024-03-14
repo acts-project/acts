@@ -12,7 +12,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
@@ -49,6 +49,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
     const Options& options) {
   nlohmann::json jVolume;
   jVolume["name"] = volume.name();
+  jVolume["geometryId"] = volume.geometryId().volume();
   jVolume["transform"] = Transform3JsonConverter::toJson(
       volume.transform(gctx), options.transformOptions);
   jVolume["bounds"] = VolumeBoundsJsonConverter::toJson(volume.volumeBounds());
@@ -62,7 +63,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
   jVolume["surfaces"] = jSurfaces;
   // And its surface navigation delegates
   nlohmann::json jSurfacesDelegate =
-      IndexedSurfacesJsonConverter::toJson(volume.surfaceCandidatesUpdator());
+      IndexedSurfacesJsonConverter::toJson(volume.surfaceCandidatesUpdater());
   jVolume["surface_navigation"] = jSurfacesDelegate;
 
   // Write the sub volumes
@@ -120,12 +121,14 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
   int vIndex = findVolume(&volume, detectorVolumes);
   jVolume["index"] = vIndex;
 
+  std::size_t sIndex = 0;
   // Write the surfaces - patch bounds & augment with self links
   nlohmann::json jSurfaces;
   for (const auto& s : volume.surfaces()) {
     auto jSurface =
-        SurfaceJsonConverter::toJson(gctx, *s, options.surfaceOptions);
+        SurfaceJsonConverter::toJsonDetray(gctx, *s, options.surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jSurface["mask"], vIndex);
+    jSurface["index_in_coll"] = sIndex++;
     jSurfaces.push_back(jSurface);
   }
 
@@ -140,7 +143,10 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
         (toJsonDetray(gctx, *p, ip, volume, orientedSurfaces, detectorVolumes,
                       options.portalOptions));
     std::for_each(jPortalSurfaces.begin(), jPortalSurfaces.end(),
-                  [&](auto& jSurface) { jSurfaces.push_back(jSurface); });
+                  [&](auto& jSurface) {
+                    jSurface["index_in_coll"] = sIndex++;
+                    jSurfaces.push_back(jSurface);
+                  });
   }
   jVolume["surfaces"] = jSurfaces;
 
@@ -151,6 +157,8 @@ std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
                                             const nlohmann::json& jVolume) {
   std::string name = jVolume["name"];
+  GeometryIdentifier geoId;
+  geoId.setVolume(jVolume["geometryId"]);
   Transform3 transform =
       Transform3JsonConverter::fromJson(jVolume["transform"]);
   auto bounds = VolumeBoundsJsonConverter::fromJson(jVolume["bounds"]);
@@ -162,9 +170,11 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
   auto portalGenerator = Experimental::defaultPortalGenerator();
 
   if (jSurfaces.empty() && jVolumes.empty()) {
-    return Experimental::DetectorVolumeFactory::construct(
+    auto volume = Experimental::DetectorVolumeFactory::construct(
         portalGenerator, gctx, name, transform, std::move(bounds),
         Experimental::tryAllPortals());
+    volume->assignGeometryId(geoId);
+    return volume;
   }
   // Convert the surfaces
   std::vector<std::shared_ptr<Surface>> surfaces;
@@ -179,8 +189,10 @@ Acts::DetectorVolumeJsonConverter::fromJson(const GeometryContext& gctx,
 
   auto jSurfaceNavigation = jVolume["surface_navigation"];
 
-  return Experimental::DetectorVolumeFactory::construct(
+  auto volume = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, gctx, name, transform, std::move(bounds), surfaces,
       volumes, Experimental::tryRootVolumes(),
       IndexedSurfacesJsonConverter::fromJson(jSurfaceNavigation));
+  volume->assignGeometryId(geoId);
+  return volume;
 }

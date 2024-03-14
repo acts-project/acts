@@ -38,12 +38,14 @@ DD4hepDetectorHelper::rectangleDigiModule(
     // the Acts segmentation of the DigitizationModule
     double gridSizeX = cartesianGrid.gridSizeX() * scalor;
     double gridSizeY = cartesianGrid.gridSizeY() * scalor;
-    size_t bins0 = (cartesianGrid.gridSizeX() != 0)
-                       ? static_cast<size_t>((2 * halflengthX) / gridSizeX)
-                       : 0;
-    size_t bins1 = (cartesianGrid.gridSizeY() != 0)
-                       ? static_cast<size_t>((2 * halflengthY) / gridSizeY)
-                       : 0;
+    std::size_t bins0 =
+        (cartesianGrid.gridSizeX() != 0)
+            ? static_cast<std::size_t>((2 * halflengthX) / gridSizeX)
+            : 0;
+    std::size_t bins1 =
+        (cartesianGrid.gridSizeY() != 0)
+            ? static_cast<std::size_t>((2 * halflengthY) / gridSizeY)
+            : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
         std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
@@ -75,12 +77,14 @@ DD4hepDetectorHelper::trapezoidalDigiModule(
     // the Acts segmentation of the DigitizationModule
     double gridSizeX = cartesianGrid.gridSizeX() * scalor;
     double gridSizeY = cartesianGrid.gridSizeY() * scalor;
-    size_t bins0 = (cartesianGrid.gridSizeX() != 0)
-                       ? static_cast<size_t>((2 * maxHalflengthX) / gridSizeX)
-                       : 0;
-    size_t bins1 = (cartesianGrid.gridSizeY() != 0)
-                       ? static_cast<size_t>((2 * halflengthY) / gridSizeY)
-                       : 0;
+    std::size_t bins0 =
+        (cartesianGrid.gridSizeX() != 0)
+            ? static_cast<std::size_t>((2 * maxHalflengthX) / gridSizeX)
+            : 0;
+    std::size_t bins1 =
+        (cartesianGrid.gridSizeY() != 0)
+            ? static_cast<std::size_t>((2 * halflengthY) / gridSizeY)
+            : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
         std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,

@@ -73,8 +73,8 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
 
-    /// function to check if neural network predicted track label is duplicate
-    std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
+    /// Write additional matching details to a TTree
+    bool writeMatchingDetails = false;
   };
 
   /// Construct from configuration and log level.
@@ -108,15 +108,23 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 
+  /// For optional output of the matching details
+  TTree* m_matchingTree{nullptr};
+
+  /// Variables to fill in the TTree
+  uint32_t m_treeEventNr{};
+  uint64_t m_treeParticleId{};
+  bool m_treeIsMatched{};
+
   // Adding numbers for efficiency, fake, duplicate calculations
-  size_t m_nTotalTracks = 0;
-  size_t m_nTotalMatchedTracks = 0;
-  size_t m_nTotalFakeTracks = 0;
-  size_t m_nTotalDuplicateTracks = 0;
-  size_t m_nTotalParticles = 0;
-  size_t m_nTotalMatchedParticles = 0;
-  size_t m_nTotalDuplicateParticles = 0;
-  size_t m_nTotalFakeParticles = 0;
+  std::size_t m_nTotalTracks = 0;
+  std::size_t m_nTotalMatchedTracks = 0;
+  std::size_t m_nTotalFakeTracks = 0;
+  std::size_t m_nTotalDuplicateTracks = 0;
+  std::size_t m_nTotalParticles = 0;
+  std::size_t m_nTotalMatchedParticles = 0;
+  std::size_t m_nTotalDuplicateParticles = 0;
+  std::size_t m_nTotalFakeParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{

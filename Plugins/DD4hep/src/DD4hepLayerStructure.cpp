@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
+#include "Acts/Utilities/BinningType.hpp"
+
 Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
     std::unique_ptr<const Logger> logger)
@@ -18,9 +20,10 @@ Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
   }
 }
 
-std::shared_ptr<Acts::Experimental::LayerStructureBuilder>
+std::tuple<std::shared_ptr<Acts::Experimental::LayerStructureBuilder>,
+           std::optional<Acts::Extent>>
 Acts::Experimental::DD4hepLayerStructure::builder(
-    DD4hepDetectorElement::Store& dd4hepStore,
+    DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Check for misconfiguration with double naming
   if (dd4hepStore.find(options.name) != dd4hepStore.end()) {
@@ -32,7 +35,12 @@ Acts::Experimental::DD4hepLayerStructure::builder(
 
   // This object is going to be filled with the created surfaces
   DD4hepDetectorSurfaceFactory::Cache fCache;
-  m_surfaceFactory->construct(fCache, dd4hepElement, options.conversionOptions);
+  fCache.sExtent = options.extent;
+  fCache.pExtent = options.extent;
+  fCache.extentConstraints = options.extentConstraints;
+  fCache.nExtentSegments = options.nSegments;
+  m_surfaceFactory->construct(fCache, gctx, dd4hepElement,
+                              options.conversionOptions);
 
   ACTS_DEBUG("Conversion from DD4Hep : " << fCache.sensitiveSurfaces.size()
                                          << " sensitive surfaces");
@@ -50,8 +58,29 @@ Acts::Experimental::DD4hepLayerStructure::builder(
 
   // Surfaces are prepared for creating the builder
   LayerStructureBuilder::Config lsbConfig;
-  lsbConfig.auxiliary = "*** DD4hep driven builder for: ";
+  lsbConfig.auxiliary = "*** DD4hep auto-generated builder for: ";
+  lsbConfig.extent = fCache.sExtent;
   lsbConfig.auxiliary += options.name;
+
+  // Patch the binning to the extent parameters
+  if (fCache.sExtent.has_value() && options.patchBinningWithExtent) {
+    const auto& extent = fCache.sExtent.value();
+    // Check if the binning
+    ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
+    for (auto& b : fCache.binnings) {
+      if (extent.constrains(b.binValue)) {
+        ACTS_VERBOSE("Binning '" << binningValueNames()[b.binValue]
+                                 << "' is patched.");
+        ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back()
+                                    << "]");
+        b.edges.front() = extent.min(b.binValue);
+        b.edges.back() = extent.max(b.binValue);
+        ACTS_VERBOSE(" -> to   : [" << b.edges.front() << ", " << b.edges.back()
+                                    << "]");
+      }
+    }
+  }
+
   // Translate binings and supports
   lsbConfig.binnings = fCache.binnings;
   lsbConfig.supports = fCache.supports;
@@ -84,6 +113,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     }
   }
 
+  // Create the surface provider from the layer structure
   lsbConfig.surfacesProvider =
       std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
           lSurfaces);
@@ -92,7 +122,17 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   ACTS_DEBUG("Configured to build " << lsbConfig.supports.size()
                                     << " supports.");
 
+  // Make one common extent
+  if (fCache.sExtent.has_value() && fCache.pExtent.has_value()) {
+    ACTS_DEBUG(
+        "Sensitive extent determined: " << fCache.sExtent.value().toString());
+    ACTS_DEBUG(
+        "Passive   extent determined: " << fCache.pExtent.value().toString());
+    fCache.sExtent.value().extend(fCache.pExtent.value());
+  }
+
   // Return the structure builder
-  return std::make_shared<LayerStructureBuilder>(
-      lsbConfig, getDefaultLogger(options.name, options.logLevel));
+  return {std::make_shared<LayerStructureBuilder>(
+              lsbConfig, getDefaultLogger(options.name, options.logLevel)),
+          fCache.sExtent};
 }

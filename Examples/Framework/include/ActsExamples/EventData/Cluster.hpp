@@ -17,8 +17,8 @@ namespace ActsExamples {
 /// Simple struct holding cluster information.
 struct Cluster {
   using Cell = ActsFatras::Segmentizer::ChannelSegment;
-  size_t sizeLoc0 = 0;
-  size_t sizeLoc1 = 0;
+  std::size_t sizeLoc0 = 0;
+  std::size_t sizeLoc1 = 0;
   std::vector<Cell> channels;
 };
 

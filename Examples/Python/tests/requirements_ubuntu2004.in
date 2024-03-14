@@ -1,0 +1,9 @@
+# to support python 3.8 in CI: test_exatrkx_python (ubuntu2004)
+# higher versions of numpy don't support python 3.8
+numpy==1.24.4
+
+pytest
+pytest-check
+uproot
+awkward
+pyyaml

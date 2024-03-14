@@ -41,7 +41,7 @@ class INavigationDelegate {
 ///
 /// @note it relies on the detector volume to be set to the state
 /// Memory  managed navigation state updator
-using SurfaceCandidatesUpdator =
+using SurfaceCandidatesUpdater =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
                    INavigationDelegate>;
 
@@ -51,16 +51,9 @@ using SurfaceCandidatesUpdator =
 /// @param nState [in, out] is the navigation state to be updated
 ///
 /// @return the new DetectorVolume into which one changes at this switch
-using DetectorVolumeUpdator =
+using DetectorVolumeUpdater =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
                    INavigationDelegate>;
-
-/// @brief  A dummy constructed updator
-inline static DetectorVolumeUpdator unconnectedUpdator() {
-  DetectorVolumeUpdator unconnected;
-  unconnected.disconnect();
-  return unconnected;
-}
 
 }  // namespace Experimental
 }  // namespace Acts

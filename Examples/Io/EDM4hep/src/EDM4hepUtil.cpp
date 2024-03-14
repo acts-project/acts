@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -21,6 +22,8 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include "edm4hep/TrackState.h"
+
+using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
@@ -42,13 +45,11 @@ ActsFatras::Particle EDM4hepUtil::readParticle(
                   from.getTime() * Acts::UnitConstants::ns);
 
   // Only used for direction; normalization/units do not matter
-  to.setDirection(from.getMomentum()[0], from.getMomentum()[1],
-                  from.getMomentum()[2]);
+  Acts::Vector3 momentum = {from.getMomentum()[0], from.getMomentum()[1],
+                            from.getMomentum()[2]};
+  to.setDirection(momentum.normalized());
 
-  to.setAbsoluteMomentum(std::hypot(from.getMomentum()[0],
-                                    from.getMomentum()[1],
-                                    from.getMomentum()[2]) *
-                         Acts::UnitConstants::GeV);
+  to.setAbsoluteMomentum(momentum.norm() * 1_GeV);
 
   return to;
 }
@@ -70,38 +71,36 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(
     const edm4hep::SimTrackerHit& from, const MapParticleIdFrom& particleMapper,
     const MapGeometryIdFrom& geometryMapper) {
   ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
-  Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  const auto mass = from.getMCParticle().getMass();
-  const Acts::ActsVector<3> momentum{
-      from.getMomentum().x * Acts::UnitConstants::GeV,
-      from.getMomentum().y * Acts::UnitConstants::GeV,
-      from.getMomentum().z * Acts::UnitConstants::GeV,
+  const auto mass = from.getMCParticle().getMass() * 1_GeV;
+  const Acts::Vector3 momentum{
+      from.getMomentum().x * 1_GeV,
+      from.getMomentum().y * 1_GeV,
+      from.getMomentum().z * 1_GeV,
   };
   const auto energy = std::hypot(momentum.norm(), mass);
 
-  ActsFatras::Hit::Vector4 pos4{
-      from.getPosition().x * Acts::UnitConstants::mm,
-      from.getPosition().y * Acts::UnitConstants::mm,
-      from.getPosition().z * Acts::UnitConstants::mm,
-      from.getTime() * Acts::UnitConstants::ns,
+  Acts::Vector4 pos4{
+      from.getPosition().x * 1_mm,
+      from.getPosition().y * 1_mm,
+      from.getPosition().z * 1_mm,
+      from.getTime() * 1_ns,
   };
 
-  ActsFatras::Hit::Vector4 mom4{
+  Acts::Vector4 mom4{
       momentum.x(),
       momentum.y(),
       momentum.z(),
       energy,
   };
 
-  // TODO no EDM4hep equivalent?
-  ActsFatras::Hit::Vector4 delta4{
-      0 * Acts::UnitConstants::GeV, 0 * Acts::UnitConstants::GeV,
-      0 * Acts::UnitConstants::GeV,
-      0 * Acts::UnitConstants::GeV,  // sth.getEDep()
-  };
+  Acts::Vector4 delta4 = Acts::Vector4::Zero();
+  delta4[Acts::eEnergy] = -from.getEDep() * Acts::UnitConstants::GeV;
 
-  // TODO no EDM4hep equivalent?
+  Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
+
+  // Can extract from time, but we need a complete picture of the trajectory
+  // first
   int32_t index = -1;
 
   return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
@@ -152,7 +151,8 @@ Measurement EDM4hepUtil::readMeasurement(
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  IndexSourceLink sourceLink{geometryId, from.id()};
+  IndexSourceLink sourceLink{
+      geometryId, static_cast<Index>(podioObjectIDToInteger(from.id()))};
 
   auto pos = from.getPosition();
   auto cov = from.getCovMatrix();
@@ -252,7 +252,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 
 void EDM4hepUtil::writeTrajectory(
     const Acts::GeometryContext& gctx, double Bz, const Trajectories& from,
-    edm4hep::MutableTrack to, size_t fromIndex,
+    edm4hep::MutableTrack to, std::size_t fromIndex,
     const Acts::ParticleHypothesis& particleHypothesis,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();

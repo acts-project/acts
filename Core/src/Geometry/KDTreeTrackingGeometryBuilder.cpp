@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cstddef>
@@ -143,8 +142,6 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
       return tVolume;
     }
   }
-
-  return nullptr;
 }
 
 /// @return a new tracking volume

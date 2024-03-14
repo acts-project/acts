@@ -83,7 +83,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   /// Nested smearer struct that holds geometric digitizer and smearing
   /// Support up to 4 dimensions.
-  template <size_t kSmearDIM>
+  template <std::size_t kSmearDIM>
   struct CombinedDigitizer {
     GeometricConfig geometric;
     ActsFatras::BoundParametersSmearer<RandomEngine, kSmearDIM> smearing;
@@ -121,7 +121,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   /// @param cfg Is the digitization configuration input
   ///
   /// @return a variant of a Digitizer
-  template <size_t kSmearDIM>
+  template <std::size_t kSmearDIM>
   static Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
     CombinedDigitizer<kSmearDIM> impl;
     // Copy the geometric configuration

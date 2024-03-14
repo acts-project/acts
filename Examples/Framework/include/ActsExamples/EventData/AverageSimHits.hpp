@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,7 +44,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
   Acts::Vector3 avgDir = Acts::Vector3::Zero();
 
-  size_t n = 0u;
+  std::size_t n = 0u;
   for (auto [_, simHitIdx] : hitSimHitsRange) {
     n += 1u;
 
@@ -51,11 +52,19 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // check their validity again.
     const auto& simHit = *simHits.nth(simHitIdx);
 
+    // We use the thickness of the detector element as tolerance, because Geant4
+    // treats the Surfaces as volumes and thus it is not ensured, that each hit
+    // lies exactly on the Acts::Surface
+    const auto tolerance =
+        surface.associatedDetectorElement() != nullptr
+            ? surface.associatedDetectorElement()->thickness()
+            : Acts::s_onSurfaceTolerance;
+
     // transforming first to local positions and average that ensures that the
     // averaged position is still on the surface. the averaged global position
     // might not be on the surface anymore.
     auto result = surface.globalToLocal(gCtx, simHit.position(),
-                                        simHit.direction(), 0.5_um);
+                                        simHit.direction(), tolerance);
     if (result.ok()) {
       avgLocal += result.value();
     } else {

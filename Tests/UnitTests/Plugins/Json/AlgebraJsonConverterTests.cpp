@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
               referenceT);
 
   // Check rotation read back in - transposed
-  std::vector<size_t> transposedIndices = {0, 3, 6, 1, 4, 7, 2, 5, 8};
+  std::vector<std::size_t> transposedIndices = {0, 3, 6, 1, 4, 7, 2, 5, 8};
   readR = transposeOut["rotation"].get<std::vector<ActsScalar>>();
   for (auto [i, rr] : Acts::enumerate(referenceR)) {
     CHECK_CLOSE_ABS(readR[transposedIndices[i]], rr, 1e-5);

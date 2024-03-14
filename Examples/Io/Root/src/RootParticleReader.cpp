@@ -84,8 +84,8 @@ ActsExamples::RootParticleReader::RootParticleReader(
   }
 }
 
-std::pair<size_t, size_t> ActsExamples::RootParticleReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::RootParticleReader::availableEvents() const {
   return {0u, m_events};
 }
 
@@ -153,7 +153,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
       p.setPosition4((*m_vx)[i] * Acts::UnitConstants::mm,
                      (*m_vy)[i] * Acts::UnitConstants::mm,
                      (*m_vz)[i] * Acts::UnitConstants::mm,
-                     (*m_vt)[i] * Acts::UnitConstants::ns);
+                     (*m_vt)[i] * Acts::UnitConstants::mm);
       // NOTE: depends on the normalization done in setDirection
       p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
       p.setAbsoluteMomentum((*m_p)[i] * Acts::UnitConstants::GeV);

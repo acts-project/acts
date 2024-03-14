@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -34,7 +35,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -50,6 +50,7 @@ namespace {
 using namespace Acts;
 using namespace ActsAlignment;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
@@ -142,9 +143,10 @@ struct TelescopeDetector {
     // The volume transform
     Translation3 transVol(0, 0, 0);
     Transform3 trafoVol(rotation * transVol);
-    VolumeBoundsPtr boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
-        length + 10._mm);
+    std::shared_ptr<const VolumeBounds> boundsVol =
+        std::make_shared<const CuboidVolumeBounds>(
+            rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
+            length + 10._mm);
 
     LayerArrayCreator::Config lacConfig;
     LayerArrayCreator layArrCreator(
@@ -247,7 +249,7 @@ struct KalmanFitterInputTrajectory {
 /// Function to create trajectories for kalman fitter
 ///
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
-    std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
+    std::shared_ptr<const TrackingGeometry> geo, std::size_t nTrajectories) {
   // simulation propagator
   const auto simPropagator = makeStraightPropagator(std::move(geo));
 
@@ -313,7 +315,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Set the surfaces to be aligned (fix the layer 8)
   unsigned int iSurface = 0;
-  std::unordered_map<const Surface*, size_t> idxedAlignSurfaces;
+  std::unordered_map<const Surface*, std::size_t> idxedAlignSurfaces;
   // Loop over the detector elements
   for (auto& det : detector.detectorStore) {
     const auto& surface = det->surface();

@@ -69,6 +69,44 @@ struct SimHitData {
                  tpz, te, deltapx, deltapy, deltapz, deltae, index);
 };
 
+// Write out muon simhits before digitization
+struct MuonSimHitData {
+  /// Hit surface identifier. Not available in the TrackML datasets.
+  int pdgId = 0;
+  /// three components of the muon station identifier
+  int StationName = 0;
+  int StationEta = 0;
+  int StationPhi = 0;
+  // True hit location in station frame, in mm.
+  float LocalPositionExtrx = 0.0f, LocalPositionExtry = 0.0f,
+        LocalPositionExtrz = 0.0f;
+  /// True particle momentum in GeV before interaction.
+  float LocalDirectionx = 0.0f, LocalDirectiony = 0.0f, LocalDirectionz = 0.0f;
+  DFE_NAMEDTUPLE(MuonSimHitData, pdgId, StationName, StationEta, StationPhi,
+                 LocalPositionExtrx, LocalPositionExtry, LocalPositionExtrz,
+                 LocalDirectionx, LocalDirectiony, LocalDirectionz);
+};
+
+// Write out muon simhits before digitization
+struct MuonDriftCircleData {
+  /// Drift radius, in mm.
+  float driftRadius = 0.0f;
+  /// Drift tube center location in the station frame
+  float tubePositionx = 0.0f, tubePositiony = 0.0f, tubePositionz = 0.0f;
+  /// three components of the muon station identifier
+  int stationName = 0;
+  int stationEta = 0;
+  int stationPhi = 0;
+  // components of the tube identifier within the station
+  int multilayer = 0;
+  int tubelayer = 0;
+  int tube = 0;
+
+  DFE_NAMEDTUPLE(MuonDriftCircleData, driftRadius, tubePositionx, tubePositiony,
+                 tubePositionz, stationName, stationEta, stationPhi, multilayer,
+                 tubelayer, tube);
+};
+
 struct TruthHitData {
   /// Event-unique hit identifier. As defined for the simulated hit below and
   /// used to link back to it; same value can appear multiple times here due to
@@ -307,7 +345,7 @@ struct TrackParameterData {
 };
 
 struct ProtoTrackData {
-  size_t trackId;
+  std::size_t trackId;
   Index measurementId;
   double x, y, z;
 

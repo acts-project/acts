@@ -36,14 +36,12 @@
 #include <tuple>
 #include <utility>
 
-namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
 
 using Covariance = BoundSquareMatrix;
-using Jacobian = BoundMatrix;
 
 /// @brief Simplified propagator state
 struct PropState {
@@ -158,11 +156,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.setStepSize(slsState, -1337.);
+  sls.updateStepSize(slsState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), -1337.);
 
-  sls.releaseStepSize(slsState);
+  sls.releaseStepSize(slsState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
@@ -384,16 +382,15 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Update in context of a surface
   freeParams = detail::transformBoundToFreeParameters(
       bp.referenceSurface(), tgContext, bp.parameters());
-  freeParams.segment<3>(eFreePos0) *= 2;
-  freeParams[eFreeTime] *= 2;
 
   BOOST_CHECK(bp.covariance().has_value());
   sls.update(slsState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
              *plane);
-  CHECK_CLOSE_OR_SMALL(sls.position(slsState), 2. * pos, eps, eps);
-  BOOST_CHECK_EQUAL(sls.charge(slsState), 1. * charge);
-  CHECK_CLOSE_OR_SMALL(sls.time(slsState), 2. * time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(sls.position(slsState), pos, eps, eps);
+  BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
+  CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
+
 }  // namespace Test
 }  // namespace Acts

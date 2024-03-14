@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/KDTree.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <algorithm>
@@ -595,11 +594,11 @@ BOOST_AUTO_TEST_CASE(range_search_many_same) {
 
   std::vector<std::pair<std::array<double, 3>, int>> points;
 
-  for (size_t i = 0; i < 50; ++i) {
+  for (std::size_t i = 0; i < 50; ++i) {
     points.push_back({{64.0, 64.0, 64.0}, q++});
   }
 
-  for (size_t i = 0; i < 50; ++i) {
+  for (std::size_t i = 0; i < 50; ++i) {
     points.push_back({{-64.0, -64.0, -64.0}, q++});
   }
 

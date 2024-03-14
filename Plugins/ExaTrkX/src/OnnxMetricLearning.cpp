@@ -57,7 +57,7 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 }
 
 std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
-    std::vector<float>& inputValues, size_t, int) {
+    std::vector<float>& inputValues, std::size_t, int) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
@@ -86,7 +86,7 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
                           eOutputTensor);
 
   ACTS_VERBOSE("Embedding space of the first SP: ");
-  for (size_t i = 0; i < 3; i++) {
+  for (std::size_t i = 0; i < 3; i++) {
     ACTS_VERBOSE("\t" << eOutputData[i]);
   }
 
@@ -98,10 +98,10 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   int64_t numEdges = edgeList.size() / 2;
   ACTS_DEBUG("Graph construction: built " << numEdges << " edges.");
 
-  for (size_t i = 0; i < 10; i++) {
+  for (std::size_t i = 0; i < 10; i++) {
     ACTS_VERBOSE(edgeList[i]);
   }
-  for (size_t i = 0; i < 10; i++) {
+  for (std::size_t i = 0; i < 10; i++) {
     ACTS_VERBOSE(edgeList[numEdges + i]);
   }
 

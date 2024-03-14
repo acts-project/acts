@@ -141,7 +141,7 @@ concept TrackStateProxyConcept =
   { cv.calibratedSize() } -> std::same_as<TrackIndexType>;
   { v.calibratedSize() } -> std::same_as<TrackIndexType>;
 
-  { cv.chi2() } -> std::same_as<double>;
+  { cv.chi2() } -> std::same_as<float>;
 
   { cv.pathLength() } -> std::same_as<double>;
 

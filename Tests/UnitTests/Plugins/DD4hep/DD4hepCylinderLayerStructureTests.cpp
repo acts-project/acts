@@ -103,11 +103,14 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   lsOptions.name = "BeamPipe";
   lsOptions.logLevel = Acts::Logging::VERBOSE;
 
-  auto beamPipeInternalsBuilder =
-      beamPipeStructure.builder(dd4hepStore, world, lsOptions);
+  auto [beamPipeInternalsBuilder, beamPipeExt] =
+      beamPipeStructure.builder(dd4hepStore, tContext, world, lsOptions);
+
+  // Not configured to have the beam pipe Extent measured
+  BOOST_CHECK(beamPipeExt == std::nullopt);
 
   // Build the internal volume structure
-  auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+  auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
       beamPipeInternalsBuilder->construct(tContext);
 
   // All surfaces are filled
@@ -115,16 +118,16 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   // No volumes are added
   BOOST_CHECK(volumes.empty());
   // The surface updator is connected
-  BOOST_CHECK(surfacesUpdator.connected());
+  BOOST_CHECK(surfacesUpdater.connected());
   // The volume updator is connected
-  BOOST_CHECK(volumeUpdator.connected());
+  BOOST_CHECK(volumeUpdater.connected());
 
   // Kill that instance before going into the next test
   lcdd->destroyInstance();
 }
 
 // This test creates DD4hep xml compact files for cylindrical
-// layer structures and then converts them into IndexedSurfacesUpdator
+// layer structures and then converts them into IndexedSurfacesUpdater
 // and other additional components needed for Internal DetectorVolume
 // structure.
 //
@@ -146,7 +149,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
   std::vector<std::array<unsigned int, 4u> > zphiBinning = {
       {1u, 1u, 0u, 0u}, {14u, 52u, 1u, 1u}, {28u, 104u, 0u, 0u}};
 
-  size_t itest = 0;
+  std::size_t itest = 0;
   for (auto [nz, nphi, ez, ephi] : zphiBinning) {
     // Create an XML from it
     std::ofstream cxml;
@@ -161,6 +164,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     cxml << segmentation_xml;
     cxml << cylinder_layer_head_xml;
 
+    // Test binning
     if (nz * nphi > 1u) {
       cxml << indent_12_xml << "<acts_surface_binning";
       cxml << " ztype=\"equidistant\"";
@@ -189,15 +193,6 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
            << "    <tubs rmin=\"122*mm\" rmax=\"124*mm\" dz=\"500*mm\" "
               "material=\"Air\"/>"
            << '\n';
-      cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
-      passiveAddon = 1u;
-    } else if (itest == 2u) {
-      cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
-      cxml << indent_12_xml
-           << "    <tubs rmin=\"122*mm\" rmax=\"124*mm\" dz=\"500*mm\" "
-              "material=\"Air\"/>"
-           << '\n';
-      cxml << "    <acts_proto_material/>" << '\n';
       cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
       passiveAddon = 1u;
     }
@@ -229,11 +224,11 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     lsOptions.name = "BarrelLayer";
     lsOptions.logLevel = Acts::Logging::VERBOSE;
 
-    auto barrelInternalsBuilder =
-        barrelStructure.builder(dd4hepStore, world, lsOptions);
+    auto [barrelInternalsBuilder, barrelExt] =
+        barrelStructure.builder(dd4hepStore, tContext, world, lsOptions);
 
     // Build the internal volume structure
-    auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+    auto [surfaces, volumes, surfacesUpdater, volumeUpdater] =
         barrelInternalsBuilder->construct(tContext);
 
     // All surfaces are filled
@@ -241,13 +236,74 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     // No volumes are added
     BOOST_CHECK(volumes.empty());
     // The surface updator is connected
-    BOOST_CHECK(surfacesUpdator.connected());
+    BOOST_CHECK(surfacesUpdater.connected());
     // The volume updator is connected
-    BOOST_CHECK(volumeUpdator.connected());
+    BOOST_CHECK(volumeUpdater.connected());
 
     // Kill that instance before going into the next test
     lcdd->destroyInstance();
   }
+}
+
+// Test the auto-range determination
+BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructureAutoRange) {
+  // First create some test surfaces
+  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+  auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
+                                              116., 3., 2., {52, 14});
+
+  // Create an XML from it
+  std::ofstream cxml;
+  std::string fName = "CylinderLayer_auto_range.xml";
+
+  cxml.open(fName);
+  cxml << head_xml;
+  cxml << segmentation_xml;
+  cxml << cylinder_layer_head_xml;
+
+  cxml << "<modules>" << '\n';
+  for (const auto& s : cSurfaces) {
+    cxml << indent_12_xml
+         << DD4hepTestsHelper::surfaceToXML(tContext, *s,
+                                            Acts::Transform3::Identity())
+         << "\n";
+  }
+  cxml << "</modules>" << '\n';
+  cxml << tail_xml;
+  cxml << end_xml;
+  cxml.close();
+
+  auto lcdd = &(dd4hep::Detector::getInstance());
+  lcdd->fromCompact(fName);
+  lcdd->volumeManager();
+  lcdd->apply("DD4hepVolumeManager", 0, nullptr);
+
+  auto world = lcdd->world();
+
+  // Now the test starts ...
+  auto sFactory = std::make_shared<Acts::DD4hepDetectorSurfaceFactory>(
+      Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
+                             Acts::Logging::VERBOSE));
+
+  Acts::Experimental::DD4hepLayerStructure barrelStructure(
+      std::move(sFactory),
+      Acts::getDefaultLogger("DD4hepLayerStructure", Acts::Logging::VERBOSE));
+
+  Acts::DD4hepDetectorElement::Store dd4hepStore;
+
+  Acts::Experimental::DD4hepLayerStructure::Options lsOptions;
+  lsOptions.name = "AutoRangeLayer";
+  auto extent = Acts::Extent();
+  lsOptions.extent = extent;
+  lsOptions.extentConstraints = {Acts::binZ, Acts::binR};
+  lsOptions.logLevel = Acts::Logging::VERBOSE;
+
+  auto [barrelInternalsBuilder, barrelExt] =
+      barrelStructure.builder(dd4hepStore, tContext, world, lsOptions);
+
+  BOOST_CHECK(barrelExt != std::nullopt);
+  BOOST_CHECK(barrelExt.value().constrains(Acts::binZ));
+  BOOST_CHECK(barrelExt.value().constrains(Acts::binR));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

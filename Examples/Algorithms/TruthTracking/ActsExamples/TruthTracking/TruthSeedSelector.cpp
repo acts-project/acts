@@ -66,7 +66,7 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     // find the corresponding hits for this particle
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));
     // number of recorded hits
-    size_t nHits = hits.size();
+    std::size_t nHits = hits.size();
     return within(rho, 0., m_cfg.rhoMax) &&
            within(p.position().z(), m_cfg.zMin, m_cfg.zMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&

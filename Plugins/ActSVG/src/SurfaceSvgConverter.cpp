@@ -118,6 +118,17 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
     }
   }
 
+  // Decorations
+  // - Flag the material
+  if (surface.surfaceMaterial() != nullptr) {
+    pSurface._decorations["material"] = actsvg::svg::object{};
+  }
+
+  /// - The geometry ID as string
+  actsvg::svg::object geoId{};
+  geoId._id = std::to_string(surface.geometryId().value());
+  pSurface._decorations["geo_id"] = geoId;
+
   // Attach the style
   pSurface._fill._fc = {
       cOptions.style.fillColor,

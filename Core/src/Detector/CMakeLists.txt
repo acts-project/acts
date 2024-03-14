@@ -3,11 +3,15 @@ target_sources(
   PRIVATE
     detail/BlueprintHelper.cpp
     detail/BlueprintDrawer.cpp
+    detail/CuboidalDetectorHelper.cpp
     detail/CylindricalDetectorHelper.cpp
+    detail/DetectorVolumeConsistency.cpp
     detail/PortalHelper.cpp
-    detail/SupportHelper.cpp
+    detail/ProtoMaterialHelper.cpp
+    detail/SupportSurfacesHelper.cpp
     detail/IndexedGridFiller.cpp
     CylindricalContainerBuilder.cpp
+    CuboidalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
     DetectorVolume.cpp
@@ -20,6 +24,4 @@ target_sources(
     GeometryIdGenerator.cpp
     VolumeStructureBuilder.cpp
     MultiWireStructureBuilder.cpp
-
-    
 )

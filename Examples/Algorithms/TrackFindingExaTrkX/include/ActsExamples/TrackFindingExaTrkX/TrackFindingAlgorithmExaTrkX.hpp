@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -52,6 +53,9 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// Output protoTracks collection.
     std::string outputProtoTracks;
 
+    /// Output graph (optional)
+    std::string outputGraph;
+
     std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
 
     std::vector<std::shared_ptr<Acts::EdgeClassificationBase>> edgeClassifiers;
@@ -67,8 +71,11 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float clusterXScale = 1.f;
     float clusterYScale = 1.f;
 
+    /// Remove track candidates with 2 or less hits
+    bool filterShortTracks = false;
+
     /// Target graph properties
-    size_t targetMinHits = 3;
+    std::size_t targetMinHits = 3;
     double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 
@@ -114,6 +121,8 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+  WriteDataHandle<Acts::TorchGraphStoreHook::Graph> m_outputGraph{
+      this, "OutputGraph"};
 
   // for truth graph
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
