@@ -33,13 +33,8 @@ class CylinderVolumeStack : public Volume {
 
   struct VolumeTuple;
   static std::shared_ptr<Volume> checkOverlapAndAttachInZ(
-      VolumeTuple& a, VolumeTuple& b, AttachmentStrategy strategy,
-      const Logger& logger);
-
-  static std::shared_ptr<Volume> createGapVolume(const VolumeTuple& a,
-                                                 const VolumeTuple& b,
-                                                 BinningValue direction,
-                                                 const Logger& logger);
+      VolumeTuple& a, VolumeTuple& b, const Transform3& groupTransform,
+      AttachmentStrategy strategy, const Logger& logger);
 
   static void printVolumeSequence(const std::vector<VolumeTuple>& volumes,
                                   const Logger& logger);

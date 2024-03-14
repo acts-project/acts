@@ -46,7 +46,7 @@ Volume CylinderVolumeStack::createOuterVolume(
   }
 
   // For alignment check, we have to pick one of the volumes as the base
-  const auto& groupTransform = volumes.front()->transform();
+  const auto groupTransform = volumes.front()->transform();
   ACTS_DEBUG("Group transform is:\n" << groupTransform.matrix());
 
   std::vector<VolumeTuple> volumeTuples;
@@ -124,7 +124,8 @@ Volume CylinderVolumeStack::createOuterVolume(
       auto& a = volumeTuples.at(i);
       auto& b = volumeTuples.at(j);
 
-      auto gap = checkOverlapAndAttachInZ(a, b, strategy, logger);
+      auto gap =
+          checkOverlapAndAttachInZ(a, b, groupTransform, strategy, logger);
       if (gap) {
         ACTS_DEBUG("Received gap volume, registering");
         auto* cylinderBounds =
@@ -134,14 +135,10 @@ Volume CylinderVolumeStack::createOuterVolume(
               "CylinderVolumeStack constructed gap volume was not a cylinder "
               "volume"};
         }
-        // @FIXME: This might not be safe, actually
-        // Gap volume is in group coordinate system, transform to global
-        Transform3 gapLocalTransform = gap->transform();
-        gap->setTransform(groupTransform * gap->transform());
         gapVolumes.emplace_back(
             gap, cylinderBounds,
             std::make_shared<CylinderVolumeBounds>(*cylinderBounds),
-            gapLocalTransform);
+            groupTransform.inverse() * gap->transform());
       }
     }
 
@@ -214,17 +211,19 @@ Volume CylinderVolumeStack::createOuterVolume(
         volumeTuples.back().bounds->get(CylinderVolumeBounds::eHalfLengthZ);
 
     ActsScalar midZ = (minZ + maxZ) / 2.0;
+    ActsScalar hlZ = (maxZ - minZ) / 2.0;
 
     ACTS_DEBUG("Outer volume bounds are z: [ "
                << minZ << " <- " << midZ << " -> " << maxZ << " ], r: [ "
                << minR << " <-> " << maxR << " ]");
+    ACTS_DEBUG(" -> Half length: " << hlZ);
 
     Transform3 outerTransform = groupTransform * Translation3{0, 0, midZ};
 
     ACTS_DEBUG("Outer transform is:\n" << outerTransform.matrix());
 
     auto outerCylinderBounds =
-        std::make_shared<CylinderVolumeBounds>(minR, maxR, (maxZ - minZ) / 2.0);
+        std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
     ACTS_DEBUG("Outer bounds are:\n" << *outerCylinderBounds);
 
     return Volume(outerTransform, outerCylinderBounds);
@@ -235,7 +234,7 @@ Volume CylinderVolumeStack::createOuterVolume(
 }
 
 std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
-    VolumeTuple& a, VolumeTuple& b,
+    VolumeTuple& a, VolumeTuple& b, const Transform3& groupTransform,
     CylinderVolumeStack::AttachmentStrategy strategy, const Logger& logger) {
   ActsScalar aZ = a.localTransform.translation()[eZ];
   ActsScalar aHlZ = a.bounds->get(CylinderVolumeBounds::eHalfLengthZ);
@@ -282,27 +281,46 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
     ACTS_DEBUG("Synchronizing bounds in z with strategy: " << strategy);
 
     switch (strategy) {
-        // case AttachmentStrategy::Midpoint: {
-        // ACTS_DEBUG(" -> Midpoint strategy");
-        // // The midpoint of the two volumes
-        // ActsScalar midpoint = (aZMax + bZMin) / 2.0;
+      // case AttachmentStrategy::Midpoint: {
+      // ACTS_DEBUG(" -> Midpoint strategy");
+      // // The midpoint of the two volumes
+      // ActsScalar midpoint = (aZMax + bZMin) / 2.0;
 
-        // ACTS_DEBUG(" - Midpoint: " << midpoint);
+      // ACTS_DEBUG(" - Midpoint: " << midpoint);
 
-        // a.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, halfLength);
-        // a.updatedBounds->set(CylinderVolumeBounds::eZ, midpoint);
-        // b.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, halfLength);
-        // b.updatedBounds->set(CylinderVolumeBounds::eZ, midpoint);
-        // break;
-        // }
+      // a.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, halfLength);
+      // a.updatedBounds->set(CylinderVolumeBounds::eZ, midpoint);
+      // b.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, halfLength);
+      // b.updatedBounds->set(CylinderVolumeBounds::eZ, midpoint);
+      // break;
+      // }
+      case AttachmentStrategy::First: {
+        ACTS_DEBUG(" -> Strategy: First");
+        ActsScalar gapWidth = bZMin - aZMax;
+        ActsScalar aZMidNew = (aZMin + bZMin) / 2.0;
+        ActsScalar aHlZNew = (bZMin - aZMin) / 2.0;
+        ACTS_DEBUG("  - Gap width: " << gapWidth);
+        ACTS_DEBUG("  - New halflength for first volume: " << aHlZNew);
+        ACTS_DEBUG("  - New bounds for first volume: ["
+                   << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
+                   << (aZMidNew + aHlZNew) << "]");
+
+        a.localTransform = Translation3{0, 0, aZMidNew};
+        a.volume->setTransform(groupTransform * a.localTransform);
+        a.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, aHlZNew);
+
+        break;
+      }
       case AttachmentStrategy::Gap: {
-        ACTS_DEBUG(" -> Gap strategy");
+        ACTS_DEBUG(" -> Strategy: Gap");
         ActsScalar gapHlZ = (bZMin - aZMax) / 2.0;
         ActsScalar gapMidZ = (bZMin + aZMax) / 2.0;
 
-        Transform3 gapTransform{Translation3{0, 0, gapMidZ}};
+        ACTS_DEBUG("  - Gap half length: " << gapHlZ << " at z: " << gapMidZ);
+
+        Transform3 gapLocalTransform{Translation3{0, 0, gapMidZ}};
         gap = std::make_shared<Volume>(
-            gapTransform,
+            groupTransform * gapLocalTransform,
             std::make_shared<CylinderVolumeBounds>(
                 a.bounds->get(CylinderVolumeBounds::eMinR),
                 a.bounds->get(CylinderVolumeBounds::eMaxR), gapHlZ));
@@ -320,24 +338,6 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
 
   return gap;
 }
-
-// std::shared_ptr<Volume> CylinderVolumeStack::createGapVolume(
-// const VolumeTuple& a, const VolumeTuple& b, BinningValue direction,
-// const Logger& logger) {
-// if(direction
-// // This calculation is duplicated, but the separation into a separate
-// function
-// // is worth it
-// ActsScalar aZ = a.localTransform.translation()[eZ];
-// ActsScalar aHlZ = a.bounds->get(CylinderVolumeBounds::eHalfLengthZ);
-// ActsScalar aZMin = aZ - aHlZ;
-// ActsScalar aZMax = aZ + aHlZ;
-
-// ActsScalar bZ = b.localTransform.translation()[eZ];
-// ActsScalar bHlZ = b.bounds->get(CylinderVolumeBounds::eHalfLengthZ);
-// ActsScalar bZMin = bZ - bHlZ;
-// ActsScalar bZMax = bZ + bHlZ;
-// }
 
 void CylinderVolumeStack::printVolumeSequence(
     const std::vector<VolumeTuple>& volumes, const Logger& logger) {
