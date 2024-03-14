@@ -128,14 +128,14 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 
   std::vector<std::function<std::shared_ptr<TrackingVolume>(
       const GeometryContext&, const TrackingVolumePtr&,
-      const VolumeBoundsPtr&)>>
+      const std::shared_ptr<const VolumeBounds>&)>>
       volumeFactories;
 
   for (const auto& vb : volumeBuilders) {
     volumeFactories.push_back(
         [vb](const GeometryContext& vgctx,
              const std::shared_ptr<const TrackingVolume>& inner,
-             const VolumeBoundsPtr&) {
+             const std::shared_ptr<const VolumeBounds>&) {
           return vb->trackingVolume(vgctx, inner);
         });
   }
