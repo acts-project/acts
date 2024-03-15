@@ -130,7 +130,7 @@ Acts::Layer::compatibleSurfaces(
     // intersect the end surface
     // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter =
-        static_cast<const Surface*>(options.endObject)
+        options.endObject
             ->intersect(gctx, position, direction, BoundaryCheck(true))
             .closest();
     // non-valid intersection with the end surface provided at this layer
