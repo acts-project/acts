@@ -33,8 +33,7 @@ from acts.examples.reconstruction import (
     addSeedFilterML,
     SeedFilterMLDBScanConfig,
 )
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 u = acts.UnitConstants
@@ -86,7 +85,7 @@ oddSeedingSel = geoDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
 detector, trackingGeometry, decorators = getOpenDataDetector(
-    geoDir, mdecorator=oddMaterialDeco
+    odd_dir=geoDir, mdecorator=oddMaterialDeco
 )
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
