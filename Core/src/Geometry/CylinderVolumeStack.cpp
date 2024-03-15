@@ -608,6 +608,7 @@ void CylinderVolumeStack::assignVolumeBounds(
 
 void CylinderVolumeStack::assignVolumeBounds(
     std::shared_ptr<VolumeBounds> volbounds, const Logger& logger) {
+  // @TODO: Assert no phi sector or bevel has been set
   ACTS_DEBUG(
       "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
 
@@ -746,6 +747,98 @@ void CylinderVolumeStack::assignVolumeBounds(
     }
 
     ACTS_VERBOSE("*** Volume configuration after z resizing:");
+    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+
+    // Commit and update outer vector
+    m_volumes.clear();
+    for (auto& vt : volumes) {
+      vt.commit();
+      m_volumes.push_back(vt.volume);
+    }
+
+  } else if (m_direction == BinningValue::binR) {
+    ACTS_VERBOSE("Stack direction is r");
+
+    std::vector<VolumeTuple> volumes;
+    volumes.reserve(m_volumes.size());
+    std::transform(m_volumes.begin(), m_volumes.end(),
+                   std::back_inserter(volumes), [this](const auto& volume) {
+                     return VolumeTuple{volume, m_groupTransform};
+                   });
+
+    ACTS_VERBOSE("*** Initial volume configuration:");
+    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+
+    ACTS_VERBOSE("Resize all volumes to new z bounds");
+    for (auto& volume : volumes) {
+      volume.set({
+          {CylinderVolumeBounds::eHalfLengthZ, newHlZ},
+      });
+    }
+
+    ACTS_VERBOSE("*** Volume configuration after z resizing:");
+    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+
+    if (oldMinR == newMinR && oldMaxR == newMaxR) {
+      ACTS_VERBOSE("Bounds are the same, no r resize needed");
+    } else {
+      if (m_resizeStrategy == ResizeStrategy::Expand) {
+        if (oldMinR > newMinR) {
+          // expand innermost volume
+          auto& first = volumes.front();
+          first.set({
+              {CylinderVolumeBounds::eMinR, newMinR},
+          });
+          ACTS_VERBOSE(" -> z: [ " << first.minZ() << " <- " << first.midZ()
+                                   << " -> " << first.maxZ() << " ], r: [ "
+                                   << first.minR() << " <-> " << first.maxR()
+                                   << " ]");
+        }
+        if (oldMaxR < newMaxR) {
+          // expand outermost volume
+          auto& last = volumes.back();
+          last.set({
+              {CylinderVolumeBounds::eMaxR, newMaxR},
+          });
+          ACTS_VERBOSE(" -> z: [ " << last.minZ() << " <- " << last.midZ()
+                                   << " -> " << last.maxZ() << " ], r: [ "
+                                   << last.minR() << " <-> " << last.maxR()
+                                   << " ]");
+        }
+      } else if (m_resizeStrategy == ResizeStrategy::Gap) {
+        if (oldMinR > newMinR) {
+          ACTS_VERBOSE("Creating gap volume at the innermost end");
+          auto gapBounds =
+              std::make_shared<CylinderVolumeBounds>(newMinR, oldMinR, newHlZ);
+          auto gapTransform = m_groupTransform;
+          volumes.insert(volumes.begin(),
+                         VolumeTuple{std::make_shared<Volume>(
+                                         gapTransform, std::move(gapBounds)),
+                                     m_groupTransform});
+          auto gap = volumes.front();
+          ACTS_VERBOSE(" -> gap inner: [ "
+                       << gap.minZ() << " <- " << gap.midZ() << " -> "
+                       << gap.maxZ() << " ], r: [ " << gap.minR() << " <-> "
+                       << gap.maxR() << " ]");
+        }
+        if (oldMaxR < newMaxR) {
+          ACTS_VERBOSE("Creating gap volume at the outermost end");
+          auto gapBounds =
+              std::make_shared<CylinderVolumeBounds>(oldMaxR, newMaxR, newHlZ);
+          auto gapTransform = m_groupTransform;
+          volumes.emplace_back(
+              std::make_shared<Volume>(gapTransform, std::move(gapBounds)),
+              m_groupTransform);
+          auto gap = volumes.back();
+          ACTS_VERBOSE(" -> gap outer: [ "
+                       << gap.minZ() << " <- " << gap.midZ() << " -> "
+                       << gap.maxZ() << " ], r: [ " << gap.minR() << " <-> "
+                       << gap.maxR() << " ]");
+        }
+      }
+    }
+
+    ACTS_VERBOSE("*** Volume configuration after r resizing:");
     printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
 
     // Commit and update outer vector
