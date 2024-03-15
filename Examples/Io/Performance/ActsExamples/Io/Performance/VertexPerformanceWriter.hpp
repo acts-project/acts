@@ -166,6 +166,8 @@ class VertexPerformanceWriter final
   std::vector<int> m_nTracksOnTruthVertex;
   std::vector<int> m_nTracksOnRecoVertex;
 
+  std::vector<double> m_recoVertexTrackWeights;
+  std::vector<double> m_truthVertexTrackWeights;
   std::vector<double> m_truthVertexMatchRatio;
 
   /// Number of reconstructed vertices

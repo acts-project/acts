@@ -190,6 +190,8 @@ VertexPerformanceWriter::VertexPerformanceWriter(
   m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
   m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
 
+  m_outputTree->Branch("recoVertexTrackWeights", &m_recoVertexTrackWeights);
+  m_outputTree->Branch("truthVertexTrackWeights", &m_truthVertexTrackWeights);
   m_outputTree->Branch("truthVertexMatchRatio", &m_truthVertexMatchRatio);
 
   m_outputTree->Branch("nRecoVtx", &m_nRecoVtx);
@@ -451,31 +453,32 @@ ProcessCode VertexPerformanceWriter::writeT(
       }
     }
 
-    double totalTrackWeight = 0;
+    double recoVertexTrackWeights = 0;
     for (const auto& trk : tracksAtVtx) {
-      totalTrackWeight += trk.trackWeight;
+      recoVertexTrackWeights += trk.trackWeight;
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<SimBarcode, std::pair<int, double>> fmap;
+    std::map<SimBarcode, double> truthVertexWeights;
     for (const auto& [vtxId, weight] : contributingTruthVertices) {
-      ++fmap[vtxId].first;
-      fmap[vtxId].second += weight;
+      truthVertexWeights[vtxId] += weight;
     }
-    double maxOccurrence = -1;
-    SimBarcode maxOccurrenceId = -1;
-    for (const auto& [vtxId, counter] : fmap) {
-      if (counter.second > maxOccurrence) {
-        maxOccurrenceId = vtxId;
-        maxOccurrence = counter.second;
-      }
+    auto truthVertexMatch = std::max_element(
+        truthVertexWeights.begin(), truthVertexWeights.end(),
+        [](const auto& a, const auto& b) { return a.second < b.second; });
+
+    if (truthVertexMatch == truthVertexWeights.end()) {
+      ACTS_DEBUG("No truth vertex found for reconstructed vertex.");
+      continue;
     }
+    SimBarcode truthVertexId = truthVertexMatch->first;
+    double truthVertexTrackWeights = truthVertexMatch->second;
 
     // Count number of reconstructible tracks on truth vertex
     int nTracksOnTruthVertex = 0;
     for (const auto& particle : associatedTruthParticles) {
       SimBarcode vtxId = particle.particleId().setParticle(0).setSubParticle(0);
-      if (vtxId == maxOccurrenceId) {
+      if (vtxId == truthVertexId) {
         ++nTracksOnTruthVertex;
       }
     }
@@ -491,7 +494,7 @@ ProcessCode VertexPerformanceWriter::writeT(
     // make up at least vertexMatchThreshold of the track weight at the
     // reconstructed vertex.
     double vertexMatchFraction =
-        (m_cfg.useTracks ? fmap[maxOccurrenceId].second / totalTrackWeight
+        (m_cfg.useTracks ? truthVertexTrackWeights / recoVertexTrackWeights
                          : 1.0);
     if (vertexMatchFraction > m_cfg.vertexMatchThreshold) {
       int count = 0;
@@ -538,7 +541,7 @@ ProcessCode VertexPerformanceWriter::writeT(
         SimBarcode vtxId =
             particle.particleId().setParticle(0).setSubParticle(0);
 
-        if (vtxId == maxOccurrenceId) {
+        if (vtxId == truthVertexId) {
           // Vertex found, fill variables
 
           // Helper function for computing the pull
@@ -646,6 +649,8 @@ ProcessCode VertexPerformanceWriter::writeT(
             m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
             m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
 
+            m_recoVertexTrackWeights.push_back(recoVertexTrackWeights);
+            m_truthVertexTrackWeights.push_back(truthVertexTrackWeights);
             m_truthVertexMatchRatio.push_back(vertexMatchFraction);
           }
 
@@ -813,6 +818,8 @@ ProcessCode VertexPerformanceWriter::writeT(
   m_sumPt2.clear();
   m_nTracksOnTruthVertex.clear();
   m_nTracksOnRecoVertex.clear();
+  m_recoVertexTrackWeights.clear();
+  m_truthVertexTrackWeights.clear();
   m_truthVertexMatchRatio.clear();
   m_trkParticleId.clear();
   m_trkWeight.clear();
