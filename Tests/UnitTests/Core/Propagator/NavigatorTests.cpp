@@ -711,12 +711,12 @@ std::vector<GeometryIdentifier> collectRelevantGeoIds(
     if (geoId.sensitive() == 0 && material == nullptr) {
       continue;
     }
-    geoIds.push_back(surfaceHit.surface->geometryId());
+    geoIds.push_back(geoId);
   }
   return geoIds;
 }
 
-/// the actual test nethod that runs the test can be used with several
+/// the actual test method that runs the test can be used with several
 /// propagator types
 ///
 /// @tparam propagator_t is the actual propagator type
@@ -922,7 +922,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
                                 fwdStepSurfaces.begin(), fwdStepSurfaces.end());
 }
 
-/// the actual test nethod that runs the test can be used with several
+/// the actual test method that runs the test can be used with several
 /// propagator types
 ///
 /// @tparam propagator_probe_t is the probe propagator type
@@ -1035,7 +1035,7 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());

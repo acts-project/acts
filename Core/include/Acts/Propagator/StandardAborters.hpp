@@ -105,7 +105,7 @@ struct SurfaceReached {
     // not using the stepper overstep limit here because it does not always work
     // for perigee surfaces
     // note: the near limit is necessary for surfaces with more than one
-    // intersections in order to discard the ones which are behind us
+    // intersection in order to discard the ones which are behind us
     const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
