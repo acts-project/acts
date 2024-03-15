@@ -27,8 +27,6 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-// @TODO: Phi sector parameters are completely invalid for now
-
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(Geometry);
@@ -1356,6 +1354,62 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
                         std::invalid_argument);
     }
   }
+
+  BOOST_TEST_CONTEXT("Volume has phi values or bevel values") {
+    std::vector<std::shared_ptr<CylinderVolumeBounds>> invalidVolumeBounds = {
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm,
+                                               0.2 * M_PI),
+
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm, M_PI,
+                                               0.3 * M_PI),
+
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm, M_PI,
+                                               0.0, 0.3 * M_PI),
+        std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm, M_PI,
+                                               0.0, 0.0, 0.3 * M_PI),
+    };
+
+    for (const auto& invalid : invalidVolumeBounds) {
+      std::stringstream ss;
+      ss << "Invalid bounds: " << *invalid;
+      BOOST_TEST_CONTEXT(ss.str()) {
+        std::vector<std::shared_ptr<Volume>> volumes;
+        volumes.push_back(std::make_shared<Volume>(
+            Transform3{Translation3{Vector3{0_mm, 0_mm, -500_mm}}},
+            std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+
+        {
+          // have valid stack, try to assign extra
+          CylinderVolumeStack cylStack(volumes, direction, strategy,
+                                       CylinderVolumeStack::ResizeStrategy::Gap,
+                                       *logger);
+          BOOST_CHECK_THROW(cylStack.assignVolumeBounds(invalid, *logger),
+                            std::invalid_argument);
+        }
+
+        {
+          std::shared_ptr<Volume> vol;
+          if (direction == binZ) {
+            vol = std::make_shared<Volume>(
+                Transform3{Translation3{Vector3{0_mm, 0_mm, 500_mm}}}, invalid);
+          } else {
+            invalid->set({
+                {CylinderVolumeBounds::eMinR, 400_mm},
+                {CylinderVolumeBounds::eMaxR, 600_mm},
+            });
+            vol = std::make_shared<Volume>(
+                Transform3{Translation3{Vector3{0_mm, 0_mm, 0_mm}}}, invalid);
+          }
+          volumes.push_back(vol);
+          BOOST_CHECK_THROW(
+              CylinderVolumeStack(volumes, direction, strategy,
+                                  CylinderVolumeStack::ResizeStrategy::Gap,
+                                  *logger),
+              std::invalid_argument);
+        }
+      }
+    }
+  }
 }
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
@@ -1384,7 +1438,5 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END();
-
-// @TODO: Test phi sector / bevel on bounds for initial and assign
 
 }  // namespace Acts::Test

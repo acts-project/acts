@@ -81,7 +81,6 @@ CylinderVolumeStack::CylinderVolumeStack(
 Volume CylinderVolumeStack::createOuterVolume(
     std::vector<std::shared_ptr<Volume>>& volumes, BinningValue direction,
     AttachmentStrategy strategy, const Logger& logger) {
-  // @TODO: Check no volume has avg phi etc, this is unsupported for now
   ACTS_DEBUG("Creating CylinderVolumeStack from "
              << volumes.size() << " volumes in direction "
              << binningValueNames()[direction]);
@@ -110,6 +109,9 @@ Volume CylinderVolumeStack::createOuterVolume(
           "CylinderVolumeStack requires all volumes to "
           "have CylinderVolumeBounds"};
     }
+
+    checkNoPhiOrBevel(*cylinderBounds, logger);
+
     volumeTuples.emplace_back(volume, m_groupTransform);
   }
 
@@ -608,7 +610,6 @@ void CylinderVolumeStack::assignVolumeBounds(
 
 void CylinderVolumeStack::assignVolumeBounds(
     std::shared_ptr<VolumeBounds> volbounds, const Logger& logger) {
-  // @TODO: Assert no phi sector or bevel has been set
   ACTS_DEBUG(
       "Resizing CylinderVolumeStack with strategy: " << m_resizeStrategy);
 
@@ -620,6 +621,8 @@ void CylinderVolumeStack::assignVolumeBounds(
     throw std::invalid_argument(
         "CylinderVolumeStack requires CylinderVolumeBounds");
   }
+
+  checkNoPhiOrBevel(*newBounds, logger);
 
   const auto* oldBounds =
       dynamic_cast<CylinderVolumeBounds*>(m_volumeBounds.get());
@@ -850,6 +853,39 @@ void CylinderVolumeStack::assignVolumeBounds(
   }
 
   m_volumeBounds = std::move(volbounds);
+}
+
+void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
+                                            const Logger& logger) {
+  if (bounds.get(CylinderVolumeBounds::eHalfPhiSector) != M_PI) {
+    ACTS_ERROR(
+        "CylinderVolumeStack requires all volumes to have a full "
+        "phi sector");
+    throw std::invalid_argument(
+        "CylinderVolumeStack requires all volumes to have a full phi sector");
+  }
+
+  if (bounds.get(CylinderVolumeBounds::eAveragePhi) != 0.0) {
+    ACTS_ERROR(
+        "CylinderVolumeStack requires all volumes to have an average "
+        "phi of 0");
+    throw std::invalid_argument(
+        "CylinderVolumeStack requires all volumes to have an average phi of 0");
+  }
+
+  if (bounds.get(CylinderVolumeBounds::eBevelMinZ) != 0.0) {
+    ACTS_ERROR(
+        "CylinderVolumeStack requires all volumes to have a bevel angle of 0");
+    throw std::invalid_argument(
+        "CylinderVolumeStack requires all volumes to have a bevel angle of 0");
+  }
+
+  if (bounds.get(CylinderVolumeBounds::eBevelMaxZ) != 0.0) {
+    ACTS_ERROR(
+        "CylinderVolumeStack requires all volumes to have a bevel angle of 0");
+    throw std::invalid_argument(
+        "CylinderVolumeStack requires all volumes to have a bevel angle of 0");
+  }
 }
 
 std::ostream& operator<<(std::ostream& os,
