@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -63,6 +64,9 @@ class CylinderVolumeStack : public Volume {
 
   std::pair<ActsScalar, ActsScalar> synchronizeZBounds(
       std::vector<VolumeTuple>& volumes, const Logger& logger);
+
+  static void checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
+                                const Logger& logger);
 
   BinningValue m_direction{};
   ResizeStrategy m_resizeStrategy{};
