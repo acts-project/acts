@@ -256,13 +256,22 @@ std::vector<ActsScalar> CylinderVolumeBounds::values() const {
 }
 
 void CylinderVolumeBounds::checkConsistency() {
-  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) >= get(eMaxR)) {
-    throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
+  if (get(eMinR) < 0. || get(eMaxR) <= 0.) {
+    throw std::invalid_argument(
+        "CylinderVolumeBounds: invalid radial input: minR (" +
+        std::to_string(get(eMinR)) + ") < 0 or maxR (" +
+        std::to_string(get(eMaxR)) + ") <= 0");
+  }
+  if (get(eMinR) >= get(eMaxR)) {
+    throw std::invalid_argument(
+        "CylinderVolumeBounds: invalid radial input: minR (" +
+        std::to_string(get(eMinR)) + ") >= (" + std::to_string(get(eMaxR)) +
+        ")");
   }
   if (get(eHalfLengthZ) <= 0) {
     throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid longitudinal input: " +
-        std::to_string(get(eHalfLengthZ)));
+        "CylinderVolumeBounds: invalid longitudinal input: hlZ (" +
+        std::to_string(get(eHalfLengthZ)) + ") <= 0");
   }
   if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument(
