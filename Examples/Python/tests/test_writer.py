@@ -18,12 +18,7 @@ from helpers import (
 )
 
 import acts
-
-from common import getOpenDataDetectorDirectory
-
 from acts import PlanarModuleStepper, UnitConstants as u
-
-
 from acts.examples import (
     ObjPropagationStepsWriter,
     TrackFinderPerformanceWriter,
@@ -51,6 +46,7 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 @pytest.mark.obj

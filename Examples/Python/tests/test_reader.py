@@ -8,9 +8,6 @@ from helpers import (
     edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
-from common import getOpenDataDetectorDirectory
-
-from acts.examples.odd import getOpenDataDetector
 
 import acts
 from acts import PlanarModuleStepper, UnitConstants as u
@@ -30,6 +27,7 @@ from acts.examples import (
     PlanarSteppingAlgorithm,
     Sequencer,
 )
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 @pytest.mark.root
@@ -367,9 +365,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     s = Sequencer(numThreads=1)
 
