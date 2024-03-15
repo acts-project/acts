@@ -29,10 +29,9 @@ class CylinderVolumeStack : public Volume {
   // @TODO: Implement assignVolumeBounds
 
  private:
-  static Volume createOuterVolume(std::vector<std::shared_ptr<Volume>>& volumes,
-                                  BinningValue direction,
-                                  AttachmentStrategy strategy,
-                                  const Logger& logger);
+  Volume createOuterVolume(std::vector<std::shared_ptr<Volume>>& volumes,
+                           BinningValue direction, AttachmentStrategy strategy,
+                           const Logger& logger);
 
   struct VolumeTuple;
 
@@ -40,17 +39,28 @@ class CylinderVolumeStack : public Volume {
                                   const Logger& logger,
                                   Acts::Logging::Level lvl);
 
-  static std::vector<VolumeTuple> checkOverlapAndAttachInZ(
-      std::vector<VolumeTuple>& volumes, const Transform3& groupTransform,
-      AttachmentStrategy strategy, const Logger& logger);
+  static void overlapPrint(const VolumeTuple& a, const VolumeTuple& b,
+                           const Logger& logger);
 
-  static std::pair<ActsScalar, ActsScalar> synchronizeRBounds(
-      const std::vector<VolumeTuple>& volumes, const Logger& logger);
+  static void checkVolumeAlignment(const std::vector<VolumeTuple>& volumes,
+                                   const Logger& logger);
 
-  static void checkZVolumeAlignment(const std::vector<VolumeTuple>& volumes,
-                                    const Logger& logger);
+  std::vector<VolumeTuple> checkOverlapAndAttachInZ(
+      std::vector<VolumeTuple>& volumes, AttachmentStrategy strategy,
+      const Logger& logger);
 
-  BinningValue m_direction;
+  std::pair<ActsScalar, ActsScalar> synchronizeRBounds(
+      std::vector<VolumeTuple>& volumes, const Logger& logger);
+
+  std::vector<VolumeTuple> checkOverlapAndAttachInR(
+      std::vector<VolumeTuple>& volumes, AttachmentStrategy strategy,
+      const Logger& logger);
+
+  std::pair<ActsScalar, ActsScalar> synchronizeZBounds(
+      std::vector<VolumeTuple>& volumes, const Logger& logger);
+
+  BinningValue m_direction{};
+  Transform3 m_groupTransform{};
   std::vector<std::shared_ptr<Volume>>& m_volumes;
 };
 
