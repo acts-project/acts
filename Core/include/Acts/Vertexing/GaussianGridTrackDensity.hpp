@@ -31,11 +31,11 @@ class GaussianGridTrackDensity {
     /// @param zMinMax_ The minimum and maximum z-values (in mm) that
     ///                 should be covered by the main 1-dim density grid along
     ///                 the z-axis
-    /// @tparam mainGridSize The size of the z-axis 1-dim main density grid
-    /// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
+    /// @param mainGridSize_ The size of the z-axis 1-dim main density grid
+    /// @param trkGridSize_ The 2(!)-dim grid size of a single track, i.e.
     /// a single track is modelled as a (trkGridSize x trkGridSize) grid
     /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-    /// @note The value of @p zMinMax_ together with @p mainGridSize determines the
+    /// @note The value of @p zMinMax_ together with @p mainGridSize_ determines the
     /// overall bin size to be used as seen below
     Config(float zMinMax_ = 100, int mainGridSize_ = 2000,
            int trkGridSize_ = 15)
