@@ -35,12 +35,12 @@ void Acts::AbstractVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     AbstractVolume* opposite = nullptr;
     AbstractVolume* along = nullptr;
-    if (osf.second == Direction::Negative) {
+    if (osf.direction == Direction::Negative) {
       opposite = this;
     } else {
       along = this;
     }
     m_boundarySurfaces.push_back(std::make_shared<const Boundary>(
-        std::move(osf.first), opposite, along));
+        std::move(osf.surface), opposite, along));
   }
 }

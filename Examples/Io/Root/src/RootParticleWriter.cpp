@@ -38,7 +38,6 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
   m_inputFinalParticles.maybeInitialize(m_cfg.inputFinalParticles);
 
   // open root file and create the tree
@@ -80,8 +79,6 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     m_outputTree->Branch("e_loss", &m_eLoss);
     m_outputTree->Branch("total_x0", &m_pathInX0);
     m_outputTree->Branch("total_l0", &m_pathInL0);
-  }
-  if (m_inputSimHits.isInitialized()) {
     m_outputTree->Branch("number_of_hits", &m_numberOfHits);
   }
 }
@@ -105,17 +102,15 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
+  const SimParticleContainer* finalParticles = nullptr;
+  if (m_inputFinalParticles.isInitialized()) {
+    finalParticles = &m_inputFinalParticles(ctx);
+  }
+
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   auto nan = std::numeric_limits<float>::quiet_NaN();
-
-  std::unordered_map<ActsFatras::Barcode, std::uint32_t> hitsPerParticle;
-  if (m_inputSimHits.isInitialized()) {
-    for (const auto& simHit : m_inputSimHits(ctx)) {
-      ++hitsPerParticle[simHit.particleId()];
-    }
-  }
 
   m_eventId = ctx.eventNumber;
   for (const auto& particle : particles) {
@@ -156,11 +151,11 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
 
-    if (m_inputFinalParticles.isInitialized()) {
-      const auto& finalParticles = m_inputFinalParticles(ctx);
+    bool wroteFinalParticle = false;
+    if (finalParticles != nullptr) {
       // get the final particle
-      auto it = finalParticles.find(particle);
-      if (it == finalParticles.end()) {
+      auto it = finalParticles->find(particle);
+      if (it == finalParticles->end()) {
         ACTS_ERROR("Could not find final particle for "
                    << particle.particleId() << " in event " << ctx.eventNumber);
       } else {
@@ -175,25 +170,15 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         // get the path in L0
         m_pathInL0.push_back(Acts::clampValue<float>(finalParticle.pathInL0() /
                                                      Acts::UnitConstants::mm));
+        // get the number of hits
+        m_numberOfHits.push_back(finalParticle.numberOfHits());
+        wroteFinalParticle = true;
       }
-    } else {
+    }
+    if (!wroteFinalParticle) {
       m_eLoss.push_back(nan);
       m_pathInX0.push_back(nan);
       m_pathInL0.push_back(nan);
-    }
-
-    if (m_inputSimHits.isInitialized()) {
-      // get the sim hits
-      auto it = hitsPerParticle.find(particle.particleId());
-      if (it == hitsPerParticle.end()) {
-        ACTS_DEBUG("Could not find sim hits for "
-                   << particle.particleId() << " in event " << ctx.eventNumber);
-        m_numberOfHits.push_back(0);
-      } else {
-        // get the number of hits
-        m_numberOfHits.push_back(it->second);
-      }
-    } else {
       m_numberOfHits.push_back(-1);
     }
   }
