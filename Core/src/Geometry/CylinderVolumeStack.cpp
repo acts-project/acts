@@ -88,20 +88,20 @@ Volume CylinderVolumeStack::createOuterVolume(
                    << n << " at z: " << vt.localTransform.translation()[eZ]);
       ACTS_VERBOSE("- Local transform is:\n" << vt.localTransform.matrix());
 
+      // @TODO: What's a good tolerance here?
+      constexpr auto tolerance = s_onSurfaceTolerance;
+
       // In the group coordinate system:
 
-      // a) the volumes cannot have rotations meaningfully different from 1
-      if (!vt.localTransform.rotation().isApprox(
-              Transform3::Identity().rotation())) {
+      // a) the volumes cannot rotate around x or y
+      if (std::abs(vt.localTransform.rotation().col(eX)[eZ]) >= tolerance ||
+          std::abs(vt.localTransform.rotation().col(eY)[eZ]) >= tolerance) {
         ACTS_ERROR("Volumes are not aligned: rotation is different");
         throw std::invalid_argument(
             "Volumes are not aligned: rotation is different");
       }
 
       ACTS_VERBOSE(" -> Rotation is ok!");
-
-      // @TODO: What's a good tolerance here?
-      constexpr auto tolerance = s_onSurfaceTolerance;
 
       // b) the volumes cannot have translation in x or y
       Vector2 translation = vt.localTransform.translation().head<2>();
@@ -291,6 +291,7 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
         ACTS_VERBOSE(" -> Strategy: Expand both volumes to midpoint");
         ActsScalar gapWidth = bZMin - aZMax;
         ACTS_VERBOSE("  - Gap width: " << gapWidth);
+
         ActsScalar aZMidNew = (aZMin + aZMax) / 2.0 + gapWidth / 4.0;
         ActsScalar aHlZNew = (aZMax - aZMin) / 2.0 + gapWidth / 4.0;
         ACTS_VERBOSE("  - New halflength for first volume: " << aHlZNew);
@@ -298,12 +299,18 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
                      << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
                      << (aZMidNew + aHlZNew) << "]");
 
+        assert(aZMin == aZMidNew - aHlZNew && "Volume shrunk");
+        assert(aZMax <= aZMidNew + aHlZNew && "Volume shrunk");
+
         ActsScalar bZMidNew = (bZMin + bZMax) / 2.0 - gapWidth / 4.0;
         ActsScalar bHlZNew = (bZMax - bZMin) / 2.0 + gapWidth / 4.0;
         ACTS_VERBOSE("  - New halflength for second volume: " << bHlZNew);
         ACTS_VERBOSE("  - New bounds for second volume: ["
                      << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
                      << (bZMidNew + bHlZNew) << "]");
+
+        assert(bZMin >= bZMidNew - bHlZNew && "Volume shrunk");
+        assert(bZMax == bZMidNew + bHlZNew && "Volume shrunk");
 
         a.localTransform = Translation3{0, 0, aZMidNew};
         a.volume->setTransform(groupTransform * a.localTransform);
@@ -326,6 +333,9 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
                      << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
                      << (aZMidNew + aHlZNew) << "]");
 
+        assert(aZMin == aZMidNew - aHlZNew && "Volume shrunk");
+        assert(aZMax <= aZMidNew + aHlZNew && "Volume shrunk");
+
         a.localTransform = Translation3{0, 0, aZMidNew};
         a.volume->setTransform(groupTransform * a.localTransform);
         a.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, aHlZNew);
@@ -342,6 +352,9 @@ std::shared_ptr<Volume> CylinderVolumeStack::checkOverlapAndAttachInZ(
         ACTS_VERBOSE("  - New bounds for second volume: ["
                      << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
                      << (bZMidNew + bHlZNew) << "]");
+
+        assert(bZMin >= bZMidNew - bHlZNew && "Volume shrunk");
+        assert(bZMax == bZMidNew + bHlZNew && "Volume shrunk");
 
         b.localTransform = Translation3{0, 0, bZMidNew};
         b.volume->setTransform(groupTransform * b.localTransform);
