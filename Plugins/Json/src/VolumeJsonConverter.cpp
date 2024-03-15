@@ -20,10 +20,6 @@ void Acts::to_json(
   to_json(j, volume.second.get());
 }
 
-// void Acts::to_json(nlohmann::json& j, const Acts::TrackigVolume*& volume) {
-// to_json(j, *volume);
-// }
-
 void Acts::to_json(nlohmann::json& j, const Acts::TrackingVolume& volume) {
   j[Acts::jsonKey().namekey] = volume.volumeName();
   if (volume.volumeMaterial() != nullptr) {
