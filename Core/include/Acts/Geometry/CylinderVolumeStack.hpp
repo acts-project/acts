@@ -20,13 +20,18 @@ namespace Acts {
 class CylinderVolumeStack : public Volume {
  public:
   enum class AttachmentStrategy { First, Second, Midpoint, Gap };
+  enum class ResizeStrategy { Expand, Gap };
 
   CylinderVolumeStack(
       std::vector<std::shared_ptr<Volume>>& volumes, BinningValue direction,
       AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
+      ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
 
-  // @TODO: Implement assignVolumeBounds
+  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) override;
+
+  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds,
+                          const Logger& logger);
 
  private:
   Volume createOuterVolume(std::vector<std::shared_ptr<Volume>>& volumes,
@@ -60,11 +65,14 @@ class CylinderVolumeStack : public Volume {
       std::vector<VolumeTuple>& volumes, const Logger& logger);
 
   BinningValue m_direction{};
+  ResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
   std::vector<std::shared_ptr<Volume>>& m_volumes;
 };
 
 std::ostream& operator<<(std::ostream& os,
                          CylinderVolumeStack::AttachmentStrategy strategy);
+std::ostream& operator<<(std::ostream& os,
+                         CylinderVolumeStack::ResizeStrategy strategy);
 
 }  // namespace Acts
