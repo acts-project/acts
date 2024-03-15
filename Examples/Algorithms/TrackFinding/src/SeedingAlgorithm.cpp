@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
