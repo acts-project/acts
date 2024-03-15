@@ -62,7 +62,7 @@ using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-double Bz = 2_T;
+const double Bz = 2_T;
 auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
 
 EigenStepper estepper(bField);
