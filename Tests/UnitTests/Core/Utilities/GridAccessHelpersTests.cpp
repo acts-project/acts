@@ -107,6 +107,7 @@ BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
   using SubSpace0 = Acts::GridAccess::GlobalSubSpace<>;
   BOOST_CHECK_THROW(auto gss0 = SubSpace0(), std::invalid_argument);
 
+  // This could in principle be allowed, but does not make sense
   using SubSpace4 = Acts::GridAccess::GlobalSubSpace<Acts::binX, Acts::binY,
                                                      Acts::binZ, Acts::binPhi>;
   BOOST_CHECK_THROW(auto gss4 = SubSpace4(), std::invalid_argument);
