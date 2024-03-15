@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -34,13 +35,20 @@ class CylinderVolumeStack : public Volume {
                                   const Logger& logger);
 
   struct VolumeTuple;
-  static std::shared_ptr<Volume> checkOverlapAndAttachInZ(
-      VolumeTuple& a, VolumeTuple& b, const Transform3& groupTransform,
-      AttachmentStrategy strategy, const Logger& logger);
 
   static void printVolumeSequence(const std::vector<VolumeTuple>& volumes,
                                   const Logger& logger,
                                   Acts::Logging::Level lvl);
+
+  static std::vector<VolumeTuple> checkOverlapAndAttachInZ(
+      std::vector<VolumeTuple>& volumes, const Transform3& groupTransform,
+      AttachmentStrategy strategy, const Logger& logger);
+
+  static std::pair<ActsScalar, ActsScalar> synchronizeRBounds(
+      const std::vector<VolumeTuple>& volumes, const Logger& logger);
+
+  static void checkZVolumeAlignment(const std::vector<VolumeTuple>& volumes,
+                                    const Logger& logger);
 
   BinningValue m_direction;
   std::vector<std::shared_ptr<Volume>>& m_volumes;
