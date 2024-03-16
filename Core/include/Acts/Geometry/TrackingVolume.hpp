@@ -309,7 +309,6 @@ class TrackingVolume : public Volume {
   ///
   /// @param visitor The callable. Will be called for each reachable volume
   /// that is found, a selection of the volumes can be done in the visitor
-  /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member

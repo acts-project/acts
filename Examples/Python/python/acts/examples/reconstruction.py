@@ -1930,7 +1930,7 @@ def addVertexFitting(
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
                 bField=field,
-                minTrackVtxMatchFraction=0.0,
+                vertexMatchThreshold=0.7 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )

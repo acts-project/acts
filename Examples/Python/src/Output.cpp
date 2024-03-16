@@ -334,7 +334,7 @@ void addOutput(Context& ctx) {
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
       inputParticles, inputSelectedParticles, inputTracks,
       inputTrackParticleMatching, inputVertices, bField, filePath, treeName,
-      fileMode, minTrackVtxMatchFraction, useTracks);
+      fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,

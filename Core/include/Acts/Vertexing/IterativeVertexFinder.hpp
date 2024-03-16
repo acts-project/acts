@@ -63,7 +63,6 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// @brief Config constructor
     ///
     /// @param fitter Vertex fitter
-    /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
     Config(VertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
