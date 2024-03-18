@@ -119,11 +119,13 @@ Acts::Layer::compatibleSurfaces(
     return sIntersections;
   }
 
+  double nearLimit = options.nearLimit;
+  double farLimit = options.farLimit;
+
+  // TODO this looks like a major hack; is this really needed?
   // (0) End surface check
   // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface
-  double nearLimit = options.nearLimit;
-  double farLimit = options.farLimit;
   if (options.endObject != nullptr) {
     // intersect the end surface
     // - it is the final one don't use the boundary check at all
@@ -150,6 +152,14 @@ Acts::Layer::compatibleSurfaces(
     farLimit = 1.5 * thickness() * pCorrection;
   }
 
+  auto isUnique = [&](const SurfaceIntersection& b) {
+    auto find_it = std::find_if(
+        sIntersections.begin(), sIntersections.end(), [&b](const auto& a) {
+          return a.object() == b.object() && a.index() == b.index();
+        });
+    return find_it == sIntersections.end();
+  };
+
   // lemma 0 : accept the surface
   auto acceptSurface = [&options](const Surface& sf,
                                   bool sensitive = false) -> bool {
@@ -168,8 +178,8 @@ Acts::Layer::compatibleSurfaces(
   // lemma 1 : check and fill the surface
   // [&sIntersections, &options, &parameters
   auto processSurface = [&](const Surface& sf, bool sensitive = false) {
-    // veto if it's start or end surface
-    if (options.startObject == &sf || options.endObject == &sf) {
+    // veto if it's start surface
+    if (options.startObject == &sf) {
       return;
     }
     // veto if it doesn't fit the prescription
@@ -183,14 +193,13 @@ Acts::Layer::compatibleSurfaces(
       boundaryCheck = false;
     }
     // the surface intersection
-    SurfaceMultiIntersection sfmi =
-        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck));
-    for (const auto& sfi : sfmi.split()) {
-      // check if intersection is valid and pathLimit has not been exceeded
-      if (sfi &&
-          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
-        sIntersections.push_back(sfi);
-      }
+    SurfaceIntersection sfi =
+        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck))
+            .closest();
+    if (sfi &&
+        detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
+        isUnique(sfi)) {
+      sIntersections.push_back(sfi);
     }
   };
 
@@ -234,26 +243,6 @@ Acts::Layer::compatibleSurfaces(
   const Surface* layerSurface = &surfaceRepresentation();
   processSurface(*layerSurface);
 
-  // Sort by object address
-  std::sort(
-      sIntersections.begin(), sIntersections.end(),
-      [](const auto& a, const auto& b) { return a.object() < b.object(); });
-  // Now look for duplicates. As we just sorted by path length, duplicates
-  // should be subsequent
-  auto it = std::unique(
-      sIntersections.begin(), sIntersections.end(),
-      [](const SurfaceIntersection& a, const SurfaceIntersection& b) -> bool {
-        return a.object() == b.object();
-      });
-
-  // resize to remove all items that are past the unique range
-  sIntersections.resize(std::distance(sIntersections.begin(), it),
-                        SurfaceIntersection::invalid());
-
-  // sort according to the path length
-  std::sort(sIntersections.begin(), sIntersections.end(),
-            SurfaceIntersection::pathLengthOrder);
-
   return sIntersections;
 }
 
@@ -270,7 +259,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
                     (surfaceRepresentation().surfaceMaterial() != nullptr));
 
-  // The Limits: current path & overstepping
+  // The Limits
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 

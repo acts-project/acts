@@ -35,7 +35,7 @@ class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
-template <typename T>
+template <typename object_t>
 struct NavigationOptions;
 
 // Simple surface intersection
