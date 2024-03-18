@@ -191,23 +191,23 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
 
     const auto& particleMatch = imatched->second;
 
-    // Fill fake rate plots
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters,
-                            particleMatch.isFake);
-
-    if (particleMatch.isFake) {
+    if (particleMatch.classification == TrackMatchClassification::Fake) {
       m_nTotalFakeTracks++;
-    } else {
-      // Duplication flag is only meaningful for non-fake tracks
-
-      if (particleMatch.isDuplicate) {
-        m_nTotalDuplicateTracks++;
-      }
-
-      // Fill the duplication rate
-      m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                 particleMatch.isDuplicate);
     }
+
+    if (particleMatch.classification == TrackMatchClassification::Duplicate) {
+      m_nTotalDuplicateTracks++;
+    }
+
+    // Fill fake rate plots
+    m_fakeRatePlotTool.fill(
+        m_fakeRatePlotCache, fittedParameters,
+        particleMatch.classification == TrackMatchClassification::Fake);
+
+    // Fill the duplication rate
+    m_duplicationPlotTool.fill(
+        m_duplicationPlotCache, fittedParameters,
+        particleMatch.classification == TrackMatchClassification::Duplicate);
   }
 
   // Loop over all truth particles for efficiency plots and reco details.

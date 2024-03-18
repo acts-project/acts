@@ -19,15 +19,24 @@
 
 namespace ActsExamples {
 
+enum class TrackMatchClassification {
+  Unknown = 0,
+  /// The track is associated to a truth particle
+  Matched,
+  /// The track is associated to a truth particle, but the track is not unique
+  Duplicate,
+  /// The track cannot be uniquely associated to a truth particle
+  Fake,
+};
+
 struct TrackMatchEntry {
+  TrackMatchClassification classification{TrackMatchClassification::Unknown};
+
   std::optional<SimBarcode> particle;
 
   /// Number of hits on the track that are associated to a particle
   /// Sorted by decreasing number of hits
   std::vector<ParticleHitCount> contributingParticles;
-
-  bool isDuplicate{};
-  bool isFake{};
 };
 
 struct ParticleMatchEntry {

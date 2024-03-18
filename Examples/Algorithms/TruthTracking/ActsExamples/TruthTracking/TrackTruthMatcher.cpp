@@ -9,6 +9,7 @@
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <map>
@@ -102,7 +103,8 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     if ((!m_cfg.doubleMatching && recoMatched) ||
         (m_cfg.doubleMatching && recoMatched && truthMatched)) {
       auto& trackParticleMatch = trackParticleMatching[track.index()] = {
-          majorityParticleId, particleHitCounts, false, false};
+          TrackMatchClassification::Matched, majorityParticleId,
+          particleHitCounts};
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       if (!particleTrackMatch.track) {
@@ -115,17 +117,19 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
             tracks.getTrack(particleTrackMatch.track.value());
         if (otherTrack.nMeasurements() < track.nMeasurements() ||
             otherTrack.chi2() > track.chi2()) {
-          trackParticleMatching[otherTrack.index()].isDuplicate = true;
+          trackParticleMatching[otherTrack.index()].classification =
+              TrackMatchClassification::Duplicate;
           particleTrackMatch.track = track.index();
         } else {
-          trackParticleMatch.isDuplicate = true;
+          trackParticleMatch.classification =
+              TrackMatchClassification::Duplicate;
         }
 
         ++particleTrackMatch.duplicates;
       }
     } else {
-      trackParticleMatching[track.index()] = {std::nullopt, particleHitCounts,
-                                              false, true};
+      trackParticleMatching[track.index()] = {TrackMatchClassification::Fake,
+                                              std::nullopt, particleHitCounts};
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       ++particleTrackMatch.fakes;
