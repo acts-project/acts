@@ -422,7 +422,7 @@ ProcessCode VertexPerformanceWriter::writeT(
     double truthVertexTrackWeights = truthVertexMatch->second;
 
     // Count number of reconstructible tracks on truth vertex
-    std::uint32_t nTracksOnTruthVertex = 0;
+    std::uint32_t nTracksOnTruthVertex = 0u;
     for (const auto& particle : selectedParticles) {
       SimBarcode vtxId =
           SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
