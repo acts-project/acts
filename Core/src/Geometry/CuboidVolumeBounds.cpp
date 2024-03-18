@@ -44,41 +44,44 @@ CuboidVolumeBounds& CuboidVolumeBounds::operator=(
   return *this;
 }
 
-Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
+std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
   // Face surfaces xy -------------------------------------
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., -get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
+  oSurfaces.push_back(
+      OrientedSurface{std::move(sf), Direction::OppositeNormal});
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
+  oSurfaces.push_back(
+      OrientedSurface{std::move(sf), Direction::OppositeNormal});
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
+  oSurfaces.push_back(
+      OrientedSurface{std::move(sf), Direction::OppositeNormal});
 
   return oSurfaces;
 }
