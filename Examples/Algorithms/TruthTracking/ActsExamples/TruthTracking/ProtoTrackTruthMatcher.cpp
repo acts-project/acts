@@ -12,9 +12,9 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include <stdexcept>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <vector>
 
 namespace ActsExamples {
