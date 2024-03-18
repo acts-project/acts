@@ -63,10 +63,9 @@ typename grid_type::point_t castPosition(const Vector3& position,
 /// @param ra is the array to be filled
 ///
 /// @note void function that fills the provided array
-template <typename Array, std::size_t... idx>
-void fillLocal(const Vector2& lposition,
-               const std::vector<std::size_t>& laccess, Array& ra,
-               std::index_sequence<idx...> /*indices*/) {
+template <typename Array, typename local_indices, std::size_t... idx>
+void fillLocal(const Vector2& lposition, const local_indices& laccess,
+               Array& ra, std::index_sequence<idx...> /*indices*/) {
   ((ra[idx] = lposition[laccess[idx]]), ...);
 }
 
@@ -79,9 +78,9 @@ void fillLocal(const Vector2& lposition,
 /// @param laccess the local accessors
 ///
 /// @return an array suitable for the grid
-template <typename grid_type>
-typename grid_type::point_t accessLocal(
-    const Vector2& lposition, const std::vector<std::size_t>& laccess) {
+template <typename grid_type, typename local_indices>
+typename grid_type::point_t accessLocal(const Vector2& lposition,
+                                        const local_indices& laccess) {
   if constexpr (grid_type::DIM > 2u) {
     throw std::invalid_argument(
         "GridAccessHelper: only 1-D and 2-D grids are possible for local "
@@ -143,25 +142,26 @@ class Affine3Transformed final : public IGlobalToGridLocal {
 /// position
 /// @tparam ...Args
 template <BinningValue... Args>
-class GlobalSubSpace final : public IGlobalToGridLocal {
+class GlobalSubspace final : public IGlobalToGridLocal {
  public:
   using grid_local_t = std::array<ActsScalar, sizeof...(Args)>;
 
   // Constructor with sanity checks
-  GlobalSubSpace() {
+  GlobalSubspace() {
     if constexpr (sizeof...(Args) == 0) {
       throw std::invalid_argument(
-          "GlobalSubSpace: cannot have an empty binning value list.");
+          "GlobalSubspace: cannot have an empty binning value list.");
     }
 
     if constexpr (sizeof...(Args) > 3) {
       throw std::invalid_argument(
-          "GlobalSubSpace: cannot have more than 3 binning values.");
+          "GlobalSubspace: cannot have more than 3 binning values.");
     }
   }
 
   /// The binning values
-  std::array<BinningValue, sizeof...(Args)> bValues = {Args...};
+  static constexpr std::array<BinningValue, sizeof...(Args)> bValues = {
+      Args...};
 
   /// Transform in to the local frame, then the grid local position
   ///
@@ -176,6 +176,79 @@ class GlobalSubSpace final : public IGlobalToGridLocal {
         std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
     return glocal;
   }
+};
+
+// The bound to grid local transformation, if only access of a subspace
+// is requested
+template <std::size_t... Args>
+class LocalSubspace final : public IBoundToGridLocal {
+ public:
+  using grid_local_t = std::array<ActsScalar, sizeof...(Args)>;
+
+  // Constructor with sanity checks
+  LocalSubspace() {
+    if constexpr (sizeof...(Args) == 0) {
+      throw std::invalid_argument(
+          "LocalSubspace: cannot have an empty binning value list.");
+    }
+
+    if constexpr (sizeof...(Args) > 2) {
+      throw std::invalid_argument(
+          "LocalSubspace: cannot have more than 2 binning values.");
+    }
+
+    if constexpr (sizeof...(Args) == 1) {
+      if (std::get<0>(accessors) >= 2) {
+        throw std::invalid_argument(
+            "LocalSubspace: local access needs to be 0u or 1u");
+      }
+    }
+
+    if constexpr (sizeof...(Args) == 2) {
+      if (std::get<0>(accessors) == std::get<1>(accessors)) {
+        throw std::invalid_argument(
+            "LocalSubspace: local access needs to be unique");
+      }
+      if (std::get<0>(accessors) >= 2 || std::get<1>(accessors) >= 2) {
+        throw std::invalid_argument(
+            "LocalSubspace: local access needs to be 0u or 1u");
+      }
+    }
+  }
+
+  static constexpr std::array<std::size_t, sizeof...(Args)> accessors = {
+      Args...};
+
+  /// Access the local entries
+  ///
+  /// @param lposition is the local position
+  ///
+  /// @return the grid position
+  grid_local_t toGridLocal(const Vector2& lposition) const {
+    // Fill the grid point from local according to the accessors
+    grid_local_t accessed{};
+    GridAccessHelpers::fillLocal(
+        lposition, accessors, accessed,
+        std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
+    return accessed;
+  }
+};
+
+class BoundCylinderToZPhi final : public IBoundToGridLocal {
+ public:
+  ActsScalar radius = 1.;
+  ActsScalar shift = 0.;
+
+  /// Constructor with arguments
+  /// @param r the radius
+  /// @param z the shift
+  BoundCylinderToZPhi(ActsScalar r, ActsScalar z) : radius(r), shift(z) {}
+
+  std::array<ActsScalar, 2u> l2ZPhi(const Vector2& local) const {
+    return {local[1u] + shift, local[0u] / radius};
+  }
+
+  using BoundDiscToRPhi = LocalSubspace<0u, 1u>;
 };
 
 }  // namespace GridAccess
