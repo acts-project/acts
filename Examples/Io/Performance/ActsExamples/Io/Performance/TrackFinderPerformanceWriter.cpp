@@ -154,7 +154,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
 
   const Acts::Logger& logger() const { return _logger; }
 
-  void write(uint64_t eventId, const ProtoTrackContainer& tracks,
+  void write(std::uint64_t eventId, const ProtoTrackContainer& tracks,
              const SimParticleContainer& particles,
              const HitParticlesMap& hitParticlesMap,
              const ProtoTrackParticleMatching& protoTrackParticleMatching) {

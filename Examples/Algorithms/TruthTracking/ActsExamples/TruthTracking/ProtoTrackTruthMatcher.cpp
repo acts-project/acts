@@ -12,8 +12,10 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include <stdexcept>
 #include <map>
 #include <optional>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -79,7 +81,7 @@ ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
     }
 
     // Get the majority particleId and majority particle counts
-    // Note that the majority particle might be not in the truth seeds
+    // Note that the majority particle might not be in the truth seeds
     // collection
     ActsFatras::Barcode majorityParticleId =
         particleHitCounts.front().particleId;

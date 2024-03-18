@@ -14,6 +14,8 @@
 
 #include <map>
 #include <optional>
+#include <stdexcept>
+#include <vector>
 
 namespace ActsExamples {
 

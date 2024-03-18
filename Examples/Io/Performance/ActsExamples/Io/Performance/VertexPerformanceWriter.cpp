@@ -591,7 +591,7 @@ ProcessCode VertexPerformanceWriter::writeT(
       m_pullT.push_back(
           pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
 
-      double sumPt2 = 0;
+      double sumPt2 = 0.;
       for (const auto& trk : tracksAtVtx) {
         if (trk.trackWeight > m_cfg.minTrkWeight) {
           double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
