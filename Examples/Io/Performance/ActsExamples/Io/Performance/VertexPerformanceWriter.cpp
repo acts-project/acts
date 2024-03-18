@@ -453,8 +453,6 @@ ProcessCode VertexPerformanceWriter::writeT(
 
     // Get references to inner vectors where all track variables corresponding
     // to the current vertex will be saved
-    auto& innerTrkParticleId = m_trkParticleId.emplace_back();
-
     auto& innerTrkWeight = m_trkWeight.emplace_back();
 
     auto& innerRecoPhi = m_recoPhi.emplace_back();
@@ -464,6 +462,8 @@ ProcessCode VertexPerformanceWriter::writeT(
     auto& innerRecoPhiFitted = m_recoPhiFitted.emplace_back();
     auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
     auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
+
+    auto& innerTrkParticleId = m_trkParticleId.emplace_back();
 
     auto& innerTruthPhi = m_truthPhi.emplace_back();
     auto& innerTruthTheta = m_truthTheta.emplace_back();
@@ -774,7 +774,6 @@ ProcessCode VertexPerformanceWriter::writeT(
   m_pullZ.clear();
   m_pullT.clear();
   m_sumPt2.clear();
-  m_trkParticleId.clear();
   m_trkWeight.clear();
   m_recoPhi.clear();
   m_recoTheta.clear();
@@ -782,6 +781,7 @@ ProcessCode VertexPerformanceWriter::writeT(
   m_recoPhiFitted.clear();
   m_recoThetaFitted.clear();
   m_recoQOverPFitted.clear();
+  m_trkParticleId.clear();
   m_truthPhi.clear();
   m_truthTheta.clear();
   m_truthQOverP.clear();
