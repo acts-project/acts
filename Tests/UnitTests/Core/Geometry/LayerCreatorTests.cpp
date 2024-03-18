@@ -29,7 +29,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <array>

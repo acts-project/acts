@@ -148,7 +148,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
       auto cvbOrientedSurfaces = cvb.orientedSurfaces();
       for (auto z : zValues) {
         for (const auto& cvbSf : cvbOrientedSurfaces) {
-          drawSurface(helper, *cvbSf.first, gctx,
+          drawSurface(helper, *cvbSf.surface, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
@@ -164,7 +164,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
                                  0.5 * thickness);
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
         for (const auto& cvbSf : cvbOrientedSurfaces) {
-          drawSurface(helper, *cvbSf.first, gctx,
+          drawSurface(helper, *cvbSf.surface, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }

@@ -200,7 +200,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 
 Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, Acts::TrackingVolumePtr /*gctx*/,
-    Acts::VolumeBoundsPtr /*bounds*/) const {
+    std::shared_ptr<const VolumeBounds> /*bounds*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());

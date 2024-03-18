@@ -37,7 +37,7 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3& transform, VolumeBoundsPtr volbounds,
+    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
     : Volume(transform, std::move(volbounds)),
@@ -52,7 +52,8 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    const Transform3& transform, VolumeBoundsPtr volumeBounds,
+    const Transform3& transform,
+    std::shared_ptr<const VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -150,13 +151,13 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     TrackingVolume* opposite = nullptr;
     TrackingVolume* along = nullptr;
-    if (osf.second == Direction::Negative) {
+    if (osf.direction == Direction::OppositeNormal) {
       opposite = this;
     } else {
       along = this;
     }
     m_boundarySurfaces.push_back(std::make_shared<const Boundary>(
-        std::move(osf.first), opposite, along));
+        std::move(osf.surface), opposite, along));
   }
 }
 

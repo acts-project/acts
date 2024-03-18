@@ -124,7 +124,8 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      const Transform3& transform, VolumeBoundsPtr volumeBounds,
+      const Transform3& transform,
+      std::shared_ptr<const VolumeBounds> volumeBounds,
       const std::shared_ptr<const TrackingVolumeArray>& containedVolumes =
           nullptr,
       const std::string& volumeName = "undefined") {
@@ -145,7 +146,8 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      const Transform3& transform, VolumeBoundsPtr volumeBounds,
+      const Transform3& transform,
+      std::shared_ptr<const VolumeBounds> volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> containedLayers = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
@@ -306,7 +308,6 @@ class TrackingVolume : public Volume {
   ///
   /// @param visitor The callable. Will be called for each reachable volume
   /// that is found, a selection of the volumes can be done in the visitor
-  /// @param restrictToSensitives If true, only sensitive surfaces are visited
   ///
   /// @note If a context is needed for the visit, the vistitor has to provide
   /// this, e.g. as a private member
@@ -409,14 +410,6 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   GlueVolumesDescriptor& glueVolumesDescriptor();
 
-  /// Register the color code
-  ///
-  /// @param icolor is a color number
-  void registerColorCode(unsigned int icolor);
-
-  /// Get the color code
-  unsigned int colorCode() const;
-
   /// Return the MotherVolume - if it exists
   const TrackingVolume* motherVolume() const;
 
@@ -434,7 +427,8 @@ class TrackingVolume : public Volume {
   /// @param volbounds is the description of the volume boundaries
   /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
-  TrackingVolume(const Transform3& transform, VolumeBoundsPtr volbounds,
+  TrackingVolume(const Transform3& transform,
+                 std::shared_ptr<const VolumeBounds> volbounds,
                  const std::shared_ptr<const TrackingVolumeArray>&
                      containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
@@ -451,7 +445,8 @@ class TrackingVolume : public Volume {
   /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
-      const Transform3& transform, VolumeBoundsPtr volumeBounds,
+      const Transform3& transform,
+      std::shared_ptr<const VolumeBounds> volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
@@ -514,9 +509,6 @@ class TrackingVolume : public Volume {
 
   /// Volume name for debug reasons & screen output
   std::string m_name;
-
-  /// color code for displaying
-  unsigned int m_colorCode{20};
 };
 
 inline const std::string& TrackingVolume::volumeName() const {
@@ -548,14 +540,6 @@ inline const MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
 inline std::shared_ptr<const TrackingVolumeArray>
 TrackingVolume::confinedVolumes() const {
   return m_confinedVolumes;
-}
-
-inline void TrackingVolume::registerColorCode(unsigned int icolor) {
-  m_colorCode = icolor;
-}
-
-inline unsigned int TrackingVolume::colorCode() const {
-  return m_colorCode;
 }
 
 inline const TrackingVolume* TrackingVolume::motherVolume() const {

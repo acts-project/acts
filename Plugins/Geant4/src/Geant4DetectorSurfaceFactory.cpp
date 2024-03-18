@@ -12,6 +12,7 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <utility>
 
