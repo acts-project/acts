@@ -93,12 +93,12 @@ struct IndexedMaterialAccessor {
 template <typename grid_t, typename material_accessor_t = GridMaterialAccessor>
 class GridSurfaceMaterialT : public ISurfaceMaterial {
  public:
-  // Definition of bound (on surface) to grid local represenation delegate
+  // Definition of bound (on surface) to grid local representation delegate
   using BoundToGridLocalDelegate =
       OwningDelegate<typename grid_t::point_t(const Vector2&),
                      GridAccess::IBoundToGridLocal>;
 
-  // Definition of global to grid local represenation delegate
+  // Definition of global to grid local representation delegate
   using GlobalToGridLocalDelegate =
       OwningDelegate<typename grid_t::point_t(const Vector3&),
                      GridAccess::IGlobalToGridLocal>;
@@ -167,7 +167,7 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   /// The global to grid local delegate
   GlobalToGridLocalDelegate m_globalToGridLocal;
 
-  /// The bound to grid lcoal delegate
+  /// The bound to grid local delegate
   BoundToGridLocalDelegate m_boundToGridLocal;
 };
 
