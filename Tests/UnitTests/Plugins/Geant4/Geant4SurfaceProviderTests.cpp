@@ -11,7 +11,9 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Geant4/Geant4SurfaceProvider.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -300,6 +302,80 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
 
     BOOST_CHECK_EQUAL(s2DPos.at(nChip)->center(gctx), pos);
   }
+}
+
+const char* gdml_head_xml =
+    R"""(<?xml version="1.0" ?>
+         <gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">)""";
+
+BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
+  std::ofstream bgdml;
+  bgdml.open("Plane.gdml");
+  bgdml << gdml_head_xml;
+  bgdml << "<solids>" << '\n';
+  bgdml << "<box name=\"wb\" x=\"100\" y=\"100\" z=\"500\" lunit=\"mm\"/>"
+        << '\n';
+  bgdml << "<box name=\"c\" x=\"35\" y=\"55\" z=\"90\" lunit=\"mm\"/>" << '\n';
+  bgdml << "<box name=\"b\" x=\"25\" y=\"50\" z=\"1\" lunit=\"mm\"/>" << '\n';
+  bgdml << "</solids>" << '\n';
+  bgdml << "<structure>" << '\n';
+  bgdml << "    <volume name=\"b\">" << '\n';
+  bgdml << "     <materialref ref=\"G4_Fe\"/>" << '\n';
+  bgdml << "         <solidref ref=\"b\"/>" << '\n';
+  bgdml << "    </volume>" << '\n';
+  bgdml << "    <volume name=\"cl\">" << '\n';
+  bgdml << "         <materialref ref=\"G4_Galactic\"/>" << '\n';
+  bgdml << "         <solidref ref=\"c\"/>" << '\n';
+  bgdml << "             <physvol name=\"b_pv\">" << '\n';
+  bgdml << "                    <volumeref ref=\"b\"/>" << '\n';
+  bgdml << "                    <position name=\"b_pv_pos\" unit=\"mm\" "
+           "x=\"0\" y=\"5.\" z=\"0\"/>"
+        << '\n';
+  bgdml << "                    <rotation name=\"b_pv_rot\" unit=\"deg\" "
+           "x=\"-90\" y=\"0\" z=\"0\"/>"
+        << '\n';
+  bgdml << "              </physvol>" << '\n';
+  bgdml << "    </volume>" << '\n';
+  bgdml << "    <volume name=\"wl\">" << '\n';
+  bgdml << "         <materialref ref=\"G4_Galactic\"/>" << '\n';
+  bgdml << "         <solidref ref=\"wb\"/>" << '\n';
+  bgdml << "             <physvol name=\"cl_pv\">" << '\n';
+  bgdml << "                    <volumeref ref=\"cl\"/>" << '\n';
+  bgdml << "                    <rotation name=\"cl_pv_rot\" unit=\"deg\" "
+           "x=\"-90\" y=\"0\" z=\"0\"/>"
+        << '\n';
+  bgdml << "              </physvol>" << '\n';
+  bgdml << "    </volume>" << '\n';
+  bgdml << "</structure>" << '\n';
+  bgdml << "<setup name=\"Default\" version=\"1.0\">" << '\n';
+  bgdml << "    <world ref=\"wl\"/>" << '\n';
+  bgdml << "</setup>" << '\n';
+  bgdml << "</gdml>" << '\n';
+
+  bgdml.close();
+
+  // 1D selection -- select only the second row
+  auto planeFromGDMLCfg =
+      Acts::Experimental::Geant4SurfaceProvider<1>::Config();
+  planeFromGDMLCfg.gdmlPath = "Plane.gdml";
+  planeFromGDMLCfg.surfacePreselector =
+      std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+          std::vector<std::string>{"b_pv"}, true);
+
+  auto kdt1DOpt = Acts::Experimental::Geant4SurfaceProvider<1>::kdtOptions();
+  kdt1DOpt.range = Acts::RangeXD<1, Acts::ActsScalar>();
+  kdt1DOpt.range[0].set(-100, 100);
+  kdt1DOpt.binningValues = {Acts::BinningValue::binZ};
+
+  auto tContext = Acts::GeometryContext();
+
+  auto planeProvider =
+      std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
+          planeFromGDMLCfg, kdt1DOpt, false);
+
+  auto planes = planeProvider->surfaces(tContext);
+  BOOST_CHECK_EQUAL(planes.size(), 1u);
+  CHECK_CLOSE_ABS(planes.front()->center(tContext).z(), 5., 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

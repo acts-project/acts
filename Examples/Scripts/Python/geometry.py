@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+
 import os
-from common import getOpenDataDetectorDirectory
+import json
+
+import acts
+from acts import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     GenericDetector,
@@ -14,11 +18,6 @@ from acts.examples import (
     JsonMaterialWriter,
     JsonFormat,
 )
-
-import acts
-import json
-
-from acts import MaterialMapJsonConverter
 
 
 def runGeometry(
@@ -94,9 +93,7 @@ def runGeometry(
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    # detector, trackingGeometry, decorators = getOpenDataDetector(
-    #    getOpenDataDetectorDirectory()
-    # )
+    # detector, trackingGeometry, decorators = getOpenDataDetector()
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
 
