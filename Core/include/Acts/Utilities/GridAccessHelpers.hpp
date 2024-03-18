@@ -124,8 +124,8 @@ class Affine3Transformed final : public IGlobalToGridLocal {
   ///
   /// @param g2gl is the global to grid local transformation
   /// @param t is the transformation matrix
-  Affine3Transformed(global_to_grid_local_t g2gl, Transform3 t)
-      : globalToGridLocal(std::move(g2gl)), transform(std::move(t)) {}
+  Affine3Transformed(global_to_grid_local_t g2gl, const Transform3& t)
+      : globalToGridLocal(std::move(g2gl)), transform(t) {}
 
   /// Transform in to the local frame, then the grid local position
   ///
