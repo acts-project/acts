@@ -1437,10 +1437,11 @@ def addTrackWriters(
         if writeFinderPerformance:
             s.addWriter(
                 acts.examples.TrackFinderPerformanceWriter(
-                    level=acts.logging.INFO,
+                    level=customLogLevel(),
                     inputProtoTracks="prototracks",
                     inputParticles="truth_seeds_selected",
                     inputMeasurementParticlesMap="measurement_particles_map",
+                    inputProtoTrackParticleMatching="prototrack_particle_matching",
                     filePath=str(
                         outputDirRoot / f"performance_track_finder_{name}.root"
                     ),
@@ -1450,7 +1451,7 @@ def addTrackWriters(
         if writeFitterPerformance:
             s.addWriter(
                 acts.examples.TrackFitterPerformanceWriter(
-                    level=acts.logging.INFO,
+                    level=customLogLevel(),
                     inputTracks=tracks,
                     inputParticles="truth_seeds_selected",
                     inputTrackParticleMatching="track_particle_matching",
@@ -1610,15 +1611,30 @@ def addExaTrkX(
         ]
         trackBuilder = acts.examples.CugraphTrackBuilding(customLogLevel())
 
-    s.addAlgorithm(
-        acts.examples.TrackFindingAlgorithmExaTrkX(
-            level=customLogLevel(),
-            inputSpacePoints="spacepoints",
-            outputProtoTracks="protoTracks",
-            graphConstructor=graphConstructor,
-            edgeClassifiers=edgeClassifiers,
-            trackBuilder=trackBuilder,
-        )
+    findingAlg = acts.examples.TrackFindingAlgorithmExaTrkX(
+        level=customLogLevel(),
+        inputSpacePoints="spacepoints",
+        outputProtoTracks="prototracks",
+        graphConstructor=graphConstructor,
+        edgeClassifiers=edgeClassifiers,
+        trackBuilder=trackBuilder,
+    )
+    s.addAlgorithm(findingAlg)
+
+    matchAlg = acts.examples.ProtoTrackTruthMatcher(
+        level=customLogLevel(),
+        inputProtoTracks=findingAlg.config.outputProtoTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="exatrkx_prototrack_particle_matching",
+        outputParticleTrackMatching="exatrkx_particle_prototrack_matching",
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "prototrack_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_prototrack_matching", matchAlg.config.outputParticleTrackMatching
     )
 
     # Write truth track finding / seeding performance
@@ -1626,9 +1642,10 @@ def addExaTrkX(
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
-                inputProtoTracks="protoTracks",
+                inputProtoTracks=findingAlg.outputProtoTracks,
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",
+                inputProtoTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
