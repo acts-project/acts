@@ -127,4 +127,42 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTests) {
   CHECK_CLOSE_ABS(zphi[1], 0.25, 1.e-6);
 }
 
+BOOST_AUTO_TEST_CASE(BoundToGridLocalTests) {
+  Acts::GridAccess::LocalSubspace<0u, 1u> bssXY;
+  auto xy = bssXY.toGridLocal(Vector2{
+      1.,
+      2.,
+  });
+
+  BOOST_CHECK_EQUAL(xy[0], 1.);
+  BOOST_CHECK_EQUAL(xy[1], 2.);
+
+  using Invalid0 = Acts::GridAccess::LocalSubspace<>;
+  BOOST_CHECK_THROW(auto invalid0 = Invalid0(), std::invalid_argument);
+
+  using Invalid3 = Acts::GridAccess::LocalSubspace<0u, 1u, 2u>;
+  BOOST_CHECK_THROW(auto invalid3 = Invalid0(), std::invalid_argument);
+
+  using InvalidL0G2 = Acts::GridAccess::LocalSubspace<2u, 0u>;
+  BOOST_CHECK_THROW(auto invalidl0g2 = InvalidL0G2(), std::invalid_argument);
+
+  using InvalidL1G2 = Acts::GridAccess::LocalSubspace<0u, 2u>;
+  BOOST_CHECK_THROW(auto invalidl1g2 = InvalidL1G2(), std::invalid_argument);
+
+  using InvalidL0G2D1 = Acts::GridAccess::LocalSubspace<2u>;
+  BOOST_CHECK_THROW(auto invalidl0g2d1 = InvalidL0G2D1(),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTests) {
+  Acts::ActsScalar radius = 100.;
+  Acts::ActsScalar shift = 0.;
+  Acts::GridAccess::BoundCylinderToZPhi bctzp(radius, shift);
+
+  auto zphi = bctzp.l2ZPhi(Vector2{0.25 * radius, 52.});
+
+  CHECK_CLOSE_ABS(zphi[0], 52., 1.e-6);
+  CHECK_CLOSE_ABS(zphi[1], 0.25, 1.e-6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
