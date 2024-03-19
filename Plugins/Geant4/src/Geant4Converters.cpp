@@ -60,7 +60,7 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
       g4Rot.zy(), g4Rot.xz(), g4Rot.yz(), g4Rot.zz();
   Transform3 transform = Transform3::Identity();
   transform.prerotate(rotation);
-  transform.pretranslate(translation);  
+  transform.pretranslate(translation);
   return transform;
 }
 
