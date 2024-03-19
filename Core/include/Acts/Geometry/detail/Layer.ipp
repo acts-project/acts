@@ -35,7 +35,7 @@ inline void Layer::encloseTrackingVolume(const TrackingVolume& tvol) {
   m_trackingVolume = &(tvol);
 }
 
-inline const AbstractVolume* Layer::representingVolume() const {
+inline const Volume* Layer::representingVolume() const {
   return m_representingVolume.get();
 }
 
