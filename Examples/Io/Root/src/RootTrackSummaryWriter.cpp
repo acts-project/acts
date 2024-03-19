@@ -53,8 +53,8 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
+  if (m_cfg.inputTrackParticleMatching.empty()) {
+    throw std::invalid_argument("Missing input track particles matching");
   }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -64,7 +64,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -218,7 +218,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
-  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -298,13 +298,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
         track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
 
     // Get the majority truth particle to this track
-    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    auto match = trackParticleMatching.find(track.index());
     bool foundMajorityParticle = false;
     // Get the truth particle info
-    if (!particleHitCounts.empty()) {
+    if (match != trackParticleMatching.end() &&
+        match->second.particle.has_value()) {
       // Get the barcode of the majority truth particle
-      majorityParticleId = particleHitCounts.front().particleId;
-      nMajorityHits = particleHitCounts.front().hitCount;
+      majorityParticleId = match->second.particle.value();
+      nMajorityHits = match->second.contributingParticles.front().hitCount;
 
       // Find the truth particle via the barcode
       auto ip = particles.find(majorityParticleId);
