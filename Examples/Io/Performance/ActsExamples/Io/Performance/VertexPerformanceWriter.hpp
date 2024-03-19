@@ -14,6 +14,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -48,6 +49,8 @@ class VertexPerformanceWriter final
     std::string inputVertices;
     /// Tracks object from track finidng.
     std::string inputTracks;
+    /// Input truth vertex collection.
+    std::string inputTruthVertices;
     /// All input truth particle collection.
     std::string inputParticles;
     /// All input selected truth particle collection.
@@ -229,10 +232,12 @@ class VertexPerformanceWriter final
   std::vector<std::vector<double>> m_pullThetaFitted;
   std::vector<std::vector<double>> m_pullQOverPFitted;
 
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<SimVertexContainer> m_inputTruthVertices{this,
+                                                          "InputTruthVertices"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimParticleContainer> m_inputSelectedParticles{
       this, "InputSelectedParticles"};
-  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
 };
