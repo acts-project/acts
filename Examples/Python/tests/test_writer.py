@@ -731,7 +731,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kfTracks",
+            inputTracks="kf_tracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )
