@@ -1583,12 +1583,13 @@ def addExaTrkX(
     findingAlg = acts.examples.TrackFindingAlgorithmExaTrkX(
         level=customLogLevel(),
         inputSpacePoints="spacepoints",
-        outputProtoTracks="prototracks",
+        outputProtoTracks="exatrkx_prototracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
     )
     s.addAlgorithm(findingAlg)
+    s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
     matchAlg = acts.examples.ProtoTrackTruthMatcher(
         level=customLogLevel(),
@@ -1611,7 +1612,7 @@ def addExaTrkX(
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
-                inputProtoTracks=findingAlg.outputProtoTracks,
+                inputProtoTracks=findingAlg.config.outputProtoTracks,
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
