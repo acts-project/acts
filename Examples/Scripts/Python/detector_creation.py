@@ -90,7 +90,21 @@ if "__main__" == __name__:
         [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
         "detector",
     )
-
     acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+    #return bool
     detrayConvBool = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
     print(f"detray converter run :  {detrayConvBool}")
+    
+    
+    #returns detector
+    #detector2 = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
+    
+    #acts.svg.viewDetector(
+    #    geoContext,
+    #    detector2,
+    #    "odd-detray-eleni",
+    #    [[ivol, volumeOptions] for ivol in range(detector.number_volumes())],
+    #    [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
+    #    "detector",
+    #)
+    #print(f"detray converter run :  {detrayConvBool}")
