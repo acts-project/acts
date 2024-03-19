@@ -37,7 +37,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
 
   ReadDataHandle<SimParticleContainer> inputParticles;
   ReadDataHandle<HitParticlesMap> inputMeasurementParticlesMap;
-  ReadDataHandle<ProtoTrackParticleMatching> m_inputProtoTrackParticleMatching;
+  ReadDataHandle<ProtoTrackParticleMatching> inputProtoTrackParticleMatching;
 
   TFile* file = nullptr;
 
@@ -90,8 +90,8 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
       : cfg(std::move(c)),
         inputParticles{parent, "InputParticles"},
         inputMeasurementParticlesMap{parent, "InputMeasurementParticlesMap"},
-        m_inputProtoTrackParticleMatching{parent,
-                                          "InputProtoTrackParticleMatching"},
+        inputProtoTrackParticleMatching{parent,
+                                        "InputProtoTrackParticleMatching"},
         _logger(l) {
     if (cfg.inputProtoTracks.empty()) {
       throw std::invalid_argument("Missing proto tracks input collection");
@@ -111,7 +111,8 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     }
 
     inputParticles.initialize(cfg.inputParticles);
-    m_inputProtoTrackParticleMatching.initialize(
+    inputMeasurementParticlesMap.initialize(cfg.inputMeasurementParticlesMap);
+    inputProtoTrackParticleMatching.initialize(
         cfg.inputProtoTrackParticleMatching);
 
     // the output file can not be given externally since TFile accesses to the
@@ -284,7 +285,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& hitParticlesMap = m_impl->inputMeasurementParticlesMap(ctx);
   const auto& protoTrackParticleMatching =
-      m_impl->m_inputProtoTrackParticleMatching(ctx);
+      m_impl->inputProtoTrackParticleMatching(ctx);
   m_impl->write(ctx.eventNumber, tracks, particles, hitParticlesMap,
                 protoTrackParticleMatching);
   return ProcessCode::SUCCESS;

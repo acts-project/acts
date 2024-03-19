@@ -394,7 +394,7 @@ def addSeeding(
             if not outputDirCsv.exists():
                 outputDirCsv.mkdir()
 
-            CsvSeedWriter = acts.examples.CsvSeedWriter(
+            csvSeedWriter = acts.examples.CsvSeedWriter(
                 level=logLevel,
                 inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                 inputSimSeeds=seeds,
@@ -404,7 +404,7 @@ def addSeeding(
                 outputDir=str(outputDirCsv),
                 fileName=str(f"seed.csv"),
             )
-            s.addWriter(CsvSeedWriter)
+            s.addWriter(csvSeedWriter)
 
     return s
 
@@ -1016,7 +1016,7 @@ def addSeedFilterML(
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
 
-        CsvSeedWriter = acts.examples.CsvSeedWriter(
+        csvSeedWriter = acts.examples.CsvSeedWriter(
             level=customLogLevel,
             inputTrackParameters=estParams,
             inputSimSeeds=seeds,
@@ -1026,7 +1026,7 @@ def addSeedFilterML(
             outputDir=str(outputDirCsv),
             fileName=str(f"seed.csv"),
         )
-        s.addWriter(CsvSeedWriter)
+        s.addWriter(csvSeedWriter)
 
     return s
 
