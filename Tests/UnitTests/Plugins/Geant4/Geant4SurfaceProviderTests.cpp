@@ -354,10 +354,15 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
 
   bgdml.close();
 
+  /// Read the gdml file and get the world volume
+  G4GDMLParser parser;
+  parser.Read("Plane.gdml", false);
+  auto world = parser.GetWorldVolume();
+
   // 1D selection -- select only the second row
   auto planeFromGDMLCfg =
       Acts::Experimental::Geant4SurfaceProvider<1>::Config();
-  planeFromGDMLCfg.gdmlPath = "Plane.gdml";
+  planeFromGDMLCfg.g4World = world;
   planeFromGDMLCfg.surfacePreselector =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
           std::vector<std::string>{"b_pv"}, true);
@@ -371,7 +376,7 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
 
   auto planeProvider =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-          planeFromGDMLCfg, kdt1DOpt, false);
+          planeFromGDMLCfg, kdt1DOpt);
 
   auto planes = planeProvider->surfaces(tContext);
   BOOST_CHECK_EQUAL(planes.size(), 1u);
