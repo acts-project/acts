@@ -105,8 +105,8 @@ def runTruthTrackingGx2f(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
+            inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDir / "trackstates_gx2f.root"),
         )
@@ -117,29 +117,18 @@ def runTruthTrackingGx2f(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_gx2f.root"),
             writeGx2fSpecific=True,
         )
     )
 
-    # TODO: PerformanceWriters are not tested yet
-    # s.addWriter(
-    #     acts.examples.TrackFinderPerformanceWriter(
-    #         level=acts.logging.INFO,
-    #         inputProtoTracks="truth_particle_tracks",
-    #         inputParticles="truth_seeds_selected",
-    #         inputMeasurementParticlesMap="measurement_particles_map",
-    #         filePath=str(outputDir / "performance_track_finder.root"),
-    #     )
-    # )
-    #
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gx2f.root"),
         )
     )

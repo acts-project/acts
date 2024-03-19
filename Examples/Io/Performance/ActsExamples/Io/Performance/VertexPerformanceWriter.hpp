@@ -12,14 +12,14 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
-#include <cstdint>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -43,22 +43,17 @@ struct AlgorithmContext;
 class VertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex>> {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
-    /// All input truth particle collection.
-    std::string inputAllTruthParticles;
-    /// Selected input truth particle collection.
-    std::string inputSelectedTruthParticles;
-    /// Tracks object from track finidng.
-    std::string inputTracks;
-    /// Optional. Truth particles associated to tracks. Using 1:1 matching if
-    /// given.
-    std::string inputAssociatedTruthParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
+    /// Tracks object from track finidng.
+    std::string inputTracks;
+    /// All input truth particle collection.
+    std::string inputParticles;
+    /// All input selected truth particle collection.
+    std::string inputSelectedParticles;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
@@ -108,9 +103,23 @@ class VertexPerformanceWriter final
   /// The event number
   std::uint32_t m_eventNr{0};
 
-  // Truth vertex ID
-  std::vector<int> m_vertexPrimary;
-  std::vector<int> m_vertexSecondary;
+  /// Number of reconstructed vertices
+  int m_nRecoVtx = -1;
+  /// Number of true vertices
+  int m_nTrueVtx = -1;
+  /// Number of vertices in detector acceptance
+  int m_nVtxDetAcceptance = -1;
+  /// Max. number of reconstructable vertices (detector acceptance + tracking
+  /// efficiency)
+  int m_nVtxReconstructable = -1;
+
+  /// Number of tracks associated with the reconstructed vertex
+  std::vector<int> m_nTracksOnRecoVertex;
+
+  std::vector<double> m_recoVertexTrackWeights;
+
+  // Sum pT^2 of all tracks associated with the vertex
+  std::vector<double> m_sumPt2;
 
   // Reconstructed 4D vertex position
   std::vector<double> m_recoX;
@@ -137,6 +146,16 @@ class VertexPerformanceWriter final
   std::vector<double> m_seedZ;
   std::vector<double> m_seedT;
 
+  // Truth vertex ID
+  std::vector<int> m_vertexPrimary;
+  std::vector<int> m_vertexSecondary;
+
+  std::vector<double> m_truthVertexTrackWeights;
+  std::vector<double> m_truthVertexMatchRatio;
+
+  /// Number of tracks associated with the truth vertex
+  std::vector<int> m_nTracksOnTruthVertex;
+
   // True 4D vertex position
   std::vector<double> m_truthX;
   std::vector<double> m_truthY;
@@ -158,27 +177,6 @@ class VertexPerformanceWriter final
   std::vector<double> m_pullY;
   std::vector<double> m_pullZ;
   std::vector<double> m_pullT;
-
-  // Sum pT^2 of all tracks associated with the vertex
-  std::vector<double> m_sumPt2;
-
-  // Number of tracks associated with truth/reconstructed vertex
-  std::vector<int> m_nTracksOnTruthVertex;
-  std::vector<int> m_nTracksOnRecoVertex;
-
-  std::vector<double> m_recoVertexTrackWeights;
-  std::vector<double> m_truthVertexTrackWeights;
-  std::vector<double> m_truthVertexMatchRatio;
-
-  /// Number of reconstructed vertices
-  int m_nRecoVtx = -1;
-  /// Number of true vertices
-  int m_nTrueVtx = -1;
-  /// Number of vertices in detector acceptance
-  int m_nVtxDetAcceptance = -1;
-  /// Max. number of reconstructable vertices (detector acceptance + tracking
-  /// efficiency)
-  int m_nVtxReconstructable = -1;
 
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner
@@ -231,15 +229,12 @@ class VertexPerformanceWriter final
   std::vector<std::vector<double>> m_pullThetaFitted;
   std::vector<std::vector<double>> m_pullQOverPFitted;
 
-  ReadDataHandle<SimParticleContainer> m_inputAllTruthParticles{
-      this, "InputAllTruthParticles"};
-  ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
-      this, "InputSelectedTruthParticles"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<SimParticleContainer> m_inputSelectedParticles{
+      this, "InputSelectedParticles"};
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-  ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
-      this, "InputAssociatedTruthParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
 };
 
 }  // namespace ActsExamples
