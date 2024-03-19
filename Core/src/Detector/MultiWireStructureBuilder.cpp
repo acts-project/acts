@@ -72,7 +72,8 @@ class MultiWireInternalStructureBuilder
         isg{internalSurfaces,
             {},
             {m_cfg.binning[0u].binValue, m_cfg.binning[1u].binValue},
-            {m_cfg.binning[0u].expansion, m_cfg.binning[1u].expansion}};
+            {m_cfg.binning[0u].expansion, m_cfg.binning[1u].expansion},
+            m_cfg.transform};
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
     Acts::GridAxisGenerators::EqBoundEqBound aGenerator{
         {m_cfg.binning[0u].edges.front(), m_cfg.binning[0u].edges.back()},
@@ -127,6 +128,7 @@ Acts::Experimental::MultiWireStructureBuilder::construct(
   MultiWireInternalStructureBuilder::Config iConfig;
   iConfig.iSurfaces = mCfg.mlSurfaces;
   iConfig.binning = mCfg.mlBinning;
+  iConfig.transform = mCfg.transform;
   iConfig.auxiliary = "Construct Internal Structure";
 
   Acts::Experimental::DetectorVolumeBuilder::Config dvConfig;
