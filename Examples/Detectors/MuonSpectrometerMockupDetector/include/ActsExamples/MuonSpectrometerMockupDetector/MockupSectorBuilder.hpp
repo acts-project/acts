@@ -40,6 +40,14 @@ class MockupSectorBuilder {
     // The number of sectors we want to create
     int NumberOfSectors = 1;
 
+    // boolean to apply binning for the multilayer volumes (for an indexed based
+    // navigation)
+    bool binning = false;
+
+    //position of sector along z - with full phi coverage
+    float zOffset = 0.;
+
+    //tolerance to avoid overlaps between the volumes' bounds
     float toleranceOverlap = 10.;
   };
 
@@ -77,7 +85,7 @@ class MockupSectorBuilder {
 
   /// Draw the sector in an obj file
   /// @param nameObjFile The name of the obj file where the sector will be saved
-  void drawSector(const std::shared_ptr<Acts::Experimental::DetectorVolume>&
+  void static drawSector(const std::shared_ptr<Acts::Experimental::DetectorVolume>&
                       detectorVolumeSector,
                   const std::string& nameObjFile);
 
@@ -86,7 +94,15 @@ class MockupSectorBuilder {
 
   G4VPhysicalVolume* g4World = nullptr;
 
-  int maxNumberOfSectors = 8;
+  int maxNumberOfSectors = 16;
+
+  // Build the volume for the multilayer -from the multiwire builder
+  /// @param gctx The current geometry context object
+  /// @param  surfaces The vector of the surfaces
+  /// @note The surfaces are expected to be sorted w.t.r y and z coordinates
+  std::shared_ptr<Acts::Experimental::DetectorVolume> buildMultiLayer(
+      const Acts::GeometryContext& gctx,
+      std::vector<std::shared_ptr<Acts::Surface>> surfaces);
 };
 
 }  // namespace ActsExamples

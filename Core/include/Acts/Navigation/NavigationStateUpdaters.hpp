@@ -40,8 +40,11 @@ inline void updateCandidates(const GeometryContext& gctx,
                              NavigationState& nState) {
   const auto& position = nState.position;
   const auto& direction = nState.direction;
+  std::cout<<"position="<<position.x()<<","<<position.y()<<","<<position.z()<<std::endl;
+  std::cout<<"direction="<<direction.x()<<","<<direction.y()<<","<<direction.z()<<std::endl;
 
   NavigationState::SurfaceCandidates nextSurfaceCandidates;
+  std::cout<<"before intersection checking sCandidates="<< nState.surfaceCandidates.size()<<std::endl;
 
   for (NavigationState::SurfaceCandidate c : nState.surfaceCandidates) {
     // Get the surface representation: either native surface of portal
@@ -54,12 +57,17 @@ inline void updateCandidates(const GeometryContext& gctx,
                                         c.boundaryCheck, s_onSurfaceTolerance);
     for (auto& si : sIntersection.split()) {
       c.objectIntersection = si;
+      std::cout<<"intersection pathlength ="<<c.objectIntersection.pathLength()<<std::endl;
+      std::cout<<"nstate overstepTolerance ="<<nState.overstepTolerance<<std::endl;
+      std::cout<<"c object intersection ="<<c.objectIntersection.status()<<std::endl;
       if (c.objectIntersection &&
           c.objectIntersection.pathLength() > nState.overstepTolerance) {
         nextSurfaceCandidates.emplace_back(c);
       }
     }
   }
+
+  std::cout<<"after intersection checking sCandidates="<<nextSurfaceCandidates.size()<<std::endl;
 
   nState.surfaceCandidates = std::move(nextSurfaceCandidates);
 }

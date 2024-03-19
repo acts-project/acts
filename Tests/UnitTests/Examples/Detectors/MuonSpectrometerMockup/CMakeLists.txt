@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsExamplesMuonSpectrometerMockupDetector ActsExamplesGenerators)
+add_unittest(MockupBuilder MockupBuilderTests.cpp)
+add_unittest(MockupNavigation MockupNavigationTests.cpp)

@@ -47,8 +47,8 @@ class ExternalsBuilder : public IExternalStructureBuilder {
         m_transform(transform),
         m_bounds(std::move(bounds)) {}
 
-  ExternalStructure construct(
-      [[maybe_unused]] const GeometryContext& gctx) const final {
+  ExternalStructure construct([
+      [maybe_unused]] const GeometryContext& gctx) const final {
     return {m_transform, std::make_unique<bounds_type>(m_bounds),
             defaultPortalGenerator()};
   }
@@ -69,8 +69,8 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
         m_transform(transform),
         m_bounds(std::move(bounds)) {}
 
-  InternalStructure construct(
-      [[maybe_unused]] const GeometryContext& gctx) const final {
+  InternalStructure construct([
+      [maybe_unused]] const GeometryContext& gctx) const final {
     auto surface = Surface::makeShared<surface_type>(
         m_transform, std::make_shared<bounds_type>(m_bounds));
     return {{surface}, {}, tryAllPortalsAndSurfaces(), tryNoVolumes()};
@@ -118,8 +118,8 @@ class InternalVolumeBuilder : public IInternalStructureBuilder {
         m_transform(transform),
         m_bounds(std::move(bounds)) {}
 
-  InternalStructure construct(
-      [[maybe_unused]] const GeometryContext& gctx) const final {
+  InternalStructure construct([
+      [maybe_unused]] const GeometryContext& gctx) const final {
     auto bounds = std::make_unique<bounds_type>(m_bounds);
     auto portalGenerator = defaultPortalGenerator();
     auto volume = DetectorVolumeFactory::construct(

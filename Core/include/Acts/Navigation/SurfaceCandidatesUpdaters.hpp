@@ -44,15 +44,17 @@ struct AllPortalsImpl : public INavigationDelegate {
     // Retrieval necessary
     if (nState.surfaceCandidates.empty()) {
       // Fill internal portals if existing
+     
       for (const auto v : nState.currentVolume->volumes()) {
         const auto& iPortals = v->portals();
         PortalsFiller::fill(nState, iPortals);
       }
       // Filling the new portal candidates
-      const auto& portals = nState.currentVolume->portals();
+      const auto& portals = nState.currentVolume->portals();     
       PortalsFiller::fill(nState, portals);
     }
     // Sort and update
+    
     updateCandidates(gctx, nState);
   }
 };

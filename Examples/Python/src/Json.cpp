@@ -222,7 +222,7 @@ void addJson(Context& ctx) {
     mex.def(
         "readDetectorFromJson",
         [](const Acts::GeometryContext& gctx,
-           const std::string& fileName) -> auto{
+           const std::string& fileName) -> auto {
           auto in = std::ifstream(fileName,
                                   std::ifstream::in | std::ifstream::binary);
           nlohmann::json jDetectorIn;

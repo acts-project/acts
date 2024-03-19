@@ -1,0 +1,1 @@
+add_subdirectory_if(MuonSpectrometerMockup ACTS_BUILD_EXAMPLES_GEANT4)

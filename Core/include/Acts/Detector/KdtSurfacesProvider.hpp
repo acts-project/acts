@@ -183,8 +183,8 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   }
 
   /// The call to provide the surfaces
-  std::vector<std::shared_ptr<Surface>> surfaces(
-      [[maybe_unused]] const GeometryContext& gctx) const final {
+  std::vector<std::shared_ptr<Surface>> surfaces([
+      [maybe_unused]] const GeometryContext& gctx) const final {
     return m_kdt->surfaces(m_region);
   }
 

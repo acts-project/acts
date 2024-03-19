@@ -338,7 +338,7 @@ void test_components_modifying_accessors() {
       [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
 
   std::apply(
-      [&](const auto &...projs) {
+      [&](const auto &... projs) {
         // clang-format off
         ( [&]() { modify(projs); check(projs); }(), ...);
         // clang-format on

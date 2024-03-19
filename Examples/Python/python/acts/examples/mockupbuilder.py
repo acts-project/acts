@@ -40,3 +40,5 @@ detectorVolumes = [detectorVolumeInner, detectorVolumeMiddle, detectorVolumeOute
 detectorVolumeSector = mockupBuilder.buildSector(detectorVolumes)
 
 mockupBuilder.drawSector(detectorVolumeSector, "sector_drawn_from_python")
+
+
