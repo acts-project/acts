@@ -45,8 +45,10 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace ActsExamples;
 using namespace detray;
+using namespace detray::io::detail;
 
-using detector_t = detector<>;
+using detector_t = detector<default_metadata>;
+
 
 //example pybind lamda function
 namespace Acts::Python {
@@ -57,18 +59,28 @@ namespace Acts::Python {
         {
             mex.def("DetrayConverter",
                     [](const Acts::GeometryContext& gctx,
-                    const Acts::Experimental::Detector& detector,
+                    const Acts::Experimental::Detector& acts_detector,
                     const std::string& name) -> bool {
                         
-                        //build an empty detector
-                        detector_builder<> det_builder{};
+                        //DETRAY
+                        //build a mini detector
+                        typename detector_t::name_map names{};
                         vecmem::host_memory_resource host_mr;
+                        detector_builder<default_metadata> det_builder{};
+                        detray::io::detail::detector_components_reader<detector_t> readers;
+
+                        readers.set_detector_name(acts_detector.name());
+                        //readers.read(det_builder, names);
                         const detector_t d = det_builder.build(host_mr);
+                        //bool ret2 = detray_converter(d);
 
+
+                        //ACTS
                         //call the converters from plugin 
-                        bool ret = detray_converter(d);
+                        //bool ret = detray_converter(acts_detector);
+                        //const detector_t d_detray = ;                           
 
-                        return (ret);
+                        return (detray_tree_converter(acts_detector, gctx));
                     });
         }
     }
