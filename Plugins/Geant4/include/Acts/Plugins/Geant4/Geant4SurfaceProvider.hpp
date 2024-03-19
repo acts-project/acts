@@ -89,7 +89,6 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   /// Constructor
   /// @param config The configuration struct
   /// @param options The optional configuration for KDTree
-  /// @param validateGDMLschema Whether to validate the gdml schema
   Geant4SurfaceProvider(const Config& config,
                         const kdtOptions& options = kdtOptions()) {
     if (config.g4World == nullptr) {
