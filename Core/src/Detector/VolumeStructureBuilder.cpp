@@ -36,8 +36,8 @@ Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
 }
 
 Acts::Experimental::ExternalStructure
-Acts::Experimental::VolumeStructureBuilder::construct([
-    [maybe_unused]] const Acts::GeometryContext& gctx) const {
+Acts::Experimental::VolumeStructureBuilder::construct(
+    [[maybe_unused]] const Acts::GeometryContext& gctx) const {
   // Print out the auxiliary information
   if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);

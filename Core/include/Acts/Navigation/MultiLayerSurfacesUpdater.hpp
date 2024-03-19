@@ -45,18 +45,15 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   MultiLayerSurfacesUpdaterImpl(
       grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity())
-      : grid(std::move(igrid)), casts(icasts), transform(itr.inverse()) {}
+      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   MultiLayerSurfacesUpdaterImpl() = delete;
 
   void update(const GeometryContext& gctx, NavigationState& nState) const {
-    // get the local position and direction
-    auto lposition = transform * nState.position;
-    auto ldirection = transform.linear() * nState.direction;
-
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +
                           std::pow(grid.binWidth()[1], 2));
-    auto path = pgenerator(lposition, ldirection, step, grid.numLocalBins()[1]);
+    auto path = pgenerator(nState.position, nState.direction, step,
+                           grid.numLocalBins()[1]);
 
     std::vector<const Acts::Surface*> surfCandidates = {};
 
@@ -79,8 +76,11 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param position is the position of the update call
   std::array<ActsScalar, grid_type::DIM> castPosition(
       const Vector3& position) const {
+    // Transform into local 3D frame
+    Vector3 tposition = transform * position;
+
     std::array<ActsScalar, grid_type::DIM> casted{};
-    fillCasts(position, casted,
+    fillCasts(tposition, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
     return casted;
   }
@@ -120,19 +120,20 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
 };
 
 struct PathGridSurfacesGenerator {
-  std::vector<Vector3> operator()(Vector3 lstartPosition,
-                                  const Vector3& ldirection,
-                                  ActsScalar stepSize,
+  std::vector<Vector3> operator()(Vector3 startPosition,
+                                  const Vector3& direction, ActsScalar stepSize,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
 
-    auto lposition = std::move(lstartPosition);
-    auto step = stepSize * ldirection;
+    auto tposition = std::move(startPosition);
+    auto stepSizeY = stepSize * sin(Acts::VectorHelpers::phi(direction));
+    auto stepSizeX = stepSize * cos(Acts::VectorHelpers::phi(direction));
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
-      pathCoordinates.push_back(lposition);
-      lposition = lposition + step;
+      pathCoordinates.push_back(tposition);
+      tposition.y() = tposition.y() + stepSizeY;
+      tposition.x() = tposition.x() + stepSizeX;
     }
 
     return pathCoordinates;

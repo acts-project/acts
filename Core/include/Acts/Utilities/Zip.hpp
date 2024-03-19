@@ -22,7 +22,7 @@ namespace Acts {
 /// @param r The ranges parameter pack
 /// @note the behaviour is undefined if the ranges do not have equal range
 template <typename... R>
-auto zip(R &&... r) {
+auto zip(R &&...r) {
   struct It {
     std::tuple<decltype(r.begin())...> iterators;
     static_assert(std::tuple_size_v<decltype(iterators)> > 0);
@@ -30,7 +30,7 @@ auto zip(R &&... r) {
     using reference = std::tuple<decltype(*r.begin())...>;
 
     auto operator++() {
-      std::apply([](auto &... args) { (++args, ...); }, iterators);
+      std::apply([](auto &...args) { (++args, ...); }, iterators);
       return *this;
     }
 
@@ -39,7 +39,7 @@ auto zip(R &&... r) {
     }
 
     reference operator*() {
-      return std::apply([](auto &... args) { return reference{*args...}; },
+      return std::apply([](auto &...args) { return reference{*args...}; },
                         iterators);
     }
   };

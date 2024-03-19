@@ -56,8 +56,8 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
         m_surfaceBounds(sBounds),
         m_name(vName) {}
 
-  DetectorComponent construct([
-      [maybe_unused]] const GeometryContext& gctx) const final {
+  DetectorComponent construct(
+      [[maybe_unused]] const GeometryContext& gctx) const final {
     // The outgoing root volumes
     std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
 

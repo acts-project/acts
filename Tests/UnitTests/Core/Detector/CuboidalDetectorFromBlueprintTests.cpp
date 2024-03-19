@@ -39,8 +39,8 @@ class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a consistent set of detector volume internals
-  Acts::Experimental::InternalStructure construct([
-      [maybe_unused]] const Acts::GeometryContext& gctx) const final {
+  Acts::Experimental::InternalStructure construct(
+      [[maybe_unused]] const Acts::GeometryContext& gctx) const final {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         (m_transform),
         std::make_shared<Acts::RectangleBounds>(m_surfaceBounds));

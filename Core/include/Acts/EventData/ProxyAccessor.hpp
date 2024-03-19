@@ -23,15 +23,15 @@ template <typename T>
 concept MutableProxyType = requires(T t, HashedString key) {
   requires !T::ReadOnly;
 
-  { t.template component<int>(key) }
-  ->std::same_as<std::conditional_t<T::ReadOnly, const int&, int&>>;
+  {
+    t.template component<int>(key)
+    } -> std::same_as<std::conditional_t<T::ReadOnly, const int&, int&>>;
 };
 
 template <typename T>
 concept ConstProxyType = requires(T t, HashedString key) {
   requires T::ReadOnly;
-  { t.template component<int>(key) }
-  ->std::same_as<const int&>;
+  { t.template component<int>(key) } -> std::same_as<const int&>;
 };
 
 template <typename T>

@@ -33,7 +33,6 @@ inline Intersection3D intersect(const Transform3& transform,
   const Vector3 pcenter = tMatrix.block<3, 1>(0, 3).transpose();
   // It is solvable, so go on
   ActsScalar denom = direction.dot(pnormal);
-  std::cout << "in intersection: denom =" << denom << std::endl;
   if (denom != 0.0) {
     // Translate that into a path
     ActsScalar path = (pnormal.dot((pcenter - position))) / (denom);
@@ -41,7 +40,6 @@ inline Intersection3D intersect(const Transform3& transform,
     Intersection3D::Status status = std::abs(path) < std::abs(tolerance)
                                         ? Intersection3D::Status::onSurface
                                         : Intersection3D::Status::reachable;
-    std::cout << "status=" << status << std::endl;
     // Return the intersection
     return Intersection3D{(position + path * direction), path, status};
   }

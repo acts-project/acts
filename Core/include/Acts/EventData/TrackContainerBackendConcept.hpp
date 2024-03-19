@@ -34,43 +34,33 @@ using ConstCovariance = Eigen::Map<const BoundMatrix>;
 template <typename T>
 concept ConstTrackContainerBackend = requires(const T& cv, HashedString key,
                                               TrackIndexType itrack) {
-  { cv.size_impl() }
-  ->std::same_as<std::size_t>;
+  { cv.size_impl() } -> std::same_as<std::size_t>;
 
-  { cv.component_impl(key, itrack) }
-  ->std::same_as<std::any>;
+  { cv.component_impl(key, itrack) } -> std::same_as<std::any>;
 
-  { cv.parameters(itrack) }
-  ->std::same_as<detail::ConstParameters>;
+  { cv.parameters(itrack) } -> std::same_as<detail::ConstParameters>;
 
-  { cv.covariance(itrack) }
-  ->std::same_as<detail::ConstCovariance>;
+  { cv.covariance(itrack) } -> std::same_as<detail::ConstCovariance>;
 
-  { cv.hasColumn_impl(key) }
-  ->std::same_as<bool>;
+  { cv.hasColumn_impl(key) } -> std::same_as<bool>;
 
-  { cv.referenceSurface_impl(itrack) }
-  ->std::same_as<const Surface*>;
+  { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
 
-  { cv.particleHypothesis_impl(itrack) }
-  ->std::same_as<ParticleHypothesis>;
+  { cv.particleHypothesis_impl(itrack) } -> std::same_as<ParticleHypothesis>;
 
   {cv.dynamicKeys_impl()};
   requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
 };
 
 template <typename T>
-concept MutableTrackContainerBackend = ConstTrackContainerBackend<T>&& requires(
-    T v, HashedString key, TrackIndexType itrack, std::string col,
-    const T& other, std::shared_ptr<const Surface> sharedSurface) {
-  { v.parameters(itrack) }
-  ->std::same_as<detail::Parameters>;
+concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
+    requires(T v, HashedString key, TrackIndexType itrack, std::string col,
+             const T& other, std::shared_ptr<const Surface> sharedSurface) {
+  { v.parameters(itrack) } -> std::same_as<detail::Parameters>;
 
-  { v.covariance(itrack) }
-  ->std::same_as<detail::Covariance>;
+  { v.covariance(itrack) } -> std::same_as<detail::Covariance>;
 
-  { v.addTrack_impl() }
-  ->std::same_as<TrackIndexType>;
+  { v.addTrack_impl() } -> std::same_as<TrackIndexType>;
 
   {v.removeTrack_impl(itrack)};
 
@@ -102,8 +92,7 @@ struct IsReadOnlyTrackContainer;
 
 template <typename T>
 concept TrackContainerBackend = ConstTrackContainerBackend<T> &&
-                                (IsReadOnlyTrackContainer<T>::value ||
-                                 MutableTrackContainerBackend<T>);
+    (IsReadOnlyTrackContainer<T>::value || MutableTrackContainerBackend<T>);
 }  // namespace Acts
 
 #endif

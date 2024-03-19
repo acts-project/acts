@@ -470,18 +470,19 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
       // assign z-bin a value between 0 and 10 identifying the z-slice of a
       // space-point
       if (Z > 0.) {
-        Z < 250. ? z = 5
-                 : Z < 450. ? z = 6
-                            : Z < 925. ? z = 7
-                                       : Z < 1400. ? z = 8
-                                                   : Z < 2500. ? z = 9 : z = 10;
+        Z < 250.    ? z = 5
+        : Z < 450.  ? z = 6
+        : Z < 925.  ? z = 7
+        : Z < 1400. ? z = 8
+        : Z < 2500. ? z = 9
+                    : z = 10;
       } else {
-        Z > -250.
-            ? z = 5
-            : Z > -450.
-                  ? z = 4
-                  : Z > -925. ? z = 3
-                              : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
+        Z > -250.    ? z = 5
+        : Z > -450.  ? z = 4
+        : Z > -925.  ? z = 3
+        : Z > -1400. ? z = 2
+        : Z > -2500. ? z = 1
+                     : z = 0;
       }
       // calculate bin nr "n" for self-made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz

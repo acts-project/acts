@@ -239,14 +239,6 @@ void Acts::Experimental::DetectorVolume::updateNavigationState(
     const GeometryContext& gctx, NavigationState& nState) const {
   nState.currentVolume = this;
   m_surfaceCandidatesUpdater(gctx, nState);
-  for (auto& sc : nState.surfaceCandidates) {
-    if (sc.surface != nullptr) {
-      std::cout << sc.surface->name() << std::endl;
-    } else {
-      std::cout << sc.portal->surface().name() << std::endl;
-    }
-  }
- 
   nState.surfaceCandidateIndex = 0;
 }
 
