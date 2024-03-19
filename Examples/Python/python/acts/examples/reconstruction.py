@@ -1595,15 +1595,15 @@ def addExaTrkX(
         inputProtoTracks=findingAlg.config.outputProtoTracks,
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputTrackParticleMatching="exatrkx_prototrack_particle_matching",
-        outputParticleTrackMatching="exatrkx_particle_prototrack_matching",
+        outputProtoTrackParticleMatching="exatrkx_prototrack_particle_matching",
+        outputParticleProtoTrackMatching="exatrkx_particle_prototrack_matching",
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
-        "prototrack_particle_matching", matchAlg.config.outputTrackParticleMatching
+        "prototrack_particle_matching", matchAlg.config.outputProtoTrackParticleMatching
     )
     s.addWhiteboardAlias(
-        "particle_prototrack_matching", matchAlg.config.outputParticleTrackMatching
+        "particle_prototrack_matching", matchAlg.config.outputParticleProtoTrackMatching
     )
 
     # Write truth track finding / seeding performance
@@ -1614,7 +1614,7 @@ def addExaTrkX(
                 inputProtoTracks=findingAlg.outputProtoTracks,
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputProtoTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
+                inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
