@@ -98,10 +98,10 @@ ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
     // Check if the trajectory is matched with truth.
     // If not, it will be classified as 'fake'
     const bool recoMatched =
-        static_cast<float>(nMajorityHits) / protoTrack.size() >=
+        static_cast<double>(nMajorityHits) / protoTrack.size() >=
         m_cfg.matchingRatio;
     const bool truthMatched =
-        static_cast<float>(nMajorityHits) /
+        static_cast<double>(nMajorityHits) /
             particleTruthHitCount.at(majorityParticleId) >=
         m_cfg.matchingRatio;
 

@@ -184,24 +184,23 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         }
         const auto& particleMatch = imatched->second;
 
-        // Get the barcode of the majority truth particle
-        SimBarcode majorityParticleId = particleMatch.particle.value();
+        if (particleMatch.particle.has_value()) {
+          SimBarcode majorityParticleId = particleMatch.particle.value();
 
-        if (!particleMatch.contributingParticles.empty()) {
           auto it = majorityCount.try_emplace(majorityParticleId, 0u).first;
           it->second += 1;
+
+          // Find the truth particle via the barcode
+          if (auto ip = particles.find(majorityParticleId);
+              ip == particles.end()) {
+            ACTS_WARNING(
+                "Majority particle not found in the particles collection.");
+          }
         }
+
         for (const auto& hc : particleMatch.contributingParticles) {
           auto it = reconCount.try_emplace(hc.particleId, 0u).first;
           it->second += 1;
-        }
-
-        // Find the truth particle via the barcode
-        if (auto ip = particles.find(majorityParticleId);
-            ip == particles.end()) {
-          ACTS_WARNING(
-              "Majority particle not found in the particles collection.");
-          continue;
         }
 
         trkEventId = eventId;

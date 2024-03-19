@@ -78,7 +78,7 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     }
 
     // Get the majority particleId and majority particle counts
-    // Note that the majority particle might be not in the truth seeds
+    // Note that the majority particle might not be in the truth seeds
     // collection
     ActsFatras::Barcode majorityParticleId =
         particleHitCounts.front().particleId;
