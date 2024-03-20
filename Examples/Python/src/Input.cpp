@@ -38,18 +38,16 @@ void addInput(Context& ctx) {
 
   // ROOT READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootParticleReader, mex,
-                             "RootParticleReader", particleCollection,
-                             vertexPrimaryCollection, vertexSecondaryCollection,
-                             treeName, filePath, orderedEvents);
+                             "RootParticleReader", outputParticles, treeName,
+                             filePath);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootMaterialTrackReader, mex,
-                             "RootMaterialTrackReader", collection, treeName,
-                             fileList, orderedEvents,
-                             readCachedSurfaceInformation);
+                             "RootMaterialTrackReader", outputMaterialTracks,
+                             treeName, fileList, readCachedSurfaceInformation);
 
-  ACTS_PYTHON_DECLARE_READER(
-      ActsExamples::RootTrackSummaryReader, mex, "RootTrackSummaryReader",
-      outputTracks, outputParticles, treeName, filePath, orderedEvents);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootTrackSummaryReader, mex,
+                             "RootTrackSummaryReader", outputTracks,
+                             outputParticles, treeName, filePath);
 
   // CSV READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvParticleReader, mex,

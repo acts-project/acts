@@ -23,9 +23,11 @@
 #include <TMathBase.h>
 #include <TTree.h>
 
-ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
-    const Config& config, Acts::Logging::Level level)
-    : ActsExamples::IReader(),
+namespace ActsExamples {
+
+RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
+                                                 Acts::Logging::Level level)
+    : IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
       m_cfg(config) {
   if (m_cfg.fileList.empty()) {
@@ -90,8 +92,8 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
             << " events this corresponds to a batch size of: " << m_batchSize
             << std::endl;
 
-  // If the events are not in order, get the entry numbers for ordered events
-  if (!m_cfg.orderedEvents) {
+  // If the events are not ordered, we need to sort the entry numbers
+  {
     if (!eventIdPresent) {
       throw std::invalid_argument{
           "'event_id' branch is missing in your tree. This is not compatible "
@@ -103,10 +105,11 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                 m_entryNumbers.data(), false);
   }
-  m_outputMaterialTracks.initialize(m_cfg.collection);
+
+  m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
 }
 
-ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
+RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_inputChain;
 
   delete m_step_x;
@@ -129,17 +132,16 @@ ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_sur_pathCorrection;
 }
 
-std::string ActsExamples::RootMaterialTrackReader::name() const {
+std::string RootMaterialTrackReader::name() const {
   return "RootMaterialTrackReader";
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::RootMaterialTrackReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> RootMaterialTrackReader::availableEvents()
+    const {
   return {0u, m_events};
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
-    const ActsExamples::AlgorithmContext& context) {
+ProcessCode RootMaterialTrackReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded material from tracks.");
   // read in the material track
   if (m_inputChain != nullptr && context.eventNumber < m_events) {
@@ -155,9 +157,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     for (std::size_t ib = 0; ib < m_batchSize; ++ib) {
       // Read the correct entry: startEntry + ib
       auto entry = m_batchSize * context.eventNumber + ib;
-      if (!m_cfg.orderedEvents && entry < m_entryNumbers.size()) {
-        entry = m_entryNumbers[entry];
-      }
+      entry = m_entryNumbers.at(entry);
       ACTS_VERBOSE("Reading event: " << context.eventNumber
                                      << " with stored entry: " << entry);
       m_inputChain->GetEntry(entry);
@@ -232,5 +232,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     m_outputMaterialTracks(context, std::move(mtrackCollection));
   }
   // Return success flag
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
