@@ -82,13 +82,6 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   BOOST_CHECK_EQUAL(ml3.material().X0(), 11.);
   BOOST_CHECK_EQUAL(ml4.material().X0(), 21.);
 
-  // Direct access with bin0 and bin1
-  const Acts::MaterialSlab& mb0 = ism.materialSlab(3u, 0);  // should be vacuum
-  BOOST_CHECK_EQUAL(mb0.material().X0(), 11.);
-
-  const Acts::MaterialSlab& mb1 = ism.materialSlab(4u, 0);  // should be vacuum
-  BOOST_CHECK_EQUAL(mb1.material().X0(), 21.);
-
   // Now scale it - and access again
   ism *= 2.;
   const Acts::MaterialSlab& sml0 = ism.materialSlab(l0);
@@ -154,10 +147,6 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
                    -9.5);  // should be material 3, same phi but different z
   const Acts::MaterialSlab& mg3 = ism.materialSlab(g3);
   BOOST_CHECK_EQUAL(mg3.material().X0(), 21.);
-
-  // Direct access with bin0 and bin1
-  const Acts::MaterialSlab& mb0 = ism.materialSlab(0u, 2u);  // should be vacuum
-  BOOST_CHECK(!mb0.material());                              // vacuum
 }
 
 BOOST_AUTO_TEST_SUITE_END()

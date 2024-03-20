@@ -66,8 +66,6 @@ def run() -> None:
         "Acts::FreeMatrix",
         "Acts::SurfaceVector",
         "Acts::Intersection3D",
-        "Acts::OrientedSurface",
-        "Acts::OrientedSurfaces",
         "Acts::BoundToFreeMatrix",
         "Acts::FreeToBoundMatrix",
         "Acts::FreeSquareMatrix",
@@ -81,6 +79,7 @@ def run() -> None:
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
+        "Acts::OrientedSurface",
     }
 
     role_instances["class"] |= {
@@ -106,7 +105,6 @@ def run() -> None:
         "Acts::NullBField",
         "Acts::DiscBounds",
         "Acts::PlanarBounds",
-        "Acts::AbstractVolume",
         "Acts::AnnulusBounds",
         "Acts::DiamondBounds",
         "Acts::RegularSurface",
