@@ -21,6 +21,7 @@
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootVertexReader.hpp"
 
 #include <memory>
 
@@ -33,14 +34,18 @@ using namespace pybind11::literals;
 using namespace ActsExamples;
 
 namespace Acts::Python {
+
 void addInput(Context& ctx) {
   auto mex = ctx.get("examples");
 
   // ROOT READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootParticleReader, mex,
-                             "RootParticleReader", particleCollection,
-                             vertexPrimaryCollection, vertexSecondaryCollection,
-                             treeName, filePath, orderedEvents);
+                             "RootParticleReader", outputParticles, treeName,
+                             filePath, orderedEvents);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootVertexReader, mex,
+                             "RootVertexReader", outputVertices, treeName,
+                             filePath, orderedEvents);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootMaterialTrackReader, mex,
                              "RootMaterialTrackReader", collection, treeName,
@@ -92,6 +97,7 @@ void addInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
-                             simHitCollection);
+                             outputSimHits);
 }
+
 }  // namespace Acts::Python

@@ -1856,6 +1856,7 @@ def addVertexFitting(
     tracks = tracks if tracks is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
+    inputVertices = "vertices_input"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1907,6 +1908,7 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
+                inputTruthVertices=inputVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
