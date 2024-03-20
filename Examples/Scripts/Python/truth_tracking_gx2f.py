@@ -55,11 +55,10 @@ def runTruthTrackingGx2f(
         )
         assert inputParticlePath.exists()
         s.addReader(
-            RootParticleReader(
+            acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                inputParticles="particles_input",
-                inputVertices="vertices_input",
+                outputParticles="particles_input",
                 orderedEvents=False,
             )
         )
