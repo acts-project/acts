@@ -38,8 +38,7 @@ using Acts::VectorHelpers::phi;
 namespace ActsExamples {
 
 RootMaterialTrackWriter::RootMaterialTrackWriter(
-    const RootMaterialTrackWriter::Config& config,
-    Acts::Logging::Level level)
+    const RootMaterialTrackWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputMaterialTracks, "RootMaterialTrackWriter", level),
       m_cfg(config) {
   // An input collection name and tree name must be specified
@@ -371,4 +370,4 @@ ProcessCode RootMaterialTrackWriter::writeT(
   return ProcessCode::SUCCESS;
 }
 
-} // namespace ActsExamples
+}  // namespace ActsExamples
