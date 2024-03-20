@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTest) {
   // Read //
   //////////
   RootSimHitReader::Config readerConfig;
-  readerConfig.simHitCollection = "hits";
+  readerConfig.outputSimHits = "hits";
   readerConfig.filePath = "./testhits.root";
 
   RootSimHitReader reader(readerConfig, Acts::Logging::WARNING);

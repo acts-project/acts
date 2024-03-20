@@ -90,6 +90,6 @@ void addInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
-                             simHitCollection);
+                             outputSimHits);
 }
 }  // namespace Acts::Python
