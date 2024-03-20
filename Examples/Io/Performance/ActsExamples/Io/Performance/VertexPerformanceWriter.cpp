@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,6 +39,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -152,6 +153,8 @@ VertexPerformanceWriter::VertexPerformanceWriter(
 
   m_outputTree->Branch("nRecoVtx", &m_nRecoVtx);
   m_outputTree->Branch("nTrueVtx", &m_nTrueVtx);
+  m_outputTree->Branch("nMergedVtx", &m_nMergedVtx);
+  m_outputTree->Branch("nSplitVtx", &m_nSplitVtx);
   m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
   m_outputTree->Branch("nVtxReconstructable", &m_nVtxReconstructable);
 
@@ -189,6 +192,8 @@ VertexPerformanceWriter::VertexPerformanceWriter(
   m_outputTree->Branch("truthVertexMatchRatio", &m_truthVertexMatchRatio);
 
   m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
+
+  m_outputTree->Branch("recoVertexClassification", &m_recoVertexClassification);
 
   m_outputTree->Branch("truthX", &m_truthX);
   m_outputTree->Branch("truthY", &m_truthY);
@@ -259,10 +264,14 @@ ProcessCode VertexPerformanceWriter::finalize() {
 
 ProcessCode VertexPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   m_nRecoVtx = vertices.size();
+  m_nMergedVtx = 0;
+  m_nSplitVtx = 0;
 
   ACTS_DEBUG("Number of reco vertices in event: " << m_nRecoVtx);
 
@@ -290,6 +299,23 @@ ProcessCode VertexPerformanceWriter::writeT(
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
+  // Get number of track-associated true primary vertices
+  m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
+
+  ACTS_INFO("Number of reconstructed tracks : "
+            << ((tracks != nullptr) ? tracks->size() : 0));
+  ACTS_INFO("Number of reco track-associated truth particles in event : "
+            << recoParticles.size());
+  ACTS_INFO("Maximum number of reconstructible primary vertices : "
+            << m_nVtxReconstructable);
+
+  // We compare the reconstructed momenta to the true momenta at the vertex. For
+  // this, we propagate the reconstructed tracks to the PCA of the true vertex
+  // position. Setting up propagator:
+  Acts::EigenStepper<> stepper(m_cfg.bField);
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  auto propagator = std::make_shared<Propagator>(stepper);
+
   auto findParticle = [&](ConstTrackProxy track) -> std::optional<SimParticle> {
     // Get the truth-matched particle
     auto imatched = trackParticleMatching.find(track.index());
@@ -312,6 +338,39 @@ ProcessCode VertexPerformanceWriter::writeT(
     }
 
     return *iparticle;
+  };
+
+  auto findTrack = [&](const Acts::TrackAtVertex& trkAtVtx)
+      -> std::optional<ConstTrackProxy> {
+    // Track parameters before the vertex fit
+    const Acts::BoundTrackParameters& origTrack =
+        *trkAtVtx.originalParams.as<Acts::BoundTrackParameters>();
+
+    // Finding the matching parameters in the container of all track
+    // parameters. This allows us to identify the corresponding particle.
+    // TODO this should not be necessary if the tracks at vertex would keep
+    // this information
+    for (ConstTrackProxy inputTrk : *tracks) {
+      const auto& params = inputTrk.parameters();
+
+      if (origTrack.parameters() == params) {
+        return inputTrk;
+      }
+    }
+
+    return std::nullopt;
+  };
+
+  auto calcSumPt2 = [this](const Acts::Vertex& vtx) {
+    double sumPt2 = 0;
+    for (const auto& trk : vtx.tracks()) {
+      if (trk.trackWeight > m_cfg.minTrkWeight) {
+        double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
+                        ->transverseMomentum();
+        sumPt2 += pt * pt;
+      }
+    }
+    return sumPt2;
   };
 
   auto weightHighEnough = [this](const Acts::TrackAtVertex& trkAtVtx) {
@@ -359,327 +418,381 @@ ProcessCode VertexPerformanceWriter::writeT(
     recoParticles = particles;
   }
 
-  // Get number of track-associated true primary vertices
-  m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
+  struct ToTruthMatching {
+    std::optional<SimVertexBarcode> vertexId;
+    double totalTrackWeight{};
+    double matchFraction{};
 
-  ACTS_INFO("Number of reconstructed tracks : "
-            << ((tracks != nullptr) ? tracks->size() : 0));
-  ACTS_INFO("Number of reco track-associated truth particles in event : "
-            << recoParticles.size());
-  ACTS_INFO("Maximum number of reconstructible primary vertices : "
-            << m_nVtxReconstructable);
+    RecoVertexClassification classification{RecoVertexClassification::Unknown};
+  };
+  struct ToRecoMatching {
+    std::size_t recoIndex{};
 
-  // Loop over reconstructed vertices and see if they can be matched to a true
-  // vertex.
-  for (const Acts::Vertex& vtx : vertices) {
+    double recoSumPt2{};
+  };
+
+  std::vector<ToTruthMatching> recoToTruthMatching;
+  std::map<SimVertexBarcode, ToRecoMatching> truthToRecoMatching;
+
+  // Do truth matching for each reconstructed vertex
+  for (const auto& [vtxIndex, vtx] : Acts::enumerate(vertices)) {
     // Reconstructed tracks that contribute to the reconstructed vertex
-    const std::vector<Acts::TrackAtVertex>& tracksAtVtx = vtx.tracks();
-    // Input tracks matched to `tracksAtVtx`
-    std::vector<std::uint32_t> trackIndices;
+    const auto& tracksAtVtx = vtx.tracks();
 
-    // Containers for storing truth particles and truth vertices that contribute
+    // Containers for storing truth particles and truth vertices that
+    // contribute
     // to the reconstructed vertex
-    SimParticleContainer particlesAtVtx;
-    std::vector<std::pair<SimBarcode, double>> contributingTruthVertices;
+    std::vector<std::pair<SimVertexBarcode, double>> contributingTruthVertices;
 
-    if (m_cfg.useTracks) {
-      for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
-        // Track parameters before the vertex fit
-        const Acts::BoundTrackParameters& origTrack =
-            *trk.originalParams.as<Acts::BoundTrackParameters>();
-
-        bool foundMatchingParticle = false;
-
-        // Finding the matching parameters in the container of all track
-        // parameters. This allows us to identify the corresponding particle.
-        // TODO this should not be necessary if the tracks at vertex would keep
-        // this information
-        for (ConstTrackProxy inputTrk : *tracks) {
-          const auto& params = inputTrk.parameters();
-
-          if (origTrack.parameters() == params) {
-            trackIndices.push_back(inputTrk.index());
-            foundMatchingParticle = true;
-
-            if (trk.trackWeight > m_cfg.minTrkWeight) {
-              std::optional<SimParticle> particleOpt = findParticle(inputTrk);
-              if (!particleOpt.has_value()) {
-                continue;
-              }
-              const SimParticle& particle = *particleOpt;
-
-              particlesAtVtx.insert(particle);
-              contributingTruthVertices.emplace_back(
-                  particle.particleId().vertexId(), trk.trackWeight);
-            }
-
-            break;
-          }
-        }
-
-        if (!foundMatchingParticle) {
-          ACTS_DEBUG("Track has no matching truth particle.");
-        }
-      }
-
-      if (tracksAtVtx.size() != trackIndices.size()) {
-        ACTS_ERROR("Not all tracks at vertex have a matching input track.");
-      }
-    } else {
-      for (const SimParticle& particle : particles) {
-        contributingTruthVertices.emplace_back(particle.particleId().vertexId(),
-                                               1);
-      }
-    }
-
-    double recoVertexTrackWeights = 0;
+    double totalTrackWeight = 0;
     for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
-      recoVertexTrackWeights += trk.trackWeight;
+      if (trk.trackWeight < m_cfg.minTrkWeight) {
+        continue;
+      }
+
+      totalTrackWeight += trk.trackWeight;
+
+      std::optional<ConstTrackProxy> trackOpt = findTrack(trk);
+      if (!trackOpt.has_value()) {
+        ACTS_DEBUG("Track has no matching input track.");
+        continue;
+      }
+      const ConstTrackProxy& inputTrk = *trackOpt;
+      std::optional<SimParticle> particleOpt = findParticle(inputTrk);
+      if (!particleOpt.has_value()) {
+        ACTS_VERBOSE("Track has no matching truth particle.");
+      } else {
+        contributingTruthVertices.emplace_back(
+            SimBarcode(particleOpt->particleId()).vertexId(), trk.trackWeight);
+      }
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<SimVertexBarcode, double> truthVertexWeights;
+    std::map<SimVertexBarcode, std::pair<int, double>> fmap;
     for (const auto& [vtxId, weight] : contributingTruthVertices) {
-      truthVertexWeights[vtxId] += weight;
+      ++fmap[vtxId].first;
+      fmap[vtxId].second += weight;
     }
-    auto truthVertexMatch = std::max_element(
-        truthVertexWeights.begin(), truthVertexWeights.end(),
-        [](const auto& a, const auto& b) { return a.second < b.second; });
-
-    if (truthVertexMatch == truthVertexWeights.end()) {
-      ACTS_DEBUG("No truth vertex found for reconstructed vertex.");
-      continue;
-    }
-    SimVertexBarcode truthVertexId = truthVertexMatch->first;
-    double truthVertexTrackWeights = truthVertexMatch->second;
-
-    // Count number of reconstructible tracks on truth vertex
-    std::uint32_t nTracksOnTruthVertex = 0u;
-    for (const SimParticle& particle : selectedParticles) {
-      SimBarcode vtxId =
-          SimBarcode(particle.particleId()).setParticle(0).setSubParticle(0);
-      if (vtxId == truthVertexId) {
-        ++nTracksOnTruthVertex;
+    double maxOccurrence = -1;
+    SimVertexBarcode maxOccurrenceId = -1;
+    for (const auto& [vtxId, counter] : fmap) {
+      if (counter.second > maxOccurrence) {
+        maxOccurrenceId = vtxId;
+        maxOccurrence = counter.second;
       }
     }
 
-    // Get number of contributing tracks (i.e., tracks with a weight above
-    // threshold)
-    std::uint32_t nTracksOnRecoVertex =
-        std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
-    // Match reconstructed and truth vertex if the tracks of the truth vertex
-    // make up at least vertexMatchThreshold of the track weight at the
-    // reconstructed vertex.
+    double sumPt2 = calcSumPt2(vtx);
+
     double vertexMatchFraction =
-        (m_cfg.useTracks ? truthVertexTrackWeights / recoVertexTrackWeights
-                         : 1.0);
+        fmap[maxOccurrenceId].second / totalTrackWeight;
+    RecoVertexClassification recoVertexClassification =
+        RecoVertexClassification::Unknown;
 
-    if (vertexMatchFraction <= m_cfg.vertexMatchThreshold) {
-      ACTS_DEBUG("Match fraction " << vertexMatchFraction
-                                   << " below threshold. Not matching.");
-      continue;
+    if (vertexMatchFraction >= m_cfg.vertexMatchThreshold) {
+      recoVertexClassification = RecoVertexClassification::Clean;
+    } else {
+      recoVertexClassification = RecoVertexClassification::Merged;
     }
 
-    auto iTruthVertex = truthVertices.find(truthVertexId);
-    if (iTruthVertex == truthVertices.end()) {
-      ACTS_ERROR("Truth vertex not found.");
-      continue;
-    }
-    const SimVertex& truthVertex = *iTruthVertex;
+    recoToTruthMatching.push_back({maxOccurrenceId, totalTrackWeight,
+                                   vertexMatchFraction,
+                                   recoVertexClassification});
 
-    const Acts::ActsVector<4>& truePos = truthVertex.position4;
+    auto& recoToTruth = recoToTruthMatching.back();
 
-    // Write vertex truth based information
-    {
-      m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
-      m_recoVertexTrackWeights.push_back(recoVertexTrackWeights);
+    // We have to decide if this reco vertex is a split vertex.
+    if (auto it = truthToRecoMatching.find(maxOccurrenceId);
+        it != truthToRecoMatching.end()) {
+      // This truth vertex is already matched to a reconstructed vertex so we
+      // are dealing with a split vertex.
 
-      m_recoX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0]);
-      m_recoY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1]);
-      m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
-      m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
+      // We have to decide which of the two reconstructed vertices is the
+      // split vertex.
+      if (sumPt2 <= it->second.recoSumPt2) {
+        // Since the sumPt2 is smaller we can simply call this a split vertex
 
-      Acts::ActsScalar varX = vtx.fullCovariance()(
-          Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0);
-      Acts::ActsScalar varY = vtx.fullCovariance()(
-          Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreePos1);
-      Acts::ActsScalar varZ = vtx.fullCovariance()(
-          Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreePos2);
-      Acts::ActsScalar varTime = vtx.fullCovariance()(
-          Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime);
-      m_covXX.push_back(varX);
-      m_covYY.push_back(varY);
-      m_covZZ.push_back(varZ);
-      m_covTT.push_back(varTime);
-      m_covXY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                             Acts::FreeIndices::eFreePos1));
-      m_covXZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                             Acts::FreeIndices::eFreePos2));
-      m_covXT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                             Acts::FreeIndices::eFreeTime));
-      m_covYZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                             Acts::FreeIndices::eFreePos2));
-      m_covYT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                             Acts::FreeIndices::eFreeTime));
-      m_covZT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
-                                             Acts::FreeIndices::eFreeTime));
+        recoToTruth.classification = RecoVertexClassification::Split;
 
-      m_seedX.push_back(vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos0]);
-      m_seedY.push_back(vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos1]);
-      m_seedZ.push_back(vtx.fullSeedPosition()[Acts::FreeIndices::eFreePos2]);
-      m_seedT.push_back(vtx.fullSeedPosition()[Acts::FreeIndices::eFreeTime]);
+        // Keep the existing truth to reco matching
+      } else {
+        // The sumPt2 is larger, so we call the other vertex a split vertex.
 
-      m_vertexPrimary.push_back(truthVertex.vertexId().vertexPrimary());
-      m_vertexSecondary.push_back(truthVertex.vertexId().vertexSecondary());
+        auto& otherRecoToTruth = recoToTruthMatching.at(it->second.recoIndex);
+        // Swap the classification
+        recoToTruth.classification = otherRecoToTruth.classification;
+        otherRecoToTruth.classification = RecoVertexClassification::Split;
 
-      m_truthVertexTrackWeights.push_back(truthVertexTrackWeights);
-      m_truthVertexMatchRatio.push_back(vertexMatchFraction);
-
-      m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-
-      m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
-      m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
-      m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
-      m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
-
-      const Acts::ActsVector<4> diffPos = vtx.fullPosition() - truePos;
-      m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
-      m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
-      m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
-      m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
-
-      const Acts::ActsVector<4> diffSeedPos = vtx.fullSeedPosition() - truePos;
-      m_resSeedZ.push_back(diffSeedPos[Acts::FreeIndices::eFreePos2]);
-      m_resSeedT.push_back(diffSeedPos[Acts::FreeIndices::eFreeTime]);
-
-      m_pullX.push_back(pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
-      m_pullY.push_back(pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
-      m_pullZ.push_back(pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
-      m_pullT.push_back(
-          pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
-
-      double sumPt2 = 0.;
-      for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
-        if (trk.trackWeight > m_cfg.minTrkWeight) {
-          double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
-                          ->transverseMomentum();
-          sumPt2 += pt * pt;
-        }
+        // Overwrite the truth to reco matching
+        it->second = {vtxIndex, sumPt2};
       }
-      m_sumPt2.push_back(sumPt2);
+    } else {
+      truthToRecoMatching[maxOccurrenceId] = {vtxIndex, sumPt2};
+    }
+  }
+
+  // Loop over reconstructed vertices and see if they can be matched to a true
+  // vertex.
+  for (const auto& [vtxIndex, vtx] : Acts::enumerate(vertices)) {
+    // Reconstructed tracks that contribute to the reconstructed vertex
+    const auto& tracksAtVtx = vtx.tracks();
+    // Input tracks matched to `tracksAtVtx`
+    std::vector<std::uint32_t> trackIndices;
+
+    const auto& toTruthMatching = recoToTruthMatching[vtxIndex];
+
+    m_recoX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0]);
+    m_recoY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1]);
+    m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
+    m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
+
+    Acts::ActsScalar varX = vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                                 Acts::FreeIndices::eFreePos0);
+    Acts::ActsScalar varY = vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
+                                                 Acts::FreeIndices::eFreePos1);
+    Acts::ActsScalar varZ = vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
+                                                 Acts::FreeIndices::eFreePos2);
+    Acts::ActsScalar varTime = vtx.fullCovariance()(
+        Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime);
+
+    m_covXX.push_back(varX);
+    m_covYY.push_back(varY);
+    m_covZZ.push_back(varZ);
+    m_covTT.push_back(varTime);
+    m_covXY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                           Acts::FreeIndices::eFreePos1));
+    m_covXZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                           Acts::FreeIndices::eFreePos2));
+    m_covXT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                           Acts::FreeIndices::eFreeTime));
+    m_covYZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
+                                           Acts::FreeIndices::eFreePos2));
+    m_covYT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
+                                           Acts::FreeIndices::eFreeTime));
+    m_covZT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
+                                           Acts::FreeIndices::eFreeTime));
+
+    double sumPt2 = calcSumPt2(vtx);
+    m_sumPt2.push_back(sumPt2);
+
+    double recoVertexTrackWeights = toTruthMatching.totalTrackWeight;
+    m_recoVertexTrackWeights.push_back(recoVertexTrackWeights);
+
+    RecoVertexClassification recoVertexClassification =
+        toTruthMatching.classification;
+    m_recoVertexClassification.push_back(
+        static_cast<int>(recoVertexClassification));
+
+    if (recoVertexClassification == RecoVertexClassification::Merged) {
+      ++m_nMergedVtx;
+    } else if (recoVertexClassification == RecoVertexClassification::Split) {
+      ++m_nSplitVtx;
     }
 
-    // Write vertex track based information
-    {
-      // Get references to inner vectors where all track variables corresponding
-      // to the current vertex will be saved
+    unsigned int nTracksOnRecoVertex =
+        std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
+    m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
 
-      auto& innerTrkWeight = m_trkWeight.emplace_back();
+    // Saving truth information for the reconstructed vertex
+    bool truthInfoWritten = false;
+    std::optional<Acts::Vector4> truthPos;
+    if (toTruthMatching.vertexId.has_value()) {
+      auto iTruthVertex = truthVertices.find(toTruthMatching.vertexId.value());
+      if (iTruthVertex == truthVertices.end()) {
+        ACTS_ERROR("Truth vertex not found.");
+      } else {
+        const SimVertex& truthVertex = *iTruthVertex;
 
-      auto& innerRecoPhi = m_recoPhi.emplace_back();
-      auto& innerRecoTheta = m_recoTheta.emplace_back();
-      auto& innerRecoQOverP = m_recoQOverP.emplace_back();
+        // Count number of reconstructible tracks on truth vertex
+        int nTracksOnTruthVertex = 0;
+        for (const auto& particle : selectedParticles) {
+          if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+            ++nTracksOnTruthVertex;
+          }
+        }
+        m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
 
-      auto& innerRecoPhiFitted = m_recoPhiFitted.emplace_back();
-      auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
-      auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
+        m_truthVertexMatchRatio.push_back(toTruthMatching.matchFraction);
 
-      auto& innerTrkParticleId = m_trkParticleId.emplace_back();
+        m_vertexPrimary.push_back(truthVertex.vertexId().vertexPrimary());
+        m_vertexSecondary.push_back(truthVertex.vertexId().vertexSecondary());
 
-      auto& innerTruthPhi = m_truthPhi.emplace_back();
-      auto& innerTruthTheta = m_truthTheta.emplace_back();
-      auto& innerTruthQOverP = m_truthQOverP.emplace_back();
+        const Acts::Vector4& truePos = truthVertex.position4;
+        truthPos = truePos;
+        m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
+        m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
+        m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
+        m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
 
-      auto& innerResPhi = m_resPhi.emplace_back();
-      auto& innerResTheta = m_resTheta.emplace_back();
-      auto& innerResQOverP = m_resQOverP.emplace_back();
+        const Acts::Vector4 diffPos = vtx.fullPosition() - truePos;
+        m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
+        m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
+        m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
+        m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
 
-      auto& innerResPhiFitted = m_resPhiFitted.emplace_back();
-      auto& innerResThetaFitted = m_resThetaFitted.emplace_back();
-      auto& innerResQOverPFitted = m_resQOverPFitted.emplace_back();
+        m_pullX.push_back(
+            pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
+        m_pullY.push_back(
+            pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
+        m_pullZ.push_back(
+            pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
+        m_pullT.push_back(
+            pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
 
-      auto& innerMomOverlap = m_momOverlap.emplace_back();
-      auto& innerMomOverlapFitted = m_momOverlapFitted.emplace_back();
+        truthInfoWritten = true;
+      }
+    }
+    if (!truthInfoWritten) {
+      m_nTracksOnTruthVertex.push_back(-1);
 
-      auto& innerPullPhi = m_pullPhi.emplace_back();
-      auto& innerPullTheta = m_pullTheta.emplace_back();
-      auto& innerPullQOverP = m_pullQOverP.emplace_back();
+      m_truthVertexMatchRatio.push_back(-1);
 
-      auto& innerPullPhiFitted = m_pullPhiFitted.emplace_back();
-      auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
-      auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
+      m_vertexPrimary.push_back(-1);
+      m_vertexSecondary.push_back(-1);
 
-      // We compare the reconstructed momenta to the true momenta at the
-      // vertex. For this, we propagate the reconstructed tracks to the PCA of
-      // the true vertex position. Setting up propagator:
-      Acts::EigenStepper<> stepper(m_cfg.bField);
-      using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-      auto propagator = std::make_shared<Propagator>(stepper);
+      m_truthX.push_back(nan);
+      m_truthY.push_back(nan);
+      m_truthZ.push_back(nan);
+      m_truthT.push_back(nan);
+
+      m_resX.push_back(nan);
+      m_resY.push_back(nan);
+      m_resZ.push_back(nan);
+      m_resT.push_back(nan);
+
+      m_pullX.push_back(nan);
+      m_pullY.push_back(nan);
+      m_pullZ.push_back(nan);
+      m_pullT.push_back(nan);
+    }
+
+    // Saving the reconstructed/truth momenta. The reconstructed momenta
+    // are taken at the PCA to the truth vertex position -> we need to
+    // perform a propagation.
+
+    // Get references to inner vectors where all track variables corresponding
+    // to the current vertex will be saved
+    auto& innerTrkWeight = m_trkWeight.emplace_back();
+
+    auto& innerRecoPhi = m_recoPhi.emplace_back();
+    auto& innerRecoTheta = m_recoTheta.emplace_back();
+    auto& innerRecoQOverP = m_recoQOverP.emplace_back();
+
+    auto& innerRecoPhiFitted = m_recoPhiFitted.emplace_back();
+    auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
+    auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
+
+    auto& innerTrkParticleId = m_trkParticleId.emplace_back();
+
+    auto& innerTruthPhi = m_truthPhi.emplace_back();
+    auto& innerTruthTheta = m_truthTheta.emplace_back();
+    auto& innerTruthQOverP = m_truthQOverP.emplace_back();
+
+    auto& innerResPhi = m_resPhi.emplace_back();
+    auto& innerResTheta = m_resTheta.emplace_back();
+    auto& innerResQOverP = m_resQOverP.emplace_back();
+
+    auto& innerResPhiFitted = m_resPhiFitted.emplace_back();
+    auto& innerResThetaFitted = m_resThetaFitted.emplace_back();
+    auto& innerResQOverPFitted = m_resQOverPFitted.emplace_back();
+
+    auto& innerMomOverlap = m_momOverlap.emplace_back();
+    auto& innerMomOverlapFitted = m_momOverlapFitted.emplace_back();
+
+    auto& innerPullPhi = m_pullPhi.emplace_back();
+    auto& innerPullTheta = m_pullTheta.emplace_back();
+    auto& innerPullQOverP = m_pullQOverP.emplace_back();
+
+    auto& innerPullPhiFitted = m_pullPhiFitted.emplace_back();
+    auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
+    auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
+
+    // Perigee at the true vertex position
+    std::shared_ptr<Acts::PerigeeSurface> perigeeSurface;
+    if (truthPos.has_value()) {
+      perigeeSurface =
+          Acts::Surface::makeShared<Acts::PerigeeSurface>(truthPos->head<3>());
+    }
+    // Lambda for propagating the tracks to the PCA
+    auto propagateToVtx =
+        [&](const auto& params) -> std::optional<Acts::BoundTrackParameters> {
+      if (!perigeeSurface) {
+        return std::nullopt;
+      }
+
+      auto intersection =
+          perigeeSurface
+              ->intersect(ctx.geoContext, params.position(ctx.geoContext),
+                          params.direction(), Acts::BoundaryCheck(false))
+              .closest();
+
       // Setting the geometry/magnetic field context for the event
       Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+      pOptions.direction =
+          Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
-      // Saving the reconstructed/truth momenta. The reconstructed momenta
-      // are taken at the PCA to the truth vertex position -> we need to
-      // perform a propagation.
+      auto result = propagator->propagate(params, *perigeeSurface, pOptions);
+      if (!result.ok()) {
+        ACTS_ERROR("Propagation to true vertex position failed.");
+        return std::nullopt;
+      }
+      auto& paramsAtVtx = *result->endParameters;
+      return std::make_optional(paramsAtVtx);
+    };
 
-      // Perigee at the true vertex position
-      const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
-          Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
-      // Lambda for propagating the tracks to the PCA
-      auto propagateToVtx = [&](const Acts::BoundTrackParameters& params)
-          -> std::optional<Acts::BoundTrackParameters> {
-        Acts::SurfaceIntersection intersection =
-            perigeeSurface
-                ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                            params.direction(), Acts::BoundaryCheck(false))
-                .closest();
-        pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-            intersection.pathLength());
+    for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
+      if (trk.trackWeight < m_cfg.minTrkWeight) {
+        continue;
+      }
 
-        auto result = propagator->propagate(params, *perigeeSurface, pOptions);
-        if (!result.ok()) {
-          ACTS_ERROR("Propagation to true vertex position failed.");
-          return std::nullopt;
-        }
-        auto& paramsAtVtx = *result->endParameters;
-        return std::make_optional(paramsAtVtx);
-      };
+      innerTrkWeight.push_back(trk.trackWeight);
 
-      for (const auto& [trkAtVtx, trkIndex] :
-           Acts::zip(tracksAtVtx, trackIndices)) {
-        const auto trk = tracks->getTrack(trkIndex);
+      Acts::Vector3 trueUnitDir = Acts::Vector3::Zero();
+      Acts::Vector3 trueMom = Acts::Vector3::Zero();
 
-        innerTrkWeight.push_back(trkAtVtx.trackWeight);
+      std::optional<SimParticle> particleOpt;
+      std::optional<ConstTrackProxy> trackOpt = findTrack(trk);
+      if (trackOpt.has_value()) {
+        particleOpt = findParticle(*trackOpt);
+      }
 
-        std::optional<SimParticle> particleOpt = findParticle(trk);
-        if (!particleOpt.has_value()) {
-          continue;
-        }
+      if (particleOpt.has_value()) {
         const SimParticle& particle = *particleOpt;
+
         innerTrkParticleId.push_back(particle.particleId().value());
 
-        const Acts::Vector3& trueUnitDir = particle.direction();
-        Acts::Vector3 trueMom;
-        trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
+        trueUnitDir = particle.direction();
+        trueMom.head<2>() = Acts::makePhiThetaFromDirection(trueUnitDir);
         trueMom[2] = particle.qOverP();
+
         innerTruthPhi.push_back(trueMom[0]);
         innerTruthTheta.push_back(trueMom[1]);
         innerTruthQOverP.push_back(trueMom[2]);
+      } else {
+        ACTS_VERBOSE("Track has no matching truth particle.");
 
-        // Save track parameters before the vertex fit
-        const auto paramsAtVtx = propagateToVtx(
-            *trkAtVtx.originalParams.as<Acts::BoundTrackParameters>());
-        if (paramsAtVtx != std::nullopt) {
-          Acts::ActsVector<3> recoMom =
-              paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
-          const Acts::ActsMatrix<3, 3>& momCov =
-              paramsAtVtx->covariance()->block<3, 3>(Acts::eBoundPhi,
-                                                     Acts::eBoundPhi);
-          innerRecoPhi.push_back(recoMom[0]);
-          innerRecoTheta.push_back(recoMom[1]);
-          innerRecoQOverP.push_back(recoMom[2]);
+        innerTrkParticleId.push_back(-1);
 
-          Acts::ActsVector<3> diffMom = recoMom - trueMom;
+        innerTruthPhi.push_back(nan);
+        innerTruthTheta.push_back(nan);
+        innerTruthQOverP.push_back(nan);
+      }
+
+      // Save track parameters before the vertex fit
+      const auto paramsAtVtx = propagateToVtx(
+          *(trk.originalParams.as<Acts::BoundTrackParameters>()));
+      if (paramsAtVtx.has_value()) {
+        Acts::Vector3 recoMom =
+            paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
+        const Acts::ActsMatrix<3, 3>& momCov =
+            paramsAtVtx->covariance()->template block<3, 3>(Acts::eBoundPhi,
+                                                            Acts::eBoundPhi);
+        innerRecoPhi.push_back(recoMom[0]);
+        innerRecoTheta.push_back(recoMom[1]);
+        innerRecoQOverP.push_back(recoMom[2]);
+
+        if (particleOpt.has_value()) {
+          Acts::Vector3 diffMom = recoMom - trueMom;
           // Accounting for the periodicity of phi. We overwrite the
           // previously computed value for better readability.
           diffMom[0] = Acts::detail::difference_periodic(recoMom(0), trueMom(0),
@@ -694,25 +807,45 @@ ProcessCode VertexPerformanceWriter::writeT(
           innerPullQOverP.push_back(
               pull(diffMom[2], momCov(2, 2), "q/p", false));
 
-          const Acts::Vector3& recoUnitDir = paramsAtVtx->direction();
+          const auto& recoUnitDir = paramsAtVtx->direction();
           double overlap = trueUnitDir.dot(recoUnitDir);
           innerMomOverlap.push_back(overlap);
+        } else {
+          innerResPhi.push_back(nan);
+          innerResTheta.push_back(nan);
+          innerResQOverP.push_back(nan);
+          innerPullPhi.push_back(nan);
+          innerPullTheta.push_back(nan);
+          innerPullQOverP.push_back(nan);
+          innerMomOverlap.push_back(nan);
         }
+      } else {
+        innerRecoPhi.push_back(nan);
+        innerRecoTheta.push_back(nan);
+        innerRecoQOverP.push_back(nan);
+        innerResPhi.push_back(nan);
+        innerResTheta.push_back(nan);
+        innerResQOverP.push_back(nan);
+        innerPullPhi.push_back(nan);
+        innerPullTheta.push_back(nan);
+        innerPullQOverP.push_back(nan);
+        innerMomOverlap.push_back(nan);
+      }
 
-        // Save track parameters after the vertex fit
-        const auto paramsAtVtxFitted = propagateToVtx(trkAtVtx.fittedParams);
-        if (paramsAtVtxFitted != std::nullopt &&
-            trkAtVtx.trackWeight > m_cfg.minTrkWeight) {
-          Acts::ActsVector<3> recoMomFitted =
-              paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
-          const Acts::ActsMatrix<3, 3>& momCovFitted =
-              paramsAtVtxFitted->covariance()->block<3, 3>(Acts::eBoundPhi,
-                                                           Acts::eBoundPhi);
-          innerRecoPhiFitted.push_back(recoMomFitted[0]);
-          innerRecoThetaFitted.push_back(recoMomFitted[1]);
-          innerRecoQOverPFitted.push_back(recoMomFitted[2]);
+      // Save track parameters after the vertex fit
+      const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
+      if (paramsAtVtxFitted.has_value()) {
+        Acts::Vector3 recoMomFitted =
+            paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
+        const Acts::ActsMatrix<3, 3>& momCovFitted =
+            paramsAtVtxFitted->covariance()->block<3, 3>(Acts::eBoundPhi,
+                                                         Acts::eBoundPhi);
+        innerRecoPhiFitted.push_back(recoMomFitted[0]);
+        innerRecoThetaFitted.push_back(recoMomFitted[1]);
+        innerRecoQOverPFitted.push_back(recoMomFitted[2]);
 
-          Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
+        if (particleOpt.has_value()) {
+          Acts::Vector3 diffMomFitted = recoMomFitted - trueMom;
           // Accounting for the periodicity of phi. We overwrite the
           // previously computed value for better readability.
           diffMomFitted[0] = Acts::detail::difference_periodic(
@@ -728,11 +861,29 @@ ProcessCode VertexPerformanceWriter::writeT(
           innerPullQOverPFitted.push_back(
               pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
-          const Acts::Vector3& recoUnitDirFitted =
-              paramsAtVtxFitted->direction();
+          const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
           double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
           innerMomOverlapFitted.push_back(overlapFitted);
+        } else {
+          innerResPhiFitted.push_back(nan);
+          innerResThetaFitted.push_back(nan);
+          innerResQOverPFitted.push_back(nan);
+          innerPullPhiFitted.push_back(nan);
+          innerPullThetaFitted.push_back(nan);
+          innerPullQOverPFitted.push_back(nan);
+          innerMomOverlapFitted.push_back(nan);
         }
+      } else {
+        innerRecoPhiFitted.push_back(nan);
+        innerRecoThetaFitted.push_back(nan);
+        innerRecoQOverPFitted.push_back(nan);
+        innerResPhiFitted.push_back(nan);
+        innerResThetaFitted.push_back(nan);
+        innerResQOverPFitted.push_back(nan);
+        innerPullPhiFitted.push_back(nan);
+        innerPullThetaFitted.push_back(nan);
+        innerPullQOverPFitted.push_back(nan);
+        innerMomOverlapFitted.push_back(nan);
       }
     }
   }

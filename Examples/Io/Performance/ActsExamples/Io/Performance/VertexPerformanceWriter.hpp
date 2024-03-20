@@ -27,12 +27,15 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
+
+enum class RecoVertexClassification {
+  Unknown = 0,
+  Clean,
+  Merged,
+  Split,
+};
 
 /// @class VertexPerformanceWriter
 ///
@@ -110,6 +113,10 @@ class VertexPerformanceWriter final
   int m_nRecoVtx = -1;
   /// Number of true vertices
   int m_nTrueVtx = -1;
+  /// Number of merged vertices
+  int m_nMergedVtx = -1;
+  /// Number of split vertices
+  int m_nSplitVtx = -1;
   /// Number of vertices in detector acceptance
   int m_nVtxDetAcceptance = -1;
   /// Max. number of reconstructable vertices (detector acceptance + tracking
@@ -158,6 +165,9 @@ class VertexPerformanceWriter final
 
   /// Number of tracks associated with the truth vertex
   std::vector<int> m_nTracksOnTruthVertex;
+
+  /// Classification of the reconstructed vertex see RecoVertexClassification
+  std::vector<int> m_recoVertexClassification;
 
   // True 4D vertex position
   std::vector<double> m_truthX;
