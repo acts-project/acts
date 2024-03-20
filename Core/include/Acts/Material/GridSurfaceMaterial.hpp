@@ -117,8 +117,8 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   /// @param globalToGridLocal the delegation from global into grid local frame
   GridSurfaceMaterialT(grid_type&& grid,
                        material_accessor_type&& materialAccessor,
-                       BoundToGridLocalDelegate&& boundToGridLocal,
-                       GlobalToGridLocalDelegate&& globalToGridLocal)
+                       BoundToGridLocalDelegate boundToGridLocal,
+                       GlobalToGridLocalDelegate globalToGridLocal)
       : m_grid(std::move(grid)),
         m_materialAccessor(std::move(materialAccessor)),
         m_globalToGridLocal(std::move(globalToGridLocal)),
