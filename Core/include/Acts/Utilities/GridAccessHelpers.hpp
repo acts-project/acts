@@ -210,6 +210,7 @@ class LocalSubspace final : public IBoundToGridLocal {
         std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
     return accessed;
   }
+
 };
 
 class BoundCylinderToZPhi final : public IBoundToGridLocal {
