@@ -85,7 +85,7 @@ def runMaterialMappingNoTrack(
     stepper = StraightLineStepper()
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
-    mmAlgCfg.collection = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -240,7 +240,7 @@ def runMaterialMappingVariance(
     stepper = StraightLineStepper()
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometryVar
-    mmAlgCfg.collection = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
