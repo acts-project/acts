@@ -1,0 +1,105 @@
+#!/usr/bin/python
+import pathlib, acts, acts.examples
+from pathlib import Path
+from typing import Optional, Union
+from acts import UnitConstants as u
+
+from acts.examples.simulation import (
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
+    addFatras,
+    ParticleSelectorConfig,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    # addSeeding,
+    addTelescopeSeeding,
+    addTelescopeSeedPerformanceWriters,
+    # SeedingAlgorithm,
+    #TruthSeedRanges,
+    #SeedFinderConfigArg,
+    #SeedFinderOptionsArg, 
+    addCKFTracks,
+    TrackSelectorConfig,
+    CkfConfig,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
+    addVertexFitting,
+    VertexFinder,
+)
+
+u = acts.UnitConstants
+detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
+    bounds=[200, 200],
+    positions=[30, 60, 90, 120, 150, 180],
+    binValue=0,
+)
+
+field = acts.ConstantBField(acts.Vector3(0, 0, 0.001 * u.T))
+outputDir = Path.cwd() / "result_telescope_with_time"
+if not outputDir.exists():
+    outputDir.mkdir()
+
+rnd = acts.examples.RandomNumbers(seed=42)
+s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
+
+addParticleGun(
+    s,
+    MomentumConfig(4 * u.GeV, 4 * u.GeV, transverse=True),
+    EtaConfig(-0.01, 0.01, uniform=True),
+    PhiConfig(-1. * u.degree, 1. * u.degree),
+    ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=False),
+    multiplicity=5,
+    rnd=rnd,
+    # vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.0*u.mm, 0.*u.mm, 0.*u.mm, 2.5*u.ns)),
+)
+
+addFatras(
+    s,
+    trackingGeometry,
+    field,
+    rnd=rnd,
+    preSelectParticles=ParticleSelectorConfig(
+        rho=(0.0 * u.mm, 300.0 * u.mm),
+        absZ=(0.0 * u.mm, 200.0 * u.mm),
+        eta=(-0.5, 0.5),
+        pt=(1 * u.GeV, None),
+        removeNeutral=True,
+    ),
+    outputDirRoot=outputDir,
+)
+
+addDigitization(
+    s,
+    trackingGeometry,
+    field,
+    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope-with-time.json"),
+    outputDirRoot=outputDir,
+    rnd=rnd,
+    # logLevel=acts.logging.VERBOSE
+)
+
+
+addTelescopeSeeding(
+    s,
+    trackingGeometry,
+    initialSigmas={1, 1, 1, 1, 0.1, 1},
+    initialVarInflation={1, 1, 1, 1, 1, 1},
+    outputDirRoot=outputDir,
+    # logLevel=acts.logging.VERBOSE,
+)
+
+#addTelescopeSeedPerformanceWriters(
+#    s,
+#    outputDirRoot=outputDir,
+#    outputTrackParameters="trackParameters",
+#    # logLevel=acts.logging.VERBOSE,
+#)
+
+addCKFTracks(                                                                                                                                                   s,                                                                                                                                                          trackingGeometry,                                                                                                                                           field,                                                                                                                                                      CkfConfig(                                                                                                                                                      chi2CutOff=15.0,                                                                                                                                            numMeasurementsCutOff=10,                                                                                                                               ),                                                                                                                                                          outputDirRoot=outputDir,                                                                                                                                    logLevel=acts.logging.DEBUG
+)
+
+s.run()

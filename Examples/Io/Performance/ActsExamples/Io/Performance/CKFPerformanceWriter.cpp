@@ -99,6 +99,7 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
+
   float eff_tracks = float(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRate_tracks = float(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRate_tracks =
@@ -176,6 +177,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
+
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<std::size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
@@ -203,6 +205,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   std::vector<float> inputFeatures(3);
 
   for (const auto& track : tracks) {
+	if (track.nMeasurements() < 4){
+	  continue;
+	}
     // Check if the reco track has fitted track parameters
     if (!track.hasReferenceSurface()) {
       ACTS_WARNING("No fitted track parameters for track with tip index = "
@@ -225,6 +230,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
           << track.tipIndex());
       continue;
     }
+
     // Get the majority particleId and majority particle counts
     // Note that the majority particle might be not in the truth seeds
     // collection
@@ -235,13 +241,14 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     // Check if the trajectory is matched with truth.
     // If not, it will be class ified as 'fake'
     const bool recoMatched =
-        static_cast<float>(nMajorityHits) / track.nMeasurements() >=
-        m_cfg.truthMatchProbMin;
+        //static_cast<float>(nMajorityHits) / track.nMeasurements() >=
+        //m_cfg.truthMatchProbMin;
+        static_cast<float>(nMajorityHits) / track.nMeasurements() >= 0.5;
     const bool truthMatched =
-        static_cast<float>(nMajorityHits) /
-            particleTruthHitCount.at(majorityParticleId) >=
-        m_cfg.truthMatchProbMin;
-
+        //static_cast<float>(nMajorityHits) /
+        //    particleTruthHitCount.at(majorityParticleId) >=
+        //m_cfg.truthMatchProbMin;
+        static_cast<float>(nMajorityHits) / particleTruthHitCount.at(majorityParticleId) >= 0.8;
     bool isFake = false;
     if (!m_cfg.doubleMatching && recoMatched) {
       matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
@@ -254,8 +261,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
 
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
-    m_perfSummary->Fill(1, isFake);  // 1 is the bin center for fake rate
-
+    //m_perfSummary->Fill(1, isFake);  // 1 is the bin center for fake rate
+    m_perfSummary->Fill(isFake, 1);  // 1 is the bin center for fake rate
+									 //
     // Use neural network classification for duplication rate plots
     // Currently, the network used for this example can only handle
     // good/duplicate classification, so need to manually exclude fake tracks
@@ -272,8 +280,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Fill the duplication rate
       m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                  isDuplicated);
-      m_perfSummary->Fill(
-          2, isDuplicated);  // 2 is the bin center for duplicate rate
+      //m_perfSummary->Fill(2, isDuplicated);  // 2 is the bin center for duplicate rate
+      m_perfSummary->Fill(isDuplicated, 2);  // 2 is the bin center for duplicate rate
     }
     // Counting number of total trajectories
     m_nTotalTracks++;
@@ -302,17 +310,17 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         // Fill the duplication rate
         m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);
-        m_perfSummary->Fill(
-            2,
-            isDuplicated);  // 2 is the bin center for duplicate rate
-      }
+        //m_perfSummary->Fill(2, isDuplicated);  // 2 is the bin center for duplicate rate
+        m_perfSummary->Fill(isDuplicated, 2);  // 2 is the bin center for duplicate rate
+	  }
     }
   }
 
   // Loop over all truth particle seeds for efficiency plots and reco details.
   // These are filled w.r.t. truth particle seed info
   for (const auto& particle : particles) {
-    auto particleId = particle.particleId();
+
+	auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     std::size_t nMatchedTracks = 0;
     bool isReconstructed = false;
@@ -347,9 +355,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     }
     // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
-    m_perfSummary->Fill(0,
-                        isReconstructed);  // 0 is the bin center for efficiency
-    // Fill number of duplicated tracks for this particle
+    //m_perfSummary->Fill(0,isReconstructed);  // 0 is the bin center for efficiency
+    m_perfSummary->Fill(isReconstructed, 0);
+	// Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
                                nMatchedTracks - 1);
 

@@ -1,0 +1,8 @@
+mtllib /home/ZhangHaolin/ACTS/acts-telescope/Examples/Scripts/Python/obj/Telescope_passives_l2.mtl
+usemtl material_240_280_0
+v -25 -100 15
+v 25 -100 15
+v 25 100 15
+v -25 100 15
+usemtl material_240_280_0
+f 1 2 3 4

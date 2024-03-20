@@ -16,7 +16,7 @@ set_target_properties(ActsTestsDD4hepFactories PROPERTIES LIBRARY_OUTPUT_DIRECTO
 dd4hep_set_version(ActsTestsDD4hepFactories MAJOR 1 MINOR 0 PATCH 0)
 dd4hep_generate_rootmap(ActsTestsDD4hepFactories)
 
-find_library(dd4hep_core_plugins_library DDCorePlugins REQUIRED)
+#find_library(dd4hep_core_plugins_library DDCorePlugins REQUIRED)
 cmake_path(GET dd4hep_core_plugins_library PARENT_PATH DD4HEP_LIBRARY_PATH)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 

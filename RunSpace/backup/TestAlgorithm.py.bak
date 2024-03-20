@@ -1,0 +1,3 @@
+from acts .examples import *
+help(TelescopeSeedingAlgorithm)
+help(TelescopeSeedingAlgorithmConfig)

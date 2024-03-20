@@ -1,8 +1,8 @@
 {
   "description": "Experiment-independent toolkit for (charged) particle track reconstruction in (high energy) physics experiments implemented in modern C++ ",
   "license": "MPL-2.0",
-  "title": "acts-project/acts: v11.0.0",
-  "version": "v11.0.0",
+  "title": "acts-project/acts: v32.1.0",
+  "version": "v32.1.0",
   "upload_type": "software",
   "creators": [
     {
@@ -112,7 +112,7 @@
       "affiliation": "CERN / University of Amsterdam",
       "name": "Stephen Nicholas Swatman",
       "orcid": "0000-0002-3747-3229"
-    }
+    },
     {
       "affiliation": "CERN / TU Wien",
       "name": "Felix Russo",
@@ -125,17 +125,6 @@
       "scheme": "url",
       "identifier": "https://github.com/acts-project/acts/tree/v10.0.0",
       "relation": "isSupplementTo"
-    },
-    {
-      "scheme": "doi",
-      "identifier": "10.5281/zenodo.4818137",
-      "relation": "obsoletes",
-      "resource_type": "software"
-    },
-    {
-      "scheme": "doi",
-      "identifier": "10.5281/zenodo.5141418",
-      "relation": "isVersionOf"
     }
   ]
 }

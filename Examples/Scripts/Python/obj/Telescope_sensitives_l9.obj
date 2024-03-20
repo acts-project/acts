@@ -1,0 +1,8 @@
+mtllib /home/ZhangHaolin/ACTS/acts-telescope/Examples/Scripts/Python/obj/Telescope_sensitives_l9.mtl
+usemtl material_0_180_240
+v -25 -100 150
+v 25 -100 150
+v 25 100 150
+v -25 100 150
+usemtl material_0_180_240
+f 1 2 3 4

@@ -1,0 +1,149 @@
+#!/usr/bin/python
+import pathlib, acts, acts.examples
+from pathlib import Path
+from typing import Optional, Union
+from acts import UnitConstants as u
+
+from acts.examples.simulation import (
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
+    addFatras,
+    ParticleSelectorConfig,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    addSeeding,
+    SeedingAlgorithm,
+    TruthSeedRanges,
+    SeedFinderConfigArg,
+    SeedFinderOptionsArg, 
+    addCKFTracks,
+    TrackSelectorConfig,
+    CkfConfig,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
+    addVertexFitting,
+    VertexFinder,
+)
+
+u = acts.UnitConstants
+detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
+    bounds=[200, 200],
+    positions=[30, 60, 90, 120, 150, 180],
+    binValue=0,
+)
+
+field = acts.ConstantBField(acts.Vector3(0, 0, 1 * u.T))
+# outputDir = Path.cwd() / "result_telescope"
+outputDir = Path.cwd() / "result_telescope_with_time"
+if not outputDir.exists():
+    outputDir.mkdir()
+
+rnd = acts.examples.RandomNumbers(seed=43)
+s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
+
+addParticleGun(
+    s,
+    MomentumConfig(4 * u.GeV, 4 * u.GeV, transverse=True),
+    EtaConfig(-0.8, 0.8, uniform=True),
+    PhiConfig(-35.0*u.degree, 35.0 * u.degree),
+    ParticleConfig(10, acts.PdgParticle.eMuon, randomizeCharge=False),
+    multiplicity=5,
+    rnd=rnd,
+    # vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.0*u.mm, 0.*u.mm, 0.*u.mm, 2.5*u.ns)),
+)
+
+addFatras(
+    s,
+    trackingGeometry,
+    field,
+    rnd=rnd,
+    preSelectParticles=ParticleSelectorConfig(
+        rho=(0.0 * u.mm, 300.0 * u.mm),
+        absZ=(0.0 * u.mm, 200.0 * u.mm),
+        eta=(-0.8, 0.8),
+        pt=(1 * u.GeV, None),
+        removeNeutral=True,
+    ),
+    outputDirRoot=outputDir,
+)
+
+addDigitization(
+    s,
+    trackingGeometry,
+    field,
+    # digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope.json"),
+    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope-with-time.json"),
+    outputDirRoot=outputDir,
+    rnd=rnd,
+    # logLevel=acts.logging.VERBOSE
+)
+
+addSeeding(
+    s,
+    trackingGeometry,
+    field,
+
+    TruthSeedRanges(pt=(1 * u.GeV, None), eta=(-0.8, 0.8), nHits=(6, None)),
+
+    # ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
+    SeedFinderConfigArg(
+        r=(1, 141.5 * u.mm), # 100*sqrt(2)
+
+        # deltaR=(1 * u.mm, 60 * u.mm),
+        deltaR=(0.05 * u.mm, 100 * u.mm), # 大于这个值效率不变，小于效率降低
+
+        collisionRegion=(-100 * u.mm, 100 * u.mm), # 放宽效率不变，放窄效率降低
+        z=(-100 * u.mm, 100 * u.mm), # half 200
+        maxSeedsPerSpM=3,
+        sigmaScattering=30,
+        radLengthPerSeed=0.5,
+
+        minPt=1000 * u.MeV,
+
+        impactMax=100 * u.mm, # 大于这个值效率不变，小于效率降低
+    ),
+
+    SeedFinderOptionsArg( 
+        beamPos=(0,0), 
+        bFieldInZ=1 * u.T, 
+    ),
+
+    geoSelectionConfigFile=Path("../Examples/Algorithms/TrackFinding/share/geoSelection-telescope.json"),
+    outputDirRoot=outputDir,
+    rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+    # logLevel=acts.logging.DEBUG
+)
+
+addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    CkfConfig(
+        chi2CutOff=15.0, 
+        numMeasurementsCutOff=10,
+    ),
+    outputDirRoot=outputDir,
+    # logLevel=acts.logging.DEBUG
+)
+
+
+"""
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
+    outputDirRoot=outputDir,
+)
+
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+)
+"""
+
+s.run()
