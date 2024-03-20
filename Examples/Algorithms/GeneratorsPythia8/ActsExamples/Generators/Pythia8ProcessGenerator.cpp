@@ -115,14 +115,10 @@ Pythia8Generator::operator()(RandomEngine& rng) {
     // only secondaries have a defined vertex position
     if (m_cfg.labelSecondaries && genParticle.hasVertex()) {
       // either add to existing secondary vertex if exists or create new one
-
-      // check if an existing vertex is close enough
+      // TODO can we do this w/o the manual search and position check?
       auto it = std::find_if(
-          vertices.begin(), vertices.end(), [=](const SimVertex& other) {
-            return (pos4.head<3>() - other.position()).norm() <
-                   m_cfg.spatialVertexThreshold;
-          });
-
+          vertices.begin(), vertices.end(),
+          [=](const SimVertex& other) { return pos4 == other.position4; });
       if (it != vertices.end()) {
         particleId.setVertexSecondary(std::distance(vertices.begin(), it));
         it->outgoing.insert(particleId);
