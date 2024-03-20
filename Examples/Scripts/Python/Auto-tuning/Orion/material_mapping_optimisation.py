@@ -225,7 +225,7 @@ def runMaterialMappingVariance(
     # Read material step information from a ROOT TTRee
     reader = RootMaterialTrackReader(
         level=acts.logging.ERROR,
-        collection="material-tracks",
+        outputMaterialTracks="material-tracks",
         fileList=[
             os.path.join(
                 inputPath,
