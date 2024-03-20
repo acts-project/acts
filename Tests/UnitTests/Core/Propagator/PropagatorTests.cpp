@@ -485,5 +485,6 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                   "Propagator unexpectedly inherits from BasePropagator");
   }
 }
+
 }  // namespace Test
 }  // namespace Acts
