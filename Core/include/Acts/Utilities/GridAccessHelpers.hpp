@@ -150,7 +150,7 @@ class GlobalSubspace final : public IGlobalToGridLocal {
   static_assert(sizeof...(Args) > 0,
                 "GlobalSubspace: cannot have an empty binning value list.");
 
-  /// Asser that size has to be smaller than 4
+  /// Assert that size has to be smaller than 4
   static_assert(sizeof...(Args) <= 3,
                 "GlobalSubspace: cannot have more than 3 binning values.");
 
