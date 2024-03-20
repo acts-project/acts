@@ -5,7 +5,6 @@ import argparse
 
 import acts
 import acts.examples
-from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
 
@@ -149,7 +148,7 @@ if "__main__" == __name__:
     )
 
     args = p.parse_args()
-    # detector, trackingGeometry, _ = getOpenDataDetector()
+    # detector, trackingGeometry, _ = getOpenDataDetector(    getOpenDataDetectorDirectory() )
     detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

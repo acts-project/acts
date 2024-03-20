@@ -41,13 +41,6 @@ Result<BoundState> detail::boundState(
     const ParticleHypothesis& particleHypothesis, bool covTransport,
     double accumulatedPath,
     const FreeToBoundCorrection& freeToBoundCorrection) {
-  // Create the bound parameters
-  Result<BoundVector> bv = detail::transformFreeToBoundParameters(
-      freeParameters, surface, geoContext);
-  if (!bv.ok()) {
-    return bv.error();
-  }
-
   // Covariance transport
   std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -65,6 +58,12 @@ Result<BoundState> detail::boundState(
     cov = boundCovariance;
   }
 
+  // Create the bound parameters
+  Result<BoundVector> bv = detail::transformFreeToBoundParameters(
+      freeParameters, surface, geoContext);
+  if (!bv.ok()) {
+    return bv.error();
+  }
   // Create the bound state
   return std::make_tuple(
       BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov),

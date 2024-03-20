@@ -159,8 +159,8 @@ class DBScan {
       // hypercube with a length of 2 epsilon).
       typename Tree::range_t range;
       for (std::size_t dim = 0; dim < kDims; dim++) {
-        range[dim] = Range1D<scalar_t>(currentPoint[dim] - m_eps,
-                                       currentPoint[dim] + m_eps);
+        range[dim] = std::make_pair(currentPoint[dim] - m_eps,
+                                    currentPoint[dim] + m_eps);
       }
       // We use the KDTree to find the neighbours.
       // An extra cut needs to be applied to only keep the neighbours that

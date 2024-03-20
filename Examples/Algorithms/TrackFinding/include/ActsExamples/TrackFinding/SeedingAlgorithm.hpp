@@ -82,9 +82,7 @@ class SeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::SeedFinder<SimSpacePoint,
-                   Acts::CylindricalSpacePointGrid<SimSpacePoint>>
-      m_seedFinder;
+  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
 

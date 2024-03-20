@@ -9,38 +9,9 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
 #include <iomanip>
 #include <iostream>
-
-/// Constructor for symmetric Trapezoid
-///
-/// @param halfXnegY minimal half length X, definition at negative Y
-/// @param halfXposY maximal half length X, definition at positive Y
-/// @param halfY half length Y - defined at x=0
-/// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
-Acts::TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
-                                       double halfY,
-                                       double rotAngle) noexcept(false)
-    : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
-      m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
-  rotateBoundingBox();
-  checkConsistency();
-}
-
-/// Constructor for symmetric Trapezoid - from fixed size array
-///
-/// @param values the values to be stream in
-Acts::TrapezoidBounds::TrapezoidBounds(
-    const std::array<double, eSize>& values) noexcept(false)
-    : m_values(values),
-      m_boundingBox(
-          std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
-          values[eHalfLengthY]) {
-  rotateBoundingBox();
-  checkConsistency();
-}
 
 Acts::TrapezoidBounds::~TrapezoidBounds() = default;
 
@@ -50,18 +21,16 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
 
 bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
+  const double x = lposition[0];
+  const double y = lposition[1];
+
+  const double hlY = get(TrapezoidBounds::eHalfLengthY);
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
-
-  const Acts::Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
-  const double x = extPosition[0];
-  const double y = extPosition[1];
 
   if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
-    const double tolX = bcheck.tolerance()[eBoundLoc0];
-    const double tolY = bcheck.tolerance()[eBoundLoc1];
+    double tolX = bcheck.tolerance()[eBoundLoc0];
+    double tolY = bcheck.tolerance()[eBoundLoc1];
 
     if (std::abs(y) - hlY > tolY) {
       // outside y range
@@ -81,24 +50,17 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
 
   // at this stage, the point can only be in the triangles
   // run slow-ish polygon check
-  std::vector<Acts::Vector2> vertices = {
-      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  return bcheck.isInside(extPosition, vertices);
+  std::array<Vector2, 4> v{
+      Vector2{-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+  return bcheck.isInside(lposition, v);
 }
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
-  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
-  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
-
-  std::vector<Acts::Vector2> vertices = {
-      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  for (auto& v : vertices) {
-    v = Eigen::Rotation2Dd(-rotAngle) * v;
-  }
-  return vertices;
+  double minhx = get(TrapezoidBounds::eHalfLengthXnegY);
+  double maxhx = get(TrapezoidBounds::eHalfLengthXposY);
+  double hy = get(TrapezoidBounds::eHalfLengthY);
+  return {{-minhx, -hy}, {minhx, -hy}, {maxhx, hy}, {-maxhx, hy}};
 }
 
 const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
@@ -108,32 +70,9 @@ const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
 std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
+  sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY) = "
      << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
-     << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
+     << get(eHalfLengthY) << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-std::vector<double> Acts::TrapezoidBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-void Acts::TrapezoidBounds::rotateBoundingBox() noexcept(false) {
-  const double rotAngle = get(eRotationAngle);
-
-  if (rotAngle != 0.) {
-    m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();
-  }
-}
-
-void Acts::TrapezoidBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthXnegY) <= 0. || get(eHalfLengthXposY) <= 0.) {
-    throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
-  }
-  if (get(eHalfLengthY) <= 0.) {
-    throw std::invalid_argument("TrapezoidBounds: invalid local y setup");
-  }
 }

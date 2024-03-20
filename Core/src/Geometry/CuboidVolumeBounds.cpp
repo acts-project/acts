@@ -17,23 +17,21 @@
 #include <type_traits>
 #include <utility>
 
-namespace Acts {
-
-CuboidVolumeBounds::CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
-                                       ActsScalar halez)
+Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
+                                             double halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
-CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
+Acts::CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
     : VolumeBounds(),
       m_values(bobo.m_values),
       m_xyBounds(bobo.m_xyBounds),
       m_yzBounds(bobo.m_yzBounds),
       m_zxBounds(bobo.m_zxBounds) {}
 
-CuboidVolumeBounds& CuboidVolumeBounds::operator=(
+Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
     const CuboidVolumeBounds& bobo) {
   if (this != &bobo) {
     m_values = bobo.m_values;
@@ -44,59 +42,51 @@ CuboidVolumeBounds& CuboidVolumeBounds::operator=(
   return *this;
 }
 
-std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  std::vector<OrientedSurface> oSurfaces;
+  OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
   // Face surfaces xy -------------------------------------
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., -get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
 
   return oSurfaces;
 }
 
-std::ostream& CuboidVolumeBounds::toStream(std::ostream& os) const {
-  os << std::setiosflags(std::ios::fixed);
-  os << std::setprecision(5);
-  os << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";
-  os << "(" << get(eHalfLengthX) << ", " << get(eHalfLengthY) << ", "
-     << get(eHalfLengthZ) << ")";
-  return os;
+std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
+  return dumpT(sl);
 }
 
-Volume::BoundingBox CuboidVolumeBounds::boundingBox(
-    const Transform3* trf, const Vector3& envelope,
+Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   Vector3 vmin(-get(eHalfLengthX), -get(eHalfLengthY), -get(eHalfLengthZ));
   Vector3 vmax(get(eHalfLengthX), get(eHalfLengthY), get(eHalfLengthZ));
@@ -105,7 +95,7 @@ Volume::BoundingBox CuboidVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-void CuboidVolumeBounds::buildSurfaceBounds() {
+void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
   m_xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
                                                        get(eHalfLengthY));
   m_yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),
@@ -114,7 +104,7 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
+double Acts::CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue <= binZ) {
     return m_values[bValue];
   }
@@ -124,24 +114,3 @@ ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   }
   return 0.0;
 }
-
-bool CuboidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
-  return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
-          std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
-          std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
-}
-
-std::vector<ActsScalar> CuboidVolumeBounds::values() const {
-  std::vector<ActsScalar> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-void CuboidVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eHalfLengthX) <= 0 || get(eHalfLengthY) <= 0 ||
-      get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument(
-        "CuboidVolumeBounds: invalid input, zero or negative.");
-  }
-}
-}  // namespace Acts

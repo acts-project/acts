@@ -59,8 +59,10 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
   rotation << g4Rot.xx(), g4Rot.yx(), g4Rot.zx(), g4Rot.xy(), g4Rot.yy(),
       g4Rot.zy(), g4Rot.xz(), g4Rot.yz(), g4Rot.zz();
   Transform3 transform = Transform3::Identity();
-  transform.pretranslate(translation);
-  transform.prerotate(rotation);
+  transform.matrix().block(0, 0, 3, 1) = rotation.col(0);
+  transform.matrix().block(0, 1, 3, 1) = rotation.col(1);
+  transform.matrix().block(0, 2, 3, 1) = rotation.col(2);
+  transform.matrix().block(0, 3, 3, 1) = translation;
   return transform;
 }
 

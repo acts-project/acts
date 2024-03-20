@@ -63,7 +63,6 @@ ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
 
   frame.put(std::move(trackCollection), "ActsTracks");
 
-  std::lock_guard guard(m_writeMutex);
   m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;

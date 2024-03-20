@@ -68,7 +68,6 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  private:
   Config m_cfg;
 
-  std::mutex m_writeMutex;
   podio::ROOTFrameWriter m_writer;
 
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>

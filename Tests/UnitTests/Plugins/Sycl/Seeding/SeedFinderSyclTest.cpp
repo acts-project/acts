@@ -184,8 +184,7 @@ auto main(int argc, char** argv) -> int {
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::SeedFinder<SpacePoint> syclSeedFinder(
       config, options, deviceAtlasCuts, queue, resource, &device_resource);
-  Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>
-      normalSeedFinder(config);
+  Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
   auto globalTool = [=](const SpacePoint& sp, float /*unused*/,
                         float /*unused*/, float /*unused*/)
       -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {

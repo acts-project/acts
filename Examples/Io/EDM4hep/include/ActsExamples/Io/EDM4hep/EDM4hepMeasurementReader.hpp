@@ -18,7 +18,6 @@
 #include <string>
 
 #include <podio/ROOTFrameReader.h>
-#include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
 
@@ -69,9 +68,7 @@ class EDM4hepMeasurementReader final : public IReader {
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  tbb::enumerable_thread_specific<podio::ROOTFrameReader> m_reader;
-
-  podio::ROOTFrameReader& reader();
+  podio::ROOTFrameReader m_reader;
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};

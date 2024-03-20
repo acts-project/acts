@@ -56,8 +56,6 @@ class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
  private:
   Config m_cfg;
 
-  std::mutex m_writeMutex;
-
   podio::ROOTFrameWriter m_writer;
 };
 

@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -166,10 +165,10 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
 }
 
 // check covariance transport using the ridders propagator for comparison
-// Covariance transport does not work for theta close to poles
+
 BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
-                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
-                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runForwardComparisonTest<Propagator, RiddersPropagator,
                            Acts::DenseStepperPropagatorOptions>(
@@ -202,10 +201,9 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
       DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
-// Covariance transport does not work for theta close to poles
 BOOST_DATA_TEST_CASE(CovarianceToPlane,
-                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
-                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceComparisonTest<Propagator, RiddersPropagator, PlaneSurfaceBuilder,
                              Acts::DenseStepperPropagatorOptions>(

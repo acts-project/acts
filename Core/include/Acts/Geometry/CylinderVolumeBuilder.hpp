@@ -527,8 +527,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///         processing
   MutableTrackingVolumePtr trackingVolume(
       const GeometryContext& gctx, TrackingVolumePtr existingVolume = nullptr,
-      std::shared_ptr<const VolumeBounds> externalBounds =
-          nullptr) const override;
+      VolumeBoundsPtr externalBounds = nullptr) const override;
 
   /// Set configuration method
   ///

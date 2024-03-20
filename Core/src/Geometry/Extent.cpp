@@ -96,7 +96,7 @@ void Acts::Extent::set(BinningValue bValue, ActsScalar min, ActsScalar max) {
   if (bValue == binR && minval < 0.) {
     minval = 0.;
   }
-  m_range[bValue] = Range1D<ActsScalar>{minval, max};
+  m_range[bValue] = Range1D{minval, max};
   m_constrains.set(bValue);
 }
 

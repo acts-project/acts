@@ -14,7 +14,12 @@
 namespace Acts {
 
 /// @class Vertex
+///
 /// @brief Class for storing vertex objects
+///
+/// @tparam input_track_t Track object type
+///
+template <typename input_track_t>
 class Vertex {
  public:
   /// @brief Default constructor
@@ -36,7 +41,7 @@ class Vertex {
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
   Vertex(const Vector3& position, const SquareMatrix3& covariance,
-         std::vector<TrackAtVertex> tracks);
+         const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @brief Vertex constructor
   ///
@@ -44,7 +49,7 @@ class Vertex {
   /// @param covariance 4x4 covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
   Vertex(const Vector4& position, const SquareMatrix4& covariance,
-         std::vector<TrackAtVertex> tracks);
+         const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
   Vector3 position() const;
@@ -56,10 +61,6 @@ class Vertex {
   const Vector4& fullPosition() const;
   Vector4& fullPosition();
 
-  /// @return Returns 4D position of the vertex seed
-  const Vector4& fullSeedPosition() const;
-  Vector4& fullSeedPosition();
-
   /// @return Returns position covariance
   SquareMatrix3 covariance() const;
 
@@ -68,7 +69,7 @@ class Vertex {
   SquareMatrix4& fullCovariance();
 
   /// @return Returns vector of tracks associated with the vertex
-  const std::vector<TrackAtVertex>& tracks() const;
+  const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
 
   /// @return Returns pair of (chi2, numberDoF)
   std::pair<double, double> fitQuality() const;
@@ -100,7 +101,8 @@ class Vertex {
   void setFullCovariance(const SquareMatrix4& covariance);
 
   /// @param tracks Vector of tracks at vertex
-  void setTracksAtVertex(std::vector<TrackAtVertex> tracks);
+  void setTracksAtVertex(
+      const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @param chiSquared Chi2 of fit
   /// @param numberDoF Number of degrees of freedom
@@ -111,11 +113,12 @@ class Vertex {
 
  private:
   Vector4 m_position = Vector4::Zero();
-  Vector4 m_seedPosition = Vector4::Zero();
   SquareMatrix4 m_covariance = SquareMatrix4::Zero();
-  std::vector<TrackAtVertex> m_tracksAtVertex;
+  std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = 0.;  // chi2 of the fit
   double m_numberDoF = 0.;   // number of degrees of freedom
 };
 
 }  // namespace Acts
+
+#include "Vertex.ipp"

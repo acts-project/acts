@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
 #include <memory>
@@ -25,12 +24,18 @@ namespace Acts {
 class IVolumeMaterial;
 class TrackingVolume;
 
+using TrackingVolumePointer = const Acts::TrackingVolume*;
+using TrackingVolumeAndMaterial =
+    std::pair<const Acts::TrackingVolume*,
+              std::shared_ptr<const Acts::IVolumeMaterial>>;
+
 /// Conversion of a pair of tracking volume and material used for the material
 /// mapping
-void to_json(
-    nlohmann::json& j,
-    const std::pair<const Acts::TrackingVolume*,
-                    std::shared_ptr<const Acts::IVolumeMaterial>>& volume);
+void to_json(nlohmann::json& j, const TrackingVolumeAndMaterial& volume);
+
+/// Conversion of a const pointer on a tracking volume used to write the
+/// geometry
+void to_json(nlohmann::json& j, const TrackingVolumePointer& volume);
 
 /// Conversion of a tracking volume
 void to_json(nlohmann::json& j, const Acts::TrackingVolume& volume);

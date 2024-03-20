@@ -17,7 +17,6 @@
 namespace Acts {
 
 /// Material description for interactions with matter.
-/// @defgroup Material Material
 ///
 /// The following parameters are used to specify the material and its
 /// interactions with traversing particles:

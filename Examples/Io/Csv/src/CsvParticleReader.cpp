@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
     particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
     particle.setPosition4(
         data.vx * Acts::UnitConstants::mm, data.vy * Acts::UnitConstants::mm,
-        data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::mm);
+        data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::ns);
     // Only used for direction; normalization/units do not matter
     particle.setDirection(data.px, data.py, data.pz);
     particle.setAbsoluteMomentum(std::hypot(data.px, data.py, data.pz) *

@@ -8,6 +8,9 @@ from helpers import (
     edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
+from common import getOpenDataDetectorDirectory
+
+from acts.examples.odd import getOpenDataDetector
 
 import acts
 from acts import PlanarModuleStepper, UnitConstants as u
@@ -27,7 +30,6 @@ from acts.examples import (
     PlanarSteppingAlgorithm,
     Sequencer,
 )
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 @pytest.mark.root
@@ -344,7 +346,6 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
         ddsim.compactFile = input
     ddsim.enableGun = True
     ddsim.gun.direction = (1, 0, 0)
-    ddsim.gun.particle = "pi-"
     ddsim.gun.distribution = "eta"
     ddsim.numberOfEvents = 10
     ddsim.outputFile = output
@@ -354,8 +355,8 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
 @pytest.mark.slow
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_simhit_particle_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepReader
+def test_edm4hep_simhit_reader(tmp_path):
+    from acts.examples.edm4hep import EDM4hepSimHitReader
 
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
@@ -365,37 +366,22 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     s = Sequencer(numThreads=1)
 
     s.addReader(
-        EDM4hepReader(
+        EDM4hepSimHitReader(
             level=acts.logging.INFO,
             inputPath=tmp_file,
-            inputSimHits=[
-                "PixelBarrelReadout",
-                "PixelEndcapReadout",
-                "ShortStripBarrelReadout",
-                "ShortStripEndcapReadout",
-                "LongStripBarrelReadout",
-                "LongStripEndcapReadout",
-            ],
-            outputParticlesGenerator="particles_input",
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
             outputSimHits="simhits",
             dd4hepDetector=detector,
-            trackingGeometry=trackingGeometry,
         )
     )
 
     alg = AssertCollectionExistsAlg("simhits", "check_alg", acts.logging.WARNING)
-    s.addAlgorithm(alg)
-
-    alg = AssertCollectionExistsAlg(
-        "particles_input", "check_alg", acts.logging.WARNING
-    )
     s.addAlgorithm(alg)
 
     s.run()
@@ -453,6 +439,55 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_particle_reader(tmp_path, conf_const, ptcl_gun):
+    from acts.examples.edm4hep import (
+        EDM4hepParticleWriter,
+        EDM4hepParticleReader,
+    )
+
+    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    evGen = ptcl_gun(s)
+
+    out = tmp_path / "particles_edm4hep.root"
+
+    out.mkdir()
+
+    s.addWriter(
+        conf_const(
+            EDM4hepParticleWriter,
+            acts.logging.WARNING,
+            inputParticles=evGen.config.outputParticles,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    # reset the seeder
+    s = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+
+    s.addReader(
+        conf_const(
+            EDM4hepParticleReader,
+            acts.logging.WARNING,
+            inputPath=str(out),
+            outputParticles="input_particles",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "input_particles", "check_alg", acts.logging.WARNING
+    )
+
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_tracks_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
 
@@ -480,7 +515,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kf_tracks",
+            inputTracks="kfTracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )
@@ -494,7 +529,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addReader(
         EDM4hepTrackReader(
             level=acts.logging.VERBOSE,
-            outputTracks="kf_tracks",
+            outputTracks="kfTracks",
             inputPath=str(out),
             Bz=2 * u.T,
         )

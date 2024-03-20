@@ -245,7 +245,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     recoVertexContainer.push_back(vtx);
   }
 
-  Acts::Vertex beamspotConstraint;
+  Acts::Vertex<Acts::BoundTrackParameters> beamspotConstraint;
   Acts::Vector3 beamspotPos;
   Acts::SquareMatrix3 beamspotCov;
 

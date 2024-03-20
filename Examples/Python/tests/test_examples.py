@@ -13,6 +13,7 @@ import pytest
 
 from helpers import (
     geant4Enabled,
+    rootEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
@@ -22,14 +23,18 @@ from helpers import (
     failure_threshold,
 )
 
+pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
+
+
 import acts
 from acts.examples import (
     Sequencer,
     GenericDetector,
     AlignedDetector,
 )
-from acts.examples.odd import getOpenDataDetector
 
+from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -145,7 +150,9 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     csv = tmp_path / "csv"
     csv.mkdir()
@@ -530,9 +537,8 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
-@pytest.mark.parametrize("directNavigation", [False, True])
 def test_truth_tracking_kalman(
-    tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
+    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
 ):
     from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -556,7 +562,6 @@ def test_truth_tracking_kalman(
         digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
         reverseFilteringMomThreshold=revFiltMomThresh,
-        directNavigation=directNavigation,
         s=seq,
     )
 
@@ -571,16 +576,6 @@ def test_truth_tracking_kalman(
         if tn is not None:
             assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
-
-    import ROOT
-
-    ROOT.PyConfig.IgnoreCommandLineOptions = True
-    ROOT.gROOT.SetBatch(True)
-    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_fitter.root"))
-    keys = [k.GetName() for k in rf.GetListOfKeys()]
-    assert "tracksummary" in keys
-    for entry in rf.Get("tracksummary"):
-        assert entry.hasFittedParams
 
 
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
@@ -665,7 +660,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     from material_mapping import runMaterialMapping
 
@@ -706,6 +703,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
@@ -742,6 +740,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
@@ -785,6 +784,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
@@ -814,7 +814,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     [
         (GenericDetector.create, 450),
         pytest.param(
-            getOpenDataDetector,
+            functools.partial(getOpenDataDetector, getOpenDataDetectorDirectory()),
             540,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
@@ -1129,7 +1129,9 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1159,7 +1161,9 @@ def test_full_chain_odd_example(tmp_path):
 @pytest.mark.slow
 def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1201,7 +1205,9 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent

@@ -63,10 +63,9 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
   return true;
 }
 
-std::vector<Acts::OrientedSurface>
-Acts::GenericCuboidVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  std::vector<OrientedSurface> oSurfaces;
+  OrientedSurfaces oSurfaces;
 
   // approximate cog of the volume
   Vector3 cog(0, 0, 0);
@@ -116,7 +115,7 @@ Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     auto srfTrf = transform * vol2srf.inverse();
     auto srf = Surface::makeShared<PlaneSurface>(srfTrf, polyBounds);
 
-    oSurfaces.push_back(OrientedSurface{std::move(srf), dir});
+    oSurfaces.push_back(OrientedSurface(std::move(srf), dir));
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);

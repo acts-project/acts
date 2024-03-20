@@ -32,8 +32,6 @@ from pathlib import Path
 
 from orion.client import build_experiment
 
-from Optuna_tuning import get_tracking_perf, run_ckf
-
 srcDir = Path(__file__).resolve().parent
 
 
@@ -84,7 +82,6 @@ class Objective:
         maxPtScattering,
         deltaRMin,
         deltaRMax,
-        ckf_perf=True,
     ):
         params = [
             maxSeedsPerSpM,
@@ -107,7 +104,30 @@ class Objective:
             "deltaRMax",
         ]
 
-        get_tracking_perf(self, ckf_perf, params, keys)
+        outputDir = Path(srcDir / "Output_CKF")
+        outputfile = srcDir / "Output_CKF/performance_ckf.root"
+        outputDir.mkdir(exist_ok=True)
+        run_ckf(params, keys, outputDir)
+        rootFile = uproot.open(outputfile)
+        self.res["eff"].append(rootFile["eff_particles"].member("fElements")[0])
+        self.res["fakerate"].append(rootFile["fakerate_tracks"].member("fElements")[0])
+        self.res["duplicaterate"].append(
+            rootFile["duplicaterate_tracks"].member("fElements")[0]
+        )
+
+        timingfile = srcDir / "Output_CKF/timing.tsv"
+        timing = pd.read_csv(timingfile, sep="\t")
+        time_ckf = float(
+            timing[timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")][
+                "time_perevent_s"
+            ]
+        )
+        time_seeding = float(
+            timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
+                "time_perevent_s"
+            ]
+        )
+        self.res["runtime"].append(time_ckf + time_seeding)
 
         efficiency = self.res["eff"][-1]
         penalty = (

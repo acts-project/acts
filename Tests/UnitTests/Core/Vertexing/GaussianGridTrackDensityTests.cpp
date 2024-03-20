@@ -43,13 +43,13 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   constexpr std::size_t mainGridSize = 400;
   constexpr std::size_t trkGridSize = 15;
 
-  using Grid = GaussianGridTrackDensity;
+  using Grid = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
+  Grid::Config cfg(zMinMax);
   Grid grid(cfg);
 
   // Create some test tracks
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
                                ParticleHypothesis::pion());
 
   // The grid to be filled
-  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero(mainGridSize);
+  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
@@ -118,14 +118,14 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Tracks are far away from z-axis (or not in region of interest) and
   // should not have contributed to density grid
-  auto zeroGrid = Grid::MainGridVector::Zero(mainGridSize);
+  auto zeroGrid = Grid::MainGridVector::Zero();
   BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
   // Now add track 1 and 2 to grid, separately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
-  mainGrid = Grid::MainGridVector::Zero(mainGridSize);
+  mainGrid = Grid::MainGridVector::Zero();
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Track 1 is closer to z-axis and should thus yield higher
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK_EQUAL(maxBin, 0);
 
   // Check if error is thrown for empty grid
-  mainGrid = Grid::MainGridVector::Zero(mainGridSize);
+  mainGrid = Grid::MainGridVector::Zero();
   auto maxResErr = grid.getMaxZPosition(mainGrid);
   BOOST_CHECK(!maxResErr.ok());
 
@@ -183,13 +183,13 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   constexpr int mainGridSize = 50;
   constexpr int trkGridSize = 11;
 
-  using Grid = Acts::GaussianGridTrackDensity;
+  using Grid = Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
+  Grid::Config cfg(zMinMax);
   cfg.useHighestSumZPosition = true;
   Grid grid(cfg);
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
                                ParticleHypothesis::pion());
 
   // The grid to be filled
-  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero(mainGridSize);
+  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
@@ -246,13 +246,13 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   constexpr int mainGridSize = 50;
   constexpr int trkGridSize = 11;
 
-  using Grid = Acts::GaussianGridTrackDensity;
+  using Grid = Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
+  Grid::Config cfg(zMinMax);
   cfg.useHighestSumZPosition = true;
   Grid grid(cfg);
 
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
                                ParticleHypothesis::pion());
 
   // The grid to be filled
-  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero(mainGridSize);
+  Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching

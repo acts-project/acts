@@ -33,7 +33,7 @@ Acts::Experimental::generatePortals(
   std::vector<std::shared_ptr<Portal>> portals;
   for (auto [i, oSurface] : enumerate(orientedSurfaces)) {
     // Create a portal from the surface
-    auto portal = std::make_shared<Portal>(oSurface.surface);
+    auto portal = std::make_shared<Portal>(oSurface.first);
     // Create a shared link instance & delegate
     auto singleLinkImpl =
         std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
@@ -41,8 +41,8 @@ Acts::Experimental::generatePortals(
     singleLink.connect<&SingleDetectorVolumeImpl::update>(
         std::move(singleLinkImpl));
     // Update the volume link and the store
-    portal->assignDetectorVolumeUpdater(oSurface.direction,
-                                        std::move(singleLink), {dVolume});
+    portal->assignDetectorVolumeUpdater(oSurface.second, std::move(singleLink),
+                                        {dVolume});
     // Portal is prepared
     portals.push_back(std::move(portal));
   }

@@ -33,9 +33,6 @@ class Direction final {
   static constexpr auto Backward = Value::Negative;
   static constexpr auto Forward = Value::Positive;
 
-  static constexpr auto OppositeNormal = Value::Negative;
-  static constexpr auto AlongNormal = Value::Positive;
-
   /// This turns a signed value into a direction. Will assert on zero.
   ///
   /// @param scalar is the signed value

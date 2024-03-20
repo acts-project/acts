@@ -91,7 +91,9 @@ struct StepWiseActor {
       result.paths.push_back(std::get<double>(boundState));
     }
     // Also store the jacobian and full path
-    if (state.stage == PropagatorStage::postPropagation && !result.finalized) {
+    if ((navigator.navigationBreak(state.navigation) ||
+         navigator.targetReached(state.navigation)) &&
+        !result.finalized) {
       // Set the last stepping parameter
       result.paths.push_back(state.stepping.pathAccumulated);
       // Set the full parameter

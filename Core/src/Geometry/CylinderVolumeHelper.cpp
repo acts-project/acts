@@ -35,7 +35,6 @@
 #include <cmath>
 #include <cstddef>
 #include <iosfwd>
-#include <memory>
 #include <ostream>
 #include <utility>
 
@@ -203,8 +202,8 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   const Transform3 transform = Transform3(Translation3(0., 0., zPosition));
   // call to the creation method with Bounds & Translation3
   return createTrackingVolume(gctx, layers, volumeMaterial,
-                              std::shared_ptr<const VolumeBounds>(cBounds),
-                              mtvVector, transform, volumeName, bType);
+                              VolumeBoundsPtr(cBounds), mtvVector, transform,
+                              volumeName, bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
@@ -383,8 +382,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   // Create the transform from the stuff known so far
   const Transform3 topVolumeTransform = Transform3(Translation3(0., 0., zPos));
   // Create the bounds from the information gathered so far
-  auto topVolumeBounds = std::make_shared<CylinderVolumeBounds>(
-      rMin, rMax, 0.5 * std::abs(zMax - zMin));
+  CylinderVolumeBounds* topVolumeBounds =
+      new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin));
 
   // some screen output
   ACTS_VERBOSE("Container volume bounds are " << (*topVolumeBounds));
@@ -398,11 +397,13 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   if (volumeArray == nullptr) {
     ACTS_WARNING(
         "Creation of TrackingVolume array did not succeed - returning 0 ");
+    delete topVolumeBounds;
     return nullptr;
   }
   // we have the bounds and the volume array, create the volume
   std::shared_ptr<TrackingVolume> topVolume = TrackingVolume::create(
-      topVolumeTransform, topVolumeBounds, volumeArray, volumeName);
+      topVolumeTransform, VolumeBoundsPtr(topVolumeBounds), volumeArray,
+      volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
   if (!interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,

@@ -47,10 +47,8 @@ struct SecondaryVertexIdGetter {
 };
 }  // namespace detail
 
-using SimBarcode = ::ActsFatras::Barcode;
 using SimParticle = ::ActsFatras::Particle;
 /// Store particles ordered by particle identifier.
-using SimBarcodeContainer = ::boost::container::flat_set<SimBarcode>;
 using SimParticleContainer =
     ::boost::container::flat_set<SimParticle, detail::CompareParticleId>;
 

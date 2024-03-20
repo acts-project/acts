@@ -8,14 +8,17 @@
 
 #pragma once
 
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+
+#include <fstream>
 
 using namespace Acts::UnitLiterals;
 
@@ -36,6 +39,9 @@ namespace ActsExamples {
 /// and each line in the file corresponds to one seed.
 class CsvSeedWriter : public WriterT<TrackParametersContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+  using HitSimHitsMap = IndexMultimap<Index>;
+
   struct Config {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;

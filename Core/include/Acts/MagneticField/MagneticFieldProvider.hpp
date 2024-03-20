@@ -18,8 +18,6 @@
 
 namespace Acts {
 
-/// @defgroup MagneticField Magnetic field
-
 /// Base class for all magnetic field providers
 class MagneticFieldProvider {
  public:

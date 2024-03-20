@@ -425,14 +425,9 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   for (auto tmapBin : touchedMapBins) {
     std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
     if (m_cfg.computeVariance) {
-      // This only makes sense for the binned material
-      auto binnedMaterial = dynamic_cast<const BinnedSurfaceMaterial*>(
-          touchedMaterialBin[tmapBin.first].get());
-      if (binnedMaterial != nullptr) {
-        tmapBin.first->trackVariance(
-            trackBins,
-            binnedMaterial->fullMaterial()[trackBins[0][1]][trackBins[0][0]]);
-      }
+      tmapBin.first->trackVariance(
+          trackBins, touchedMaterialBin[tmapBin.first]->materialSlab(
+                         trackBins[0][0], trackBins[0][1]));
     }
     tmapBin.first->trackAverage(trackBins);
   }
@@ -503,15 +498,11 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
   for (auto tmapBin : touchedMapBins) {
     std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
     if (m_cfg.computeVariance) {
-      // This only makes sense for the binned material
-      auto binnedMaterial = dynamic_cast<const BinnedSurfaceMaterial*>(
-          touchedMaterialBin[tmapBin.first].get());
-      if (binnedMaterial != nullptr) {
-        tmapBin.first->trackVariance(
-            trackBins,
-            binnedMaterial->fullMaterial()[trackBins[0][1]][trackBins[0][0]],
-            true);
-      }
+      tmapBin.first->trackVariance(
+          trackBins,
+          touchedMaterialBin[tmapBin.first]->materialSlab(trackBins[0][0],
+                                                          trackBins[0][1]),
+          true);
     }
     // No need to do an extra pass for untouched surfaces they would have been
     // added to the material interaction in the initial mapping

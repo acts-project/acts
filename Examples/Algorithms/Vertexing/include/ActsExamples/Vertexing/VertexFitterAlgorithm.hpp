@@ -47,11 +47,14 @@ class VertexFitterAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer;
-  using VertexFitter = Acts::FullBilloirVertexFitter;
-  using VertexFitterOptions = Acts::VertexingOptions;
+  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+  using VertexFitter =
+      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using VertexFitterOptions =
+      Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
-  using VertexCollection = std::vector<Acts::Vertex>;
+  using VertexCollection =
+      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
 
   struct Config {
     /// Optional. Input track parameters collection
@@ -68,10 +71,10 @@ class VertexFitterAlgorithm final : public IAlgorithm {
     Acts::Vector4 constraintPos = Acts::Vector4(0, 0, 0, 0);
     /// Vertex constraint covariance matrix
     Acts::SquareMatrix4 constraintCov =
-        Acts::Vector4(1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      1e8 * Acts::UnitConstants::mm * Acts::UnitConstants::mm)
+        Acts::Vector4(3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      10 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1 * Acts::UnitConstants::ns * Acts::UnitConstants::ns)
             .asDiagonal();
   };
 

@@ -28,12 +28,12 @@ EDM4hepTrackReader::EDM4hepTrackReader(const Config& config,
 
   m_outputTracks.initialize(m_cfg.outputTracks);
 
-  m_eventsRange = {0, reader().getEntries("events")};
+  m_reader.openFile(m_cfg.inputPath);
 }
 
 std::pair<std::size_t, std::size_t> EDM4hepTrackReader::availableEvents()
     const {
-  return m_eventsRange;
+  return {0, m_reader.getEntries("events")};
 }
 
 std::string EDM4hepTrackReader::EDM4hepTrackReader::name() const {
@@ -41,7 +41,7 @@ std::string EDM4hepTrackReader::EDM4hepTrackReader::name() const {
 }
 
 ProcessCode EDM4hepTrackReader::read(const AlgorithmContext& ctx) {
-  podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
+  podio::Frame frame = m_reader.readEntry("events", ctx.eventNumber);
 
   const auto& trackCollection =
       frame.get<edm4hep::TrackCollection>(m_cfg.inputTracks);
@@ -64,16 +64,6 @@ ProcessCode EDM4hepTrackReader::read(const AlgorithmContext& ctx) {
   m_outputTracks(ctx, std::move(constTracks));
 
   return ProcessCode::SUCCESS;
-}
-
-podio::ROOTFrameReader& EDM4hepTrackReader::reader() {
-  bool exists = false;
-  auto& reader = m_reader.local(exists);
-  if (!exists) {
-    reader.openFile(m_cfg.inputPath);
-  }
-
-  return reader;
 }
 
 }  // namespace ActsExamples

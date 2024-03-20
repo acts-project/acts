@@ -18,10 +18,6 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
-#include "Acts/Vertexing/GaussianTrackDensity.hpp"
-#include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/TrackAtVertex.hpp"
-#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
@@ -40,30 +36,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                        Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("AdaptiveMultiVertexFinder", level),
-      m_cfg(config),
-      m_propagator{[&]() {
-        // Set up EigenStepper
-        Acts::EigenStepper<> stepper(m_cfg.bField);
-
-        // Set up the propagator
-        return std::make_shared<Propagator>(stepper);
-      }()},
-      m_ipEstimator{[&]() {
-        // Set up ImpactPointEstimator
-        Acts::ImpactPointEstimator::Config ipEstimatorCfg(m_cfg.bField,
-                                                          m_propagator);
-        return Acts::ImpactPointEstimator(
-            ipEstimatorCfg, logger().cloneWithSuffix("ImpactPointEstimator"));
-      }()},
-      m_linearizer{[&] {
-        // Set up the helical track linearizer
-        Linearizer::Config ltConfig;
-        ltConfig.bField = m_cfg.bField;
-        ltConfig.propagator = m_propagator;
-        return Linearizer(ltConfig,
-                          logger().cloneWithSuffix("HelicalTrackLinearizer"));
-      }()},
-      m_vertexFinder{makeVertexFinder()} {
+      m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameter collection");
   }
@@ -79,15 +52,15 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
-    -> Acts::AdaptiveMultiVertexFinder {
-  std::shared_ptr<const Acts::IVertexFinder> seedFinder;
+ActsExamples::ProcessCode
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
-    using Seeder = Acts::TrackDensityVertexFinder;
-    Acts::GaussianTrackDensity::Config trkDensityCfg;
-    trkDensityCfg.extractParameters
-        .connect<&Acts::InputTrack::extractParameters>();
-    seedFinder = std::make_shared<Seeder>(Seeder::Config{trkDensityCfg});
+    using Seeder = Acts::TrackDensityVertexFinder<
+        Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+    using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
+    Seeder seedFinder;
+    return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
     Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
@@ -99,14 +72,38 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
     Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
 
     // Set up vertex seeder and finder
-    using Seeder = Acts::AdaptiveGridDensityVertexFinder;
+    using Seeder = Acts::AdaptiveGridDensityVertexFinder<Fitter>;
+    using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     Seeder::Config seederConfig(trkDensity);
-    seederConfig.extractParameters
-        .connect<&Acts::InputTrack::extractParameters>();
-    seedFinder = std::make_shared<Seeder>(seederConfig);
+    Seeder seedFinder(seederConfig);
+    return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
   } else {
-    throw std::invalid_argument("Unknown seed finder");
+    return ActsExamples::ProcessCode::ABORT;
   }
+}
+
+template <typename vseeder_t, typename vfinder_t>
+ActsExamples::ProcessCode
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
+    const ActsExamples::AlgorithmContext& ctx,
+    const vseeder_t& seedFinder) const {
+  using Finder = vfinder_t;
+
+  // Set up EigenStepper
+  Acts::EigenStepper<> stepper(m_cfg.bField);
+
+  // Set up the propagator
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // Set up ImpactPointEstimator
+  IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
+  IPEstimator ipEstimator(ipEstimatorCfg,
+                          logger().cloneWithSuffix("ImpactPointEstimator"));
+
+  // Set up the helical track linearizer
+  Linearizer::Config ltConfig(m_cfg.bField, propagator);
+  Linearizer linearizer(ltConfig,
+                        logger().cloneWithSuffix("HelicalTrackLinearizer"));
 
   // Set up deterministic annealing with user-defined temperatures
   Acts::AnnealingUtility::Config annealingConfig;
@@ -114,18 +111,17 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   Acts::AnnealingUtility annealingUtility(annealingConfig);
 
   // Set up the vertex fitter with user-defined annealing
-  Fitter::Config fitterCfg(m_ipEstimator);
+  Fitter::Config fitterCfg(ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
   fitterCfg.minWeight = 0.001;
   fitterCfg.doSmoothing = true;
   fitterCfg.useTime = m_cfg.useTime;
-  fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&m_linearizer);
   Fitter fitter(std::move(fitterCfg),
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
-  Acts::AdaptiveMultiVertexFinder::Config finderConfig(
-      std::move(fitter), seedFinder, m_ipEstimator, m_cfg.bField);
+  typename Finder::Config finderConfig(std::move(fitter), std::move(seedFinder),
+                                       ipEstimator, std::move(linearizer),
+                                       m_cfg.bField);
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
@@ -133,51 +129,43 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
-  // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
-  finderConfig.tracksMaxSignificance = 5;
-  // This should be used consistently with and without time
-  finderConfig.doFullSplitting = false;
-  // 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
-  finderConfig.maxMergeVertexSignificance = 3;
   if (m_cfg.useTime) {
     // When using time, we have an extra contribution to the chi2 by the time
     // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
     // maximum chi2 that a track can have to be associated with a vertex).
-    // Using the same p-value for 3 dof instead of 2.
-    // 6.7 corresponds to a p-value of ~0.92 using `chi2(x=6.7,ndf=3)`
-    finderConfig.tracksMaxSignificance = 6.7;
-    // Using the same p-value for 2 dof instead of 1.
-    // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
-    finderConfig.maxMergeVertexSignificance = 5;
+    finderConfig.tracksMaxSignificance = 7.5;
+    // Check if vertices are merged in space and time
+    // TODO rename do3dSplitting -> doFullSplitting
+    finderConfig.do3dSplitting = true;
+    // Reset the maximum significance that two vertices can have before they are
+    // considered as merged. The default value 3 is tuned for comparing the
+    // vertices' z-coordinates. Since we consider 4 dimensions here, we need to
+    // multiply the value by 4 and thus we set it to 3 * 4 = 12.
+    finderConfig.maxMergeVertexSignificance = 12.;
   }
-  finderConfig.extractParameters
-      .template connect<&Acts::InputTrack::extractParameters>();
 
   // Instantiate the finder
-  return Acts::AdaptiveMultiVertexFinder(std::move(finderConfig),
-                                         logger().clone());
-}
+  Finder finder(std::move(finderConfig), logger().clone());
 
-ActsExamples::ProcessCode
-ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   // TODO change this from pointers to tracks parameters to actual tracks
-  auto inputTracks = makeInputTracks(inputTrackParameters);
+  auto inputTrackPointers =
+      makeTrackParametersPointerContainer(inputTrackParameters);
 
-  if (inputTrackParameters.size() != inputTracks.size()) {
+  if (inputTrackParameters.size() != inputTrackPointers.size()) {
     ACTS_ERROR("Input track containers do not align: "
-               << inputTrackParameters.size() << " != " << inputTracks.size());
+               << inputTrackParameters.size()
+               << " != " << inputTrackPointers.size());
   }
 
-  for (const auto& trk : inputTrackParameters) {
-    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
+  for (const auto trk : inputTrackPointers) {
+    if (trk->covariance() && trk->covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI
       // to fail
-      ACTS_WARNING("input track " << trk << " has det(cov) = "
-                                  << trk.covariance()->determinant());
+      ACTS_WARNING("input track " << *trk << " has det(cov) = "
+                                  << trk->covariance()->determinant());
     }
   }
 
@@ -186,7 +174,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   //////////////////////////////////////////////
 
   // The vertex finder state
-  auto state = m_vertexFinder.makeState(ctx.magFieldContext);
+  typename Finder::State state;
 
   // Default vertexing options, this is where e.g. a constraint could be set
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
@@ -199,7 +187,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = m_vertexFinder.find(inputTracks, finderOpts, state);
+    auto result = finder.find(inputTrackPointers, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());
@@ -216,7 +204,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   }
 
   // store proto vertices extracted from the found vertices
-  m_outputProtoVertices(ctx, makeProtoVertices(inputTracks, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackPointers, vertices));
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));

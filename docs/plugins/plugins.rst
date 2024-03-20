@@ -8,6 +8,7 @@ dependencies and are thus disabled by default.
 .. toctree::
    :maxdepth: 1
 
+   autodiff
    dd4hep
    exatrkx
    geant4

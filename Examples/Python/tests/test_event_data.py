@@ -6,20 +6,20 @@ def test_particle_hypothesis():
     pion = acts.ParticleHypothesis.pion
     electron = acts.ParticleHypothesis.electron
     proton = acts.ParticleHypothesis.proton
-    kaon = acts.ParticleHypothesis.kaon
     geantino = acts.ParticleHypothesis.geantino
     chargedGeantino = acts.ParticleHypothesis.chargedGeantino
 
     # create new particle hypothesis
+    kaon = acts.ParticleHypothesis(321, 0.493677, 1)
 
     # check pdg
     assert muon.absolutePdg() == acts.PdgParticle.eMuon
     assert pion.absolutePdg() == acts.PdgParticle.ePionPlus
     assert electron.absolutePdg() == acts.PdgParticle.eElectron
-    assert kaon.absolutePdg() == acts.PdgParticle.eKaonPlus
     assert proton.absolutePdg() == acts.PdgParticle.eProton
     assert geantino.absolutePdg() == acts.PdgParticle.eInvalid
     assert chargedGeantino.absolutePdg() == acts.PdgParticle.eInvalid
+    assert kaon.absolutePdg() == 321
 
     # check mass
     assert electron.mass() != 0
@@ -45,7 +45,6 @@ def test_particle_hypothesis():
     assert (
         str(electron) == "ParticleHypothesis{absPdg=e, mass=0.000510999, absCharge=1}"
     )
-    assert str(kaon) == "ParticleHypothesis{absPdg=K, mass=0.493677, absCharge=1}"
     assert str(proton) == "ParticleHypothesis{absPdg=p, mass=0.938272, absCharge=1}"
     assert str(geantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=0}"
     assert str(chargedGeantino) == "ParticleHypothesis{absPdg=0, mass=0, absCharge=1}"

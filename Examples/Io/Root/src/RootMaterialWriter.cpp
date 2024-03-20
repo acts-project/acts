@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -25,7 +24,6 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
@@ -158,10 +156,11 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
                          -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
 
     // loop over the material and fill
-    if (bsm != nullptr) {
-      const auto& materialMatrix = bsm->fullMaterial();
-      for (auto [b1, materialVector] : Acts::enumerate(materialMatrix)) {
-        for (auto [b0, mat] : Acts::enumerate(materialVector)) {
+    for (std::size_t b0 = 0; b0 < bins0; ++b0) {
+      for (std::size_t b1 = 0; b1 < bins1; ++b1) {
+        // get the material for the bin
+        auto& mat = sMaterial->materialSlab(b0, b1);
+        if (mat) {
           t->SetBinContent(b0 + 1, b1 + 1, mat.thickness());
           x0->SetBinContent(b0 + 1, b1 + 1, mat.material().X0());
           l0->SetBinContent(b0 + 1, b1 + 1, mat.material().L0());
@@ -170,15 +169,6 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
           rho->SetBinContent(b0 + 1, b1 + 1, mat.material().massDensity());
         }
       }
-    } else if (bins1 == 1 && bins0 == 1) {
-      // homogeneous surface
-      auto mat = sMaterial->materialSlab(Acts::Vector3{0, 0, 0});
-      t->SetBinContent(1, 1, mat.thickness());
-      x0->SetBinContent(1, 1, mat.material().X0());
-      l0->SetBinContent(1, 1, mat.material().L0());
-      A->SetBinContent(1, 1, mat.material().Ar());
-      Z->SetBinContent(1, 1, mat.material().Z());
-      rho->SetBinContent(1, 1, mat.material().massDensity());
     }
     t->Write();
     x0->Write();
@@ -353,8 +343,6 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
 
   // If confined layers exist, loop over them and collect the layer material
   if (tVolume.confinedLayers() != nullptr) {
-    ACTS_VERBOSE("Collecting material for " << tVolume.volumeName()
-                                            << " layers");
     for (auto& lay : tVolume.confinedLayers()->arrayObjects()) {
       collectMaterial(*lay, detMatMap);
     }

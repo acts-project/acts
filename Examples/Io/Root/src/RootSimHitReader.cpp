@@ -152,7 +152,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
         m_floatColumns.at("tx") * Acts::UnitConstants::mm,
         m_floatColumns.at("ty") * Acts::UnitConstants::mm,
         m_floatColumns.at("tz") * Acts::UnitConstants::mm,
-        m_floatColumns.at("tt") * Acts::UnitConstants::mm,
+        m_floatColumns.at("tt") * Acts::UnitConstants::ns,
     };
 
     const Acts::Vector4 before4 = {

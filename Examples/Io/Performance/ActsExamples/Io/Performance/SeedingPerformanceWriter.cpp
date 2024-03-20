@@ -23,7 +23,6 @@
 #include <vector>
 
 #include <TFile.h>
-#include <TVectorT.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -100,20 +99,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       "/ nMatchedParticles) = "
       << aveNDuplicatedSeeds);
 
-  auto writeFloat = [&](float f, const char* name) {
-    TVectorF v(1);
-    v[0] = f;
-    m_outputFile->WriteObject(&v, name);
-  };
-
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
-    writeFloat(eff, "eff_seeds");
-    writeFloat(fakeRate, "fakerate_seeds");
-    writeFloat(duplicationRate, "duplicaterate_seeds");
-    writeFloat(totalSeedPurity, "purity_seeds");
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;

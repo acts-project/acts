@@ -140,6 +140,18 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
                                                            m_globalCasts));
   }
 
+  /// @copydoc ISurfaceMaterial::materialSlab(std::size_t bin0, std::size_t bin1) const
+  ///
+  /// The ISurface material class expects bins in [ 0 - n ] x [ 0, m ], we will
+  /// convert into this format, but it is gonna be slow
+  const MaterialSlab& materialSlab(std::size_t bin0,
+                                   std::size_t bin1) const final {
+    // Access via bin0 and bin1
+    Acts::Vector2 lposition =
+        GridAccessHelpers::toLocal(m_grid, bin0, bin1, m_localAccessors[0u]);
+    return materialSlab(lposition);
+  }
+
   /// Scale operator
   ///
   /// @param scale is the scale factor applied

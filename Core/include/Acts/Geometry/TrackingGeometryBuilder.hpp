@@ -41,7 +41,7 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
     /// The list of tracking volume builders
     std::vector<std::function<std::shared_ptr<TrackingVolume>(
         const GeometryContext& gctx, const TrackingVolumePtr&,
-        const std::shared_ptr<const VolumeBounds>&)>>
+        const VolumeBoundsPtr&)>>
         trackingVolumeBuilders;
 
     /// The tracking volume helper for detector construction

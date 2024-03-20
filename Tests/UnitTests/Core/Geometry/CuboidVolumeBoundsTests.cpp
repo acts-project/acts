@@ -121,15 +121,15 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   auto geoCtx = GeometryContext();
 
   for (auto& os : cvbOrientedSurfaces) {
-    auto osCenter = os.surface->center(geoCtx);
+    auto osCenter = os.first->center(geoCtx);
     const auto* pSurface =
-        dynamic_cast<const Acts::PlaneSurface*>(os.surface.get());
+        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
                           "The surface is not a plane surface");
     auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
-    Vector3 insideBox = osCenter + os.direction * osNormal;
-    Vector3 outsideBox = osCenter - os.direction * osNormal;
+    Vector3 insideBox = osCenter + os.second * osNormal;
+    Vector3 outsideBox = osCenter - os.second * osNormal;
     BOOST_CHECK(box.inside(insideBox));
     BOOST_CHECK(!box.inside(outsideBox));
   }
@@ -140,37 +140,37 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY =
-      cvbOrientedSurfaces[negativeFaceXY].surface->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[negativeFaceXY].first->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
 
   auto pFaceXY =
-      cvbOrientedSurfaces[positiveFaceXY].surface->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[positiveFaceXY].first->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
 
   auto nFaceYZ =
-      cvbOrientedSurfaces[negativeFaceYZ].surface->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[negativeFaceYZ].first->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceYZ.col(0).isApprox(yaxis));
   BOOST_CHECK(nFaceYZ.col(1).isApprox(zaxis));
   BOOST_CHECK(nFaceYZ.col(2).isApprox(xaxis));
 
   auto pFaceYZ =
-      cvbOrientedSurfaces[positiveFaceYZ].surface->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[positiveFaceYZ].first->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceYZ.col(0).isApprox(yaxis));
   BOOST_CHECK(pFaceYZ.col(1).isApprox(zaxis));
   BOOST_CHECK(pFaceYZ.col(2).isApprox(xaxis));
 
   auto nFaceZX =
-      cvbOrientedSurfaces[negativeFaceZX].surface->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[negativeFaceZX].first->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(nFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(nFaceZX.col(2).isApprox(yaxis));
 
   auto pFaceZX =
-      cvbOrientedSurfaces[positiveFaceZX].surface->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[positiveFaceZX].first->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(pFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(pFaceZX.col(2).isApprox(yaxis));

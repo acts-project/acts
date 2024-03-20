@@ -53,8 +53,8 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
-    throw std::invalid_argument("Missing input track particles matching");
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -64,7 +64,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -218,7 +218,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
-  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -242,11 +242,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     m_NDF.push_back(track.nDoF());
     {
       std::vector<double> measurementChi2;
-      std::vector<std::uint32_t> measurementVolume;
-      std::vector<std::uint32_t> measurementLayer;
+      std::vector<double> measurementVolume;
+      std::vector<double> measurementLayer;
       std::vector<double> outlierChi2;
-      std::vector<std::uint32_t> outlierVolume;
-      std::vector<std::uint32_t> outlierLayer;
+      std::vector<double> outlierVolume;
+      std::vector<double> outlierLayer;
       for (const auto& state : track.trackStatesReversed()) {
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
@@ -298,14 +298,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
         track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
 
     // Get the majority truth particle to this track
-    auto match = trackParticleMatching.find(track.index());
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     bool foundMajorityParticle = false;
     // Get the truth particle info
-    if (match != trackParticleMatching.end() &&
-        match->second.particle.has_value()) {
+    if (!particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
-      majorityParticleId = match->second.particle.value();
-      nMajorityHits = match->second.contributingParticles.front().hitCount;
+      majorityParticleId = particleHitCounts.front().particleId;
+      nMajorityHits = particleHitCounts.front().hitCount;
 
       // Find the truth particle via the barcode
       auto ip = particles.find(majorityParticleId);

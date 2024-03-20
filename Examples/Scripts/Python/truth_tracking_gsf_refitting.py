@@ -38,8 +38,8 @@ gsfOptions = {
 s.addAlgorithm(
     acts.examples.RefittingAlgorithm(
         acts.logging.INFO,
-        inputTracks="kf_tracks",
-        outputTracks="gsf_tracks",
+        inputTracks="kfTracks",
+        outputTracks="gsfTracks",
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
 )
@@ -49,7 +49,7 @@ s.addWriter(
         level=acts.logging.INFO,
         inputTracks="tracks",
         inputParticles="truth_seeds_selected",
-        inputTrackParticleMatching="track_particle_matching",
+        inputMeasurementParticlesMap="measurement_particles_map",
         filePath=str(outputDir / "performance_refitter.root"),
     )
 )

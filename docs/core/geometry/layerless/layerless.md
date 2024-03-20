@@ -4,7 +4,7 @@
 ## Geometry module rosetta stone
 
 :::{todo}
-Describe replacements of `TrackingGeometry`, `TrackingVolume` etc. and how the classes map to one another.
+Describe replacements of `TrackingGeometry`, `TrackingVolume` etc and how the classes map to one another.
 :::
 
 

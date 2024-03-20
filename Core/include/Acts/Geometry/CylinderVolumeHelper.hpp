@@ -79,8 +79,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   MutableTrackingVolumePtr createTrackingVolume(
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      std::shared_ptr<const VolumeBounds> volumeBounds,
-      MutableTrackingVolumeVector mtvVector = {},
+      VolumeBoundsPtr volumeBounds, MutableTrackingVolumeVector mtvVector = {},
       const Transform3& transform = Transform3::Identity(),
       const std::string& volumeName = "UndefinedVolume",
       BinningType bType = arbitrary) const override;

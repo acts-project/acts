@@ -67,7 +67,6 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
   frame.put(std::move(hitsPlane), "ActsTrackerHitsPlane");
   frame.put(std::move(hits), "ActsTrackerHitsRaw");
 
-  std::lock_guard guard(m_writeMutex);
   m_writer.writeFrame(frame, "events");
 
   return ActsExamples::ProcessCode::SUCCESS;

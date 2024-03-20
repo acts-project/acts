@@ -1,16 +1,6 @@
 #!/usr/bin/env python3
-
 import os
 
-import acts
-from acts import (
-    SurfaceMaterialMapper,
-    VolumeMaterialMapper,
-    Navigator,
-    Propagator,
-    StraightLineStepper,
-    MaterialMapJsonConverter,
-)
 from acts.examples import (
     Sequencer,
     WhiteBoard,
@@ -22,6 +12,19 @@ from acts.examples import (
     JsonMaterialWriter,
     JsonFormat,
 )
+
+import acts
+from acts import (
+    Vector4,
+    UnitConstants as u,
+    SurfaceMaterialMapper,
+    VolumeMaterialMapper,
+    Navigator,
+    Propagator,
+    StraightLineStepper,
+    MaterialMapJsonConverter,
+)
+from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
 
@@ -131,7 +134,9 @@ def runMaterialMapping(
 
 if "__main__" == __name__:
     matDeco = acts.IMaterialDecorator.fromFile("geometry-map.json")
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matDeco
+    )
 
     runMaterialMapping(
         trackingGeometry,

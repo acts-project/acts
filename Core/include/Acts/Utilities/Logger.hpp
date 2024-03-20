@@ -23,8 +23,6 @@
 #include <thread>
 #include <utility>
 
-/// @defgroup Logging Logging
-
 // clang-format off
 /// @brief macro to use a local Acts::Logger object
 /// @ingroup Logging

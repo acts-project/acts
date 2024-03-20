@@ -89,7 +89,6 @@ ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
   frame.put(std::move(mcParticles), m_cfg.outputParticles);
   frame.put(std::move(simTrackerHitCollection), m_cfg.outputSimTrackerHits);
 
-  std::lock_guard lock{m_writeMutex};
   m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;

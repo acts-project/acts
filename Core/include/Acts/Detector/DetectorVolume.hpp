@@ -484,9 +484,6 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 /// @brief  A detector volume factory which first constructs the detector volume
 /// and then constructs the portals. This ensures that the std::shared_ptr
 /// holding the detector volume is not weak when assigning to the portals.
-///
-/// @note Optional containment check is invoked by setting the number
-/// of segments nSeg to be greater than 0
 class DetectorVolumeFactory {
  public:
   /// Create a detector volume - from factory
@@ -497,19 +494,11 @@ class DetectorVolumeFactory {
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
       DetectorVolumeUpdater detectorVolumeUpdater,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater, int nSeg = -1) {
+      SurfaceCandidatesUpdater surfaceCandidateUpdater) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
         std::move(detectorVolumeUpdater), std::move(surfaceCandidateUpdater));
     dVolume->construct(gctx, portalGenerator);
-
-    /// Volume extent is constructed from the portals
-    /// So the surface/subvolume containment
-    /// check has to happen here
-    if (nSeg > 0 && !dVolume->checkContainment(gctx, nSeg)) {
-      throw std::invalid_argument(
-          "DetectorVolume: surfaces or subvolumes are not contained by volume");
-    }
     return dVolume;
   }
 

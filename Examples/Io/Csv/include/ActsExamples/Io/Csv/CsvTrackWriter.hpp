@@ -11,14 +11,17 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -45,6 +48,8 @@ namespace ActsExamples {
 /// and each line in the file corresponds to one track.
 class CsvTrackWriter : public WriterT<ConstTrackContainer> {
  public:
+  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     std::string inputTracks;                 ///< Input track collection
     std::string outputDir;                   ///< where to place output files

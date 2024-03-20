@@ -10,6 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -21,6 +22,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
@@ -29,11 +31,9 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
-// @TODO: Add TrackingVolume tests
-
-BOOST_AUTO_TEST_CASE(placeholder) {
-  BOOST_CHECK(true);
-}
+#define NBOXES 10
+#define NTESTS 20
+#include "BVHDataTestCase.hpp"
 
 BOOST_AUTO_TEST_SUITE_END()
 

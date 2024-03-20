@@ -369,6 +369,13 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
+    /// The current iteration of the fitter.
+    /// The variable is updated in fit().
+    /// The actor needs to know the current iteration for adding new
+    /// trackStates. During the first iteration, each measurement surfaces will
+    /// be added to the track.
+    std::size_t nUpdate = Acts::MultiTrajectoryTraits::kInvalid;
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -386,11 +393,6 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
-      if (state.navigation.navigationBreak) {
-        ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
-        result.finished = true;
-      }
-
       if (result.finished) {
         return;
       }
@@ -398,8 +400,8 @@ class Gx2Fitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      if (surface != nullptr &&
-          surface->associatedDetectorElement() != nullptr) {
+      //      std::string direction = state.stepping.navDir.toString();
+      if (surface != nullptr) {
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
@@ -488,10 +490,8 @@ class Gx2Fitter {
           } else if (trackStateProxy.calibratedSize() == 2) {
             collector<2>(trackStateProxy, result, *actorLogger);
           } else {
-            ACTS_WARNING("Found measurement with "
-                         << trackStateProxy.calibratedSize()
-                         << " dimensions. Only measurements of 1 and 2 "
-                            "dimensions are implemented yet.");
+            ACTS_WARNING(
+                "Only measurements of 1 and 2 dimensions are implemented yet.");
           }
 
           // Set the measurement type flag
@@ -641,6 +641,7 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.nUpdate = nUpdate;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
@@ -668,24 +669,6 @@ class Gx2Fitter {
                    << gx2fResult.collectorCovariances.size());
       ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
                    << gx2fResult.collectorProjectedJacobians.size());
-
-      // This check takes into account the evaluated dimensions of the
-      // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we n-dimensional measurements count for n measurements, reducing the
-      // effective number of needed measurements.
-      // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement. This
-      // is also taken into account here.
-      // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
-      // a more general approach is desired.
-      // TODO genernalize for n-dimensional fit
-      constexpr std::size_t ndf = 4;
-      if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
-        ACTS_INFO("Not enough measurements. Require "
-                  << ndf + 1 << ", but only "
-                  << gx2fResult.collectorResiduals.size() << " could be used.");
-        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
-      }
 
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
@@ -788,37 +771,6 @@ class Gx2Fitter {
     }
 
     ACTS_VERBOSE("final covariance:\n" << fullCovariancePredicted);
-
-    // Propagate again with the final covariance matrix. This is necessary to
-    // obtain the propagated covariance for each state.
-    if (gx2fOptions.nUpdateMax > 0) {
-      ACTS_VERBOSE("Propagate with the final covariance.");
-      // update covariance
-      ACTS_VERBOSE("finaldeltaParams:\n" << deltaParams);
-      params.covariance() = fullCovariancePredicted;
-
-      // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
-      // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
-      auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
-      gx2fActor.inputMeasurements = &inputMeasurements;
-      gx2fActor.extensions = gx2fOptions.extensions;
-      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
-      gx2fActor.actorLogger = m_actorLogger.get();
-
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
-
-      auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trackContainer.trackStateContainer();
-
-      // Clear the track container. It could be more performant to update the
-      // existing states, but this needs some more thinking.
-      trackContainer.clear();
-
-      m_propagator.template propagate(propagatorState);
-    }
 
     if (!trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {

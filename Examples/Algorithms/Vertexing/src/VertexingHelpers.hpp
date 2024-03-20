@@ -24,20 +24,21 @@ namespace ActsExamples {
 ///
 /// @param trackParameters input examples track parameters container
 /// @return track parameters pointer container referencing the input tracks
-inline std::vector<Acts::InputTrack> makeInputTracks(
+inline std::vector<const Acts::BoundTrackParameters*>
+makeTrackParametersPointerContainer(
     const TrackParametersContainer& trackParameters) {
-  std::vector<Acts::InputTrack> inputTracks;
-  inputTracks.reserve(trackParameters.size());
+  std::vector<const Acts::BoundTrackParameters*> trackParametersPointers;
+  trackParametersPointers.reserve(trackParameters.size());
 
   for (const auto& trackParam : trackParameters) {
-    inputTracks.emplace_back(&trackParam);
+    trackParametersPointers.push_back(&trackParam);
   }
-  return inputTracks;
+  return trackParametersPointers;
 }
 
 /// Create proto vertices from reconstructed vertices.
 ///
-/// @param inputTracks input track parameters container
+/// @param trackParameters input track parameters container
 /// @param vertices reconstructed vertices
 /// @return proto vertices corresponding to the reconstructed vertices
 ///
@@ -45,8 +46,8 @@ inline std::vector<Acts::InputTrack> makeInputTracks(
 /// elements in the given input track parameters container. If that is not the
 /// case the behaviour is undefined.
 inline ProtoVertexContainer makeProtoVertices(
-    const std::vector<Acts::InputTrack>& inputTracks,
-    const std::vector<Acts::Vertex>& vertices) {
+    const std::vector<const Acts::BoundTrackParameters*>& trackParameters,
+    const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
   ProtoVertexContainer protoVertices;
   protoVertices.reserve(vertices.size());
 
@@ -55,10 +56,10 @@ inline ProtoVertexContainer makeProtoVertices(
     protoVertex.reserve(vertex.tracks().size());
 
     for (const auto& track : vertex.tracks()) {
-      auto it = std::find(inputTracks.begin(), inputTracks.end(),
+      auto it = std::find(trackParameters.begin(), trackParameters.end(),
                           track.originalParams);
-      if (it != inputTracks.end()) {
-        protoVertex.push_back(std::distance(inputTracks.begin(), it));
+      if (it != trackParameters.end()) {
+        protoVertex.push_back(std::distance(trackParameters.begin(), it));
       } else {
         protoVertex.push_back(-1);
       }

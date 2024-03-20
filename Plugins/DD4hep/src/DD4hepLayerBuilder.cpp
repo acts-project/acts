@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <array>

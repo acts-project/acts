@@ -99,7 +99,7 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   using Base::Value;
 
   // Construct an invalid barcode with all levels set to zero.
-  constexpr Barcode() : Base(Base::Zeros()) {}
+  Barcode() : Base(Base::Zeros()) {}
   Barcode(const Barcode&) = default;
   Barcode(Barcode&&) = default;
   Barcode& operator=(const Barcode&) = default;
@@ -117,30 +117,15 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   constexpr Value subParticle() const { return level(4); }
 
   /// Set the primary vertex identifier.
-  constexpr Barcode& setVertexPrimary(Value id) {
-    set(0, id);
-    return *this;
-  }
+  constexpr Barcode& setVertexPrimary(Value id) { return set(0, id), *this; }
   /// Set the secondary vertex identifier.
-  constexpr Barcode& setVertexSecondary(Value id) {
-    set(1, id);
-    return *this;
-  }
+  constexpr Barcode& setVertexSecondary(Value id) { return set(1, id), *this; }
   /// Set the parent particle identifier.
-  constexpr Barcode& setParticle(Value id) {
-    set(2, id);
-    return *this;
-  }
+  constexpr Barcode& setParticle(Value id) { return set(2, id), *this; }
   /// Set the particle identifier.
-  constexpr Barcode& setGeneration(Value id) {
-    set(3, id);
-    return *this;
-  }
+  constexpr Barcode& setGeneration(Value id) { return set(3, id), *this; }
   /// Set the process identifier.
-  constexpr Barcode& setSubParticle(Value id) {
-    set(4, id);
-    return *this;
-  }
+  constexpr Barcode& setSubParticle(Value id) { return set(4, id), *this; }
 
   /// Construct a new barcode representing a descendant particle.
   ///

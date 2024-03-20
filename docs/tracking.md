@@ -115,7 +115,7 @@ $\sigma^2(X)$ are the regular variances. As the covariance matrix $C$ is
 symmetric, only the upper right half is shown in the matrix above. The
 uncertainties associated with the local position, as well as the momentum
 direction are indicated in {numref}`parameters` (a) as an ellipse and a cone
-around the momentum vector $\vec p$, respectively.
+around the momentum vector $\vec p$, respectively. 
 
 (particle_propagation)=
 ## Particle propagation
@@ -483,7 +483,7 @@ detectors, the readout can either be performed in a binary way, only recording
 which segments fired, or the amount of charges measured in the segment can be
 recorded, e.g. via *time-over-threshold* readout. In all cases, the readout is
 attached to an identifier uniquely locating the segment on the corresponding
-sensor.
+sensor. 
 
 As a next step, these raw readouts need to be *clustered*, in order to
 extract an estimate of where particles intersect with the sensor. The general
@@ -495,7 +495,7 @@ either consider all eight surrounding pixels as neighboring a central one, or
 only consider the four non-diagonal ones, as shown in
 {numref}`clustering_cca`. The figure only shows the simplest possible
 cluster starting from the central pixel. In reality, the CCA will iteratively
-continue from the pixels on the cluster edges.
+continue from the pixels on the cluster edges. 
 
 (clustering_cca)=
 :::{figure} /figures/tracking/cca.svg
@@ -519,7 +519,7 @@ $$
 $$
 
 Here, $\vec l_i$ is the local position of the $i$-th segment while
-$q_i$ is its charge.
+$q_i$ is its charge. 
 
 An illustration of the clusterization can be found in {numref}`clustering_image`,
 where a pixel sensor is shown to be intersected by a charged particle,
@@ -528,7 +528,7 @@ with a red frame receive energy from the particle, but the amount is under
 the readout threshold. Four other cells receive energy above the threshold
 and are read out. The clustering will then group these four cells into a
 cluster, and subsequently estimate the cluster position based on the energy
-deposited in the cells. In case no charge information is not available
+deposited in the cells. In case no charge information is not available 
 for a given detector, the calculation is purely geometric.
 
 
@@ -559,9 +559,8 @@ mitigated by allowing tracks to share clusters with other particles, which
 comes at the price of allowing duplicated tracks to some extent.
 Additionally, merged clusters typically feature worse position resolution,
 which manifests itself since it negatively affects the final fit of the
-track.
+track. 
 
-(tracking_sp_formation)=
 ## Spacepoint formation
 
 The basic input to most forms of pattern recognition algorithms for tracking
@@ -652,7 +651,7 @@ $$
 
 with the charge $q$ and the magnetic field $B$. An intersection
 between the straight line in the $rz$-plane with the $z$-axis gives an
-estimate of the longitudinal impact parameter.
+estimate of the longitudinal impact parameter. 
 An illustration of seeds in the transverse plane is found in
 {numref}`seeding_figure`. Note that seeds can incorporate hits spread across all of
 the layers shown, although this can be a configuration parameter.
@@ -877,7 +876,7 @@ $$
 and a filtered residual
 
 $$
-  \vec r_k = \vec m_k - \mathbf H_k \vec x_k
+  \vec r_k = \vec m_k - \mathbf H_k \vec x_k 
   ,
 $$
 
@@ -886,7 +885,7 @@ the measurement $\vec m_k$. Using the filtered residual, an effective
 $\chi^2$ increment
 
 $$
-  \chi^2_+ = \vec r_k^\mathrm{T}
+  \chi^2_+ = \vec r_k^\mathrm{T} 
   \left[ \left( \mathbb 1 - \mathbf H_k  \mathbf K_k \right)  \mathbf V_k \right]^{-1}
   \vec r_k
 $$

@@ -8,18 +8,18 @@ histograms:
     nbins: 21
     min: 0
     max: 20
-
-  "truthVertexMatchRatio":
+  
+  "trkVtxMatch":
     nbins: 100
-    min: 0.0
+    min: 0.3
     max: 1.01
 
-  "resX|resY|resZ|resSeedZ":
+  "resX|resY|resZ":
     nbins: 100
     min: -0.1
     max: 0.1
 
-  "resT|resSeedT":
+  "resT":
     nbins: 100
     min: -50
     max: 50
@@ -33,6 +33,7 @@ histograms:
     nbins: 50
     min: -6
     max: 6
+
 
   "trk_pull.*":
     nbins: 50
@@ -49,17 +50,17 @@ histograms:
     min: 0.0
     max: 100.0
 
-  "truthX|truthY|recoX|recoY|seedX|seedY":
+  "truthX|truthY|recoX|recoY":
     nbins: 100
     min: -0.06
     max: 0.06
 
-  "truthZ|recoZ|seedZ":
+  "truthZ|recoZ":
     nbins: 100
     min: -200
     max: 200
 
-  "truthT|recoT|seedT":
+  "truthT|recoT":
     nbins: 100
     min: -2000
     max: 2000
@@ -88,11 +89,6 @@ histograms:
     nbins: 100
     min: -0.01
     max: 1.01
-  
-  "sumPt2":
-    nbins: 100
-    min: 0
-    max: 700
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]

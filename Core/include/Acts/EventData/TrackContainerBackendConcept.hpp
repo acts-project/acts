@@ -83,8 +83,6 @@ concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
 
   {v.setParticleHypothesis_impl(
       itrack, std::declval<const Acts::ParticleHypothesis&>())};
-
-  {v.clear()};
 };
 
 template <typename T>

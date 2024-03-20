@@ -160,10 +160,10 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   std::vector<std::array<Acts::ActsScalar, 2u>> innerOuter = {
       {25., 35.}, {65., 75.}, {110., 120.}};
   auto b0Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
-                                               31., 3., 2., {16, 14});
+                                               32., 3., 2., {16, 14});
 
   auto b1Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
-                                               71., 3., 2., {32, 14});
+                                               72., 3., 2., {32, 14});
 
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
@@ -192,7 +192,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   cxml << beampipe_head_xml << '\n';
   cxml << indent_12_xml << "<acts_passive_surface>" << '\n';
   cxml << indent_12_xml
-       << "<tubs rmin=\"19*mm\" rmax=\"20*mm\" dz=\"800*mm\" "
+       << "<tubs rmin=\"25*mm\" rmax=\"25.8*mm\" dz=\"1800*mm\" "
           "material=\"Air\"/>"
        << '\n';
   cxml << indent_12_xml << "</acts_passive_surface>" << '\n';

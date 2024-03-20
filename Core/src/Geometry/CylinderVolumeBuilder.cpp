@@ -58,7 +58,7 @@ void Acts::CylinderVolumeBuilder::setLogger(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, TrackingVolumePtr existingVolume,
-    std::shared_ptr<const VolumeBounds> externalBounds) const {
+    VolumeBoundsPtr externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
   if (existingVolume) {
     ACTS_DEBUG("- will wrap/enclose : " << existingVolume->volumeName());

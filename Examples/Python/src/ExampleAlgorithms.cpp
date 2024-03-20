@@ -109,10 +109,6 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(ptMin);
       ACTS_PYTHON_MEMBER(ptMax);
       ACTS_PYTHON_MEMBER(minMeasurements);
-      ACTS_PYTHON_MEMBER(maxHoles);
-      ACTS_PYTHON_MEMBER(maxOutliers);
-      ACTS_PYTHON_MEMBER(maxSharedHits);
-      ACTS_PYTHON_MEMBER(maxChi2);
       ACTS_PYTHON_MEMBER(measurementCounter);
       ACTS_PYTHON_STRUCT_END();
 
@@ -129,8 +125,6 @@ void addExampleAlgorithms(Context& ctx) {
       auto c = py::class_<EtaBinnedConfig>(tool, "EtaBinnedConfig")
                    .def(py::init<>())
                    .def(py::init<const Config&>());
-
-      patchKwargsConstructor(c);
 
       c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 

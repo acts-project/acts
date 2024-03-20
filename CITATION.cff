@@ -1,96 +1,96 @@
-cff-version: 1.1.0
-message: If you use this software, please cite it using these metadata.
-title: 'A Common Tracking Software Project'
-doi: 10.5281/zenodo.5141419
 authors:
-- given-names: Andreas
+- affiliation: CERN
   family-names: Salzburger
-  affiliation: CERN
-- given-names: Paul
+  given-names: Andreas
+- affiliation: CERN
   family-names: Gessinger
-  affiliation: CERN
-- given-names: Fabian
+  given-names: Paul
+- affiliation: CERN / TUM Muenchen
   family-names: Klimpel
-  affiliation: CERN / TUM Muenchen
-- given-names: Moritz
+  given-names: Fabian
+- affiliation: CERN
   family-names: Kiehn
-  affiliation: CERN
-- given-names: Bastian
+  given-names: Moritz
+- affiliation: CERN / JGU Mainz
   family-names: Schlag
-  affiliation: CERN / JGU Mainz
-- given-names: Hadrien
+  given-names: Bastian
+- affiliation: Universite Paris-Saclay / CNRS/IN2P3
   family-names: Grasland
-  affiliation: Universite Paris-Saclay / CNRS/IN2P3
-- given-names: Robert
+  given-names: Hadrien
+- affiliation: University of Massachussets
   family-names: Langenberg
-  affiliation: University of Massachussets
-- given-names: Corentin
+  given-names: Robert
+- affiliation: CERN
   family-names: Allaire
-  affiliation: CERN
-- given-names: Xiaocong
+  given-names: Corentin
+- affiliation: DESY Hamburg
   family-names: Ai
-  affiliation: DESY Hamburg
-- given-names: Benjamin
+  given-names: Xiaocong
+- affiliation: Universitaet Regensburg
   family-names: Huth
-  affiliation: Universitaet Regensburg
-- given-names: Louis-Guillaume
+  given-names: Benjamin
+- affiliation: UC Berkeley
   family-names: Gagnon
-  affiliation: UC Berkeley
-- given-names: Noemi
+  given-names: Louis-Guillaume
+- affiliation: CERN
   family-names: Calace
-  affiliation: CERN
-- given-names: Attila
+  given-names: Noemi
+- affiliation: CERN
   family-names: Krasznahorkay
-  affiliation: CERN
-- given-names: Beomki
+  given-names: Attila
+- affiliation: UC Berkeley
   family-names: Yeo
-  affiliation: UC Berkeley
-- given-names: Charles
+  given-names: Beomki
+- affiliation: LBNL
   family-names: Leggett
-  affiliation: LBNL
-- given-names: Czirkos
+  given-names: Charles
+- affiliation: Eotvos Lorand University
   family-names: Angela
-  affiliation: Eotvos Lorand University
-- given-names: Tomohiro
+  given-names: Czirkos
+- affiliation: UC Berkeley
   family-names: Yamazaki
-  affiliation: UC Berkeley
-- given-names: Joana
+  given-names: Tomohiro
+- affiliation: CERN
   family-names: Niermann
-  affiliation: CERN
-- given-names: Irina
+  given-names: Joana
+- affiliation: UC Berkeley
   family-names: Ene
-  affiliation: UC Berkeley
-- given-names: Joe
+  given-names: Irina
+- affiliation: Oak Ridge National Laboratory
   family-names: Osborn
-  affiliation: Oak Ridge National Laboratory
-- given-names: Rocky
+  given-names: Joe
+- affiliation: Stanford University
   family-names: Garg
+  given-names: Rocky
   name-particle: Bala
-  affiliation: Stanford University
-- given-names: Andreas
+- affiliation: CERN / TU Wien
   family-names: Stefl
-  affiliation: CERN / TU Wien
-- given-names: Luis Falda
+  given-names: Andreas
+- affiliation: CERN / University of Coimbra
   family-names: Coelho
-  affiliation: CERN / University of Coimbra
+  given-names: Luis Falda
   orcid: https://orcid.org/0000-0002-2298-3605
-- given-names: Alexander J.
+- affiliation: CERN / University of Graz
   family-names: Pfleger
-  affiliation: CERN / University of Graz
+  given-names: Alexander J.
   orcid: https://orcid.org/0000-0001-5524-7738
-- given-names: Guilherme
+- affiliation: University of Lisbon
   family-names: Almeida
-  affiliation: University of Lisbon
+  given-names: Guilherme
   orcid: https://orcid.org/0000-0002-4257-4278
-- given-names: Stephen Nicholas
+- affiliation: CERN / University of Amsterdam
   family-names: Swatman
-  affiliation: CERN / University of Amsterdam
+  given-names: Stephen Nicholas
   orcid: https://orcid.org/0000-0002-3747-3229
-- given-names: Felix
+- affiliation: CERN / TU Wien
   family-names: Russo
-  affiliation: CERN / TU Wien
+  given-names: Felix
   orcid: https://orcid.org/0009-0005-8975-2245
-version: 10.0.0
-date-released: 2021-07-28
-repository-code: https://github.com/acts-project/acts
+cff-version: 1.1.0
+date-released: '2024-02-02'
+doi: 10.5281/zenodo.5141419
 license: MPL-2.0
+message: If you use this software, please cite it using these metadata.
+repository-code: https://github.com/acts-project/acts
+title: A Common Tracking Software Project
+version: v32.1.0

@@ -12,12 +12,15 @@
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
-void Acts::to_json(
-    nlohmann::json& j,
-    const std::pair<const Acts::TrackingVolume*,
-                    std::shared_ptr<const Acts::IVolumeMaterial>>& volume) {
+void Acts::to_json(nlohmann::json& j,
+                   const Acts::TrackingVolumeAndMaterial& volume) {
   j[Acts::jsonKey().namekey] = volume.first->volumeName();
   to_json(j, volume.second.get());
+}
+
+void Acts::to_json(nlohmann::json& j,
+                   const Acts::TrackingVolumePointer& volume) {
+  to_json(j, *volume);
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::TrackingVolume& volume) {

@@ -119,19 +119,12 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
   G4double p = convertEnergy * aTrack.GetKineticEnergy();
 
-  std::uint32_t numberOfHits = 0;
-  if (auto it = eventStore().particleHitCount.find(particleId);
-      it != eventStore().particleHitCount.end()) {
-    numberOfHits = it->second;
-  }
-
   // Now create the Particle
   ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle(pdg),
                                       charge, mass);
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
   aParticle.setAbsoluteMomentum(p);
-  aParticle.setNumberOfHits(numberOfHits);
   return aParticle;
 }
 

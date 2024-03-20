@@ -13,7 +13,6 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -45,15 +44,15 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
-    throw std::invalid_argument("Missing input track particles matching");
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -100,7 +99,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
-  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;
@@ -121,19 +120,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     Acts::BoundTrackParameters fittedParameters =
         track.createParametersAtReference();
 
-    // Get the truth-matched particle
-    auto imatched = trackParticleMatching.find(track.index());
-    if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth particle associated with this track, index = "
-                 << track.index() << " tip index = " << track.tipIndex());
+    // Get the majority truth particle for this trajectory
+    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    if (particleHitCounts.empty()) {
+      ACTS_WARNING("No truth particle associated with this trajectory.");
       continue;
     }
-
-    // Get the barcode of the majority truth particle
-    SimBarcode majorityParticleId = imatched->second.particle.value();
-
-    // Find the truth particle via the barcode
-    auto ip = particles.find(majorityParticleId);
+    // Find the truth particle for the majority barcode
+    const auto ip = particles.find(particleHitCounts.front().particleId);
     if (ip == particles.end()) {
       ACTS_WARNING("Majority particle not found in the particles collection.");
       continue;

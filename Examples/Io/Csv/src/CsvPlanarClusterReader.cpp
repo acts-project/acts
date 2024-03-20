@@ -202,7 +202,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
             truth.tx * Acts::UnitConstants::mm,
             truth.ty * Acts::UnitConstants::mm,
             truth.tz * Acts::UnitConstants::mm,
-            truth.tt * Acts::UnitConstants::mm,
+            truth.tt * Acts::UnitConstants::ns,
         };
         ActsFatras::Hit::Vector4 simMom4{
             truth.tpx * Acts::UnitConstants::GeV,
@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     Acts::Vector3 pos(hit.x * Acts::UnitConstants::mm,
                       hit.y * Acts::UnitConstants::mm,
                       hit.z * Acts::UnitConstants::mm);
-    double time = hit.t * Acts::UnitConstants::mm;
+    double time = hit.t * Acts::UnitConstants::ns;
     Acts::Vector3 mom(1, 1, 1);  // fake momentum
     Acts::Vector2 local(0, 0);
     auto lpResult = surface->globalToLocal(ctx.geoContext, pos, mom);

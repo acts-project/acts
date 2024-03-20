@@ -202,18 +202,18 @@ BOOST_DATA_TEST_CASE(
 
   // check if difference is halfZ - sign and direction independent
   CHECK_CLOSE_REL(
-      (pos - boundarySurfaces.at(0).surface->center(tgContext)).norm(),
+      (pos - boundarySurfaces.at(0).first->center(tgContext)).norm(),
       cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   CHECK_CLOSE_REL(
-      (pos - boundarySurfaces.at(1).surface->center(tgContext)).norm(),
+      (pos - boundarySurfaces.at(1).first->center(tgContext)).norm(),
       cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   // transform to local
   double posDiscPosZ =
-      (transform.inverse() * boundarySurfaces.at(1).surface->center(tgContext))
+      (transform.inverse() * boundarySurfaces.at(1).first->center(tgContext))
           .z();
   double centerPosZ = (transform.inverse() * pos).z();
   double negDiscPosZ =
-      (transform.inverse() * boundarySurfaces.at(0).surface->center(tgContext))
+      (transform.inverse() * boundarySurfaces.at(0).first->center(tgContext))
           .z();
   // check if center of disc boundaries lies in the middle in z
   BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
@@ -230,20 +230,18 @@ BOOST_DATA_TEST_CASE(
   // positive disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transform.rotation().col(2).dot(boundarySurfaces.at(1).surface->normal(
+      transform.rotation().col(2).dot(boundarySurfaces.at(1).first->normal(
           tgContext, Acts::Vector2(0., 0.))),
       1., 1e-12);
   // negative disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transform.rotation().col(2).dot(boundarySurfaces.at(0).surface->normal(
+      transform.rotation().col(2).dot(boundarySurfaces.at(0).first->normal(
           tgContext, Acts::Vector2(0., 0.))),
       1., 1e-12);
   // test in r
-  CHECK_CLOSE_REL(boundarySurfaces.at(3).surface->center(tgContext), pos,
-                  1e-12);
-  CHECK_CLOSE_REL(boundarySurfaces.at(2).surface->center(tgContext), pos,
-                  1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(3).first->center(tgContext), pos, 1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(2).first->center(tgContext), pos, 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
@@ -308,19 +306,19 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
   Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : cvbOrientedSurfaces) {
-    auto onSurface = os.surface->binningPosition(geoCtx, binR);
+    auto onSurface = os.first->binningPosition(geoCtx, binR);
     auto locPos =
-        os.surface->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
-    auto osNormal = os.surface->normal(geoCtx, locPos);
+        os.first->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
+    auto osNormal = os.first->normal(geoCtx, locPos);
     // Check if you step inside the volume with the oriented normal
-    Vector3 insideCvb = onSurface + os.direction * osNormal;
-    Vector3 outsideCvb = onSurface - os.direction * osNormal;
+    Vector3 insideCvb = onSurface + os.second * osNormal;
+    Vector3 outsideCvb = onSurface - os.second * osNormal;
 
     BOOST_CHECK(cvb.inside(insideCvb));
     BOOST_CHECK(!cvb.inside(outsideCvb));
 
     // Test the orientation of the boundary surfaces
-    auto rot = os.surface->transform(geoCtx).rotation();
+    auto rot = os.first->transform(geoCtx).rotation();
     BOOST_CHECK(rot.col(0).isApprox(xaxis));
     BOOST_CHECK(rot.col(1).isApprox(yaxis));
     BOOST_CHECK(rot.col(2).isApprox(zaxis));

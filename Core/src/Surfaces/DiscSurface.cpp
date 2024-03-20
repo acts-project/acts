@@ -219,9 +219,6 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
-
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
-
   // special polar coordinates for the Disc
   double lrad = boundParams[eBoundLoc0];
   double lphi = boundParams[eBoundLoc1];

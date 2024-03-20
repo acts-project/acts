@@ -186,9 +186,6 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   }
 
   std::size_t size_impl() const { return m_collection->size(); }
-
-  void clear() { m_collection->clear(); }
-
   // END INTERFACE HELPER
 
   const Surface* referenceSurface_impl(IndexType itrack) const {

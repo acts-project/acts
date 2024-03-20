@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
-
 import os
 import argparse
+import string
+import math
 import time
-from datetime import datetime
+from types import FunctionType
 
 from orion.client import build_experiment
 from orion.storage.base import get_storage
 
+from acts.examples import (
+    Sequencer,
+    WhiteBoard,
+    AlgorithmContext,
+    ProcessCode,
+    RootMaterialTrackReader,
+    RootMaterialTrackWriter,
+    MaterialMapping,
+    JsonMaterialWriter,
+    JsonFormat,
+)
+
 import acts
 from acts import (
+    Vector4,
+    UnitConstants as u,
     SurfaceMaterialMapper,
     VolumeMaterialMapper,
     Navigator,
@@ -17,17 +32,10 @@ from acts import (
     StraightLineStepper,
     MaterialMapJsonConverter,
 )
-from acts.examples import (
-    Sequencer,
-    WhiteBoard,
-    AlgorithmContext,
-    ProcessCode,
-    RootMaterialTrackReader,
-    MaterialMapping,
-    JsonMaterialWriter,
-    JsonFormat,
-)
+
+from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
+from datetime import datetime
 
 
 def runMaterialMappingNoTrack(
@@ -165,7 +173,9 @@ def runMaterialMappingVariance(
     matDeco = acts.IMaterialDecorator.fromFile(
         str(os.path.join(inputPath, "geometry-map.json"))
     )
-    detectorTemp, trackingGeometryTemp, decoratorsTemp = getOpenDataDetector(matDeco)
+    detectorTemp, trackingGeometryTemp, decoratorsTemp = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matDeco
+    )
     matMapDeco = acts.MappingMaterialDecorator(
         tGeometry=trackingGeometryTemp, level=acts.logging.ERROR
     )
@@ -177,7 +187,9 @@ def runMaterialMappingVariance(
     del decoratorsTemp
 
     # Decorate the detector with the MappingMaterialDecorator
-    detector, trackingGeometry, decorators = getOpenDataDetector(matMapDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matMapDeco
+    )
 
     # Sequence for the mapping, only use one thread when mapping material
     sMap = acts.examples.Sequencer(
@@ -213,7 +225,9 @@ def runMaterialMappingVariance(
     # Use the material map from the previous mapping as an input
     cborMap = os.path.join(pathExp, (mapName + ".cbor"))
     matDecoVar = acts.IMaterialDecorator.fromFile(cborMap)
-    detectorVar, trackingGeometryVar, decoratorsVar = getOpenDataDetector(matDecoVar)
+    detectorVar, trackingGeometryVar, decoratorsVar = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matDecoVar
+    )
     s = acts.examples.Sequencer(events=events, numThreads=1, logLevel=acts.logging.INFO)
     for decorator in decoratorsVar:
         s.addContextDecorator(decorator)
@@ -472,7 +486,9 @@ if "__main__" == __name__:
     matDeco = acts.IMaterialDecorator.fromFile(
         str(os.path.join(args.inputPath, "geometry-map.json"))
     )
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matDeco
+    )
 
     # Use the MappingMaterialDecorator to create a binning map that can be optimised
     matMapDeco = acts.MappingMaterialDecorator(
@@ -579,7 +595,7 @@ if "__main__" == __name__:
 
         # Decorate the detector with the MappingMaterialDecorator
         resultDetector, resultTrackingGeometry, resultDecorators = getOpenDataDetector(
-            matMapDeco
+            getOpenDataDetectorDirectory(), matMapDeco
         )
 
         # Sequence for the mapping, only use one thread when mapping material

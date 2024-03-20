@@ -43,7 +43,7 @@ Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
     return SurfaceIntersection::invalid();
   }
   return *std::min_element(sIntersections.begin(), sIntersections.end(),
-                           SurfaceIntersection::pathLengthOrder);
+                           SurfaceIntersection::forwardOrder);
 }
 
 const std::vector<const Acts::Surface*>&

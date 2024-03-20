@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-
 from pathlib import Path
 
 import acts
 import acts.examples
 from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
 from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -39,7 +39,9 @@ def runGeant4(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

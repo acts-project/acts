@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
         data.tx * Acts::UnitConstants::mm,
         data.ty * Acts::UnitConstants::mm,
         data.tz * Acts::UnitConstants::mm,
-        data.tt * Acts::UnitConstants::mm,
+        data.tt * Acts::UnitConstants::ns,
     };
     ActsFatras::Hit::Vector4 mom4{
         data.tpx * Acts::UnitConstants::GeV,
