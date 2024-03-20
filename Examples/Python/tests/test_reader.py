@@ -58,8 +58,7 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             RootParticleReader,
             acts.logging.WARNING,
-            inputParticles="particles_input",
-            inputVertices="vertices_input",
+            outputParticles="particles_input",
             filePath=str(file),
         )
     )
