@@ -266,15 +266,6 @@ ProcessCode VertexPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
   const double nan = std::numeric_limits<double>::quiet_NaN();
 
-  // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
-
-  m_nRecoVtx = vertices.size();
-  m_nMergedVtx = 0;
-  m_nSplitVtx = 0;
-
-  ACTS_DEBUG("Number of reco vertices in event: " << m_nRecoVtx);
-
   // Read truth vertex input collection
   const SimVertexContainer& truthVertices = m_inputTruthVertices(ctx);
   // Read truth particle input collection
@@ -283,38 +274,8 @@ ProcessCode VertexPerformanceWriter::writeT(
   const TrackParticleMatching& trackParticleMatching =
       m_inputTrackParticleMatching(ctx);
 
-  // Get number of generated true primary vertices
-  m_nTrueVtx = getNumberOfTruePriVertices(particles);
-  // Get number of detector-accepted true primary vertices
-  m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedParticles);
-
-  ACTS_DEBUG("Number of truth particles in event : " << particles.size());
-  ACTS_DEBUG("Number of truth primary vertices : " << m_nTrueVtx);
-  ACTS_DEBUG("Number of detector-accepted truth primary vertices : "
-             << m_nVtxDetAcceptance);
-
   const ConstTrackContainer* tracks = nullptr;
   SimParticleContainer recoParticles;
-
-  // Get the event number
-  m_eventNr = ctx.eventNumber;
-
-  // Get number of track-associated true primary vertices
-  m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
-
-  ACTS_INFO("Number of reconstructed tracks : "
-            << ((tracks != nullptr) ? tracks->size() : 0));
-  ACTS_INFO("Number of reco track-associated truth particles in event : "
-            << recoParticles.size());
-  ACTS_INFO("Maximum number of reconstructible primary vertices : "
-            << m_nVtxReconstructable);
-
-  // We compare the reconstructed momenta to the true momenta at the vertex. For
-  // this, we propagate the reconstructed tracks to the PCA of the true vertex
-  // position. Setting up propagator:
-  Acts::EigenStepper<> stepper(m_cfg.bField);
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  auto propagator = std::make_shared<Propagator>(stepper);
 
   auto findParticle = [&](ConstTrackProxy track) -> std::optional<SimParticle> {
     // Get the truth-matched particle
@@ -417,6 +378,45 @@ ProcessCode VertexPerformanceWriter::writeT(
     // vertex
     recoParticles = particles;
   }
+
+  // Exclusive access to the tree while writing
+  std::lock_guard<std::mutex> lock(m_writeMutex);
+
+  m_nRecoVtx = vertices.size();
+  m_nMergedVtx = 0;
+  m_nSplitVtx = 0;
+
+  ACTS_DEBUG("Number of reco vertices in event: " << m_nRecoVtx);
+
+  // Get number of generated true primary vertices
+  m_nTrueVtx = getNumberOfTruePriVertices(particles);
+  // Get number of detector-accepted true primary vertices
+  m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedParticles);
+
+  ACTS_DEBUG("Number of truth particles in event : " << particles.size());
+  ACTS_DEBUG("Number of truth primary vertices : " << m_nTrueVtx);
+  ACTS_DEBUG("Number of detector-accepted truth primary vertices : "
+             << m_nVtxDetAcceptance);
+
+  // Get the event number
+  m_eventNr = ctx.eventNumber;
+
+  // Get number of track-associated true primary vertices
+  m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
+
+  ACTS_INFO("Number of reconstructed tracks : "
+            << ((tracks != nullptr) ? tracks->size() : 0));
+  ACTS_INFO("Number of reco track-associated truth particles in event : "
+            << recoParticles.size());
+  ACTS_INFO("Maximum number of reconstructible primary vertices : "
+            << m_nVtxReconstructable);
+
+  // We compare the reconstructed momenta to the true momenta at the vertex. For
+  // this, we propagate the reconstructed tracks to the PCA of the true vertex
+  // position. Setting up propagator:
+  Acts::EigenStepper<> stepper(m_cfg.bField);
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  auto propagator = std::make_shared<Propagator>(stepper);
 
   struct ToTruthMatching {
     std::optional<SimVertexBarcode> vertexId;
