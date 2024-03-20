@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -85,7 +85,7 @@ struct GeometryView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
   /// @param viewConfig The drawing configuration for boundary surfaces
-  static void drawVolume(IVisualization3D& helper, const AbstractVolume& volume,
+  static void drawVolume(IVisualization3D& helper, const Volume& volume,
                          const GeometryContext& gctx,
                          const Transform3& transform = Transform3::Identity(),
                          const ViewConfig& viewConfig = s_viewVolume);
