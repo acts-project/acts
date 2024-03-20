@@ -58,13 +58,14 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             RootParticleReader,
             acts.logging.WARNING,
-            particleCollection="input_particles",
+            inputParticles="particles_input",
+            inputVertices="vertices_input",
             filePath=str(file),
         )
     )
 
     alg = AssertCollectionExistsAlg(
-        "input_particles", "check_alg", acts.logging.WARNING
+        "particles_input", "check_alg", acts.logging.WARNING
     )
     s2.addAlgorithm(alg)
 
