@@ -58,7 +58,8 @@ def runTruthTrackingGx2f(
             RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection="particles_input",
+                inputParticles="particles_input",
+                inputVertices="vertices_input",
                 orderedEvents=False,
             )
         )

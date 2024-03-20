@@ -148,6 +148,11 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   Barcode makeDescendant(Value sub = 0u) const {
     return Barcode(*this).setGeneration(generation() + 1).setSubParticle(sub);
   }
+
+  /// Reduce the barcode to the vertex identifier.
+  constexpr Barcode vertexId() const {
+    return Barcode(*this).setParticle(0).setSubParticle(0);
+  }
 };
 
 }  // namespace ActsFatras

@@ -47,7 +47,8 @@ def runDigitization(
         # Read input from input collection (e.g. Pythia8 output)
         evGen = acts.examples.RootParticleReader(
             level=s.config.logLevel,
-            particleCollection="particles_input",
+            inputParticles="particles_input",
+            inputVertices="vertices_input",
             filePath=str(particlesInput),
             orderedEvents=False,
         )
