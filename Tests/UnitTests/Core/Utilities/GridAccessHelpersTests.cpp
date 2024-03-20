@@ -103,15 +103,6 @@ BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
 
   auto zt = gssZT.toGridLocal(Vector3{1., 2., 3.});
   BOOST_CHECK_EQUAL(zt[0], 103.);
-
-  // Invalidy checks
-  using SubSpace0 = Acts::GridAccess::GlobalSubspace<>;
-  BOOST_CHECK_THROW(auto gss0 = SubSpace0(), std::invalid_argument);
-
-  // This could in principle be allowed, but does not make sense
-  using SubSpace4 = Acts::GridAccess::GlobalSubspace<Acts::binX, Acts::binY,
-                                                     Acts::binZ, Acts::binPhi>;
-  BOOST_CHECK_THROW(auto gss4 = SubSpace4(), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(BoundToGridLocalTests) {
@@ -123,22 +114,6 @@ BOOST_AUTO_TEST_CASE(BoundToGridLocalTests) {
 
   BOOST_CHECK_EQUAL(xy[0], 1.);
   BOOST_CHECK_EQUAL(xy[1], 2.);
-
-  using Invalid0 = Acts::GridAccess::LocalSubspace<>;
-  BOOST_CHECK_THROW(auto invalid0 = Invalid0(), std::invalid_argument);
-
-  using Invalid3 = Acts::GridAccess::LocalSubspace<0u, 1u, 2u>;
-  BOOST_CHECK_THROW(auto invalid3 = Invalid0(), std::invalid_argument);
-
-  using InvalidL0G2 = Acts::GridAccess::LocalSubspace<2u, 0u>;
-  BOOST_CHECK_THROW(auto invalidl0g2 = InvalidL0G2(), std::invalid_argument);
-
-  using InvalidL1G2 = Acts::GridAccess::LocalSubspace<0u, 2u>;
-  BOOST_CHECK_THROW(auto invalidl1g2 = InvalidL1G2(), std::invalid_argument);
-
-  using InvalidL0G2D1 = Acts::GridAccess::LocalSubspace<2u>;
-  BOOST_CHECK_THROW(auto invalidl0g2d1 = InvalidL0G2D1(),
-                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTests) {

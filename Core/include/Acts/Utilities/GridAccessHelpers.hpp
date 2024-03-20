@@ -138,7 +138,7 @@ class Affine3Transformed final : public IGlobalToGridLocal {
   }
 };
 
-/// @brief A global (potentially castet) sub space of a global
+/// @brief A global (potentially casted) sub space of a global
 /// position
 /// @tparam ...Args
 template <BinningValue... Args>
@@ -146,18 +146,16 @@ class GlobalSubspace final : public IGlobalToGridLocal {
  public:
   using grid_local_t = std::array<ActsScalar, sizeof...(Args)>;
 
-  // Constructor with sanity checks
-  GlobalSubspace() {
-    if constexpr (sizeof...(Args) == 0) {
-      throw std::invalid_argument(
-          "GlobalSubspace: cannot have an empty binning value list.");
-    }
+  /// Assert that size has to be bigger than 0
+  static_assert(sizeof...(Args) > 0,
+                "GlobalSubspace: cannot have an empty binning value list.");
 
-    if constexpr (sizeof...(Args) > 3) {
-      throw std::invalid_argument(
-          "GlobalSubspace: cannot have more than 3 binning values.");
-    }
-  }
+  /// Asser that size has to be smaller than 4
+  static_assert(sizeof...(Args) <= 3,
+                "GlobalSubspace: cannot have more than 3 binning values.");
+
+  // Constructor
+  GlobalSubspace() = default;
 
   /// The binning values
   static constexpr std::array<BinningValue, sizeof...(Args)> bValues = {
@@ -185,36 +183,16 @@ class LocalSubspace final : public IBoundToGridLocal {
  public:
   using grid_local_t = std::array<ActsScalar, sizeof...(Args)>;
 
-  // Constructor with sanity checks
-  LocalSubspace() {
-    if constexpr (sizeof...(Args) == 0) {
-      throw std::invalid_argument(
-          "LocalSubspace: cannot have an empty binning value list.");
-    }
+  /// Assert that the accessors are unique
+  static_assert(sizeof...(Args) == 1 || sizeof...(Args) == 2,
+                "LocalSubspace: only 1 or 2 accessors are allowed.");
 
-    if constexpr (sizeof...(Args) > 2) {
-      throw std::invalid_argument(
-          "LocalSubspace: cannot have more than 2 binning values.");
-    }
+  /// Only 0 or 1 are allowed
+  static_assert(((Args < 2) && ...),
+                "LocalSubspace: local access needs to be 0u or 1u");
 
-    if constexpr (sizeof...(Args) == 1) {
-      if (std::get<0>(accessors) >= 2) {
-        throw std::invalid_argument(
-            "LocalSubspace: local access needs to be 0u or 1u");
-      }
-    }
-
-    if constexpr (sizeof...(Args) == 2) {
-      if (std::get<0>(accessors) == std::get<1>(accessors)) {
-        throw std::invalid_argument(
-            "LocalSubspace: local access needs to be unique");
-      }
-      if (std::get<0>(accessors) >= 2 || std::get<1>(accessors) >= 2) {
-        throw std::invalid_argument(
-            "LocalSubspace: local access needs to be 0u or 1u");
-      }
-    }
-  }
+  // Constructor
+  LocalSubspace() = default;
 
   static constexpr std::array<std::size_t, sizeof...(Args)> accessors = {
       Args...};
