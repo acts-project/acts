@@ -555,6 +555,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
   m_nMajorityHits.clear();
   m_majorityParticleId.clear();
+  m_trackClassification.clear();
   m_t_charge.clear();
   m_t_time.clear();
   m_t_vx.clear();
