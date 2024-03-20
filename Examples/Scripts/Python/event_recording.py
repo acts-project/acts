@@ -43,6 +43,7 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
             )
         ],
         outputParticles="particles_input",
+        outputVertices="vertices_input",
         randomNumbers=rnd,
     )
 
