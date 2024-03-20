@@ -200,10 +200,10 @@ void addOutput(Context& ctx) {
       inputMeasurementParticlesMap, inputMeasurementSimHitsMap, filePath,
       treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootMaterialTrackWriter, mex,
-                             "RootMaterialTrackWriter", collection, filePath,
-                             fileMode, treeName, recalculateTotals, prePostStep,
-                             storeSurface, storeVolume, collapseInteractions);
+  ACTS_PYTHON_DECLARE_WRITER(
+      ActsExamples::RootMaterialTrackWriter, mex, "RootMaterialTrackWriter",
+      inputMaterialTracks, filePath, fileMode, treeName, recalculateTotals,
+      prePostStep, storeSurface, storeVolume, collapseInteractions);
 
   {
     using Writer = ActsExamples::RootBFieldWriter;

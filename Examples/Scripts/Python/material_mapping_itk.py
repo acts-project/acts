@@ -53,7 +53,7 @@ def runMaterialMapping(
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            collection="material-tracks",
+            outputMaterialTracks="material-tracks",
             fileList=[
                 os.path.join(
                     inputDir,

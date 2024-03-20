@@ -35,13 +35,15 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
-    const ActsExamples::RootMaterialTrackWriter::Config& config,
+namespace ActsExamples {
+
+RootMaterialTrackWriter::RootMaterialTrackWriter(
+    const RootMaterialTrackWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.collection, "RootMaterialTrackWriter", level),
+    : WriterT(config.inputMaterialTracks, "RootMaterialTrackWriter", level),
       m_cfg(config) {
   // An input collection name and tree name must be specified
-  if (m_cfg.collection.empty()) {
+  if (m_cfg.inputMaterialTracks.empty()) {
     throw std::invalid_argument("Missing input collection");
   } else if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
@@ -108,13 +110,13 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
+RootMaterialTrackWriter::~RootMaterialTrackWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
+ProcessCode RootMaterialTrackWriter::finalize() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
 
@@ -122,10 +124,10 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
   m_outputTree->Write();
   m_outputFile->Close();
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
+ProcessCode RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
     const std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>&
         materialTracks) {
@@ -366,5 +368,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
   }
 
   // return success
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+} // namespace ActsExamples
