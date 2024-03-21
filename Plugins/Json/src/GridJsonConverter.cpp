@@ -191,6 +191,7 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
         globalToGridLocal = decodeSubspace<binEta>(jGlobalToGridLocal);
         break;
       default:
+        // globalToGridLocal = nullptr;
         break;
     }
   }
