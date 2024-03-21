@@ -105,6 +105,7 @@ def run() -> None:
         "Acts::NullBField",
         "Acts::DiscBounds",
         "Acts::PlanarBounds",
+        "Acts::AbstractVolume",
         "Acts::AnnulusBounds",
         "Acts::DiamondBounds",
         "Acts::RegularSurface",

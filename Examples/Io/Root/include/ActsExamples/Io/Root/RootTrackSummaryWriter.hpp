@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,12 +26,8 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootTrackSummaryWriter
 ///
@@ -142,6 +138,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   std::vector<unsigned int> m_nMajorityHits;
   /// The particle Id of the majority particle
   std::vector<uint64_t> m_majorityParticleId;
+  /// The classification of the reconstructed track
+  std::vector<int> m_trackClassification;
   /// Charge of majority particle
   std::vector<int> m_t_charge;
   /// Time of majority particle
