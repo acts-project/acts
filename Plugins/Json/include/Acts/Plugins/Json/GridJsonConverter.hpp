@@ -49,7 +49,7 @@ nlohmann::json toJson(const GridAccess::IGlobalToGridLocal& globalToGridLocal);
 ///
 /// @param jGlobalToGridLocal the json snippet
 ///
-/// @return a newly created objet
+/// @return a newly created object
 std::unique_ptr<GridAccess::IGlobalToGridLocal> globalToGridLocalFromJson(
     const nlohmann::json& jGlobalToGridLocal);
 
@@ -64,7 +64,7 @@ nlohmann::json toJson(const GridAccess::IBoundToGridLocal& boundToGridLocal);
 ///
 /// @param jBoundToGridLocal the json snippet
 ///
-/// @return a newly created objet
+/// @return a newly created object
 std::unique_ptr<GridAccess::IBoundToGridLocal> boundToGridLocalFromJson(
     const nlohmann::json& jBoundToGridLocal);
 

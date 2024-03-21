@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(LocalSubspace1D) {
       },
       lspace1D);
 
-  // Check that none of them is empy
+  // Check that none of them is empty
   for (auto& jls : jlspace) {
     BOOST_CHECK(!jls.empty());
   }
