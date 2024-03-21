@@ -219,6 +219,7 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
     } else if (accessors == std::vector<BinningValue>{binPhi, binZ}) {
       globalToGridLocal = decodeSubspace<binPhi, binZ>(jGlobalToGridLocal);
     }
+    // else globalToGridLocal = nullptr;
   }
   return globalToGridLocal;
 }
