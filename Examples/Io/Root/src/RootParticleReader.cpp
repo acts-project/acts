@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/RootUtility.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
@@ -20,7 +21,6 @@
 #include <stdexcept>
 
 #include <TChain.h>
-#include <TMathBase.h>
 
 namespace ActsExamples {
 
@@ -78,8 +78,8 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
-    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
-                m_entryNumbers.data(), false);
+    RootUtility::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                      m_entryNumbers.data(), false);
   }
 }
 

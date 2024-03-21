@@ -16,6 +16,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/RootUtility.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -23,7 +24,6 @@
 #include <stdexcept>
 
 #include <TChain.h>
-#include <TMathBase.h>
 
 ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
     const ActsExamples::RootAthenaNTupleReader::Config& config,
@@ -123,8 +123,8 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("EventNumber", "", "goff");
     // Sort to get the entry numbers of the ordered events
-    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
-                m_entryNumbers.data(), false);
+    RootUtility::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                      m_entryNumbers.data(), false);
   }
 }
 

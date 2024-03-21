@@ -12,9 +12,9 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
 #include <cstdint>
