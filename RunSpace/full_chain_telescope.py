@@ -3,6 +3,8 @@ import pathlib, acts, acts.examples
 from pathlib import Path
 from typing import Optional, Union
 from acts import UnitConstants as u
+from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory 
+from acts.examples import TelescopeDetector
 
 from acts.examples.simulation import (
     addParticleGun,
@@ -26,11 +28,18 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
+teleG4Config=TelescopeDetector.Config();
+teleG4Config.bounds=[200, 200]
+teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
+teleG4Config.thickness = [80, 80, 80, 1, 80, 80, 80]
+teleG4Config.binValue=0
+
 u = acts.UnitConstants
 
 detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
     bounds=[200, 200],
-    positions=[30, 60, 90, 120, 150, 180],
+    positions=[30, 60, 90, 105, 120, 150, 180],
+    thickness=[0.08, 0.08, 0.08, 0.001, 0.08, 0.08, 0.08],
     binValue=0,
 )
 
@@ -121,6 +130,7 @@ addParticleGun(
     vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(5.*u.mm, 5.*u.mm, 5.*u.um, stddev_t*u.ns)),
 )
 
+
 addFatras(
     s,
     trackingGeometry,
@@ -135,6 +145,28 @@ addFatras(
     ),
     outputDirRoot=outputDir,
 )
+
+'''
+addGeant4(
+    s,
+    detector=None,
+    trackingGeometry=trackingGeometry,
+    field=field,
+    rnd=rnd,
+    volumeMappings = ["Layer #0 Phys"],
+    g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
+    preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 300 * u.mm),
+            absZ=(-200.0, 200.0 * u.m),
+            eta=(-3.0, 3.0),
+            pt=(1 * u.GeV, None),
+            removeNeutral=True,
+    ),
+    outputDirRoot=outputDir,
+    killVolume=trackingGeometry.worldVolume,
+    killAfterTime=1000 * u.ns,
+)
+'''
 
 addDigitization(
     s,

@@ -40,18 +40,24 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
         "The number of provided positions must match the number of "
         "provided stereo angles.");
   }
+  if (cfg.positions.size() != cfg.thickness.size()) {
+    throw std::invalid_argument(
+        "The number of provided positions must match the number of "
+        "provided thickness.");
+  }
 
   config = cfg;
 
   // Sort the provided distances
   std::vector<double> positions = cfg.positions;
   std::vector<double> stereos = cfg.stereos;
+  std::vector<double> thickness = cfg.thickness;
   std::sort(positions.begin(), positions.end());
 
   /// Return the telescope detector
   TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
-      nominalContext, detectorStore, positions, stereos, cfg.offsets,
-      cfg.bounds, cfg.thickness,
+      nominalContext, detectorStore, positions, stereos, cfg.thickness, cfg.offsets,
+      cfg.bounds,
       static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(
           cfg.surfaceType),
       static_cast<Acts::BinningValue>(cfg.binValue));

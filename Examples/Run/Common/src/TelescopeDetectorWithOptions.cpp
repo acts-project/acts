@@ -68,7 +68,10 @@ auto TelescopeDetectorWithOptions::finalize(
   cfg.bounds =
       vm["geo-tele-bounds"].template as<ActsExamples::Options::Reals<2>>();
   // Translate the thickness in unit of mm
-  cfg.thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
+  //cfg.thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
+  cfg.thickness = vm["geo-tele-thickness"]
+                    .template as<ActsExamples::Options::VariableReals>()
+                    .values;
   cfg.surfaceType = vm["geo-tele-surface"].template as<int>();
   cfg.binValue = vm["geo-tele-alignaxis"].template as<int>();
 

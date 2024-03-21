@@ -19,14 +19,20 @@ from acts.examples.simulation import (
 
 u = acts.UnitConstants
 
+teleG4Config=TelescopeDetector.Config();
+teleG4Config.bounds=[200, 200]
+teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
+teleG4Config.thickness = [80, 80, 80, 1, 80, 80, 80]
+teleG4Config.binValue=0
+
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
         bounds=[200, 200],
-        positions=[30, 60, 90, 120, 150, 180],
-        binValue=2,
+        positions=[30, 60, 90, 105, 120, 150, 180],
+        binValue=0,
     )
 
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
     outputDir = Path.cwd() / "telescope_simulation"
     if not outputDir.exists():
@@ -54,7 +60,7 @@ if "__main__" == __name__:
                 trackingGeometry,
                 field,
                 rnd=rnd,
-                g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory,
+                g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
                 outputDirRoot=outputDir / postfix,
                 outputDirCsv=outputDir / postfix,
                 logLevel=acts.logging.VERBOSE,

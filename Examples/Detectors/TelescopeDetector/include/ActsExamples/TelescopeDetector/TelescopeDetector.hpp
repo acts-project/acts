@@ -44,13 +44,13 @@ struct TelescopeDetector {
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
-    std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
-    std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
+    std::vector<double> positions{{0, 30, 60, 105, 120, 150, 180}};
+    std::vector<double> stereos{{0, 0, 0, 0, 0, 0, 0}};
     std::array<double, 2> offsets{{0, 0}};
     std::array<double, 2> bounds{{25, 100}};
-    double thickness{80_um};
+	std::vector<double> thickness{{80_um, 80_um, 80_um, 1_um, 80_um, 80_um, 80_um}};
     int surfaceType{0};
-    int binValue{2};
+    int binValue{0};
   };
 
   Config config;

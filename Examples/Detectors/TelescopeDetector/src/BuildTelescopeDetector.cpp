@@ -42,8 +42,9 @@ ActsExamples::Telescope::buildDetector(
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
+	const std::vector<double>& thickness,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
+    ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 
@@ -57,9 +58,9 @@ ActsExamples::Telescope::buildDetector(
   // Material of the surfaces
   Acts::Material silicon = Acts::Material::fromMassDensity(
       9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3);
-  Acts::MaterialSlab matProp(silicon, thickness);
-  const auto surfaceMaterial =
-      std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
+  //Acts::MaterialSlab matProp(silicon, thickness);
+  //const auto surfaceMaterial =
+  //    std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
 
   // Construct the rotation
   // This assumes the binValue is binX, binY or binZ. No reset is necessary in
@@ -79,6 +80,10 @@ ActsExamples::Telescope::buildDetector(
   std::size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
   for (unsigned int i = 0; i < nLayers; ++i) {
+	Acts::MaterialSlab matProp(silicon, thickness[i]);
+	const auto surfaceMaterial =
+    std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
+
     // The translation without rotation yet
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
     // The entire transformation (the coordinate system, whose center is defined
