@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
@@ -43,6 +44,8 @@ nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
   return jAxis;
 }
 
+namespace {
+
 template <typename Subspace>
 void encodeSubspace(nlohmann::json& j,
                     const Acts::GridAccess::IGlobalToGridLocal& ga,
@@ -50,56 +53,154 @@ void encodeSubspace(nlohmann::json& j,
   const Subspace* subspace = dynamic_cast<const Subspace*>(&ga);
   if (subspace != nullptr) {
     j["type"] = "subspace";
-    j["accessors"] = subspace->accessors;
+    j["accessors"] = subspace->bValues;
+  }
+}
+
+template <typename Subspace>
+void encodeTransformedSubspace(nlohmann::json& j,
+                               const Acts::GridAccess::IGlobalToGridLocal& ga,
+                               const Subspace& s) {
+  const Acts::GridAccess::Affine3Transformed<Subspace>* tsubspace =
+      dynamic_cast<const Acts::GridAccess::Affine3Transformed<Subspace>*>(&ga);
+  if (tsubspace != nullptr) {
+    encodeSubspace(j, tsubspace->globalToGridLocal, s);
+    j["transform"] =
+        Acts::Transform3JsonConverter::toJson(tsubspace->transform);
   }
 }
 
 template <typename... Args>
 void encodeSubspaces(nlohmann::json& j,
-                     const Acts::GridAccess::IGlobalToGridLocal& ga,
-                     std::tuple<Args...>& t) {
-  std::apply([&](auto&&... vals) { (encodeSubspace(j, ga, vals), ...); }, t);                    
+                     const Acts::GridAccess::IGlobalToGridLocal& ga, bool trf,
+                     const std::tuple<Args...>& t) {
+  if (trf) {
+    std::apply(
+        [&](auto&&... vals) { (encodeTransformedSubspace(j, ga, vals), ...); },
+        t);
+  } else {
+    std::apply([&](auto&&... vals) { (encodeSubspace(j, ga, vals), ...); }, t);
+  }
 }
+
+template <Acts::BinningValue... Args>
+std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> decodeSubspace(
+    const nlohmann::json& jga) {
+  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> ga = nullptr;
+  if (jga.find("transform") != jga.end()) {
+    Acts::Transform3 transform =
+        Acts::Transform3JsonConverter::fromJson(jga.at("transform"));
+    Acts::GridAccess::GlobalSubspace<Args...> s;
+    ga = std::make_unique<Acts::GridAccess::Affine3Transformed<
+        Acts::GridAccess::GlobalSubspace<Args...>>>(std::move(s), transform);
+  } else {
+    ga = std::make_unique<Acts::GridAccess::GlobalSubspace<Args...>>();
+  }
+  return ga;
+}
+
+}  // namespace
 
 nlohmann::json Acts::GridAccessJsonConverter::toJson(
     const GridAccess::IGlobalToGridLocal& ga) {
   nlohmann::json jga;
+
+  std::array<bool, 2u> transformOptions = {false, true};
 
   // One dimensional sub spaces
   const std::tuple<
       GridAccess::GlobalSubspace<binX>, GridAccess::GlobalSubspace<binY>,
       GridAccess::GlobalSubspace<binZ>, GridAccess::GlobalSubspace<binR>,
       GridAccess::GlobalSubspace<binPhi>, GridAccess::GlobalSubspace<binEta>>
-      oneDimAccessors = {};
+      odAcc = {};
 
-  encodeSubspaces(jga, ga, oneDimAccessors);
-  if (!jga.empty()) {
-    return jga;
+  for (bool trf : transformOptions) {
+    encodeSubspaces(jga, ga, trf, odAcc);
+    if (!jga.empty()) {
+      return jga;
+    }
   }
 
-  // Usfeul two dimensional sub spaces 
-  const std::tuple<
-    GridAccess::GlobalSubspace<binX, binY>, GridAccess::GlobalSubspace<binY, binX>,
-    GridAccess::GlobalSubspace<binX, binZ>, GridAccess::GlobalSubspace<binZ, binX>,
-    GridAccess::GlobalSubspace<binY, binZ>, GridAccess::GlobalSubspace<binZ, binY>,
-    GridAccess::GlobalSubspace<binR, binPhi>, GridAccess::GlobalSubspace<binPhi, binR>, 
-    GridAccess::GlobalSubspace<binZ, binPhi>, GridAccess::GlobalSubspace<binPhi, binZ>>
-    twoDimAccessors = {};
+  // Usfeul two dimensional sub spaces
+  const std::tuple<GridAccess::GlobalSubspace<binX, binY>,
+                   GridAccess::GlobalSubspace<binY, binX>,
+                   GridAccess::GlobalSubspace<binX, binZ>,
+                   GridAccess::GlobalSubspace<binZ, binX>,
+                   GridAccess::GlobalSubspace<binY, binZ>,
+                   GridAccess::GlobalSubspace<binZ, binY>,
+                   GridAccess::GlobalSubspace<binR, binPhi>,
+                   GridAccess::GlobalSubspace<binPhi, binR>,
+                   GridAccess::GlobalSubspace<binZ, binPhi>,
+                   GridAccess::GlobalSubspace<binPhi, binZ>>
+      twoDimAccessors = {};
 
-  encodeSubspaces(jga, ga, twoDimAccessors);
-  if (!jga.empty()) {
-    return jga;
+  for (bool trf : transformOptions) {
+    encodeSubspaces(jga, ga, trf, twoDimAccessors);
+    if (!jga.empty()) {
+      return jga;
+    }
   }
-
-
-
   return jga;
 }
 
 std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal>
 Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
     const nlohmann::json& jga) {
-  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> ga;
+  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> ga = nullptr;
+
+  std::vector<BinningValue> accessors =
+      jga.at("accessors").get<std::vector<BinningValue>>();
+
+  // Switch and fill for 1D
+  if (accessors.size() == 1u) {
+    switch (accessors[0]) {
+      case binX:
+        ga = decodeSubspace<binX>(jga);
+        break;
+      case binY:
+        ga = decodeSubspace<binY>(jga);
+        break;
+      case binZ:
+        ga = decodeSubspace<binZ>(jga);
+        break;
+      case binR:
+        ga = decodeSubspace<binR>(jga);
+        break;
+      case binPhi:
+        ga = decodeSubspace<binPhi>(jga);
+        break;
+      case binEta:
+        ga = decodeSubspace<binEta>(jga);
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Switch and fill for 2D
+  if (accessors.size() == 2u) {
+    if (accessors == std::vector<BinningValue>{binX, binY}) {
+      ga = decodeSubspace<binX, binY>(jga);
+    } else if (accessors == std::vector<BinningValue>{binY, binX}) {
+      ga = decodeSubspace<binY, binX>(jga);
+    } else if (accessors == std::vector<BinningValue>{binX, binZ}) {
+      ga = decodeSubspace<binX, binZ>(jga);
+    } else if (accessors == std::vector<BinningValue>{binZ, binX}) {
+      ga = decodeSubspace<binZ, binX>(jga);
+    } else if (accessors == std::vector<BinningValue>{binY, binZ}) {
+      ga = decodeSubspace<binY, binZ>(jga);
+    } else if (accessors == std::vector<BinningValue>{binZ, binY}) {
+      ga = decodeSubspace<binZ, binY>(jga);
+    } else if (accessors == std::vector<BinningValue>{binR, binPhi}) {
+      ga = decodeSubspace<binR, binPhi>(jga);
+    } else if (accessors == std::vector<BinningValue>{binPhi, binR}) {
+      ga = decodeSubspace<binPhi, binR>(jga);
+    } else if (accessors == std::vector<BinningValue>{binZ, binPhi}) {
+      ga = decodeSubspace<binZ, binPhi>(jga);
+    } else if (accessors == std::vector<BinningValue>{binPhi, binZ}) {
+      ga = decodeSubspace<binPhi, binZ>(jga);
+    }
+  }
   return ga;
 }
 

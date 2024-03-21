@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/GridAccessHelpers.hpp"
 
 #include <iostream>
 
@@ -45,14 +45,13 @@ namespace GridAccessJsonConverter {
 /// @return a json object to represent global class
 nlohmann::json toJson(const GridAccess::IGlobalToGridLocal& ga);
 
-/// Create a global grid to local instance 
+/// Create a global grid to local instance
 ///
-/// @param jga the json snippet 
+/// @param jga the json snippet
 ///
 /// @return a newly created objet
 std::unique_ptr<GridAccess::IGlobalToGridLocal> globalToGridLocalFromJson(
     const nlohmann::json& jga);
-
 
 /// Convert a local to local access to json
 ///
@@ -61,18 +60,15 @@ std::unique_ptr<GridAccess::IGlobalToGridLocal> globalToGridLocalFromJson(
 /// @return a json object to represent local class
 nlohmann::json toJson(const GridAccess::IBoundToGridLocal& la);
 
-
 /// Create a local grid to local instance
 ///
 /// @param jla the json snippet
 ///
 /// @return a newly created objet
 std::unique_ptr<GridAccess::IBoundToGridLocal> boundToGridLocalFromJson(
-    const nlohmann::json& jla); 
-
+    const nlohmann::json& jla);
 
 }  // namespace GridAccessJsonConverter
-
 
 namespace GridJsonConverter {
 
