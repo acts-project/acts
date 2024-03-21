@@ -71,15 +71,24 @@ void encodeTransformedSubspace(nlohmann::json& j,
 }
 
 template <typename... Args>
-void encodeSubspaces(nlohmann::json& j,
-                     const Acts::GridAccess::IGlobalToGridLocal& ga, bool trf,
-                     const std::tuple<Args...>& t) {
-  if (trf) {
+void encodeSubspaces(
+    nlohmann::json& globalToGridLocalJson,
+    const Acts::GridAccess::IGlobalToGridLocal& globalToGridLocal,
+    bool transformed, const std::tuple<Args...>& tAcessors) {
+  if (transformed) {
     std::apply(
-        [&](auto&&... vals) { (encodeTransformedSubspace(j, ga, vals), ...); },
-        t);
+        [&](auto&&... vals) {
+          (encodeTransformedSubspace(globalToGridLocalJson, globalToGridLocal,
+                                     vals),
+           ...);
+        },
+        tAcessors);
   } else {
-    std::apply([&](auto&&... vals) { (encodeSubspace(j, ga, vals), ...); }, t);
+    std::apply(
+        [&](auto&&... vals) {
+          (encodeSubspace(globalToGridLocalJson, globalToGridLocal, vals), ...);
+        },
+        tAcessors);
   }
 }
 
@@ -102,8 +111,8 @@ std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> decodeSubspace(
 }  // namespace
 
 nlohmann::json Acts::GridAccessJsonConverter::toJson(
-    const GridAccess::IGlobalToGridLocal& ga) {
-  nlohmann::json jga;
+    const GridAccess::IGlobalToGridLocal& gridToGridLocal) {
+  nlohmann::json gridToGridLocalJson;
 
   std::array<bool, 2u> transformOptions = {false, true};
 
@@ -112,12 +121,13 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
       GridAccess::GlobalSubspace<binX>, GridAccess::GlobalSubspace<binY>,
       GridAccess::GlobalSubspace<binZ>, GridAccess::GlobalSubspace<binR>,
       GridAccess::GlobalSubspace<binPhi>, GridAccess::GlobalSubspace<binEta>>
-      odAcc = {};
+      oneDimSubspaces = {};
 
-  for (bool trf : transformOptions) {
-    encodeSubspaces(jga, ga, trf, odAcc);
-    if (!jga.empty()) {
-      return jga;
+  for (bool transform : transformOptions) {
+    encodeSubspaces(gridToGridLocalJson, gridToGridLocal, transform,
+                    oneDimSubspaces);
+    if (!gridToGridLocalJson.empty()) {
+      return gridToGridLocalJson;
     }
   }
 
@@ -132,45 +142,47 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
                    GridAccess::GlobalSubspace<binPhi, binR>,
                    GridAccess::GlobalSubspace<binZ, binPhi>,
                    GridAccess::GlobalSubspace<binPhi, binZ>>
-      twoDimAccessors = {};
+      twoDimSubspaces = {};
 
-  for (bool trf : transformOptions) {
-    encodeSubspaces(jga, ga, trf, twoDimAccessors);
-    if (!jga.empty()) {
-      return jga;
+  for (bool transform : transformOptions) {
+    encodeSubspaces(gridToGridLocalJson, gridToGridLocal, transform,
+                    twoDimSubspaces);
+    if (!gridToGridLocalJson.empty()) {
+      return gridToGridLocalJson;
     }
   }
-  return jga;
+  return gridToGridLocalJson;
 }
 
 std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal>
 Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
-    const nlohmann::json& jga) {
-  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> ga = nullptr;
+    const nlohmann::json& gToGridLocalJson) {
+  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> gridToGridLocal =
+      nullptr;
 
   std::vector<BinningValue> accessors =
-      jga.at("accessors").get<std::vector<BinningValue>>();
+      gToGridLocalJson.at("accessors").get<std::vector<BinningValue>>();
 
   // Switch and fill for 1D
   if (accessors.size() == 1u) {
     switch (accessors[0]) {
       case binX:
-        ga = decodeSubspace<binX>(jga);
+        gridToGridLocal = decodeSubspace<binX>(gToGridLocalJson);
         break;
       case binY:
-        ga = decodeSubspace<binY>(jga);
+        gridToGridLocal = decodeSubspace<binY>(gToGridLocalJson);
         break;
       case binZ:
-        ga = decodeSubspace<binZ>(jga);
+        gridToGridLocal = decodeSubspace<binZ>(gToGridLocalJson);
         break;
       case binR:
-        ga = decodeSubspace<binR>(jga);
+        gridToGridLocal = decodeSubspace<binR>(gToGridLocalJson);
         break;
       case binPhi:
-        ga = decodeSubspace<binPhi>(jga);
+        gridToGridLocal = decodeSubspace<binPhi>(gToGridLocalJson);
         break;
       case binEta:
-        ga = decodeSubspace<binEta>(jga);
+        gridToGridLocal = decodeSubspace<binEta>(gToGridLocalJson);
         break;
       default:
         break;
@@ -180,94 +192,99 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
   // Switch and fill for 2D
   if (accessors.size() == 2u) {
     if (accessors == std::vector<BinningValue>{binX, binY}) {
-      ga = decodeSubspace<binX, binY>(jga);
+      gridToGridLocal = decodeSubspace<binX, binY>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binY, binX}) {
-      ga = decodeSubspace<binY, binX>(jga);
+      gridToGridLocal = decodeSubspace<binY, binX>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binX, binZ}) {
-      ga = decodeSubspace<binX, binZ>(jga);
+      gridToGridLocal = decodeSubspace<binX, binZ>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binZ, binX}) {
-      ga = decodeSubspace<binZ, binX>(jga);
+      gridToGridLocal = decodeSubspace<binZ, binX>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binY, binZ}) {
-      ga = decodeSubspace<binY, binZ>(jga);
+      gridToGridLocal = decodeSubspace<binY, binZ>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binZ, binY}) {
-      ga = decodeSubspace<binZ, binY>(jga);
+      gridToGridLocal = decodeSubspace<binZ, binY>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binR, binPhi}) {
-      ga = decodeSubspace<binR, binPhi>(jga);
+      gridToGridLocal = decodeSubspace<binR, binPhi>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binPhi, binR}) {
-      ga = decodeSubspace<binPhi, binR>(jga);
+      gridToGridLocal = decodeSubspace<binPhi, binR>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binZ, binPhi}) {
-      ga = decodeSubspace<binZ, binPhi>(jga);
+      gridToGridLocal = decodeSubspace<binZ, binPhi>(gToGridLocalJson);
     } else if (accessors == std::vector<BinningValue>{binPhi, binZ}) {
-      ga = decodeSubspace<binPhi, binZ>(jga);
+      gridToGridLocal = decodeSubspace<binPhi, binZ>(gToGridLocalJson);
     }
   }
-  return ga;
+  return gridToGridLocal;
 }
 
 nlohmann::json Acts::GridAccessJsonConverter::toJson(
-    const GridAccess::IBoundToGridLocal& la) {
-  nlohmann::json jla;
+    const GridAccess::IBoundToGridLocal& bToGridLocal) {
+  nlohmann::json bToGridLocalJson;
 
-  auto localSubSpace0 = dynamic_cast<const GridAccess::LocalSubspace<0u>*>(&la);
+  auto localSubSpace0 =
+      dynamic_cast<const GridAccess::LocalSubspace<0u>*>(&bToGridLocal);
   if (localSubSpace0 != nullptr) {
-    jla["type"] = "subspace";
-    jla["accessors"] = localSubSpace0->accessors;
+    bToGridLocalJson["type"] = "subspace";
+    bToGridLocalJson["accessors"] = localSubSpace0->accessors;
   }
 
-  auto localSubSpace1 = dynamic_cast<const GridAccess::LocalSubspace<1u>*>(&la);
+  auto localSubSpace1 =
+      dynamic_cast<const GridAccess::LocalSubspace<1u>*>(&bToGridLocal);
   if (localSubSpace1 != nullptr) {
-    jla["type"] = "subspace";
-    jla["accessors"] = localSubSpace1->accessors;
+    bToGridLocalJson["type"] = "subspace";
+    bToGridLocalJson["accessors"] = localSubSpace1->accessors;
   }
 
   auto localSubSpace01 =
-      dynamic_cast<const GridAccess::LocalSubspace<0u, 1u>*>(&la);
+      dynamic_cast<const GridAccess::LocalSubspace<0u, 1u>*>(&bToGridLocal);
   if (localSubSpace01 != nullptr) {
-    jla["type"] = "subspace";
-    jla["accessors"] = localSubSpace01->accessors;
+    bToGridLocalJson["type"] = "subspace";
+    bToGridLocalJson["accessors"] = localSubSpace01->accessors;
   }
 
   auto localSubSpace10 =
-      dynamic_cast<const GridAccess::LocalSubspace<1u, 0u>*>(&la);
+      dynamic_cast<const GridAccess::LocalSubspace<1u, 0u>*>(&bToGridLocal);
   if (localSubSpace10 != nullptr) {
-    jla["type"] = "subspace";
-    jla["accessors"] = localSubSpace10->accessors;
+    bToGridLocalJson["type"] = "subspace";
+    bToGridLocalJson["accessors"] = localSubSpace10->accessors;
   }
 
   auto boundCylinderToZPhi =
-      dynamic_cast<const GridAccess::BoundCylinderToZPhi*>(&la);
+      dynamic_cast<const GridAccess::BoundCylinderToZPhi*>(&bToGridLocal);
   if (boundCylinderToZPhi != nullptr) {
-    jla["type"] = "cylinder_to_zphi";
-    jla["radius"] = boundCylinderToZPhi->radius;
-    jla["shift"] = boundCylinderToZPhi->shift;
+    bToGridLocalJson["type"] = "cylinder_to_zphi";
+    bToGridLocalJson["radius"] = boundCylinderToZPhi->radius;
+    bToGridLocalJson["shift"] = boundCylinderToZPhi->shift;
   }
 
-  return jla;
+  return bToGridLocalJson;
 }
 
 std::unique_ptr<Acts::GridAccess::IBoundToGridLocal>
 Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
-    const nlohmann::json& jla) {
-  std::unique_ptr<Acts::GridAccess::IBoundToGridLocal> la;
-  std::string type = jla.at("type").get<std::string>();
+    const nlohmann::json& bToGridLocalJson) {
+  std::unique_ptr<Acts::GridAccess::IBoundToGridLocal> bToGridLocal = nullptr;
+  std::string type = bToGridLocalJson.at("type").get<std::string>();
   if (type == "subspace") {
     std::vector<std::size_t> accessors =
-        jla.at("accessors").get<std::vector<std::size_t>>();
+        bToGridLocalJson.at("accessors").get<std::vector<std::size_t>>();
     if (accessors.size() == 1 && accessors[0] == 0) {
-      la = std::make_unique<Acts::GridAccess::LocalSubspace<0u>>();
+      bToGridLocal = std::make_unique<Acts::GridAccess::LocalSubspace<0u>>();
     } else if (accessors.size() == 1 && accessors[0] == 1) {
-      la = std::make_unique<Acts::GridAccess::LocalSubspace<1u>>();
+      bToGridLocal = std::make_unique<Acts::GridAccess::LocalSubspace<1u>>();
     } else if (accessors.size() == 2 && accessors[0] == 0 &&
                accessors[1] == 1) {
-      la = std::make_unique<Acts::GridAccess::LocalSubspace<0u, 1u>>();
+      bToGridLocal =
+          std::make_unique<Acts::GridAccess::LocalSubspace<0u, 1u>>();
     } else if (accessors.size() == 2 && accessors[0] == 1 &&
                accessors[1] == 0) {
-      la = std::make_unique<Acts::GridAccess::LocalSubspace<1u, 0u>>();
+      bToGridLocal =
+          std::make_unique<Acts::GridAccess::LocalSubspace<1u, 0u>>();
     }
   } else if (type == "cylinder_to_zphi") {
-    ActsScalar radius = jla.at("radius").get<ActsScalar>();
-    ActsScalar shift = jla.at("shift").get<ActsScalar>();
-    la = std::make_unique<Acts::GridAccess::BoundCylinderToZPhi>(radius, shift);
+    ActsScalar radius = bToGridLocalJson.at("radius").get<ActsScalar>();
+    ActsScalar shift = bToGridLocalJson.at("shift").get<ActsScalar>();
+    bToGridLocal =
+        std::make_unique<Acts::GridAccess::BoundCylinderToZPhi>(radius, shift);
   }
-  return la;
+  return bToGridLocal;
 }

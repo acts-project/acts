@@ -40,33 +40,33 @@ namespace GridAccessJsonConverter {
 
 /// Convert a global to local access to json
 ///
-/// @param ga the global to local access
+/// @param gToGridLocal the global to grid local access
 ///
 /// @return a json object to represent global class
-nlohmann::json toJson(const GridAccess::IGlobalToGridLocal& ga);
+nlohmann::json toJson(const GridAccess::IGlobalToGridLocal& gToGridLocal);
 
 /// Create a global grid to local instance
 ///
-/// @param jga the json snippet
+/// @param gToGridLocalJson the json snippet
 ///
 /// @return a newly created objet
 std::unique_ptr<GridAccess::IGlobalToGridLocal> globalToGridLocalFromJson(
-    const nlohmann::json& jga);
+    const nlohmann::json& gToGridLocalJson);
 
 /// Convert a local to local access to json
 ///
-/// @param la the local to local access
+/// @param bToGridLocal the local to local access
 ///
 /// @return a json object to represent local class
-nlohmann::json toJson(const GridAccess::IBoundToGridLocal& la);
+nlohmann::json toJson(const GridAccess::IBoundToGridLocal& bToGridLocal);
 
 /// Create a local grid to local instance
 ///
-/// @param jla the json snippet
+/// @param bToGridLocalJson the json snippet
 ///
 /// @return a newly created objet
 std::unique_ptr<GridAccess::IBoundToGridLocal> boundToGridLocalFromJson(
-    const nlohmann::json& jla);
+    const nlohmann::json& bToGridLocalJson);
 
 }  // namespace GridAccessJsonConverter
 
