@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
           jboundCylinderToZPhi);
 
   // Check that it is not empty
-  BOOST_CHECK(boundCylinderToZPhiRead != nullptr);
+  BOOST_REQUIRE(boundCylinderToZPhiRead != nullptr);
 
   const Acts::GridAccess::BoundCylinderToZPhi* bct =
       dynamic_cast<const Acts::GridAccess::BoundCylinderToZPhi*>(
