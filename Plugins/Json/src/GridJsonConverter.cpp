@@ -137,7 +137,7 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
     }
   }
 
-  // Usfeul two dimensional sub spaces
+  // Useful two dimensional sub spaces
   const std::tuple<GridAccess::GlobalSubspace<binX, binY>,
                    GridAccess::GlobalSubspace<binY, binX>,
                    GridAccess::GlobalSubspace<binX, binZ>,
