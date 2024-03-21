@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
       dynamic_cast<const Acts::GridAccess::BoundCylinderToZPhi*>(
           boundCylinderToZPhiRead.get());
 
-  BOOST_CHECK(bct != nullptr);
+  BOOST_REQUIRE(bct != nullptr);
   CHECK_CLOSE_ABS(bct->radius, 100., 1e-5);
   CHECK_CLOSE_ABS(bct->shift, 10., 1e-5);
 }
