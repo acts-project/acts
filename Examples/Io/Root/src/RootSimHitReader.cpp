@@ -37,7 +37,7 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_outputSimHits.initialize(m_cfg.simHitCollection);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   // Set the branches
   int f = 0;
