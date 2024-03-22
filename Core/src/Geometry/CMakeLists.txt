@@ -1,6 +1,7 @@
 target_sources(
   ActsCore
   PRIVATE
+    AbstractVolume.cpp
     ConeLayer.cpp
     ConeVolumeBounds.cpp
     CuboidVolumeBounds.cpp
