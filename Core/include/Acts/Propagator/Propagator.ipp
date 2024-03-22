@@ -258,6 +258,10 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
   moveStateToResult(state, result);
 
   if (makeCurvilinear) {
+    if (!m_stepper.prepareCurvilinearState(state, m_navigator)) {
+      // information to compute curvilinearState is incomplete.
+      return propagationResult.error();
+    }
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
     // Fill the end parameters
