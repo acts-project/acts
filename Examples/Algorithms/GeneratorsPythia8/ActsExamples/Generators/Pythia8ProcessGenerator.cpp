@@ -117,11 +117,12 @@ Pythia8Generator::operator()(RandomEngine& rng) {
       // either add to existing secondary vertex if exists or create new one
 
       // check if an existing vertex is close enough
-      auto it = std::find_if(
-          vertices.begin(), vertices.end(), [=](const SimVertex& other) {
-            return (pos4.head<3>() - other.position()).norm() <
-                   m_cfg.spatialVertexThreshold;
-          });
+      auto it =
+          std::find_if(vertices.begin(), vertices.end(),
+                       [&pos4, this](const SimVertex& other) {
+                         return (pos4.head<3>() - other.position()).norm() <
+                                m_cfg.spatialVertexThreshold;
+                       });
 
       if (it != vertices.end()) {
         particleId.setVertexSecondary(std::distance(vertices.begin(), it));
