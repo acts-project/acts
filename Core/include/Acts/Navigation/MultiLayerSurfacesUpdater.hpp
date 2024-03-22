@@ -128,7 +128,7 @@ struct PathGridSurfacesGenerator {
     pathCoordinates.reserve(numberOfSteps);
 
     Vector3 position = startPosition;
-    auto step = stepSize * ldirection;
+    Vector3 step = stepSize * ldirection;
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
       pathCoordinates.push_back(lposition);
