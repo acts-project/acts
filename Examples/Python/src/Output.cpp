@@ -179,13 +179,13 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
                              "TrackFinderPerformanceWriter", inputProtoTracks,
-                             inputMeasurementParticlesMap, inputParticles,
-                             filePath, fileMode, treeNameTracks,
-                             treeNameParticles);
+                             inputParticles, inputMeasurementParticlesMap,
+                             inputProtoTrackParticleMatching, filePath,
+                             fileMode, treeNameTracks, treeNameParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFitterPerformanceWriter, mex,
                              "TrackFitterPerformanceWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
+                             inputParticles, inputTrackParticleMatching,
                              filePath, resPlotToolConfig, effPlotToolConfig,
                              trackSummaryPlotToolConfig);
 
@@ -322,20 +322,19 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackStatesWriter, mex, "RootTrackStatesWriter",
-      inputTracks, inputParticles, inputSimHits, inputMeasurementParticlesMap,
+      inputTracks, inputParticles, inputTrackParticleMatching, inputSimHits,
       inputMeasurementSimHitsMap, filePath, treeName, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackSummaryWriter, mex, "RootTrackSummaryWriter",
-      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
+      inputTracks, inputParticles, inputTrackParticleMatching, filePath,
       treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
-      inputAllTruthParticles, inputSelectedTruthParticles,
-      inputAssociatedTruthParticles, inputTracks, inputMeasurementParticlesMap,
-      inputVertices, bField, filePath, treeName, fileMode,
-      minTrackVtxMatchFraction, truthMatchProbMin, useTracks);
+      inputParticles, inputSelectedParticles, inputTracks,
+      inputTrackParticleMatching, inputVertices, bField, filePath, treeName,
+      fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,
@@ -377,10 +376,10 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTracks, inputParticles, inputMeasurementParticlesMap, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
-      doubleMatching, writeMatchingDetails);
+      inputTracks, inputParticles, inputTrackParticleMatching,
+      inputParticleTrackMatching, filePath, fileMode, effPlotToolConfig,
+      fakeRatePlotToolConfig, duplicationPlotToolConfig,
+      trackSummaryPlotToolConfig, writeMatchingDetails);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
