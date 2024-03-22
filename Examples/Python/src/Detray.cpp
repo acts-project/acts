@@ -60,7 +60,7 @@ namespace Acts::Python {
             mex.def("DetrayConverter",
                     [](const Acts::GeometryContext& gctx,
                     const Acts::Experimental::Detector& acts_detector,
-                    const std::string& name) -> bool {
+                    const std::string& name) -> detector_t {
                         
                         //DETRAY
                         //build a mini detector
@@ -78,9 +78,9 @@ namespace Acts::Python {
                         //ACTS
                         //call the converters from plugin 
                         //bool ret = detray_converter(acts_detector);
-                        //const detector_t d_detray = ;                           
+                        //detector_t d_detray = detray_tree_converter(acts_detector, gctx);                           
 
-                        return (detray_tree_converter(acts_detector, gctx));
+                        return std::move(detray_tree_converter(acts_detector, gctx));
                     });
         }
     }
