@@ -32,4 +32,7 @@ using ConstTrackContainer =
 
 using TrackIndexType = TrackContainer::IndexType;
 
+using TrackProxy = TrackContainer::TrackProxy;
+using ConstTrackProxy = ConstTrackContainer::ConstTrackProxy;
+
 }  // namespace ActsExamples
