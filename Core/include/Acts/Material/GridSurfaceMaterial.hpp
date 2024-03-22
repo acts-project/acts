@@ -32,8 +32,8 @@ struct GridMaterialAccessor {
   ///
   /// @return the material slab from the grid bin associated to the lookup point
   template <typename grid_type>
-  inline MaterialSlab& slab(grid_type& grid,
-                            const typename grid_type::point_t& point) const {
+  inline const MaterialSlab& slab(
+      grid_type& grid, const typename grid_type::point_t& point) const {
     return grid.atPosition(point);
   }
 
@@ -45,8 +45,9 @@ struct GridMaterialAccessor {
   /// @note this is not particularly fast
   template <typename grid_type>
   void scale(grid_type& grid, ActsScalar scale) {
-    for (auto& m : grid.values()) {
-      m.scaleThickness(scale);
+    // Loop through the grid bins, get the indices and scale the material
+    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
+      grid.at(ib).scaleThickness(scale);
     }
   }
 };
@@ -71,11 +72,59 @@ struct IndexedMaterialAccessor {
 
   /// @brief Scale the material (by scaling the thickness)
   ///
+  ///
   /// @param scale the amount of the scaling
   template <typename grid_type>
   void scale(grid_type& /*unused*/, ActsScalar scale) {
     for (auto& m : material) {
       m.scaleThickness(scale);
+    }
+  }
+};
+
+/// @brief  This is an accessor for cases where the material is filled in a global
+/// material vector that is accessed from the different material grids.
+struct GloballyIndexedMaterialAccessor {
+  /// @brief The internal storage of the material
+  std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
+
+  /// Indicate if you have entries bins across different grids, e.g. by
+  /// running a compression/clustering algorithm.
+  ///
+  /// It is the responsibility of the user to set this flag correctly.
+  bool sharedEntries = false;
+
+  /// @brief  Direct const access to the material slap sorted in the grid
+  /// @tparam grid_type the type of the grid, also defines the point type
+  /// @param grid the grid
+  /// @param point the lookup point (already casted from global, or filled from local)
+  ///
+  /// @return the material slab from the grid bin associated to the lookup point
+  template <typename grid_type>
+  inline const MaterialSlab& slab(
+      const grid_type& grid, const typename grid_type::point_t& point) const {
+    auto index = grid.atPosition(point);
+    return (*globalMaterial)[index];
+  }
+
+  /// @brief Scale the material (by scaling the thickness)
+  ///
+  /// @note this will scale only the bins touched by this grid, however,
+  /// if there are shared bins, then it will throw an exception as the
+  /// outcome is unpredictable.
+  ///
+  /// @param scale the amount of the scaling
+  template <typename grid_type>
+  void scale(grid_type& grid, ActsScalar scale) {
+    if (sharedEntries) {
+      throw std::invalid_argument(
+          "GloballyIndexedMaterialAccessor: shared entry scaling is not "
+          "supported.");
+    }
+    // Loop through the grid bins, get the indices and scale the material
+    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
+      auto index = grid.at(ib);
+      (*globalMaterial)[index].scaleThickness(scale);
     }
   }
 };
@@ -175,6 +224,11 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
 template <typename grid_type>
 using IndexedSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, IndexedMaterialAccessor>;
+
+// Globally Indexed Surface material
+template <typename grid_type>
+using GloballyIndexedSurfaceMaterial =
+    GridSurfaceMaterialT<grid_type, GloballyIndexedMaterialAccessor>;
 
 // Grid Surface material
 template <typename grid_type>
