@@ -84,8 +84,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   }
 
   // create the primary vertex
-  auto& primaryVertex =
-      vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
+  vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
 
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {
@@ -120,17 +119,18 @@ Pythia8Generator::operator()(RandomEngine& rng) {
       auto it = std::find_if(
           vertices.begin(), vertices.end(),
           [=](const SimVertex& other) { return pos4 == other.position4; });
-      if (it == vertices.end()) {
+      if (it != vertices.end()) {
+        particleId.setVertexSecondary(std::distance(vertices.begin(), it));
+        it->outgoing.insert(particleId);
+      } else {
         // no matching secondary vertex exists -> create new one
         particleId.setVertexSecondary(vertices.size());
         auto& vertex = vertices.emplace_back(particleId.vertexId(), pos4);
         vertex.outgoing.insert(particleId);
         ACTS_VERBOSE("created new secondary vertex " << pos4.transpose());
-      } else {
-        particleId.setVertexSecondary(std::distance(vertices.begin(), it));
-        it->outgoing.insert(particleId);
       }
     } else {
+      auto& primaryVertex = vertices.front();
       primaryVertex.outgoing.insert(particleId);
     }
 

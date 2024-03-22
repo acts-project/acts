@@ -113,17 +113,21 @@ auto gctx = Acts::GeometryContext();
 auto [physWorld, names] = ConstructGeant4World();
 
 BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
+  /// Read the gdml file and get the world volume
+  G4GDMLParser parser;
+  parser.Read(gdmlPath.string(), false);
+  auto world = parser.GetWorldVolume();
+
   // Default template parameters are fine
   // when using names as identifiers
   auto spFullCfg = Acts::Experimental::Geant4SurfaceProvider<>::Config();
-  spFullCfg.gdmlPath = gdmlPath.string();
+  spFullCfg.g4World = world;
   spFullCfg.surfacePreselector =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(names,
                                                                           true);
 
   auto spFull = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(
-      spFullCfg, Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(),
-      false);
+      spFullCfg, Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions());
 
   auto lbFullCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lbFullCfg.surfacesProvider = spFull;
@@ -157,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
                                         names.begin() + names.size() / 2);
 
   auto spLeftArmCfg = Acts::Experimental::Geant4SurfaceProvider<>::Config();
-  spLeftArmCfg.gdmlPath = gdmlPath.string();
+  spLeftArmCfg.g4World = world;
   spLeftArmCfg.surfacePreselector =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
           leftArmNames, true);
@@ -165,7 +169,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
   auto spLeftArm =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<>>(
           spLeftArmCfg,
-          Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions(), false);
+          Acts::Experimental::Geant4SurfaceProvider<>::kdtOptions());
 
   auto lbCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lbCfg.surfacesProvider = spLeftArm;
@@ -190,9 +194,14 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
+  /// Read the gdml file and get the world volume
+  G4GDMLParser parser;
+  parser.Read(gdmlPath.string(), false);
+  auto world = parser.GetWorldVolume();
+
   // 1D selection -- select only the second row
   auto sp1DCfg = Acts::Experimental::Geant4SurfaceProvider<1>::Config();
-  sp1DCfg.gdmlPath = gdmlPath.string();
+  sp1DCfg.g4World = world;
 
   auto kdt1DOpt = Acts::Experimental::Geant4SurfaceProvider<1>::kdtOptions();
   kdt1DOpt.range = Acts::RangeXD<1, Acts::ActsScalar>();
@@ -200,7 +209,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   kdt1DOpt.binningValues = {Acts::BinningValue::binZ};
 
   auto sp1D = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-      sp1DCfg, kdt1DOpt, false);
+      sp1DCfg, kdt1DOpt);
 
   auto lb1DCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb1DCfg.surfacesProvider = sp1D;
@@ -226,7 +235,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   // 2D selection -- select only the second row
   // of the left arm
   auto sp2DCfg = Acts::Experimental::Geant4SurfaceProvider<2>::Config();
-  sp2DCfg.gdmlPath = gdmlPath.string();
+  sp2DCfg.g4World = world;
 
   auto kdt2DOpt = Acts::Experimental::Geant4SurfaceProvider<2>::kdtOptions();
   kdt2DOpt.range = Acts::RangeXD<2, Acts::ActsScalar>();
@@ -235,7 +244,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   kdt2DOpt.binningValues = {Acts::BinningValue::binZ};
 
   auto sp2D = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<2>>(
-      sp2DCfg, kdt2DOpt, false);
+      sp2DCfg, kdt2DOpt);
 
   auto lb2DCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb2DCfg.surfacesProvider = sp2D;
@@ -257,7 +266,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   // Preselect the left arm based on the position
   // and select only the second row
   auto sp2DPosCfg = Acts::Experimental::Geant4SurfaceProvider<1>::Config();
-  sp2DPosCfg.gdmlPath = gdmlPath.string();
+  sp2DPosCfg.g4World = world;
   std::map<unsigned int, std::tuple<double, double>> ranges;
 
   std::array<unsigned int, 3> g4Axes{0};
@@ -274,7 +283,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
           ranges);
 
   auto sp2DPos = std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-      sp2DPosCfg, kdt1DOpt, false);
+      sp2DPosCfg, kdt1DOpt);
 
   auto lb2DPosCfg = Acts::Experimental::LayerStructureBuilder::Config();
   lb2DPosCfg.surfacesProvider = sp2DPos;
@@ -345,10 +354,15 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
 
   bgdml.close();
 
+  /// Read the gdml file and get the world volume
+  G4GDMLParser parser;
+  parser.Read("Plane.gdml", false);
+  auto world = parser.GetWorldVolume();
+
   // 1D selection -- select only the second row
   auto planeFromGDMLCfg =
       Acts::Experimental::Geant4SurfaceProvider<1>::Config();
-  planeFromGDMLCfg.gdmlPath = "Plane.gdml";
+  planeFromGDMLCfg.g4World = world;
   planeFromGDMLCfg.surfacePreselector =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
           std::vector<std::string>{"b_pv"}, true);
@@ -362,7 +376,7 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
 
   auto planeProvider =
       std::make_shared<Acts::Experimental::Geant4SurfaceProvider<1>>(
-          planeFromGDMLCfg, kdt1DOpt, false);
+          planeFromGDMLCfg, kdt1DOpt);
 
   auto planes = planeProvider->surfaces(tContext);
   BOOST_CHECK_EQUAL(planes.size(), 1u);

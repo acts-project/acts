@@ -73,16 +73,16 @@ class EventGenerator final : public ActsExamples::IReader {
     virtual Acts::Vector4 operator()(RandomEngine& rng) const = 0;
   };
 
-  /// @brief Generator interface particles for a vertex
+  /// @brief Generator interface for vertices and particles
   struct ParticlesGenerator {
     /// @brief Virtual destructor required
     virtual ~ParticlesGenerator() = default;
-    /// @brief Generate particles for a vertex
+    /// @brief Generate vertices and particles for one interaction
     /// @note This method cannot be `const` because the Pythia8 generator
     ///       uses the Pythia8 interfaces, which is non-const
     ///
     /// @param rng Shared random number generator instance
-    /// @return SimParticleContainer The populated particle container for the vertex
+    /// @return The vertex and particle containers
     virtual std::pair<SimVertexContainer, SimParticleContainer> operator()(
         RandomEngine& rng) = 0;
   };
