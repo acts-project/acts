@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -60,6 +61,7 @@ int findVolume(
 
 namespace detray{
 
+    
     static io::transform_payload detray_converter_transf(const Transform3& t, const Transform3JsonConverter::Options& options){
 
         //access acts transform
@@ -108,16 +110,10 @@ namespace detray{
         mask_pd.shape = static_cast<io::mask_payload::mask_shape>(shape);
         mask_pd.boundaries = static_cast<std::vector<real_io>>(boundaries); //conversion sos??
 
-
+        ///home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/common/geometry_reader.hpp
+        detray::io::single_link_payload lnk;
+        mask_pd.volume_link = lnk;
         //Acts::SurfaceBoundsJsonConverter::toJsonDetray
-        //detray side missing: 
-            //mask_pd.volume_link = 
-            //mask_pd.boundaries =
-
-        //acts side missing 
-            //boundaries
-            //shape
-            //volume link
 
         return mask_pd;
     }
@@ -136,7 +132,6 @@ namespace detray{
         surf_pd.mask = detray_converter_mask(surface->bounds(),surfaceOptions.portal);
         //detray missing 
             //optional material
-            //surf_pd.mask -> detray_converter_mask
 
         return surf_pd;
     }
@@ -154,6 +149,7 @@ namespace detray{
         for (const auto* surface : volume->surfaces()) {
             io::surface_payload surf_pd = detray_converter_surf(surface, gctx);// acts transf
             surf_pd.index_in_coll= sIndex++;
+            surf_pd.mask.volume_link.link= vol_pd.index.link;//link surface' mask to volume
             vol_pd.surfaces.push_back(surf_pd);
         }
 
@@ -163,7 +159,7 @@ namespace detray{
             //volumeBounds()
             //volume_portals
         
-        //detray side missing : 
+        //detray sos questions : 
             //vol_pd.acc_links :inline void from_json(const nlohmann::ordered_json& j, volume_payload& v) {
             //vol_pd.type -> always cylinder?? sos?
 
@@ -179,6 +175,8 @@ namespace detray{
         header_data_pd.detector = detector.name();
         header_data_pd.tag = "geometry"; 
         header_data_pd.date = io::detail::get_current_date();
+
+        //geo header payload ?? sos where?  
         //header_pd.data = header_data_pd; //sos how to
         //header_pd.type = "detray";//sos how to
         //header_pd.n_volumes = det.volumes.size();
@@ -187,7 +185,7 @@ namespace detray{
         return header_pd;
     }
 
-    bool detray_tree_converter(const Acts::Experimental::Detector& detector, const Acts::GeometryContext& gctx){
+    detector_t detray_tree_converter(const Acts::Experimental::Detector& detector, const Acts::GeometryContext& gctx){
         
         detray::io::detector_payload dp;
         std::cout<<"-----tree converter-------"<<std::endl;
@@ -202,73 +200,20 @@ namespace detray{
 
         detray::io::geometry_reader::convert<detector_t>(det_builder, names, dp);
 
-        const detector_t DetrayDet = det_builder.build(host_mr);
+        detector_t detrayDet = det_builder.build(host_mr);
+        detray::detail::check_consistency(detrayDet); //-> no portals
         
         //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
-        return (true);
+        return std::move(detrayDet);
 
     }
-
-    bool detray_converter(const detector_t& d){
-
-        return (true);
-    }
-
-    //acts methods
-    bool volume_printer(const Acts::Experimental::Detector& detector){
-        
-        io::detail::detector_components_reader<detector_t> readers;
-        std::size_t nSurfaces = 0;
-        std::vector<const Experimental::Portal*> portals;
-
-        std::cout<<"detector name "<<detector.name()<<std::endl;
-
-        int Nportals,Nvolumes=0;
-        for (const auto* volume : detector.volumes()) {
-            Nportals=0;
-            Nvolumes++;
-            std::cout<<"volume "<<Nvolumes<<":";
-            for (const auto& portal : volume->portals()) {
-                Nportals++;
-                std::cout<<Nportals<<":";
-            }
-            std::cout<<std::endl;
-        }
-
-        return (true);
-    }
-
-    //acts-> detray payloads
-    bool detray_converter(const Acts::Experimental::Detector& detector){
-
-        std::cout<<"detector name "<<detector.name()<<std::endl;//acts
-
-        //see /home/exochell/docker_dir/ACTS_ODD_D/acts/Plugins/Detray/include/Detray.hpp
-        //access volume and then: 
-        //volume.volume_bounds()
-        //volume.transform()
-        Transform3JsonConverter::Options writtenOption{true, false};
-
-        detray::io::volume_payload vol_pd;
-
-        for (const auto* volume : detector.volumes()) {
-            std::cout<<volume->name()<<std::endl;
-            io::transform_payload transf_pd = detray_converter_transf(volume->transform(), writtenOption);// acts transf
-        }
-        
-        //give payload to convert function
-
-        //initialize detector d
-        detray::io::detector_payload dp;
-        dp.volumes = {detray::io::volume_payload{}, detray::io::volume_payload{}};
-
-        //build detector d
-
-        return (true);
-    }
-
 
 }
 
+
+//NOTES
+//inline single_link_payload convert(const std::size_t idx) {
+//use basic_converter.hpp
+//fill portals
 
 
