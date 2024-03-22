@@ -306,6 +306,7 @@ def ptcl_gun(rng):
                 )
             ],
             outputParticles="particles_input",
+            outputVertices="vertices_input",
             randomNumbers=rng,
         )
 

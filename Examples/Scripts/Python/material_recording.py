@@ -58,6 +58,7 @@ def runMaterialRecording(
             )
         ],
         outputParticles="particles_initial",
+        outputVertices="vertices_initial",
         randomNumbers=rnd,
     )
 

@@ -35,7 +35,6 @@ from acts.examples.reconstruction import (
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
-
 u = acts.UnitConstants
 
 
@@ -135,7 +134,6 @@ if args["edm4hep"]:
         inputParticles="particles",
         outputParticles="particles_selected",
     )
-
 
 else:
     if not ttbar:

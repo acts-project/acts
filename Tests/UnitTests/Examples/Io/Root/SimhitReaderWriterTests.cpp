@@ -12,6 +12,7 @@
 #include "Acts/Tests/CommonHelpers/WhiteBoardUtilities.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 

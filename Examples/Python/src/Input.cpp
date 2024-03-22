@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootVertexReader.hpp"
 
 #include <memory>
 
@@ -33,6 +34,7 @@ using namespace pybind11::literals;
 using namespace ActsExamples;
 
 namespace Acts::Python {
+
 void addInput(Context& ctx) {
   auto mex = ctx.get("examples");
 
@@ -40,6 +42,10 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootParticleReader, mex,
                              "RootParticleReader", outputParticles, treeName,
                              filePath);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootVertexReader, mex,
+                             "RootVertexReader", outputVertices, treeName,
+                             filePath, orderedEvents);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootMaterialTrackReader, mex,
                              "RootMaterialTrackReader", outputMaterialTracks,
@@ -92,4 +98,5 @@ void addInput(Context& ctx) {
                              "RootSimHitReader", treeName, filePath,
                              outputSimHits);
 }
+
 }  // namespace Acts::Python
