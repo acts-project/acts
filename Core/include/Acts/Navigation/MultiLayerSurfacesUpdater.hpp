@@ -43,7 +43,7 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   MultiLayerSurfacesUpdaterImpl(
-      grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
+      grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr.inverse()) {}
 
