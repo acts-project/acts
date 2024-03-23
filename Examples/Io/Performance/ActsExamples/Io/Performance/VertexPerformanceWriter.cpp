@@ -578,17 +578,6 @@ ProcessCode VertexPerformanceWriter::writeT(
     double recoVertexTrackWeights = toTruthMatching.totalTrackWeight;
     m_recoVertexTrackWeights.push_back(recoVertexTrackWeights);
 
-    RecoVertexClassification recoVertexClassification =
-        toTruthMatching.classification;
-    m_recoVertexClassification.push_back(
-        static_cast<int>(recoVertexClassification));
-
-    if (recoVertexClassification == RecoVertexClassification::Merged) {
-      ++m_nMergedVtx;
-    } else if (recoVertexClassification == RecoVertexClassification::Split) {
-      ++m_nSplitVtx;
-    }
-
     unsigned int nTracksOnRecoVertex =
         std::count_if(tracksAtVtx.begin(), tracksAtVtx.end(), weightHighEnough);
     m_nTracksOnRecoVertex.push_back(nTracksOnRecoVertex);
@@ -600,47 +589,55 @@ ProcessCode VertexPerformanceWriter::writeT(
       auto iTruthVertex = truthVertices.find(toTruthMatching.vertexId.value());
       if (iTruthVertex == truthVertices.end()) {
         ACTS_ERROR("Truth vertex not found.");
-      } else {
-        const SimVertex& truthVertex = *iTruthVertex;
-
-        // Count number of reconstructible tracks on truth vertex
-        int nTracksOnTruthVertex = 0;
-        for (const auto& particle : selectedParticles) {
-          if (particle.particleId().vertexId() == truthVertex.vertexId()) {
-            ++nTracksOnTruthVertex;
-          }
-        }
-        m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-
-        m_truthVertexMatchRatio.push_back(toTruthMatching.matchFraction);
-
-        m_vertexPrimary.push_back(truthVertex.vertexId().vertexPrimary());
-        m_vertexSecondary.push_back(truthVertex.vertexId().vertexSecondary());
-
-        const Acts::Vector4& truePos = truthVertex.position4;
-        truthPos = truePos;
-        m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
-        m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
-        m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
-        m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
-
-        const Acts::Vector4 diffPos = vtx.fullPosition() - truePos;
-        m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
-        m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
-        m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
-        m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
-
-        m_pullX.push_back(
-            pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
-        m_pullY.push_back(
-            pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
-        m_pullZ.push_back(
-            pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
-        m_pullT.push_back(
-            pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
-
-        truthInfoWritten = true;
+        continue;
       }
+      const SimVertex& truthVertex = *iTruthVertex;
+
+      // Count number of reconstructible tracks on truth vertex
+      int nTracksOnTruthVertex = 0;
+      for (const auto& particle : selectedParticles) {
+        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+          ++nTracksOnTruthVertex;
+        }
+      }
+      m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
+
+      RecoVertexClassification recoVertexClassification =
+          toTruthMatching.classification;
+      m_recoVertexClassification.push_back(
+          static_cast<int>(recoVertexClassification));
+
+      if (recoVertexClassification == RecoVertexClassification::Merged) {
+        ++m_nMergedVtx;
+      } else if (recoVertexClassification == RecoVertexClassification::Split) {
+        ++m_nSplitVtx;
+      }
+
+      m_truthVertexMatchRatio.push_back(toTruthMatching.matchFraction);
+
+      m_vertexPrimary.push_back(truthVertex.vertexId().vertexPrimary());
+      m_vertexSecondary.push_back(truthVertex.vertexId().vertexSecondary());
+
+      const Acts::Vector4& truePos = truthVertex.position4;
+      truthPos = truePos;
+      m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
+      m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
+      m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
+      m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
+
+      const Acts::Vector4 diffPos = vtx.fullPosition() - truePos;
+      m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
+      m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
+      m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
+      m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
+
+      m_pullX.push_back(pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
+      m_pullY.push_back(pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
+      m_pullZ.push_back(pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
+      m_pullT.push_back(
+          pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
+
+      truthInfoWritten = true;
     }
     if (!truthInfoWritten) {
       m_nTracksOnTruthVertex.push_back(-1);
@@ -916,6 +913,7 @@ ProcessCode VertexPerformanceWriter::writeT(
   m_truthVertexTrackWeights.clear();
   m_truthVertexMatchRatio.clear();
   m_nTracksOnTruthVertex.clear();
+  m_recoVertexClassification.clear();
   m_truthX.clear();
   m_truthY.clear();
   m_truthZ.clear();
