@@ -31,7 +31,7 @@ from acts.examples.reconstruction import (
 teleG4Config=TelescopeDetector.Config();
 teleG4Config.bounds=[200, 200]
 teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
-teleG4Config.thickness = [80, 80, 80, 1, 80, 80, 80]
+teleG4Config.thickness = [0.08, 0.08, 0.08, 0.001, 0.08, 0.08, 0.08]
 teleG4Config.binValue=0
 
 u = acts.UnitConstants
@@ -121,7 +121,7 @@ addParticleGun(
     MomentumConfig(4 * u.GeV, 4 * u.GeV, transverse=True),
     EtaConfig(-0.0125, 0.0125, uniform=True),
     PhiConfig(-0.0 * u.degree, 0.71 * u.degree),
-    ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=False),
+    ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
     multiplicity=3,
     #multiplicity=mul,
     rnd=rnd,
@@ -130,7 +130,7 @@ addParticleGun(
     vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(5.*u.mm, 5.*u.mm, 5.*u.um, stddev_t*u.ns)),
 )
 
-
+'''
 addFatras(
     s,
     trackingGeometry,
@@ -147,13 +147,14 @@ addFatras(
 )
 
 '''
+
 addGeant4(
     s,
     detector=None,
     trackingGeometry=trackingGeometry,
     field=field,
     rnd=rnd,
-    volumeMappings = ["Layer #0 Phys"],
+    #volumeMappings = ["Layer #0 Phys"],
     g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
     preSelectParticles=ParticleSelectorConfig(
             rho=(0.0, 300 * u.mm),
@@ -166,7 +167,7 @@ addGeant4(
     killVolume=trackingGeometry.worldVolume,
     killAfterTime=1000 * u.ns,
 )
-'''
+
 
 addDigitization(
     s,

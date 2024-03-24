@@ -3,6 +3,8 @@ import pathlib, acts, acts.examples
 from pathlib import Path
 from typing import Optional, Union
 from acts import UnitConstants as u
+from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory 
+from acts.examples import TelescopeDetector
 
 from acts.examples.simulation import (
     addParticleGun,
@@ -11,6 +13,7 @@ from acts.examples.simulation import (
     PhiConfig,
     ParticleConfig,
     addFatras,
+    addGeant4,
     ParticleSelectorConfig,
     addDigitization,
 )
@@ -25,13 +28,18 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-u = acts.UnitConstants
+teleG4Config=TelescopeDetector.Config();
+teleG4Config.bounds=[200, 200]
+teleG4Config.positions=[30, 60, 90, 105, 120, 150, 180]
+teleG4Config.thickness = [0.08, 0.08, 0.08, 0.001, 0.08, 0.08, 0.08]
+teleG4Config.binValue=0
 
-field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
+u = acts.UnitConstants
 
 detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
     bounds=[200, 200],
-    positions=[30, 60, 90, 120, 150, 180],
+    positions=[30, 60, 90, 105, 120, 150, 180],
+    thickness=[0.08, 0.08, 0.08, 0.001, 0.08, 0.08, 0.08],
     binValue=0,
 )
 
@@ -111,17 +119,18 @@ s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
 addParticleGun(
     s,
     MomentumConfig(4 * u.GeV, 4 * u.GeV, transverse=True),
-    EtaConfig(-0.05, 0.05, uniform=True),
-    PhiConfig(-0.00 * u.degree, 2.862 * u.degree),
-    ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=False),
+    EtaConfig(-0.0125, 0.0125, uniform=True),
+    PhiConfig(-0.0 * u.degree, 0.71 * u.degree),
+    ParticleConfig(1, acts.PdgParticle.eElectron, randomizeCharge=False),
     multiplicity=3,
     #multiplicity=mul,
     rnd=rnd,
     #vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, 50.*u.um, 50.*u.um, 4*u.ns)),
     #vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, stddev_p*u.um, stddev_p*u.um, 4*u.ns)),
-    vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(0.*u.mm, 50.*u.um, 50.*u.um, stddev_t*u.ns)),
+    vtxGen=acts.examples.GaussianVertexGenerator(mean=acts.Vector4(0, 0, 0, 0), stddev=acts.Vector4(5.*u.mm, 5.*u.mm, 5.*u.um, stddev_t*u.ns)),
 )
 
+'''
 addFatras(
     s,
     trackingGeometry,
@@ -130,18 +139,41 @@ addFatras(
     preSelectParticles=ParticleSelectorConfig(
         rho=(0.0 * u.mm, 300.0 * u.mm),
         absZ=(0.0 * u.mm, 200.0 * u.mm),
-        eta=(-0.5, 0.5),
+        eta=(-3, 3),
         pt=(1 * u.GeV, None),
         removeNeutral=True,
     ),
     outputDirRoot=outputDir,
 )
 
+'''
+
+addGeant4(
+    s,
+    detector=None,
+    trackingGeometry=trackingGeometry,
+    field=field,
+    rnd=rnd,
+    #volumeMappings = ["Layer #0 Phys"],
+    g4DetectorConstructionFactory=TelescopeG4DetectorConstructionFactory(teleG4Config),
+    preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 300 * u.mm),
+            absZ=(-200.0, 200.0 * u.m),
+            eta=(-3.0, 3.0),
+            pt=(1 * u.GeV, None),
+            removeNeutral=True,
+    ),
+    outputDirRoot=outputDir,
+    killVolume=trackingGeometry.worldVolume,
+    killAfterTime=1000 * u.ns,
+)
+
+
 addDigitization(
     s,
     trackingGeometry,
     field,
-    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope-with-time.json"),
+    digiConfigFile=Path("../Examples/Algorithms/Digitization/share/default-smearing-config-telescope-time.json"),
     outputDirRoot=outputDir,
     rnd=rnd,
     # logLevel=acts.logging.VERBOSE

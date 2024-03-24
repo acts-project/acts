@@ -80,7 +80,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
       std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
                 volumeName) != m_cfg.volumeMappings.end();
 
-  if (isSensitive || isMappedMaterial || isMappedVolume) {
+  //if (isSensitive || isMappedMaterial || isMappedVolume) {
     // Find the associated ACTS object
     auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
         Acts::GeometryContext(), g4AbsPosition);
@@ -126,7 +126,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
                    << volumeName << "' with material '" << volumeMaterialName
                    << "' at position " << g4RelPosition.transpose());
     }
-  } else {
+  //} else {
     ACTS_VERBOSE("Did not try mapping '"
                  << g4PhysicalVolume->GetName() << "' at "
                  << g4RelPosition.transpose()
@@ -134,5 +134,5 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
                  << ") is null and volume name (=" << volumeName
                  << ") and material name (=" << volumeMaterialName
                  << ") were not found");
-  }
+  //}
 }

@@ -58,19 +58,12 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
                 std::abs(m_cfg.offsets[1]) + m_cfg.bounds[1] * 0.5,
                 m_cfg.positions.back() + m_cfg.thickness[0]});
 
-  //G4double worldSize =
-  //	  std::max({m_cfg.positions.back() + m_cfg.thickness[0],
-  //				std::abs(m_cfg.offsets[0]) + m_cfg.bounds[0] * 0.5,
-  //				std::abs(m_cfg.offsets[1]) + m_cfg.bounds[1] * 0.5});
   // Envelope parameters
   //
-  //G4double envSizeX = length + m_cfg.thickness[0] * mm;
-  //G4double envSizeY = m_cfg.bounds[0] * mm;
-  //G4double envSizeZ = m_cfg.bounds[1] * mm;
-
   G4double envSizeX = m_cfg.bounds[0] * mm;
   G4double envSizeY = m_cfg.bounds[1] * mm;
   G4double envSizeZ = length + m_cfg.thickness[0] * mm;
+
   // Option to switch on/off checking of volumes overlaps
   //
   G4bool checkOverlaps = true;
@@ -110,7 +103,6 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   // Envelope 1
   //
-  /*
   G4Box* solidEnv =
       new G4Box("Envelope Solid",                                 // its name
                 0.5 * envSizeX, 0.5 * envSizeY, 0.5 * envSizeZ);  // its size
@@ -129,11 +121,9 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
                         false,               // no boolean operation
                         0,                   // copy number
                         checkOverlaps);      // overlaps checking
-  */
 
   // Envelope 2
   //
-  /*
   G4LogicalVolume* logicEnv2 =
       new G4LogicalVolume(solidEnv,              // its solid
                           galactic,              // its material
@@ -141,35 +131,36 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   G4VPhysicalVolume* physEnv2 = new G4PVPlacement(
       nullptr,  // no rotation
-      G4ThreeVector(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm, center),  // at detector center
+      G4ThreeVector(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm,
+                    center),  // at detector center
       "Envelope #2 Phys",     // its name
       logicEnv2,              // its logical volume
       physEnv1,               // its mother volume
       false,                  // no boolean operation
       0,                      // copy number
       checkOverlaps);         // overlaps checking
-  */
+
   // Layer
   //
-  //for (std::size_t i = 0; i < m_cfg.positions.size(); ++i){
-		
-  G4Box* solidLayer = new G4Box("Layer Solid", 0.5 * m_cfg.bounds[0], 0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness[0]);
+  for (std::size_t i = 0; i < m_cfg.positions.size(); ++i) {
+  G4Box* solidLayer = new G4Box("Layer Solid", 0.5 * m_cfg.bounds[0],
+                                0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness[i]);
 
   G4LogicalVolume* logicLayer = new G4LogicalVolume(solidLayer,  // its solid
                                                     silicon,     // its material
                                                     "Layer Logic");  // its name
 
-  new G4PVPlacement(
-      rotation,                                                // no rotation
-      G4ThreeVector(50, 50, 50),  // at position
-      "Layer #" + std::to_string(0) + " Phys",                // its name
-      logicLayer,      // its logical volume
-      //physEnv2,        // its mother volume
-	  m_world,		   // 
-      false,           // no boolean operation
-      0,               // copy number
-      checkOverlaps);  // overlaps checking
-  //}
+  //for (std::size_t i = 0; i < m_cfg.positions.size(); ++i) {
+    new G4PVPlacement(
+        nullptr,                                                // no rotation
+        G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position
+        "Layer #" + std::to_string(i) + " Phys",                // its name
+        logicLayer,      // its logical volume
+        physEnv2,        // its mother volume
+        false,           // no boolean operation
+        0,               // copy number
+        checkOverlaps);  // overlaps checking
+  }
 
   return m_world;
 }
