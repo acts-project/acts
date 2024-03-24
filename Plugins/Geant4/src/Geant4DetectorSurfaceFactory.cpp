@@ -26,12 +26,14 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
   auto g4Translation = g4PhysVol.GetTranslation();
   auto g4Rotation = g4PhysVol.GetRotation();
 
-  G4Transform3D g4Transform =
-      (g4Rotation == nullptr)
-          ? G4Transform3D(CLHEP::HepRotation(), g4Translation)
-          : G4Transform3D(*g4Rotation, g4Translation);
+    if (g4Rotation == nullptr) {
+      g4Rotation = new CLHEP::HepRotation();
+    }
 
-  G4Transform3D newToGlobal = g4ToGlobal * g4Transform;
+    G4Transform3D newToGlobal(
+        g4ToGlobal.getRotation() * g4Rotation->inverse(),
+        g4ToGlobal.getTranslation() + g4ToGlobal.getRotation()*g4Translation
+    );
 
   // Get the logical volume
   auto g4LogicalVolume = g4PhysVol.GetLogicalVolume();
