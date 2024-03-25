@@ -69,11 +69,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values iw the bound values
-  CuboidVolumeBounds(const std::array<ActsScalar, eSize>& values) noexcept(
-      false)
-      : m_values(values) {
-    checkConsistency();
-  }
+  CuboidVolumeBounds(const std::array<ActsScalar, eSize>& values);
 
   /// Copy Constructor
   ///
@@ -159,6 +155,13 @@ class CuboidVolumeBounds : public VolumeBounds {
  private:
   /// The bound values ordered in a fixed size array
   std::array<ActsScalar, eSize> m_values;
+
+  std::shared_ptr<const RectangleBounds> m_xyBounds{nullptr};
+  std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};
+  std::shared_ptr<const RectangleBounds> m_zxBounds{nullptr};
+
+  /// Create the surface bounds
+  void buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given

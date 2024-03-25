@@ -197,9 +197,21 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// The internal version of the bounds can be float/ActsScalar
   std::array<ActsScalar, eSize> m_values{};
 
+  /// Bounds of the inner CylinderBounds
+  std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
+  /// Bounds of the inner CylinderBounds
+  std::shared_ptr<const CylinderBounds> m_outerCylinderBounds{nullptr};
+  /// Bounds of the bottom/top Radial
+  std::shared_ptr<const RadialBounds> m_discBounds{nullptr};
+  /// Bounds of the sector planes
+  std::shared_ptr<const PlanarBounds> m_sectorPlaneBounds{nullptr};
+
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
   void checkConsistency();
+
+  /// Helper method to create the surface bounds
+  void buildSurfaceBounds();
 };
 
 }  // namespace Acts

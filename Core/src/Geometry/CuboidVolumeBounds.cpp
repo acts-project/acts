@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -23,51 +22,52 @@ CuboidVolumeBounds::CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
                                        ActsScalar halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
+  buildSurfaceBounds();
+}
+
+CuboidVolumeBounds::CuboidVolumeBounds(
+    const std::array<ActsScalar, eSize>& values)
+    : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
 }
 
 std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  auto xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
-                                                          get(eHalfLengthY));
-  auto yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),
-                                                          get(eHalfLengthZ));
-  auto zxBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthZ),
-                                                          get(eHalfLengthX));
-
   std::vector<OrientedSurface> oSurfaces;
   oSurfaces.reserve(6);
   // Face surfaces xy -------------------------------------
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3(0., 0., -get(eHalfLengthZ)), xyBounds);
+      transform * Translation3(0., 0., -get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3(0., 0., get(eHalfLengthZ)), xyBounds);
+      transform * Translation3(0., 0., get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal});
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
-      yzBounds);
+      m_yzBounds);
   oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(get(eHalfLengthX), 0., 0.) * s_planeYZ,
-      yzBounds);
+      m_yzBounds);
   oSurfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal});
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX,
-      zxBounds);
+      m_zxBounds);
   oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., get(eHalfLengthY), 0.) * s_planeZX,
-      zxBounds);
+      m_zxBounds);
   oSurfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal});
 
@@ -91,6 +91,15 @@ Volume::BoundingBox CuboidVolumeBounds::boundingBox(
 
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   return trf == nullptr ? box : box.transformed(*trf);
+}
+
+void CuboidVolumeBounds::buildSurfaceBounds() {
+  m_xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
+                                                       get(eHalfLengthY));
+  m_yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),
+                                                       get(eHalfLengthZ));
+  m_zxBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthZ),
+                                                       get(eHalfLengthX));
 }
 
 ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
@@ -136,6 +145,7 @@ void CuboidVolumeBounds::set(
   }
   try {
     checkConsistency();
+    buildSurfaceBounds();
   } catch (std::invalid_argument& e) {
     m_values = previous;
     throw e;
