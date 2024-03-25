@@ -35,6 +35,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iosfwd>
+#include <memory>
 #include <ostream>
 #include <utility>
 
@@ -382,8 +383,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   // Create the transform from the stuff known so far
   const Transform3 topVolumeTransform = Transform3(Translation3(0., 0., zPos));
   // Create the bounds from the information gathered so far
-  CylinderVolumeBounds* topVolumeBounds =
-      new CylinderVolumeBounds(rMin, rMax, 0.5 * std::abs(zMax - zMin));
+  auto topVolumeBounds = std::make_shared<CylinderVolumeBounds>(
+      rMin, rMax, 0.5 * std::abs(zMax - zMin));
 
   // some screen output
   ACTS_VERBOSE("Container volume bounds are " << (*topVolumeBounds));
@@ -397,13 +398,11 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   if (volumeArray == nullptr) {
     ACTS_WARNING(
         "Creation of TrackingVolume array did not succeed - returning 0 ");
-    delete topVolumeBounds;
     return nullptr;
   }
   // we have the bounds and the volume array, create the volume
   std::shared_ptr<TrackingVolume> topVolume = TrackingVolume::create(
-      topVolumeTransform, VolumeBoundsPtr(topVolumeBounds), volumeArray,
-      volumeName);
+      topVolumeTransform, topVolumeBounds, volumeArray, volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
   if (!interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,
