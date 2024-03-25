@@ -327,6 +327,87 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
+  CylinderVolumeBounds cyl(100, 300, 200);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eMinR, 400),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMinR), 100);
+
+  cyl.set(CylinderVolumeBounds::eMinR, 200);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMinR), 200);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eMaxR, 50),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMaxR), 300);
+
+  cyl.set(CylinderVolumeBounds::eMaxR, 250);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMaxR), 250);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eHalfLengthZ, -200),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 200);
+
+  cyl.set(CylinderVolumeBounds::eHalfLengthZ, 250);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 250);
+
+  cyl.set(CylinderVolumeBounds::eHalfLengthZ, 150);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 150);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eHalfPhiSector, -M_PI),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eHalfPhiSector, 1.5 * M_PI),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI);
+
+  cyl.set(CylinderVolumeBounds::eHalfPhiSector, M_PI / 2);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI / 2);
+
+  for (auto bValue :
+       {CylinderVolumeBounds::eAveragePhi, CylinderVolumeBounds::eBevelMaxZ,
+        CylinderVolumeBounds::eBevelMinZ}) {
+    BOOST_CHECK_THROW(cyl.set(bValue, -1.5 * M_PI), std::invalid_argument);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), 0);
+
+    BOOST_CHECK_THROW(cyl.set(bValue, 1.5 * M_PI), std::invalid_argument);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), 0);
+
+    cyl.set(bValue, 0.5 * M_PI);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), 0.5 * M_PI);
+    cyl.set(bValue, -0.5 * M_PI);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), -0.5 * M_PI);
+  }
+
+  cyl = CylinderVolumeBounds(100, 300, 200);
+  auto previous = cyl.values();
+
+  BOOST_CHECK_THROW(cyl.set({
+                        {CylinderVolumeBounds::eMinR, 50},
+                        {CylinderVolumeBounds::eMaxR, 200},
+                        {CylinderVolumeBounds::eHalfLengthZ, -1},
+                    }),
+                    std::logic_error);
+  auto act = cyl.values();
+  BOOST_CHECK_EQUAL_COLLECTIONS(previous.begin(), previous.end(), act.begin(),
+                                act.end());
+
+  cyl.set({
+      {CylinderVolumeBounds::eMinR, 50},
+      {CylinderVolumeBounds::eMaxR, 200},
+      {CylinderVolumeBounds::eHalfLengthZ, 150},
+  });
+
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMinR), 50);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMaxR), 200);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 150);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eAveragePhi), 0);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eBevelMinZ), 0);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eBevelMaxZ), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts
