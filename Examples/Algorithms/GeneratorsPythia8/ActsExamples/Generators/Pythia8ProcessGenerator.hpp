@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
@@ -23,6 +24,7 @@
 namespace Pythia8 {
 class Pythia;
 }
+
 namespace ActsExamples {
 
 class Pythia8Generator : public EventGenerator::ParticlesGenerator {
@@ -55,7 +57,8 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Pythia8Generator& operator=(const Pythia8Generator&) = delete;
   Pythia8Generator& operator=(Pythia8Generator&& other) = delete;
 
-  SimParticleContainer operator()(RandomEngine& rng) override;
+  std::pair<SimVertexContainer, SimParticleContainer> operator()(
+      RandomEngine& rng) override;
 
  private:
   /// Private access to the logging instance

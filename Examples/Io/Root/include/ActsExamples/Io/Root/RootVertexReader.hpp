@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -28,17 +28,17 @@ class TChain;
 
 namespace ActsExamples {
 
-/// @class RootParticleReader
+/// @class RootVertexReader
 ///
-/// @brief Reads in Particles information from a root file
-class RootParticleReader : public IReader {
+/// @brief Reads in Vertex information from a root file
+class RootVertexReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    ///< particle collection to read
-    std::string outputParticles = "particleCollection";
+    /// particle collection to read
+    std::string outputVertices = "particleCollection";
     /// name of the output tree
-    std::string treeName = "particles";
+    std::string treeName = "vertices";
     /// The name of the input file
     std::string filePath;
     /// Whether the events are ordered or not
@@ -47,13 +47,13 @@ class RootParticleReader : public IReader {
 
   /// Constructor
   /// @param config The Configuration struct
-  RootParticleReader(const Config& config, Acts::Logging::Level level);
+  RootVertexReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootParticleReader() override;
+  ~RootVertexReader() override;
 
   /// Framework name() method
-  std::string name() const override { return "RootParticleReader"; }
+  std::string name() const override { return "RootVertexReader"; }
 
   /// Return the available events range.
   std::pair<std::size_t, std::size_t> availableEvents() const override;
@@ -73,8 +73,7 @@ class RootParticleReader : public IReader {
   /// The config class
   Config m_cfg;
 
-  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
-                                                          "OutputParticles"};
+  WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputParticles"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
@@ -94,28 +93,18 @@ class RootParticleReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::uint64_t>* m_particleId = new std::vector<std::uint64_t>;
-  std::vector<int32_t>* m_particleType = new std::vector<int32_t>;
+  std::vector<std::uint64_t>* m_vertexId = new std::vector<std::uint64_t>;
   std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
   std::vector<float>* m_vx = new std::vector<float>;
   std::vector<float>* m_vy = new std::vector<float>;
   std::vector<float>* m_vz = new std::vector<float>;
   std::vector<float>* m_vt = new std::vector<float>;
-  std::vector<float>* m_px = new std::vector<float>;
-  std::vector<float>* m_py = new std::vector<float>;
-  std::vector<float>* m_pz = new std::vector<float>;
-  std::vector<float>* m_m = new std::vector<float>;
-  std::vector<float>* m_q = new std::vector<float>;
-  std::vector<float>* m_eta = new std::vector<float>;
-  std::vector<float>* m_phi = new std::vector<float>;
-  std::vector<float>* m_pt = new std::vector<float>;
-  std::vector<float>* m_p = new std::vector<float>;
   std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_vertexSecondary =
       new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
+  std::vector<std::vector<double>>* m_outgoingParticles =
+      new std::vector<std::vector<double>>;
 };
 
 }  // namespace ActsExamples

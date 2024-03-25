@@ -38,7 +38,7 @@ class RootSimHitReader : public IReader {
   /// @brief The nested configuration struct
   struct Config {
     /// name of the whiteboard entry
-    std::string simHitCollection = "simhits";
+    std::string outputSimHits = "simhits";
     /// name of the output tree
     std::string treeName = "hits";
     ///< The name of the input file

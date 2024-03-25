@@ -44,7 +44,7 @@ def runVertexFitting(
             acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection=inputParticles,
+                outputParticles=inputParticles,
                 orderedEvents=False,
             )
         )
