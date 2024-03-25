@@ -127,7 +127,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
       OrientedSurface{std::move(cSurface), Direction::OppositeNormal});
 
   // [3] Inner Cylinder (optional)
-  if (get(eMinR) > s_epsilon) {
+  if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
@@ -135,7 +135,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   }
 
   // [4] & [5] - Sectoral planes (optional)
-  if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
+  if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
     const Transform3 sp1Transform =
         Transform3(transform *

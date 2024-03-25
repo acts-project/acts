@@ -16,7 +16,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
@@ -26,7 +25,6 @@
 #include <cmath>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
