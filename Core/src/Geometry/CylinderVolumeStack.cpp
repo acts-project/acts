@@ -625,7 +625,7 @@ void CylinderVolumeStack::assignVolumeBounds(
   checkNoPhiOrBevel(*newBounds, logger);
 
   const auto* oldBounds =
-      dynamic_cast<CylinderVolumeBounds*>(m_volumeBounds.get());
+      dynamic_cast<const CylinderVolumeBounds*>(m_volumeBounds.get());
   const ActsScalar newMinR = newBounds->get(CylinderVolumeBounds::eMinR);
   const ActsScalar newMaxR = newBounds->get(CylinderVolumeBounds::eMaxR);
   const ActsScalar newHlZ = newBounds->get(CylinderVolumeBounds::eHalfLengthZ);
