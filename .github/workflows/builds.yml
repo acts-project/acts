@@ -513,42 +513,6 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
-  cuda:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v41
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v4
-        id: ccache-restore
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_CUDA=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
-      - name: Save ccache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
   sycl:
     runs-on: ubuntu-latest
