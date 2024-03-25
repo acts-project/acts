@@ -21,14 +21,14 @@ namespace Acts {
 
 struct CylinderVolumeStack::VolumeTuple {
   std::shared_ptr<Volume> volume;
-  CylinderVolumeBounds* bounds{};
+  const CylinderVolumeBounds* bounds{};
   std::shared_ptr<CylinderVolumeBounds> updatedBounds{};
   Transform3 localTransform;
 
   VolumeTuple(std::shared_ptr<Volume> volume_, const Transform3& groupTransform)
       : volume{std::move(volume_)},
         localTransform{groupTransform.inverse() * volume->transform()} {
-    bounds = dynamic_cast<CylinderVolumeBounds*>(&volume->volumeBounds());
+    bounds = dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
     assert(bounds != nullptr);
     updatedBounds = std::make_shared<CylinderVolumeBounds>(*bounds);
   }
@@ -103,7 +103,7 @@ Volume CylinderVolumeStack::createOuterVolume(
 
   for (const auto& volume : volumes) {
     auto* cylinderBounds =
-        dynamic_cast<CylinderVolumeBounds*>(&volume->volumeBounds());
+        dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
     if (cylinderBounds == nullptr) {
       throw std::invalid_argument{
           "CylinderVolumeStack requires all volumes to "
