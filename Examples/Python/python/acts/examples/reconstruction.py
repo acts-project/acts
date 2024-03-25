@@ -1164,7 +1164,7 @@ def addCKFTracks(
         Union[TrackSelectorConfig, List[TrackSelectorConfig]]
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
-    twoWay: bool = True,
+    twoWay: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1242,7 +1242,8 @@ def addCKFTracks(
     # Setup the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
-    trackFinder = acts.examples.TrackFindingAlgorithm(
+    trackFinderAlg = acts.examples.MyTrackFindingAlgorithm if twoWay else acts.examples.TrackFindingAlgorithm
+    trackFinder = trackFinderAlg(
         level=customLogLevel(),
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [
@@ -1260,13 +1261,19 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="ckf_tracks",
-        findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
-            trackingGeometry, field, customLogLevel()
+        **(dict(
+                trackingGeometry=trackingGeometry,
+                magneticField=field,
+            ) if twoWay
+            else dict(
+                findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
+                    trackingGeometry, field, customLogLevel()
+                )
+            )
         ),
         **acts.examples.defaultKWArgs(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
-            twoWay=twoWay,
         ),
     )
     s.addAlgorithm(trackFinder)
