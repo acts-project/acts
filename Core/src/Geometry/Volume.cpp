@@ -94,8 +94,4 @@ const VolumeBounds& Volume::volumeBounds() const {
   return *m_volumeBounds;
 }
 
-VolumeBounds& Volume::volumeBounds() {
-  return *m_volumeBounds;
-}
-
 }  // namespace Acts

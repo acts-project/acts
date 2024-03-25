@@ -65,12 +65,6 @@ class Volume : public virtual GeometryObject {
   /// Returns const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
 
-  /// Returns reference to the volume bounds
-  /// @warning This is INCOMPATIBLE with Gen1 geometry building:
-  ///          changing volumes bounds will invalidate boundary surfaces,
-  ///          and the change is not propagated!
-  VolumeBounds& volumeBounds();
-
   /// Set volume bounds and update volume bounding boxes implicitly
   void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 
