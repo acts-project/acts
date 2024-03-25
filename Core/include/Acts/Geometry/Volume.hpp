@@ -37,7 +37,8 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  Volume(const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds);
+  Volume(const Transform3& transform,
+         std::shared_ptr<const VolumeBounds> volbounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -101,7 +102,7 @@ class Volume : public virtual GeometryObject {
   Transform3 m_transform;
   Transform3 m_itransform;
   Vector3 m_center;
-  std::shared_ptr<VolumeBounds> m_volumeBounds;
+  std::shared_ptr<const VolumeBounds> m_volumeBounds;
 };
 
 /**Overload of << operator for std::ostream for debug output*/

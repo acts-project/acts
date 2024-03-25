@@ -19,7 +19,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 
 Volume::Volume(const Transform3& transform,
-               std::shared_ptr<VolumeBounds> volbounds)
+               std::shared_ptr<const VolumeBounds> volbounds)
     : GeometryObject(),
       m_transform(transform),
       m_itransform(m_transform.inverse()),
