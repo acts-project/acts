@@ -149,7 +149,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   Transform3 trafo(Transform3::Identity());
   trafo.translation() = cfg.position;
   // Set bounds
-  auto bounds = std::make_shared<const CuboidVolumeBounds>(
+  auto bounds = std::make_shared<CuboidVolumeBounds>(
       cfg.length.x() * 0.5, cfg.length.y() * 0.5, cfg.length.z() * 0.5);
 
   // Gather the layers
@@ -186,14 +186,14 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
     // Build TrackingVolume
-    trackVolume =
-        TrackingVolume::create(trafo, bounds, cfg.volumeMaterial, nullptr,
-                               nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume = std::make_shared<TrackingVolume>(
+        trafo, bounds, cfg.volumeMaterial, nullptr, nullptr,
+        cfg.trackingVolumes, cfg.name);
   } else {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(trafo, bounds, cfg.volumeMaterial,
-                                         std::move(layArr), nullptr,
-                                         cfg.trackingVolumes, cfg.name);
+    trackVolume = std::make_shared<TrackingVolume>(
+        trafo, bounds, cfg.volumeMaterial, std::move(layArr), nullptr,
+        cfg.trackingVolumes, cfg.name);
   }
   return trackVolume;
 }
@@ -230,7 +230,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   trafo.translation() = m_cfg.position;
 
   // Size of the volume
-  auto volume = std::make_shared<const CuboidVolumeBounds>(
+  auto volume = std::make_shared<CuboidVolumeBounds>(
       m_cfg.length.x() * 0.5, m_cfg.length.y() * 0.5, m_cfg.length.z() * 0.5);
 
   // Build vector of confined volumes
@@ -259,7 +259,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Create world volume
   MutableTrackingVolumePtr mtvp(
-      TrackingVolume::create(trafo, volume, trVolArr, "World"));
+      std::make_shared<TrackingVolume>(trafo, volume, trVolArr, "World"));
 
   return mtvp;
 }
