@@ -43,6 +43,7 @@
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
@@ -100,6 +101,7 @@ void register_csv_bfield_writer_binding(
 }  // namespace
 
 namespace Acts::Python {
+
 void addOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
@@ -176,6 +178,10 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
                              "RootParticleWriter", inputParticles,
                              inputFinalParticles, filePath, fileMode, treeName);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootVertexWriter, mex,
+                             "RootVertexWriter", inputVertices, filePath,
+                             fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
                              "TrackFinderPerformanceWriter", inputProtoTracks,
@@ -332,9 +338,9 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
-      inputParticles, inputSelectedParticles, inputTracks,
-      inputTrackParticleMatching, inputVertices, bField, filePath, treeName,
-      fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
+      inputVertices, inputTracks, inputTruthVertices, inputParticles,
+      inputSelectedParticles, inputTrackParticleMatching, bField, filePath,
+      treeName, fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,
@@ -416,4 +422,5 @@ void addOutput(Context& ctx) {
                              "CsvExaTrkXGraphWriter", inputGraph, outputDir,
                              outputStem);
 }
+
 }  // namespace Acts::Python
