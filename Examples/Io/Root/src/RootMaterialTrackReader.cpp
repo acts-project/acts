@@ -87,7 +87,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
             << " events this corresponds to a batch size of: " << m_batchSize
             << std::endl;
 
-  // If the events are not ordered, we need to sort the entry numbers
+  // Sort the entry numbers of the events
   {
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
