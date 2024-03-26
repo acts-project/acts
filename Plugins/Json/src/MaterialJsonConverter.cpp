@@ -162,92 +162,128 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   nlohmann::json jGrid = jMaterialAccessor["grid"];
   nlohmann::json jGridAxes = jGrid["axes"];
 
-  auto boundToGridLocal =
-      Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
-          jMaterial["bound_to_grid_local"]);
+  Acts::detail::AxisBoundaryType boundaryType0 = jGridAxes[0]["boundary_type"];
 
-  auto globalToGridLocal =
-      Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
-          jMaterial["global_to_grid_local"]);
-
-  Acts::detail::AxisBoundaryType boundaryType = jGridAxes[0]["boundary_type"];
+  // 1-dimensional case
   if (jGridAxes.size() == 1u) {
-    if (boundaryType == Acts::detail::AxisBoundaryType::Bound) {
+    // Bound case
+    if (boundaryType0 == Acts::detail::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqBound eqBound{jGridAxes[0]["range"],
                                                 jGridAxes[0]["bins"]};
       auto grid =
           Acts::GridJsonConverter::fromJson<decltype(eqBound), std::size_t>(
               jGrid, eqBound);
 
-      // return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
-      //     std::move(grid), std::move(materialAccessor),
-      //     std::move(globalCasts), std::move(localAccess),
-      //     std::move(transform));
+      auto boundToGridLocal =
+          Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
+              jMaterial["bound_to_grid_local"]);
+
+      auto globalToGridLocal =
+          Acts::GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(
+              jMaterial["global_to_grid_local"]);
+
+      return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
+          std::move(grid), std::move(materialAccessor),
+          std::move(boundToGridLocal), std::move(globalToGridLocal));
+    }
+    // Closed case
+    if (boundaryType0 == Acts::detail::AxisBoundaryType::Closed) {
+      Acts::GridAxisGenerators::EqClosed eqClosed{jGridAxes[0]["range"],
+                                                  jGridAxes[0]["bins"]};
+      auto grid =
+          Acts::GridJsonConverter::fromJson<decltype(eqClosed), std::size_t>(
+              jGrid, eqClosed);
+
+      auto boundToGridLocal =
+          Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
+              jMaterial["bound_to_grid_local"]);
+
+      auto globalToGridLocal =
+          Acts::GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(
+              jMaterial["global_to_grid_local"]);
+
+      return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
+          std::move(grid), std::move(materialAccessor),
+          std::move(boundToGridLocal), std::move(globalToGridLocal));
     }
   }
 
-  /**
-    std::array<Acts::ActsScalar, 2u> axisRange0 = jGrid["axes"][0u]["range"];
-    unsigned int nBins0 = jGrid["axes"][0u]["bins"];
-    if (axesType.size() == 1u) {
-      if (axesType.front() == "bound") {
-        Acts::GridAxisGenerators::EqBound eqBound{axisRange0, nBins0};
-        auto grid =
-            Acts::GridJsonConverter::fromJson<decltype(eqBound), std::size_t>(
-                jGrid, eqBound);
-        return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
-            std::move(grid), std::move(materialAccessor),
-    std::move(globalCasts), std::move(localAccess), std::move(transform));
-      }
-      if (axesType.front() == "closed") {
-        Acts::GridAxisGenerators::EqClosed eqClosed{axisRange0, nBins0};
-        auto grid =
-            Acts::GridJsonConverter::fromJson<decltype(eqClosed), std::size_t>(
-                jGrid, eqClosed);
-        return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
-            std::move(grid), std::move(materialAccessor),
-    std::move(globalCasts), std::move(localAccess), std::move(transform));
-      }
+  // 2-dimensional case
+  if (jGridAxes.size() == 2u) {
+    // Second boundary type
+    Acts::detail::AxisBoundaryType boundaryType1 =
+        jGridAxes[1]["boundary_type"];
+
+    // Bound-bound setup
+    if (boundaryType0 == Acts::detail::AxisBoundaryType::Bound &&
+        boundaryType1 == Acts::detail::AxisBoundaryType::Bound) {
+      Acts::GridAxisGenerators::EqBoundEqBound eqBoundEqBound{
+          jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
+          jGridAxes[1]["bins"]};
+      auto grid =
+          Acts::GridJsonConverter::fromJson<decltype(eqBoundEqBound),
+                                            std::size_t>(jGrid, eqBoundEqBound);
+
+      auto boundToGridLocal =
+          Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+              jMaterial["bound_to_grid_local"]);
+
+      auto globalToGridLocal =
+          Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
+              jMaterial["global_to_grid_local"]);
+
+      return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
+          std::move(grid), std::move(materialAccessor),
+          std::move(boundToGridLocal), std::move(globalToGridLocal));
     }
-    if (axesType.size() == 2u) {
-      std::array<Acts::ActsScalar, 2u> axisRange1 = jGrid["axes"][1u]["range"];
-      unsigned int nBins1 = jGrid["axes"][1u]["bins"];
-      if (axesType.front() == "bound" && axesType.back() == "bound") {
-        Acts::GridAxisGenerators::EqBoundEqBound eqBoundEqBound{
-            axisRange0, nBins0, axisRange1, nBins1};
-        auto grid =
-            Acts::GridJsonConverter::fromJson<decltype(eqBoundEqBound),
-                                              std::size_t>(jGrid,
-    eqBoundEqBound);
 
-        return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
-            std::move(grid), std::move(materialAccessor),
-    std::move(globalCasts), std::move(localAccess), std::move(transform));
-      }
-      if (axesType.front() == "bound" && axesType.back() == "closed") {
-        Acts::GridAxisGenerators::EqBoundEqClosed eqBoundEqClosed{
-            axisRange0, nBins0, axisRange1, nBins1};
-        auto grid = Acts::GridJsonConverter::fromJson<decltype(eqBoundEqClosed),
-                                                      std::size_t>(
-            jGrid, eqBoundEqClosed);
+    // Bound-closed setup
+    if (boundaryType0 == Acts::detail::AxisBoundaryType::Bound &&
+        boundaryType1 == Acts::detail::AxisBoundaryType::Closed) {
+      Acts::GridAxisGenerators::EqBoundEqClosed eqBoundEqClosed{
+          jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
+          jGridAxes[1]["bins"]};
+      auto grid = Acts::GridJsonConverter::fromJson<decltype(eqBoundEqClosed),
+                                                    std::size_t>(
+          jGrid, eqBoundEqClosed);
 
-        return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
-            std::move(grid), std::move(materialAccessor),
-    std::move(globalCasts), std::move(localAccess), std::move(transform));
-      }
-      if (axesType.front() == "closed" && axesType.back() == "bound") {
-        Acts::GridAxisGenerators::EqClosedEqBound eqClosedEqBound{
-            axisRange0, nBins0, axisRange1, nBins1};
-        auto grid = Acts::GridJsonConverter::fromJson<decltype(eqClosedEqBound),
-                                                      std::size_t>(
-            jGrid, eqClosedEqBound);
+      auto boundToGridLocal =
+          Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+              jMaterial["bound_to_grid_local"]);
 
-        return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
-            std::move(grid), std::move(materialAccessor),
-    std::move(globalCasts), std::move(localAccess), std::move(transform));
-      }
+      auto globalToGridLocal =
+          Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
+              jMaterial["global_to_grid_local"]);
+
+      return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
+          std::move(grid), std::move(materialAccessor),
+          std::move(boundToGridLocal), std::move(globalToGridLocal));
     }
-   */
+
+    // Closed-bound setup
+    if (boundaryType0 == Acts::detail::AxisBoundaryType::Closed &&
+        boundaryType1 == Acts::detail::AxisBoundaryType::Bound) {
+      Acts::GridAxisGenerators::EqClosedEqBound eqClosedEqBound{
+          jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
+          jGridAxes[1]["bins"]};
+      auto grid = Acts::GridJsonConverter::fromJson<decltype(eqClosedEqBound),
+                                                    std::size_t>(
+          jGrid, eqClosedEqBound);
+
+      auto boundToGridLocal =
+          Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+              jMaterial["bound_to_grid_local"]);
+
+      auto globalToGridLocal =
+          Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
+              jMaterial["global_to_grid_local"]);
+
+      return new Acts::IndexedSurfaceMaterial<decltype(grid)>(
+          std::move(grid), std::move(materialAccessor),
+          std::move(boundToGridLocal), std::move(globalToGridLocal));
+    }
+  }
+
   return nullptr;
 }
 
