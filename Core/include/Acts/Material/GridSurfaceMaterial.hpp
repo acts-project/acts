@@ -72,7 +72,6 @@ struct IndexedMaterialAccessor {
 
   /// @brief Scale the material (by scaling the thickness)
   ///
-  ///
   /// @param scale the amount of the scaling
   template <typename grid_type>
   void scale(grid_type& /*unused*/, ActsScalar scale) {
@@ -118,7 +117,6 @@ struct GloballyIndexedMaterialAccessor {
   /// if there are shared bins, then it will throw an exception as the
   /// outcome is unpredictable.
   ///
-  /// @param scale the amount of the scaling
   template <typename grid_type>
   void scale(grid_type& grid, ActsScalar scale) {
     if (sharedEntries) {
