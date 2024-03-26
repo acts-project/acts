@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   BOOST_CHECK_THROW(ism1 *= 2., std::invalid_argument);
 }
 
-// This test covers the grid material (non-indexed accesser)
+// This test covers the grid material (non-indexed accessor)
 //
 // In this setup, the material is not indexed, but filled directly
 // into the grid structure.
