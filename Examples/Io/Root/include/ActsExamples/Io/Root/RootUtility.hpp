@@ -15,25 +15,34 @@
 namespace ActsExamples {
 namespace RootUtility {
 
-/// Sort the n elements of the  array a of generic templated type Element.
-/// In output the array index of type Index contains the indices of the sorted
-/// array. If down is false sort in increasing order (default is decreasing
-/// order).
+/// @brief Sorts an array of elements and outputs the indices of the sorted elements.
 ///
-/// NOTE that the array index must be created with a length >= n
-/// before calling this function.
-/// NOTE also that the size type for n must be the same type used for the index
-/// array (templated type Index)
-template <typename Element, typename Index>
-void Sort(Index n, const Element* a, Index* index, Bool_t down) {
-  for (Index i = 0; i < n; i++) {
-    index[i] = i;
+/// This function sorts an array `elements` containing `numElements` of generic type `element_t`.
+/// It outputs an array `sortedIndices` of type `index_t` that contains the indices of 
+/// `elements` in sorted order. The sort order is determined by the `sortDescending` flag;
+/// if `true`, the array is sorted in descending order, otherwise in ascending order.
+///
+/// @tparam element_t The data type of the array elements to be sorted.
+/// @tparam index_t The data type for indexing and counting elements in the arrays.
+///
+/// @param numElements The number of elements in the `elements` array.
+/// @param elements Pointer to the array of type `element_t`
+/// @param sortedIndices Pointer to an array of `index_t` type where the sorted indices will be stored.
+/// @param sortDescending Boolean flag indicating the sort order. `true` for descending, `false` for ascending.
+///
+/// @note It is the caller's responsibility to ensure that the `sortedIndices` array is pre-allocated 
+/// with a length of at least `numElements`. Furthermore, the types of `numElements` and `sortedIndices` 
+/// must be consistent.
+template <typename element_t, typename index_t>
+void Sort(index_t numElements, const element_t* elements, index_t* sortedIndices, Bool_t sortDescending) {
+  for (index_t i = 0; i < numElements; i++) {
+    sortedIndices[i] = i;
   }
 
-  if (down) {
-    std::stable_sort(index, index + n, CompareDesc<const Element*>(a));
+  if (sortDescending) {
+    std::stable_sort(sortedIndices, sortedIndices + numElements, CompareDesc<const element_t*>(elements));
   } else {
-    std::stable_sort(index, index + n, CompareAsc<const Element*>(a));
+    std::stable_sort(sortedIndices, sortedIndices + numElements, CompareAsc<const element_t*>(elements));
   }
 }
 
