@@ -45,7 +45,6 @@ def runVertexFitting(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles=inputParticles,
-                orderedEvents=False,
             )
         )
 
@@ -83,7 +82,6 @@ def runVertexFitting(
             outputTracks=trackParameters,
             outputParticles=associatedParticles,
             filePath=str(inputTrackSummary.resolve()),
-            orderedEvents=False,
         )
         s.addReader(trackSummaryReader)
 
