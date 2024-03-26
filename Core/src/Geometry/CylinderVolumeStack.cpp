@@ -390,9 +390,9 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
           Transform3 gapGlobalTransform = m_groupTransform * gapLocalTransform;
           auto gapBounds = std::make_shared<CylinderVolumeBounds>(
               a.minR(), b.maxR(), gapHlZ);
-          gapVolumes.emplace_back(std::make_shared<Volume>(
-                                      gapGlobalTransform, std::move(gapBounds)),
-                                  m_groupTransform);
+
+          auto gap = addGapVolume(gapGlobalTransform, gapBounds);
+          gapVolumes.emplace_back(gap, m_groupTransform);
 
           break;
         }
@@ -464,7 +464,7 @@ CylinderVolumeStack::checkOverlapAndAttachInR(
 
           auto gapBounds = std::make_shared<CylinderVolumeBounds>(
               a.maxR(), b.minR(), a.halfLengthZ());
-          auto gap = std::make_shared<Volume>(m_groupTransform, gapBounds);
+          auto gap = addGapVolume(m_groupTransform, gapBounds);
 
           gapVolumes.emplace_back(std::move(gap), m_groupTransform);
           break;
@@ -727,10 +727,8 @@ void CylinderVolumeStack::assignVolumeBounds(
         auto gap1Bounds =
             std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap1HlZ);
         auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
-        volumes.insert(volumes.begin(),
-                       VolumeTuple{std::make_shared<Volume>(
-                                       gap1Transform, std::move(gap1Bounds)),
-                                   m_groupTransform});
+        auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
+        volumes.insert(volumes.begin(), VolumeTuple{gap1, m_groupTransform});
 
         ActsScalar gap2MinZ = volumes.back().maxZ();
         ActsScalar gap2MaxZ = newHlZ;
@@ -743,9 +741,8 @@ void CylinderVolumeStack::assignVolumeBounds(
         auto gap2Bounds =
             std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap2HlZ);
         auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
-        volumes.emplace_back(
-            std::make_shared<Volume>(gap2Transform, std::move(gap2Bounds)),
-            m_groupTransform);
+        auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
+        volumes.emplace_back(gap2, m_groupTransform);
       }
     }
 
@@ -814,10 +811,9 @@ void CylinderVolumeStack::assignVolumeBounds(
           auto gapBounds =
               std::make_shared<CylinderVolumeBounds>(newMinR, oldMinR, newHlZ);
           auto gapTransform = m_groupTransform;
+          auto gapVolume = std::make_shared<Volume>(gapTransform, gapBounds);
           volumes.insert(volumes.begin(),
-                         VolumeTuple{std::make_shared<Volume>(
-                                         gapTransform, std::move(gapBounds)),
-                                     m_groupTransform});
+                         VolumeTuple{gapVolume, m_groupTransform});
           auto gap = volumes.front();
           ACTS_VERBOSE(" -> gap inner: [ "
                        << gap.minZ() << " <- " << gap.midZ() << " -> "
@@ -829,9 +825,8 @@ void CylinderVolumeStack::assignVolumeBounds(
           auto gapBounds =
               std::make_shared<CylinderVolumeBounds>(oldMaxR, newMaxR, newHlZ);
           auto gapTransform = m_groupTransform;
-          volumes.emplace_back(
-              std::make_shared<Volume>(gapTransform, std::move(gapBounds)),
-              m_groupTransform);
+          auto gapVolume = std::make_shared<Volume>(gapTransform, gapBounds);
+          volumes.emplace_back(gapVolume, m_groupTransform);
           auto gap = volumes.back();
           ACTS_VERBOSE(" -> gap outer: [ "
                        << gap.minZ() << " <- " << gap.midZ() << " -> "
@@ -886,6 +881,13 @@ void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
     throw std::invalid_argument(
         "CylinderVolumeStack requires all volumes to have a bevel angle of 0");
   }
+}
+
+std::shared_ptr<Volume> CylinderVolumeStack::addGapVolume(
+    Transform3 transform, std::shared_ptr<VolumeBounds> bounds) {
+  auto gapVolume = std::make_shared<Volume>(transform, bounds);
+  m_gaps.push_back(gapVolume);
+  return gapVolume;
 }
 
 std::ostream& operator<<(std::ostream& os,
