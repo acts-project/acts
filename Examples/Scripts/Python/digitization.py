@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import acts
 import acts.examples
@@ -47,9 +47,8 @@ def runDigitization(
         # Read input from input collection (e.g. Pythia8 output)
         evGen = acts.examples.RootParticleReader(
             level=s.config.logLevel,
-            outputParticles="particles_input",
             filePath=str(particlesInput),
-            orderedEvents=False,
+            outputParticles="particles_input",
         )
         s.addReader(evGen)
 
