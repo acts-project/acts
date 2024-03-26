@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -248,6 +249,10 @@ class TrackingVolume : public Volume {
         volume->visitVolumes(visitor);
       }
     }
+
+    for (const auto& volume : m_volumes) {
+      volume->visitVolumes(visitor);
+    }
   }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
@@ -278,6 +283,28 @@ class TrackingVolume : public Volume {
   ///
   /// @param mvol is the mother volume
   void setMotherVolume(TrackingVolume* mvol);
+
+  using MutableVolumeRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::unique_ptr<TrackingVolume>>>;
+  using VolumeRange = detail::TransformRange<
+      detail::ConstDereference,
+      const std::vector<std::unique_ptr<TrackingVolume>>>;
+
+  /// Return all volumes registered under this tracking volume
+  /// @return the range of volumes
+  VolumeRange volumes() const;
+
+  /// Return mutable view of the registered volumes under this tracking volume
+  /// @return the range of volumes
+  MutableVolumeRange volumes();
+
+  /// Add a child volume to this tracking volume
+  /// @param volume The volume to add
+  /// @note The @p volume will have its mother volume assigned to @p this.
+  ///       It will throw if @p volume already has a mother volume set
+  /// @return Reference to the added volume
+  TrackingVolume& addVolume(std::unique_ptr<TrackingVolume> volume);
 
   /// Interface of @c TrackingVolume in the Gen1 geometry model
   /// @deprecated This interface is being replaced, and is subject to removal
@@ -464,6 +491,8 @@ class TrackingVolume : public Volume {
 
   /// Volume name for debug reasons & screen output
   std::string m_name;
+
+  std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
 };
 
 }  // namespace Acts
