@@ -54,7 +54,7 @@ using GridEqClosed =
                Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
                                   Acts::detail::AxisBoundaryType::Closed>>;
 
-// Grid definition : eq bound
+// Grid definition : eq bound eq bound
 template <typename value_type>
 using GridEqBoundEqBound =
     Acts::Grid<value_type,
