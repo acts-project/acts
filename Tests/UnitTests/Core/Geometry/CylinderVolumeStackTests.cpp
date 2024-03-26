@@ -27,7 +27,7 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::DEBUG);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(Geometry);
 
@@ -80,7 +80,7 @@ BOOST_DATA_TEST_CASE(Baseline,
   transform3.translate(Vector3{0_mm, 0_mm, 2 * hlZ * shift});
   auto vol3 = std::make_shared<Volume>(transform3, bounds3);
 
-  std::vector<std::shared_ptr<Volume>> volumes = {vol1, vol2, vol3};
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
   // Rotate to simulate unsorted volumes: all results should be the same!
   std::rotate(volumes.begin(), volumes.begin() + rotate, volumes.end());
 
@@ -326,26 +326,26 @@ BOOST_AUTO_TEST_CASE(Asymmetric) {
   transform3.translate(Vector3{0_mm, 0_mm, pZ3});
   auto vol3 = std::make_shared<Volume>(transform3, bounds3);
 
-  std::vector<std::shared_ptr<Volume>> volumes = {vol2, vol1, vol3};
+  std::vector<Volume*> volumes = {vol2.get(), vol1.get(), vol3.get()};
 
-  // CylinderVolumeStack cylStack(
-  // volumes, binZ, CylinderVolumeStack::AttachmentStrategy::Gap,
-  // CylinderVolumeStack::ResizeStrategy::Gap, *logger);
-  // BOOST_CHECK_EQUAL(volumes.size(), 5);
+  CylinderVolumeStack cylStack(
+      volumes, binZ, CylinderVolumeStack::AttachmentStrategy::Gap,
+      CylinderVolumeStack::ResizeStrategy::Gap, *logger);
+  BOOST_CHECK_EQUAL(volumes.size(), 5);
 
-  // auto stackBounds =
-  // dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
-  // BOOST_REQUIRE(stackBounds != nullptr);
+  auto stackBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
+  BOOST_REQUIRE(stackBounds != nullptr);
 
-  // BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMinR), 100_mm);
-  // BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMaxR), 600_mm);
-  // BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eHalfLengthZ),
-  // (std::abs(pZ1 - hlZ1) + pZ3 + hlZ3) / 2.0);
+  BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMinR), 100_mm);
+  BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMaxR), 600_mm);
+  BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                    (std::abs(pZ1 - hlZ1) + pZ3 + hlZ3) / 2.0);
 
-  // ActsScalar midZ = (pZ1 - hlZ1 + pZ3 + hlZ3) / 2.0;
-  // Transform3 expectedTransform{Translation3{0_mm, 0_mm, midZ}};
-  // CHECK_CLOSE_OR_SMALL(cylStack.transform().matrix(),
-  // expectedTransform.matrix(), 1e-10, 1e-14);
+  ActsScalar midZ = (pZ1 - hlZ1 + pZ3 + hlZ3) / 2.0;
+  Transform3 expectedTransform{Translation3{0_mm, 0_mm, midZ}};
+  CHECK_CLOSE_OR_SMALL(cylStack.transform().matrix(),
+                       expectedTransform.matrix(), 1e-10, 1e-14);
 }
 
 BOOST_DATA_TEST_CASE(RotationInZ, boost::unit_test::data::make(strategies),
@@ -368,7 +368,7 @@ BOOST_DATA_TEST_CASE(RotationInZ, boost::unit_test::data::make(strategies),
           AngleAxis3{30_degree, Vector3::UnitZ()},
       bounds2);
 
-  std::vector<std::shared_ptr<Volume>> volumes = {vol1, vol2};
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
 
   CylinderVolumeStack cylStack(volumes, binZ, strategy,
                                CylinderVolumeStack::ResizeStrategy::Gap,
@@ -459,8 +459,8 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
   transform3.translate(Vector3{0_mm, 0_mm, 2 * hlZ});
   auto vol3 = std::make_shared<Volume>(transform3, bounds3);
 
-  std::vector<std::shared_ptr<Volume>> volumes = {vol1, vol2, vol3};
-  std::vector<std::shared_ptr<Volume>> originalVolumes = volumes;
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
+  std::vector<Volume*> originalVolumes = volumes;
 
   std::vector<Transform3> originalTransforms = {transform1, transform2,
                                                 transform3};
@@ -724,11 +724,11 @@ BOOST_DATA_TEST_CASE(Baseline,
   transform3.translate(Vector3{0_mm, 0_mm, 40_mm});
   auto vol3 = std::make_shared<Volume>(transform3, bounds3);
 
-  std::vector<std::shared_ptr<Volume>> volumes = {vol1, vol2, vol3};
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
   // Rotate to simulate unsorted volumes: all results should be the same!
   std::rotate(volumes.begin(), volumes.begin() + rotate, volumes.end());
 
-  std::vector<std::shared_ptr<Volume>> origVolumes = volumes;
+  std::vector<Volume*> origVolumes = volumes;
 
   std::vector<CylinderVolumeBounds> originalBounds;
   std::transform(
@@ -957,8 +957,8 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
   auto vol2 = std::make_shared<Volume>(base, bounds2);
   auto vol3 = std::make_shared<Volume>(base, bounds3);
 
-  std::vector<std::shared_ptr<Volume>> volumes = {vol1, vol2, vol3};
-  std::vector<std::shared_ptr<Volume>> originalVolumes = volumes;
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
+  std::vector<Volume*> originalVolumes = volumes;
 
   std::vector<CylinderVolumeBounds> originalBounds;
 
@@ -1288,18 +1288,20 @@ BOOST_AUTO_TEST_SUITE(Common);
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidDirection,
                      boost::unit_test::data::make(strategies), strategy) {
-  std::vector<std::shared_ptr<Volume>> volumes;
-  volumes.push_back(std::make_shared<Volume>(
+  std::vector<Volume*> volumes;
+  auto vol1 = std::make_shared<Volume>(
       Transform3::Identity(),
-      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+  volumes.push_back(vol1.get());
 
   // Single volume invalid direction still gives an error
   BOOST_CHECK_THROW(CylinderVolumeStack(volumes, binY, strategy),
                     std::invalid_argument);
 
-  volumes.push_back(std::make_shared<Volume>(
+  auto vol2 = std::make_shared<Volume>(
       Transform3::Identity(),
-      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+  volumes.push_back(vol2.get());
 
   BOOST_CHECK_THROW(CylinderVolumeStack(volumes, binY, strategy),
                     std::invalid_argument);
@@ -1310,7 +1312,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
                       boost::unit_test::data::make(Acts::binZ, Acts::binR)),
                      strategy, direction) {
   BOOST_TEST_CONTEXT("Empty Volume") {
-    std::vector<std::shared_ptr<Volume>> volumes;
+    std::vector<Volume*> volumes;
     BOOST_CHECK_THROW(CylinderVolumeStack(volumes, direction, strategy),
                       std::invalid_argument);
   }
@@ -1318,16 +1320,18 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
   BOOST_TEST_CONTEXT("Volumes rotated relative to each other") {
     // At this time, all rotations are considered invalid, even around z
     for (const Vector3 axis : {Vector3::UnitX(), Vector3::UnitY()}) {
-      std::vector<std::shared_ptr<Volume>> volumes;
-      volumes.push_back(std::make_shared<Volume>(
+      std::vector<Volume*> volumes;
+      auto vol1 = std::make_shared<Volume>(
           Transform3{Translation3{Vector3{0_mm, 0_mm, -500_mm}}},
-          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+      volumes.push_back(vol1.get());
 
       BOOST_TEST_MESSAGE("Axis: " << axis);
-      volumes.push_back(std::make_shared<Volume>(
+      auto vol2 = std::make_shared<Volume>(
           Transform3{Translation3{Vector3{0_mm, 0_mm, 500_mm}} *
                      AngleAxis3(1_degree, axis)},
-          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+      volumes.push_back(vol2.get());
 
       BOOST_CHECK_THROW(CylinderVolumeStack(
                             volumes, direction, strategy,
@@ -1339,14 +1343,16 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
   BOOST_TEST_CONTEXT("Volumes shifted in the xy plane relative to each other") {
     for (const Vector3& shift :
          {Vector3{5_mm, 0, 0}, Vector3{0, -5_mm, 0}, Vector3{2_mm, -2_mm, 0}}) {
-      std::vector<std::shared_ptr<Volume>> volumes;
-      volumes.push_back(std::make_shared<Volume>(
+      std::vector<Volume*> volumes;
+      auto vol1 = std::make_shared<Volume>(
           Transform3{Translation3{Vector3{0_mm, 0_mm, -500_mm}}},
-          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+      volumes.push_back(vol1.get());
 
-      volumes.push_back(std::make_shared<Volume>(
+      auto vol2 = std::make_shared<Volume>(
           Transform3{Translation3{Vector3{0_mm, 0_mm, 500_mm} + shift}},
-          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+          std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+      volumes.push_back(vol2.get());
 
       BOOST_CHECK_THROW(CylinderVolumeStack(
                             volumes, direction, strategy,
@@ -1373,10 +1379,11 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
       std::stringstream ss;
       ss << "Invalid bounds: " << *invalid;
       BOOST_TEST_CONTEXT(ss.str()) {
-        std::vector<std::shared_ptr<Volume>> volumes;
-        volumes.push_back(std::make_shared<Volume>(
+        std::vector<Volume*> volumes;
+        auto vol1 = std::make_shared<Volume>(
             Transform3{Translation3{Vector3{0_mm, 0_mm, -500_mm}}},
-            std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm)));
+            std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
+        volumes.push_back(vol1.get());
 
         {
           // have valid stack, try to assign extra
@@ -1400,7 +1407,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
             vol = std::make_shared<Volume>(
                 Transform3{Translation3{Vector3{0_mm, 0_mm, 0_mm}}}, invalid);
           }
-          volumes.push_back(vol);
+          volumes.push_back(vol.get());
           BOOST_CHECK_THROW(
               CylinderVolumeStack(volumes, direction, strategy,
                                   CylinderVolumeStack::ResizeStrategy::Gap,
@@ -1421,7 +1428,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
           AngleAxis3(73_degree, Vector3::UnitX()),
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 400_mm));
 
-  std::vector<std::shared_ptr<Volume>> volumes{vol};
+  std::vector<Volume*> volumes{vol.get()};
 
   CylinderVolumeStack cylStack(volumes, direction, strategy,
                                CylinderVolumeStack::ResizeStrategy::Gap,
@@ -1430,7 +1437,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
   // Cylinder stack has the same transform as bounds as the single input
   // volume
   BOOST_CHECK_EQUAL(volumes.size(), 1);
-  BOOST_CHECK_EQUAL(volumes.at(0), vol);
+  BOOST_CHECK_EQUAL(volumes.at(0), vol.get());
   BOOST_CHECK_EQUAL(vol->transform().matrix(), cylStack.transform().matrix());
   BOOST_CHECK_EQUAL(vol->volumeBounds(), cylStack.volumeBounds());
 }

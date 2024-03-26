@@ -20,13 +20,13 @@
 namespace Acts {
 
 struct CylinderVolumeStack::VolumeTuple {
-  std::shared_ptr<Volume> volume;
+  Volume* volume;
   const CylinderVolumeBounds* bounds{};
   std::shared_ptr<CylinderVolumeBounds> updatedBounds{};
   Transform3 localTransform;
 
-  VolumeTuple(std::shared_ptr<Volume> volume_, const Transform3& groupTransform)
-      : volume{std::move(volume_)},
+  VolumeTuple(Volume& volume_, const Transform3& groupTransform)
+      : volume{&volume_},
         localTransform{groupTransform.inverse() * volume->transform()} {
     bounds = dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
     assert(bounds != nullptr);
@@ -69,22 +69,33 @@ struct CylinderVolumeStack::VolumeTuple {
   }
 };
 
-CylinderVolumeStack::CylinderVolumeStack(
-    std::vector<std::shared_ptr<Volume>>& volumes, BinningValue direction,
-    AttachmentStrategy strategy, ResizeStrategy resizeStrategy,
-    const Logger& logger)
-    : Volume(createOuterVolume(volumes, direction, strategy, logger)),
+CylinderVolumeStack::CylinderVolumeStack(std::vector<Volume*>& volumes,
+                                         BinningValue direction,
+                                         AttachmentStrategy strategy,
+                                         ResizeStrategy resizeStrategy,
+                                         const Logger& logger)
+    : Volume(initialVolume(volumes)),
       m_direction(direction),
       m_resizeStrategy(resizeStrategy),
-      m_volumes(volumes) {}
+      m_volumes(volumes) {
+  initializeOuterVolume(direction, strategy, logger);
+}
 
-Volume CylinderVolumeStack::createOuterVolume(
-    std::vector<std::shared_ptr<Volume>>& volumes, BinningValue direction,
-    AttachmentStrategy strategy, const Logger& logger) {
-  ACTS_DEBUG("Creating CylinderVolumeStack from "
-             << volumes.size() << " volumes in direction "
-             << binningValueNames()[direction]);
+Volume CylinderVolumeStack::initialVolume(const std::vector<Volume*>& volumes) {
   if (volumes.empty()) {
+    throw std::invalid_argument(
+        "CylinderVolumeStack requires at least one volume");
+  }
+  return *volumes.front();
+}
+
+void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
+                                                AttachmentStrategy strategy,
+                                                const Logger& logger) {
+  ACTS_DEBUG("Creating CylinderVolumeStack from "
+             << m_volumes.size() << " volumes in direction "
+             << binningValueNames()[direction]);
+  if (m_volumes.empty()) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires at least one volume");
   }
@@ -95,13 +106,13 @@ Volume CylinderVolumeStack::createOuterVolume(
   }
 
   // For alignment check, we have to pick one of the volumes as the base
-  m_groupTransform = volumes.front()->transform();
+  m_groupTransform = m_volumes.front()->transform();
   ACTS_VERBOSE("Initial group transform is:\n" << m_groupTransform.matrix());
 
   std::vector<VolumeTuple> volumeTuples;
-  volumeTuples.reserve(volumes.size());
+  volumeTuples.reserve(m_volumes.size());
 
-  for (const auto& volume : volumes) {
+  for (const auto& volume : m_volumes) {
     auto* cylinderBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
     if (cylinderBounds == nullptr) {
@@ -112,15 +123,19 @@ Volume CylinderVolumeStack::createOuterVolume(
 
     checkNoPhiOrBevel(*cylinderBounds, logger);
 
-    volumeTuples.emplace_back(volume, m_groupTransform);
+    volumeTuples.emplace_back(*volume, m_groupTransform);
   }
 
   ACTS_DEBUG("*** Initial volume configuration:");
   printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-  if (volumes.size() == 1) {
-    ACTS_VERBOSE("Only one volume, returning")
-    return Volume(*volumes.front());
+  if (m_volumes.size() == 1) {
+    ACTS_VERBOSE("Only one volume, returning");
+    setTransform(m_volumes.front()->transform());
+    const auto* cylBounds = dynamic_cast<const CylinderVolumeBounds*>(
+        &m_volumes.front()->volumeBounds());
+    assert(cylBounds != nullptr && "Volume bounds are not cylinder bounds");
+    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(*cylBounds);
   }
 
   ACTS_VERBOSE("Checking volume alignment");
@@ -162,15 +177,11 @@ Volume CylinderVolumeStack::createOuterVolume(
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
     std::sort(volumeTuples.begin(), volumeTuples.end(),
-              [](const auto& a, const auto& b) {
-                return a.localTransform.translation()[eZ] <
-                       b.localTransform.translation()[eZ];
-              });
+              [](const auto& a, const auto& b) { return a.midZ() < b.midZ(); });
 
-    // Update outer volume vector after sorting
-    volumes.clear();
+    m_volumes.clear();
     for (const auto& vt : volumeTuples) {
-      volumes.push_back(vt.volume);
+      m_volumes.push_back(vt.volume);
     }
 
     ACTS_DEBUG("*** Volume configuration after final z sorting:");
@@ -182,15 +193,15 @@ Volume CylinderVolumeStack::createOuterVolume(
     ActsScalar midZ = (minZ + maxZ) / 2.0;
     ActsScalar hlZ = (maxZ - minZ) / 2.0;
 
-    m_groupTransform = m_groupTransform * Translation3{0, 0, midZ};
+    m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    auto outerCylinderBounds =
-        std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
-    ACTS_DEBUG("Outer bounds are:\n" << *outerCylinderBounds);
+    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
+    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
     ACTS_DEBUG("Outer transform / new group transform is:\n"
-               << m_groupTransform.matrix());
+               << m_transform.matrix());
 
-    return Volume(m_groupTransform, outerCylinderBounds);
+    // Update group transform to the new center
+    m_groupTransform = m_transform;
 
   } else if (direction == Acts::binR) {
     ACTS_ERROR("Sorting by volume r middle point");
@@ -225,10 +236,9 @@ Volume CylinderVolumeStack::createOuterVolume(
     std::sort(volumeTuples.begin(), volumeTuples.end(),
               [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
 
-    // Update outer volume vector after sorting
-    volumes.clear();
+    m_volumes.clear();
     for (const auto& vt : volumeTuples) {
-      volumes.push_back(vt.volume);
+      m_volumes.push_back(vt.volume);
     }
 
     ACTS_DEBUG("*** Volume configuration after final r sorting:");
@@ -240,15 +250,15 @@ Volume CylinderVolumeStack::createOuterVolume(
     ActsScalar midZ = (minZ + maxZ) / 2.0;
     ActsScalar hlZ = (maxZ - minZ) / 2.0;
 
-    Transform3 outerTransform = m_groupTransform * Translation3{0, 0, midZ};
+    m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
-    auto outerCylinderBounds =
-        std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
+    m_volumeBounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
 
-    ACTS_DEBUG("Outer bounds are:\n" << *outerCylinderBounds);
-    ACTS_DEBUG("Outer transform is:\n" << outerTransform.matrix());
+    ACTS_DEBUG("Outer bounds are:\n" << *m_volumeBounds);
+    ACTS_DEBUG("Outer transform is:\n" << m_transform.matrix());
 
-    return Volume(outerTransform, outerCylinderBounds);
+    // Update group transform to the new center
+    m_groupTransform = m_transform;
 
   } else {
     ACTS_ERROR("Binning in " << binningValueNames()[direction]
@@ -392,7 +402,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
               a.minR(), b.maxR(), gapHlZ);
 
           auto gap = addGapVolume(gapGlobalTransform, gapBounds);
-          gapVolumes.emplace_back(gap, m_groupTransform);
+          gapVolumes.emplace_back(*gap, m_groupTransform);
 
           break;
         }
@@ -466,7 +476,7 @@ CylinderVolumeStack::checkOverlapAndAttachInR(
               a.maxR(), b.minR(), a.halfLengthZ());
           auto gap = addGapVolume(m_groupTransform, gapBounds);
 
-          gapVolumes.emplace_back(std::move(gap), m_groupTransform);
+          gapVolumes.emplace_back(*gap, m_groupTransform);
           break;
         }
         default:
@@ -493,18 +503,12 @@ void CylinderVolumeStack::printVolumeSequence(
     ss << std::fixed;
     ss << std::setprecision(3);
     ss << std::setfill(' ');
-    ActsScalar z = vt.localTransform.translation()[eZ];
-    ActsScalar hlZ = vt.updatedBounds->get(CylinderVolumeBounds::eHalfLengthZ);
-    ActsScalar minZ = z - hlZ;
-    ActsScalar maxZ = z + hlZ;
-
-    ActsScalar minR = vt.updatedBounds->get(CylinderVolumeBounds::eMinR);
-    ActsScalar maxR = vt.updatedBounds->get(CylinderVolumeBounds::eMaxR);
 
     int w = 9;
-    ss << "z: [ " << std::setw(w) << minZ << " <- " << std::setw(w) << z
-       << " -> " << std::setw(w) << maxZ << " ], r: [ " << std::setw(w) << minR
-       << " <-> " << std::setw(w) << maxR << " ]";
+    ss << "z: [ " << std::setw(w) << vt.minZ() << " <- " << std::setw(w)
+       << vt.midZ() << " -> " << std::setw(w) << vt.maxZ() << " ], r: [ "
+       << std::setw(w) << vt.minR() << " <-> " << std::setw(w) << vt.maxR()
+       << " ]";
 
     logger().log(lvl, ss.str());
   }
@@ -664,18 +668,19 @@ void CylinderVolumeStack::assignVolumeBounds(
   if (m_direction == BinningValue::binZ) {
     ACTS_VERBOSE("Stack direction is z");
 
-    std::vector<VolumeTuple> volumes;
-    volumes.reserve(m_volumes.size());
+    std::vector<VolumeTuple> volumeTuples;
+    volumeTuples.reserve(m_volumes.size());
     std::transform(m_volumes.begin(), m_volumes.end(),
-                   std::back_inserter(volumes), [this](const auto& volume) {
-                     return VolumeTuple{volume, m_groupTransform};
+                   std::back_inserter(volumeTuples),
+                   [this](const auto& volume) {
+                     return VolumeTuple{*volume, m_groupTransform};
                    });
 
     ACTS_VERBOSE("*** Initial volume configuration:");
-    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     ACTS_VERBOSE("Resize all volumes to new r bounds");
-    for (auto& volume : volumes) {
+    for (auto& volume : volumeTuples) {
       volume.set({
           {CylinderVolumeBounds::eMinR, newMinR},
           {CylinderVolumeBounds::eMaxR, newMaxR},
@@ -683,32 +688,34 @@ void CylinderVolumeStack::assignVolumeBounds(
     }
 
     ACTS_VERBOSE("*** Volume configuration after r resizing:");
-    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     if (newHlZ == oldHlZ) {
       ACTS_VERBOSE("Halflength z is the same, no z resize needed");
     } else {
       if (m_resizeStrategy == ResizeStrategy::Expand) {
         ACTS_VERBOSE("Expanding first and last volume to new z bounds");
-        auto& first = volumes.front();
+        auto& first = volumeTuples.front();
         ActsScalar newMinZFirst = -newHlZ;
         ActsScalar newMidZFirst = (newMinZFirst + first.maxZ()) / 2.0;
         ActsScalar newHlZFirst = (first.maxZ() - newMinZFirst) / 2.0;
 
         ACTS_VERBOSE(" -> first z: [ " << newMinZFirst << " <- " << newMidZFirst
-                                       << " -> " << first.maxZ() << " ]");
+                                       << " -> " << first.maxZ()
+                                       << " ] (hl: " << newHlZFirst << ")");
 
         first.set({{CylinderVolumeBounds::eHalfLengthZ, newHlZFirst}});
         first.setLocalTransform(Transform3{Translation3{0, 0, newMidZFirst}},
                                 m_groupTransform);
 
-        auto& last = volumes.back();
+        auto& last = volumeTuples.back();
         ActsScalar newMaxZLast = newHlZ;
         ActsScalar newMidZLast = (last.minZ() + newMaxZLast) / 2.0;
         ActsScalar newHlZLast = (newMaxZLast - last.minZ()) / 2.0;
 
         ACTS_VERBOSE(" -> last z: [ " << last.minZ() << " <- " << newMidZLast
-                                      << " -> " << newMaxZLast << " ]");
+                                      << " -> " << newMaxZLast
+                                      << " ] (hl: " << newHlZLast << ")");
 
         last.set({{CylinderVolumeBounds::eHalfLengthZ, newHlZLast}});
         last.setLocalTransform(Transform3{Translation3{0, 0, newMidZLast}},
@@ -717,41 +724,44 @@ void CylinderVolumeStack::assignVolumeBounds(
         ACTS_VERBOSE("Creating gap volumes to fill the new z bounds");
 
         ActsScalar gap1MinZ = -newHlZ;
-        ActsScalar gap1MaxZ = volumes.front().minZ();
+        ActsScalar gap1MaxZ = volumeTuples.front().minZ();
         ActsScalar gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
         ActsScalar gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
 
         ACTS_VERBOSE(" -> gap1 z: [ " << gap1MinZ << " <- " << gap1PZ << " -> "
-                                      << gap1MaxZ << " ]");
+                                      << gap1MaxZ << " ] (hl: " << gap1HlZ
+                                      << ")");
 
         auto gap1Bounds =
             std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap1HlZ);
         auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
         auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
-        volumes.insert(volumes.begin(), VolumeTuple{gap1, m_groupTransform});
+        volumeTuples.insert(volumeTuples.begin(),
+                            VolumeTuple{*gap1, m_groupTransform});
 
-        ActsScalar gap2MinZ = volumes.back().maxZ();
+        ActsScalar gap2MinZ = volumeTuples.back().maxZ();
         ActsScalar gap2MaxZ = newHlZ;
         ActsScalar gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
         ActsScalar gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
 
         ACTS_VERBOSE(" -> gap2 z: [ " << gap2MinZ << " <- " << gap2PZ << " -> "
-                                      << gap2MaxZ << " ]");
+                                      << gap2MaxZ << " ] (hl: " << gap2HlZ
+                                      << ")");
 
         auto gap2Bounds =
             std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap2HlZ);
         auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
         auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
-        volumes.emplace_back(gap2, m_groupTransform);
+        volumeTuples.emplace_back(*gap2, m_groupTransform);
       }
     }
 
     ACTS_VERBOSE("*** Volume configuration after z resizing:");
-    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     // Commit and update outer vector
     m_volumes.clear();
-    for (auto& vt : volumes) {
+    for (auto& vt : volumeTuples) {
       vt.commit();
       m_volumes.push_back(vt.volume);
     }
@@ -759,25 +769,26 @@ void CylinderVolumeStack::assignVolumeBounds(
   } else if (m_direction == BinningValue::binR) {
     ACTS_VERBOSE("Stack direction is r");
 
-    std::vector<VolumeTuple> volumes;
-    volumes.reserve(m_volumes.size());
+    std::vector<VolumeTuple> volumeTuples;
+    volumeTuples.reserve(m_volumes.size());
     std::transform(m_volumes.begin(), m_volumes.end(),
-                   std::back_inserter(volumes), [this](const auto& volume) {
-                     return VolumeTuple{volume, m_groupTransform};
+                   std::back_inserter(volumeTuples),
+                   [this](const auto& volume) {
+                     return VolumeTuple{*volume, m_groupTransform};
                    });
 
     ACTS_VERBOSE("*** Initial volume configuration:");
-    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     ACTS_VERBOSE("Resize all volumes to new z bounds");
-    for (auto& volume : volumes) {
+    for (auto& volume : volumeTuples) {
       volume.set({
           {CylinderVolumeBounds::eHalfLengthZ, newHlZ},
       });
     }
 
     ACTS_VERBOSE("*** Volume configuration after z resizing:");
-    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     if (oldMinR == newMinR && oldMaxR == newMaxR) {
       ACTS_VERBOSE("Bounds are the same, no r resize needed");
@@ -785,7 +796,7 @@ void CylinderVolumeStack::assignVolumeBounds(
       if (m_resizeStrategy == ResizeStrategy::Expand) {
         if (oldMinR > newMinR) {
           // expand innermost volume
-          auto& first = volumes.front();
+          auto& first = volumeTuples.front();
           first.set({
               {CylinderVolumeBounds::eMinR, newMinR},
           });
@@ -796,7 +807,7 @@ void CylinderVolumeStack::assignVolumeBounds(
         }
         if (oldMaxR < newMaxR) {
           // expand outermost volume
-          auto& last = volumes.back();
+          auto& last = volumeTuples.back();
           last.set({
               {CylinderVolumeBounds::eMaxR, newMaxR},
           });
@@ -811,10 +822,10 @@ void CylinderVolumeStack::assignVolumeBounds(
           auto gapBounds =
               std::make_shared<CylinderVolumeBounds>(newMinR, oldMinR, newHlZ);
           auto gapTransform = m_groupTransform;
-          auto gapVolume = std::make_shared<Volume>(gapTransform, gapBounds);
-          volumes.insert(volumes.begin(),
-                         VolumeTuple{gapVolume, m_groupTransform});
-          auto gap = volumes.front();
+          auto gapVolume = addGapVolume(gapTransform, gapBounds);
+          volumeTuples.insert(volumeTuples.begin(),
+                              VolumeTuple{*gapVolume, m_groupTransform});
+          auto gap = volumeTuples.front();
           ACTS_VERBOSE(" -> gap inner: [ "
                        << gap.minZ() << " <- " << gap.midZ() << " -> "
                        << gap.maxZ() << " ], r: [ " << gap.minR() << " <-> "
@@ -825,9 +836,9 @@ void CylinderVolumeStack::assignVolumeBounds(
           auto gapBounds =
               std::make_shared<CylinderVolumeBounds>(oldMaxR, newMaxR, newHlZ);
           auto gapTransform = m_groupTransform;
-          auto gapVolume = std::make_shared<Volume>(gapTransform, gapBounds);
-          volumes.emplace_back(gapVolume, m_groupTransform);
-          auto gap = volumes.back();
+          auto gapVolume = addGapVolume(gapTransform, gapBounds);
+          volumeTuples.emplace_back(*gapVolume, m_groupTransform);
+          auto gap = volumeTuples.back();
           ACTS_VERBOSE(" -> gap outer: [ "
                        << gap.minZ() << " <- " << gap.midZ() << " -> "
                        << gap.maxZ() << " ], r: [ " << gap.minR() << " <-> "
@@ -837,11 +848,11 @@ void CylinderVolumeStack::assignVolumeBounds(
     }
 
     ACTS_VERBOSE("*** Volume configuration after r resizing:");
-    printVolumeSequence(volumes, logger, Acts::Logging::DEBUG);
+    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     // Commit and update outer vector
     m_volumes.clear();
-    for (auto& vt : volumes) {
+    for (auto& vt : volumeTuples) {
       vt.commit();
       m_volumes.push_back(vt.volume);
     }

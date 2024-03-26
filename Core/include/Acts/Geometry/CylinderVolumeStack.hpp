@@ -24,7 +24,7 @@ class CylinderVolumeStack : public Volume {
   enum class ResizeStrategy { Expand, Gap };
 
   CylinderVolumeStack(
-      std::vector<std::shared_ptr<Volume>>& volumes, BinningValue direction,
+      std::vector<Volume*>& volumes, BinningValue direction,
       AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
       ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
@@ -35,9 +35,10 @@ class CylinderVolumeStack : public Volume {
                           const Logger& logger);
 
  private:
-  Volume createOuterVolume(std::vector<std::shared_ptr<Volume>>& volumes,
-                           BinningValue direction, AttachmentStrategy strategy,
-                           const Logger& logger);
+  static Volume initialVolume(const std::vector<Volume*>& volumes);
+
+  void initializeOuterVolume(BinningValue direction,
+                             AttachmentStrategy strategy, const Logger& logger);
 
   struct VolumeTuple;
 
@@ -74,9 +75,8 @@ class CylinderVolumeStack : public Volume {
   BinningValue m_direction{};
   ResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
-  std::vector<std::shared_ptr<Volume>>& m_volumes;
-
   std::vector<std::shared_ptr<Volume>> m_gaps{};
+  std::vector<Volume*>& m_volumes;
 };
 
 std::ostream& operator<<(std::ostream& os,
