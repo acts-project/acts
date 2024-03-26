@@ -167,15 +167,12 @@ addSeeding(
 s.addAlgorithm(
     acts.examples.MyTrackFindingAlgorithm(
         level=acts.logging.INFO,
-
         magneticField=field,
         trackingGeometry=trackingGeometry,
-
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="mytracks",
-
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [
                 (

@@ -1272,10 +1272,10 @@ def addCKFTracks(
             )
             if twoWay == 2
             else dict(
-                twoWay=(twoWay==1),
+                twoWay=(twoWay == 1),
                 findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
                     trackingGeometry, field, customLogLevel()
-                )
+                ),
             )
         ),
         **acts.examples.defaultKWArgs(
