@@ -68,10 +68,15 @@ class CylinderVolumeStack : public Volume {
   static void checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
                                 const Logger& logger);
 
+  std::shared_ptr<Volume> addGapVolume(Transform3 transform,
+                                       std::shared_ptr<VolumeBounds> bounds);
+
   BinningValue m_direction{};
   ResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
   std::vector<std::shared_ptr<Volume>>& m_volumes;
+
+  std::vector<std::shared_ptr<Volume>> m_gaps{};
 };
 
 std::ostream& operator<<(std::ostream& os,
