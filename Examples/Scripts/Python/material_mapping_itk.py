@@ -53,7 +53,7 @@ def runMaterialMapping(
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            collection="material-tracks",
+            outputMaterialTracks="material-tracks",
             fileList=[
                 os.path.join(
                     inputDir,
@@ -68,7 +68,7 @@ def runMaterialMapping(
 
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
-    mmAlgCfg.collection = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -102,7 +102,7 @@ def runMaterialMapping(
         s.addWriter(
             RootMaterialTrackWriter(
                 level=acts.logging.INFO,
-                collection=mmAlgCfg.collection,
+                inputMaterialTracks=mmAlgCfg.collection,
                 filePath=os.path.join(
                     outputDir,
                     mapName + "_tracks.root",
