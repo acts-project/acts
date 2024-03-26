@@ -101,7 +101,7 @@ RootTrackSummaryReader::RootTrackSummaryReader(
   {
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_nr", "", "goff");
-    RootUtility::StableSort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+    RootUtility::stableSort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                             m_entryNumbers.data(), false);
   }
 }

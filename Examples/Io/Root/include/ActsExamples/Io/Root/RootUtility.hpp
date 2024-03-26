@@ -38,7 +38,7 @@ namespace RootUtility {
 /// with a length of at least `numElements`. Furthermore, the types of
 /// `numElements` and `sortedIndices` must be consistent.
 template <typename element_t, typename index_t>
-void StableSort(index_t numElements, const element_t* elements,
+void stableSort(index_t numElements, const element_t* elements,
                 index_t* sortedIndices, Bool_t sortDescending) {
   for (index_t i = 0; i < numElements; i++) {
     sortedIndices[i] = i;
