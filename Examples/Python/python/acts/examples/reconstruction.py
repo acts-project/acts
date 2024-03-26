@@ -1164,7 +1164,7 @@ def addCKFTracks(
         Union[TrackSelectorConfig, List[TrackSelectorConfig]]
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
-    twoWay: bool = False,
+    twoWay: int = 0,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1244,7 +1244,7 @@ def addCKFTracks(
     # truth particle smearing and source link selection config
     trackFinderAlg = (
         acts.examples.MyTrackFindingAlgorithm
-        if twoWay
+        if twoWay == 2
         else acts.examples.TrackFindingAlgorithm
     )
     trackFinder = trackFinderAlg(
@@ -1270,8 +1270,9 @@ def addCKFTracks(
                 trackingGeometry=trackingGeometry,
                 magneticField=field,
             )
-            if twoWay
+            if twoWay == 2
             else dict(
+                twoWay=(twoWay==1),
                 findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
                     trackingGeometry, field, customLogLevel()
                 )
