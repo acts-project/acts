@@ -87,7 +87,7 @@ struct Options {
 ///
 /// @param gctx is the geometry context
 /// @param materialInteractions is the vector of material interaction
-/// @param intersectedSurfaces is the geometry identifier
+/// @param intersectedSurfaces are the surfac assignment candidates 
 /// @param options are the options for the assignment
 ///
 /// @return a pair of vectors of assigned and unassigned material interactions
