@@ -206,6 +206,24 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
     return sl;
   }
 
+  /// @brief Accessor to the grid
+  const grid_type& grid() const { return m_grid; }
+
+  /// @brief Accessor to the material accessor
+  const material_accessor_type& materialAccessor() const {
+    return m_materialAccessor;
+  }
+
+  /// @brief Accessor to the bound to grid local delegate
+  const BoundToGridLocalDelegate& boundToGridLocal() const {
+    return m_boundToGridLocal;
+  }
+
+  /// @brief Accessor to the global to grid local delegate
+  const GlobalToGridLocalDelegate& globalToGridLocal() const {
+    return m_globalToGridLocal;
+  }
+
  private:
   /// @brief The grid
   grid_type m_grid;
