@@ -35,14 +35,12 @@ class RootParticleReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    ///< particle collection to read
+    /// particle collection to read
     std::string outputParticles = "particleCollection";
     /// name of the output tree
     std::string treeName = "particles";
     /// The name of the input file
     std::string filePath;
-    /// Whether the events are ordered or not
-    bool orderedEvents = true;
   };
 
   /// Constructor
