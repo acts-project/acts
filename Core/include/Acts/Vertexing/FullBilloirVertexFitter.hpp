@@ -83,9 +83,8 @@ class FullBilloirVertexFitter {
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
-  /// @param state The state object
+  /// @param fieldCache The magnetic field cache
   ///
   /// @return Fitted vertex
   Result<Vertex> fit(const std::vector<InputTrack>& paramVector,

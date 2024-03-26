@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
@@ -34,6 +35,40 @@ nlohmann::json toJson(const IAxis& ia);
 nlohmann::json toJsonDetray(const IAxis& ia);
 
 }  // namespace AxisJsonConverter
+
+namespace GridAccessJsonConverter {
+
+/// Convert a global to local access to json
+///
+/// @param globalToGridLocal the global to grid local access
+///
+/// @return a json object to represent global class
+nlohmann::json toJson(const GridAccess::IGlobalToGridLocal& globalToGridLocal);
+
+/// Create a global grid to local instance
+///
+/// @param jGlobalToGridLocal the json snippet
+///
+/// @return a newly created object
+std::unique_ptr<GridAccess::IGlobalToGridLocal> globalToGridLocalFromJson(
+    const nlohmann::json& jGlobalToGridLocal);
+
+/// Convert a local to local access to json
+///
+/// @param boundToGridLocal the local to local access
+///
+/// @return a json object to represent local class
+nlohmann::json toJson(const GridAccess::IBoundToGridLocal& boundToGridLocal);
+
+/// Create a local grid to local instance
+///
+/// @param jBoundToGridLocal the json snippet
+///
+/// @return a newly created object
+std::unique_ptr<GridAccess::IBoundToGridLocal> boundToGridLocalFromJson(
+    const nlohmann::json& jBoundToGridLocal);
+
+}  // namespace GridAccessJsonConverter
 
 namespace GridJsonConverter {
 

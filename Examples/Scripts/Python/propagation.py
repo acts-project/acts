@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+
 import os
 
 import acts
 import acts.examples
-
 from acts.examples import GenericDetector, AlignedDetector
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 

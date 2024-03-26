@@ -8,9 +8,6 @@ from helpers import (
     edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
-from common import getOpenDataDetectorDirectory
-
-from acts.examples.odd import getOpenDataDetector
 
 import acts
 from acts import PlanarModuleStepper, UnitConstants as u
@@ -30,6 +27,7 @@ from acts.examples import (
     PlanarSteppingAlgorithm,
     Sequencer,
 )
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 @pytest.mark.root
@@ -60,13 +58,13 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             RootParticleReader,
             acts.logging.WARNING,
-            particleCollection="input_particles",
+            outputParticles="particles_input",
             filePath=str(file),
         )
     )
 
     alg = AssertCollectionExistsAlg(
-        "input_particles", "check_alg", acts.logging.WARNING
+        "particles_input", "check_alg", acts.logging.WARNING
     )
     s2.addAlgorithm(alg)
 
@@ -367,9 +365,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     s = Sequencer(numThreads=1)
 
@@ -484,7 +480,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kfTracks",
+            inputTracks="kf_tracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )
@@ -498,7 +494,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addReader(
         EDM4hepTrackReader(
             level=acts.logging.VERBOSE,
-            outputTracks="kfTracks",
+            outputTracks="kf_tracks",
             inputPath=str(out),
             Bz=2 * u.T,
         )
