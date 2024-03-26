@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 
 #include <algorithm>
 #include <ostream>
@@ -639,4 +640,24 @@ const Acts::Layer* TrackingVolume::associatedLayer(
   // return the null pointer
   return nullptr;
 }
+
+TrackingVolume::VolumeRange TrackingVolume::volumes() const {
+  return detail::make_transform_range<detail::ConstDereference>(m_volumes);
+}
+
+TrackingVolume::MutableVolumeRange TrackingVolume::volumes() {
+  return detail::make_transform_range<detail::Dereference>(m_volumes);
+}
+
+TrackingVolume& TrackingVolume::addVolume(
+    std::unique_ptr<TrackingVolume> volume) {
+  if (volume->motherVolume() != nullptr) {
+    throw std::invalid_argument("Volume already has a mother volume");
+  }
+
+  volume->setMotherVolume(this);
+  m_volumes.push_back(std::move(volume));
+  return *m_volumes.back();
+}
+
 }  // namespace Acts
