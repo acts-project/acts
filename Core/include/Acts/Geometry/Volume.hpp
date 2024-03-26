@@ -37,8 +37,6 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  /// @note This will automatically build an oriented bounding box with an
-  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Transform3& transform,
          std::shared_ptr<const VolumeBounds> volbounds);
 
@@ -46,8 +44,6 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  /// @note This will automatically build an oriented bounding box with an
-  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
   Volume() = delete;
@@ -67,11 +63,11 @@ class Volume : public virtual GeometryObject {
   /// returns the center of the volume
   const Vector3& center() const;
 
-  /// returns the volumeBounds()
+  /// Returns const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
 
   /// Set volume bounds and update volume bounding boxes implicitly
-  void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
+  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -79,8 +75,10 @@ class Volume : public virtual GeometryObject {
   BoundingBox boundingBox(const Vector3& envelope = {0, 0, 0}) const;
 
   /// Construct oriented bounding box for this shape
+  /// @note This will build an oriented bounding box with an
+  ///       envelope value of (0.05, 0.05, 0.05)mm
   /// @return Constructed oriented bounding box pointing to this volume
-  const BoundingBox& orientedBoundingBox() const;
+  BoundingBox orientedBoundingBox() const;
 
   /// Inside() method for checks
   ///
@@ -105,7 +103,6 @@ class Volume : public virtual GeometryObject {
   Transform3 m_itransform;
   Vector3 m_center;
   std::shared_ptr<const VolumeBounds> m_volumeBounds;
-  BoundingBox m_orientedBoundingBox;
 };
 
 /**Overload of << operator for std::ostream for debug output*/

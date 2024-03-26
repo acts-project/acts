@@ -24,18 +24,14 @@ Volume::Volume(const Transform3& transform,
       m_transform(transform),
       m_itransform(m_transform.inverse()),
       m_center(m_transform.translation()),
-      m_volumeBounds(std::move(volbounds)),
-      m_orientedBoundingBox(m_volumeBounds->boundingBox(
-          nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
+      m_volumeBounds(std::move(volbounds)) {}
 
 Volume::Volume(const Volume& vol, const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * vol.m_transform),
       m_itransform(m_transform.inverse()),
       m_center(m_transform.translation()),
-      m_volumeBounds(vol.m_volumeBounds),
-      m_orientedBoundingBox(m_volumeBounds->boundingBox(
-          nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
+      m_volumeBounds(vol.m_volumeBounds) {}
 
 Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
                                 BinningValue bValue) const {
@@ -73,14 +69,13 @@ Volume::BoundingBox Volume::boundingBox(const Vector3& envelope) const {
   return m_volumeBounds->boundingBox(&m_transform, envelope, this);
 }
 
-const Volume::BoundingBox& Volume::orientedBoundingBox() const {
-  return m_orientedBoundingBox;
+Volume::BoundingBox Volume::orientedBoundingBox() const {
+  return m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm},
+                                     this);
 }
 
-void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
+void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
   m_volumeBounds = std::move(volbounds);
-  m_orientedBoundingBox =
-      m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this);
 }
 
 const Transform3& Volume::transform() const {
