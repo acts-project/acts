@@ -91,9 +91,8 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
   {
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
-    // Sort to get the entry numbers of the ordered events
-    RootUtility::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
-                      m_entryNumbers.data(), false);
+    RootUtility::StableSort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                            m_entryNumbers.data(), false);
   }
 
   m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
