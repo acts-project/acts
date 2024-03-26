@@ -23,7 +23,6 @@ class Surface;
 class SurfaceArray;
 class TrackingVolume;
 struct Polyhedron;
-class AbstractVolume;
 class IVisualization3D;
 
 namespace Experimental {
@@ -78,7 +77,7 @@ struct GeometryView3D {
       const ViewConfig& gridConfig = s_viewGrid,
       const std::string& outputDir = ".");
 
-  /// Helper method to draw AbstractVolume objects
+  /// Helper method to draw Volume objects
   ///
   /// @param [in,out] helper The visualization helper
   /// @param volume The volume to be drawn
@@ -124,7 +123,7 @@ struct GeometryView3D {
       const ViewConfig& unconnected = ViewConfig({255, 0, 0}),
       const ViewConfig& viewConfig = s_viewSensitive);
 
-  /// Helper method to draw AbstractVolume objects
+  /// Helper method to draw Layer objects
   ///
   /// @param [in,out] helper The visualization helper
   /// @param layer The tracking layer to be drawn
@@ -140,7 +139,7 @@ struct GeometryView3D {
                         const ViewConfig& gridConfig = s_viewGrid,
                         const std::string& outputDir = ".");
 
-  /// Helper method to draw AbstractVolume objects
+  /// Helper method to draw TrackingVolume objects
   ///
   /// @param [in,out] helper The visualization helper
   /// @param tVolume The tracking volume to be drawn
