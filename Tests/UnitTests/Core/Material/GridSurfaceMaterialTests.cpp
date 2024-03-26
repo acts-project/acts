@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
 
 // This test covers the grid material (non-indexed accesser)
 //
-// In this setup, the material is not indexed, but filled direclty
+// In this setup, the material is not indexed, but filled directly
 // into the grid structure.
 BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   using EqBound = Acts::GridAxisGenerators::EqBound;

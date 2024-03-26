@@ -353,56 +353,56 @@ Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
 
 nlohmann::json Acts::GridAccessJsonConverter::toJson(
     const GridAccess::IBoundToGridLocal& boundToGridLocal) {
-  nlohmann::json jBoundtoGridLocal;
+  nlohmann::json jBoundToGridLocal;
 
   auto localSubSpace0 =
       dynamic_cast<const GridAccess::LocalSubspace<0u>*>(&boundToGridLocal);
   if (localSubSpace0 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace0->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace0->accessors;
   }
 
   auto localSubSpace1 =
       dynamic_cast<const GridAccess::LocalSubspace<1u>*>(&boundToGridLocal);
   if (localSubSpace1 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace1->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace1->accessors;
   }
 
   auto localSubSpace01 =
       dynamic_cast<const GridAccess::LocalSubspace<0u, 1u>*>(&boundToGridLocal);
   if (localSubSpace01 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace01->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace01->accessors;
   }
 
   auto localSubSpace10 =
       dynamic_cast<const GridAccess::LocalSubspace<1u, 0u>*>(&boundToGridLocal);
   if (localSubSpace10 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace10->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace10->accessors;
   }
 
   auto boundCylinderToZPhi =
       dynamic_cast<const GridAccess::BoundCylinderToZPhi*>(&boundToGridLocal);
   if (boundCylinderToZPhi != nullptr) {
-    jBoundtoGridLocal["type"] = "cylinder_to_zphi";
-    jBoundtoGridLocal["radius"] = boundCylinderToZPhi->radius;
-    jBoundtoGridLocal["shift"] = boundCylinderToZPhi->shift;
+    jBoundToGridLocal["type"] = "cylinder_to_zphi";
+    jBoundToGridLocal["radius"] = boundCylinderToZPhi->radius;
+    jBoundToGridLocal["shift"] = boundCylinderToZPhi->shift;
   }
 
-  return jBoundtoGridLocal;
+  return jBoundToGridLocal;
 }
 
 std::unique_ptr<Acts::GridAccess::IBoundToGridLocal>
 Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
-    const nlohmann::json& jBoundtoGridLocal) {
+    const nlohmann::json& jBoundToGridLocal) {
   std::unique_ptr<Acts::GridAccess::IBoundToGridLocal> boundToGridLocal =
       nullptr;
-  std::string type = jBoundtoGridLocal.at("type").get<std::string>();
+  std::string type = jBoundToGridLocal.at("type").get<std::string>();
   if (type == "subspace") {
     std::vector<std::size_t> accessors =
-        jBoundtoGridLocal.at("accessors").get<std::vector<std::size_t>>();
+        jBoundToGridLocal.at("accessors").get<std::vector<std::size_t>>();
     if (accessors.size() == 1 && accessors[0] == 0) {
       boundToGridLocal =
           std::make_unique<Acts::GridAccess::LocalSubspace<0u>>();
@@ -419,8 +419,8 @@ Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
           std::make_unique<Acts::GridAccess::LocalSubspace<1u, 0u>>();
     }
   } else if (type == "cylinder_to_zphi") {
-    ActsScalar radius = jBoundtoGridLocal.at("radius").get<ActsScalar>();
-    ActsScalar shift = jBoundtoGridLocal.at("shift").get<ActsScalar>();
+    ActsScalar radius = jBoundToGridLocal.at("radius").get<ActsScalar>();
+    ActsScalar shift = jBoundToGridLocal.at("shift").get<ActsScalar>();
     boundToGridLocal =
         std::make_unique<Acts::GridAccess::BoundCylinderToZPhi>(radius, shift);
   }
@@ -429,13 +429,13 @@ Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
 
 Acts::GridAccess::BoundToGridLocal1DimDelegate
 Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
-    const nlohmann::json& jBoundtoGridLocal) {
+    const nlohmann::json& jBoundToGridLocal) {
   Acts::GridAccess::BoundToGridLocal1DimDelegate delegate;
 
-  std::string type = jBoundtoGridLocal.at("type").get<std::string>();
+  std::string type = jBoundToGridLocal.at("type").get<std::string>();
   if (type == "subspace") {
     std::vector<std::size_t> accessors =
-        jBoundtoGridLocal.at("accessors").get<std::vector<std::size_t>>();
+        jBoundToGridLocal.at("accessors").get<std::vector<std::size_t>>();
     // Safety check
     if (accessors.size() != 1u) {
       throw std::invalid_argument(
@@ -459,13 +459,13 @@ Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
 
 Acts::GridAccess::BoundToGridLocal2DimDelegate
 Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
-    const nlohmann::json& jBoundtoGridLocal) {
+    const nlohmann::json& jBoundToGridLocal) {
   Acts::GridAccess::BoundToGridLocal2DimDelegate delegate;
 
-  std::string type = jBoundtoGridLocal.at("type").get<std::string>();
+  std::string type = jBoundToGridLocal.at("type").get<std::string>();
   if (type == "subspace") {
     std::vector<std::size_t> accessors =
-        jBoundtoGridLocal.at("accessors").get<std::vector<std::size_t>>();
+        jBoundToGridLocal.at("accessors").get<std::vector<std::size_t>>();
 
     // Safety check
     if (accessors.size() != 2u) {
@@ -484,8 +484,8 @@ Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
           std::move(boundToGridLocal));
     }
   } else if (type == "cylinder_to_zphi") {
-    ActsScalar radius = jBoundtoGridLocal.at("radius").get<ActsScalar>();
-    ActsScalar shift = jBoundtoGridLocal.at("shift").get<ActsScalar>();
+    ActsScalar radius = jBoundToGridLocal.at("radius").get<ActsScalar>();
+    ActsScalar shift = jBoundToGridLocal.at("shift").get<ActsScalar>();
     auto boundToGridLocal =
         std::make_unique<const Acts::GridAccess::BoundCylinderToZPhi>(radius,
                                                                       shift);

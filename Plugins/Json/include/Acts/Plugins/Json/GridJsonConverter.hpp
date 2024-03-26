@@ -102,7 +102,7 @@ std::unique_ptr<GridAccess::IBoundToGridLocal> boundToGridLocalFromJson(
 /// @note the dimension of the delegate has to be known by peeking
 /// into the json object
 GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal1DimDelegateFromJson(
-    const nlohmann::json& jBoundtoGridLocal);
+    const nlohmann::json& jBoundToGridLocal);
 
 /// Create the delegate directly
 ///
@@ -114,7 +114,7 @@ GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal1DimDelegateFromJson(
 /// @note the dimension of the delegate has to be known by peeking
 /// into the json object
 GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal2DimDelegateFromJson(
-    const nlohmann::json& jBoundtoGridLocal);
+    const nlohmann::json& jBoundToGridLocal);
 
 }  // namespace GridAccessJsonConverter
 

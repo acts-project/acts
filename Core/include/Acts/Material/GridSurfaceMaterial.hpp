@@ -95,8 +95,10 @@ struct GloballyIndexedMaterialAccessor {
   bool sharedEntries = false;
 
   /// @brief  Direct const access to the material slap sorted in the grid
+  ///
   /// @tparam grid_type the type of the grid, also defines the point type
-  /// @param grid the grid
+  ///
+  /// @param grid the grid holding the indices into the global material vector
   /// @param point the lookup point (already casted from global, or filled from local)
   ///
   /// @return the material slab from the grid bin associated to the lookup point
@@ -108,6 +110,9 @@ struct GloballyIndexedMaterialAccessor {
   }
 
   /// @brief Scale the material (by scaling the thickness)
+  ///
+  /// @param grid the grid holding the indices into the global material vector
+  /// @param scale the amount of the scaling
   ///
   /// @note this will scale only the bins touched by this grid, however,
   /// if there are shared bins, then it will throw an exception as the
