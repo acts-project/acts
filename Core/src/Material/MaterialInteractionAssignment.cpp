@@ -68,7 +68,7 @@ Acts::MaterialInteractionAssignment::assign(
     // A local veta veto kicked in
     GeometryIdentifier intersectionID = surface->geometryId();
     if (options.localVetos.find(intersectionID) != options.localVetos.end()) {
-      auto localVeto = (*options.localVetos.find(intersectionID));
+      const auto& localVeto = *options.localVetos.find(intersectionID);
       if (localVeto(materialInteraction, intersectedSurfaces[is])) {
         unassignedMaterialInteractions.push_back(materialInteraction);
         continue;
