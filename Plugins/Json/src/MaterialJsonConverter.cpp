@@ -143,7 +143,7 @@ void unrollIndexedGridConversion(nlohmann::json& jMaterial,
 
 template <typename IndexedAccessorType>
 Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
-  // Load accessior and grid
+  // Load accessor and grid
   nlohmann::json jMaterialAccessor = jMaterial["accessor"];
 
   // Prepare the material and its accessor
