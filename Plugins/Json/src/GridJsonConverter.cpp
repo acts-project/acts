@@ -157,7 +157,7 @@ void decorateGlobalDelegate(Delegate& delegate,
     }
   }
 
-  // Two-dimension al setting
+  // Two-dimensional setting
   if constexpr (sizeof...(Args) == 2u) {
     if (std::get<0>(std::forward_as_tuple(Args...)) == accessors[0] &&
         std::get<1>(std::forward_as_tuple(Args...)) == accessors[1]) {
