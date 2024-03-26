@@ -34,7 +34,9 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace Acts {
@@ -65,7 +67,9 @@ class MyTrackFindingAlgorithm final : public IAlgorithm {
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config
-    std::optional<Acts::TrackSelector::Config> trackSelectorCfg;
+    std::optional<std::variant<Acts::TrackSelector::Config,
+                               Acts::TrackSelector::EtaBinnedConfig>>
+        trackSelectorCfg = std::nullopt;
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
   };

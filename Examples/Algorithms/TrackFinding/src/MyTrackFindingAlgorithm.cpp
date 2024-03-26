@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
@@ -18,6 +19,7 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
@@ -44,13 +46,14 @@ ActsExamples::MyTrackFindingAlgorithm::MyTrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("MyTrackFindingAlgorithm", level),
       m_cfg(std::move(config)),
-      m_trackSelector([this]() -> std::optional<Acts::TrackSelector> {
-        if (m_cfg.trackSelectorCfg.has_value()) {
-          return {m_cfg.trackSelectorCfg.value()};
-        } else {
-          return std::nullopt;
-        }
-      }()) {
+      m_trackSelector(
+          m_cfg.trackSelectorCfg.has_value()
+              ? std::visit(
+                    [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
+                      return {cfg};
+                    },
+                    m_cfg.trackSelectorCfg.value())
+              : std::nullopt) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -164,7 +167,7 @@ ActsExamples::ProcessCode ActsExamples::MyTrackFindingAlgorithm::execute(
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
 
@@ -218,7 +221,9 @@ ActsExamples::ProcessCode ActsExamples::MyTrackFindingAlgorithm::execute(
         }
 
         bwdTrack.reverseTrackStates(true);
-        seedNumber(bwdTrack) = nSeed;
+        // Set the seed number, this number decrease by 1 since the seed number
+        // has already been updated
+        seedNumber(bwdTrack) = nSeed - 1;
 
         auto innermostFwdState = fwdTrack.trackStatesReversed().begin();
         for (auto i = innermostFwdState;
