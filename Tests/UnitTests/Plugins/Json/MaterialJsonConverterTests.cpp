@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
   BOOST_CHECK(gridRead.atPosition(Point{3.5}) == 2u);  // material 2
   BOOST_CHECK(gridRead.atPosition(Point{4.5}) == 3u);  // material 3
 
-  // Check the accessor is ther
+  // Check the accessor is there and the material is filled
   auto accessorRead = ismReadTyped->materialAccessor();
   CHECK_CLOSE_ABS(accessorRead.material[0].thickness(), 0.0, 1e-5);
   CHECK_CLOSE_ABS(accessorRead.material[1].thickness(), 1.0, 1e-5);
