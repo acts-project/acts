@@ -40,10 +40,10 @@ TrackingVolume::TrackingVolume(
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
     : Volume(transform, std::move(volbounds)),
-      m_volumeMaterial(nullptr),
       m_boundarySurfaces(),
       m_confinedLayers(nullptr),
       m_confinedVolumes(containedVolumeArray),
+      m_volumeMaterial(nullptr),
       m_name(volumeName) {
   createBoundarySurfaces();
   interlinkLayers();
@@ -58,10 +58,10 @@ TrackingVolume::TrackingVolume(
     MutableTrackingVolumeVector denseVolumeVector,
     const std::string& volumeName)
     : Volume(transform, std::move(volumeBounds)),
-      m_volumeMaterial(std::move(volumeMaterial)),
       m_confinedLayers(std::move(staticLayerArray)),
       m_confinedVolumes(std::move(containedVolumeArray)),
       m_confinedDenseVolumes({}),
+      m_volumeMaterial(std::move(volumeMaterial)),
       m_name(volumeName) {
   createBoundarySurfaces();
   interlinkLayers();
