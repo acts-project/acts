@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   const Acts::MaterialSlab& ml0g1 = ism1.materialSlab(l0);
   BOOST_CHECK_EQUAL(ml0g1.material().X0(), 1.);
 
-  // scaling shared material shoulr throw a std::invalid_argument
+  // scaling shared material should throw a std::invalid_argument
   BOOST_CHECK_THROW(ism1 *= 2., std::invalid_argument);
 }
 
