@@ -50,7 +50,7 @@ using LocalVeto = std::function<bool(
     const std::tuple<const Surface*, Vector3, Vector3>& suggestedAssignment)>;
 
 /// @brief definition of possible re-assignments to next surface, this could e.g.
-/// be used for respecting pre/post mappint directives that are not fully
+/// be used for respecting pre/post mapping directives that are not fully
 /// handled by closest distance matching
 ///
 /// The provided parameters are the mutable material interaction, the suggested
