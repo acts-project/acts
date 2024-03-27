@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   CuboidVolumeBounds bounds(4_mm, 5_mm, 6_mm);
 
   // Build and test the volume
-  Volume volume(transform, std::make_shared<const CuboidVolumeBounds>(bounds));
+  Volume volume(transform, std::make_shared<CuboidVolumeBounds>(bounds));
   BOOST_CHECK_EQUAL(volume.transform().matrix(), transform.matrix());
   CHECK_CLOSE_ABS(volume.itransform().matrix(), transform.inverse().matrix(),
                   eps);
