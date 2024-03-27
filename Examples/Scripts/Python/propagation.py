@@ -43,6 +43,7 @@ def runPropagation(
         ntests=ntracks,
         sterileLogger=sterile,
         propagationStepCollection="propagation-steps",
+        ptRange=(0.15 * u.GeV, 1 * u.GeV),
     )
 
     s.addAlgorithm(alg)
@@ -130,7 +131,7 @@ if "__main__" == __name__:
     bfield = acts.ConstantBField(acts.Vector3(0, 0, args.bfield * acts.UnitConstants.T))
 
     ## Alternative: no B field
-    # field = acts.NullBField()
+    # bfield = acts.NullBField()
 
     ## Alternative: Analytical solenoid B field, discretized in an interpolated field map
     # solenoid = acts.SolenoidBField(
@@ -139,7 +140,7 @@ if "__main__" == __name__:
     #     bMagCenter = 2*u.T,
     #     nCoils = 1194
     # )
-    # field = acts.solenoidFieldMap(
+    # bfield = acts.solenoidFieldMap(
     #     rlim=(0, 1200*u.mm),
     #     zlim=(-5000*u.mm, 5000*u.mm),
     #     nbins=(50, 50),
