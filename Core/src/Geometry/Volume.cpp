@@ -94,6 +94,10 @@ const VolumeBounds& Volume::volumeBounds() const {
   return *m_volumeBounds;
 }
 
+std::shared_ptr<const VolumeBounds> Volume::volumeBoundsPtr() const {
+  return m_volumeBounds;
+}
+
 void Volume::setTransform(const Transform3& transform) {
   m_transform = transform;
   m_itransform = m_transform.inverse();
