@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   auto trf = Transform3(Translation3(Vector3(0, 8, -5)) *
                         AngleAxis3(M_PI / 3., Vector3(1, -3, 9).normalized()));
 
-  AbstractVolume vol(trf, cubo);
+  Volume vol(trf, cubo);
 
   PlyVisualization3D<double> ply;
 

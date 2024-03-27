@@ -37,7 +37,6 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
-  /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
@@ -153,6 +152,14 @@ struct SurfaceReached {
     }
     return reached;
   }
+};
+
+/// Similar to SurfaceReached, but with an infinite overstep limit.
+///
+/// This can be used to force the propagation to the target surface.
+struct ForcedSurfaceReached : SurfaceReached {
+  ForcedSurfaceReached()
+      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
 };
 
 /// This is the condition that the end of World has been reached

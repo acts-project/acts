@@ -58,6 +58,43 @@ auto Acts::EigenStepper<E, A>::boundState(
 }
 
 template <typename E, typename A>
+template <typename propagator_state_t, typename navigator_t>
+bool Acts::EigenStepper<E, A>::prepareCurvilinearState(
+    propagator_state_t& prop_state, const navigator_t& navigator) const {
+  // test whether the accumulated path has still its initial value.
+  if (prop_state.stepping.pathAccumulated == 0.) {
+    // if no step was executed the path length derivates have not been
+    // computed but are needed to compute the curvilinear covariance. The
+    // derivates are given by k1 for a zero step width.
+    if (prop_state.stepping.extension.validExtensionForStep(prop_state, *this,
+                                                            navigator)) {
+      // First Runge-Kutta point (at current position)
+      auto& sd = prop_state.stepping.stepData;
+      auto pos = position(prop_state.stepping);
+      auto fieldRes = getField(prop_state.stepping, pos);
+      if (fieldRes.ok()) {
+        sd.B_first = *fieldRes;
+        if (prop_state.stepping.extension.k1(prop_state, *this, navigator,
+                                             sd.k1, sd.B_first, sd.kQoP)) {
+          // dr/ds :
+          prop_state.stepping.derivative.template head<3>() =
+              prop_state.stepping.pars.template segment<3>(eFreeDir0);
+          // d (dr/ds) / ds :
+          prop_state.stepping.derivative.template segment<3>(4) = sd.k1;
+          // to set dt/ds :
+          prop_state.stepping.extension.finalize(
+              prop_state, *this, navigator,
+              prop_state.stepping.pathAccumulated);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
                                                 bool transportCov) const
     -> CurvilinearState {
@@ -249,24 +286,20 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // Furthermore, we're constructing K in place of J, and since
     // K₁₁ = I₈ = J₁₁ and K₂₁ = 0₈ = D₂₁, we don't actually need to touch those
     // sub-matrices at all!
-    if ((D.topLeftCorner<4, 4>().isIdentity()) &&
-        (D.bottomLeftCorner<4, 4>().isZero()) &&
-        (state.stepping.jacTransport.template topLeftCorner<4, 4>()
-             .isIdentity()) &&
-        (state.stepping.jacTransport.template bottomLeftCorner<4, 4>()
-             .isZero())) {
-      state.stepping.jacTransport.template topRightCorner<4, 4>() +=
-          D.topRightCorner<4, 4>() *
-          state.stepping.jacTransport.template bottomRightCorner<4, 4>();
-      state.stepping.jacTransport.template bottomRightCorner<4, 4>() =
-          (D.bottomRightCorner<4, 4>() *
-           state.stepping.jacTransport.template bottomRightCorner<4, 4>())
-              .eval();
-    } else {
-      // For safety purposes, we provide a full matrix multiplication as a
-      // backup strategy.
-      state.stepping.jacTransport = D * state.stepping.jacTransport;
-    }
+    assert((D.topLeftCorner<4, 4>().isIdentity()));
+    assert((D.bottomLeftCorner<4, 4>().isZero()));
+    assert((state.stepping.jacTransport.template topLeftCorner<4, 4>()
+                .isIdentity()));
+    assert((state.stepping.jacTransport.template bottomLeftCorner<4, 4>()
+                .isZero()));
+
+    state.stepping.jacTransport.template topRightCorner<4, 4>() +=
+        D.topRightCorner<4, 4>() *
+        state.stepping.jacTransport.template bottomRightCorner<4, 4>();
+    state.stepping.jacTransport.template bottomRightCorner<4, 4>() =
+        (D.bottomRightCorner<4, 4>() *
+         state.stepping.jacTransport.template bottomRightCorner<4, 4>())
+            .eval();
   } else {
     if (!state.stepping.extension.finalize(state, *this, navigator, h)) {
       return EigenStepperError::StepInvalid;

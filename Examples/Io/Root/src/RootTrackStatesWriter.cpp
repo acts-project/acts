@@ -20,6 +20,7 @@
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -58,11 +59,11 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
+  if (m_cfg.inputTrackParticleMatching.empty()) {
+    throw std::invalid_argument("Missing input track particles matching");
+  }
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
-  }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.inputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
@@ -76,8 +77,8 @@ ActsExamples::RootTrackStatesWriter::RootTrackStatesWriter(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
-  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
   // Setup ROOT I/O
@@ -295,12 +296,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
   auto& gctx = ctx.geoContext;
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
   const auto& simHits = m_inputSimHits(ctx);
-  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
-
-  // For each particle within a track, how many hits did it contribute
-  std::vector<ParticleHitCount> particleHitCounts;
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -317,10 +315,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
 
     // Get the majority truth particle to this track
     int truthQ = 1.;
-    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
-    if (!particleHitCounts.empty()) {
+    auto match = trackParticleMatching.find(track.index());
+    if (match != trackParticleMatching.end() &&
+        match->second.particle.has_value()) {
       // Get the barcode of the majority truth particle
-      auto barcode = particleHitCounts.front().particleId;
+      auto barcode = match->second.particle.value();
       // Find the truth particle via the barcode
       auto ip = particles.find(barcode);
       if (ip != particles.end()) {

@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/format14:v41
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check
         run: >
           git config --global safe.directory "$GITHUB_WORKSPACE"
           && CI/check_format .
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: changed
@@ -30,7 +30,7 @@ jobs:
   format-py:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -42,7 +42,7 @@ jobs:
   license:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -53,7 +53,7 @@ jobs:
   include_guards:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -63,14 +63,14 @@ jobs:
   pragma_once:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check
         run: >
           CI/check_pragma_once.sh
   end_of_line:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -80,7 +80,7 @@ jobs:
   size_t:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -90,14 +90,14 @@ jobs:
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check
         run: >
           CI/check_boost_test_macro.sh
   smearing_config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -107,7 +107,7 @@ jobs:
   cmake_options:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -117,7 +117,7 @@ jobs:
   spelling:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -130,7 +130,7 @@ jobs:
   missing_includes:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install clang
         run: >
           sudo apt-get install -y clang libeigen3-dev libboost-dev
@@ -140,7 +140,7 @@ jobs:
   fpe_masks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -153,7 +153,7 @@ jobs:
   unused_files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: '3.12'
