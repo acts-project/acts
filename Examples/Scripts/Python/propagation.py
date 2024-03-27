@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import argparse
 
 import acts
 import acts.examples
@@ -10,7 +11,15 @@ from acts.examples.odd import getOpenDataDetectorDirectory
 u = acts.UnitConstants
 
 
-def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
+def runPropagation(
+    trackingGeometry,
+    ntracks,
+    field,
+    sterile=True,
+    outputDir=os.getcwd(),
+    s=None,
+    decorators=[],
+):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
 
     for d in decorators:
@@ -31,34 +40,62 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         propagatorImpl=prop,
         level=acts.logging.INFO,
         randomNumberSvc=rnd,
-        ntests=1000,
-        sterileLogger=True,
+        ntests=ntracks,
+        sterileLogger=sterile,
         propagationStepCollection="propagation-steps",
     )
 
     s.addAlgorithm(alg)
 
     # Output
-    s.addWriter(
-        acts.examples.ObjPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation-steps",
-            outputDir=outputDir + "/obj",
+    if not sterile:
+        if not os.path.exists(outputDir + "/obj"):
+            os.makedirs(outputDir + "/obj")
+        s.addWriter(
+            acts.examples.ObjPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation-steps",
+                outputDir=outputDir + "/obj",
+            )
         )
-    )
 
-    s.addWriter(
-        acts.examples.RootPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation-steps",
-            filePath=outputDir + "/propagation_steps.root",
+        s.addWriter(
+            acts.examples.RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation-steps",
+                filePath=outputDir + "/propagation_steps.root",
+            )
         )
-    )
 
     return s
 
 
 if "__main__" == __name__:
+
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "-n", "--events", type=int, default=100, help="Number of events to generate"
+    )
+    p.add_argument(
+        "-t", "--tracks", type=int, default=1000, help="Particle tracks per event"
+    )
+    p.add_argument(
+        "-j", "--threads", type=int, default=1, help="Number of events in parallel"
+    )
+
+    p.add_argument(
+        "-b", "--bfield", type=float, default=2.0, help="B field value in Tesla"
+    )
+
+    p.add_argument(
+        "-s",
+        "--sterile",
+        action=argparse.BooleanOptionalAction,
+        help="Run in sterile mode",
+    )
+
+    args = p.parse_args()
+
     matDeco = None
     # matDeco = acts.IMaterialDecorator.fromFile("material.json")
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
@@ -90,7 +127,7 @@ if "__main__" == __name__:
     # trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+    field = acts.ConstantBField(acts.Vector3(0, 0, args.bfield * acts.UnitConstants.T))
 
     ## Alternative: no B field
     # field = acts.NullBField()
@@ -109,6 +146,14 @@ if "__main__" == __name__:
     #     field=solenoid
     # )
 
+    seq = acts.examples.Sequencer(events=args.events, numThreads=1)
+
     runPropagation(
-        trackingGeometry, field, os.getcwd(), decorators=contextDecorators
+        trackingGeometry,
+        ntracks=args.tracks,
+        field=field,
+        sterile=args.sterile,
+        outputDir=os.getcwd(),
+        s=seq,
+        decorators=contextDecorators,
     ).run()
