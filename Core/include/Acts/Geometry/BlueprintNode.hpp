@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
+
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -17,6 +21,7 @@ namespace Acts {
 
 class Volume;
 class TrackingVolume;
+class IVisualization3D;
 
 class BlueprintNode {
  public:
@@ -29,21 +34,37 @@ class BlueprintNode {
 
   virtual void toStream(std::ostream& os) const;
 
-  virtual Volume& build() = 0;
+  virtual Volume& build(const Logger& logger = Acts::getDummyLogger()) = 0;
 
   // @TODO: This should return the portal "shell"
-  virtual void connect(TrackingVolume& parent) = 0;
+  virtual void connect(TrackingVolume& parent,
+                       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  void addChild(std::unique_ptr<BlueprintNode> child) {
-    m_children.push_back(std::move(child));
-  }
+  virtual void visualize(IVisualization3D& vis,
+                         const GeometryContext& gctx) const;
 
-  const std::vector<std::unique_ptr<BlueprintNode>>& children() {
-    return m_children;
-  }
+  void addChild(std::unique_ptr<BlueprintNode> child);
+
+  using MutableChildRange =
+      detail::TransformRange<detail::Dereference,
+                             std::vector<std::unique_ptr<BlueprintNode>>>;
+
+  using ChildRange =
+      detail::TransformRange<detail::ConstDereference,
+                             const std::vector<std::unique_ptr<BlueprintNode>>>;
+
+  MutableChildRange children();
+  ChildRange children() const;
+
+  std::size_t depth() const;
+
+ protected:
+  std::string prefix() const;
 
  private:
   std::string m_name;
+
+  std::size_t m_depth{0};
 
   std::vector<std::unique_ptr<BlueprintNode>> m_children{};
 };

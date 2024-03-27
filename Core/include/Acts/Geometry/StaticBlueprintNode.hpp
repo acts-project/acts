@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 namespace Acts {
@@ -18,12 +19,16 @@ class StaticBlueprintNode : public BlueprintNode {
   StaticBlueprintNode(const std::string& name,
                       std::unique_ptr<TrackingVolume> volume);
 
-  Volume& build() override;
+  Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
-  void connect(TrackingVolume& parent) override;
+  void connect(TrackingVolume& parent,
+               const Logger& logger = Acts::getDummyLogger()) override;
+
+  void visualize(IVisualization3D& vis,
+                 const GeometryContext& gctx) const override;
 
   // This connects averything to the static volume contained here
-  void connect();
+  void connect(const Logger& logger = Acts::getDummyLogger());
 
   std::unique_ptr<TrackingVolume> releaseVolume() {
     return std::move(m_volume);

@@ -11,6 +11,8 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
 namespace Acts {
 
 class CylinderContainerBlueprintNode : public BlueprintNode {
@@ -22,15 +24,22 @@ class CylinderContainerBlueprintNode : public BlueprintNode {
       CylinderVolumeStack::ResizeStrategy resizeStrategy =
           CylinderVolumeStack::ResizeStrategy::Expand);
 
-  Volume& build() override;
+  Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
-  void connect(TrackingVolume& parent) override;
+  void connect(TrackingVolume& parent,
+               const Logger& logger = Acts::getDummyLogger()) override;
+
+  void visualize(IVisualization3D& vis,
+                 const GeometryContext& gctx) const override;
 
  private:
   BinningValue m_direction;
   CylinderVolumeStack::AttachmentStrategy m_attachmentStrategy;
   CylinderVolumeStack::ResizeStrategy m_resizeStrategy;
-  // CylinderVolumeStack m_stack;
+
+  // Is only initialized during `build`
+  std::vector<Volume*> m_childVolumes;
+  std::optional<CylinderVolumeStack> m_stack{std::nullopt};
 };
 
 }  // namespace Acts

@@ -82,7 +82,8 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
 
   auto root = std::make_unique<CylinderContainerBlueprintNode>(
-      "root", BinningValue::binZ);
+      "root", BinningValue::binZ, CylinderVolumeStack::AttachmentStrategy::Gap,
+      CylinderVolumeStack::ResizeStrategy::Gap);
 
   ActsScalar z0 = -200_mm;
   for (std::size_t i = 0; i < 10; i++) {
@@ -94,8 +95,22 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
         "child" + std::to_string(i), std::move(childCyl)));
   }
 
-  // auto world = root->build();
-  // std::cout << world.volumeBounds() << std::endl;
+  TrackingVolume dummy{Transform3::Identity(), cylBounds};
+  BOOST_CHECK_THROW(root->connect(dummy), std::runtime_error);
+
+  ObjVisualization3D vis;
+  // Can't visualize before having called build
+  BOOST_CHECK_THROW(root->visualize(vis, gctx), std::runtime_error);
+
+  auto world = root->build(*logger);
+
+  root->visualize(vis, gctx);
+
+  TrackingVolume top{world.transform(), world.volumeBoundsPtr()};
+
+  root->connect(top, *logger);
+
+  vis.write("container.obj");
 }
 
 BOOST_AUTO_TEST_SUITE_END();
