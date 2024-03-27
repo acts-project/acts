@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       static_assert(std::is_same_v<decltype(r.at(0)), int&>);
       static_assert(std::is_same_v<decltype(r[0]), int&>);
       static_assert(std::is_same_v<decltype(*r.begin()), int&>);
+      static_assert(std::is_same_v<decltype(*r.cbegin()), const int&>);
 
       r.at(2) = 4;
       BOOST_CHECK_EQUAL(*v.at(2), 4);

@@ -125,7 +125,11 @@ struct TransformRange {
 
   const_iterator begin() const { return const_iterator{m_container->begin()}; }
 
+  const_iterator cbegin() const { return begin(); }
+
   const_iterator end() const { return const_iterator{m_container->end()}; }
+
+  const_iterator cend() const { return end(); }
 
   std::size_t size() const { return m_container->size(); }
   bool empty() const { return m_container->empty(); }
