@@ -6,32 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Zip.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
-
-using namespace Acts::UnitLiterals;
+#include <utility>
 
 namespace Acts::Test {
 
-BOOST_AUTO_TEST_SUITE(Geometry);
-
 BOOST_AUTO_TEST_CASE(VolumeTest) {
+  using namespace Acts::UnitLiterals;
   double eps = std::numeric_limits<double>::epsilon();
 
   // Build a translation
@@ -102,7 +95,5 @@ BOOST_AUTO_TEST_CASE(VolumeUpdateTest) {
   BOOST_CHECK_EQUAL(&volume.volumeBounds(), volBounds.get());
   BOOST_CHECK_EQUAL(volume.transform().matrix(), trf2.matrix());
 }
-
-BOOST_AUTO_TEST_SUITE_END();
 
 }  // namespace Acts::Test
