@@ -16,8 +16,9 @@ namespace Acts {
 
 class StaticBlueprintNode : public BlueprintNode {
  public:
-  StaticBlueprintNode(const std::string& name,
-                      std::unique_ptr<TrackingVolume> volume);
+  StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume);
+
+  const std::string& name() const override;
 
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 

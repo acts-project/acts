@@ -14,9 +14,8 @@
 
 namespace Acts {
 
-StaticBlueprintNode::StaticBlueprintNode(const std::string& name,
-                                         std::unique_ptr<TrackingVolume> volume)
-    : BlueprintNode(name), m_volume(std::move(volume)) {}
+StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
+    : m_volume(std::move(volume)) {}
 
 Volume& StaticBlueprintNode::build(const Logger& logger) {
   ACTS_DEBUG(prefix() << "static build");
@@ -63,6 +62,10 @@ void StaticBlueprintNode::visualize(IVisualization3D& vis,
   GeometryView3D::drawVolume(vis, *m_volume, gctx, Transform3::Identity(),
                              viewConfig);
   BlueprintNode::visualize(vis, gctx);
+}
+
+const std::string& StaticBlueprintNode::name() const {
+  return m_volume->volumeName();
 }
 
 }  // namespace Acts

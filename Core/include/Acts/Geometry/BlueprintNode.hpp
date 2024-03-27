@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
@@ -22,15 +23,15 @@ namespace Acts {
 class Volume;
 class TrackingVolume;
 class IVisualization3D;
+class CylinderContainerBlueprintNode;
 
 class BlueprintNode {
  public:
-  BlueprintNode(const std::string& name) : m_name(name) {}
+  BlueprintNode() = default;
 
   virtual ~BlueprintNode() = default;
 
-  std::string name() const { return m_name; }
-  void setName(const std::string& name) { m_name = name; }
+  virtual const std::string& name() const = 0;
 
   virtual void toStream(std::ostream& os) const;
 
@@ -42,6 +43,13 @@ class BlueprintNode {
 
   virtual void visualize(IVisualization3D& vis,
                          const GeometryContext& gctx) const;
+
+  void addStaticVolume(std::unique_ptr<TrackingVolume> volume);
+
+  void addCylinderContainer(
+      const std::string& name, BinningValue direction,
+      const std::function<std::unique_ptr<BlueprintNode>(
+          std::unique_ptr<CylinderContainerBlueprintNode> cylinder)>& factory);
 
   void addChild(std::unique_ptr<BlueprintNode> child);
 
@@ -62,10 +70,7 @@ class BlueprintNode {
   std::string prefix() const;
 
  private:
-  std::string m_name;
-
   std::size_t m_depth{0};
-
   std::vector<std::unique_ptr<BlueprintNode>> m_children{};
 };
 

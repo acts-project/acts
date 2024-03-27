@@ -24,6 +24,8 @@ class CylinderContainerBlueprintNode : public BlueprintNode {
       CylinderVolumeStack::ResizeStrategy resizeStrategy =
           CylinderVolumeStack::ResizeStrategy::Expand);
 
+  const std::string& name() const override;
+
   Volume& build(const Logger& logger = Acts::getDummyLogger()) override;
 
   void connect(TrackingVolume& parent,
@@ -32,7 +34,15 @@ class CylinderContainerBlueprintNode : public BlueprintNode {
   void visualize(IVisualization3D& vis,
                  const GeometryContext& gctx) const override;
 
+  CylinderContainerBlueprintNode& setDirection(BinningValue direction);
+  CylinderContainerBlueprintNode& setAttachmentStrategy(
+      CylinderVolumeStack::AttachmentStrategy attachmentStrategy);
+  CylinderContainerBlueprintNode& setResizeStrategy(
+      CylinderVolumeStack::ResizeStrategy resizeStrategy);
+
  private:
+  std::string m_name;
+
   BinningValue m_direction;
   CylinderVolumeStack::AttachmentStrategy m_attachmentStrategy;
   CylinderVolumeStack::ResizeStrategy m_resizeStrategy;

@@ -19,10 +19,14 @@ CylinderContainerBlueprintNode::CylinderContainerBlueprintNode(
     const std::string& name, BinningValue direction,
     CylinderVolumeStack::AttachmentStrategy attachmentStrategy,
     CylinderVolumeStack::ResizeStrategy resizeStrategy)
-    : BlueprintNode(name),
+    : m_name(name),
       m_direction(direction),
       m_attachmentStrategy(attachmentStrategy),
       m_resizeStrategy(resizeStrategy) {}
+
+const std::string& CylinderContainerBlueprintNode::name() const {
+  return m_name;
+}
 
 Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container build");
@@ -76,6 +80,35 @@ void CylinderContainerBlueprintNode::visualize(
   }
 
   BlueprintNode::visualize(vis, gctx);
+}
+
+CylinderContainerBlueprintNode& CylinderContainerBlueprintNode::setDirection(
+    BinningValue direction) {
+  if (m_stack.has_value()) {
+    throw std::runtime_error("Cannot change direction after build");
+  }
+  m_direction = direction;
+  return *this;
+}
+
+CylinderContainerBlueprintNode&
+CylinderContainerBlueprintNode::setAttachmentStrategy(
+    CylinderVolumeStack::AttachmentStrategy attachmentStrategy) {
+  if (m_stack.has_value()) {
+    throw std::runtime_error("Cannot change direction after build");
+  }
+  m_attachmentStrategy = attachmentStrategy;
+  return *this;
+}
+
+CylinderContainerBlueprintNode&
+CylinderContainerBlueprintNode::setResizeStrategy(
+    CylinderVolumeStack::ResizeStrategy resizeStrategy) {
+  if (m_stack.has_value()) {
+    throw std::runtime_error("Cannot change direction after build");
+  }
+  m_resizeStrategy = resizeStrategy;
+  return *this;
 }
 
 }  // namespace Acts
