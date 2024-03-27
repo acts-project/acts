@@ -26,10 +26,10 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
-
-using OrientedSurface = std::pair<std::shared_ptr<RegularSurface>, Direction>;
-using OrientedSurfaces = std::vector<OrientedSurface>;
+struct OrientedSurface {
+  std::shared_ptr<RegularSurface> surface;
+  Direction direction;
+};
 
 // Planar definitions to help construct the boundary surfaces
 static const Transform3 s_planeXY = Transform3::Identity();
@@ -103,7 +103,7 @@ class VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  virtual OrientedSurfaces orientedSurfaces(
+  virtual std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const = 0;
 
   /// Construct bounding box for this shape

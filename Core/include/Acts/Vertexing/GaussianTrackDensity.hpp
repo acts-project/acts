@@ -113,8 +113,6 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundTrackParameters from
-  /// InputTrack
   ///
   /// @return Pair of position of global maximum and Gaussian width
   Result<std::optional<std::pair<double, double>>> globalMaximumWithWidth(
@@ -124,8 +122,6 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundTrackParameters from
-  /// InputTrack
   ///
   /// @return z position of the global maximum
   Result<std::optional<double>> globalMaximum(
@@ -139,8 +135,6 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundTrackParameters from
-  /// InputTrack
   Result<void> addTracks(State& state,
                          const std::vector<InputTrack>& trackList) const;
 

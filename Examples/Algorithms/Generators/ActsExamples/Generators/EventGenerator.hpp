@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -62,9 +63,9 @@ class EventGenerator final : public ActsExamples::IReader {
   };
 
   /// @brief Generator interface for a vertex position
-  struct VertexGenerator {
+  struct PrimaryVertexPositionGenerator {
     /// @brief Virtual destructor required
-    virtual ~VertexGenerator() = default;
+    virtual ~PrimaryVertexPositionGenerator() = default;
     /// @brief Generate a vertex position
     ///
     /// @param rng Shared random number generator instance
@@ -72,29 +73,32 @@ class EventGenerator final : public ActsExamples::IReader {
     virtual Acts::Vector4 operator()(RandomEngine& rng) const = 0;
   };
 
-  /// @brief Generator interface particles for a vertex
+  /// @brief Generator interface for vertices and particles
   struct ParticlesGenerator {
     /// @brief Virtual destructor required
     virtual ~ParticlesGenerator() = default;
-    /// @brief Generate particles for a vertex
+    /// @brief Generate vertices and particles for one interaction
     /// @note This method cannot be `const` because the Pythia8 generator
     ///       uses the Pythia8 interfaces, which is non-const
     ///
     /// @param rng Shared random number generator instance
-    /// @return SimParticleContainer The populated particle container for the vertex
-    virtual SimParticleContainer operator()(RandomEngine& rng) = 0;
+    /// @return The vertex and particle containers
+    virtual std::pair<SimVertexContainer, SimParticleContainer> operator()(
+        RandomEngine& rng) = 0;
   };
 
   /// @brief Combined struct which contains all generator components
   struct Generator {
     std::shared_ptr<MultiplicityGenerator> multiplicity = nullptr;
-    std::shared_ptr<VertexGenerator> vertex = nullptr;
+    std::shared_ptr<PrimaryVertexPositionGenerator> vertex = nullptr;
     std::shared_ptr<ParticlesGenerator> particles = nullptr;
   };
 
   struct Config {
     /// Name of the output particles collection.
     std::string outputParticles;
+    /// Name of the vertex collection.
+    std::string outputVertices;
     /// List of generators that should be used to generate the event.
     std::vector<Generator> generators;
     /// The random number service.
@@ -121,6 +125,7 @@ class EventGenerator final : public ActsExamples::IReader {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+  WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples
