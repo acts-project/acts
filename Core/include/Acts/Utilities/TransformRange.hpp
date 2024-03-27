@@ -190,6 +190,12 @@ struct TransformRangeIterator {
     return m_iterator == other.m_iterator;
   }
 
+  /// Compare two iterators for inequality
+  /// @param other The other iterator to compare to
+  bool operator!=(const TransformRangeIterator& other) const {
+    return m_iterator != other.m_iterator;
+  }
+
  private:
   iterator_t m_iterator;
 };
