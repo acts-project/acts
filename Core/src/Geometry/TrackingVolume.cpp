@@ -639,11 +639,11 @@ const Acts::Layer* TrackingVolume::associatedLayer(
 }
 
 TrackingVolume::VolumeRange TrackingVolume::volumes() const {
-  return detail::make_transform_range<detail::ConstDereference>(m_volumes);
+  return VolumeRange{m_volumes};
 }
 
 TrackingVolume::MutableVolumeRange TrackingVolume::volumes() {
-  return detail::make_transform_range<detail::Dereference>(m_volumes);
+  return MutableVolumeRange{m_volumes};
 }
 
 TrackingVolume& TrackingVolume::addVolume(
