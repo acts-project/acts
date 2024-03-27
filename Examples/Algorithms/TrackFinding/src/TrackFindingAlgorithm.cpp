@@ -227,7 +227,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
           }
 
           secondTrack.reverseTrackStates(true);
-          seedNumber(secondTrack) = nSeed;
+          seedNumber(secondTrack) = nSeed - 1;
 
           (*firstFirstState).previous() =
               (*std::next(secondTrack.trackStatesReversed().begin())).index();
