@@ -72,6 +72,8 @@ class CylinderVolumeStack : public Volume {
   std::shared_ptr<Volume> addGapVolume(Transform3 transform,
                                        std::shared_ptr<VolumeBounds> bounds);
 
+  std::vector<std::shared_ptr<Volume>>& gaps();
+
   BinningValue m_direction{};
   ResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
