@@ -34,6 +34,9 @@ class CylinderVolumeStack : public Volume {
   void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds,
                           const Logger& logger);
 
+  std::vector<std::shared_ptr<Volume>>& gaps();
+  const std::vector<std::shared_ptr<Volume>>& gaps() const;
+
  private:
   static Volume initialVolume(const std::vector<Volume*>& volumes);
 
@@ -71,8 +74,6 @@ class CylinderVolumeStack : public Volume {
 
   std::shared_ptr<Volume> addGapVolume(Transform3 transform,
                                        std::shared_ptr<VolumeBounds> bounds);
-
-  std::vector<std::shared_ptr<Volume>>& gaps();
 
   BinningValue m_direction{};
   ResizeStrategy m_resizeStrategy{};

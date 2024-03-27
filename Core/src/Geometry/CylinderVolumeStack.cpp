@@ -905,6 +905,10 @@ std::vector<std::shared_ptr<Volume>>& CylinderVolumeStack::gaps() {
   return m_gaps;
 }
 
+const std::vector<std::shared_ptr<Volume>>& CylinderVolumeStack::gaps() const {
+  return m_gaps;
+}
+
 std::ostream& operator<<(std::ostream& os,
                          CylinderVolumeStack::AttachmentStrategy strategy) {
   switch (strategy) {
