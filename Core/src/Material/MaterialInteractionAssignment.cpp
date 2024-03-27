@@ -8,7 +8,7 @@
 
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 
-std::array<std::vector<Acts::MaterialInteraction>, 2u>
+Acts::MaterialInteractionAssignment::Result
 Acts::MaterialInteractionAssignment::assign(
     const GeometryContext& gctx,
     const std::vector<MaterialInteraction>& materialInteractions,

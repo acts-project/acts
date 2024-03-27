@@ -25,6 +25,14 @@ class Surface;
 
 namespace MaterialInteractionAssignment {
 
+/// The result struct of the assignment run
+struct Result {
+  /// The assigned material interactions
+  std::vector<MaterialInteraction> assigned = {};
+  /// The unassigned material interactions
+  std::vector<MaterialInteraction> unassigned = {};
+};
+
 /// @brief definition of a global veto for assigning material interactions
 ///
 /// This can be used to restrict the assignment to a specific volume, or
@@ -87,16 +95,15 @@ struct Options {
 ///
 /// @param gctx is the geometry context
 /// @param materialInteractions is the vector of material interaction
-/// @param intersectedSurfaces are the surfac assignment candidates 
+/// @param intersectedSurfaces are the surfac assignment candidates
 /// @param options are the options for the assignment
 ///
 /// @return a pair of vectors of assigned and unassigned material interactions
-std::array<std::vector<MaterialInteraction>, 2u> assign(
-    const GeometryContext& gctx,
-    const std::vector<MaterialInteraction>& materialInteractions,
-    const std::vector<std::tuple<const Surface*, Vector3, Vector3>>&
-        intersectedSurfaces,
-    const Options& options = Options());
+Result assign(const GeometryContext& gctx,
+              const std::vector<MaterialInteraction>& materialInteractions,
+              const std::vector<std::tuple<const Surface*, Vector3, Vector3>>&
+                  intersectedSurfaces,
+              const Options& options = Options());
 
 }  // namespace MaterialInteractionAssignment
 
