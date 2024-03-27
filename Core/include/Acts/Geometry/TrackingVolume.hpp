@@ -55,7 +55,7 @@ class TrackingVolume;
 struct GeometryIdentifierHook;
 
 /// Interface types of the Gen1 geometry model
-/// @deprecated This interface is being replaced, and is subject to removal
+/// @note This interface is being replaced, and is subject to removal
 /// @{
 
 // master typedefs
@@ -309,7 +309,7 @@ class TrackingVolume : public Volume {
   TrackingVolume& addVolume(std::unique_ptr<TrackingVolume> volume);
 
   /// Interface of @c TrackingVolume in the Gen1 geometry model
-  /// @deprecated This interface is being replaced, and is subject to removal
+  /// @note This interface is being replaced, and is subject to removal
   ///
   /// @{
 
