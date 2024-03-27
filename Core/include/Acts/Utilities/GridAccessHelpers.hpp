@@ -222,13 +222,36 @@ class BoundCylinderToZPhi final : public IBoundToGridLocal {
   /// @param z the shift
   BoundCylinderToZPhi(ActsScalar r, ActsScalar z) : radius(r), shift(z) {}
 
-  std::array<ActsScalar, 2u> l2ZPhi(const Vector2& local) const {
+  std::array<ActsScalar, 2u> toGridLocal(const Vector2& local) const {
     return {local[1u] + shift, local[0u] / radius};
   }
 
   using BoundDiscToRPhi = LocalSubspace<0u, 1u>;
 };
 
-}  // namespace GridAccess
+// Definition of bound (on surface) to grid local representation delegate
+// 1 dimensional local grid
+using BoundToGridLocal1DimDelegate =
+    OwningDelegate<std::array<ActsScalar, 1u>(const Vector2&),
+                   GridAccess::IBoundToGridLocal>;
 
+// Definition of global to grid local representation delegate
+// 1 dimensional local grid
+using GlobalToGridLocal1DimDelegate =
+    OwningDelegate<std::array<ActsScalar, 1u>(const Vector3&),
+                   GridAccess::IGlobalToGridLocal>;
+
+// Definition of bound (on surface) to grid local representation delegate
+// 2 dimensional local grid
+using BoundToGridLocal2DimDelegate =
+    OwningDelegate<std::array<ActsScalar, 2u>(const Vector2&),
+                   GridAccess::IBoundToGridLocal>;
+
+// Definition of global to grid local representation delegate
+// 2 dimensional local grid
+using GlobalToGridLocal2DimDelegate =
+    OwningDelegate<std::array<ActsScalar, 2u>(const Vector3&),
+                   GridAccess::IGlobalToGridLocal>;
+
+}  // namespace GridAccess
 }  // namespace Acts
