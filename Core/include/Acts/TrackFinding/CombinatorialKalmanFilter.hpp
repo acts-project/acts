@@ -151,11 +151,8 @@ struct CombinatorialKalmanFilterOptions {
   /// @param accessor_ The source link accessor
   /// @param extensions_ The extension struct
   /// @param pOptions The plain propagator options
-  /// @param rSurface The reference surface for the eventual track fitting to be
-  /// expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
-  /// @param rSmoothing Whether to run smoothing to get fitted parameter
   CombinatorialKalmanFilterOptions(
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
