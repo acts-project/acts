@@ -151,14 +151,13 @@ class TrackingVolume : public Volume {
   /// @param transform is the global 3D transform to position the volume in
   /// space
   /// @param volumeBounds is the description of the volume boundaries
-  /// @param volumeMaterial is are materials of the tracking volume
+  /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
                  std::shared_ptr<const VolumeBounds> volumeBounds,
                  const std::string& volumeName = "undefined");
 
+  // @TODO: This needs to be refactored to include Gen3 volumes
   /// Return the associated sub Volume, returns THIS if no subVolume exists
-  /// @TODO: This needs to be refactored to include Gen3 volumes
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position associated with that search
   /// @param tol Search position tolerance for dense volumes
