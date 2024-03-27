@@ -94,4 +94,15 @@ const VolumeBounds& Volume::volumeBounds() const {
   return *m_volumeBounds;
 }
 
+void Volume::setTransform(const Transform3& transform) {
+  m_transform = transform;
+  m_itransform = m_transform.inverse();
+  m_center = m_transform.translation();
+}
+
+bool Volume::operator==(const Volume& other) const {
+  return (m_transform.matrix() == other.m_transform.matrix()) &&
+         (*m_volumeBounds == *other.m_volumeBounds);
+}
+
 }  // namespace Acts
