@@ -49,7 +49,7 @@ using GlobalVeto =
 ///
 /// This can take already the suggested surface assignment into account
 /// return true if the assignment should be vetoed. This can be used for
-/// having exlusion rules based on surface information.
+/// having exclusion rules based on surface information.
 ///
 /// @param materialInteraction is the material interaction to be checked for the veto
 /// @param suggestedAssignment is the suggested assignment: surface, position, direction
