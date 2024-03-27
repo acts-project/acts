@@ -43,4 +43,7 @@ target_sources(
         PortalLinkBase.cpp
         PortalError.cpp
         PortalShell.cpp
+        BlueprintNode.cpp
+        CylinderContainerBlueprintNode.cpp
+        StaticBlueprintNode.cpp
 )
