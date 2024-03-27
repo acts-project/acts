@@ -154,6 +154,10 @@ class TrackingVolume : public Volume {
       MutableTrackingVolumeVector denseVolumeVector = {},
       const std::string& volumeName = "undefined");
 
+  /// Constructor from a regular volume
+  /// @param other is the volume to be converted
+  explicit TrackingVolume(const Volume& other);
+
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   /// @TODO: This needs to be refactored to include Gen3 volumes
   ///

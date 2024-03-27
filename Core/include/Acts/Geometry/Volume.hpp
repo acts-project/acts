@@ -68,6 +68,9 @@ class Volume : public GeometryObject {
   /// Returns const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
 
+  /// Returns shared pointer to the volume bounds
+  std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
+
   /// Set volume bounds and update volume bounding boxes implicitly
   virtual void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 

@@ -64,6 +64,9 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
+TrackingVolume::TrackingVolume(const Volume& volume)
+    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr()) {}
+
 TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;
 }
