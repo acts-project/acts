@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/Volume.hpp"
+#include "ActsExamples/Geant4/Geant4ParticleStatus.hpp"
 
 #include <ostream>
 #include <utility>
@@ -48,5 +48,28 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
                << time / Acts::UnitConstants::ns << "ns and isSecondary "
                << isSecondary);
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
+  }
+
+  // store the status of the particle
+  // check if we have a particle assigned to track
+  if (eventStore().trackIdMapping.find(track->GetTrackID()) ==
+      eventStore().trackIdMapping.end()) {
+    return;
+  }
+
+  // set the outcome of the particle
+  const auto particleId = eventStore().trackIdMapping.at(track->GetTrackID());
+  if (outOfVolume) {
+    eventStore().particleStatus[particleId] =
+        static_cast<std::uint32_t>(Geant4ParticleStatus::KilledVolume);
+  } else if (outOfTime) {
+    eventStore().particleStatus[particleId] =
+        static_cast<std::uint32_t>(Geant4ParticleStatus::KilledTime);
+  } else if (invalidSecondary) {
+    eventStore().particleStatus[particleId] =
+        static_cast<std::uint32_t>(Geant4ParticleStatus::KilledSecondary);
+  } else if (track->GetTrackStatus() == fStopAndKill) {
+    eventStore().particleStatus[particleId] =
+        static_cast<std::uint32_t>(Geant4ParticleStatus::KilledAbsorbed);
   }
 }

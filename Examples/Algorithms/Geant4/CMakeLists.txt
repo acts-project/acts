@@ -1,6 +1,7 @@
 set(ACTS_EXAMPLES_G4SOURCES
     src/GdmlDetectorConstruction.cpp
     src/TelescopeG4DetectorConstruction.cpp
+    src/Geant4ParticleStatus.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp
