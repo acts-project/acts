@@ -29,7 +29,6 @@
 class TChain;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootTrackSummaryReader
 ///
@@ -47,9 +46,6 @@ class RootTrackSummaryReader : public IReader {
     std::string treeName = "tracksummary";
     /// The name of the input file
     std::string filePath;
-
-    /// Whether the events are ordered or not
-    bool orderedEvents = true;
   };
 
   /// Constructor
