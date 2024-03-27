@@ -151,7 +151,7 @@ if "__main__" == __name__:
     runPropagation(
         trackingGeometry,
         ntracks=args.tracks,
-        bfield=field,
+        field=bfield,
         sterile=args.sterile,
         outputDir=os.getcwd(),
         s=seq,
