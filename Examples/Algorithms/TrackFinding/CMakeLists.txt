@@ -9,7 +9,6 @@ add_library(
   src/TrackParamsEstimationAlgorithm.cpp
   src/MuonHoughSeeder.cpp
   src/GbtsSeedingAlgorithm.cpp
-  src/MyTrackFindingAlgorithm.cpp
 )
 
 target_include_directories(
