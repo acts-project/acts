@@ -438,7 +438,7 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 
     assert len(list(obj.iterdir())) == 0
 
-    runPropagation(trk_geo, field, str(tmp_path), s=seq).run()
+    runPropagation(trk_geo, field=field, outputDir=str(tmp_path), s=seq).run()
 
     for fn, tn, ee in root_files:
         fp = tmp_path / fn

@@ -127,7 +127,7 @@ if "__main__" == __name__:
     # trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
-    field = acts.ConstantBField(acts.Vector3(0, 0, args.bfield * acts.UnitConstants.T))
+    bfield = acts.ConstantBField(acts.Vector3(0, 0, args.bfield * acts.UnitConstants.T))
 
     ## Alternative: no B field
     # field = acts.NullBField()
@@ -151,7 +151,7 @@ if "__main__" == __name__:
     runPropagation(
         trackingGeometry,
         ntracks=args.tracks,
-        field=field,
+        bfield=field,
         sterile=args.sterile,
         outputDir=os.getcwd(),
         s=seq,
