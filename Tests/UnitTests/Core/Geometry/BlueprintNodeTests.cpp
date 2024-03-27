@@ -110,6 +110,8 @@ BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
 }
 
 BOOST_AUTO_TEST_CASE(NodeApiTest) {
+  Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
+
   auto root = std::make_unique<CylinderContainerBlueprintNode>(
       "root", BinningValue::binZ, CylinderVolumeStack::AttachmentStrategy::Gap,
       CylinderVolumeStack::ResizeStrategy::Gap);
@@ -119,62 +121,63 @@ BOOST_AUTO_TEST_CASE(NodeApiTest) {
         .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
 
     // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
-    // Transform3::Identity() * Translation3{Vector3{0, 0, -600_mm}},
+    // base * Translation3{Vector3{0, 0, -600_mm}},
     // std::make_shared<CylinderVolumeBounds>(200_mm, 400_mm, 200_mm),
     // "PixelNegativeEndcap"));
 
-    cyl->addCylinderContainer("PixelNegativeEndcap", binZ, [](auto ec) {
+    // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
+    // base * Translation3{Vector3{0, 0, 600_mm}},
+    // std::make_shared<CylinderVolumeBounds>(200_mm, 400_mm, 200_mm),
+    // "PixelPositiveEndcap"));
+
+    // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
+    // base * Translation3{Vector3{0, 0, 0_mm}},
+    // std::make_shared<CylinderVolumeBounds>(100_mm, 600_mm, 200_mm),
+    // "PixelBarrel"));
+
+    cyl->addCylinderContainer("PixelNegativeEndcap", binZ, [&](auto ec) {
       ec->setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap);
 
       ec->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity() * Translation3{Vector3{0, 0, -600_mm}},
+          base * Translation3{Vector3{0, 0, -600_mm}},
           std::make_shared<CylinderVolumeBounds>(200_mm, 450_mm, 20_mm),
           "PixelNeg1"));
 
       ec->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity() * Translation3{Vector3{0, 0, -400_mm}},
+          base * Translation3{Vector3{0, 0, -400_mm}},
           std::make_shared<CylinderVolumeBounds>(200_mm, 800_mm, 20_mm),
-          "PixelNeg1"));
+          "PixelNeg2"));
 
       return ec;
     });
 
-    // cyl->addStaticVolume(std::make_unique<TrackingVolume>(
-    // Transform3::Identity() * Translation3{Vector3{0, 0, 0_mm}},
-    // std::make_shared<CylinderVolumeBounds>(100_mm, 600_mm, 200_mm),
-    // "PixelBarrel"));
-
-    cyl->addCylinderContainer("PixelBarrel", binR, [](auto brl) {
+    cyl->addCylinderContainer("PixelBarrel", binR, [&](auto brl) {
       brl->setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
           .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Expand);
 
       brl->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity(),
-          std::make_shared<CylinderVolumeBounds>(23_mm, 48_mm, 200_mm),
+          base, std::make_shared<CylinderVolumeBounds>(23_mm, 48_mm, 200_mm),
           "PixelLayer0"));
 
       brl->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity(),
-          std::make_shared<CylinderVolumeBounds>(87_mm, 103_mm, 250_mm),
+          base, std::make_shared<CylinderVolumeBounds>(87_mm, 103_mm, 250_mm),
           "PixelLayer1"));
 
       brl->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity(),
-          std::make_shared<CylinderVolumeBounds>(150_mm, 180_mm, 310_mm),
+          base, std::make_shared<CylinderVolumeBounds>(150_mm, 180_mm, 310_mm),
           "PixelLayer2"));
 
       brl->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity(),
-          std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
+          base, std::make_shared<CylinderVolumeBounds>(250_mm, 400_mm, 310_mm),
           "PixelLayer2"));
 
       return brl;
     });
 
-    cyl->addCylinderContainer("PixelPoxWrapper", binR, [](auto ec) {
+    cyl->addCylinderContainer("PixelPosWrapper", binR, [&](auto ec) {
       ec->setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
       ec->addStaticVolume(std::make_unique<TrackingVolume>(
-          Transform3::Identity() * Translation3{Vector3{0, 0, 600_mm}},
+          base * Translation3{Vector3{0, 0, 600_mm}},
           std::make_shared<CylinderVolumeBounds>(150_mm, 390_mm, 200_mm),
           "PixelPositiveEndcap"));
       return ec;
