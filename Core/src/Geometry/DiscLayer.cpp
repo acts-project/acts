@@ -9,12 +9,12 @@
 #include "Acts/Geometry/DiscLayer.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -37,10 +37,9 @@ Acts::DiscLayer::DiscLayer(const Transform3& transform,
   if (rBounds != nullptr) {
     // The volume bounds
     auto rVolumeBounds =
-        std::make_shared<const CylinderVolumeBounds>(*rBounds, thickness);
+        std::make_shared<CylinderVolumeBounds>(*rBounds, thickness);
     // @todo rotate around x for the avePhi if you have a sector
-    m_representingVolume =
-        std::make_unique<AbstractVolume>(m_transform, rVolumeBounds);
+    m_representingVolume = std::make_unique<Volume>(m_transform, rVolumeBounds);
   }
   // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
@@ -68,18 +67,15 @@ void Acts::DiscLayer::buildApproachDescriptor() {
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume != nullptr) {
     // get the boundary surfaces
-    const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
-        bSurfaces = m_representingVolume->boundarySurfaces();
+    std::vector<OrientedSurface> bSurfaces =
+        m_representingVolume->volumeBounds().orientedSurfaces(
+            m_representingVolume->transform());
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Surface>> aSurfaces;
-    aSurfaces.push_back(
-        bSurfaces.at(negativeFaceXY)->surfaceRepresentation().getSharedPtr());
-    aSurfaces.push_back(
-        bSurfaces.at(positiveFaceXY)->surfaceRepresentation().getSharedPtr());
-    aSurfaces.push_back(
-        bSurfaces.at(tubeInnerCover)->surfaceRepresentation().getSharedPtr());
-    aSurfaces.push_back(
-        bSurfaces.at(tubeOuterCover)->surfaceRepresentation().getSharedPtr());
+    aSurfaces.push_back(bSurfaces.at(negativeFaceXY).surface);
+    aSurfaces.push_back(bSurfaces.at(positiveFaceXY).surface);
+    aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);
+    aSurfaces.push_back(bSurfaces.at(tubeOuterCover).surface);
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor =
         std::make_unique<const GenericApproachDescriptor>(std::move(aSurfaces));

@@ -14,6 +14,7 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
+#include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"

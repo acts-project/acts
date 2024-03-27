@@ -18,12 +18,7 @@ from helpers import (
 )
 
 import acts
-
-from common import getOpenDataDetectorDirectory
-
 from acts import PlanarModuleStepper, UnitConstants as u
-
-
 from acts.examples import (
     ObjPropagationStepsWriter,
     TrackFinderPerformanceWriter,
@@ -51,6 +46,7 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 @pytest.mark.obj
@@ -735,7 +731,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kfTracks",
+            inputTracks="kf_tracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )

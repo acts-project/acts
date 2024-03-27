@@ -110,7 +110,7 @@ void addMaterial(Context& ctx) {
                                const Acts::MagneticFieldContext&>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
-    ACTS_PYTHON_MEMBER(collection);
+    ACTS_PYTHON_MEMBER(inputMaterialTracks);
     ACTS_PYTHON_MEMBER(mappingMaterialCollection);
     ACTS_PYTHON_MEMBER(materialSurfaceMapper);
     ACTS_PYTHON_MEMBER(materialVolumeMapper);

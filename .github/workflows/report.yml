@@ -40,7 +40,7 @@ jobs:
             });
             let fs = require('fs');
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/physmon.zip`, Buffer.from(download.data));
-            let = url = `https://herald.dokku.paulgessinger.com/view/${process.env.GITHUB_REPOSITORY}/${matchArtifact.id}`;
+            let = url = `https://acts-herald.app.cern.ch/view/${process.env.GITHUB_REPOSITORY}/${matchArtifact.id}`;
 
             core.exportVariable('ARTIFACT_URL', url)
             return true;

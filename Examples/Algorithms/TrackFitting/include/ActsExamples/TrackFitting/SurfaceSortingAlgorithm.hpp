@@ -31,8 +31,6 @@ using TrackHitList = std::map<const double, const Index>;
 
 class SurfaceSortingAlgorithm final : public IAlgorithm {
  public:
-  using HitSimHitsMap = IndexMultimap<Index>;
-
   struct Config {
     /// Input proto track collection
     std::string inputProtoTracks;
