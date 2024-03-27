@@ -171,17 +171,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
+      std::size_t nsecond = 0;
+
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
       seedNumber(firstTrack) = nSeed - 1;
 
-      if (!m_cfg.twoWay) {
-        if (!m_trackSelector.has_value() ||
-            m_trackSelector->isValidTrack(firstTrack)) {
-          auto destProxy = tracks.getTrack(tracks.addTrack());
-          destProxy.copyFrom(firstTrack, true);
-        }
-      } else {
+      if (m_cfg.twoWay) {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy> firstState;
         for (auto st : firstTrack.trackStatesReversed()) {
           bool isMeasurement =
@@ -207,39 +203,40 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         if (!secondResult.ok()) {
           ACTS_WARNING("Second track finding failed for seed "
                        << iseed << " with error" << secondResult.error());
-          continue;
-        }
+        } else {
+          auto firstFirstState =
+              std::next(firstTrack.trackStatesReversed().begin(),
+                        firstTrack.nTrackStates() - 1);
 
-        auto firstFirstState =
-            std::next(firstTrack.trackStatesReversed().begin(),
-                      firstTrack.nTrackStates() - 1);
-
-        auto& secondTracksForSeed = secondResult.value();
-        for (auto& secondTrack : secondTracksForSeed) {
-          if (secondTrack.nTrackStates() < 2) {
-            if (!m_trackSelector.has_value() ||
-                m_trackSelector->isValidTrack(firstTrack)) {
-              auto destProxy = tracks.getTrack(tracks.addTrack());
-              destProxy.copyFrom(firstTrack, true);
+          auto& secondTracksForSeed = secondResult.value();
+          for (auto& secondTrack : secondTracksForSeed) {
+            if (secondTrack.nTrackStates() < 2) {
+              continue;
             }
 
-            continue;
+            secondTrack.reverseTrackStates(true);
+            seedNumber(secondTrack) = nSeed - 1;
+
+            (*firstFirstState).previous() =
+                (*std::next(secondTrack.trackStatesReversed().begin())).index();
+            secondTrack.tipIndex() = firstTrack.tipIndex();
+
+            Acts::calculateTrackQuantities(secondTrack);
+
+            if (!m_trackSelector.has_value() ||
+                m_trackSelector->isValidTrack(secondTrack)) {
+              auto destProxy = tracks.getTrack(tracks.addTrack());
+              destProxy.copyFrom(secondTrack, true);
+            }
+            ++nsecond;
           }
-
-          secondTrack.reverseTrackStates(true);
-          seedNumber(secondTrack) = nSeed - 1;
-
-          (*firstFirstState).previous() =
-              (*std::next(secondTrack.trackStatesReversed().begin())).index();
-          secondTrack.tipIndex() = firstTrack.tipIndex();
-
-          Acts::calculateTrackQuantities(secondTrack);
-
-          if (!m_trackSelector.has_value() ||
-              m_trackSelector->isValidTrack(secondTrack)) {
-            auto destProxy = tracks.getTrack(tracks.addTrack());
-            destProxy.copyFrom(secondTrack, true);
-          }
+        }
+      }
+      if (nsecond == 0) {
+        if (!m_trackSelector.has_value() ||
+            m_trackSelector->isValidTrack(firstTrack)) {
+          auto destProxy = tracks.getTrack(tracks.addTrack());
+          destProxy.copyFrom(firstTrack, true);
         }
       }
     }
