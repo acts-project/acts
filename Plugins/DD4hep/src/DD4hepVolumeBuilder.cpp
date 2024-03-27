@@ -79,9 +79,8 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
                       "constructor!"));
     }
     // Build boundaries
-    CylinderVolumeBounds cvBounds(rMin, rMax, dz);
-    volumes.push_back(TrackingVolume::create(
-        transform, std::make_shared<const CylinderVolumeBounds>(cvBounds)));
+    volumes.push_back(std::make_shared<TrackingVolume>(
+        transform, std::make_shared<CylinderVolumeBounds>(rMin, rMax, dz)));
   }
   return volumes;
 }
