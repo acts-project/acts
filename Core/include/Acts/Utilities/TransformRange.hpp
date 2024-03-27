@@ -21,7 +21,7 @@ struct TransformRangeIterator;
 
 /// This type implements a transforming range over a container.
 /// It functions like a view, where all element access is passed through
-/// a user-defined callable, that can process values, like derefencing them
+/// a user-defined callable, that can process values, like dereferencing them
 /// or calling a specific method.
 ///
 /// @note The range and associated iterator maintain const-ness of the input,
