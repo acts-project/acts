@@ -261,7 +261,8 @@ void CylinderVolumeBounds::checkConsistency() {
   }
   if (get(eHalfLengthZ) <= 0) {
     throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid longitudinal input.");
+        "CylinderVolumeBounds: invalid longitudinal input: " +
+        std::to_string(get(eHalfLengthZ)));
   }
   if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument(
