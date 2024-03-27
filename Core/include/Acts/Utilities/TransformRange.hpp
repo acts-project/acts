@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <iterator>
 #include <type_traits>
 #include <utility>
 
@@ -38,21 +39,26 @@ struct ConstDereference {
 template <typename Callable, typename iterator_t, bool force_const>
 struct TransformRangeIterator {
  private:
-  using internal_value_type = typename iterator_t::value_type;
+  using internal_value_type = std::iterator_traits<iterator_t>::value_type;
 
-  using raw_value_type =
-      typename Callable::template value_type<internal_value_type>;
+  using raw_value_type = std::remove_reference_t<
+      typename Callable::template value_type<internal_value_type>>;
 
  public:
-  using value_type = std::conditional_t<
-      force_const, decltype(std::as_const(std::declval<raw_value_type>())),
-      raw_value_type>;
+  using value_type =
+      std::conditional_t<force_const, std::add_const_t<raw_value_type>,
+                         raw_value_type>;
+
+  using difference_type = std::iterator_traits<iterator_t>::difference_type;
+  using pointer = std::remove_reference_t<value_type>*;
+  using reference = value_type&;
+  using iterator_category = std::iterator_traits<iterator_t>::iterator_category;
 
   explicit TransformRangeIterator(iterator_t iterator) : m_iterator(iterator) {}
 
-  value_type operator*() { return Callable::apply(*m_iterator); }
+  reference operator*() { return Callable::apply(*m_iterator); }
 
-  value_type operator*() const { return Callable::apply(*m_iterator); }
+  reference operator*() const { return Callable::apply(*m_iterator); }
 
   TransformRangeIterator& operator++() {
     ++m_iterator;
@@ -72,12 +78,16 @@ struct TransformRange {
  private:
   using internal_value_type = typename container_t::value_type;
 
-  using raw_value_type = Callable::template value_type<internal_value_type>;
+  using raw_value_type = std::remove_reference_t<
+      typename Callable::template value_type<internal_value_type>>;
 
  public:
-  using value_type = std::conditional_t<
-      std::is_const_v<container_t>,
-      decltype(std::as_const(std::declval<raw_value_type>())), raw_value_type>;
+  using value_type =
+      std::conditional_t<std::is_const_v<container_t>,
+                         std::add_const_t<raw_value_type>, raw_value_type>;
+
+  using reference = value_type&;
+  using const_reference = const value_type&;
 
   using iterator = TransformRangeIterator<
       Callable,
@@ -89,19 +99,20 @@ struct TransformRange {
       TransformRangeIterator<Callable, typename container_t::const_iterator,
                              true>;
 
-  explicit TransformRange(container_t& container) : m_container(&container) {}
+  explicit TransformRange(Callable&& /*callable*/, container_t& container)
+      : m_container(&container) {}
 
-  value_type operator[](std::size_t i) {
+  reference operator[](std::size_t i) {
     return Callable::apply((*m_container)[i]);
   }
 
-  decltype(auto) operator[](std::size_t i) const {
+  const_reference operator[](std::size_t i) const {
     return std::as_const(Callable::apply((*m_container)[i]));
   }
 
-  value_type at(std::size_t i) { return Callable::apply(m_container->at(i)); }
+  reference at(std::size_t i) { return Callable::apply(m_container->at(i)); }
 
-  decltype(auto) at(std::size_t i) const {
+  const_reference at(std::size_t i) const {
     return std::as_const(Callable::apply(m_container->at(i)));
   }
 
@@ -119,12 +130,6 @@ struct TransformRange {
  private:
   container_t* m_container;
 };
-
-template <typename Callable, typename container_t>
-TransformRange<Callable, container_t> make_transform_range(
-    container_t& container) {
-  return TransformRange<Callable, container_t>(container);
-}
 
 }  // namespace detail
 }  // namespace Acts

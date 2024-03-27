@@ -40,8 +40,10 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
     v.push_back(std::make_unique<int>(3));
 
     {
-      auto r = detail::make_transform_range<detail::Dereference>(v);
-      static_assert(std::is_same_v<decltype(r)::value_type, int&>);
+      auto r = detail::TransformRange{detail::Dereference{}, v};
+      static_assert(std::is_same_v<decltype(r)::value_type, int>);
+      static_assert(std::is_same_v<decltype(r)::reference, int&>);
+      static_assert(std::is_same_v<decltype(r)::const_reference, const int&>);
       static_assert(std::is_same_v<decltype(r.at(0)), int&>);
       static_assert(std::is_same_v<decltype(r[0]), int&>);
       static_assert(std::is_same_v<decltype(*r.begin()), int&>);
@@ -58,8 +60,10 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       static_assert(std::is_same_v<decltype(*(++r_cref.begin())), const int&>);
       checkSameAddresses(v, r_cref);
 
-      auto cr = detail::make_transform_range<detail::ConstDereference>(v);
-      static_assert(std::is_same_v<decltype(cr)::value_type, const int&>);
+      auto cr = detail::TransformRange{detail::ConstDereference{}, v};
+      static_assert(std::is_same_v<decltype(cr)::value_type, const int>);
+      static_assert(std::is_same_v<decltype(cr)::reference, const int&>);
+      static_assert(std::is_same_v<decltype(cr)::const_reference, const int&>);
       static_assert(std::is_same_v<decltype(cr.at(0)), const int&>);
       static_assert(std::is_same_v<decltype(cr[0]), const int&>);
       static_assert(std::is_same_v<decltype(*cr.begin()), const int&>);
@@ -79,16 +83,20 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       raw_v.push_back(ptr.get());
     }
     {
-      auto r = detail::make_transform_range<detail::Dereference>(raw_v);
-      static_assert(std::is_same_v<decltype(r)::value_type, int&>);
+      auto r = detail::TransformRange{detail::Dereference{}, raw_v};
+      static_assert(std::is_same_v<decltype(r)::value_type, int>);
+      static_assert(std::is_same_v<decltype(r)::reference, int&>);
+      static_assert(std::is_same_v<decltype(r)::const_reference, const int&>);
       static_assert(std::is_same_v<decltype(r.at(0)), int&>);
       static_assert(std::is_same_v<decltype(r[0]), int&>);
       static_assert(std::is_same_v<decltype(*r.begin()), int&>);
       static_assert(std::is_same_v<decltype(*(++r.begin())), int&>);
       checkSameAddresses(v, r);
 
-      auto cr = detail::make_transform_range<detail::ConstDereference>(raw_v);
-      static_assert(std::is_same_v<decltype(cr)::value_type, const int&>);
+      auto cr = detail::TransformRange{detail::ConstDereference{}, raw_v};
+      static_assert(std::is_same_v<decltype(cr)::value_type, const int>);
+      static_assert(std::is_same_v<decltype(cr)::reference, const int&>);
+      static_assert(std::is_same_v<decltype(cr)::const_reference, const int&>);
       static_assert(std::is_same_v<decltype(cr.at(0)), const int&>);
       static_assert(std::is_same_v<decltype(cr[0]), const int&>);
       static_assert(std::is_same_v<decltype(*cr.begin()), const int&>);
@@ -104,8 +112,10 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
     v.push_back(std::make_unique<const int>(3));
 
     {
-      auto r = detail::make_transform_range<detail::Dereference>(v);
-      static_assert(std::is_same_v<decltype(r)::value_type, const int&>);
+      auto r = detail::TransformRange{detail::Dereference{}, v};
+      static_assert(std::is_same_v<decltype(r)::value_type, const int>);
+      static_assert(std::is_same_v<decltype(r)::reference, const int&>);
+      static_assert(std::is_same_v<decltype(r)::const_reference, const int&>);
       static_assert(std::is_same_v<decltype(r.at(0)), const int&>);
       static_assert(std::is_same_v<decltype(r[0]), const int&>);
       static_assert(std::is_same_v<decltype(*r.begin()), const int&>);
@@ -118,8 +128,10 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       raw_v.push_back(ptr.get());
     }
     {
-      auto r = detail::make_transform_range<detail::Dereference>(raw_v);
-      static_assert(std::is_same_v<decltype(r)::value_type, const int&>);
+      auto r = detail::TransformRange{detail::Dereference{}, raw_v};
+      static_assert(std::is_same_v<decltype(r)::value_type, const int>);
+      static_assert(std::is_same_v<decltype(r)::reference, const int&>);
+      static_assert(std::is_same_v<decltype(r)::const_reference, const int&>);
       static_assert(std::is_same_v<decltype(r.at(0)), const int&>);
       static_assert(std::is_same_v<decltype(r[0]), const int&>);
       static_assert(std::is_same_v<decltype(*r.begin()), const int&>);
@@ -138,8 +150,10 @@ BOOST_AUTO_TEST_CASE(TransformRangeFromConstRef) {
   const auto& cv = v;
 
   {
-    auto r_cv = detail::make_transform_range<detail::Dereference>(cv);
-    static_assert(std::is_same_v<decltype(r_cv)::value_type, const int&>);
+    auto r_cv = detail::TransformRange{detail::Dereference{}, cv};
+    static_assert(std::is_same_v<decltype(r_cv)::value_type, const int>);
+    static_assert(std::is_same_v<decltype(r_cv)::reference, const int&>);
+    static_assert(std::is_same_v<decltype(r_cv)::const_reference, const int&>);
     static_assert(std::is_same_v<decltype(r_cv.at(0)), const int&>);
     static_assert(std::is_same_v<decltype(r_cv[0]), const int&>);
     static_assert(std::is_same_v<decltype(*r_cv.begin()), const int&>);
@@ -150,8 +164,10 @@ BOOST_AUTO_TEST_CASE(TransformRangeFromConstRef) {
   }
 
   {
-    auto r_cv = detail::make_transform_range<detail::ConstDereference>(cv);
-    static_assert(std::is_same_v<decltype(r_cv)::value_type, const int&>);
+    auto r_cv = detail::TransformRange{detail::ConstDereference{}, cv};
+    static_assert(std::is_same_v<decltype(r_cv)::value_type, const int>);
+    static_assert(std::is_same_v<decltype(r_cv)::reference, const int&>);
+    static_assert(std::is_same_v<decltype(r_cv)::const_reference, const int&>);
     static_assert(std::is_same_v<decltype(r_cv.at(0)), const int&>);
     static_assert(std::is_same_v<decltype(r_cv[0]), const int&>);
     static_assert(std::is_same_v<decltype(*r_cv.begin()), const int&>);
