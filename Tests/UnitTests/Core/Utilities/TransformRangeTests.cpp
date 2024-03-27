@@ -76,6 +76,12 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       static_assert(std::is_same_v<decltype(*cr_cref.begin()), const int&>);
       static_assert(std::is_same_v<decltype(*(++cr_cref.begin())), const int&>);
       checkSameAddresses(v, cr_cref);
+
+      std::vector<int> act;
+      std::copy(cr_cref.begin(), cr_cref.end(), std::back_inserter(act));
+      std::vector<int> exp = {1, 2, 4};
+      BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(),
+                                    act.end());
     }
 
     std::vector<int*> raw_v;
@@ -161,6 +167,12 @@ BOOST_AUTO_TEST_CASE(TransformRangeFromConstRef) {
 
     checkSameAddresses(v, r_cv);
     checkSameAddresses(cv, r_cv);
+
+    std::vector<int> act;
+    std::copy(r_cv.begin(), r_cv.end(), std::back_inserter(act));
+    std::vector<int> exp = {1, 2, 3};
+    BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(),
+                                  act.end());
   }
 
   {
@@ -175,7 +187,43 @@ BOOST_AUTO_TEST_CASE(TransformRangeFromConstRef) {
 
     checkSameAddresses(v, r_cv);
     checkSameAddresses(cv, r_cv);
+
+    std::vector<int> act;
+    std::copy(r_cv.begin(), r_cv.end(), std::back_inserter(act));
+    std::vector<int> exp = {1, 2, 3};
+    BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(),
+                                  act.end());
   }
+}
+
+BOOST_AUTO_TEST_CASE(TransformRangeReferenceWrappers) {
+  int a = 5;
+  int b = 6;
+  int c = 7;
+
+  std::vector<std::reference_wrapper<int>> v = {a, b, c};
+  BOOST_CHECK_EQUAL(&v[0].get(), &a);
+
+  auto r = detail::TransformRange{detail::DotGet{}, v};
+  static_assert(std::is_same_v<decltype(r)::value_type, int>);
+  static_assert(std::is_same_v<decltype(r)::reference, int&>);
+  static_assert(std::is_same_v<decltype(r)::const_reference, const int&>);
+  static_assert(std::is_same_v<decltype(r.at(0)), int&>);
+  static_assert(std::is_same_v<decltype(r[0]), int&>);
+  static_assert(std::is_same_v<decltype(*r.begin()), int&>);
+  static_assert(std::is_same_v<decltype(*(++r.begin())), int&>);
+
+  BOOST_CHECK_EQUAL(r.at(0), 5);
+  BOOST_CHECK_EQUAL(&r.at(0), &a);
+  BOOST_CHECK_EQUAL(r[0], 5);
+  BOOST_CHECK_EQUAL(&r[0], &a);
+  BOOST_CHECK_EQUAL(*r.begin(), 5);
+  BOOST_CHECK_EQUAL(&*r.begin(), &a);
+
+  std::vector<int> act;
+  std::copy(r.begin(), r.end(), std::back_inserter(act));
+  std::vector<int> exp = {5, 6, 7};
+  BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

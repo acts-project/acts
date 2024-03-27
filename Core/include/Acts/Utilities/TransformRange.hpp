@@ -21,9 +21,6 @@ struct Dereference {
   constexpr static decltype(auto) apply(input_t&& value) {
     return *value;
   }
-
-  template <typename input_t>
-  using value_type = decltype(apply(std::declval<input_t>()));
 };
 
 struct ConstDereference {
@@ -31,28 +28,34 @@ struct ConstDereference {
   constexpr static decltype(auto) apply(input_t&& value) {
     return std::as_const(*value);
   }
+};
 
+struct DotGet {
   template <typename input_t>
-  using value_type = decltype(apply(std::declval<input_t>()));
+  constexpr static decltype(auto) apply(input_t&& value) {
+    return value.get();
+  }
 };
 
 template <typename Callable, typename iterator_t, bool force_const>
 struct TransformRangeIterator {
  private:
-  using internal_value_type = std::iterator_traits<iterator_t>::value_type;
+  using internal_value_type =
+      typename std::iterator_traits<iterator_t>::value_type;
 
-  using raw_value_type = std::remove_reference_t<
-      typename Callable::template value_type<internal_value_type>>;
+  using raw_value_type = std::remove_reference_t<decltype(Callable::apply(
+      std::declval<internal_value_type>()))>;
 
  public:
   using value_type =
       std::conditional_t<force_const, std::add_const_t<raw_value_type>,
                          raw_value_type>;
 
-  using difference_type = std::iterator_traits<iterator_t>::difference_type;
+  using difference_type =
+      typename std::iterator_traits<iterator_t>::difference_type;
   using pointer = std::remove_reference_t<value_type>*;
   using reference = value_type&;
-  using iterator_category = std::iterator_traits<iterator_t>::iterator_category;
+  using iterator_category = std::forward_iterator_tag;
 
   explicit TransformRangeIterator(iterator_t iterator) : m_iterator(iterator) {}
 
@@ -78,8 +81,8 @@ struct TransformRange {
  private:
   using internal_value_type = typename container_t::value_type;
 
-  using raw_value_type = std::remove_reference_t<
-      typename Callable::template value_type<internal_value_type>>;
+  using raw_value_type = std::remove_reference_t<decltype(Callable::apply(
+      std::declval<internal_value_type>()))>;
 
  public:
   using value_type =
