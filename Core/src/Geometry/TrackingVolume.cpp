@@ -30,20 +30,6 @@
 namespace Acts {
 class ISurfaceMaterial;
 
-TrackingVolume::TrackingVolume(
-    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
-    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
-    const std::string& volumeName)
-    : Volume(transform, std::move(volbounds)),
-      m_boundarySurfaces(),
-      m_confinedLayers(nullptr),
-      m_confinedVolumes(containedVolumeArray),
-      m_volumeMaterial(nullptr),
-      m_name(volumeName) {
-  createBoundarySurfaces();
-  interlinkLayers();
-}
-
 // constructor for arguments
 TrackingVolume::TrackingVolume(
     const Transform3& transform,
@@ -64,8 +50,15 @@ TrackingVolume::TrackingVolume(
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
 
-TrackingVolume::TrackingVolume(const Volume& volume)
-    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr()) {}
+TrackingVolume::TrackingVolume(const Volume& volume,
+                               const std::string& volumName)
+    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), volumName) {}
+
+TrackingVolume::TrackingVolume(const Transform3& transform,
+                               std::shared_ptr<const VolumeBounds> volumeBounds,
+                               const std::string& volumeName)
+    : TrackingVolume(transform, volumeBounds, nullptr, nullptr, nullptr, {},
+                     volumeName) {}
 
 TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;

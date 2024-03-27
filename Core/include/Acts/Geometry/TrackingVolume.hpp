@@ -120,20 +120,6 @@ class TrackingVolume : public Volume {
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
 
-  /// Constructor for a container Volume
-  /// - vacuum filled volume either as a for other tracking volumes
-  ///
-  /// @param transform is the global 3D transform to position the volume in
-  /// space
-  /// @param volbounds is the description of the volume boundaries
-  /// @param containedVolumeArray are the static volumes that fill this volume
-  /// @param volumeName is a string identifier
-  TrackingVolume(const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> volbounds,
-                 const std::shared_ptr<const TrackingVolumeArray>&
-                     containedVolumeArray = nullptr,
-                 const std::string& volumeName = "undefined");
-
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param transform is the global 3D transform to position the volume in
@@ -156,7 +142,19 @@ class TrackingVolume : public Volume {
 
   /// Constructor from a regular volume
   /// @param other is the volume to be converted
-  explicit TrackingVolume(const Volume& other);
+  /// @param volumeName is a string identifier
+  TrackingVolume(const Volume& other,
+                 const std::string& volumeName = "undefined");
+
+  /// Constructor for a full equipped Tracking Volume
+  ///
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
+  /// @param volumeBounds is the description of the volume boundaries
+  /// @param volumeMaterial is are materials of the tracking volume
+  TrackingVolume(const Transform3& transform,
+                 std::shared_ptr<const VolumeBounds> volumeBounds,
+                 const std::string& volumeName = "undefined");
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   /// @TODO: This needs to be refactored to include Gen3 volumes

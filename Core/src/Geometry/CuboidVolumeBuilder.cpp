@@ -230,7 +230,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   trafo.translation() = m_cfg.position;
 
   // Size of the volume
-  auto volume = std::make_shared<CuboidVolumeBounds>(
+  auto volumeBounds = std::make_shared<CuboidVolumeBounds>(
       m_cfg.length.x() * 0.5, m_cfg.length.y() * 0.5, m_cfg.length.z() * 0.5);
 
   // Build vector of confined volumes
@@ -258,8 +258,9 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
       new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
   // Create world volume
-  MutableTrackingVolumePtr mtvp(
-      std::make_shared<TrackingVolume>(trafo, volume, trVolArr, "World"));
+  MutableTrackingVolumePtr mtvp(std::make_shared<TrackingVolume>(
+      trafo, volumeBounds, nullptr, nullptr, trVolArr,
+      MutableTrackingVolumeVector{}, "World"));
 
   return mtvp;
 }
