@@ -16,18 +16,19 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/RootUtility.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 #include <TChain.h>
-#include <TMathBase.h>
 
-ActsExamples::RootTrackSummaryReader::RootTrackSummaryReader(
-    const ActsExamples::RootTrackSummaryReader::Config& config,
-    Acts::Logging::Level level)
-    : ActsExamples::IReader(),
+namespace ActsExamples {
+
+RootTrackSummaryReader::RootTrackSummaryReader(
+    const RootTrackSummaryReader::Config& config, Acts::Logging::Level level)
+    : IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
       m_cfg(config) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
@@ -96,22 +97,21 @@ ActsExamples::RootTrackSummaryReader::RootTrackSummaryReader(
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
-  // If the events are not in order, get the entry numbers for ordered events
-  if (!m_cfg.orderedEvents) {
+  // Sort the entry numbers of the events
+  {
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_nr", "", "goff");
-    // Sort to get the entry numbers of the ordered events
-    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
-                m_entryNumbers.data(), false);
+    RootUtility::stableSort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
+                            m_entryNumbers.data(), false);
   }
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::RootTrackSummaryReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> RootTrackSummaryReader::availableEvents()
+    const {
   return {0u, m_events};
 }
 
-ActsExamples::RootTrackSummaryReader::~RootTrackSummaryReader() {
+RootTrackSummaryReader::~RootTrackSummaryReader() {
   delete m_multiTrajNr;
   delete m_subTrajNr;
   delete m_nStates;
@@ -155,8 +155,7 @@ ActsExamples::RootTrackSummaryReader::~RootTrackSummaryReader() {
   delete m_err_eT_fit;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackSummaryReader::read(
-    const ActsExamples::AlgorithmContext& context) {
+ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded tracks.");
 
   // read in the fitted track parameters and particles
@@ -174,10 +173,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryReader::read(
     SimParticleContainer truthParticleCollection;
 
     // Read the correct entry
-    auto entry = context.eventNumber;
-    if (!m_cfg.orderedEvents && entry < m_entryNumbers.size()) {
-      entry = m_entryNumbers[entry];
-    }
+    auto entry = m_entryNumbers.at(context.eventNumber);
     m_inputChain->GetEntry(entry);
     ACTS_INFO("Reading event: " << context.eventNumber
                                 << " stored as entry: " << entry);
@@ -229,5 +225,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryReader::read(
     ACTS_WARNING("Could not read in event.");
   }
   // Return success flag
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

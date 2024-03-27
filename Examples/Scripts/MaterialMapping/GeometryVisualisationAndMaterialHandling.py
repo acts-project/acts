@@ -594,7 +594,6 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
         material_boundary_discs = [[] for _ in range(len(index_to_names))]
 
         for entry in data["Surfaces"]["entries"]:
-
             if not entry["value"]["material"]["mapMaterial"]:
                 continue
 

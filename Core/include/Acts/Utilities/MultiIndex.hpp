@@ -142,6 +142,9 @@ class MultiIndex {
   friend constexpr bool operator==(MultiIndex lhs, MultiIndex rhs) {
     return lhs.m_value == rhs.m_value;
   }
+  friend constexpr bool operator!=(MultiIndex lhs, MultiIndex rhs) {
+    return lhs.m_value != rhs.m_value;
+  }
   friend inline std::ostream& operator<<(std::ostream& os, MultiIndex idx) {
     // one level is always defined
     os << idx.level(0u);

@@ -30,7 +30,7 @@ Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(config) {
 
 Acts::MagneticFieldProvider::Cache Acts::SolenoidBField::makeCache(
     const MagneticFieldContext& mctx) const {
-  return MagneticFieldProvider::Cache::make<Cache>(mctx);
+  return MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
 }
 
 Acts::Vector3 Acts::SolenoidBField::getField(const Vector3& position) const {

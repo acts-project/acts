@@ -31,7 +31,6 @@ def buildITkGeometry(
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
 ):
-
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -445,9 +444,7 @@ def itkSeedingAlgConfig(
         if highOccupancyConfig == True:
             rMaxGridConfig = 250 * u.mm
             deltaRMax = 200 * u.mm
-            zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
-            # variables that are only used for highOccupancyConfig configuration:
-            skipZMiddleBinSearch = 2
+            zBinsCustomLooping = [2, 10, 3, 9, 6, 4, 8, 5, 7]
 
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
@@ -518,8 +515,6 @@ def itkSeedingAlgConfig(
             [40.0, 80.0],
         ]
         useVariableMiddleSPRange = False
-    else:
-        skipZMiddleBinSearch = 0
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
@@ -535,7 +530,6 @@ def itkSeedingAlgConfig(
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
         zBinsCustomLooping=zBinsCustomLooping,
-        skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,

@@ -37,15 +37,12 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
-  /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const Logger& logger) const {
-    if (navigator.targetReached(state.navigation)) {
-      return true;
-    }
+                  const navigator_t& /*navigator*/,
+                  const Logger& logger) const {
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
@@ -54,8 +51,6 @@ struct PathLimitReached {
     if (limitReached) {
       ACTS_VERBOSE("PathLimit aborter | "
                    << "Path limit reached at distance " << distance);
-      // reaching the target means navigation break
-      navigator.targetReached(state.navigation, true);
       return true;
     }
     stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
@@ -159,6 +154,14 @@ struct SurfaceReached {
   }
 };
 
+/// Similar to SurfaceReached, but with an infinite overstep limit.
+///
+/// This can be used to force the propagation to the target surface.
+struct ForcedSurfaceReached : SurfaceReached {
+  ForcedSurfaceReached()
+      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
+};
+
 /// This is the condition that the end of World has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {
@@ -177,7 +180,6 @@ struct EndOfWorldReached {
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    navigator.targetReached(state.navigation, endOfWorld);
     return endOfWorld;
   }
 };

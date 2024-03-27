@@ -23,6 +23,8 @@
 #include <thread>
 #include <utility>
 
+/// @defgroup Logging Logging
+
 // clang-format off
 /// @brief macro to use a local Acts::Logger object
 /// @ingroup Logging
@@ -302,7 +304,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration. See "
-          "https://acts.readthedocs.io/en/latest/core/"
+          "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
     }
   }
@@ -572,7 +574,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
           "ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration, bailing out. See "
-          "https://acts.readthedocs.io/en/latest/core/"
+          "https://acts.readthedocs.io/en/latest/core/misc/"
           "logging.html#logging-thresholds");
     }
   }

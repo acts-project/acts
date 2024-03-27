@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,6 +16,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Io/Root/RootUtility.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -23,7 +24,6 @@
 #include <stdexcept>
 
 #include <TChain.h>
-#include <TMathBase.h>
 
 ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
     const ActsExamples::RootAthenaNTupleReader::Config& config,
@@ -114,18 +114,6 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
-
-  {
-    // The entry numbers for accessing events in increased order (there could be
-    // multiple entries corresponding to one event number)
-    std::vector<long long> m_entryNumbers;
-    // If the events are not in order, get the entry numbers for ordered events
-    m_entryNumbers.resize(m_events);
-    m_inputChain->Draw("EventNumber", "", "goff");
-    // Sort to get the entry numbers of the ordered events
-    TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
-                m_entryNumbers.data(), false);
-  }
 }
 
 ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
@@ -245,7 +233,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     recoVertexContainer.push_back(vtx);
   }
 
-  Acts::Vertex<Acts::BoundTrackParameters> beamspotConstraint;
+  Acts::Vertex beamspotConstraint;
   Acts::Vector3 beamspotPos;
   Acts::SquareMatrix3 beamspotCov;
 
