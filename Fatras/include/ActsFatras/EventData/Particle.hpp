@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -295,6 +295,17 @@ class Particle {
   /// Number of hits.
   constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
 
+  /// Set the status of particle.
+  ///
+  /// @param status status code
+  constexpr Particle &setStatus(std::uint32_t status) {
+    m_status = status;
+    return *this;
+  }
+
+  /// Number of hits.
+  constexpr std::uint32_t status() const { return m_status; }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -319,6 +330,8 @@ class Particle {
   std::uint32_t m_numberOfHits = 0;
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
+  /// status code
+  std::uint32_t m_status = 0;
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

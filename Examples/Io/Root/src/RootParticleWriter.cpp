@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,6 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <ios>
 #include <limits>
@@ -80,6 +79,7 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
     m_outputTree->Branch("total_x0", &m_pathInX0);
     m_outputTree->Branch("total_l0", &m_pathInL0);
     m_outputTree->Branch("number_of_hits", &m_numberOfHits);
+    m_outputTree->Branch("status", &m_status);
   }
 }
 
@@ -172,6 +172,9 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
                                                      Acts::UnitConstants::mm));
         // get the number of hits
         m_numberOfHits.push_back(finalParticle.numberOfHits());
+        // get the particle status
+        m_status.push_back(finalParticle.status());
+
         wroteFinalParticle = true;
       }
     }
@@ -180,6 +183,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       m_pathInX0.push_back(nan);
       m_pathInL0.push_back(nan);
       m_numberOfHits.push_back(-1);
+      m_status.push_back(0);
     }
   }
 

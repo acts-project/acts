@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,13 +11,11 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <cassert>
-#include <cstddef>
 #include <ostream>
 #include <unordered_map>
 #include <utility>
@@ -125,6 +123,12 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
     numberOfHits = it->second;
   }
 
+  std::uint32_t particleStatus = 0;
+  if (auto it = eventStore().particleStatus.find(particleId);
+      it != eventStore().particleStatus.end()) {
+    particleStatus = it->second;
+  }
+
   // Now create the Particle
   ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle(pdg),
                                       charge, mass);
@@ -132,6 +136,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
   aParticle.setAbsoluteMomentum(p);
   aParticle.setNumberOfHits(numberOfHits);
+  aParticle.setStatus(particleStatus);
   return aParticle;
 }
 
