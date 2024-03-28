@@ -11,9 +11,9 @@ include(FetchContent)
 
 message(STATUS "Building FRNN as part of the ACTS project")
 
-set(ACTS_FRNN_GIT_REPOSITORY "https://github.com/lxxue/FRNN"
+set(ACTS_FRNN_GIT_REPOSITORY "https://github.com/hrzhao76/FRNN/"
     CACHE STRING "Git repository to take FRNN from")
-set(ACTS_FRNN_GIT_TAG "3e370d8d9073d4e130363faf87d2370598b5fbf2"
+set(ACTS_FRNN_GIT_TAG "5f8a48b0022300cd2863119f5646a5f31373e0c8"
     CACHE STRING "Version of FRNN to build")
 
 mark_as_advanced(ACTS_FRNN_GIT_REPOSITORY ACTS_FRNN_GIT_TAG)

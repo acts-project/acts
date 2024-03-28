@@ -19,7 +19,9 @@ namespace Acts {
 
 OnnxMetricLearning::OnnxMetricLearning(const Config& cfg,
                                        std::unique_ptr<const Logger> logger)
-    : m_logger(std::move(logger)), m_cfg(cfg) {
+    : m_logger(std::move(logger)),
+      m_cfg(cfg),
+      m_device(torch::Device(torch::kCPU)) {
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
                                      "ExaTrkX - metric learning");
 
@@ -57,7 +59,7 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 }
 
 std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
-    std::vector<float>& inputValues, std::size_t, int) {
+    std::vector<float>& inputValues, std::size_t, torch::Device) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);

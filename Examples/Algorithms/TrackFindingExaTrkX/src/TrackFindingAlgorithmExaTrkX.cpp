@@ -250,12 +250,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   // Run the pipeline
   const auto trackCandidates = [&]() {
-    const int deviceHint = -1;
     std::lock_guard<std::mutex> lock(m_mutex);
 
     Acts::ExaTrkXTiming timing;
-    auto res =
-        m_pipeline.run(features, spacepointIDs, deviceHint, *hook, &timing);
+    auto res = m_pipeline.run(features, spacepointIDs, *hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
