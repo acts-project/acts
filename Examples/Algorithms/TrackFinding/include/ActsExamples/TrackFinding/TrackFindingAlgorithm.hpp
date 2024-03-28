@@ -112,7 +112,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
     /// Run finding in two directions
-    bool twoWay = false;
+    bool twoWay = true;
   };
 
   /// Constructor of the track finding algorithm

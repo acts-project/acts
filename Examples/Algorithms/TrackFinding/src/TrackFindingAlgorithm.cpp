@@ -246,6 +246,22 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
               Acts::calculateTrackQuantities(secondTrack);
 
+              // TODO this extrapolation should not be necessary as the CKF will
+              // target this surface anyway and could communicate the parameters
+              auto secondExtrapolationResult =
+                  Acts::extrapolateTrackToReferenceSurface(
+                      secondTrack, *pSurface, extrapolator,
+                      extrapolationOptions, m_cfg.extrapolationStrategy,
+                      logger());
+              if (!secondExtrapolationResult.ok()) {
+                m_nFailedExtrapolation++;
+                ACTS_ERROR("Second extrapolation for seed "
+                           << iSeed << " and track " << firstTrack.index()
+                           << " failed with error "
+                           << secondExtrapolationResult.error());
+                continue;
+              }
+
               if (!m_trackSelector.has_value() ||
                   m_trackSelector->isValidTrack(secondTrack)) {
                 auto destProxy = tracks.getTrack(tracks.addTrack());
@@ -259,14 +275,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       }
 
       if (nSecond == 0) {
-        auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
-            firstTrack, *pSurface, extrapolator, extrapolationOptions,
-            m_cfg.extrapolationStrategy, logger());
-        if (!extrapolationResult.ok()) {
+        auto firstExtrapolationResult =
+            Acts::extrapolateTrackToReferenceSurface(
+                firstTrack, *pSurface, extrapolator, extrapolationOptions,
+                m_cfg.extrapolationStrategy, logger());
+        if (!firstExtrapolationResult.ok()) {
           m_nFailedExtrapolation++;
           ACTS_ERROR("Extrapolation for seed "
                      << iSeed << " and track " << firstTrack.index()
-                     << " failed with error " << extrapolationResult.error());
+                     << " failed with error "
+                     << firstExtrapolationResult.error());
           continue;
         }
 
