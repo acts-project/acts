@@ -62,8 +62,8 @@ namespace {
  * Helper function to compute the derivative of the time as function of the path
  * length
  */
-template <class T_ParticleHypothesis>
-double computeDtDs(const T_ParticleHypothesis &hypothesis, double qop) {
+template <class ParticleHypothesis>
+double computeDtDs(const ParticleHypothesis &hypothesis, double qop) {
   return std::hypot(1., hypothesis.mass() / hypothesis.extractMomentum(qop));
 }
 
@@ -75,21 +75,21 @@ double computeDtDs(const T_ParticleHypothesis &hypothesis, double qop) {
  * @param particle_hypothesis the particle hypothesis e.g. Acts::ParticleHypothesis::pion()
  * @return path length derivatives ( dr(...)/ds, dt/ds, dr(...)/ds2, d qop/ds [== 0] )
  */
-template <class T_ParticleHypothesis>
+template <class ParticleHypothesis>
 FreeToPathMatrix computeFreeToPathDerivatives(
-    const Vector3 &direction, double qop, const Vector3 &bfield,
-    const T_ParticleHypothesis &particle_hypothis) {
-  FreeToPathMatrix path_length_deriv;
+    const Vector3 &direction, double qop, const Vector3 &bField,
+    const ParticleHypothesis &particleHypothis) {
+  FreeToPathMatrix pathLengthDeriv;
 #if defined(EIGEN_HAS_CONSTEXPR) && EIGEN_VERSION_AT_LEAST(3, 4, 0)
-  static_assert(path_length_deriv.cols() ==
+  static_assert(pathLengthDeriv.cols() ==
                 8);  // ensure that all elements are initialized
 #endif
-  path_length_deriv.segment<3>(eFreePos0) = direction;
-  path_length_deriv(0, eFreeTime) = computeDtDs(particle_hypothis, qop);
-  path_length_deriv.segment<3>(eFreeDir0) =
-      (qop * direction.cross(bfield)).transpose();
-  path_length_deriv(0, Acts::eFreeQOverP) = 0.;
-  return path_length_deriv;
+  pathLengthDeriv.segment<3>(eFreePos0) = direction;
+  pathLengthDeriv(0, eFreeTime) = computeDtDs(particleHypothis, qop);
+  pathLengthDeriv.segment<3>(eFreeDir0) =
+      (qop * direction.cross(bField)).transpose();
+  pathLengthDeriv(0, Acts::eFreeQOverP) = 0.;
+  return pathLengthDeriv;
 }
 template <typename T, std::size_t Rows, std::size_t Cols>
 inline constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
@@ -102,9 +102,9 @@ inline constexpr Eigen::Matrix<T, Rows, Cols> makeMatrix(
   }
   Eigen::Matrix<T, Rows, Cols> matrix;
   auto iter = elements.begin();
-  for (unsigned int row_i = 0; row_i < matrix.rows(); ++row_i) {
-    for (unsigned int col_i = 0; col_i < matrix.cols(); ++col_i) {
-      matrix(row_i, col_i) = *iter;
+  for (unsigned int row = 0; row < matrix.rows(); ++row) {
+    for (unsigned int col = 0; col < matrix.cols(); ++col) {
+      matrix(row, col) = *iter;
       ++iter;
     }
   }
@@ -116,18 +116,18 @@ inline constexpr Eigen::Matrix<T, Rows, 1> makeVector(
   return makeMatrix<T, Rows, 1>(elements);
 }
 
-template <typename T_Matrix>
-T_Matrix matrixRatio(const T_Matrix &a, const T_Matrix &b) {
+template <typename Matrix>
+Matrix matrixRatio(const Matrix &a, const Matrix &b) {
   if (a.rows() != b.rows() || a.cols() != b.cols()) {
     std::abort();
   }
-  T_Matrix ret;
-  for (unsigned int row_i = 0; row_i < a.rows(); ++row_i) {
-    for (unsigned int col_i = 0; col_i < a.cols(); ++col_i) {
-      if (b(row_i, col_i) == 0.) {
-        ret(row_i, col_i) = a(row_i, col_i) - b(row_i, col_i);
+  Matrix ret;
+  for (unsigned int row = 0; row < a.rows(); ++row) {
+    for (unsigned int col = 0; col < a.cols(); ++col) {
+      if (b(row, col) == 0.) {
+        ret(row, col) = a(row, col) - b(row, col);
       } else {
-        ret(row_i, col_i) = a(row_i, col_i) / b(row_i, col_i);
+        ret(row, col) = a(row, col) / b(row, col);
       }
     }
   }
@@ -138,57 +138,57 @@ T_Matrix matrixRatio(const T_Matrix &a, const T_Matrix &b) {
 
 struct TestData {
   enum ESurfaceType { kPlane, kPolarDisk, kCylinder };
-  TestData(Vector3 &&a_surface_center, ActsMatrix<3, 3> &&a_surface_rot,
-           ESurfaceType a_surface_type, BoundVector &&a_param_vec,
-           BoundSquareMatrix &&a_param_cov, Vector3 &&a_bfield)
-      : surface_center(std::move(a_surface_center)),
-        surface_rot(std::move(a_surface_rot)),
-        surface_type(a_surface_type),
-        param_vec(std::move(a_param_vec)),
-        param_cov(std::move(a_param_cov)),
-        bfield(std::move(a_bfield)) {}
+  TestData(Vector3 &&a_surfaceCenter, ActsMatrix<3, 3> &&a_surfaceRot,
+           ESurfaceType a_surfaceType, BoundVector &&a_paramVec,
+           BoundSquareMatrix &&a_paramCov, Vector3 &&a_bField)
+      : surfaceCenter(std::move(a_surfaceCenter)),
+        surfaceRot(std::move(a_surfaceRot)),
+        surfaceType(a_surfaceType),
+        paramVec(std::move(a_paramVec)),
+        paramCov(std::move(a_paramCov)),
+        bfield(std::move(a_bField)) {}
 
-  Vector3 surface_center;
-  ActsMatrix<3, 3> surface_rot;
-  ESurfaceType surface_type;
-  BoundVector param_vec;
-  BoundSquareMatrix param_cov;
+  Vector3 surfaceCenter;
+  ActsMatrix<3, 3> surfaceRot;
+  ESurfaceType surfaceType;
+  BoundVector paramVec;
+  BoundSquareMatrix paramCov;
   Vector3 bfield;
 };
 
-template <typename T_StepperCreator>
-void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
-                               const T_StepperCreator &stepper_creator) {
+template <typename StepperCreator>
+void test_bound_to_curvilinear(const std::vector<TestData> &testDataList,
+                               const StepperCreator &stepperCreator) {
   GeometryContext geoCtx;
   MagneticFieldContext magFieldContext;
 
-  for (const auto &test_data : test_data_list) {
+  for (const auto &testData : testDataList) {
     // create a constant magnetic field provider for the test_data
     std::shared_ptr<Acts::MagneticFieldProvider> bField =
         std::dynamic_pointer_cast<Acts::MagneticFieldProvider>(
-            std::make_shared<ConstantBField>(test_data.bfield));
+            std::make_shared<ConstantBField>(testData.bfield));
 
     // create bound parameters from test data
-    const Vector3 &surface_center = test_data.surface_center;
-    const ActsMatrix<3, 3> &surface_rot = test_data.surface_rot;
-    const BoundVector &param_vec = test_data.param_vec;
-    const BoundSquareMatrix &cov = test_data.param_cov;
+    const Vector3 &surface_center = testData.surfaceCenter;
+    const ActsMatrix<3, 3> &surfaceRot = testData.surfaceRot;
+    const BoundVector &paramVec = testData.paramVec;
+    const BoundSquareMatrix &cov = testData.paramCov;
 
-    AngleAxis3 surface_transform0;
-    surface_transform0 = surface_rot;
+    AngleAxis3 surfaceTransform0;
+    surfaceTransform0 = surfaceRot;
 
     std::shared_ptr<Surface> surface;
-    switch (test_data.surface_type) {
+    switch (testData.surfaceType) {
       case TestData::kPlane: {
         surface = std::dynamic_pointer_cast<Surface>(
             Surface::makeShared<PlaneSurface>(Translation3(surface_center) *
-                                              surface_transform0));
+                                              surfaceTransform0));
         break;
       }
       case TestData::kPolarDisk: {
         surface =
             std::dynamic_pointer_cast<Surface>(Surface::makeShared<DiscSurface>(
-                Translation3(surface_center) * surface_transform0));
+                Translation3(surface_center) * surfaceTransform0));
         break;
       }
       default: {
@@ -200,11 +200,10 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     FreeVector freeParamVec = Acts::detail::transformBoundToFreeParameters(
         *surface, geoCtx, paramVec);
 
-    Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
-                      sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};
-    Vector3 position(surface->localToGlobal(
-        geoCtx, Vector2{param_vec[0], param_vec[1]}, direction));
-    BoundTrackParameters params(surface, param_vec,
+    Vector3 direction = freeParamVec.segment<3>(eFreeDir0);
+    Vector3 position = surface->localToGlobal(
+        geoCtx, Vector2{paramVec[0], paramVec[1]}, direction);
+    BoundTrackParameters params(surface, paramVec,
                                 std::optional<BoundSquareMatrix>(cov),
                                 ParticleHypothesis::pion());
 
@@ -214,82 +213,80 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     for (unsigned int i = 0; i < 4; ++i) {
       MagneticFieldProvider::Cache cache = bField->makeCache(magFieldContext);
 
-      Result<Acts::Vector3> local_bfield = bField->getField(position, cache);
-      assert(local_bfield.ok());
+      Result<Acts::Vector3> localBField = bField->getField(position, cache);
+      assert(localBField.ok());
 
-      auto path_length_derivatives = computeFreeToPathDerivatives(
-          direction, params.parameters()[eBoundQOverP], local_bfield.value(),
+      auto pathLengthDerivatives = computeFreeToPathDerivatives(
+          direction, params.parameters()[eBoundQOverP], localBField.value(),
           ParticleHypothesis::pion());
-      MSG_DEBUG("derivatives : " << path_length_derivatives);
+      MSG_DEBUG("derivatives : " << pathLengthDerivatives);
 
       // compute Jacobian for bound to curvilinear covariance transformation
       Acts::BoundMatrix b2c;
       Acts::detail::boundToCurvilinearTransportJacobian(
-          direction, surface->boundToFreeJacobian(geoCtx, free_param_vec),
+          direction, surface->boundToFreeJacobian(geoCtx, freeParamVec),
           Acts::FreeMatrix::Identity(),
           computeFreeToPathDerivatives(
-              direction, params.parameters()[eBoundQOverP],
-              local_bfield.value(), ParticleHypothesis::pion()),
+              direction, params.parameters()[eBoundQOverP], localBField.value(),
+              ParticleHypothesis::pion()),
           b2c);
 
-      auto curvi_cov_alt = b2c * cov * b2c.transpose();
+      auto curviCovAlt = b2c * cov * b2c.transpose();
 
-      MSG_DEBUG("curvilinear covariance alt.:" << std::endl << curvi_cov_alt);
+      MSG_DEBUG("curvilinear covariance alt.:" << std::endl << curviCovAlt);
 
       // configure propagator for tiny step size
-      Acts::PropagatorOptions<> null_propagation_options(geoCtx,
-                                                         magFieldContext);
+      Acts::PropagatorOptions<> nullPropagationOptions(geoCtx, magFieldContext);
 
-      null_propagation_options.pathLimit =
+      nullPropagationOptions.pathLimit =
           i == 0 ? 0 : 1e-12 * 1_m * std::pow(10, i - 1);
-      if (null_propagation_options.pathLimit > 0 && i > 1) {
-        null_propagation_options.stepTolerance =
-            null_propagation_options.pathLimit * .99;
-        null_propagation_options.surfaceTolerance =
-            null_propagation_options.pathLimit * .99;
+      if (nullPropagationOptions.pathLimit > 0 && i > 1) {
+        nullPropagationOptions.stepTolerance =
+            nullPropagationOptions.pathLimit * .99;
+        nullPropagationOptions.surfaceTolerance =
+            nullPropagationOptions.pathLimit * .99;
       }
-      auto stepper = stepper_creator(bField);
+      auto stepper = stepperCreator(bField);
       MSG_DEBUG("Stepper type " << typeid(stepper).name());
 
-      auto log_level = (isDebugOutputEnabled() ? Acts::Logging::VERBOSE
-                                               : Acts::Logging::INFO);
+      auto logLevel = (isDebugOutputEnabled() ? Acts::Logging::VERBOSE
+                                              : Acts::Logging::INFO);
 
       // Use propagator with small step size to compute parameters in
       // curvilinear parameterisation
       Propagator<decltype(stepper)> propagator(
           std::move(stepper), Acts::VoidNavigator(),
-          Acts::getDefaultLogger("Propagator", log_level));
-      auto result =
-          propagator.propagate(params, null_propagation_options, true);
+          Acts::getDefaultLogger("Propagator", logLevel));
+      auto result = propagator.propagate(params, nullPropagationOptions, true);
       {
-        const auto &curvilinear_parameters = result.value().endParameters;
-        if (curvilinear_parameters.has_value() &&
-            curvilinear_parameters.value().covariance().has_value()) {
+        const auto &curvilinearParameters = result.value().endParameters;
+        if (curvilinearParameters.has_value() &&
+            curvilinearParameters.value().covariance().has_value()) {
           MSG_DEBUG(i << " | "
-                      << "limit: " << null_propagation_options.pathLimit
-                      << " tolerance: "
-                      << null_propagation_options.stepTolerance << std::endl);
+                      << "limit: " << nullPropagationOptions.pathLimit
+                      << " tolerance: " << nullPropagationOptions.stepTolerance
+                      << std::endl);
 
-          Acts::BoundSquareMatrix curvi_cov =
-              curvilinear_parameters.value().covariance().value();
+          Acts::BoundSquareMatrix curviCov =
+              curvilinearParameters.value().covariance().value();
           MSG_DEBUG("curvilinear covariance:" << std::endl
-                                              << curvi_cov << std::endl);
+                                              << curviCov << std::endl);
           if (isDebugOutputEnabled()) {
-            Acts::BoundSquareMatrix b(curvi_cov_alt);
-            auto ratio = matrixRatio(curvi_cov, b);
+            Acts::BoundSquareMatrix b(curviCovAlt);
+            auto ratio = matrixRatio(curviCov, b);
             MSG_DEBUG("ratio:" << std::endl << ratio << std::endl);
           }
           // test that result from propagation and explicit computation are
           // compatible.
-          BOOST_CHECK(curvi_cov_alt.isApprox(curvi_cov));
+          BOOST_CHECK(curviCovAlt.isApprox(curviCov));
         }
       }
     }
   }
 }
 
-std::vector<TestData> make_test_data(double mag_field_scale = 1.) {
-  std::vector<TestData> test_data_list{
+std::vector<TestData> make_test_data(double magFieldScale = 1.) {
+  std::vector<TestData> testDataList{
       TestData(
           makeVector<ActsScalar, 3>(
               {-442.883, -624.094, 857.272}),  // surface center
@@ -574,20 +571,20 @@ std::vector<TestData> make_test_data(double mag_field_scale = 1.) {
                                      0.00202663 * 1000_T}))  // magnetic field
 
   };
-  if (mag_field_scale != 1.) {
-    for (TestData &test_data : test_data_list) {
-      test_data.bfield *= mag_field_scale;
+  if (magFieldScale != 1.) {
+    for (TestData &testData : testDataList) {
+      testData.bfield *= magFieldScale;
     }
   }
-  return test_data_list;
+  return testDataList;
 }
 
 BOOST_AUTO_TEST_CASE(BoundToCurvilinearEigenStepper) {
   // Compare covariance in curvilinear parameterisation:
   // explicit computation vs. dummy propagation using EigenStepper
-  std::vector<TestData> test_data_list(make_test_data());
+  std::vector<TestData> testDataList(make_test_data());
   test_bound_to_curvilinear(
-      test_data_list,
+      testDataList,
       [](const std::shared_ptr<Acts::MagneticFieldProvider> &bField) {
         return EigenStepper<>(bField);
       });
@@ -596,10 +593,10 @@ BOOST_AUTO_TEST_CASE(BoundToCurvilinearEigenStepper) {
 BOOST_AUTO_TEST_CASE(BoundToCurvilinearStraightLineStepper) {
   // Compare covariance in curvilinear parameterisation for vanishing magnetic
   // field: explicit computation vs. dummy propagation using StraightLineStepper
-  std::vector<TestData> test_data_list(
+  std::vector<TestData> testDataList(
       make_test_data(0.));  // scale magnetic field in test data to zero.
   test_bound_to_curvilinear(
-      test_data_list,
+      testDataList,
       []([[maybe_unused]] const std::shared_ptr<Acts::MagneticFieldProvider>
              &bField) { return StraightLineStepper(); });
 }
