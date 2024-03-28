@@ -1206,7 +1206,7 @@ class CombinatorialKalmanFilter {
     std::vector<typename TrackContainer::TrackProxy> tracks;
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
-      auto track = trackContainer.getTrack(trackContainer.addTrack());
+      auto track = trackContainer.makeTrack();
       track.tipIndex() = tip;
 
       // Set fitted track parameters if available. This will only be the case if
