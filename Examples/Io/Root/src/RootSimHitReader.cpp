@@ -22,10 +22,11 @@
 #include <TChain.h>
 #include <TMathBase.h>
 
-ActsExamples::RootSimHitReader::RootSimHitReader(
-    const ActsExamples::RootSimHitReader::Config& config,
-    Acts::Logging::Level level)
-    : ActsExamples::IReader(),
+namespace ActsExamples {
+
+RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
+                                   Acts::Logging::Level level)
+    : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
@@ -37,7 +38,7 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_outputSimHits.initialize(m_cfg.simHitCollection);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   // Set the branches
   int f = 0;
@@ -101,13 +102,11 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
                              << availableEvents().second);
 }
 
-std::pair<std::size_t, std::size_t>
-ActsExamples::RootSimHitReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
-    const ActsExamples::AlgorithmContext& context) {
+ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
   auto it = std::find_if(
       m_eventMap.begin(), m_eventMap.end(),
       [&](const auto& a) { return std::get<0>(a) == context.eventNumber; });
@@ -125,7 +124,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
     m_outputSimHits(context, {});
 
     // Return success flag
-    return ActsExamples::ProcessCode::SUCCESS;
+    return ProcessCode::SUCCESS;
   }
 
   // lock the mutex
@@ -152,7 +151,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
         m_floatColumns.at("tx") * Acts::UnitConstants::mm,
         m_floatColumns.at("ty") * Acts::UnitConstants::mm,
         m_floatColumns.at("tz") * Acts::UnitConstants::mm,
-        m_floatColumns.at("tt") * Acts::UnitConstants::ns,
+        m_floatColumns.at("tt") * Acts::UnitConstants::mm,
     };
 
     const Acts::Vector4 before4 = {
@@ -174,8 +173,13 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
     hits.insert(hit);
   }
 
+  ACTS_DEBUG("Read " << hits.size() << " hits for event "
+                     << context.eventNumber);
+
   m_outputSimHits(context, std::move(hits));
 
   // Return success flag
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

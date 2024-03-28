@@ -66,9 +66,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
-  /// Scale operator
+  /// Scale operator - dummy implementation
   ///
-  /// @param scale The value to scale this material by
   ProtoSurfaceMaterialT<BinningType>& operator*=(double /*unused*/) final {
     return (*this);
   }
@@ -89,14 +88,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ///
   /// @return will return dummy material
   const MaterialSlab& materialSlab(const Vector3& /*unused*/) const final {
-    return (m_materialSlab);
-  }
-
-  /// Direct access via bins to the MaterialSlab
-  ///
-  /// @return will return dummy material
-  const MaterialSlab& materialSlab(std::size_t /*unused*/,
-                                   std::size_t /*unused*/) const final {
     return (m_materialSlab);
   }
 

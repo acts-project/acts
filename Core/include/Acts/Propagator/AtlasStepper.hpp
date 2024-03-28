@@ -510,6 +510,21 @@ class AtlasStepper {
                       state.pathAccumulated);
   }
 
+  /// @brief If necessary fill additional members needed for curvilinearState
+  ///
+  /// Compute path length derivatives in case they have not been computed
+  /// yet, which is the case if no step has been executed yet.
+  ///
+  /// @param [in, out] prop_state State that will be presented as @c BoundState
+  /// @param [in] navigator the navigator of the propagation
+  /// @return true if nothing is missing after this call, false otherwise.
+  template <typename propagator_state_t, typename navigator_t>
+  bool prepareCurvilinearState(
+      [[maybe_unused]] propagator_state_t& prop_state,
+      [[maybe_unused]] const navigator_t& navigator) const {
+    return true;
+  }
+
   /// Create and return a curvilinear state at the current position
   ///
   ///

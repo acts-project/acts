@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-import os
+
+import json
+
 import acts
-from acts import examples, logging, GeometryContext
 from acts.examples.dd4hep import (
     DD4hepDetector,
     DD4hepDetectorOptions,
     DD4hepGeometryService,
 )
-
-import json
-
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 if "__main__" == __name__:
@@ -25,11 +23,11 @@ if "__main__" == __name__:
     dd4hepGeometryService = DD4hepGeometryService(dd4hepConfig)
     dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
 
-    cOptions = DD4hepDetectorOptions(logLevel=acts.logging.VERBOSE, emulateToGraph="")
+    cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
 
     # Uncomment if you want to use the geometry id mapping
     # This map can be produced with the 'geometry.py' script
-    geoIdMappingFile = "odd-dd4hep-geoid-mapping-wo-extra.json"
+    geoIdMappingFile = None  # "odd-dd4hep-geoid-mapping-wo-extra.json"
     if geoIdMappingFile is not None:
         # Load the geometry id mapping json file
         with open(geoIdMappingFile) as f:
@@ -49,4 +47,37 @@ if "__main__" == __name__:
     geoContext = acts.GeometryContext()
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
-    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+    surfaceStyle = acts.svg.Style()
+    surfaceStyle.fillColor = [5, 150, 245]
+    surfaceStyle.fillOpacity = 0.5
+
+    surfaceOptions = acts.svg.SurfaceOptions()
+    surfaceOptions.style = surfaceStyle
+
+    viewRange = acts.Extent([])
+    volumeOptions = acts.svg.DetectorVolumeOptions()
+    volumeOptions.surfaceOptions = surfaceOptions
+
+    for ivol in range(detector.number_volumes()):
+        acts.svg.viewDetector(
+            geoContext,
+            detector,
+            "odd-xy",
+            [[ivol, volumeOptions]],
+            [["xy", ["sensitives"], viewRange]],
+            "vol_" + str(ivol),
+        )
+
+    xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
+    zrRange = acts.Extent([[acts.Binning.phi, [-0.1, 0.1]]])
+
+    acts.svg.viewDetector(
+        geoContext,
+        detector,
+        "odd",
+        [[ivol, volumeOptions] for ivol in range(detector.number_volumes())],
+        [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
+        "detector",
+    )
+
+    # acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")

@@ -49,7 +49,8 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
   // global to local transformation
   auto lpResult = globalToLocal(gctx, position, direction);
   if (lpResult.ok()) {
-    return bcheck ? bounds().inside(lpResult.value(), bcheck) : true;
+    return bcheck.isEnabled() ? bounds().inside(lpResult.value(), bcheck)
+                              : true;
   }
   return false;
 }
@@ -57,6 +58,15 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& parameters,
     const FreeVector& pathDerivative) const {
+  // The global posiiton
+  const auto position = parameters.segment<3>(eFreePos0);
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
+
+  (void)position;
+  (void)direction;
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
   const auto alignToBoundWithoutCorrection =
@@ -79,6 +89,12 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
+
+  (void)direction;
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
@@ -120,6 +136,9 @@ Acts::AlignmentToPathMatrix Acts::Surface::alignmentToPathDerivative(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
@@ -258,6 +277,9 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
   const Vector3 direction = parameters.segment<3>(eFreeDir0);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - given by reference frame
@@ -280,6 +302,9 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Local position component given by the reference frame
@@ -299,6 +324,9 @@ Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   const RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
   // The measurement frame z axis

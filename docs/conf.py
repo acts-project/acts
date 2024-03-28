@@ -33,6 +33,7 @@ extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
+    "sphinx.ext.graphviz",
     "sphinx.ext.todo",
     "warnings_filter",
 ]
@@ -135,7 +136,6 @@ nitpick_ignore_regex = [
 # -- Automatic API documentation ---------------------------------------------
 
 env = os.environ.copy()
-env["DOXYGEN_WARN_AS_ERROR"] = "NO"
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
@@ -167,9 +167,10 @@ if tags.has("lazy_autodoc") or on_readthedocs:
     extensions += ["lazy_autodoc"]
 
 
-import white_papers
+if tags.has("white_papers"):
+    import white_papers
 
-white_papers.render()
+    white_papers.render()
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

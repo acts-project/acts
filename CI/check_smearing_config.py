@@ -59,7 +59,6 @@ with open(ref_path, "r") as ifile:
     ref = ifile.read()
 
 for i, (line_ref, line_gen) in enumerate(zip(ref.split("\n"), output.split("\n"))):
-
     lhs = line_ref.strip()
     rhs = line_gen.strip()
 

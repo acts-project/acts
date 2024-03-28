@@ -19,7 +19,7 @@ apt install google-perftools libgoogle-perftools-dev
 
 Alternatively, you can use the following commands to install it:
 
-```console 
+```console
 $ git clone https://github.com/gperftools/gperftools
 $ cd gperftools
 $ git tag -l # checkout the latest release version
