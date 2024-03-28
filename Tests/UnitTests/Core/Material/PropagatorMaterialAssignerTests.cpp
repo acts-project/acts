@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_SUITE(PropagatorMaterialAssignerTestSuite)
 /// Test with TrackingGeometry
 BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   auto vCylinderInner =
-      std::make_shared<const CylinderVolumeBounds>(rMin, rMid, 110.);
+      std::make_shared<CylinderVolumeBounds>(rMin, rMid, 110.);
 
   // Create a tracking geometry with  one material layer and one material volume
   auto pCylinderLayer =
@@ -72,13 +72,13 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   auto layers =
       lac.layerArray(tContext, {pCylinderLayer}, rMin, rMid, arbitrary, binR);
 
-  auto innerVolume = TrackingVolume::create(
+  auto innerVolume = std::make_shared<TrackingVolume>(
       Transform3::Identity(), vCylinderInner, nullptr, std::move(layers),
-      nullptr, {}, "InnerVolumeWithLayers");
+      nullptr, MutableTrackingVolumeVector{}, "InnerVolumeWithLayers");
 
-  auto outerVolume = TrackingVolume::create(
+  auto outerVolume = std::make_shared<TrackingVolume>(
       Transform3::Identity(), vCylinderOuter, volumeMaterial, nullptr, nullptr,
-      {}, "OuterVolume");
+      MutableTrackingVolumeVector{}, "OuterVolume");
   innerVolume->glueTrackingVolume(tContext, tubeOuterCover, outerVolume.get(),
                                   tubeInnerCover);
 
@@ -88,12 +88,10 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   auto volumes =
       tvac.trackingVolumeArray(tContext, {innerVolume, outerVolume}, binR);
 
-  auto vCylinderTop =
-      std::make_shared<const CylinderVolumeBounds>(rMin, rMax, 110.);
+  auto vCylinderTop = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 110.);
 
-  auto topVolume =
-      TrackingVolume::create(Transform3::Identity(), vCylinderTop, nullptr,
-                             nullptr, volumes, {}, "TopVolume");
+  auto topVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), vCylinderTop, volumes, "TopVolume");
 
   auto tGeometry = std::make_shared<TrackingGeometry>(topVolume);
 

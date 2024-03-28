@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersections) {
 BOOST_AUTO_TEST_CASE(FindTrackingVolumeIntersections) {
   auto cylinerVolumeBounds =
       std::make_shared<CylinderVolumeBounds>(20.0, 100.0, 400.0);
-  auto volume = TrackingVolume::create(
+  auto volume = std::make_shared<TrackingVolume>(
       Transform3::Identity(), cylinerVolumeBounds, nullptr, nullptr, nullptr,
-      {}, "CylindricalTrackignVolume");
+      MutableTrackingVolumeVector{}, "CylindricalTrackignVolume");
 
   IntersectionMaterialAssigner::Config imCfg;
   imCfg.trackingVolumes.push_back(volume.get());
