@@ -26,7 +26,9 @@
 namespace Acts {
 
 /// @brief selector for finding surface
-struct MaterialSurface {
+///
+/// This is to be used with a SurfaceCollector<>
+struct MaterialSurfaceIdentifier {
   /// check if the surface has material
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
@@ -73,7 +75,7 @@ struct InteractionVolumeCollector {
       if (collIt == result.collected.end() &&
           currentVolume->volumeMaterial() != nullptr) {
         Vector3 entryPosition = stepper.position(state.stepping);
-        Vector3 exitPosition = stepper.position(state.stepping);
+        Vector3 exitPosition = entryPosition;
         IAssignmentFinder::VolumeAssignment vAssignment(
             InteractionVolume(currentVolume), entryPosition, exitPosition);
         result.collected.emplace(currentVolume->geometryId(), vAssignment);
@@ -127,7 +129,8 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
         NeutralParticleHypothesis::geantino());
 
     // Prepare Action list and abort list
-    using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
+    using MaterialSurfaceCollector =
+        SurfaceCollector<MaterialSurfaceIdentifier>;
     using ActionList =
         ActionList<MaterialSurfaceCollector, InteractionVolumeCollector>;
     using AbortList = AbortList<EndOfWorldReached>;
