@@ -121,17 +121,17 @@ class LineSurface : public Surface {
   /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param parameters is the free parameters vector
   ///
   /// @return Jacobian from local to global
   BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const final;
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param parameters is the free parameters vector
   ///
   /// @return Derivative of path length w.r.t. free parameters
   FreeToPathMatrix freeToPathDerivative(

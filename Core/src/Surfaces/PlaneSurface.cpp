@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -37,14 +38,21 @@ Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
     : RegularSurface(), m_bounds(nullptr) {
+  /// Tolerance for not being within curvilinear projection this allows using
+  /// the same curvilinear frame to eta = 6, validity tested with
+  /// IntegrationTests/PropagationTest
+  static constexpr ActsScalar projTolerance = 0.999995;
+
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T
   /// V = T x U
   Vector3 T = normal.normalized();
-  Vector3 U = std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance
-                  ? Vector3::UnitZ().cross(T).normalized()
-                  : Vector3::UnitX().cross(T).normalized();
+  bool standardRepresentation =
+      std::abs(T.dot(Vector3::UnitZ())) < projTolerance;
+  Vector3 U = (standardRepresentation ? Vector3::UnitZ() : Vector3::UnitX())
+                  .cross(T)
+                  .normalized();
   Vector3 V = T.cross(U);
   RotationMatrix3 curvilinearRotation;
   curvilinearRotation.col(0) = U;

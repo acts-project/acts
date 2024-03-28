@@ -326,11 +326,11 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param parameters is the free parameters vector
   ///
   /// @return Jacobian from local to global
   virtual BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const;
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
@@ -343,7 +343,7 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param parameters is the free parameters vector
   ///
   /// @return Jacobian from global to local
   virtual FreeToBoundMatrix freeToBoundJacobian(

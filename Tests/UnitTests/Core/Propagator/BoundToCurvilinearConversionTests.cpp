@@ -197,6 +197,9 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       }
     }
 
+    FreeVector free_param_vec = Acts::detail::transformBoundToFreeParameters(
+        *surface, geoCtx, param_vec);
+
     Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
                       sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};
     Vector3 position(surface->localToGlobal(
@@ -222,7 +225,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       // compute Jacobian for bound to curvilinear covariance transformation
       Acts::BoundMatrix b2c;
       Acts::detail::boundToCurvilinearTransportJacobian(
-          direction, surface->boundToFreeJacobian(geoCtx, params.parameters()),
+          direction, surface->boundToFreeJacobian(geoCtx, free_param_vec),
           Acts::FreeMatrix::Identity(),
           computeFreeToPathDerivatives(
               direction, params.parameters()[eBoundQOverP],
