@@ -182,7 +182,8 @@ void readTrack(const edm4hep::Track& from,
   auto unpack =
       [](const edm4hep::TrackState& trackState) -> detail::Parameters {
     detail::Parameters params;
-    params.covariance = ActsSquareMatrix<6>{};
+    params.covariance = BoundMatrix::Zero();
+    params.values = BoundVector::Zero();
     detail::unpackCovariance(trackState.covMatrix.data(),
                              params.covariance.value());
     params.values[0] = trackState.D0;

@@ -96,22 +96,95 @@ void encodeSubspaces(
 }
 
 template <Acts::BinningValue... Args>
-std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> decodeSubspace(
-    const nlohmann::json& jGlobalToGridLocal) {
-  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> globalToGridLocal =
-      nullptr;
+std::unique_ptr<const Acts::GridAccess::GlobalSubspace<Args...>> decodeSubspace(
+    const nlohmann::json& /*unused*/) {
+  return std::make_unique<const Acts::GridAccess::GlobalSubspace<Args...>>();
+}
+
+template <Acts::BinningValue... Args>
+std::unique_ptr<const Acts::GridAccess::Affine3Transformed<
+    Acts::GridAccess::GlobalSubspace<Args...>>>
+decodeTransformedSubspace(const nlohmann::json& jGlobalToGridLocal) {
+  Acts::Transform3 transform = Acts::Transform3JsonConverter::fromJson(
+      jGlobalToGridLocal.at("transform"));
+  Acts::GridAccess::GlobalSubspace<Args...> globalSubspace;
+  return std::make_unique<const Acts::GridAccess::Affine3Transformed<
+      Acts::GridAccess::GlobalSubspace<Args...>>>(std::move(globalSubspace),
+                                                  transform);
+}
+
+template <Acts::BinningValue... Args>
+std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>
+decodeGeneralSubspace(const nlohmann::json& jGlobalToGridLocal) {
   if (jGlobalToGridLocal.find("transform") != jGlobalToGridLocal.end()) {
-    Acts::Transform3 transform = Acts::Transform3JsonConverter::fromJson(
-        jGlobalToGridLocal.at("transform"));
-    Acts::GridAccess::GlobalSubspace<Args...> globalSubspace;
-    globalToGridLocal = std::make_unique<Acts::GridAccess::Affine3Transformed<
-        Acts::GridAccess::GlobalSubspace<Args...>>>(std::move(globalSubspace),
-                                                    transform);
-  } else {
-    globalToGridLocal =
-        std::make_unique<Acts::GridAccess::GlobalSubspace<Args...>>();
+    return decodeTransformedSubspace<Args...>(jGlobalToGridLocal);
   }
-  return globalToGridLocal;
+  return decodeSubspace<Args...>(jGlobalToGridLocal);
+}
+
+template <typename Delegate, Acts::BinningValue... Args>
+void decorateGlobalDelegate(Delegate& delegate,
+                            const nlohmann::json& jGlobalToGridLocal) {
+  // The delegate has already been connected
+  if (delegate.connected()) {
+    return;
+  }
+
+  // Get the transform for json
+  bool hasTransform =
+      jGlobalToGridLocal.find("transform") != jGlobalToGridLocal.end();
+
+  // Get the accessors
+  std::vector<Acts::BinningValue> accessors =
+      jGlobalToGridLocal.at("accessors").get<std::vector<Acts::BinningValue>>();
+
+  // One dimensional setting
+  if constexpr (sizeof...(Args) == 1u) {
+    if (std::get<0>(std::forward_as_tuple(Args...)) == accessors[0]) {
+      if (hasTransform) {
+        using TransformedSubspace = Acts::GridAccess::Affine3Transformed<
+            Acts::GridAccess::GlobalSubspace<Args...>>;
+        auto globalToGridLocal =
+            decodeTransformedSubspace<Args...>(jGlobalToGridLocal);
+        delegate.template connect<&TransformedSubspace::toGridLocal>(
+            std::move(globalToGridLocal));
+      } else {
+        auto globalToGridLocal = decodeSubspace<Args...>(jGlobalToGridLocal);
+        delegate.template connect<
+            &Acts::GridAccess::GlobalSubspace<Args...>::toGridLocal>(
+            std::move(globalToGridLocal));
+      }
+    }
+  }
+
+  // Two-dimensional setting
+  if constexpr (sizeof...(Args) == 2u) {
+    if (std::get<0>(std::forward_as_tuple(Args...)) == accessors[0] &&
+        std::get<1>(std::forward_as_tuple(Args...)) == accessors[1]) {
+      if (hasTransform) {
+        using TransformedSubspace = Acts::GridAccess::Affine3Transformed<
+            Acts::GridAccess::GlobalSubspace<Args...>>;
+        auto globalToGridLocal =
+            decodeTransformedSubspace<Args...>(jGlobalToGridLocal);
+        delegate.template connect<&TransformedSubspace::toGridLocal>(
+            std::move(globalToGridLocal));
+      } else {
+        auto globalToGridLocal = decodeSubspace<Args...>(jGlobalToGridLocal);
+        delegate.template connect<
+            &Acts::GridAccess::GlobalSubspace<Args...>::toGridLocal>(
+            std::move(globalToGridLocal));
+      }
+    }
+  }
+}
+
+template <Acts::BinningValue... Args>
+void decorateGlobal1DimDelegate(
+    Acts::GridAccess::GlobalToGridLocal1DimDelegate& delegate,
+    const nlohmann::json& jGlobalToGridLocal) {
+  (((decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal1DimDelegate,
+                            Args>(delegate, jGlobalToGridLocal))),
+   ...);
 }
 
 }  // namespace
@@ -160,11 +233,11 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
   return jGlobalToGridLocal;
 }
 
-std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal>
+std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>
 Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
     const nlohmann::json& jGlobalToGridLocal) {
-  std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal> globalToGridLocal =
-      nullptr;
+  std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>
+      globalToGridLocal = nullptr;
 
   std::vector<BinningValue> accessors =
       jGlobalToGridLocal.at("accessors").get<std::vector<BinningValue>>();
@@ -173,22 +246,22 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
   if (accessors.size() == 1u) {
     switch (accessors[0]) {
       case binX:
-        globalToGridLocal = decodeSubspace<binX>(jGlobalToGridLocal);
+        globalToGridLocal = decodeGeneralSubspace<binX>(jGlobalToGridLocal);
         break;
       case binY:
-        globalToGridLocal = decodeSubspace<binY>(jGlobalToGridLocal);
+        globalToGridLocal = decodeGeneralSubspace<binY>(jGlobalToGridLocal);
         break;
       case binZ:
-        globalToGridLocal = decodeSubspace<binZ>(jGlobalToGridLocal);
+        globalToGridLocal = decodeGeneralSubspace<binZ>(jGlobalToGridLocal);
         break;
       case binR:
-        globalToGridLocal = decodeSubspace<binR>(jGlobalToGridLocal);
+        globalToGridLocal = decodeGeneralSubspace<binR>(jGlobalToGridLocal);
         break;
       case binPhi:
-        globalToGridLocal = decodeSubspace<binPhi>(jGlobalToGridLocal);
+        globalToGridLocal = decodeGeneralSubspace<binPhi>(jGlobalToGridLocal);
         break;
       case binEta:
-        globalToGridLocal = decodeSubspace<binEta>(jGlobalToGridLocal);
+        globalToGridLocal = decodeGeneralSubspace<binEta>(jGlobalToGridLocal);
         break;
       default:
         // globalToGridLocal = nullptr;
@@ -199,83 +272,137 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
   // Switch and fill for 2D
   if (accessors.size() == 2u) {
     if (accessors == std::vector<BinningValue>{binX, binY}) {
-      globalToGridLocal = decodeSubspace<binX, binY>(jGlobalToGridLocal);
+      globalToGridLocal = decodeGeneralSubspace<binX, binY>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binY, binX}) {
-      globalToGridLocal = decodeSubspace<binY, binX>(jGlobalToGridLocal);
+      globalToGridLocal = decodeGeneralSubspace<binY, binX>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binX, binZ}) {
-      globalToGridLocal = decodeSubspace<binX, binZ>(jGlobalToGridLocal);
+      globalToGridLocal = decodeGeneralSubspace<binX, binZ>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binZ, binX}) {
-      globalToGridLocal = decodeSubspace<binZ, binX>(jGlobalToGridLocal);
+      globalToGridLocal = decodeGeneralSubspace<binZ, binX>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binY, binZ}) {
-      globalToGridLocal = decodeSubspace<binY, binZ>(jGlobalToGridLocal);
+      globalToGridLocal = decodeGeneralSubspace<binY, binZ>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binZ, binY}) {
-      globalToGridLocal = decodeSubspace<binZ, binY>(jGlobalToGridLocal);
+      globalToGridLocal = decodeGeneralSubspace<binZ, binY>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binR, binPhi}) {
-      globalToGridLocal = decodeSubspace<binR, binPhi>(jGlobalToGridLocal);
+      globalToGridLocal =
+          decodeGeneralSubspace<binR, binPhi>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binPhi, binR}) {
-      globalToGridLocal = decodeSubspace<binPhi, binR>(jGlobalToGridLocal);
+      globalToGridLocal =
+          decodeGeneralSubspace<binPhi, binR>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binZ, binPhi}) {
-      globalToGridLocal = decodeSubspace<binZ, binPhi>(jGlobalToGridLocal);
+      globalToGridLocal =
+          decodeGeneralSubspace<binZ, binPhi>(jGlobalToGridLocal);
     } else if (accessors == std::vector<BinningValue>{binPhi, binZ}) {
-      globalToGridLocal = decodeSubspace<binPhi, binZ>(jGlobalToGridLocal);
+      globalToGridLocal =
+          decodeGeneralSubspace<binPhi, binZ>(jGlobalToGridLocal);
     }
     // else globalToGridLocal = nullptr;
   }
   return globalToGridLocal;
 }
 
+Acts::GridAccess::GlobalToGridLocal1DimDelegate
+Acts::GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(
+    const nlohmann::json& jGlobalToGridLocal) {
+  // Peek into json to check the right dimension
+  if (jGlobalToGridLocal.at("accessors").size() != 1u) {
+    throw std::invalid_argument(
+        "GridAccessJsonConverter: json input does not describe 1D case.");
+  }
+  // Unroll the decoration
+  Acts::GridAccess::GlobalToGridLocal1DimDelegate delegate;
+  decorateGlobal1DimDelegate<binX, binY, binZ, binR, binPhi, binEta>(
+      delegate, jGlobalToGridLocal);
+  return delegate;
+}
+
+Acts::GridAccess::GlobalToGridLocal2DimDelegate
+Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
+    const nlohmann::json& jGlobalToGridLocal) {
+  // Peek into json to check the right dimension
+  if (jGlobalToGridLocal.at("accessors").size() != 2u) {
+    throw std::invalid_argument(
+        "GridAccessJsonConverter: json input does not describe 2D case.");
+  }
+  // Unroll the decoration
+  Acts::GridAccess::GlobalToGridLocal2DimDelegate delegate;
+  // Only the matching one will be applied, matching condition is checked inside
+  // the call - may unroll this es well
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binX,
+                         binY>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binY,
+                         binX>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binX,
+                         binZ>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binZ,
+                         binX>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binY,
+                         binZ>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binZ,
+                         binY>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binR,
+                         binPhi>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         binPhi, binR>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binZ,
+                         binPhi>(delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         binPhi, binZ>(delegate, jGlobalToGridLocal);
+  return delegate;
+}
+
 nlohmann::json Acts::GridAccessJsonConverter::toJson(
     const GridAccess::IBoundToGridLocal& boundToGridLocal) {
-  nlohmann::json jBoundtoGridLocal;
+  nlohmann::json jBoundToGridLocal;
 
   auto localSubSpace0 =
       dynamic_cast<const GridAccess::LocalSubspace<0u>*>(&boundToGridLocal);
   if (localSubSpace0 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace0->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace0->accessors;
   }
 
   auto localSubSpace1 =
       dynamic_cast<const GridAccess::LocalSubspace<1u>*>(&boundToGridLocal);
   if (localSubSpace1 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace1->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace1->accessors;
   }
 
   auto localSubSpace01 =
       dynamic_cast<const GridAccess::LocalSubspace<0u, 1u>*>(&boundToGridLocal);
   if (localSubSpace01 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace01->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace01->accessors;
   }
 
   auto localSubSpace10 =
       dynamic_cast<const GridAccess::LocalSubspace<1u, 0u>*>(&boundToGridLocal);
   if (localSubSpace10 != nullptr) {
-    jBoundtoGridLocal["type"] = "subspace";
-    jBoundtoGridLocal["accessors"] = localSubSpace10->accessors;
+    jBoundToGridLocal["type"] = "subspace";
+    jBoundToGridLocal["accessors"] = localSubSpace10->accessors;
   }
 
   auto boundCylinderToZPhi =
       dynamic_cast<const GridAccess::BoundCylinderToZPhi*>(&boundToGridLocal);
   if (boundCylinderToZPhi != nullptr) {
-    jBoundtoGridLocal["type"] = "cylinder_to_zphi";
-    jBoundtoGridLocal["radius"] = boundCylinderToZPhi->radius;
-    jBoundtoGridLocal["shift"] = boundCylinderToZPhi->shift;
+    jBoundToGridLocal["type"] = "cylinder_to_zphi";
+    jBoundToGridLocal["radius"] = boundCylinderToZPhi->radius;
+    jBoundToGridLocal["shift"] = boundCylinderToZPhi->shift;
   }
 
-  return jBoundtoGridLocal;
+  return jBoundToGridLocal;
 }
 
 std::unique_ptr<Acts::GridAccess::IBoundToGridLocal>
 Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
-    const nlohmann::json& jBoundtoGridLocal) {
+    const nlohmann::json& jBoundToGridLocal) {
   std::unique_ptr<Acts::GridAccess::IBoundToGridLocal> boundToGridLocal =
       nullptr;
-  std::string type = jBoundtoGridLocal.at("type").get<std::string>();
+  std::string type = jBoundToGridLocal.at("type").get<std::string>();
   if (type == "subspace") {
     std::vector<std::size_t> accessors =
-        jBoundtoGridLocal.at("accessors").get<std::vector<std::size_t>>();
+        jBoundToGridLocal.at("accessors").get<std::vector<std::size_t>>();
     if (accessors.size() == 1 && accessors[0] == 0) {
       boundToGridLocal =
           std::make_unique<Acts::GridAccess::LocalSubspace<0u>>();
@@ -292,10 +419,79 @@ Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
           std::make_unique<Acts::GridAccess::LocalSubspace<1u, 0u>>();
     }
   } else if (type == "cylinder_to_zphi") {
-    ActsScalar radius = jBoundtoGridLocal.at("radius").get<ActsScalar>();
-    ActsScalar shift = jBoundtoGridLocal.at("shift").get<ActsScalar>();
+    ActsScalar radius = jBoundToGridLocal.at("radius").get<ActsScalar>();
+    ActsScalar shift = jBoundToGridLocal.at("shift").get<ActsScalar>();
     boundToGridLocal =
         std::make_unique<Acts::GridAccess::BoundCylinderToZPhi>(radius, shift);
   }
   return boundToGridLocal;
+}
+
+Acts::GridAccess::BoundToGridLocal1DimDelegate
+Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
+    const nlohmann::json& jBoundToGridLocal) {
+  Acts::GridAccess::BoundToGridLocal1DimDelegate delegate;
+
+  std::string type = jBoundToGridLocal.at("type").get<std::string>();
+  if (type == "subspace") {
+    std::vector<std::size_t> accessors =
+        jBoundToGridLocal.at("accessors").get<std::vector<std::size_t>>();
+    // Safety check
+    if (accessors.size() != 1u) {
+      throw std::invalid_argument(
+          "GridAccessJsonConverter: json input does not describe 1D case.");
+    }
+    // Specify the type
+    if (accessors[0] == 0) {
+      auto boundToGridLocal =
+          std::make_unique<const Acts::GridAccess::LocalSubspace<0u>>();
+      delegate.connect<&Acts::GridAccess::LocalSubspace<0u>::toGridLocal>(
+          std::move(boundToGridLocal));
+    } else if (accessors[0] == 1) {
+      auto boundToGridLocal =
+          std::make_unique<const Acts::GridAccess::LocalSubspace<1u>>();
+      delegate.connect<&Acts::GridAccess::LocalSubspace<1u>::toGridLocal>(
+          std::move(boundToGridLocal));
+    }
+  }
+  return delegate;
+}
+
+Acts::GridAccess::BoundToGridLocal2DimDelegate
+Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+    const nlohmann::json& jBoundToGridLocal) {
+  Acts::GridAccess::BoundToGridLocal2DimDelegate delegate;
+
+  std::string type = jBoundToGridLocal.at("type").get<std::string>();
+  if (type == "subspace") {
+    std::vector<std::size_t> accessors =
+        jBoundToGridLocal.at("accessors").get<std::vector<std::size_t>>();
+
+    // Safety check
+    if (accessors.size() != 2u) {
+      throw std::invalid_argument(
+          "GridAccessJsonConverter: json input does not describe 2D case.");
+    }
+    if (accessors[0] == 0u && accessors[1] == 1u) {
+      auto boundToGridLocal =
+          std::make_unique<const Acts::GridAccess::LocalSubspace<0u, 1u>>();
+      delegate.connect<&Acts::GridAccess::LocalSubspace<0u, 1u>::toGridLocal>(
+          std::move(boundToGridLocal));
+    } else if (accessors[0] == 1u && accessors[1] == 0u) {
+      auto boundToGridLocal =
+          std::make_unique<const Acts::GridAccess::LocalSubspace<1u, 0u>>();
+      delegate.connect<&Acts::GridAccess::LocalSubspace<1u, 0u>::toGridLocal>(
+          std::move(boundToGridLocal));
+    }
+  } else if (type == "cylinder_to_zphi") {
+    ActsScalar radius = jBoundToGridLocal.at("radius").get<ActsScalar>();
+    ActsScalar shift = jBoundToGridLocal.at("shift").get<ActsScalar>();
+    auto boundToGridLocal =
+        std::make_unique<const Acts::GridAccess::BoundCylinderToZPhi>(radius,
+                                                                      shift);
+    delegate.connect<&Acts::GridAccess::BoundCylinderToZPhi::toGridLocal>(
+        std::move(boundToGridLocal));
+  }
+
+  return delegate;
 }

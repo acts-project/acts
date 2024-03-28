@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -20,13 +21,36 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <cmath>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
 
+CylinderVolumeBounds::CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax,
+                                           ActsScalar halfz, ActsScalar halfphi,
+                                           ActsScalar avgphi,
+                                           ActsScalar bevelMinZ,
+                                           ActsScalar bevelMaxZ)
+    : m_values() {
+  m_values[eMinR] = rmin;
+  m_values[eMaxR] = rmax;
+  m_values[eHalfLengthZ] = halfz;
+  m_values[eHalfPhiSector] = halfphi;
+  m_values[eAveragePhi] = avgphi;
+  m_values[eBevelMinZ] = bevelMinZ;
+  m_values[eBevelMaxZ] = bevelMaxZ;
+  checkConsistency();
+  buildSurfaceBounds();
+}
+
+CylinderVolumeBounds::CylinderVolumeBounds(
+    const std::array<ActsScalar, eSize>& values)
+    : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
+}
+
 CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
-                                           ActsScalar thickness) noexcept(false)
+                                           ActsScalar thickness)
     : VolumeBounds() {
   ActsScalar cR = cBounds.get(CylinderBounds::eR);
   if (thickness <= 0. || (cR - 0.5 * thickness) < 0.) {
@@ -44,7 +68,7 @@ CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
-                                           ActsScalar thickness) noexcept(false)
+                                           ActsScalar thickness)
     : VolumeBounds() {
   if (thickness <= 0.) {
     throw(std::invalid_argument(
@@ -55,8 +79,8 @@ CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
   m_values[eHalfLengthZ] = 0.5 * thickness;
   m_values[eHalfPhiSector] = rBounds.get(RadialBounds::eHalfPhiSector);
   m_values[eAveragePhi] = rBounds.get(RadialBounds::eAveragePhi);
-  m_values[eBevelMinZ] = (ActsScalar)0.;
-  m_values[eBevelMaxZ] = (ActsScalar)0.;
+  m_values[eBevelMinZ] = 0.;
+  m_values[eBevelMaxZ] = 0.;
   buildSurfaceBounds();
 }
 
@@ -231,7 +255,7 @@ std::vector<ActsScalar> CylinderVolumeBounds::values() const {
   return valvector;
 }
 
-void CylinderVolumeBounds::checkConsistency() noexcept(false) {
+void CylinderVolumeBounds::checkConsistency() {
   if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) >= get(eMaxR)) {
     throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
   }
@@ -252,6 +276,25 @@ void CylinderVolumeBounds::checkConsistency() noexcept(false) {
   }
   if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
     throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
+  }
+}
+
+void CylinderVolumeBounds::set(BoundValues bValue, ActsScalar value) {
+  set({{bValue, value}});
+}
+
+void CylinderVolumeBounds::set(
+    std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues) {
+  std::array<ActsScalar, eSize> previous = m_values;
+  for (const auto& [key, value] : keyValues) {
+    m_values[key] = value;
+  }
+  try {
+    checkConsistency();
+    buildSurfaceBounds();
+  } catch (std::invalid_argument& e) {
+    m_values = previous;
+    throw e;
   }
 }
 

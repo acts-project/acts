@@ -94,9 +94,6 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
