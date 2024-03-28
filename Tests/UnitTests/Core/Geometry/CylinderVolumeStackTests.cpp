@@ -1282,7 +1282,8 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   }
 }
 
-BOOST_AUTO_TEST_CASE(UpdateStackOneSided) {
+BOOST_DATA_TEST_CASE(UpdateStackOneSided,
+                     boost::unit_test::data::make(-1.0, 1.0), f) {
   auto trf = Transform3::Identity();
 
   auto vol1 = std::make_shared<Volume>(
@@ -1304,7 +1305,7 @@ BOOST_AUTO_TEST_CASE(UpdateStackOneSided) {
       dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
   newBounds->set(CylinderVolumeBounds::eHalfLengthZ, 450_mm);
   // Shift to +z by 50mm
-  trf *= Translation3{Vector3{0_mm, 0_mm, 50_mm}};
+  trf *= Translation3{Vector3{0_mm, 0_mm, f * 50_mm}};
   // -> left edge should stay at -400mm, right edge should be at 500mm
 
   // @TODO: Check invalid doesn't change bounds
@@ -1318,7 +1319,7 @@ BOOST_AUTO_TEST_CASE(UpdateStackOneSided) {
 
   // Invalid: shift too far in z
   BOOST_CHECK_THROW(
-      cylStack.update(newBounds, trf * Translation3{Vector3{0, 0, 20_mm}},
+      cylStack.update(newBounds, trf * Translation3{Vector3{0, 0, f * 20_mm}},
                       *logger),
       std::invalid_argument);
   checkUnchanged();
