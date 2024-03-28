@@ -197,8 +197,8 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       }
     }
 
-    FreeVector free_param_vec = Acts::detail::transformBoundToFreeParameters(
-        *surface, geoCtx, param_vec);
+    FreeVector freeParamVec = Acts::detail::transformBoundToFreeParameters(
+        *surface, geoCtx, paramVec);
 
     Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
                       sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};
