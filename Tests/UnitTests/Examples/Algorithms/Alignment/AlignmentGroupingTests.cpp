@@ -8,7 +8,6 @@
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
-
 #include <ActsExamples/Alignment/AlignmentAlgorithm.hpp>
 
 BOOST_AUTO_TEST_CASE(Single_sensitive_Test) {
@@ -91,4 +90,27 @@ BOOST_AUTO_TEST_CASE(Multiple_test) {
   BOOST_CHECK(aGroup.has(geoId2));
   BOOST_CHECK(aGroup.has(geoId3));
   BOOST_CHECK(!aGroup.has(geoId4));
+}
+
+BOOST_AUTO_TEST_CASE(CalculateCenterOfMassTest) {
+  ActsExamples::GeometryContext gctx; 
+  std::vector<const Acts::Surface*> surfaces;
+
+
+  surfaces.push_back(new ActsExamples::SurfaceTest(Acts::GeometryIdentifier(), Eigen::Vector3d(1, 2, 3)));
+  surfaces.push_back(new ActsExamples::SurfaceTest(Acts::GeometryIdentifier(), Eigen::Vector3d(-1, -2, -3)));
+  surfaces.push_back(new ActsExamples::SurfaceTest(Acts::GeometryIdentifier(), Eigen::Vector3d(2, 4, 6)));
+
+  // Expected center of mass is the average of the positions
+  Eigen::Vector3d expectedCOM(2.0 / 3, 4.0 / 3, 6.0 / 3);
+
+  // Calculate center of mass
+  Eigen::Vector3d calculatedCOM = ActsExamples::calculateCenterOfMass(surfaces, gctx);
+
+  BOOST_CHECK(calculatedCom.isApprox(expectedCom, 1e-3)); 
+
+  
+  for (auto* surface : surfaces) {
+    delete surface;
+  }
 }

@@ -19,25 +19,49 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace ActsExamples {
 
+Eigen::Vector3d calculateCenterOfMass(const std::vector<const Acts::Surface*>& filteredSurfaces,
+                                      const Acts::GeometryContext& gctx);
+
 class AlignmentGroup {
- public:
-  AlignmentGroup(const std::string& name,
-                 const std::vector<Acts::GeometryIdentifier>& geoIds)
-      : m_name(name), m_map(constructHierarchyMap(geoIds)) {}
+public:
+  std::vector<const Acts::Surface*> filteredSurfaces;
+  Eigen::Vector3d centerOfMass;
+  std::unordered_map<const Acts::Surface*, Eigen::Affine3d> surfaceTransforms;
+  std::unordered_set<Acts::GeometryIdentifier> matchIds;
+  
+  AlignmentGroup(const std::string& name, const std::vector<Acts::GeometryIdentifier>& geoIds)
+      : m_name(name), m_map(constructHierarchyMap(geoIds)) {
+    for (const auto& id : geoIds) {
+      matchIds.insert(id);  // filter condition: match surfaces based on AlignmentGroup criteria
+    }
+  }
+
+  void initialize(const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+                  const Acts::GeometryContext& gctx) {
+    trackingGeometry->visitSurfaces([&](const Acts::Surface* surface) {
+      if (filter(surface)) {
+        filteredSurfaces.push_back(surface);
+      }
+    });
+    centerOfMass = calculateCenterOfMass(filteredSurfaces, gctx);
+  }
 
   // Access the name of the group
   std::string getNameOfGroup() const { return m_name; }
 
   // Useful for testing
-  bool has(Acts::GeometryIdentifier geoId) {
+  bool has(Acts::GeometryIdentifier geoId) const {
     auto it = m_map.find(geoId);
-    return (it == m_map.end()) ? false : *it;
+    return it != m_map.end() && it->second;
   }
 
  private:
@@ -54,6 +78,40 @@ class AlignmentGroup {
   }
 };
 
+  bool filter(const Acts::Surface* surface) const {
+    // Check both the matchIds and m_map for the presence of the surface's geometry ID
+    return matchIds.find(surface->geometryId()) != matchIds.end() || 
+           (m_map.find(surface->geometryId()) != m_map.end() && m_map.at(surface->geometryId()));
+  }
+};
+
+// this function calculates the geometric center of mass of a set of surfaces by averaging their center positions
+Eigen::Vector3d calculateCenterOfMass(const std::vector<const Acts::Surface*>& filteredSurfaces,
+const Acts::GeometryContext& gctx) {
+Eigen::Vector3d sumPosition = Eigen::Vector3d::Zero(); // sumPosition stores all the positions of all surfaces' centers
+for (const auto& surface : filteredSurfaces) {
+sumPosition += surface->center(gctx);
+}
+return filteredSurfaces.empty() ? Eigen::Vector3d::Zero() : sumPosition / static_cast<double>(filteredSurfaces.size());  // representation of a COM at the origin
+
+
+// function that calculates translation and rotation matrices for each surface based on the COM
+void applyRelativeTransforms(const Acts::GeometryContext& gctx, const Eigen::Vector3d& rotationAngles) {
+    Eigen::Matrix3d rotationMatrix = Eigen::AngleAxisd(rotationAngles.z(), Eigen::Vector3d::UnitZ())
+                                   * Eigen::AngleAxisd(rotationAngles.y(), Eigen::Vector3d::UnitY())
+                                   * Eigen::AngleAxisd(rotationAngles.x(), Eigen::Vector3d::UnitX());
+
+    for (const auto& surface : filteredSurfaces) {
+        // calculate the COM 
+        Eigen::Vector3d translationVector = centerOfMass - surface->center(gctx);
+
+        // transformation matrix
+        Eigen::Affine3d transform = Eigen::Translation3d(translationVector) * rotationMatrix;
+
+        // storing the transformation
+        surfaceTransforms[surface] = transform;
+    }
+  }
 class AlignmentAlgorithm final : public IAlgorithm {
  public:
   using AlignmentResult = Acts::Result<ActsAlignment::AlignmentResult>;
