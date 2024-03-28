@@ -71,7 +71,7 @@ struct InteractionVolumeCollector {
     // The current volume has been assigned by the navigator
     if (currentVolume != nullptr) {
       auto collIt = result.collected.find(currentVolume->geometryId());
-      // Check if the volume has been collected  and if it has material
+      // Check if the volume has been collected and if it has material
       if (collIt == result.collected.end() &&
           currentVolume->volumeMaterial() != nullptr) {
         Vector3 entryPosition = stepper.position(state.stepping);
