@@ -161,18 +161,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   unsigned int nSeed = 0;
 
-  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+  for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
-    auto firstResult = (*m_cfg.findTracks)(initialParameters.at(iseed),
-                                           firstOptions, tracksTemp);
+    const Acts::BoundTrackParameters& firstInitialParameters =
+        initialParameters.at(iSeed);
+
+    auto firstResult =
+        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
     m_nTotalSeeds++;
     nSeed++;
 
     if (!firstResult.ok()) {
       m_nFailedSeeds++;
-      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
+      ACTS_WARNING("Track finding failed for seed " << iSeed << " with error"
                                                     << firstResult.error());
       continue;
     }
@@ -184,12 +187,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("Smoothing for seed "
-                   << iseed << " and track " << firstTrack.index()
+                   << iSeed << " and track " << firstTrack.index()
                    << " failed with error " << firstSmoothingResult.error());
         continue;
       }
 
-      std::size_t nsecond = 0;
+      std::size_t nSecond = 0;
 
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
@@ -210,67 +213,70 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
           }
         }
 
-        Acts::BoundTrackParameters secondInitialParameters(
-            firstState->referenceSurface().getSharedPtr(),
-            firstState->parameters(), firstState->covariance(),
-            initialParameters.at(iseed).particleHypothesis());
+        if (firstState.has_value()) {
+          Acts::BoundTrackParameters secondInitialParameters(
+              firstState->referenceSurface().getSharedPtr(),
+              firstState->parameters(), firstState->covariance(),
+              firstInitialParameters.particleHypothesis());
 
-        auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
-                                                secondOptions, tracksTemp);
+          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
+                                                  secondOptions, tracksTemp);
 
-        if (!secondResult.ok()) {
-          ACTS_WARNING("Second track finding failed for seed "
-                       << iseed << " with error" << secondResult.error());
-        } else {
-          auto firstFirstState =
-              std::next(firstTrack.trackStatesReversed().begin(),
-                        firstTrack.nTrackStates() - 1);
+          if (!secondResult.ok()) {
+            ACTS_WARNING("Second track finding failed for seed "
+                         << iSeed << " with error" << secondResult.error());
+          } else {
+            auto firstFirstState =
+                std::next(firstTrack.trackStatesReversed().begin(),
+                          firstTrack.nTrackStates() - 1);
 
-          auto& secondTracksForSeed = secondResult.value();
-          for (auto& secondTrack : secondTracksForSeed) {
-            if (secondTrack.nTrackStates() < 2) {
-              continue;
+            auto& secondTracksForSeed = secondResult.value();
+            for (auto& secondTrack : secondTracksForSeed) {
+              if (secondTrack.nTrackStates() < 2) {
+                continue;
+              }
+
+              secondTrack.reverseTrackStates(true);
+              seedNumber(secondTrack) = nSeed - 1;
+
+              (*firstFirstState).previous() =
+                  (*std::next(secondTrack.trackStatesReversed().begin()))
+                      .index();
+              secondTrack.tipIndex() = firstTrack.tipIndex();
+
+              Acts::calculateTrackQuantities(secondTrack);
+
+              auto secondSmoothingResult =
+                  Acts::smoothTrack(ctx.geoContext, secondTrack, logger());
+              if (!secondSmoothingResult.ok()) {
+                m_nFailedSmoothing++;
+                ACTS_ERROR("Smoothing for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error "
+                           << secondSmoothingResult.error());
+                continue;
+              }
+
+              if (!m_trackSelector.has_value() ||
+                  m_trackSelector->isValidTrack(secondTrack)) {
+                auto destProxy = tracks.getTrack(tracks.addTrack());
+                destProxy.copyFrom(secondTrack, true);
+              }
+
+              ++nSecond;
             }
-
-            secondTrack.reverseTrackStates(true);
-            seedNumber(secondTrack) = nSeed - 1;
-
-            (*firstFirstState).previous() =
-                (*std::next(secondTrack.trackStatesReversed().begin())).index();
-            secondTrack.tipIndex() = firstTrack.tipIndex();
-
-            Acts::calculateTrackQuantities(secondTrack);
-
-            auto secondSmoothingResult =
-                Acts::smoothTrack(ctx.geoContext, secondTrack, logger());
-            if (!secondSmoothingResult.ok()) {
-              m_nFailedSmoothing++;
-              ACTS_ERROR("Smoothing for seed "
-                         << iseed << " and track " << secondTrack.index()
-                         << " failed with error "
-                         << secondSmoothingResult.error());
-              continue;
-            }
-
-            if (!m_trackSelector.has_value() ||
-                m_trackSelector->isValidTrack(secondTrack)) {
-              auto destProxy = tracks.getTrack(tracks.addTrack());
-              destProxy.copyFrom(secondTrack, true);
-            }
-
-            ++nsecond;
           }
         }
       }
 
-      if (nsecond == 0) {
+      if (nSecond == 0) {
         auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
             firstTrack, *pSurface, extrapolator, extrapolationOptions,
             m_cfg.extrapolationStrategy, logger());
         if (!extrapolationResult.ok()) {
           m_nFailedExtrapolation++;
           ACTS_ERROR("Extrapolation for seed "
-                     << iseed << " and track " << firstTrack.index()
+                     << iSeed << " and track " << firstTrack.index()
                      << " failed with error " << extrapolationResult.error());
           continue;
         }

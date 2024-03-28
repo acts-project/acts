@@ -359,10 +359,10 @@ class CombinatorialKalmanFilter {
           result.lastError = res.error();
         } else {
           const auto& fittedState = *res;
+          std::size_t currentTip = result.activeTips.back().first;
           // Assign the fitted parameters
           result.fittedParameters.emplace(
-              result.lastMeasurementIndices.back(),
-              std::get<BoundTrackParameters>(fittedState));
+              currentTip, std::get<BoundTrackParameters>(fittedState));
         }
 
         navigator.navigationBreak(state.navigation, true);
