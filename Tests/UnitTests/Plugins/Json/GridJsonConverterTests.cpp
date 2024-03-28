@@ -274,10 +274,24 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   }
 
   // Read back in
-  std::vector<std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal>> sspaceRead;
+  std::vector<std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>>
+      sspaceRead;
   for (auto& jss : jsspace) {
     sspaceRead.push_back(
         Acts::GridAccessJsonConverter::globalToGridLocalFromJson(jss));
+    if (jss["accessors"].size() == 1u) {
+      auto delegate =
+          Acts::GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(
+              jss);
+      BOOST_CHECK(delegate.connected());
+    } else if (jss["accessors"].size() == 2u) {
+      auto delegate =
+          Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
+              jss);
+      BOOST_CHECK(delegate.connected());
+    } else {
+      BOOST_CHECK(false);
+    }
   }
 
   // Test that none of them are empty
@@ -316,7 +330,7 @@ void checkGlobalSubspaceTuple(const SubspactTuple& sstuple) {
   }
 
   // Read back in
-  std::vector<std::unique_ptr<Acts::GridAccess::IGlobalToGridLocal>>
+  std::vector<std::unique_ptr<const Acts::GridAccess::IGlobalToGridLocal>>
       sspaceTransformRead;
   for (auto& jss : jsspaceTransform) {
     sspaceTransformRead.push_back(
@@ -377,7 +391,7 @@ BOOST_AUTO_TEST_CASE(GlobalSubSpaceTests2D) {
   checkGlobalSubspaceTuple(sspace2D);
 }
 
-BOOST_AUTO_TEST_CASE(LocalSubspace1D) {
+BOOST_AUTO_TEST_CASE(LocalSubspaceTests) {
   const std::tuple<Acts::GridAccess::LocalSubspace<0u>,
                    Acts::GridAccess::LocalSubspace<1u>,
                    Acts::GridAccess::LocalSubspace<0u, 1u>,
@@ -397,10 +411,24 @@ BOOST_AUTO_TEST_CASE(LocalSubspace1D) {
     BOOST_CHECK(!jls.empty());
   }
 
-  std::vector<std::unique_ptr<Acts::GridAccess::IBoundToGridLocal>> lspaceRead;
+  std::vector<std::unique_ptr<const Acts::GridAccess::IBoundToGridLocal>>
+      lspaceRead;
   for (auto& jls : jlspace) {
     lspaceRead.push_back(
         Acts::GridAccessJsonConverter::boundToGridLocalFromJson(jls));
+    if (jls["accessors"].size() == 1u) {
+      auto delegate =
+          Acts::GridAccessJsonConverter::boundToGridLocal1DimDelegateFromJson(
+              jls);
+      BOOST_CHECK(delegate.connected());
+    } else if (jls["accessors"].size() == 2u) {
+      auto delegate =
+          Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+              jls);
+      BOOST_CHECK(delegate.connected());
+    } else {
+      BOOST_CHECK(false);
+    }
   }
 
   // Test that none of them are empty
@@ -438,6 +466,11 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
   const Acts::GridAccess::BoundCylinderToZPhi* bct =
       dynamic_cast<const Acts::GridAccess::BoundCylinderToZPhi*>(
           boundCylinderToZPhiRead.get());
+
+  auto delegate =
+      Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
+          jboundCylinderToZPhi);
+  BOOST_CHECK(delegate.connected());
 
   BOOST_REQUIRE(bct != nullptr);
   CHECK_CLOSE_ABS(bct->radius, 100., 1e-5);
