@@ -25,14 +25,17 @@ using RotationToAxes =
     std::tuple<RotationMatrix3, RotationMatrix3, RotationMatrix3>;
 
 /// @brief Evaluate the derivative of local frame axes vector w.r.t.
-/// its rotation around global x/y/z axis
+/// its rotation around local x/y/z axis
 /// @Todo: add parameter for rotation axis order
 ///
-/// @param rotation The rotation that help place the surface
+/// @param compositeRotation The rotation that help places the composite object being rotated
+/// @param relRotation The relative rotation of the surface with respect to the composite object being rotated
 ///
 /// @return Derivative of local frame x/y/z axis vector w.r.t. its
-/// rotation angles (extrinsic Euler angles) around global x/y/z axis
-RotationToAxes rotationToLocalAxesDerivative(const RotationMatrix3& rotation);
+/// rotation angles (extrinsic Euler angles) around local x/y/z axis
+RotationToAxes rotationToLocalAxesDerivative(
+    const RotationMatrix3& compositeRotation,
+    const RotationMatrix3& relRotation = RotationMatrix3::Identity());
 
 }  // namespace detail
 
