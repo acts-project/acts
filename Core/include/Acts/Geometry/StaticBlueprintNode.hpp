@@ -35,6 +35,9 @@ class StaticBlueprintNode : public BlueprintNode {
     return std::move(m_volume);
   }
 
+  // protected:
+  // void addToGraphviz(std::ostream& os) const override;
+
  private:
   std::unique_ptr<TrackingVolume> m_volume;
 };

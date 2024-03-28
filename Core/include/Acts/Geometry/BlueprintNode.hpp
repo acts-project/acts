@@ -24,6 +24,8 @@ class Volume;
 class TrackingVolume;
 class IVisualization3D;
 class CylinderContainerBlueprintNode;
+class MaterialDesignatorBlueprintNode;
+class StaticBlueprintNode;
 
 class BlueprintNode {
  public:
@@ -44,34 +46,46 @@ class BlueprintNode {
   virtual void visualize(IVisualization3D& vis,
                          const GeometryContext& gctx) const;
 
-  void addStaticVolume(std::unique_ptr<TrackingVolume> volume);
+  StaticBlueprintNode& addStaticVolume(
+      std::unique_ptr<TrackingVolume> volume,
+      const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
-  void addCylinderContainer(
+  CylinderContainerBlueprintNode& addCylinderContainer(
       const std::string& name, BinningValue direction,
-      const std::function<std::unique_ptr<BlueprintNode>(
-          std::unique_ptr<CylinderContainerBlueprintNode> cylinder)>& factory);
+      const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
+          callback = {});
 
-  void addChild(std::unique_ptr<BlueprintNode> child);
+  MaterialDesignatorBlueprintNode& addMaterial(
+      const std::function<void(MaterialDesignatorBlueprintNode& material)>&
+          callback = {});
+
+  BlueprintNode& addChild(std::shared_ptr<BlueprintNode> child);
 
   using MutableChildRange =
       detail::TransformRange<detail::Dereference,
-                             std::vector<std::unique_ptr<BlueprintNode>>>;
+                             std::vector<std::shared_ptr<BlueprintNode>>>;
 
   using ChildRange =
       detail::TransformRange<detail::ConstDereference,
-                             const std::vector<std::unique_ptr<BlueprintNode>>>;
+                             const std::vector<std::shared_ptr<BlueprintNode>>>;
 
   MutableChildRange children();
   ChildRange children() const;
 
   std::size_t depth() const;
 
+  void graphviz(std::ostream& os) const;
+
  protected:
   std::string prefix() const;
+  std::string indent() const;
+
+  // Internal method to append to an existing graphviz output stream
+  virtual void addToGraphviz(std::ostream& os) const;
 
  private:
   std::size_t m_depth{0};
-  std::vector<std::unique_ptr<BlueprintNode>> m_children{};
+  std::vector<std::shared_ptr<BlueprintNode>> m_children{};
 };
 
 };  // namespace Acts

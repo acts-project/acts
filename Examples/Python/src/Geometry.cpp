@@ -91,6 +91,9 @@ struct IdentifierSurfacesCollector {
 }  // namespace
 
 namespace Acts::Python {
+
+void addBlueprint(Context& ctx);
+
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -301,6 +304,8 @@ void addGeometry(Context& ctx) {
         .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
         .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
   }
+
+  addBlueprint(ctx);
 }
 
 void addExperimentalGeometry(Context& ctx) {

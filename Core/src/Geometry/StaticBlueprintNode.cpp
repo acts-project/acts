@@ -57,6 +57,9 @@ void StaticBlueprintNode::visualize(IVisualization3D& vis,
     throw std::runtime_error("Volume is not built");
   }
 
+  std::cout << "Visualizing StaticBlueprintNode " << name() << std::endl;
+  std::cout << (*m_volume) << std::endl;
+
   ViewConfig viewConfig{{100, 100, 100}};
 
   GeometryView3D::drawVolume(vis, *m_volume, gctx, Transform3::Identity(),
@@ -67,5 +70,7 @@ void StaticBlueprintNode::visualize(IVisualization3D& vis,
 const std::string& StaticBlueprintNode::name() const {
   return m_volume->volumeName();
 }
+
+// void StaticBlueprintNode::addToGraphviz(std::ostream& os) const {}
 
 }  // namespace Acts

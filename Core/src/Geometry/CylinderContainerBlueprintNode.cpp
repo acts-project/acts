@@ -46,6 +46,8 @@ Volume& CylinderContainerBlueprintNode::build(const Logger& logger) {
                   m_resizeStrategy, logger);
   ACTS_DEBUG(prefix() << "-> Stack bounds are: " << m_stack->volumeBounds());
 
+  ACTS_DEBUG(prefix() << " *** build complete ***");
+
   return m_stack.value();
 }
 
