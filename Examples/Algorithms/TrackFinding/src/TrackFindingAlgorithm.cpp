@@ -13,9 +13,15 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
@@ -23,6 +29,8 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -86,7 +94,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
@@ -96,9 +103,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -120,18 +124,22 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions firstOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, firstPropOptions, pSurface.get());
-  firstOptions.smoothing = true;
-  firstOptions.smoothingTargetSurfaceStrategy =
-      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
+      extensions, firstPropOptions);
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, secondPropOptions, pSurface.get());
-  secondOptions.filterTargetSurface = pSurface.get();
-  secondOptions.smoothing = true;
-  secondOptions.smoothingTargetSurfaceStrategy =
-      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::last;
+      extensions, secondPropOptions);
+  secondOptions.targetSurface = pSurface.get();
+
+  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+      Acts::EigenStepper<>(m_cfg.magneticField),
+      Acts::Navigator({m_cfg.trackingGeometry},
+                      logger().cloneWithSuffix("Navigator")),
+      logger().cloneWithSuffix("Propagator"));
+
+  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
+                          Acts::AbortList<Acts::EndOfWorldReached>>
+      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -171,6 +179,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
+      auto firstSmoothingResult =
+          Acts::smoothTrack(ctx.geoContext, firstTrack, logger());
+      if (!firstSmoothingResult.ok()) {
+        m_nFailedSmoothing++;
+        ACTS_ERROR("Smoothing for seed "
+                   << iseed << " and track " << firstTrack.index()
+                   << " failed with error " << firstSmoothingResult.error());
+        continue;
+      }
+
       std::size_t nsecond = 0;
 
       // Set the seed number, this number decrease by 1 since the seed number
@@ -223,16 +241,40 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
             Acts::calculateTrackQuantities(secondTrack);
 
+            auto secondSmoothingResult =
+                Acts::smoothTrack(ctx.geoContext, secondTrack, logger());
+            if (!secondSmoothingResult.ok()) {
+              m_nFailedSmoothing++;
+              ACTS_ERROR("Smoothing for seed "
+                         << iseed << " and track " << secondTrack.index()
+                         << " failed with error "
+                         << secondSmoothingResult.error());
+              continue;
+            }
+
             if (!m_trackSelector.has_value() ||
                 m_trackSelector->isValidTrack(secondTrack)) {
               auto destProxy = tracks.getTrack(tracks.addTrack());
               destProxy.copyFrom(secondTrack, true);
             }
+
             ++nsecond;
           }
         }
       }
+
       if (nsecond == 0) {
+        auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
+            firstTrack, *pSurface, extrapolator, extrapolationOptions,
+            m_cfg.extrapolationStrategy, logger());
+        if (!extrapolationResult.ok()) {
+          m_nFailedExtrapolation++;
+          ACTS_ERROR("Extrapolation for seed "
+                     << iseed << " and track " << firstTrack.index()
+                     << " failed with error " << extrapolationResult.error());
+          continue;
+        }
+
         if (!m_trackSelector.has_value() ||
             m_trackSelector->isValidTrack(firstTrack)) {
           auto destProxy = tracks.getTrack(tracks.addTrack());
@@ -271,8 +313,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize() {
   ACTS_INFO("TrackFindingAlgorithm statistics:");
   ACTS_INFO("- total seeds: " << m_nTotalSeeds);
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
-  ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedSeeds) /
-                                       m_nTotalSeeds);
+  ACTS_INFO("- failed smoothing: " << m_nFailedSmoothing);
+  ACTS_INFO("- failed extrapolation: " << m_nFailedExtrapolation);
+  ACTS_INFO("- failure ratio seeds: " << static_cast<double>(m_nFailedSeeds) /
+                                             m_nTotalSeeds);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {

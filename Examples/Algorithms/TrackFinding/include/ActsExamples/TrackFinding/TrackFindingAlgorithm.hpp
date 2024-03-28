@@ -21,6 +21,7 @@
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -89,6 +90,11 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Output find trajectories collection.
     std::string outputTracks;
 
+    /// The tracking geometry that should be used.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// The magnetic field that should be used.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
@@ -100,11 +106,13 @@ class TrackFindingAlgorithm final : public IAlgorithm {
                                Acts::TrackSelector::EtaBinnedConfig>>
         trackSelectorCfg = std::nullopt;
 
-    /// Run finding in two directions
-    bool twoWay = true;
-
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
+    /// Extrapolation strategy
+    Acts::TrackExtrapolationStrategy extrapolationStrategy =
+        Acts::TrackExtrapolationStrategy::firstOrLast;
+    /// Run finding in two directions
+    bool twoWay = true;
   };
 
   /// Constructor of the track finding algorithm
@@ -146,6 +154,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
   mutable std::atomic<std::size_t> m_nTotalSeeds{0};
   mutable std::atomic<std::size_t> m_nFailedSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSmoothing{0};
+  mutable std::atomic<std::size_t> m_nFailedExtrapolation{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
