@@ -7,4 +7,5 @@ analysis_apps
 material_mapping
 run_ckf_auto_tuning
 digitization_config
+gsf_debugger
 :::
