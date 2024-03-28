@@ -15,6 +15,7 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -41,9 +42,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -101,9 +100,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -155,9 +152,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -178,8 +173,9 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
 
   // Veto in a specific one
   struct VetoThisOne {
-    bool operator()(const MaterialInteraction& /*unused*/,
-                    const SurfaceHit& /*unused*/) const {
+    bool operator()(
+        const MaterialInteraction& /*unused*/,
+        const IAssignmentFinder::SurfaceAssignment& /*unused*/) const {
       return true;
     }
   };
@@ -216,9 +212,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -239,8 +233,9 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
 
   // Veto in a specific one
   struct ReAssignToNeighbor {
-    void operator()(MaterialInteraction& m, const SurfaceHit& /*unused*/,
-                    const SurfaceHit& n) const {
+    void operator()(MaterialInteraction& m,
+                    const IAssignmentFinder::SurfaceAssignment& /*unused*/,
+                    const IAssignmentFinder::SurfaceAssignment& n) const {
       auto [surface, position, direction] = n;
       m.surface = surface;
       m.position = position;
@@ -286,7 +281,8 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
   Vector3 position = {20., 10., 0.};
   Vector3 direction = position.normalized();
 
-  SurfaceHit surfaceHit = {surface.get(), position, direction};
+  IAssignmentFinder::SurfaceAssignment surfaceHit{surface.get(), position,
+                                                  direction};
 
   Material material = Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0);
 

@@ -12,7 +12,8 @@ Acts::MaterialInteractionAssignment::Result
 Acts::MaterialInteractionAssignment::assign(
     const GeometryContext& gctx,
     const std::vector<MaterialInteraction>& materialInteractions,
-    const std::vector<SurfaceAssignment>& intersectedSurfaces,
+    const std::vector<IAssignmentFinder::SurfaceAssignment>&
+        intersectedSurfaces,
     const Options& options) {
   // Return container: Assume a high assignment rate
   std::vector<MaterialInteraction> assignedMaterialInteractions;
@@ -45,12 +46,12 @@ Acts::MaterialInteractionAssignment::assign(
     ActsScalar cDistance = (cPosition - materialInteraction.position).norm();
 
     // Peak forward to check if you have a closer intersection
-    while (is + 1u < intersectedSurfaces.size() &&
-           ((std::get<1>(intersectedSurfaces[is + 1]) -
-             materialInteraction.position)
-                .norm() < cDistance)) {
+    while (
+        is + 1u < intersectedSurfaces.size() &&
+        (((intersectedSurfaces[is + 1]).position - materialInteraction.position)
+             .norm() < cDistance)) {
       // Recalculate the new distance
-      ActsScalar nDistance = (std::get<1>(intersectedSurfaces[is + 1]) -
+      ActsScalar nDistance = ((intersectedSurfaces[is + 1]).position -
                               materialInteraction.position)
                                  .norm();
       ++is;
@@ -100,9 +101,9 @@ Acts::MaterialInteractionAssignment::assign(
 
   // Return container: Surfaces without assignments
   // (empty bin correction can use this information)
-  std::vector<SurfaceAssignment> surfacesWithoutAssignments;
+  std::vector<IAssignmentFinder::SurfaceAssignment> surfacesWithoutAssignments;
   for (const auto& intersectedSurface : intersectedSurfaces) {
-    if (assignedSurfaces.find(std::get<0>(intersectedSurface)) ==
+    if (assignedSurfaces.find(intersectedSurface.surface) ==
         assignedSurfaces.end()) {
       surfacesWithoutAssignments.push_back(intersectedSurface);
     }
