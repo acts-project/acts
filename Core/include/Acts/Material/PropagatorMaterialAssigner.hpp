@@ -76,12 +76,12 @@ struct InteractionVolumeCollector {
           currentVolume->volumeMaterial() != nullptr) {
         Vector3 entryPosition = stepper.position(state.stepping);
         Vector3 exitPosition = entryPosition;
-        IAssignmentFinder::VolumeAssignment vAssignment(
-            InteractionVolume(currentVolume), entryPosition, exitPosition);
+        IAssignmentFinder::VolumeAssignment vAssignment{
+            InteractionVolume(currentVolume), entryPosition, exitPosition};
         result.collected.emplace(currentVolume->geometryId(), vAssignment);
       } else if (collIt != result.collected.end()) {
         // Update the exit position
-        std::get<2>(collIt->second) = stepper.position(state.stepping);
+        (collIt->second).exit = stepper.position(state.stepping);
       }
     }
   }
@@ -145,8 +145,8 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     auto mappingSurfaces = scResult.collected;
 
     for (auto& mSurface : mappingSurfaces) {
-      candidates.first.push_back(
-          std::make_tuple(mSurface.surface, mSurface.position, direction));
+      candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
+          mSurface.surface, mSurface.position, direction});
     }
 
     // The volume collection results

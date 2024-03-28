@@ -24,22 +24,13 @@ std::vector<Acts::SurfaceIntersection> forwardOrderedIntersections(
     // Get the intersection
     auto sMultiIntersection = surface->intersect(gctx, position, direction,
                                                  Acts::BoundaryCheck(true));
-    // One solution, take it
-    if (sMultiIntersection.size() == 1u &&
-        sMultiIntersection[0u].status() >=
-            Acts::IntersectionStatus::reachable &&
-        sMultiIntersection[0u].pathLength() >= 0.0) {
-      sIntersections.push_back(sMultiIntersection[0u]);
+
+    // Take the closest
+    auto closestForward = sMultiIntersection.closestForward();
+    if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
+        closestForward.pathLength() > 0.0) {
+      sIntersections.push_back(closestForward);
       continue;
-    }
-    if (sMultiIntersection.size() > 1u) {
-      // Multiple intersections, take the closest
-      auto closestForward = sMultiIntersection.closestForward();
-      if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
-          closestForward.pathLength() > 0.0) {
-        sIntersections.push_back(closestForward);
-        continue;
-      }
     }
   }
   // Sort the intersection along the pathlength
@@ -53,7 +44,7 @@ std::vector<Acts::SurfaceIntersection> forwardOrderedIntersections(
 std::pair<std::vector<Acts::IAssignmentFinder::SurfaceAssignment>,
           std::vector<Acts::IAssignmentFinder::VolumeAssignment>>
 Acts::IntersectionMaterialAssigner::assignmentCandidates(
-    const GeometryContext& gctx, const MagneticFieldContext& /*unused*/,
+    const GeometryContext& gctx, const MagneticFieldContext& /*mctx*/,
     const Vector3& position, const Vector3& direction) const {
   // The resulting candidates
   std::pair<std::vector<Acts::IAssignmentFinder::SurfaceAssignment>,
@@ -65,8 +56,8 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
       forwardOrderedIntersections(gctx, position, direction, m_cfg.surfaces);
   candidates.first.reserve(sIntersections.size());
   for (auto& sIntersection : sIntersections) {
-    candidates.first.push_back(std::make_tuple(
-        sIntersection.object(), sIntersection.position(), direction));
+    candidates.first.push_back(IAssignmentFinder::SurfaceAssignment{
+        sIntersection.object(), sIntersection.position(), direction});
   }
 
   // Now deal with the volume intersections : tracking volume first
@@ -83,9 +74,9 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
           forwardOrderedIntersections(gctx, position, direction, tSurfaces);
       // Entry/exit exists in forward direction
       if (tIntersections.size() == 2u) {
-        candidates.second.push_back(std::make_tuple(
+        candidates.second.push_back(IAssignmentFinder::VolumeAssignment{
             InteractionVolume(trackingVolume), tIntersections[0u].position(),
-            tIntersections[1u].position()));
+            tIntersections[1u].position()});
       }
     }
   }
@@ -104,9 +95,9 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
           forwardOrderedIntersections(gctx, position, direction, dSurfaces);
       // Entry/exit exists in forward direction
       if (dIntersections.size() == 2u) {
-        candidates.second.push_back(std::make_tuple(
+        candidates.second.push_back(IAssignmentFinder::VolumeAssignment{
             InteractionVolume(detectorVolume), dIntersections[0u].position(),
-            dIntersections[1u].position()));
+            dIntersections[1u].position()});
       }
     }
   }

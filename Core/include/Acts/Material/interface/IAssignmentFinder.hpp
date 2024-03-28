@@ -26,11 +26,24 @@ class IAssignmentFinder {
   virtual ~IAssignmentFinder() = default;
 
   /// @brief SurfaceAssignment is a surface, a position and a direction
-  using SurfaceAssignment = std::tuple<const Surface*, Vector3, Vector3>;
+  struct SurfaceAssignment {
+    /// The surface to which the material interaction is assigned to
+    const Surface* surface = nullptr;
+    /// Position of the assignment
+    Vector3 position = Vector3::Zero();
+    // Direction of the assignment
+    Vector3 direction = Vector3::Zero();
+  };
 
   /// @brief VolumeAssignment is a volume and a entry and exit of the volume
-  using VolumeAssignment =
-      std::tuple<const InteractionVolume, Vector3, Vector3>;
+  struct VolumeAssignment {
+    /// The volume to which the material interaction is assigned to
+    InteractionVolume volume{};
+    /// Entry point of the volume
+    Vector3 entry = Vector3::Zero();
+    /// Exit point of the volume
+    Vector3 exit = Vector3::Zero();
+  };
 
   /// @brief Interface method for generating assignment candidates for the
   /// material interaction assignment to surfaces or volumes
