@@ -653,7 +653,9 @@ void CylinderVolumeStack::update(
     return;
   }
 
-  ACTS_VERBOSE(transform.value().matrix());
+  if (transform.has_value()) {
+    ACTS_VERBOSE(transform.value().matrix());
+  }
 
   VolumeTuple oldVolume{*this, m_transform};
   VolumeTuple newVolume{*this, m_transform};
@@ -731,80 +733,99 @@ void CylinderVolumeStack::update(
     ACTS_VERBOSE("*** Initial volume configuration:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-    ACTS_VERBOSE("Resize all volumes to new r bounds");
-    for (auto& volume : volumeTuples) {
-      volume.set({
-          {CylinderVolumeBounds::eMinR, newMinR},
-          {CylinderVolumeBounds::eMaxR, newMaxR},
-      });
+    if (newMinR != oldMinR || newMaxR != oldMaxR) {
+      ACTS_VERBOSE("Resize all volumes to new r bounds");
+      for (auto& volume : volumeTuples) {
+        volume.set({
+            {CylinderVolumeBounds::eMinR, newMinR},
+            {CylinderVolumeBounds::eMaxR, newMaxR},
+        });
+      }
+      ACTS_VERBOSE("*** Volume configuration after r resizing:");
+      printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
+    } else {
+      ACTS_VERBOSE("R bounds are the same, no r resize needed");
     }
-
-    ACTS_VERBOSE("*** Volume configuration after r resizing:");
-    printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
     if (newHlZ == oldHlZ) {
       ACTS_VERBOSE("Halflength z is the same, no z resize needed");
     } else {
       if (m_resizeStrategy == ResizeStrategy::Expand) {
-        ACTS_VERBOSE("Expanding first and last volume to new z bounds");
-        auto& first = volumeTuples.front();
-        ActsScalar newMinZFirst = -newHlZ;
-        ActsScalar newMidZFirst = (newMinZFirst + first.maxZ()) / 2.0;
-        ActsScalar newHlZFirst = (first.maxZ() - newMinZFirst) / 2.0;
+        if (newMinZ < oldMinZ) {
+          ACTS_VERBOSE("Expanding first volume to new z bounds");
 
-        ACTS_VERBOSE(" -> first z: [ " << newMinZFirst << " <- " << newMidZFirst
-                                       << " -> " << first.maxZ()
-                                       << " ] (hl: " << newHlZFirst << ")");
+          auto& first = volumeTuples.front();
+          ActsScalar newMinZFirst = newVolume.minZ();
+          ActsScalar newMidZFirst = (newMinZFirst + first.maxZ()) / 2.0;
+          ActsScalar newHlZFirst = (first.maxZ() - newMinZFirst) / 2.0;
 
-        first.set({{CylinderVolumeBounds::eHalfLengthZ, newHlZFirst}});
-        first.setLocalTransform(Transform3{Translation3{0, 0, newMidZFirst}},
-                                m_groupTransform);
+          ACTS_VERBOSE(" -> first z: [ "
+                       << newMinZFirst << " <- " << newMidZFirst << " -> "
+                       << first.maxZ() << " ] (hl: " << newHlZFirst << ")");
 
-        auto& last = volumeTuples.back();
-        ActsScalar newMaxZLast = newHlZ;
-        ActsScalar newMidZLast = (last.minZ() + newMaxZLast) / 2.0;
-        ActsScalar newHlZLast = (newMaxZLast - last.minZ()) / 2.0;
+          first.set({{CylinderVolumeBounds::eHalfLengthZ, newHlZFirst}});
+          first.setLocalTransform(Transform3{Translation3{0, 0, newMidZFirst}},
+                                  m_groupTransform);
+        }
 
-        ACTS_VERBOSE(" -> last z: [ " << last.minZ() << " <- " << newMidZLast
-                                      << " -> " << newMaxZLast
-                                      << " ] (hl: " << newHlZLast << ")");
+        if (newMaxZ > oldMaxZ) {
+          ACTS_VERBOSE("Expanding last volume to new z bounds");
 
-        last.set({{CylinderVolumeBounds::eHalfLengthZ, newHlZLast}});
-        last.setLocalTransform(Transform3{Translation3{0, 0, newMidZLast}},
-                               m_groupTransform);
+          auto& last = volumeTuples.back();
+          ActsScalar newMaxZLast = newVolume.maxZ();
+          ;
+          ActsScalar newMidZLast = (last.minZ() + newMaxZLast) / 2.0;
+          ActsScalar newHlZLast = (newMaxZLast - last.minZ()) / 2.0;
+
+          ACTS_VERBOSE(" -> last z: [ " << last.minZ() << " <- " << newMidZLast
+                                        << " -> " << newMaxZLast
+                                        << " ] (hl: " << newHlZLast << ")");
+
+          last.set({{CylinderVolumeBounds::eHalfLengthZ, newHlZLast}});
+          last.setLocalTransform(Transform3{Translation3{0, 0, newMidZLast}},
+                                 m_groupTransform);
+        }
       } else if (m_resizeStrategy == ResizeStrategy::Gap) {
         ACTS_VERBOSE("Creating gap volumes to fill the new z bounds");
 
-        ActsScalar gap1MinZ = -newHlZ;
-        ActsScalar gap1MaxZ = volumeTuples.front().minZ();
-        ActsScalar gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
-        ActsScalar gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
+        if (newMinZ < oldMinZ) {
+          ACTS_VERBOSE("Adding gap volume at negative z");
 
-        ACTS_VERBOSE(" -> gap1 z: [ " << gap1MinZ << " <- " << gap1PZ << " -> "
-                                      << gap1MaxZ << " ] (hl: " << gap1HlZ
-                                      << ")");
+          ActsScalar gap1MinZ = newVolume.minZ();
+          ActsScalar gap1MaxZ = oldVolume.minZ();
+          ActsScalar gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
+          ActsScalar gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
 
-        auto gap1Bounds =
-            std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap1HlZ);
-        auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
-        auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
-        volumeTuples.insert(volumeTuples.begin(),
-                            VolumeTuple{*gap1, m_groupTransform});
+          ACTS_VERBOSE(" -> gap1 z: [ " << gap1MinZ << " <- " << gap1PZ
+                                        << " -> " << gap1MaxZ
+                                        << " ] (hl: " << gap1HlZ << ")");
 
-        ActsScalar gap2MinZ = volumeTuples.back().maxZ();
-        ActsScalar gap2MaxZ = newHlZ;
-        ActsScalar gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
-        ActsScalar gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
+          auto gap1Bounds =
+              std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap1HlZ);
+          auto gap1Transform = m_groupTransform * Translation3{0, 0, gap1PZ};
+          auto gap1 = addGapVolume(gap1Transform, std::move(gap1Bounds));
+          volumeTuples.insert(volumeTuples.begin(),
+                              VolumeTuple{*gap1, m_groupTransform});
+        }
 
-        ACTS_VERBOSE(" -> gap2 z: [ " << gap2MinZ << " <- " << gap2PZ << " -> "
-                                      << gap2MaxZ << " ] (hl: " << gap2HlZ
-                                      << ")");
+        if (newMaxZ > oldMaxZ) {
+          ACTS_VERBOSE("Adding gap volume at positive z");
 
-        auto gap2Bounds =
-            std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap2HlZ);
-        auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
-        auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
-        volumeTuples.emplace_back(*gap2, m_groupTransform);
+          ActsScalar gap2MinZ = oldVolume.maxZ();
+          ActsScalar gap2MaxZ = newVolume.maxZ();
+          ActsScalar gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
+          ActsScalar gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
+
+          ACTS_VERBOSE(" -> gap2 z: [ " << gap2MinZ << " <- " << gap2PZ
+                                        << " -> " << gap2MaxZ
+                                        << " ] (hl: " << gap2HlZ << ")");
+
+          auto gap2Bounds =
+              std::make_shared<CylinderVolumeBounds>(newMinR, newMaxR, gap2HlZ);
+          auto gap2Transform = m_groupTransform * Translation3{0, 0, gap2PZ};
+          auto gap2 = addGapVolume(gap2Transform, std::move(gap2Bounds));
+          volumeTuples.emplace_back(*gap2, m_groupTransform);
+        }
       }
 
       ACTS_VERBOSE("*** Volume configuration after z resizing:");
