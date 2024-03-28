@@ -34,9 +34,6 @@ class CurvilinearSurface {
 
   /// Return method for the surface center by reference
   /// @note the center is always recalculated in order to not keep a cache
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  ///
   /// @return center position by value
   Vector3 center() const { return m_position; }
 
