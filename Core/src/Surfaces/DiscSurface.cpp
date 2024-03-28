@@ -221,9 +221,9 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
   // calculate the transformation to local coordinates
-  const Vector3 pos_loc = transform(gctx).inverse() * position;
-  const double lr = perp(pos_loc);
-  const double lphi = phi(pos_loc);
+  const Vector3 posLoc = transform(gctx).inverse() * position;
+  const double lr = perp(posLoc);
+  const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
   // rotate into the polar coorindates
@@ -257,9 +257,9 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
   // calculate the transformation to local coordinates
-  const Vector3 pos_loc = transform(gctx).inverse() * position;
-  const double lr = perp(pos_loc);
-  const double lphi = phi(pos_loc);
+  const Vector3 posLoc = transform(gctx).inverse() * position;
+  const double lr = perp(posLoc);
+  const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
   // rotate into the polar coorindates
