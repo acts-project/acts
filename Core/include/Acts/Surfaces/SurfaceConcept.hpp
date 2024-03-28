@@ -72,10 +72,6 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
     } -> std::same_as<BoundToFreeMatrix>;
 
   {
-    cs.boundToFreeJacobian(gctx, Vector3{}, Vector3{})
-    } -> std::same_as<BoundToFreeMatrix>;
-
-  {
     cs.freeToBoundJacobian(gctx, Vector3{}, Vector3{})
     } -> std::same_as<FreeToBoundMatrix>;
 
