@@ -830,6 +830,16 @@ class TrackProxy {
                                 covariance(), particleHypothesis());
   }
 
+  /// Convert a track state into track parameters
+  /// @note The parameters are created on the fly
+  /// @return the track parameters
+  BoundTrackParameters createParametersFromState(
+      const ConstTrackStateProxy& trackState) const {
+    return BoundTrackParameters(trackState.referenceSurface().getSharedPtr(),
+                                trackState.parameters(),
+                                trackState.covariance(), particleHypothesis());
+  }
+
   /// Return a reference to the track container backend, mutable version.
   /// @note Only available if the track proxy is not read-only
   /// @return reference to the track container backend
