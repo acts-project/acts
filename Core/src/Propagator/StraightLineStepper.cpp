@@ -33,13 +33,12 @@ StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& freeParams,
-                                 const BoundVector& boundParams,
+                                 const BoundVector& /*boundParams*/,
                                  const Covariance& covariance,
                                  const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
-  state.jacToGlobal =
-      surface.boundToFreeJacobian(state.geoContext, boundParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
@@ -70,17 +69,17 @@ void StraightLineStepper::resetState(State& state,
                                      const BoundSquareMatrix& cov,
                                      const Surface& surface,
                                      const double stepSize) const {
+  FreeVector freeParams = detail::transformBoundToFreeParameters(
+      surface, state.geoContext, boundParams);
+
   // Update the stepping state
-  update(state,
-         detail::transformBoundToFreeParameters(surface, state.geoContext,
-                                                boundParams),
-         boundParams, cov, surface);
+  state.pars = freeParams;
+  state.cov = cov;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal =
-      surface.boundToFreeJacobian(state.geoContext, boundParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
