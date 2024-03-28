@@ -198,15 +198,8 @@ Result<void> detail::reinitializeJacobians(
   if (!lpResult.ok()) {
     return lpResult.error();
   }
-  // Transform from free to bound parameters
-  Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
-      freeParameters, surface, geoContext);
-  if (!boundParameters.ok()) {
-    return boundParameters.error();
-  }
   // Reset the jacobian from local to global
-  boundToFreeJacobian =
-      surface.boundToFreeJacobian(geoContext, *boundParameters);
+  boundToFreeJacobian = surface.boundToFreeJacobian(geoContext, freeParameters);
   return Result<void>::success();
 }
 
