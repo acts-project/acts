@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
-  using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
-  Finder finder{{}, InputTrack::extractParameters};
-  Finder::State state;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  TrackDensityVertexFinder finder{{{densityCfg}}};
+  auto state = finder.makeState(magFieldContext);
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -149,10 +149,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Finder options
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
-  using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
-  Finder finder{{}, InputTrack::extractParameters};
-  Finder::State state;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  TrackDensityVertexFinder finder{{{densityCfg}}};
+  auto state = finder.makeState(magFieldContext);
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();
@@ -225,10 +225,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
-  using Finder =
-      TrackDensityVertexFinder<DummyVertexFitter<>, GaussianTrackDensity>;
-  Finder finder{{}, InputTrack::extractParameters};
-  Finder::State state;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
+  TrackDensityVertexFinder finder{{{densityCfg}}};
+  auto state = finder.makeState(magFieldContext);
 
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -321,16 +321,14 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Finder options
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
 
-  std::function<BoundTrackParameters(const InputTrack&)> extractParameters =
-      [](const InputTrack& params) {
-        return params.as<InputTrackStub>()->parameters();
-      };
+  auto extractParameters = [](const InputTrack& params) {
+    return params.as<InputTrackStub>()->parameters();
+  };
 
-  using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrackStub>,
-                                          GaussianTrackDensity>;
-
-  Finder finder({}, extractParameters);
-  Finder::State state;
+  GaussianTrackDensity::Config densityCfg;
+  densityCfg.extractParameters.connect(extractParameters);
+  TrackDensityVertexFinder finder{{{densityCfg}}};
+  auto state = finder.makeState(magFieldContext);
 
   // Start creating some track parameters
   Covariance covMat = Covariance::Identity();

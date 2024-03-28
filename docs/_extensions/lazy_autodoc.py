@@ -66,12 +66,11 @@ def run() -> None:
         "Acts::FreeMatrix",
         "Acts::SurfaceVector",
         "Acts::Intersection3D",
-        "Acts::OrientedSurface",
-        "Acts::OrientedSurfaces",
         "Acts::BoundToFreeMatrix",
         "Acts::FreeToBoundMatrix",
         "Acts::FreeSquareMatrix",
         "Acts::FreeToPathMatrix",
+        "Acts::HashedString",
     }
 
     role_instances["struct"] |= {
@@ -80,6 +79,7 @@ def run() -> None:
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
+        "Acts::OrientedSurface",
     }
 
     role_instances["class"] |= {
@@ -105,7 +105,6 @@ def run() -> None:
         "Acts::NullBField",
         "Acts::DiscBounds",
         "Acts::PlanarBounds",
-        "Acts::AbstractVolume",
         "Acts::AnnulusBounds",
         "Acts::DiamondBounds",
         "Acts::RegularSurface",
@@ -117,6 +116,8 @@ def run() -> None:
         "Acts::Logging::TimedOutputDecorator",
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
+        "Acts::Measurement",
+        "Acts::SourceLink",
     }
 
     role_instances["func"] = {
@@ -136,6 +137,7 @@ def run() -> None:
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
+        "Acts::TrackStatePropMask",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")

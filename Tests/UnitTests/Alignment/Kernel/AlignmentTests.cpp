@@ -143,7 +143,7 @@ struct TelescopeDetector {
     // The volume transform
     Translation3 transVol(0, 0, 0);
     Transform3 trafoVol(rotation * transVol);
-    VolumeBoundsPtr boundsVol = std::make_shared<const CuboidVolumeBounds>(
+    auto boundsVol = std::make_shared<CuboidVolumeBounds>(
         rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
         length + 10._mm);
 
@@ -161,9 +161,9 @@ struct TelescopeDetector {
         BinningType::arbitrary, BinningValue::binX));
 
     // Build the tracking volume
-    auto trackVolume =
-        TrackingVolume::create(trafoVol, boundsVol, nullptr, std::move(layArr),
-                               nullptr, {}, "Telescope");
+    auto trackVolume = std::make_shared<TrackingVolume>(
+        trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
+        MutableTrackingVolumeVector{}, "Telescope");
 
     return std::make_shared<const TrackingGeometry>(trackVolume);
   }

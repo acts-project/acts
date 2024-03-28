@@ -43,8 +43,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
  public:
   /// Nested configuration struct
   struct Config {
-    /// The path of the gdml file
-    std::string gdmlPath = "";
+    /// Pointer to the g4World volume
+    const G4VPhysicalVolume* g4World = nullptr;
 
     /// Convert the length scale
     ActsScalar scaleConversion = 1.;
@@ -54,6 +54,10 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     /// Converted material thickness (< 0 indicates keeping original thickness)
     ActsScalar convertedMaterialThickness = -1;
+
+    /// Transformation to apply to the
+    /// G4World volume
+    G4Transform3D worldTransform = G4Transform3D();
 
     /// A selector for passive surfaces
     std::shared_ptr<IGeant4PhysicalVolumeSelector> surfacePreselector =
@@ -83,13 +87,13 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   };
 
   /// Constructor
-  ///@param config The configuration struct
-  ///@param options The optional configuration for KDTree
+  /// @param config The configuration struct
+  /// @param options The optional configuration for KDTree
   Geant4SurfaceProvider(const Config& config,
                         const kdtOptions& options = kdtOptions()) {
-    if (config.gdmlPath.empty()) {
+    if (config.g4World == nullptr) {
       throw std::invalid_argument(
-          "Geant4SurfaceProvider: no gdml file provided");
+          "Geant4SurfaceProvider: No World volume provided");
     }
     if (config.surfacePreselector == nullptr) {
       throw std::invalid_argument(
@@ -98,16 +102,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     m_cfg = config;
     m_kdtOptions = options;
-
-    /// Read the gdml file and get the world volume
-    G4GDMLParser parser;
-    parser.Read(m_cfg.gdmlPath);
-    m_g4World = parser.GetWorldVolume();
-
-    if (m_g4World == nullptr) {
-      throw std::invalid_argument(
-          "Geant4SurfaceProvider: No g4World initialized");
-    }
+    m_g4World = m_cfg.g4World;
+    m_g4ToWorld = m_cfg.worldTransform;
   };
 
   /// Destructor
@@ -129,11 +125,10 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
     /// Generate the surface cache
     Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
-    G4Transform3D g4ToWorld;
 
     /// Find and store surfaces in the cache object
     Acts::Geant4DetectorSurfaceFactory{}.construct(
-        g4SurfaceCache, g4ToWorld, *m_g4World, g4SurfaceOptions);
+        g4SurfaceCache, m_g4ToWorld, *m_g4World, g4SurfaceOptions);
 
     auto surfaces = g4SurfaceCache.passiveSurfaces;
 
@@ -155,7 +150,9 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
 
   kdtOptions m_kdtOptions;
 
-  G4VPhysicalVolume* m_g4World = nullptr;
+  const G4VPhysicalVolume* m_g4World;
+
+  G4Transform3D m_g4ToWorld;
 };
 
 }  // namespace Experimental

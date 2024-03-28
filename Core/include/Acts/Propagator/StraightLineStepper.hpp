@@ -321,6 +321,36 @@ class StraightLineStepper {
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
 
+  /// @brief If necessary fill additional members needed for curvilinearState
+  ///
+  /// Compute path length derivatives in case they have not been computed
+  /// yet, which is the case if no step has been executed yet.
+  ///
+  /// @param [in, out] prop_state State that will be presented as @c BoundState
+  /// @param [in] navigator the navigator of the propagation
+  /// @return true if nothing is missing after this call, false otherwise.
+  template <typename propagator_state_t, typename navigator_t>
+  bool prepareCurvilinearState(
+      [[maybe_unused]] propagator_state_t& prop_state,
+      [[maybe_unused]] const navigator_t& navigator) const {
+    // test whether the accumulated path has still its initial value.
+    if (prop_state.stepping.pathAccumulated == 0.) {
+      // dr/ds :
+      prop_state.stepping.derivative.template head<3>() =
+          direction(prop_state.stepping);
+      // dt / ds
+      prop_state.stepping.derivative(eFreeTime) =
+          std::hypot(1., prop_state.stepping.particleHypothesis.mass() /
+                             absoluteMomentum(prop_state.stepping));
+      // d (dr/ds) / ds : == 0
+      prop_state.stepping.derivative.template segment<3>(4) =
+          Acts::Vector3::Zero().transpose();
+      // d qop / ds  == 0
+      prop_state.stepping.derivative(eFreeQOverP) = 0.;
+    }
+    return true;
+  }
+
   /// Create and return a curvilinear state at the current position
   ///
   /// @brief This creates a curvilinear state.
