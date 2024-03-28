@@ -222,7 +222,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       // compute Jacobian for bound to curvilinear covariance transformation
       Acts::BoundMatrix b2c;
       Acts::detail::boundToCurvilinearTransportJacobian(
-          direction, surface->boundToFreeJacobian(geoCtx, params.parameters()),
+          direction, surface->boundToFreeJacobian(geoCtx, position, direction),
           Acts::FreeMatrix::Identity(),
           computeFreeToPathDerivatives(
               direction, params.parameters()[eBoundQOverP],

@@ -529,7 +529,10 @@ struct GsfActor {
       }
 
       auto& cmp = *res;
-      cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
+      auto freeParams = cmp.pars();
+      cmp.jacToGlobal() = surface.boundToFreeJacobian(
+          state.geoContext, freeParams.template segment<3>(eFreePos0),
+          freeParams.template segment<3>(eFreeDir0));
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
       cmp.jacobian() = Acts::BoundMatrix::Identity();
       cmp.derivative() = Acts::FreeVector::Zero();

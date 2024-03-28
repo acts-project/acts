@@ -326,11 +326,13 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from local to global
-  virtual BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const;
+  virtual BoundToFreeMatrix boundToFreeJacobian(const GeometryContext& gctx,
+                                                const Vector3& position,
+                                                const Vector3& direction) const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
@@ -343,11 +345,13 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from global to local
-  virtual FreeToBoundMatrix freeToBoundJacobian(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+  virtual FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                                const Vector3& position,
+                                                const Vector3& direction) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -359,11 +363,13 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  virtual FreeToPathMatrix freeToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+  virtual FreeToPathMatrix freeToPathDerivative(const GeometryContext& gctx,
+                                                const Vector3& position,
+                                                const Vector3& direction) const;
 
   /// Calucation of the path correction for incident
   ///
@@ -430,15 +436,16 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// change of alignment parameters
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   /// @param pathDerivative is the derivative of free parameters w.r.t. path
   /// length
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame
   /// alignment parameters
   AlignmentToBoundMatrix alignmentToBoundDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters,
-      const FreeVector& pathDerivative) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const FreeVector& pathDerivative) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
@@ -450,11 +457,13 @@ class Surface : public virtual GeometryObject,
   /// ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   virtual AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -496,12 +505,14 @@ class Surface : public virtual GeometryObject,
   /// derivative to get the full alignment to bound derivatives
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame alignment
   /// parameters without path correction
   AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 };
 
 /// Print surface information to the provided stream. Internally invokes the

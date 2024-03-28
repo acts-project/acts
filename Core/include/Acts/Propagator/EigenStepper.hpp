@@ -80,8 +80,10 @@ class EigenStepper {
           stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
-      pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.direction();
+      Vector3 position = par.position(gctx);
+      Vector3 direction = par.direction();
+      pars.template segment<3>(eFreePos0) = position;
+      pars.template segment<3>(eFreeDir0) = direction;
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
 
@@ -92,7 +94,7 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
+        jacToGlobal = surface.boundToFreeJacobian(gctx, position, direction);
       }
     }
 

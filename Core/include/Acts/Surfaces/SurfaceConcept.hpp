@@ -68,19 +68,19 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
     } -> std::same_as<RotationMatrix3>;
 
   {
-    cs.boundToFreeJacobian(gctx, BoundVector{})
+    cs.boundToFreeJacobian(gctx, Vector3{}, Vector3{})
     } -> std::same_as<BoundToFreeMatrix>;
 
   {
-    cs.boundToFreeJacobian(gctx, BoundVector{})
+    cs.boundToFreeJacobian(gctx, Vector3{}, Vector3{})
     } -> std::same_as<BoundToFreeMatrix>;
 
   {
-    cs.freeToBoundJacobian(gctx, FreeVector{})
+    cs.freeToBoundJacobian(gctx, Vector3{}, Vector3{})
     } -> std::same_as<FreeToBoundMatrix>;
 
   {
-    cs.freeToPathDerivative(gctx, FreeVector{})
+    cs.freeToPathDerivative(gctx, Vector3{}, Vector3{})
     } -> std::same_as<FreeToPathMatrix>;
 
   { cs.pathCorrection(gctx, Vector3{}, Vector3{}) } -> std::same_as<double>;
@@ -103,11 +103,11 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
     } -> std::same_as<Polyhedron>;
 
   {
-    cs.alignmentToBoundDerivative(gctx, FreeVector{}, FreeVector{})
+    cs.alignmentToBoundDerivative(gctx, Vector3{}, Vector3{}, FreeVector{})
     } -> std::same_as<AlignmentToBoundMatrix>;
 
   {
-    cs.alignmentToPathDerivative(gctx, FreeVector{})
+    cs.alignmentToPathDerivative(gctx, Vector3{}, Vector3{})
     } -> std::same_as<AlignmentToPathMatrix>;
 
   {

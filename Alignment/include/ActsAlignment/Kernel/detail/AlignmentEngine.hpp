@@ -225,6 +225,8 @@ TrackAlignmentState trackAlignmentState(
       // The free parameters transformed from the smoothed parameters
       const FreeVector freeParams =
           Acts::MultiTrajectoryHelpers::freeSmoothed(gctx, state);
+      // The position
+      const Vector3 position = freeParams.segment<3>(eFreePos0);
       // The direction
       const Vector3 direction = freeParams.segment<3>(eFreeDir0);
       // The derivative of free parameters w.r.t. path length. @note Here, we
@@ -234,8 +236,8 @@ TrackAlignmentState trackAlignmentState(
       FreeVector pathDerivative = FreeVector::Zero();
       pathDerivative.head<3>() = direction;
       // Get the derivative of bound parameters w.r.t. alignment parameters
-      AlignmentToBoundMatrix alignToBound =
-          surface->alignmentToBoundDerivative(gctx, freeParams, pathDerivative);
+      AlignmentToBoundMatrix alignToBound = surface->alignmentToBoundDerivative(
+          gctx, position, direction, pathDerivative);
       // Set the degree of freedom per surface.
       // @Todo: don't allocate memory for fixed degree of freedom and consider surface/layer/volume wise align mask (instead of using global mask as now)
       resetAlignmentDerivative(alignToBound, alignMask);
