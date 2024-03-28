@@ -68,6 +68,12 @@ struct GeometricConfig {
   // Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
 
+  // Flag as strip
+  bool strip = false;
+
+  /// The variances for this digitization
+  std::map<Acts::BoundIndices, std::vector<Acts::ActsScalar>> varianceMap = {};
+
   /// Charge generation (configurable via the chargeSmearer)
   Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
     if (!chargeSmearer) {
@@ -81,14 +87,18 @@ struct GeometricConfig {
     }
   }
 
-  /// Position and Covariance generation (currently not implemented)
-  /// Takes as an argument the clsuter size and an random engine
-  /// @return a vector of uncorrelated covariance values
-  std::vector<Acts::ActsScalar> variances(std::size_t /*size0*/,
-                                          std::size_t /*size1*/,
-                                          RandomEngine & /*rng*/) const {
-    return {};
-  };
+  /// This generates the variances for a given cluster
+  ///
+  /// @note either the variances are directly taken from a pre-read
+  /// variance map, or they are generated from the pitch size
+  ///
+  /// @param csizes is the cluster size in the different dimensions
+  /// @param cmins is the cluster minimum in the different dimensions
+  ///
+  /// @return a vector of variances for the cluster
+  std::vector<Acts::ActsScalar> variances(
+      const std::array<std::size_t, 2u> &csizes,
+      const std::array<std::size_t, 2u> &cmins) const;
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine

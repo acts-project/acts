@@ -341,23 +341,8 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     }
     std::size_t size0 = static_cast<std::size_t>(b0max - b0min + 1);
     std::size_t size1 = static_cast<std::size_t>(b1max - b1min + 1);
-    auto variances = geoCfg.variances(size0, size1, rng);
-    if (variances.size() == dParameters.indices.size()) {
-      dParameters.variances = variances;
-    } else {
-      dParameters.variances =
-          std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
-    }
 
-    if (dParameters.variances[0] == -1) {
-      std::size_t ictr = b0min + size0 / 2;
-      dParameters.variances[0] = std::pow(binningData[0].width(ictr), 2) / 12.0;
-    }
-    if (dParameters.variances[1] == -1) {
-      std::size_t ictr = b1min + size1 / 2;
-      dParameters.variances[1] = std::pow(binningData[1].width(ictr), 2) / 12.0;
-    }
-
+    dParameters.variances = geoCfg.variances({size0, size1}, {b0min, b1min});
     dParameters.cluster.sizeLoc0 = size0;
     dParameters.cluster.sizeLoc1 = size1;
   }
