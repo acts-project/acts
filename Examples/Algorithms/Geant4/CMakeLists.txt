@@ -6,6 +6,7 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/MaterialPhysicsList.cpp
     src/MaterialSteppingAction.cpp
     src/ParticleTrackingAction.cpp
+    src/RegionCreator.cpp
     src/SensitiveSurfaceMapper.cpp
     src/SensitiveSteppingAction.cpp
     src/SimParticleTranslation.cpp

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
+#include "ActsExamples/Geant4/RegionCreator.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
@@ -307,6 +308,25 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(SensitiveNames);
     ACTS_PYTHON_MEMBER(PassiveNames);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Tool = RegionCreator;
+    using Config = Tool::Config;
+    auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
+                    .def(py::init<const Config&, std::string, Logging::Level>(),
+                         py::arg("config"), py::arg("name"),
+                         py::arg("logLevel") = Logging::INFO)
+                    .def_property_readonly("config", &Tool::config);
+
+    auto c = py::class_<Config>(tool, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(gammaCut);
+    ACTS_PYTHON_MEMBER(electronCut);
+    ACTS_PYTHON_MEMBER(positronCut);
+    ACTS_PYTHON_MEMBER(protonCut);
+    ACTS_PYTHON_MEMBER(volumes);
     ACTS_PYTHON_STRUCT_END();
   }
 
