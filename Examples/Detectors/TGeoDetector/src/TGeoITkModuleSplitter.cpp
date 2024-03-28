@@ -106,7 +106,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
 
   // Get the geometric information
   double thickness = detElement->thickness();
-  const Acts::Transform3& transform = surface.transform(gctx);
+  Acts::Transform3 transform = surface.transform(gctx);
   // Determine the new bounds
   const std::vector<double> boundsValues = bounds.values();
   double lengthX = (boundsValues[Acts::RectangleBounds::eMaxX] -
@@ -178,7 +178,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
 
   // Get the geometric information
   double thickness = detElement->thickness();
-  const Acts::Transform3& transform = surface.transform(gctx);
+  Acts::Transform3 transform = surface.transform(gctx);
   const std::vector<double> boundsValues = bounds.values();
   std::array<double, Acts::AnnulusBounds::eSize> values{};
   std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());

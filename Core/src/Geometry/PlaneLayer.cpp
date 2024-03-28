@@ -54,7 +54,7 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3& lTransform = transform(GeometryContext());
+  Transform3 lTransform = PlaneSurface::transform(GeometryContext());
   RotationMatrix3 lRotation = lTransform.rotation();
   const Vector3& lCenter = center(GeometryContext());
   const Vector3& lVector = normal(GeometryContext(), lCenter);

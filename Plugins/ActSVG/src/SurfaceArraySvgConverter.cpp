@@ -156,7 +156,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
     if (vType == planar || vType == polar) {
       // Get the transform and estimate the rotation of phi
       // Assumes x/y view
-      const auto& sTransform = sf->transform(gctx);
+      auto sTransform = sf->transform(gctx);
       Vector3 localA = sTransform.rotation().col(0);
       Vector3 localZ = sTransform.rotation().col(2);
       // Find out orientation w.r.t. global transform
