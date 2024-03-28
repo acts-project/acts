@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/interface/IAssignmentFinder.hpp"
 
 #include <array>
 #include <functional>
@@ -31,6 +32,8 @@ struct Result {
   std::vector<MaterialInteraction> assigned = {};
   /// The unassigned material interactions
   std::vector<MaterialInteraction> unassigned = {};
+  /// Surfaces without assignment (for empty hit correction)
+  std::vector<IAssignmentFinder::SurfaceAssignment> unassignedSurfaces = {};
 };
 
 /// @brief definition of a global veto for assigning material interactions
@@ -55,7 +58,7 @@ using GlobalVeto =
 /// @param suggestedAssignment is the suggested assignment: surface, position, direction
 using LocalVeto = std::function<bool(
     const MaterialInteraction&,
-    const std::tuple<const Surface*, Vector3, Vector3>& suggestedAssignment)>;
+    const IAssignmentFinder::SurfaceAssignment& suggestedAssignment)>;
 
 /// @brief definition of possible re-assignments to next surface, this could e.g.
 /// be used for respecting pre/post mapping directives that are not fully
@@ -72,8 +75,8 @@ using LocalVeto = std::function<bool(
 /// @note this changes the MaterialInteraction if the re-assignment is accepted
 using ReAssignment = std::function<void(
     MaterialInteraction& materialInteraction,
-    const std::tuple<const Surface*, Vector3, Vector3>& suggestedAssignment,
-    const std::tuple<const Surface*, Vector3, Vector3>& suggestedReAssignment)>;
+    const IAssignmentFinder::SurfaceAssignment& suggestedAssignment,
+    const IAssignmentFinder::SurfaceAssignment& suggestedReAssignment)>;
 
 /// @brief Options for the material interaction matcher
 /// The options are used to specify the vetos for the assignment
@@ -101,7 +104,7 @@ struct Options {
 /// @return a pair of vectors of assigned and unassigned material interactions
 Result assign(const GeometryContext& gctx,
               const std::vector<MaterialInteraction>& materialInteractions,
-              const std::vector<std::tuple<const Surface*, Vector3, Vector3>>&
+              const std::vector<IAssignmentFinder::SurfaceAssignment>&
                   intersectedSurfaces,
               const Options& options = Options());
 
