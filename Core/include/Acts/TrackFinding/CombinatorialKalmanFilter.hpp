@@ -359,10 +359,10 @@ class CombinatorialKalmanFilter {
           result.lastError = res.error();
         } else {
           const auto& fittedState = *res;
+          std::size_t currentTip = result.activeTips.back().first;
           // Assign the fitted parameters
           result.fittedParameters.emplace(
-              result.lastMeasurementIndices.back(),
-              std::get<BoundTrackParameters>(fittedState));
+              currentTip, std::get<BoundTrackParameters>(fittedState));
         }
 
         navigator.navigationBreak(state.navigation, true);
@@ -1206,7 +1206,7 @@ class CombinatorialKalmanFilter {
     std::vector<typename TrackContainer::TrackProxy> tracks;
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
-      auto track = trackContainer.getTrack(trackContainer.addTrack());
+      auto track = trackContainer.makeTrack();
       track.tipIndex() = tip;
 
       // Set fitted track parameters if available. This will only be the case if

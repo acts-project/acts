@@ -113,14 +113,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = m_cfg.maxSteps;
-  pOptions.direction = Acts::Direction::Forward;
+  Acts::PropagatorPlainOptions firstPropOptions;
+  firstPropOptions.maxSteps = m_cfg.maxSteps;
+  firstPropOptions.direction = Acts::Direction::Forward;
+
+  Acts::PropagatorPlainOptions secondPropOptions;
+  secondPropOptions.maxSteps = m_cfg.maxSteps;
+  secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
+  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions firstOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions);
+      extensions, firstPropOptions);
+
+  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, secondPropOptions);
+  secondOptions.targetSurface = pSurface.get();
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
@@ -152,51 +161,120 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   unsigned int nSeed = 0;
 
-  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+  for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
-    auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
+    const Acts::BoundTrackParameters& firstInitialParameters =
+        initialParameters.at(iSeed);
+
+    auto firstResult =
+        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
     m_nTotalSeeds++;
     nSeed++;
 
-    if (!result.ok()) {
+    if (!firstResult.ok()) {
       m_nFailedSeeds++;
-      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
-                                                    << result.error());
+      ACTS_WARNING("Track finding failed for seed " << iSeed << " with error"
+                                                    << firstResult.error());
       continue;
     }
 
-    auto& tracksForSeed = result.value();
-    for (auto& track : tracksForSeed) {
-      auto smoothingResult = Acts::smoothTrack(ctx.geoContext, track, logger());
-      if (!smoothingResult.ok()) {
+    auto& firstTracksForSeed = firstResult.value();
+    for (auto& firstTrack : firstTracksForSeed) {
+      auto firstSmoothingResult =
+          Acts::smoothTrack(ctx.geoContext, firstTrack, logger());
+      if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
-        ACTS_ERROR("Smoothing for seed "
-                   << iseed << " and track " << track.index()
-                   << " failed with error " << smoothingResult.error());
+        ACTS_ERROR("First smoothing for seed "
+                   << iSeed << " and track " << firstTrack.index()
+                   << " failed with error " << firstSmoothingResult.error());
         continue;
       }
 
-      auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
-          track, *pSurface, extrapolator, extrapolationOptions,
-          m_cfg.extrapolationStrategy, logger());
-      if (!extrapolationResult.ok()) {
-        m_nFailedExtrapolation++;
-        ACTS_ERROR("Extrapolation for seed "
-                   << iseed << " and track " << track.index()
-                   << " failed with error " << extrapolationResult.error());
-        continue;
-      }
+      std::size_t nSecond = 0;
 
       // Set the seed number, this number decrease by 1 since the seed number
-      seedNumber(track) = nSeed - 1;
+      // has already been updated
+      seedNumber(firstTrack) = nSeed - 1;
 
-      if (!m_trackSelector.has_value() ||
-          m_trackSelector->isValidTrack(track)) {
-        auto destProxy = tracks.getTrack(tracks.addTrack());
-        destProxy.copyFrom(track, true);  // make sure we copy track states!
+      if (m_cfg.twoWay) {
+        std::optional<Acts::VectorMultiTrajectory::TrackStateProxy> firstState;
+        for (auto st : firstTrack.trackStatesReversed()) {
+          bool isMeasurement =
+              st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag);
+          bool isOutlier =
+              st.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+          // We are excluding non measurement states and outlier here. Those can
+          // decrease resolution because only the smoothing corrected the very
+          // first prediction as filtering is not possible.
+          if (isMeasurement && !isOutlier) {
+            firstState = st;
+          }
+        }
+
+        if (firstState.has_value()) {
+          Acts::BoundTrackParameters secondInitialParameters(
+              firstState->referenceSurface().getSharedPtr(),
+              firstState->parameters(), firstState->covariance(),
+              firstInitialParameters.particleHypothesis());
+
+          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
+                                                  secondOptions, tracksTemp);
+
+          if (!secondResult.ok()) {
+            ACTS_WARNING("Second track finding failed for seed "
+                         << iSeed << " with error" << secondResult.error());
+          } else {
+            auto firstFirstState =
+                std::next(firstTrack.trackStatesReversed().begin(),
+                          firstTrack.nTrackStates() - 1);
+
+            auto& secondTracksForSeed = secondResult.value();
+            for (auto& secondTrack : secondTracksForSeed) {
+              if (secondTrack.nTrackStates() < 2) {
+                continue;
+              }
+
+              secondTrack.reverseTrackStates(true);
+              seedNumber(secondTrack) = nSeed - 1;
+
+              (*firstFirstState).previous() =
+                  (*std::next(secondTrack.trackStatesReversed().begin()))
+                      .index();
+              secondTrack.tipIndex() = firstTrack.tipIndex();
+
+              Acts::calculateTrackQuantities(secondTrack);
+
+              if (!m_trackSelector.has_value() ||
+                  m_trackSelector->isValidTrack(secondTrack)) {
+                auto destProxy = tracks.getTrack(tracks.addTrack());
+                destProxy.copyFrom(secondTrack, true);
+              }
+
+              ++nSecond;
+            }
+          }
+        }
+      }
+
+      if (nSecond == 0) {
+        auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
+            firstTrack, *pSurface, extrapolator, extrapolationOptions,
+            m_cfg.extrapolationStrategy, logger());
+        if (!extrapolationResult.ok()) {
+          m_nFailedExtrapolation++;
+          ACTS_ERROR("Extrapolation for seed "
+                     << iSeed << " and track " << firstTrack.index()
+                     << " failed with error " << extrapolationResult.error());
+          continue;
+        }
+
+        if (!m_trackSelector.has_value() ||
+            m_trackSelector->isValidTrack(firstTrack)) {
+          auto destProxy = tracks.getTrack(tracks.addTrack());
+          destProxy.copyFrom(firstTrack, true);
+        }
       }
     }
   }
