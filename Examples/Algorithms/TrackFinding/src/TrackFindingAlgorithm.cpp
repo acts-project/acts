@@ -186,7 +186,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
           Acts::smoothTrack(ctx.geoContext, firstTrack, logger());
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
-        ACTS_ERROR("Smoothing for seed "
+        ACTS_ERROR("First smoothing for seed "
                    << iSeed << " and track " << firstTrack.index()
                    << " failed with error " << firstSmoothingResult.error());
         continue;
@@ -245,17 +245,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               secondTrack.tipIndex() = firstTrack.tipIndex();
 
               Acts::calculateTrackQuantities(secondTrack);
-
-              auto secondSmoothingResult =
-                  Acts::smoothTrack(ctx.geoContext, secondTrack, logger());
-              if (!secondSmoothingResult.ok()) {
-                m_nFailedSmoothing++;
-                ACTS_ERROR("Smoothing for seed "
-                           << iSeed << " and track " << secondTrack.index()
-                           << " failed with error "
-                           << secondSmoothingResult.error());
-                continue;
-              }
 
               if (!m_trackSelector.has_value() ||
                   m_trackSelector->isValidTrack(secondTrack)) {
