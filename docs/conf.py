@@ -167,7 +167,7 @@ if tags.has("lazy_autodoc") or on_readthedocs:
     extensions += ["lazy_autodoc"]
 
 
-if tags.has("white_papers"):
+if on_readthedocs or tags.has("white_papers"):
     import white_papers
 
     white_papers.render()
