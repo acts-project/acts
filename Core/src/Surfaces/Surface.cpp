@@ -22,7 +22,7 @@ std::array<std::string, Acts::Surface::SurfaceType::Other>
         "Cone", "Cylinder", "Disc", "Perigee", "Plane", "Straw", "Curvilinear"};
 
 Acts::Surface::Surface(const Transform3& transform)
-    : GeometryObject(), m_transform(transform) {}
+    : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
     : GeometryObject(), m_associatedDetElement(&detelement) {}
@@ -30,13 +30,16 @@ Acts::Surface::Surface(const DetectorElementBase& detelement)
 Acts::Surface::Surface(const Surface& other)
     : GeometryObject(other),
       std::enable_shared_from_this<Surface>(),
-      m_transform(other.m_transform),
-      m_surfaceMaterial(other.m_surfaceMaterial) {}
+      m_associatedDetElement(other.m_associatedDetElement),
+      m_surfaceMaterial(other.m_surfaceMaterial) {
+  if (other.m_transform)
+    m_transform = std::make_unique<Transform3>(*other.m_transform);
+}
 
 Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3& shift)
     : GeometryObject(),
-      m_transform(shift * other.transform(gctx)),
+      m_transform(std::make_unique<Transform3>(shift * other.transform(gctx))),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::~Surface() = default;
@@ -156,7 +159,10 @@ Acts::Surface& Acts::Surface::operator=(const Surface& other) {
   if (&other != this) {
     GeometryObject::operator=(other);
     // detector element, identifier & layer association are unique
-    m_transform = other.m_transform;
+    if (other.m_transform)
+      m_transform = std::make_unique<Transform3>(*other.m_transform);
+    else
+      m_transform.reset();
     m_associatedLayer = other.m_associatedLayer;
     m_surfaceMaterial = other.m_surfaceMaterial;
     m_associatedDetElement = other.m_associatedDetElement;
@@ -182,7 +188,8 @@ bool Acts::Surface::operator==(const Surface& other) const {
     return false;
   }
   // (e) compare transform values
-  if (!m_transform.isApprox(other.m_transform, 1e-9)) {
+  if (m_transform && other.m_transform &&
+      !m_transform->isApprox((*other.m_transform), 1e-9)) {
     return false;
   }
   // (f) compare material
@@ -240,7 +247,7 @@ const Acts::Transform3& Acts::Surface::transform(
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);
   }
-  return m_transform;
+  return (*m_transform);
 }
 
 bool Acts::Surface::insideBounds(const Vector2& lposition,
@@ -337,7 +344,7 @@ void Acts::Surface::assignDetectorElement(
   m_associatedDetElement = &detelement;
   // resetting the transform as it will be handled through the detector element
   // now
-  m_transform = Transform3::Identity();
+  m_transform.reset();
 }
 
 void Acts::Surface::assignSurfaceMaterial(

@@ -37,7 +37,8 @@ Acts::CylinderLayer::CylinderLayer(
   auto cVolumeBounds = std::make_shared<CylinderVolumeBounds>(
       *CylinderSurface::m_bounds, thickness);
   // @todo rotate around x for the avePhi if you have a sector
-  m_representingVolume = std::make_unique<Volume>(m_transform, cVolumeBounds);
+  Transform3 volTrf = m_transform ? *m_transform : Transform3::Identity();
+  m_representingVolume = std::make_unique<Volume>(volTrf, cVolumeBounds);
 
   // associate the layer to the surface
   CylinderSurface::associateLayer(*this);

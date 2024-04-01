@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -479,7 +479,7 @@ class Surface : public virtual GeometryObject,
  protected:
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  Transform3 m_transform = Transform3::Identity();
+  std::unique_ptr<Transform3> m_transform{};
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement{nullptr};
