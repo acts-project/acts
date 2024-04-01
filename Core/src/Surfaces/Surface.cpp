@@ -30,11 +30,9 @@ Acts::Surface::Surface(const DetectorElementBase& detelement)
 Acts::Surface::Surface(const Surface& other)
     : GeometryObject(other),
       std::enable_shared_from_this<Surface>(),
+      m_transform(other.m_transform),
       m_associatedDetElement(other.m_associatedDetElement),
-      m_surfaceMaterial(other.m_surfaceMaterial) {
-  if (other.m_transform)
-    m_transform = std::make_unique<Transform3>(*other.m_transform);
-}
+      m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3& shift)
@@ -159,10 +157,7 @@ Acts::Surface& Acts::Surface::operator=(const Surface& other) {
   if (&other != this) {
     GeometryObject::operator=(other);
     // detector element, identifier & layer association are unique
-    if (other.m_transform)
-      m_transform = std::make_unique<Transform3>(*other.m_transform);
-    else
-      m_transform.reset();
+    m_transform = other.m_transform;
     m_associatedLayer = other.m_associatedLayer;
     m_surfaceMaterial = other.m_surfaceMaterial;
     m_associatedDetElement = other.m_associatedDetElement;

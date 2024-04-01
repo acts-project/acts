@@ -479,7 +479,7 @@ class Surface : public virtual GeometryObject,
  protected:
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  std::unique_ptr<Transform3> m_transform{};
+  std::shared_ptr<const Transform3> m_transform{};
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement{nullptr};
