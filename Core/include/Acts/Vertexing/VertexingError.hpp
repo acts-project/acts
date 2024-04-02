@@ -21,6 +21,9 @@ enum class VertexingError {
   NotConverged,
   ElementNotFound,
   NoCovariance,
+  SingularMatrix,
+  NonPositiveVariance,
+  MatrixNotPositiveDefinite,
   InvalidInput,
 };
 

@@ -55,7 +55,6 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   }
 
   [[maybe_unused]] const auto& gctx_ref = gctx;
-  assert(checkContainment(gctx) && "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
@@ -264,20 +263,27 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
     const GeometryContext& gctx, std::size_t nseg) const {
+  // We don't have a logging instance here
+  // so can't throw a warning for shapes that are
+  // using the bounding box
+  auto binningValues = volumeBounds().canonicalBinning();
+
   // Create the volume extent
   auto volumeExtent = extent(gctx, nseg);
   // Check surfaces
-  for (const auto* s : surfaces()) {
-    auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
-    if (!volumeExtent.contains(sExtent)) {
-      return false;
+  for (auto b : binningValues) {
+    for (const auto* s : surfaces()) {
+      auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
+      if (!volumeExtent.contains(sExtent, b)) {
+        return false;
+      }
     }
-  }
-  // Check volumes
-  for (const auto* v : volumes()) {
-    auto vExtent = v->extent(gctx, nseg);
-    if (!volumeExtent.contains(vExtent)) {
-      return false;
+    // Check volumes
+    for (const auto* v : volumes()) {
+      auto vExtent = v->extent(gctx, nseg);
+      if (!volumeExtent.contains(vExtent, b)) {
+        return false;
+      }
     }
   }
   // All contained

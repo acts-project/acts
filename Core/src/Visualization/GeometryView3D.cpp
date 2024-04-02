@@ -10,7 +10,6 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -148,7 +148,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
       auto cvbOrientedSurfaces = cvb.orientedSurfaces();
       for (auto z : zValues) {
         for (const auto& cvbSf : cvbOrientedSurfaces) {
-          drawSurface(helper, *cvbSf.first, gctx,
+          drawSurface(helper, *cvbSf.surface, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
@@ -164,7 +164,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
                                  0.5 * thickness);
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
         for (const auto& cvbSf : cvbOrientedSurfaces) {
-          drawSurface(helper, *cvbSf.first, gctx,
+          drawSurface(helper, *cvbSf.surface, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
@@ -187,14 +187,13 @@ void Acts::GeometryView3D::drawSurfaceArray(
 }
 
 void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
-                                      const AbstractVolume& volume,
+                                      const Volume& volume,
                                       const GeometryContext& gctx,
                                       const Transform3& transform,
                                       const ViewConfig& viewConfig) {
-  auto bSurfaces = volume.boundarySurfaces();
+  auto bSurfaces = volume.volumeBounds().orientedSurfaces(volume.transform());
   for (const auto& bs : bSurfaces) {
-    drawSurface(helper, bs->surfaceRepresentation(), gctx, transform,
-                viewConfig);
+    drawSurface(helper, *bs.surface, gctx, transform, viewConfig);
   }
 }
 
