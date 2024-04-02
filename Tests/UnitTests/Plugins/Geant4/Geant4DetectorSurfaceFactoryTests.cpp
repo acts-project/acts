@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
       obj, surface->center(gctx), surface->center(gctx) + 100 * normal, 1000,
       10, Acts::ViewConfig({0, 255, 0}));
   auto surfaces = cache.sensitiveSurfaces;
-  for (auto [k, val] : Acts::enumerate(cache.sensitiveSurfaces)) {
-    auto [el, surf] = val;
+  for (const auto& [k, val] : Acts::enumerate(cache.sensitiveSurfaces)) {
+    const auto& [el, surf] = val;
     Acts::ViewConfig vCfg;
     if (k == 0) {
       vCfg.color = Acts::ColorRGB({0, 255, 0});
