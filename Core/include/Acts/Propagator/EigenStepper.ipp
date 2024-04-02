@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
@@ -29,8 +29,8 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundSquareMatrix& cov,
                                           const Surface& surface,
                                           const double stepSize) const {
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
-      surface, state.geoContext, boundParams);
+  FreeVector freeParams =
+      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;

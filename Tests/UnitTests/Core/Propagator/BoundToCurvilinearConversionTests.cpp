@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -197,8 +197,8 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       }
     }
 
-    FreeVector free_param_vec = Acts::detail::transformBoundToFreeParameters(
-        *surface, geoCtx, param_vec);
+    FreeVector free_param_vec =
+        Acts::transformBoundToFreeParameters(*surface, geoCtx, param_vec);
 
     Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
                       sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};

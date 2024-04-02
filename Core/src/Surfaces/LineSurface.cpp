@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"

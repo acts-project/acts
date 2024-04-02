@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"

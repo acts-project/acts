@@ -8,7 +8,7 @@
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 namespace Acts {
@@ -69,8 +69,8 @@ void StraightLineStepper::resetState(State& state,
                                      const BoundSquareMatrix& cov,
                                      const Surface& surface,
                                      const double stepSize) const {
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
-      surface, state.geoContext, boundParams);
+  FreeVector freeParams =
+      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
