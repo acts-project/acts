@@ -159,7 +159,7 @@ Result<void> smoothTracks(
 template <typename track_proxy_t>
 Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
 findTrackStateForExtrapolation(
-    const GeometryContext &geoContext, track_proxy_t &track,
+    const GeometryContext &geoContext, const track_proxy_t &track,
     const Surface &referenceSurface, TrackExtrapolationStrategy strategy,
     const Logger &logger = *getDefaultLogger("TrackExtrapolation",
                                              Logging::INFO)) {

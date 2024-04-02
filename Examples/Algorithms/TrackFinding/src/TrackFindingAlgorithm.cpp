@@ -256,7 +256,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               if (!secondExtrapolationResult.ok()) {
                 m_nFailedExtrapolation++;
                 ACTS_ERROR("Second extrapolation for seed "
-                           << iSeed << " and track " << firstTrack.index()
+                           << iSeed << " and track " << secondTrack.index()
                            << " failed with error "
                            << secondExtrapolationResult.error());
                 continue;
@@ -264,7 +264,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
               if (!m_trackSelector.has_value() ||
                   m_trackSelector->isValidTrack(secondTrack)) {
-                auto destProxy = tracks.getTrack(tracks.addTrack());
+                auto destProxy = tracks.makeTrack();
                 destProxy.copyFrom(secondTrack, true);
               }
 
@@ -290,7 +290,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
         if (!m_trackSelector.has_value() ||
             m_trackSelector->isValidTrack(firstTrack)) {
-          auto destProxy = tracks.getTrack(tracks.addTrack());
+          auto destProxy = tracks.makeTrack();
           destProxy.copyFrom(firstTrack, true);
         }
       }
