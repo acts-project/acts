@@ -23,8 +23,8 @@ SimParticle HepMC3Particle::particle(
     const HepMC3::ConstGenParticlePtr& particle) {
   SimBarcode particleId = barcode(particle);
   Acts::PdgParticle pdg = static_cast<Acts::PdgParticle>(particle->pid());
-  SimParticle fw(particleId, static_cast<Acts::PdgParticle>(particle->pid()),
-                 Acts::findCharge(pdg).value_or(0), particle->generated_mass());
+  SimParticle fw(particleId, pdg, Acts::findCharge(pdg).value_or(0),
+                 particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsoluteMomentum(particle->momentum().p3mod());

@@ -9,8 +9,10 @@ target_sources(
     HomogeneousSurfaceMaterial.cpp
     HomogeneousVolumeMaterial.cpp
     Interactions.cpp
+    IntersectionMaterialAssigner.cpp
     Material.cpp
     MaterialGridHelper.cpp
+    MaterialInteractionAssignment.cpp
     MaterialMapUtils.cpp
     MaterialSlab.cpp
     ProtoVolumeMaterial.cpp

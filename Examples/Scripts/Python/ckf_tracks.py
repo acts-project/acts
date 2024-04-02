@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-from pathlib import Path
-from typing import Optional, Union
-from collections import namedtuple
 
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
+from pathlib import Path
+from typing import Optional
 
 import acts
-
 from acts import UnitConstants as u
+from acts.examples import GenericDetector, RootParticleReader
 
 
 def runCKFTracks(
@@ -70,7 +68,6 @@ def runCKFTracks(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_input",
-                orderedEvents=False,
             )
         )
 

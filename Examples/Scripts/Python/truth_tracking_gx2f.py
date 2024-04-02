@@ -59,7 +59,6 @@ def runTruthTrackingGx2f(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_input",
-                orderedEvents=False,
             )
         )
 
