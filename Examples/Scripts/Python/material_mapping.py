@@ -142,9 +142,10 @@ if "__main__" == __name__:
         default="material-map.json",
         help="output filename for the generated material map. Now the json and cbor formats are supported",
     )
-    if '.json' in args.matFile:
+    args = p.parse_args()
+    if '.json' in args.outFile:
         fmt = JsonFormat.Json
-    elif '.cbor' in args.matFile:
+    elif '.cbor' in args.outFile:
         fmt = JsonFormat.Cbor
     else:
         print('ERROR(material_mapping.py): please provide an output name ending with .json or .cbor')
