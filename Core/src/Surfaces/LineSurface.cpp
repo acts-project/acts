@@ -197,12 +197,8 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 }
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global position
-  Vector3 position = parameters.segment<3>(eFreePos0);
-  // The direction
-  Vector3 direction = parameters.segment<3>(eFreeDir0);
-
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // retrieve the reference frame
@@ -211,12 +207,12 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   Vector2 local = *globalToLocal(gctx, position, direction,
                                  std::numeric_limits<double>::max());
 
-  BoundToFreeMatrix jacToGlobal =
-      Surface::boundToFreeJacobian(gctx, parameters);
-
   // For the derivative of global position with bound angles, refer the
   // following white paper:
   // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
+
+  BoundToFreeMatrix jacToGlobal =
+      Surface::boundToFreeJacobian(gctx, position, direction);
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
@@ -238,12 +234,8 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
 }
 
 Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global posiiton
-  Vector3 position = parameters.segment<3>(eFreePos0);
-  // The direction
-  Vector3 direction = parameters.segment<3>(eFreeDir0);
-
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // The vector between position and center
@@ -271,12 +263,8 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
 }
 
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global posiiton
-  Vector3 position = parameters.segment<3>(eFreePos0);
-  // The direction
-  Vector3 direction = parameters.segment<3>(eFreeDir0);
-
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // The vector between position and center

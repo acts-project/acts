@@ -209,7 +209,8 @@ Acts::Result<Acts::BoundTrackParameters> detail::boundToBoundConversion(
 
   if (boundParameters.covariance().has_value()) {
     Acts::BoundToFreeMatrix boundToFreeJacobian =
-        sourceSurface.boundToFreeJacobian(gctx, freePars);
+        sourceSurface.boundToFreeJacobian(gctx, freePars.segment<3>(eFreePos0),
+                                          freePars.segment<3>(eFreeDir0));
 
     Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
 
