@@ -133,10 +133,10 @@ def runMaterialMapping(
 
 if "__main__" == __name__:
 
-     p = argparse.ArgumentParser(
+    p = argparse.ArgumentParser(
         description="Script to generate ACTS material map"
     )
-        p.add_argument(
+    p.add_argument(
         "-o","--outFile",
         type=str,
         default="material-map.json",
