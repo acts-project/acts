@@ -240,9 +240,8 @@ class MultiTrajectory {
   /// @param iprevious index of the previous state, kInvalid if first
   /// @return Index of the newly added track state
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr IndexType addTrackState(
-      TrackStatePropMask mask = TrackStatePropMask::All,
-      IndexType iprevious = kInvalid) {
+  IndexType addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
+                          IndexType iprevious = kInvalid) {
     return self().addTrackState_impl(mask, iprevious);
   }
 
@@ -258,6 +257,11 @@ class MultiTrajectory {
   }
 
   /// @}
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void addTrackStateComponents(IndexType istate, TrackStatePropMask mask) {
+    return self().addTrackStateComponents_impl(istate, mask);
+  }
 
   /// @anchor track_state_container_iteration
   /// @name MultiTrajectory track state iteration

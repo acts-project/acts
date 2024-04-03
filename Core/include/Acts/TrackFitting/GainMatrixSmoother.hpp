@@ -82,6 +82,10 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Getting previous track state");
     auto prev_ts = trajectory.getTrackState(entryIndex);
 
+    // ensure the track state has a smoothed component
+    trajectory.addTrackStateComponents(prev_ts.index(),
+                                       TrackStatePropMask::Smoothed);
+
     prev_ts.smoothed() = prev_ts.filtered();
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
@@ -110,6 +114,10 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
+
+      // ensure the track state has a smoothed component
+      trajectory.addTrackStateComponents(ts.index(),
+                                         TrackStatePropMask::Smoothed);
 
       if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
                                smoothed, predicted, predictedCovariance,

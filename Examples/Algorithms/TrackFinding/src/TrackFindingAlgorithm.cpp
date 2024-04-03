@@ -182,6 +182,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
+      // TODO select track
+
       auto firstSmoothingResult =
           Acts::smoothTrack(ctx.geoContext, firstTrack, logger());
       if (!firstSmoothingResult.ok()) {
@@ -232,6 +234,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
+              // TODO select track
               if (secondTrack.nTrackStates() < 2) {
                 continue;
               }
