@@ -94,13 +94,15 @@ void detail::boundToBoundTransportJacobian(
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
+  const Vector3 position = freeParameters.segment<3>(eFreePos0);
+  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
   const FreeToPathMatrix freeToPath =
-      surface.freeToPathDerivative(geoContext, freeParameters);
+      surface.freeToPathDerivative(geoContext, position, direction);
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
-      surface.freeToBoundJacobian(geoContext, freeParameters);
+      surface.freeToBoundJacobian(geoContext, position, direction);
   // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
   // surface to local/bound parameters at the final surface
@@ -160,11 +162,13 @@ void detail::freeToBoundTransportJacobian(
     const FreeVector& freeParameters, const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives,
     FreeToBoundMatrix& fullTransportJacobian) {
+  const Vector3 position = freeParameters.segment<3>(eFreePos0);
+  const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   // Calculate the jacobian from free to bound at the final surface
   FreeToBoundMatrix freeToBoundJacobian =
-      surface.freeToBoundJacobian(geoContext, freeParameters);
+      surface.freeToBoundJacobian(geoContext, position, direction);
   FreeToPathMatrix sVec =
-      surface.freeToPathDerivative(geoContext, freeParameters);
+      surface.freeToPathDerivative(geoContext, position, direction);
   // Return the jacobian to local
   fullTransportJacobian = freeToBoundJacobian * (freeTransportJacobian +
                                                  freeToPathDerivatives * sVec *
@@ -199,7 +203,8 @@ Result<void> detail::reinitializeJacobians(
     return lpResult.error();
   }
   // Reset the jacobian from local to global
-  boundToFreeJacobian = surface.boundToFreeJacobian(geoContext, freeParameters);
+  boundToFreeJacobian =
+      surface.boundToFreeJacobian(geoContext, position, direction);
   return Result<void>::success();
 }
 
