@@ -35,5 +35,6 @@ class TrackExtrapolationErrorCategory : public std::error_category {
 }  // namespace
 
 std::error_code Acts::make_error_code(Acts::TrackExtrapolationError e) {
-  return {static_cast<int>(e), TrackExtrapolationErrorCategory()};
+  static const TrackExtrapolationErrorCategory c;
+  return {static_cast<int>(e), c};
 }
