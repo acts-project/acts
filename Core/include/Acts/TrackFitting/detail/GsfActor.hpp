@@ -735,9 +735,8 @@ struct GsfActor {
                     TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
               : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
 
-      result.currentTip =
-          result.fittedStates->addTrackState(mask, result.currentTip);
-      auto proxy = result.fittedStates->getTrackState(result.currentTip);
+      auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
+      result.currentTip = proxy.index();
 
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
