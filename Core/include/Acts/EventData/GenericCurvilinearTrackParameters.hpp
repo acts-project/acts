@@ -47,8 +47,7 @@ class GenericCurvilinearTrackParameters
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
       : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
-             detail::transformFreeToCurvilinearParameters(pos4[eTime], dir,
-                                                          qOverP),
+             transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
              std::move(cov), std::move(particleHypothesis)) {}
 
   /// Construct from four-position, angles, and qOverP.
@@ -65,8 +64,8 @@ class GenericCurvilinearTrackParameters
                                     ParticleHypothesis particleHypothesis)
       : Base(Surface::makeShared<PlaneSurface>(
                  pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
-             detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
-                                                          theta, qOverP),
+             transformFreeToCurvilinearParameters(pos4[eTime], phi, theta,
+                                                  qOverP),
              std::move(cov), std::move(particleHypothesis)) {}
 
   /// Converts a bound track parameter with a different hypothesis.
