@@ -14,8 +14,8 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -603,8 +603,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
 
         // further track parameter info
         Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
-                                                         parameters);
+            Acts::transformBoundToFreeParameters(surface, gctx, parameters);
         m_x[ipar].push_back(freeParams[Acts::eFreePos0]);
         m_y[ipar].push_back(freeParams[Acts::eFreePos1]);
         m_z[ipar].push_back(freeParams[Acts::eFreePos2]);

@@ -14,8 +14,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -313,10 +313,10 @@ class AtlasStepper {
       const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
-    update(state,
-           detail::transformBoundToFreeParameters(surface, state.geoContext,
-                                                  boundParams),
-           boundParams, cov, surface);
+    update(
+        state,
+        transformBoundToFreeParameters(surface, state.geoContext, boundParams),
+        boundParams, cov, surface);
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
 

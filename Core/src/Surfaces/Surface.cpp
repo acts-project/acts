@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
