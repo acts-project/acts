@@ -195,7 +195,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
-        auto destProxy = tracks.getTrack(tracks.addTrack());
+        auto destProxy = tracks.makeTrack();
         destProxy.copyFrom(track, true);  // make sure we copy track states!
       }
     }

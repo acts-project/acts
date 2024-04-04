@@ -1281,7 +1281,7 @@ class KalmanFitter {
       return kalmanResult.result.error();
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    auto track = trackContainer.makeTrack();
     track.tipIndex() = kalmanResult.lastMeasurementIndex;
     if (kalmanResult.fittedParameters) {
       const auto& params = kalmanResult.fittedParameters.value();
