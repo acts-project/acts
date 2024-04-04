@@ -424,6 +424,8 @@ class VectorMultiTrajectory final
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
 
+  void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask);
+
   void reserve(std::size_t n);
 
   void shareFrom_impl(IndexType iself, IndexType iother,
