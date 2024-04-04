@@ -254,6 +254,68 @@ class MultiTrajectoryTestsCommon {
     alwaysPresent(ts);
   }
 
+  void testAddTrackStateComponents() {
+    using PM = TrackStatePropMask;
+
+    trajectory_t t = m_factory.create();
+
+    auto ts = t.makeTrackState(PM::None);
+    BOOST_CHECK(!ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::None);
+    BOOST_CHECK(!ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Predicted);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Filtered);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Smoothed);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Calibrated);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Jacobian);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK(ts.hasJacobian());
+
+    ts.addComponents(PM::All);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK(ts.hasJacobian());
+  }
+
   void testTrackStateProxyCrossTalk(std::default_random_engine& rng) {
     TestTrackState pc(rng, 2u);
 

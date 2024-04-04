@@ -131,6 +131,11 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   ct.testAddTrackStateWithBitMask();
 }
 
+BOOST_AUTO_TEST_CASE(AddTrackStateComponents) {
+  CommonTests ct;
+  ct.testAddTrackStateComponents();
+}
+
 // assert expected "cross-talk" between trackstate proxies
 BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   CommonTests ct;
