@@ -97,21 +97,19 @@ FreeToPathMatrix CurvilinearSurface::freeToPathDerivative() const {
 }
 
 std::ostream& CurvilinearSurface::toStream(std::ostream& sl) const {
-  sl << std::setiosflags(std::ios::fixed);
-  sl << std::setprecision(4);
-  sl << std::boolalpha;
   sl << "Curvilinear Surface" << std::endl;
   sl << "     Center position  (x, y, z) = (" << m_position.x() << ", "
      << m_position.y() << ", " << m_position.z() << ")" << std::endl;
   sl << "     Direction  (x, y, z) = (" << m_direction.x() << ", "
      << m_direction.y() << ", " << m_direction.z() << ")" << std::endl;
-  sl << std::setprecision(-1);
-  sl << std::noboolalpha;
   return sl;
 }
 
 std::string CurvilinearSurface::toString() const {
   std::stringstream ss;
+  ss << std::setiosflags(std::ios::fixed);
+  ss << std::setprecision(4);
+  ss << std::boolalpha;
   toStream(ss);
   return ss.str();
 }
