@@ -46,7 +46,7 @@ class GenericCurvilinearTrackParameters
                                     Scalar qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
-      : Base(CurvilinearSurface(pos4.segment<3>(ePos0), dir).planeSurface(),
+      : Base(CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
              transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
              std::move(cov), std::move(particleHypothesis)) {}
 
@@ -64,7 +64,7 @@ class GenericCurvilinearTrackParameters
                                     ParticleHypothesis particleHypothesis)
       : Base(CurvilinearSurface(pos4.segment<3>(ePos0),
                                 makeDirectionFromPhiTheta(phi, theta))
-                 .planeSurface(),
+                 .surface(),
              transformFreeToCurvilinearParameters(pos4[eTime], phi, theta,
                                                   qOverP),
              std::move(cov), std::move(particleHypothesis)) {}

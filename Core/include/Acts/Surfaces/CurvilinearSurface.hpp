@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,20 +10,18 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <iomanip>
-#include <ios>
-#include <ostream>
+#include <iosfwd>
 #include <string>
 
 namespace Acts {
 
+class Surface;
+class PlaneSurface;
+
 /// @brief Utility class for curvilinear surfaces
 ///
-class CurvilinearSurface {
+class CurvilinearSurface final {
  public:
   explicit CurvilinearSurface(const Vector3& direction)
       : m_direction{direction} {}
@@ -50,19 +48,7 @@ class CurvilinearSurface {
   ///
   /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
-  Acts::RotationMatrix3 referenceFrame() const {
-    /// the right-handed coordinate system is defined as
-    /// T = normal
-    /// U = Z x T
-    /// V = T x U
-    Vector3 T = m_direction;
-    Vector3 U = Vector3::UnitZ().cross(T).normalized();
-    Vector3 V = T.cross(U);
-
-    RotationMatrix3 rframe;
-    rframe << U, V, T;
-    return rframe;
-  }
+  RotationMatrix3 referenceFrame() const;
 
   /// Return method for the surface Transform3 by reference
   /// In case a detector element is associated the surface transform
@@ -70,63 +56,19 @@ class CurvilinearSurface {
   /// (mis-)alignment cache cetrally handled
   ///
   /// @return the contextual transform
-  Transform3 transform() const {
-    Transform3 transform = Transform3(referenceFrame());
-    transform.pretranslate(center());
-    return transform;
-  }
+  Transform3 transform() const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
   ///
   /// @return Jacobian from local to global
-  virtual BoundToFreeMatrix boundToFreeJacobian() const {
-    // Prepare the jacobian to free
-    BoundToFreeMatrix jacobian = BoundToFreeMatrix::Zero();
-
-    auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-        VectorHelpers::evaluateTrigonomics(m_direction);
-    jacobian(eFreePos0, eBoundLoc0) = -sinPhi;
-    jacobian(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
-    jacobian(eFreePos1, eBoundLoc0) = cosPhi;
-    jacobian(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
-    jacobian(eFreePos2, eBoundLoc1) = sinTheta;
-    // Time parameter: stays as is
-    jacobian(eFreeTime, eBoundTime) = 1;
-    jacobian.block<3, 2>(eFreeDir0, eBoundPhi) =
-        sphericalToFreeDirectionJacobian(m_direction);
-    // Q/P parameter: stays as is
-    jacobian(eFreeQOverP, eBoundQOverP) = 1;
-
-    return jacobian;
-  }
+  BoundToFreeMatrix boundToFreeJacobian() const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
   /// @return Jacobian from global to local
-  FreeToBoundMatrix freeToBoundJacobian() const {
-    // Prepare the jacobian to curvilinear
-    FreeToBoundMatrix jacobian = FreeToBoundMatrix::Zero();
-
-    auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-        VectorHelpers::evaluateTrigonomics(m_direction);
-    // We operate in curvilinear coordinates defined as follows
-    jacobian(eBoundLoc0, eFreePos0) = -sinPhi;
-    jacobian(eBoundLoc0, eFreePos1) = cosPhi;
-    jacobian(eBoundLoc1, eFreePos0) = -cosPhi * cosTheta;
-    jacobian(eBoundLoc1, eFreePos1) = -sinPhi * cosTheta;
-    jacobian(eBoundLoc1, eFreePos2) = sinTheta;
-    // Time parameter: stays as is
-    jacobian(eBoundTime, eFreeTime) = 1.;
-    // Directional and momentum parameters for curvilinear
-    jacobian.block<2, 3>(eBoundPhi, eFreeDir0) =
-        freeToSphericalDirectionJacobian(m_direction);
-    // Q/P parameter: stays as is
-    jacobian(eBoundQOverP, eFreeQOverP) = 1.;
-
-    return jacobian;
-  }
+  FreeToBoundMatrix freeToBoundJacobian() const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -134,49 +76,42 @@ class CurvilinearSurface {
   /// the direction
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  FreeToPathMatrix freeToPathDerivative() const {
-    FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
-    freeToPath.segment<3>(eFreePos0) = -1.0 * m_direction;
-    return freeToPath;
-  }
+  FreeToPathMatrix freeToPathDerivative() const;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream& toStream(std::ostream& sl) const {
-    sl << std::setiosflags(std::ios::fixed);
-    sl << std::setprecision(4);
-    sl << std::boolalpha;
-    sl << "Curvilinear Surface" << std::endl;
-    sl << "     Center position  (x, y, z) = (" << m_position.x() << ", "
-       << m_position.y() << ", " << m_position.z() << ")" << std::endl;
-    sl << "     Direction  (x, y, z) = (" << m_direction.x() << ", "
-       << m_direction.y() << ", " << m_direction.z() << ")" << std::endl;
-    sl << std::setprecision(-1);
-    sl << std::noboolalpha;
-    return sl;
-  }
+  std::ostream& toStream(std::ostream& sl) const;
 
   /// Output into a std::string
-  std::string toString() const {
-    std::stringstream ss;
-    toStream(ss);
-    return ss.str();
-  }
+  ///
+  /// @return the string representation of the curvilinear surface
+  std::string toString() const;
 
-  std::shared_ptr<PlaneSurface> planeSurface() const {
-    return Surface::makeShared<PlaneSurface>(transform());
-  }
+  /// Return the plane surface representation of the curvilinear surface
+  ///
+  /// @return the plane surface representation of the curvilinear surface
+  std::shared_ptr<PlaneSurface> planeSurface() const;
+
+  /// Return the surface representation of the curvilinear surface
+  ///
+  /// @note same as planeSurface() but returns the base class.
+  ///   This is useful if the type of the surface is not relevant.
+  ///
+  /// @return the surface representation of the curvilinear surface
+  std::shared_ptr<Surface> surface() const;
+
+  /// Output operator
+  ///
+  /// @param os is the ostream to be dumped into
+  /// @param vi is the CurvilinearSurface to be dumped
+  /// @return the ostream
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const CurvilinearSurface& vi);
 
  private:
   Vector3 m_position = Vector3::Zero();
   Vector3 m_direction = Vector3::UnitZ();
 };
-
-inline std::ostream& operator<<(std::ostream& os,
-                                const CurvilinearSurface& surface) {
-  surface.toStream(os);
-  return os;
-}
 
 }  // namespace Acts
