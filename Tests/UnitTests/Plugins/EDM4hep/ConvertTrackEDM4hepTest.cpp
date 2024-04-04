@@ -371,8 +371,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
                             std::make_shared<Acts::VectorMultiTrajectory>());
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
-    EDM4hepUtil::readTrack(
-        edm4hepTrack, readTracks.makeTrack(), Bz, *logger);
+    EDM4hepUtil::readTrack(edm4hepTrack, readTracks.makeTrack(), Bz, *logger);
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());
