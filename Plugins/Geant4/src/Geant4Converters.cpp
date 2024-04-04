@@ -56,11 +56,11 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
                       scale * g4Trans[2]);
   // And the rotation to it
   RotationMatrix3 rotation;
-  rotation << g4Rot.xx(), g4Rot.yx(), g4Rot.zx(), g4Rot.xy(), g4Rot.yy(),
-      g4Rot.zy(), g4Rot.xz(), g4Rot.yz(), g4Rot.zz();
+  rotation << g4Rot.xx(), g4Rot.xy(), g4Rot.xz(), g4Rot.yx(), g4Rot.yy(),
+      g4Rot.yz(), g4Rot.zx(), g4Rot.zy(), g4Rot.zz();
   Transform3 transform = Transform3::Identity();
+  transform.rotate(rotation);
   transform.pretranslate(translation);
-  transform.prerotate(rotation);
   return transform;
 }
 

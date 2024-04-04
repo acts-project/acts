@@ -15,8 +15,8 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                                  charge2 / absMom2, cov2,
                                  ParticleHypothesis::pion());
   BOOST_CHECK(cp2.covariance().has_value());
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
   double stepSize2 = -2. * stepSize;
@@ -380,8 +380,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
-  freeParams = detail::transformBoundToFreeParameters(
-      bp.referenceSurface(), tgContext, bp.parameters());
+  freeParams = transformBoundToFreeParameters(bp.referenceSurface(), tgContext,
+                                              bp.parameters());
 
   BOOST_CHECK(bp.covariance().has_value());
   sls.update(slsState, freeParams, bp.parameters(), 2 * (*bp.covariance()),

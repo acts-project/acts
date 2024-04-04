@@ -130,9 +130,9 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
   FreeMatrix realTransportJacobian = 2 * FreeMatrix::Identity();
 
   FreeToPathMatrix freeToPathDerivatives =
-      pSurface->freeToPathDerivative(tgContext, freeParameters);
+      pSurface->freeToPathDerivative(tgContext, position, direction);
   BoundToFreeMatrix boundToFreeJacobian =
-      pSurface->boundToFreeJacobian(tgContext, boundParameters);
+      pSurface->boundToFreeJacobian(tgContext, position, direction);
 
   // (1) curvilinear/bound to bound transport jacobian
   // a) test without actual transport into the same surface
@@ -179,21 +179,10 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
-  double time = 4.;
   Vector3 direction = Vector3(5., 2., 7.).normalized();
-  double qop = 0.125;
 
   // Build a surface, starting surface for curvilinear
   auto pSurface = Surface::makeShared<PlaneSurface>(position, direction);
-
-  // The free parameter vector
-  FreeVector freeParameters;
-  freeParameters << position[0], position[1], position[2], time, direction[0],
-      direction[1], direction[2], qop;
-  // And its associated bound vector
-  BoundVector boundParameters;
-  boundParameters << 0., 0., VectorHelpers::phi(direction),
-      VectorHelpers::theta(direction), qop, time;
 
   // Build covariance matrices for bound and free case
   BoundSquareMatrix boundCovariance = 0.025 * BoundSquareMatrix::Identity();
@@ -202,7 +191,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
   FreeMatrix noTransportJacobian = FreeMatrix::Identity();
 
   FreeToPathMatrix freeToPathDerivatives =
-      pSurface->freeToPathDerivative(tgContext, freeParameters);
+      pSurface->freeToPathDerivative(tgContext, position, direction);
   BoundToFreeMatrix boundToFreeJacobian =
       detail::curvilinearToFreeJacobian(direction);
 
@@ -242,21 +231,10 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
-  double time = 4.;
   Vector3 direction = Vector3(5., 2., 7.).normalized();
-  double qop = 0.125;
 
   // Build a surface, starting surface for curvilinear
   auto pSurface = Surface::makeShared<PlaneSurface>(position, direction);
-
-  // The free parameter vector
-  FreeVector freeParameters;
-  freeParameters << position[0], position[1], position[2], time, direction[0],
-      direction[1], direction[2], qop;
-  // And its associated bound vector
-  BoundVector boundParameters;
-  boundParameters << 0., 0., VectorHelpers::phi(direction),
-      VectorHelpers::theta(direction), qop, time;
 
   // Build covariance matrices for bound and free case
   BoundSquareMatrix boundCovariance = 0.025 * BoundSquareMatrix::Identity();
@@ -265,7 +243,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   FreeMatrix noTransportJacobian = FreeMatrix::Identity();
 
   BoundToFreeMatrix boundToFreeJacobian =
-      pSurface->boundToFreeJacobian(tgContext, boundParameters);
+      pSurface->boundToFreeJacobian(tgContext, position, direction);
 
   // (1) bound to free
   BoundToFreeMatrix b2fTransportJacobian = detail::boundToFreeTransportJacobian(

@@ -19,7 +19,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
                                 newCharge / newAbsMom, newCov,
                                 particleHypothesis);
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   Direction navDir = Direction::Forward;
   double stepSize = -256.;
