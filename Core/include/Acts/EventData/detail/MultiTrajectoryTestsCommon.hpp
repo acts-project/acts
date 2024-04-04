@@ -295,6 +295,7 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(!ts.hasJacobian());
 
     ts.addComponents(PM::Calibrated);
+    ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasPredicted());
     BOOST_CHECK(ts.hasFiltered());
     BOOST_CHECK(ts.hasSmoothed());
