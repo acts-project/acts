@@ -556,6 +556,15 @@ class MultiTrajectory {
     self().unset_impl(target, istate);
   }
 
+  /// Add additional components to an existing track state
+  /// @note Only available if the track state container is not read-only
+  /// @param istate The track state index to alter
+  /// @param mask The bitmask that instructs which components to allocate
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void addTrackStateComponents(IndexType istate, TrackStatePropMask mask) {
+    self().addTrackStateComponents_impl(istate, mask);
+  }
+
   /// Retrieve a mutable reference to a component
   /// @tparam T The type of the component to access
   /// @tparam key String key for the component to access

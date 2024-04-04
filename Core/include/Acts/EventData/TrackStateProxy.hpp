@@ -298,6 +298,14 @@ class TrackStateProxy {
     m_traj->self().unset(target, m_istate);
   }
 
+  /// Add additional components to the track state
+  /// @note Only available if the track state proxy is not read-only
+  /// @param mask The bitmask that instructs which components to allocate
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void addComponents(TrackStatePropMask mask) {
+    m_traj->self().addTrackStateComponents_impl(m_istate, mask);
+  }
+
   /// Reference surface.
   /// @return the reference surface
   const Surface& referenceSurface() const {
