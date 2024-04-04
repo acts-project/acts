@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 
 #include <iosfwd>
+#include <memory>
 #include <string>
 
 namespace Acts {
