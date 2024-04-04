@@ -424,6 +424,8 @@ class VectorMultiTrajectory final
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
 
+  void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask);
+
   void reserve(std::size_t n);
 
   void shareFrom_impl(IndexType iself, IndexType iother,
@@ -436,9 +438,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
@@ -563,9 +563,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
