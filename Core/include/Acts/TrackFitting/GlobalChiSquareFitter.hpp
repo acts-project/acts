@@ -433,12 +433,9 @@ class Gx2Fitter {
 
           // Add a <mask> TrackState entry multi trajectory. This allocates
           // storage for all components, which we will set later.
-          std::size_t currentTrackIndex =
-              fittedStates.addTrackState(mask, result.lastTrackIndex);
-
-          // now get track state proxy back
           typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.getTrackState(currentTrackIndex);
+              fittedStates.makeTrackState(mask, result.lastTrackIndex);
+          std::size_t currentTrackIndex = trackStateProxy.index();
 
           // Set the trackStateProxy components with the state from the ongoing
           // propagation
@@ -826,7 +823,7 @@ class Gx2Fitter {
     }
 
     // Prepare track for return
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    auto track = trackContainer.makeTrack();
     track.tipIndex() = tipIndex;
     track.parameters() = params.parameters();
     track.covariance() = fullCovariancePredicted;

@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
 
     BOOST_CHECK_EQUAL(tc.size(), 0);
 
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     BOOST_CHECK_EQUAL(t.tipIndex(), MultiTrajectoryTraits::kInvalid);
 
     t.setParticleHypothesis(pHypo);
@@ -225,8 +225,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK_EQUAL(pTrack.getReferenceSurface().identifier,
                       PodioUtil::kNoIdentifier);
 
-    auto t2 = tc.getTrack(tc.addTrack());
-    auto t3 = tc.getTrack(tc.addTrack());
+    auto t2 = tc.makeTrack();
+    auto t3 = tc.makeTrack();
     BOOST_CHECK_EQUAL(tc.size(), 3);
 
     // Register surface "with the detector"
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   tsc3.addColumn<uint8_t>("ts_odd");
 
   for (std::size_t i = 0; i < 10; i++) {
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     auto ts = t.appendTrackState();
     ts.predicted() = BoundVector::Ones();
     ts.component<uint64_t, "ts_counter"_hash>() = i;
@@ -358,11 +358,11 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
     t.template component<uint64_t>("counter") = i;
     t.template component<uint8_t>("odd") = static_cast<uint8_t>(i % 2 == 0);
 
-    auto t2 = tc2.getTrack(tc2.addTrack());
+    auto t2 = tc2.makeTrack();
     BOOST_CHECK_THROW(t2.copyFrom(t),
                       std::invalid_argument);  // this should fail
 
-    auto t3 = tc3.getTrack(tc3.addTrack());
+    auto t3 = tc3.makeTrack();
     t3.copyFrom(t);  // this should work
 
     BOOST_CHECK_NE(t3.tipIndex(), MultiTrajectoryTraits::kInvalid);
