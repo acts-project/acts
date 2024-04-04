@@ -485,7 +485,7 @@ class MutablePodioTrackStateContainer final
   }
 
   void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask) {
-    auto& data = trackState.data();
+    auto& data = m_collection->at(istate).data();
 
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted) &&
         data.ipredicted == kInvalid) {
