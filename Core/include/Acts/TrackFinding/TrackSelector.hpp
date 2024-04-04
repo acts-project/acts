@@ -372,7 +372,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
     if (!isValidTrack(track)) {
       continue;
     }
-    auto destProxy = outputTracks.getTrack(outputTracks.addTrack());
+    auto destProxy = outputTracks.makeTrack();
     destProxy.copyFrom(track, false);
     destProxy.tipIndex() = track.tipIndex();
   }

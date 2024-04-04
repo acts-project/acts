@@ -240,14 +240,13 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK(c.hasColumn("float_column"_hash));
 
   {
-    auto t1 = c.getTrackState(c.addTrackState(TrackStatePropMask::Predicted));
+    auto t1 = c.makeTrackState(TrackStatePropMask::Predicted);
     t1.predicted() = tv1;
     t1.predictedCovariance() = cov1;
 
     t1.setReferenceSurface(free);
 
-    auto t2 =
-        c.getTrackState(c.addTrackState(TrackStatePropMask::All, t1.index()));
+    auto t2 = c.makeTrackState(TrackStatePropMask::All, t1.index());
     t2.predicted() = tv2;
     t2.predictedCovariance() = cov2;
 
@@ -259,7 +258,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
     t2.jacobian() = cov2;
 
-    auto t3 = c.getTrackState(c.addTrackState());
+    auto t3 = c.makeTrackState();
     t3.setReferenceSurface(reg);
 
     t1.component<int32_t, "int_column"_hash>() = -11;
