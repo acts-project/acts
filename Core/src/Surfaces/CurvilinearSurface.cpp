@@ -125,8 +125,7 @@ std::shared_ptr<Surface> CurvilinearSurface::surface() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const CurvilinearSurface& surface) {
-  surface.toStream(os);
-  return os;
+  return surface.toStream(os);
 }
 
 }  // namespace Acts
