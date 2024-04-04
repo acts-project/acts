@@ -25,4 +25,9 @@ static constexpr ActsScalar s_epsilon =
 ///       unit of mm this corresponds to 0.1um.
 static constexpr ActsScalar s_onSurfaceTolerance = 1e-4;
 
+/// Tolerance for not being within curvilinear projection
+/// this allows using the same curvilinear frame to eta = 6,
+/// validity tested with IntegrationTests/PropagationTest
+static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
+
 }  // namespace Acts
