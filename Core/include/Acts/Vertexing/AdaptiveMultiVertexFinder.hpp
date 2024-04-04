@@ -75,6 +75,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     // track as compatible to vertex. If useTime is set to true, the time
     // coordinate also contributes to the significance and tracksMaxSignificance
     // needs to be increased.
+    // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
     double tracksMaxSignificance = 5.;
 
     // Max chi2 value for which tracks are considered compatible with
@@ -98,6 +99,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
     // Maximum significance on the distance between two vertices
     // to allow merging of two vertices.
+    // 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
     double maxMergeVertexSignificance = 3.;
 
     // Minimum weight a track has to have to be considered a compatible
@@ -112,9 +114,13 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     // Include also single track vertices
     bool addSingleTrackVertices = false;
 
-    // Use 3d information for evaluating the vertex distance significance
-    // for vertex merging/splitting
-    bool do3dSplitting = false;
+    // If doFullSplitting == true, we check the 3D distance (if useTime ==
+    // false) or the 4D distance (if useTime == true) of the vertices to
+    // determine whether they are merged.
+    // If doFullSplitting == false, we check the z distance (if useTime ==
+    // false) or the z-t distance (if useTime == true) of the vertices to
+    // determine whether they are merged.
+    bool doFullSplitting = false;
 
     // Maximum vertex contamination value
     double maximumVertexContamination = 0.5;
@@ -344,18 +350,19 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param fitterState The vertex fitter state
   ///
   /// @return Keep new vertex
-  bool keepNewVertex(Vertex& vtx, const std::vector<Vertex*>& allVertices,
-                     VertexFitterState& fitterState) const;
+  Result<bool> keepNewVertex(Vertex& vtx,
+                             const std::vector<Vertex*>& allVertices,
+                             VertexFitterState& fitterState) const;
 
   /// @brief Method that evaluates if the new vertex candidate is
   /// merged with one of the previously found vertices
   ///
   /// @param vtx The vertex candidate
-  /// @param allVertices All so far found vertices
+  /// @param allVertices All vertices that were found so far
   ///
-  /// @return Vertex is merged
-  bool isMergedVertex(const Vertex& vtx,
-                      const std::vector<Vertex*>& allVertices) const;
+  /// @return Bool indicating whether the vertex is merged
+  Result<bool> isMergedVertex(const Vertex& vtx,
+                              const std::vector<Vertex*>& allVertices) const;
 
   /// @brief Method that deletes last vertex from list of all vertices
   /// and refits all vertices afterwards

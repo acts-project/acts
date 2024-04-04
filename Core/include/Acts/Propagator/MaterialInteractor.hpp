@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Detector/GeometryCompatibilityConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -67,6 +68,11 @@ struct MaterialInteractor {
       return;
     }
 
+    static_assert(
+        Acts::Concepts::NavigationCompatibilityConcept<propagator_state_t,
+                                                       navigator_t>,
+        "Navigation does not fulfill geometry compatibility concept");
+
     // Handle surface material
 
     // Note that start and target surface conditions are handled in the
@@ -119,7 +125,7 @@ struct MaterialInteractor {
       updateResult(state, stepper, result);
     }
 
-    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
+    auto volume = navigator.currentVolume(state.navigation);
 
     // We only have material interactions if there is potential material
     if (volume && volume->volumeMaterial()) {

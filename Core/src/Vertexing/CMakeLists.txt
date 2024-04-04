@@ -16,4 +16,7 @@ target_sources(
     NumericalTrackLinearizer.cpp
     TrackDensityVertexFinder.cpp
     GaussianTrackDensity.cpp
+    ImpactPointEstimator.cpp
+    GaussianGridTrackDensity.cpp
+    GridDensityVertexFinder.cpp
 )

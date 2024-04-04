@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -44,17 +45,18 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
-    const ActsExamples::RootTrackSummaryWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootTrackSummaryWriter::RootTrackSummaryWriter(
+    const RootTrackSummaryWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackSummaryWriter", level),
       m_cfg(config) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
+  if (m_cfg.inputTrackParticleMatching.empty()) {
+    throw std::invalid_argument("Missing input track particles matching");
   }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -64,7 +66,7 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -76,131 +78,132 @@ ActsExamples::RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
   if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  } else {
-    // I/O parameters
-    m_outputTree->Branch("event_nr", &m_eventNr);
-    m_outputTree->Branch("track_nr", &m_trackNr);
+  }
 
-    m_outputTree->Branch("nStates", &m_nStates);
-    m_outputTree->Branch("nMeasurements", &m_nMeasurements);
-    m_outputTree->Branch("nOutliers", &m_nOutliers);
-    m_outputTree->Branch("nHoles", &m_nHoles);
-    m_outputTree->Branch("nSharedHits", &m_nSharedHits);
-    m_outputTree->Branch("chi2Sum", &m_chi2Sum);
-    m_outputTree->Branch("NDF", &m_NDF);
-    m_outputTree->Branch("measurementChi2", &m_measurementChi2);
-    m_outputTree->Branch("outlierChi2", &m_outlierChi2);
-    m_outputTree->Branch("measurementVolume", &m_measurementVolume);
-    m_outputTree->Branch("measurementLayer", &m_measurementLayer);
-    m_outputTree->Branch("outlierVolume", &m_outlierVolume);
-    m_outputTree->Branch("outlierLayer", &m_outlierLayer);
+  // I/O parameters
+  m_outputTree->Branch("event_nr", &m_eventNr);
+  m_outputTree->Branch("track_nr", &m_trackNr);
 
-    m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
-    m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
-    m_outputTree->Branch("t_charge", &m_t_charge);
-    m_outputTree->Branch("t_time", &m_t_time);
-    m_outputTree->Branch("t_vx", &m_t_vx);
-    m_outputTree->Branch("t_vy", &m_t_vy);
-    m_outputTree->Branch("t_vz", &m_t_vz);
-    m_outputTree->Branch("t_px", &m_t_px);
-    m_outputTree->Branch("t_py", &m_t_py);
-    m_outputTree->Branch("t_pz", &m_t_pz);
-    m_outputTree->Branch("t_theta", &m_t_theta);
-    m_outputTree->Branch("t_phi", &m_t_phi);
-    m_outputTree->Branch("t_eta", &m_t_eta);
-    m_outputTree->Branch("t_p", &m_t_p);
-    m_outputTree->Branch("t_pT", &m_t_pT);
-    m_outputTree->Branch("t_d0", &m_t_d0);
-    m_outputTree->Branch("t_z0", &m_t_z0);
+  m_outputTree->Branch("nStates", &m_nStates);
+  m_outputTree->Branch("nMeasurements", &m_nMeasurements);
+  m_outputTree->Branch("nOutliers", &m_nOutliers);
+  m_outputTree->Branch("nHoles", &m_nHoles);
+  m_outputTree->Branch("nSharedHits", &m_nSharedHits);
+  m_outputTree->Branch("chi2Sum", &m_chi2Sum);
+  m_outputTree->Branch("NDF", &m_NDF);
+  m_outputTree->Branch("measurementChi2", &m_measurementChi2);
+  m_outputTree->Branch("outlierChi2", &m_outlierChi2);
+  m_outputTree->Branch("measurementVolume", &m_measurementVolume);
+  m_outputTree->Branch("measurementLayer", &m_measurementLayer);
+  m_outputTree->Branch("outlierVolume", &m_outlierVolume);
+  m_outputTree->Branch("outlierLayer", &m_outlierLayer);
 
-    m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
-    m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
-    m_outputTree->Branch("eLOC1_fit", &m_eLOC1_fit);
-    m_outputTree->Branch("ePHI_fit", &m_ePHI_fit);
-    m_outputTree->Branch("eTHETA_fit", &m_eTHETA_fit);
-    m_outputTree->Branch("eQOP_fit", &m_eQOP_fit);
-    m_outputTree->Branch("eT_fit", &m_eT_fit);
-    m_outputTree->Branch("err_eLOC0_fit", &m_err_eLOC0_fit);
-    m_outputTree->Branch("err_eLOC1_fit", &m_err_eLOC1_fit);
-    m_outputTree->Branch("err_ePHI_fit", &m_err_ePHI_fit);
-    m_outputTree->Branch("err_eTHETA_fit", &m_err_eTHETA_fit);
-    m_outputTree->Branch("err_eQOP_fit", &m_err_eQOP_fit);
-    m_outputTree->Branch("err_eT_fit", &m_err_eT_fit);
-    m_outputTree->Branch("res_eLOC0_fit", &m_res_eLOC0_fit);
-    m_outputTree->Branch("res_eLOC1_fit", &m_res_eLOC1_fit);
-    m_outputTree->Branch("res_ePHI_fit", &m_res_ePHI_fit);
-    m_outputTree->Branch("res_eTHETA_fit", &m_res_eTHETA_fit);
-    m_outputTree->Branch("res_eQOP_fit", &m_res_eQOP_fit);
-    m_outputTree->Branch("res_eT_fit", &m_res_eT_fit);
-    m_outputTree->Branch("pull_eLOC0_fit", &m_pull_eLOC0_fit);
-    m_outputTree->Branch("pull_eLOC1_fit", &m_pull_eLOC1_fit);
-    m_outputTree->Branch("pull_ePHI_fit", &m_pull_ePHI_fit);
-    m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
-    m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
-    m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
+  m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
+  m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
+  m_outputTree->Branch("trackClassification", &m_trackClassification);
+  m_outputTree->Branch("t_charge", &m_t_charge);
+  m_outputTree->Branch("t_time", &m_t_time);
+  m_outputTree->Branch("t_vx", &m_t_vx);
+  m_outputTree->Branch("t_vy", &m_t_vy);
+  m_outputTree->Branch("t_vz", &m_t_vz);
+  m_outputTree->Branch("t_px", &m_t_px);
+  m_outputTree->Branch("t_py", &m_t_py);
+  m_outputTree->Branch("t_pz", &m_t_pz);
+  m_outputTree->Branch("t_theta", &m_t_theta);
+  m_outputTree->Branch("t_phi", &m_t_phi);
+  m_outputTree->Branch("t_eta", &m_t_eta);
+  m_outputTree->Branch("t_p", &m_t_p);
+  m_outputTree->Branch("t_pT", &m_t_pT);
+  m_outputTree->Branch("t_d0", &m_t_d0);
+  m_outputTree->Branch("t_z0", &m_t_z0);
 
-    if (m_cfg.writeGsfSpecific) {
-      m_outputTree->Branch("max_material_fwd", &m_gsf_max_material_fwd);
-      m_outputTree->Branch("sum_material_fwd", &m_gsf_sum_material_fwd);
-    }
+  m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
+  m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
+  m_outputTree->Branch("eLOC1_fit", &m_eLOC1_fit);
+  m_outputTree->Branch("ePHI_fit", &m_ePHI_fit);
+  m_outputTree->Branch("eTHETA_fit", &m_eTHETA_fit);
+  m_outputTree->Branch("eQOP_fit", &m_eQOP_fit);
+  m_outputTree->Branch("eT_fit", &m_eT_fit);
+  m_outputTree->Branch("err_eLOC0_fit", &m_err_eLOC0_fit);
+  m_outputTree->Branch("err_eLOC1_fit", &m_err_eLOC1_fit);
+  m_outputTree->Branch("err_ePHI_fit", &m_err_ePHI_fit);
+  m_outputTree->Branch("err_eTHETA_fit", &m_err_eTHETA_fit);
+  m_outputTree->Branch("err_eQOP_fit", &m_err_eQOP_fit);
+  m_outputTree->Branch("err_eT_fit", &m_err_eT_fit);
+  m_outputTree->Branch("res_eLOC0_fit", &m_res_eLOC0_fit);
+  m_outputTree->Branch("res_eLOC1_fit", &m_res_eLOC1_fit);
+  m_outputTree->Branch("res_ePHI_fit", &m_res_ePHI_fit);
+  m_outputTree->Branch("res_eTHETA_fit", &m_res_eTHETA_fit);
+  m_outputTree->Branch("res_eQOP_fit", &m_res_eQOP_fit);
+  m_outputTree->Branch("res_eT_fit", &m_res_eT_fit);
+  m_outputTree->Branch("pull_eLOC0_fit", &m_pull_eLOC0_fit);
+  m_outputTree->Branch("pull_eLOC1_fit", &m_pull_eLOC1_fit);
+  m_outputTree->Branch("pull_ePHI_fit", &m_pull_ePHI_fit);
+  m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
+  m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
+  m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
 
-    if (m_cfg.writeCovMat == true) {
-      // create one branch for every entry of covariance matrix
-      // one block for every row of the matrix, every entry gets own branch
-      m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
-      m_outputTree->Branch("cov_eLOC0_eLOC1", &m_cov_eLOC0_eLOC1);
-      m_outputTree->Branch("cov_eLOC0_ePHI", &m_cov_eLOC0_ePHI);
-      m_outputTree->Branch("cov_eLOC0_eTHETA", &m_cov_eLOC0_eTHETA);
-      m_outputTree->Branch("cov_eLOC0_eQOP", &m_cov_eLOC0_eQOP);
-      m_outputTree->Branch("cov_eLOC0_eT", &m_cov_eLOC0_eT);
+  if (m_cfg.writeGsfSpecific) {
+    m_outputTree->Branch("max_material_fwd", &m_gsf_max_material_fwd);
+    m_outputTree->Branch("sum_material_fwd", &m_gsf_sum_material_fwd);
+  }
 
-      m_outputTree->Branch("cov_eLOC1_eLOC0", &m_cov_eLOC1_eLOC0);
-      m_outputTree->Branch("cov_eLOC1_eLOC1", &m_cov_eLOC1_eLOC1);
-      m_outputTree->Branch("cov_eLOC1_ePHI", &m_cov_eLOC1_ePHI);
-      m_outputTree->Branch("cov_eLOC1_eTHETA", &m_cov_eLOC1_eTHETA);
-      m_outputTree->Branch("cov_eLOC1_eQOP", &m_cov_eLOC1_eQOP);
-      m_outputTree->Branch("cov_eLOC1_eT", &m_cov_eLOC1_eT);
+  if (m_cfg.writeCovMat) {
+    // create one branch for every entry of covariance matrix
+    // one block for every row of the matrix, every entry gets own branch
+    m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
+    m_outputTree->Branch("cov_eLOC0_eLOC1", &m_cov_eLOC0_eLOC1);
+    m_outputTree->Branch("cov_eLOC0_ePHI", &m_cov_eLOC0_ePHI);
+    m_outputTree->Branch("cov_eLOC0_eTHETA", &m_cov_eLOC0_eTHETA);
+    m_outputTree->Branch("cov_eLOC0_eQOP", &m_cov_eLOC0_eQOP);
+    m_outputTree->Branch("cov_eLOC0_eT", &m_cov_eLOC0_eT);
 
-      m_outputTree->Branch("cov_ePHI_eLOC0", &m_cov_ePHI_eLOC0);
-      m_outputTree->Branch("cov_ePHI_eLOC1", &m_cov_ePHI_eLOC1);
-      m_outputTree->Branch("cov_ePHI_ePHI", &m_cov_ePHI_ePHI);
-      m_outputTree->Branch("cov_ePHI_eTHETA", &m_cov_ePHI_eTHETA);
-      m_outputTree->Branch("cov_ePHI_eQOP", &m_cov_ePHI_eQOP);
-      m_outputTree->Branch("cov_ePHI_eT", &m_cov_ePHI_eT);
+    m_outputTree->Branch("cov_eLOC1_eLOC0", &m_cov_eLOC1_eLOC0);
+    m_outputTree->Branch("cov_eLOC1_eLOC1", &m_cov_eLOC1_eLOC1);
+    m_outputTree->Branch("cov_eLOC1_ePHI", &m_cov_eLOC1_ePHI);
+    m_outputTree->Branch("cov_eLOC1_eTHETA", &m_cov_eLOC1_eTHETA);
+    m_outputTree->Branch("cov_eLOC1_eQOP", &m_cov_eLOC1_eQOP);
+    m_outputTree->Branch("cov_eLOC1_eT", &m_cov_eLOC1_eT);
 
-      m_outputTree->Branch("cov_eTHETA_eLOC0", &m_cov_eTHETA_eLOC0);
-      m_outputTree->Branch("cov_eTHETA_eLOC1", &m_cov_eTHETA_eLOC1);
-      m_outputTree->Branch("cov_eTHETA_ePHI", &m_cov_eTHETA_ePHI);
-      m_outputTree->Branch("cov_eTHETA_eTHETA", &m_cov_eTHETA_eTHETA);
-      m_outputTree->Branch("cov_eTHETA_eQOP", &m_cov_eTHETA_eQOP);
-      m_outputTree->Branch("cov_eTHETA_eT", &m_cov_eTHETA_eT);
+    m_outputTree->Branch("cov_ePHI_eLOC0", &m_cov_ePHI_eLOC0);
+    m_outputTree->Branch("cov_ePHI_eLOC1", &m_cov_ePHI_eLOC1);
+    m_outputTree->Branch("cov_ePHI_ePHI", &m_cov_ePHI_ePHI);
+    m_outputTree->Branch("cov_ePHI_eTHETA", &m_cov_ePHI_eTHETA);
+    m_outputTree->Branch("cov_ePHI_eQOP", &m_cov_ePHI_eQOP);
+    m_outputTree->Branch("cov_ePHI_eT", &m_cov_ePHI_eT);
 
-      m_outputTree->Branch("cov_eQOP_eLOC0", &m_cov_eQOP_eLOC0);
-      m_outputTree->Branch("cov_eQOP_eLOC1", &m_cov_eQOP_eLOC1);
-      m_outputTree->Branch("cov_eQOP_ePHI", &m_cov_eQOP_ePHI);
-      m_outputTree->Branch("cov_eQOP_eTHETA", &m_cov_eQOP_eTHETA);
-      m_outputTree->Branch("cov_eQOP_eQOP", &m_cov_eQOP_eQOP);
-      m_outputTree->Branch("cov_eQOP_eT", &m_cov_eQOP_eT);
+    m_outputTree->Branch("cov_eTHETA_eLOC0", &m_cov_eTHETA_eLOC0);
+    m_outputTree->Branch("cov_eTHETA_eLOC1", &m_cov_eTHETA_eLOC1);
+    m_outputTree->Branch("cov_eTHETA_ePHI", &m_cov_eTHETA_ePHI);
+    m_outputTree->Branch("cov_eTHETA_eTHETA", &m_cov_eTHETA_eTHETA);
+    m_outputTree->Branch("cov_eTHETA_eQOP", &m_cov_eTHETA_eQOP);
+    m_outputTree->Branch("cov_eTHETA_eT", &m_cov_eTHETA_eT);
 
-      m_outputTree->Branch("cov_eT_eLOC0", &m_cov_eT_eLOC0);
-      m_outputTree->Branch("cov_eT_eLOC1", &m_cov_eT_eLOC1);
-      m_outputTree->Branch("cov_eT_ePHI", &m_cov_eT_ePHI);
-      m_outputTree->Branch("cov_eT_eTHETA", &m_cov_eT_eTHETA);
-      m_outputTree->Branch("cov_eT_eQOP", &m_cov_eT_eQOP);
-      m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
-    }
+    m_outputTree->Branch("cov_eQOP_eLOC0", &m_cov_eQOP_eLOC0);
+    m_outputTree->Branch("cov_eQOP_eLOC1", &m_cov_eQOP_eLOC1);
+    m_outputTree->Branch("cov_eQOP_ePHI", &m_cov_eQOP_ePHI);
+    m_outputTree->Branch("cov_eQOP_eTHETA", &m_cov_eQOP_eTHETA);
+    m_outputTree->Branch("cov_eQOP_eQOP", &m_cov_eQOP_eQOP);
+    m_outputTree->Branch("cov_eQOP_eT", &m_cov_eQOP_eT);
 
-    if (m_cfg.writeGx2fSpecific) {
-      m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
-    }
+    m_outputTree->Branch("cov_eT_eLOC0", &m_cov_eT_eLOC0);
+    m_outputTree->Branch("cov_eT_eLOC1", &m_cov_eT_eLOC1);
+    m_outputTree->Branch("cov_eT_ePHI", &m_cov_eT_ePHI);
+    m_outputTree->Branch("cov_eT_eTHETA", &m_cov_eT_eTHETA);
+    m_outputTree->Branch("cov_eT_eQOP", &m_cov_eT_eQOP);
+    m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
+  }
+
+  if (m_cfg.writeGx2fSpecific) {
+    m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
   }
 }
 
-ActsExamples::RootTrackSummaryWriter::~RootTrackSummaryWriter() {
+RootTrackSummaryWriter::~RootTrackSummaryWriter() {
   m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::finalize() {
+ProcessCode RootTrackSummaryWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -214,11 +217,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
-    const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
+ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
+                                           const ConstTrackContainer& tracks) {
   // Read additional input collections
   const auto& particles = m_inputParticles(ctx);
-  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -242,11 +245,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     m_NDF.push_back(track.nDoF());
     {
       std::vector<double> measurementChi2;
-      std::vector<double> measurementVolume;
-      std::vector<double> measurementLayer;
+      std::vector<std::uint32_t> measurementVolume;
+      std::vector<std::uint32_t> measurementLayer;
       std::vector<double> outlierChi2;
-      std::vector<double> outlierVolume;
-      std::vector<double> outlierLayer;
+      std::vector<std::uint32_t> outlierVolume;
+      std::vector<std::uint32_t> outlierLayer;
       for (const auto& state : track.trackStatesReversed()) {
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
@@ -275,6 +278,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     // Initialize the truth particle info
     ActsFatras::Barcode majorityParticleId(
         std::numeric_limits<std::size_t>::max());
+    TrackMatchClassification trackClassification =
+        TrackMatchClassification::Unknown;
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
     int t_charge = std::numeric_limits<int>::max();
     float t_time = NaNfloat;
@@ -298,13 +303,15 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
         track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
 
     // Get the majority truth particle to this track
-    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
+    auto match = trackParticleMatching.find(track.index());
     bool foundMajorityParticle = false;
     // Get the truth particle info
-    if (!particleHitCounts.empty()) {
+    if (match != trackParticleMatching.end() &&
+        match->second.particle.has_value()) {
       // Get the barcode of the majority truth particle
-      majorityParticleId = particleHitCounts.front().particleId;
-      nMajorityHits = particleHitCounts.front().hitCount;
+      majorityParticleId = match->second.particle.value();
+      trackClassification = match->second.classification;
+      nMajorityHits = match->second.contributingParticles.front().hitCount;
 
       // Find the truth particle via the barcode
       auto ip = particles.find(majorityParticleId);
@@ -363,6 +370,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
     // Push the corresponding truth particle info for the track.
     // Always push back even if majority particle not found
     m_majorityParticleId.push_back(majorityParticleId.value());
+    m_trackClassification.push_back(static_cast<int>(trackClassification));
     m_nMajorityHits.push_back(nMajorityHits);
     m_t_charge.push_back(t_charge);
     m_t_time.push_back(t_time);
@@ -547,6 +555,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
 
   m_nMajorityHits.clear();
   m_majorityParticleId.clear();
+  m_trackClassification.clear();
   m_t_charge.clear();
   m_t_time.clear();
   m_t_vx.clear();
@@ -640,3 +649,5 @@ ActsExamples::ProcessCode ActsExamples::RootTrackSummaryWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

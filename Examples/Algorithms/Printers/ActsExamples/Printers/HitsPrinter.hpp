@@ -11,8 +11,7 @@
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -35,7 +34,6 @@ struct AlgorithmContext;
 class HitsPrinter : public IAlgorithm {
  public:
   using Clusters = ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
   using HitIds = std::vector<std::size_t>;
 
   struct Config {

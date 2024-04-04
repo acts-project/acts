@@ -63,7 +63,6 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// @brief Config constructor
     ///
     /// @param fitter Vertex fitter
-    /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
     Config(VertexFitter fitter, std::shared_ptr<IVertexFinder> sfinder,
@@ -121,7 +120,7 @@ class IterativeVertexFinder final : public IVertexFinder {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& _magContext)
         : magContext(_magContext),
-          ipState(field.makeCache(magContext)),
+          ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 
     std::reference_wrapper<const Acts::MagneticFieldContext> magContext;

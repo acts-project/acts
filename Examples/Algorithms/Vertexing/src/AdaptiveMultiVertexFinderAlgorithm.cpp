@@ -133,19 +133,22 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
   finderConfig.useTime = m_cfg.useTime;
+  // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
+  finderConfig.tracksMaxSignificance = 5;
+  // This should be used consistently with and without time
+  finderConfig.doFullSplitting = false;
+  // 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
+  finderConfig.maxMergeVertexSignificance = 3;
   if (m_cfg.useTime) {
     // When using time, we have an extra contribution to the chi2 by the time
     // coordinate. We thus need to increase tracksMaxSignificance (i.e., the
     // maximum chi2 that a track can have to be associated with a vertex).
-    finderConfig.tracksMaxSignificance = 7.5;
-    // Check if vertices are merged in space and time
-    // TODO rename do3dSplitting -> doFullSplitting
-    finderConfig.do3dSplitting = true;
-    // Reset the maximum significance that two vertices can have before they
-    // are considered as merged. The default value 3 is tuned for comparing
-    // the vertices' z-coordinates. Since we consider 4 dimensions here, we
-    // need to multiply the value by 4 and thus we set it to 3 * 4 = 12.
-    finderConfig.maxMergeVertexSignificance = 12.;
+    // Using the same p-value for 3 dof instead of 2.
+    // 6.7 corresponds to a p-value of ~0.92 using `chi2(x=6.7,ndf=3)`
+    finderConfig.tracksMaxSignificance = 6.7;
+    // Using the same p-value for 2 dof instead of 1.
+    // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
+    finderConfig.maxMergeVertexSignificance = 5;
   }
   finderConfig.extractParameters
       .template connect<&Acts::InputTrack::extractParameters>();

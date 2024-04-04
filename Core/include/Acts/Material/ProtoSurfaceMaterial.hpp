@@ -91,14 +91,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
-  /// Direct access via bins to the MaterialSlab
-  ///
-  /// @return will return dummy material
-  const MaterialSlab& materialSlab(std::size_t /*unused*/,
-                                   std::size_t /*unused*/) const final {
-    return (m_materialSlab);
-  }
-
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream
