@@ -144,9 +144,9 @@ if "__main__" == __name__:
     )
     args = p.parse_args()
     if '.json' in args.outFile:
-        fmt = JsonFormat.Json
+        mapFormat = JsonFormat.Json
     elif '.cbor' in args.outFile:
-        fmt = JsonFormat.Cbor
+        mapFormat = JsonFormat.Cbor
     else:
         print('ERROR(material_mapping.py): please provide an output name ending with .json or .cbor')
         exit()
@@ -163,5 +163,5 @@ if "__main__" == __name__:
         inputDir=os.getcwd(),
         readCachedSurfaceInformation=False,
         mapName=mapName,
-        mapFormat=fmt
+        mapFormat=mapFormat
     ).run()
