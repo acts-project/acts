@@ -107,10 +107,10 @@ class CurvilinearSurface final {
   /// Output operator
   ///
   /// @param os is the ostream to be dumped into
-  /// @param vi is the CurvilinearSurface to be dumped
+  /// @param surface is the CurvilinearSurface to be dumped
   /// @return the ostream
   friend std::ostream& operator<<(std::ostream& os,
-                                  const CurvilinearSurface& vi);
+                                  const CurvilinearSurface& surface);
 
  private:
   Vector3 m_position = Vector3::Zero();
