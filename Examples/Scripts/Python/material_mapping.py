@@ -140,7 +140,7 @@ if "__main__" == __name__:
         "-o","--outFile",
         type=str,
         default="material-map.json",
-        help="output filename for the generated material map. Now the json and cbor formats are supported",
+        help="Output filename for the generated material map. Supported formats: JSON, CBOR.",
     )
     args = p.parse_args()
     if '.json' in args.outFile:
