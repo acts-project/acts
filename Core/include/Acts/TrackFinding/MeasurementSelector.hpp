@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -233,12 +233,12 @@ class MeasurementSelector {
 
   double calculateChi2(
       double* fullCalibrated, double* fullCalibratedCovariance,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Parameters predicted,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Covariance predictedCovariance,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Projector projector,
+      const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Parameters& predicted,
+      const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Covariance& predictedCovariance,
+      const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Projector& projector,
       unsigned int calibratedSize) const;
 
   Config m_config;

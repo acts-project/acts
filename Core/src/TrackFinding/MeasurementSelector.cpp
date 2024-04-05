@@ -17,12 +17,12 @@ namespace Acts {
 
 double MeasurementSelector::calculateChi2(
     double* fullCalibrated, double* fullCalibratedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector projector,
+    const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Parameters& predicted,
+    const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Covariance& predictedCovariance,
+    const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Projector& projector,
     unsigned int calibratedSize) const {
   return visit_measurement(calibratedSize, [&](auto N) -> double {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
@@ -45,7 +45,7 @@ double MeasurementSelector::calculateChi2(
 
     // Get the chi2
     return (res.transpose() *
-            ((calibratedCovariance + H * predictedCovariance * H.transpose()))
+            (calibratedCovariance + H * predictedCovariance * H.transpose())
                 .inverse() *
             res)
         .eval()(0, 0);
