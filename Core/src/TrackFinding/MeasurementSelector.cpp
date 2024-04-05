@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,7 +16,7 @@
 namespace Acts {
 
 double MeasurementSelector::calculateChi2(
-    double* fullCalibrated, double* fullCalibratedCovariance,
+    const double* fullCalibrated, const double* fullCalibratedCovariance,
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters& predicted,
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -24,7 +24,8 @@ double MeasurementSelector::calculateChi2(
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector& projector,
     unsigned int calibratedSize) const {
-  return visit_measurement(calibratedSize, [&](auto N) -> double {
+  return visit_measurement(calibratedSize, [&fullCalibrated, &fullCalibratedCovariance,
+					    &predicted, &predictedCovariance, &projector] (auto N) -> double {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{

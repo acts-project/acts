@@ -25,6 +25,8 @@
 #include <limits>
 #include <utility>
 #include <vector>
+#include <chrono>
+#include <iostream>
 
 namespace Acts {
 
@@ -86,7 +88,9 @@ class MeasurementSelector {
     using Result = Result<std::pair<
         typename std::vector<typename traj_t::TrackStateProxy>::iterator,
         typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
-
+    
+    auto start = std::chrono::high_resolution_clock::now();
+    
     ACTS_VERBOSE("Invoked MeasurementSelector");
 
     // Return error if no measurement
@@ -202,6 +206,11 @@ class MeasurementSelector {
                  << ", max: " << numMeasurementsCut);
 
     isOutlier = false;
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+    std::cout << "Duration: " << duration << std::endl;
+    
     return std::pair{candidates.begin(), trackStateIterEnd};
   }
 
@@ -232,7 +241,7 @@ class MeasurementSelector {
   }
 
   double calculateChi2(
-      double* fullCalibrated, double* fullCalibratedCovariance,
+      const double* fullCalibrated, const double* fullCalibratedCovariance,
       const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Parameters& predicted,
       const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
