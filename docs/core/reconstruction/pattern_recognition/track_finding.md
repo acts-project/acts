@@ -56,7 +56,7 @@ and provide:
    - measurement calibrator
    - branch stopper (optional)
 
-Typically users have to provide the tracking geometry, an implementation of a
+Typically, users have to provide the tracking geometry, an implementation of a
 {class}`Acts::MagneticFieldProvider`, which is needed by the stepper
 e.g. {class}`Acts::EigenStepper` which is needed by the propagator, a
 source link accessor and a measurement calibrator. An implementation of a source link

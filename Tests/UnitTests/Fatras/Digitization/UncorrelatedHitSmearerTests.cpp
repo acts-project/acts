@@ -13,8 +13,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -99,8 +99,8 @@ struct Fixture {
     auto [par, cov] =
         Acts::detail::Test::generateBoundParametersCovariance(rng);
     boundParams = par;
-    freeParams = Acts::detail::transformBoundToFreeParameters(*surface, geoCtx,
-                                                              boundParams);
+    freeParams =
+        Acts::transformBoundToFreeParameters(*surface, geoCtx, boundParams);
 
     // construct hit from free parameters
     Acts::Vector4 r4;

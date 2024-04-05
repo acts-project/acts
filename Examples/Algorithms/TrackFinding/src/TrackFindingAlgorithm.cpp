@@ -13,9 +13,15 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
@@ -23,6 +29,8 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -83,15 +91,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = m_cfg.maxSteps;
-  pOptions.direction =
-      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
-
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
@@ -101,9 +103,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -114,12 +113,24 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
+  Acts::PropagatorPlainOptions pOptions;
+  pOptions.maxSteps = m_cfg.maxSteps;
+  pOptions.direction = Acts::Direction::Forward;
+
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, pSurface.get());
-  options.smoothingTargetSurfaceStrategy =
-      Acts::CombinatorialKalmanFilterTargetSurfaceStrategy::first;
+      extensions, pOptions);
+
+  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+      Acts::EigenStepper<>(m_cfg.magneticField),
+      Acts::Navigator({m_cfg.trackingGeometry},
+                      logger().cloneWithSuffix("Navigator")),
+      logger().cloneWithSuffix("Propagator"));
+
+  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
+                          Acts::AbortList<Acts::EndOfWorldReached>>
+      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -159,12 +170,32 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
+      auto smoothingResult = Acts::smoothTrack(ctx.geoContext, track, logger());
+      if (!smoothingResult.ok()) {
+        m_nFailedSmoothing++;
+        ACTS_ERROR("Smoothing for seed "
+                   << iseed << " and track " << track.index()
+                   << " failed with error " << smoothingResult.error());
+        continue;
+      }
+
+      auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
+          track, *pSurface, extrapolator, extrapolationOptions,
+          m_cfg.extrapolationStrategy, logger());
+      if (!extrapolationResult.ok()) {
+        m_nFailedExtrapolation++;
+        ACTS_ERROR("Extrapolation for seed "
+                   << iseed << " and track " << track.index()
+                   << " failed with error " << extrapolationResult.error());
+        continue;
+      }
+
       // Set the seed number, this number decrease by 1 since the seed number
-      // has already been updated
       seedNumber(track) = nSeed - 1;
+
       if (!m_trackSelector.has_value() ||
           m_trackSelector->isValidTrack(track)) {
-        auto destProxy = tracks.getTrack(tracks.addTrack());
+        auto destProxy = tracks.makeTrack();
         destProxy.copyFrom(track, true);  // make sure we copy track states!
       }
     }
@@ -199,8 +230,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize() {
   ACTS_INFO("TrackFindingAlgorithm statistics:");
   ACTS_INFO("- total seeds: " << m_nTotalSeeds);
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
-  ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedSeeds) /
-                                       m_nTotalSeeds);
+  ACTS_INFO("- failed smoothing: " << m_nFailedSmoothing);
+  ACTS_INFO("- failed extrapolation: " << m_nFailedExtrapolation);
+  ACTS_INFO("- failure ratio seeds: " << static_cast<double>(m_nFailedSeeds) /
+                                             m_nTotalSeeds);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {

@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/TrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
@@ -47,16 +47,6 @@ namespace Acts {
 /// Author(s) Russo, F
 class FullBilloirVertexFitter {
  public:
-  struct State {
-    /// @brief The state constructor
-    ///
-    /// @param fieldCache The magnetic field cache
-    State(MagneticFieldProvider::Cache _fieldCache)
-        : fieldCache(std::move(_fieldCache)) {}
-
-    MagneticFieldProvider::Cache fieldCache;
-  };
-
   struct Config {
     /// Maximum number of iterations in fitter
     int maxIterations = 5;
@@ -93,14 +83,13 @@ class FullBilloirVertexFitter {
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
-  /// @param state The state object
+  /// @param fieldCache The magnetic field cache
   ///
   /// @return Fitted vertex
   Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
                      const VertexingOptions& vertexingOptions,
-                     State& state) const;
+                     MagneticFieldProvider::Cache& fieldCache) const;
 
  private:
   /// Configuration object
@@ -114,5 +103,3 @@ class FullBilloirVertexFitter {
 };
 
 }  // namespace Acts
-
-#include "FullBilloirVertexFitter.ipp"

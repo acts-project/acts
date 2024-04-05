@@ -15,8 +15,6 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -182,7 +180,8 @@ void readTrack(const edm4hep::Track& from,
   auto unpack =
       [](const edm4hep::TrackState& trackState) -> detail::Parameters {
     detail::Parameters params;
-    params.covariance = ActsSquareMatrix<6>{};
+    params.covariance = BoundMatrix::Zero();
+    params.values = BoundVector::Zero();
     detail::unpackCovariance(trackState.covMatrix.data(),
                              params.covariance.value());
     params.values[0] = trackState.D0;

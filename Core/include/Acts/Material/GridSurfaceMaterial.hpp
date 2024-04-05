@@ -12,6 +12,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -31,8 +32,8 @@ struct GridMaterialAccessor {
   ///
   /// @return the material slab from the grid bin associated to the lookup point
   template <typename grid_type>
-  inline MaterialSlab& slab(grid_type& grid,
-                            const typename grid_type::point_t& point) const {
+  inline const MaterialSlab& slab(
+      grid_type& grid, const typename grid_type::point_t& point) const {
     return grid.atPosition(point);
   }
 
@@ -44,8 +45,9 @@ struct GridMaterialAccessor {
   /// @note this is not particularly fast
   template <typename grid_type>
   void scale(grid_type& grid, ActsScalar scale) {
-    for (auto& m : grid.values()) {
-      m.scaleThickness(scale);
+    // Loop through the grid bins, get the indices and scale the material
+    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
+      grid.at(ib).scaleThickness(scale);
     }
   }
 };
@@ -79,6 +81,57 @@ struct IndexedMaterialAccessor {
   }
 };
 
+/// @brief  This is an accessor for cases where the material is filled in a global
+/// material vector that is accessed from the different material grids.
+struct GloballyIndexedMaterialAccessor {
+  /// @brief The internal storage of the material
+  std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
+
+  /// Indicate if you have entries bins across different grids, e.g. by
+  /// running a compression/clustering algorithm.
+  ///
+  /// It is the responsibility of the user to set this flag correctly.
+  bool sharedEntries = false;
+
+  /// @brief  Direct const access to the material slap sorted in the grid
+  ///
+  /// @tparam grid_type the type of the grid, also defines the point type
+  ///
+  /// @param grid the grid holding the indices into the global material vector
+  /// @param point the lookup point (already casted from global, or filled from local)
+  ///
+  /// @return the material slab from the grid bin associated to the lookup point
+  template <typename grid_type>
+  inline const MaterialSlab& slab(
+      const grid_type& grid, const typename grid_type::point_t& point) const {
+    auto index = grid.atPosition(point);
+    return (*globalMaterial)[index];
+  }
+
+  /// @brief Scale the material (by scaling the thickness)
+  ///
+  /// @param grid the grid holding the indices into the global material vector
+  /// @param scale the amount of the scaling
+  ///
+  /// @note this will scale only the bins touched by this grid, however,
+  /// if there are shared bins, then it will throw an exception as the
+  /// outcome is unpredictable.
+  ///
+  template <typename grid_type>
+  void scale(grid_type& grid, ActsScalar scale) {
+    if (sharedEntries) {
+      throw std::invalid_argument(
+          "GloballyIndexedMaterialAccessor: shared entry scaling is not "
+          "supported.");
+    }
+    // Loop through the grid bins, get the indices and scale the material
+    for (std::size_t ib = 0; ib < grid.size(); ++ib) {
+      auto index = grid.at(ib);
+      (*globalMaterial)[index].scaleThickness(scale);
+    }
+  }
+};
+
 /// @brief GridSurfaceMaterialT
 ///
 /// It extends the @c ISurfaceMaterial base class and allows to create
@@ -92,6 +145,16 @@ struct IndexedMaterialAccessor {
 template <typename grid_t, typename material_accessor_t = GridMaterialAccessor>
 class GridSurfaceMaterialT : public ISurfaceMaterial {
  public:
+  // Definition of bound (on surface) to grid local representation delegate
+  using BoundToGridLocalDelegate =
+      OwningDelegate<typename grid_t::point_t(const Vector2&),
+                     GridAccess::IBoundToGridLocal>;
+
+  // Definition of global to grid local representation delegate
+  using GlobalToGridLocalDelegate =
+      OwningDelegate<typename grid_t::point_t(const Vector3&),
+                     GridAccess::IGlobalToGridLocal>;
+
   /// Broadcast grid type
   using grid_type = grid_t;
 
@@ -99,57 +162,37 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   using material_accessor_type = material_accessor_t;
 
   /// @brief Constructor for indexed surface material
+  ///
   /// @param grid the index grid steering the access to the material vector
   /// @param materialAccessor the material accessor: from grid, from indexed vector
-  /// @param gcasts global casts -> casts a grid position from global
-  /// @param laccessors local accessors -> accessors to the local grid
-  /// @param transform  transform from global frame into map frame
+  /// @param boundToGridLocal the delegation from bound to grid local frame
+  /// @param globalToGridLocal the delegation from global into grid local frame
   GridSurfaceMaterialT(grid_type&& grid,
                        material_accessor_type&& materialAccessor,
-                       const std::vector<BinningValue>& gcasts,
-                       const std::vector<std::size_t>& laccessors,
-                       const Transform3& transform = Transform3::Identity())
+                       BoundToGridLocalDelegate boundToGridLocal,
+                       GlobalToGridLocalDelegate globalToGridLocal)
       : m_grid(std::move(grid)),
         m_materialAccessor(std::move(materialAccessor)),
-        m_globalCasts(gcasts),
-        m_localAccessors(laccessors),
-        m_transform(transform) {
-    if (gcasts.size() != grid_type::DIM) {
+        m_globalToGridLocal(std::move(globalToGridLocal)),
+        m_boundToGridLocal(std::move(boundToGridLocal)) {
+    if (!m_globalToGridLocal.connected()) {
       throw std::invalid_argument(
-          "The number of casts must match the grid dimension");
+          "GridSurfaceMaterialT: GlobalToGridLocalDelegate is not connected.");
     }
-
-    if (gcasts.size() != laccessors.size()) {
+    if (!m_boundToGridLocal.connected()) {
       throw std::invalid_argument(
-          "The number of casts must match the number of local accessors");
+          "GridSurfaceMaterialT: BoundToGridLocalDelegate is not connected.");
     }
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final {
-    return m_materialAccessor.slab(
-        m_grid,
-        GridAccessHelpers::accessLocal<grid_type>(lp, m_localAccessors));
+    return m_materialAccessor.slab(m_grid, m_boundToGridLocal(lp));
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   const MaterialSlab& materialSlab(const Vector3& gp) const final {
-    // Access via (transformed) global position lookup
-    return m_materialAccessor.slab(
-        m_grid, GridAccessHelpers::castPosition<grid_type>(m_transform * gp,
-                                                           m_globalCasts));
-  }
-
-  /// @copydoc ISurfaceMaterial::materialSlab(std::size_t bin0, std::size_t bin1) const
-  ///
-  /// The ISurface material class expects bins in [ 0 - n ] x [ 0, m ], we will
-  /// convert into this format, but it is gonna be slow
-  const MaterialSlab& materialSlab(std::size_t bin0,
-                                   std::size_t bin1) const final {
-    // Access via bin0 and bin1
-    Acts::Vector2 lposition =
-        GridAccessHelpers::toLocal(m_grid, bin0, bin1, m_localAccessors[0u]);
-    return materialSlab(lposition);
+    return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 
   /// Scale operator
@@ -166,27 +209,47 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
     return sl;
   }
 
+  /// @brief Accessor to the grid
+  const grid_type& grid() const { return m_grid; }
+
+  /// @brief Accessor to the material accessor
+  const material_accessor_type& materialAccessor() const {
+    return m_materialAccessor;
+  }
+
+  /// @brief Accessor to the bound to grid local delegate
+  const BoundToGridLocalDelegate& boundToGridLocal() const {
+    return m_boundToGridLocal;
+  }
+
+  /// @brief Accessor to the global to grid local delegate
+  const GlobalToGridLocalDelegate& globalToGridLocal() const {
+    return m_globalToGridLocal;
+  }
+
  private:
   /// @brief The grid
   grid_type m_grid;
 
-  /// @brief The stored material
+  /// @brief The stored material accessor
   material_accessor_type m_materialAccessor;
 
-  /// @brief The casts from global to local
-  std::vector<BinningValue> m_globalCasts;
+  /// The global to grid local delegate
+  GlobalToGridLocalDelegate m_globalToGridLocal;
 
-  /// @brief Local accessors - empty assumes direct translation
-  std::vector<std::size_t> m_localAccessors;
-
-  /// @brief The transform to the local frame
-  Transform3 m_transform;
+  /// The bound to grid local delegate
+  BoundToGridLocalDelegate m_boundToGridLocal;
 };
 
 // Indexed Surface material
 template <typename grid_type>
 using IndexedSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, IndexedMaterialAccessor>;
+
+// Globally Indexed Surface material
+template <typename grid_type>
+using GloballyIndexedSurfaceMaterial =
+    GridSurfaceMaterialT<grid_type, GloballyIndexedMaterialAccessor>;
 
 // Grid Surface material
 template <typename grid_type>

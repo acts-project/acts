@@ -659,7 +659,7 @@ class TrackProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto appendTrackState(TrackStatePropMask mask = TrackStatePropMask::All) {
     auto& tsc = m_container->trackStateContainer();
-    auto ts = tsc.getTrackState(tsc.addTrackState(mask, tipIndex()));
+    auto ts = tsc.makeTrackState(mask, tipIndex());
     tipIndex() = ts.index();
     return ts;
   }
@@ -828,6 +828,16 @@ class TrackProxy {
   BoundTrackParameters createParametersAtReference() const {
     return BoundTrackParameters(referenceSurface().getSharedPtr(), parameters(),
                                 covariance(), particleHypothesis());
+  }
+
+  /// Convert a track state into track parameters
+  /// @note The parameters are created on the fly
+  /// @return the track parameters
+  BoundTrackParameters createParametersFromState(
+      const ConstTrackStateProxy& trackState) const {
+    return BoundTrackParameters(trackState.referenceSurface().getSharedPtr(),
+                                trackState.parameters(),
+                                trackState.covariance(), particleHypothesis());
   }
 
   /// Return a reference to the track container backend, mutable version.

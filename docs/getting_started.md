@@ -267,6 +267,8 @@ components.
 | ACTS_BUILD_PLUGIN_PODIO             | Build Podio plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
+| ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                             |
+| ACTS_USE_SYSTEM_GEOMODEL            | Use a system-provided GeoModel<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
 | ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
@@ -327,7 +329,7 @@ CMake variables](https://cmake.org/Wiki/CMake_Useful_Variables) or at the [CMake
 documentation](https://cmake.org/documentation/).
 
 | Option               | Description                                                                                                                       |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | CMAKE_BUILD_TYPE     | Build type, e.g. Debug or Release; affects compiler flags <br/> (if not specified **`RelWithDebInfo`** will be used as a default) |
 | CMAKE_CXX_COMPILER   | Which C++ compiler to use, e.g. g++ or clang++                                                                                    |
 | CMAKE_INSTALL_PREFIX | Where to install ACTS to                                                                                                          |
@@ -342,7 +344,7 @@ $ DD4hep_DIR=<path/to/dd4hep> cmake -B <build> -S <source>
 The following environment variables might be useful.
 
 | Environment variable | Description                              |
-| -------------------- | ---------------------------------------- |
+|----------------------|------------------------------------------|
 | DD4hep_DIR           | Search path for the DD4hep installation  |
 | HepMC3_DIR           | Search path for the HepMC3 installation  |
 | Pythia8_DIR          | Search path for the Pythia8 installation |
@@ -364,7 +366,7 @@ You can now use the ODD in the python binding by using:
 
 ```python
 oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
-detector, trackingGeometry, decorators = getOpenDataDetector(odd_dir, oddMaterialDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(oddMaterialDeco)
 ```
 
 

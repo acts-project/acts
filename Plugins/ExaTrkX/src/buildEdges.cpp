@@ -191,7 +191,7 @@ struct Span {
   const_iterator cbegin() const { return ptr; }
   const_iterator cend() const { return ptr + S; }
 
-  auto operator[](std::size_t i) const { return ptr[i]; }
+  auto &operator[](std::size_t i) const { return ptr[i]; }
 };
 
 template <std::size_t Dim>
@@ -235,9 +235,9 @@ struct BuildEdgesKDTree {
     for (int iself = 0; iself < embedFeatures.size(0); ++iself) {
       const Span<float, Dim> self{dataPtr + iself * Dim};
 
-      Acts::RangeXD<Dim, float, Span> range;
+      Acts::RangeXD<Dim, float> range;
       for (auto j = 0ul; j < Dim; ++j) {
-        range[j] = Acts::Range1D(self[j] - rVal, self[j] + rVal);
+        range[j] = Acts::Range1D<float>(self[j] - rVal, self[j] + rVal);
       }
 
       tree.rangeSearchMapDiscard(

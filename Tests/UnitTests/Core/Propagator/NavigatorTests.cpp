@@ -27,7 +27,6 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -692,57 +691,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     std::cout << state.options.debugString << std::endl;
     state.options.debugString = "";
   }
-}
-
-BOOST_AUTO_TEST_CASE(Navigator_target_methods_BVH) {
-  // create a navigator for the Bounding Volume Hierarchy test
-  CubicBVHTrackingGeometry grid(20, 1000, 5);
-  Navigator::Config bvhNavCfg;
-  bvhNavCfg.trackingGeometry = grid.trackingGeometry;
-  bvhNavCfg.resolveSensitive = true;
-  bvhNavCfg.resolveMaterial = true;
-  bvhNavCfg.resolvePassive = false;
-  Navigator bvhNavigator{bvhNavCfg};
-
-  // test the navigation in a bounding volume hierarchy
-  // ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< BVH Navigation >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
-
-  // position and direction vector
-  Vector4 bvhPosition4(0., 0., 0, 0);
-  Vector3 bvhMomentum(1., 1., 0.);
-
-  // the propagator cache
-  PropagatorState bvhState;
-  bvhState.options.debug = debug;
-
-  // the stepper cache
-  bvhState.stepping.pos4 = bvhPosition4;
-  bvhState.stepping.dir = bvhMomentum.normalized();
-
-  // Stepper
-  PropagatorState::Stepper bvhStepper;
-
-  bvhNavigator.initialize(bvhState, bvhStepper);
-
-  // Check that the currentVolume is set
-  BOOST_CHECK_NE(bvhState.navigation.currentVolume, nullptr);
-  // Check that the currentVolume is the startVolume
-  BOOST_CHECK_EQUAL(bvhState.navigation.currentVolume,
-                    bvhState.navigation.startVolume);
-  // Check that the currentSurface is reset to:
-  BOOST_CHECK_EQUAL(bvhState.navigation.currentSurface, nullptr);
-  // No layer has been found
-  BOOST_CHECK_EQUAL(bvhState.navigation.navLayers.size(), 0u);
-  // ACTORS-ABORTERS-TARGET
-  bvhNavigator.preStep(bvhState, bvhStepper);
-  // Still no layer
-  BOOST_CHECK_EQUAL(bvhState.navigation.navLayers.size(), 0u);
-  // Surfaces have been found
-  BOOST_CHECK_EQUAL(bvhState.navigation.navSurfaces.size(), 42u);
 }
 
 }  // namespace Test

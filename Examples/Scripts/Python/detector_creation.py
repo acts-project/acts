@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-import os
+
+import json
+
 import acts
-from acts import examples, logging, Binning, svg, GeometryContext, Extent
 from acts.examples.dd4hep import (
     DD4hepDetector,
     DD4hepDetectorOptions,
     DD4hepGeometryService,
 )
-
-import json
-
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 if "__main__" == __name__:
