@@ -45,12 +45,8 @@ auto kalmanHandleMeasurement(
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
   TrackStatePropMask mask = TrackStatePropMask::All;
-  const std::size_t currentTrackIndex =
-      fittedStates.addTrackState(mask, lastTrackIndex);
-
-  // now get track state proxy back
   typename traj_t::TrackStateProxy trackStateProxy =
-      fittedStates.getTrackState(currentTrackIndex);
+      fittedStates.makeTrackState(mask, lastTrackIndex);
 
   // Set the trackStateProxy components with the state from the ongoing
   // propagation
@@ -146,12 +142,8 @@ auto kalmanHandleNoMeasurement(
   // all components, which we will set later.
   TrackStatePropMask mask =
       ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
-  const std::size_t currentTrackIndex =
-      fittedStates.addTrackState(mask, lastTrackIndex);
-
-  // now get track state proxy back
   typename traj_t::TrackStateProxy trackStateProxy =
-      fittedStates.getTrackState(currentTrackIndex);
+      fittedStates.makeTrackState(mask, lastTrackIndex);
 
   // Set the trackStateProxy components with the state from the ongoing
   // propagation

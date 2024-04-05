@@ -777,11 +777,10 @@ class CombinatorialKalmanFilter {
         }
 
         ACTS_VERBOSE("Create temp track state with mask: " << mask);
-        std::size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
         // fail!
-        auto ts = result.stateBuffer->getTrackState(tsi);
+        auto ts = result.stateBuffer->makeTrackState(mask, prevTip);
 
         if (it == slBegin) {
           // only set these for first
@@ -932,12 +931,12 @@ class CombinatorialKalmanFilter {
                                       result_type& result, bool isSensitive,
                                       std::size_t prevTip) const {
       // Add a track state
-      auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
+      auto trackStateProxy =
+          result.fittedStates->makeTrackState(stateMask, prevTip);
       ACTS_VERBOSE("Create " << (isSensitive ? "Hole" : "Material")
-                             << " output track state #" << currentTip
+                             << " output track state #"
+                             << trackStateProxy.index()
                              << " with mask: " << stateMask);
-      // now get track state proxy back
-      auto trackStateProxy = result.fittedStates->getTrackState(currentTip);
 
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
@@ -966,7 +965,7 @@ class CombinatorialKalmanFilter {
       trackStateProxy.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
 
-      return currentTip;
+      return trackStateProxy.index();
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: material interaction

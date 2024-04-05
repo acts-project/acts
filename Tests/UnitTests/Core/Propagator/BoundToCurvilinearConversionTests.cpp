@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -222,7 +222,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       // compute Jacobian for bound to curvilinear covariance transformation
       Acts::BoundMatrix b2c;
       Acts::detail::boundToCurvilinearTransportJacobian(
-          direction, surface->boundToFreeJacobian(geoCtx, params.parameters()),
+          direction, surface->boundToFreeJacobian(geoCtx, position, direction),
           Acts::FreeMatrix::Identity(),
           computeFreeToPathDerivatives(
               direction, params.parameters()[eBoundQOverP],
