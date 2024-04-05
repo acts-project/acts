@@ -450,7 +450,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(GsfError::NoMeasurementStatesCreatedFinal);
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    auto track = trackContainer.makeTrack();
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
 
     if (options.referenceSurface) {
