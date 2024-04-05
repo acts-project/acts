@@ -780,11 +780,10 @@ class CombinatorialKalmanFilter {
             "Create temp track state with mask: " << std::bitset<
                 sizeof(std::underlying_type_t<TrackStatePropMask>) * 8>(
                 static_cast<std::underlying_type_t<TrackStatePropMask>>(mask)));
-        std::size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
         // fail!
-        auto ts = result.stateBuffer->getTrackState(tsi);
+        auto ts = result.stateBuffer->makeTrackState(mask, prevTip);
 
         if (it == slBegin) {
           // only set these for first
@@ -849,9 +848,8 @@ class CombinatorialKalmanFilter {
 
         // copy this trackstate into fitted states MultiTrajectory
         typename traj_t::TrackStateProxy trackState =
-            result.fittedStates->getTrackState(
-                result.fittedStates->addTrackState(
-                    mask, candidateTrackState.previous()));
+            result.fittedStates->makeTrackState(mask,
+                                                candidateTrackState.previous());
         ACTS_VERBOSE(
             "Create SourceLink output track state #"
             << trackState.index() << " with mask: "
@@ -940,17 +938,16 @@ class CombinatorialKalmanFilter {
                                       result_type& result, bool isSensitive,
                                       std::size_t prevTip) const {
       // Add a track state
-      auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
+      auto trackStateProxy =
+          result.fittedStates->makeTrackState(stateMask, prevTip);
       ACTS_VERBOSE(
           "Create "
           << (isSensitive ? "Hole" : "Material") << " output track state #"
-          << currentTip << " with mask: "
+          << trackStateProxy.index() << " with mask: "
           << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
                          8>{
                  static_cast<std::underlying_type_t<TrackStatePropMask>>(
                      stateMask)});
-      // now get track state proxy back
-      auto trackStateProxy = result.fittedStates->getTrackState(currentTip);
 
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
@@ -979,7 +976,7 @@ class CombinatorialKalmanFilter {
       trackStateProxy.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
 
-      return currentTip;
+      return trackStateProxy.index();
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: material interaction
@@ -1206,7 +1203,7 @@ class CombinatorialKalmanFilter {
     std::vector<typename TrackContainer::TrackProxy> tracks;
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
-      auto track = trackContainer.getTrack(trackContainer.addTrack());
+      auto track = trackContainer.makeTrack();
       track.tipIndex() = tip;
 
       // Set fitted track parameters if available. This will only be the case if

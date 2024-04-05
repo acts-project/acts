@@ -331,12 +331,8 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
 }
 
 Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global position
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
-
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
   // The vector between position and center
