@@ -250,6 +250,25 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
               Acts::calculateTrackQuantities(secondTrack);
 
+              // TODO This extrapolation should not be necessary
+              // TODO The CKF is targetting this surface and should communicate
+              //      the resulting parameters
+              // TODO Removing this requires changes in the core CKF
+              //      implementation
+              auto secondExtrapolationResult =
+                  Acts::extrapolateTrackToReferenceSurface(
+                      secondTrack, *pSurface, extrapolator,
+                      extrapolationOptions, m_cfg.extrapolationStrategy,
+                      logger());
+              if (!secondExtrapolationResult.ok()) {
+                m_nFailedExtrapolation++;
+                ACTS_ERROR("Second extrapolation for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error "
+                           << secondExtrapolationResult.error());
+                continue;
+              }
+
               if (!m_trackSelector.has_value() ||
                   m_trackSelector->isValidTrack(secondTrack)) {
                 auto destProxy = tracks.makeTrack();
