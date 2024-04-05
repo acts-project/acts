@@ -235,10 +235,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               if (secondTrack.nTrackStates() < 2) {
                 continue;
               }
-              if (!secondTrack.hasReferenceSurface()) {
-                ACTS_WARNING("Second track has no reference surface");
-                continue;
-              }
 
               secondTrack.reverseTrackStates(true);
               seedNumber(secondTrack) = nSeed - 1;
