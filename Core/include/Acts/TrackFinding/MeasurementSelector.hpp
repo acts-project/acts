@@ -88,7 +88,8 @@ class MeasurementSelector {
     using Result = Result<std::pair<
         typename std::vector<typename traj_t::TrackStateProxy>::iterator,
         typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
-    
+
+    std::cout << "num meas: " << candidates.size() << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     
     ACTS_VERBOSE("Invoked MeasurementSelector");
