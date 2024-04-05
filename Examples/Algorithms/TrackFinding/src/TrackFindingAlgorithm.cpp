@@ -251,7 +251,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               Acts::calculateTrackQuantities(secondTrack);
 
               // TODO This extrapolation should not be necessary
-              // TODO The CKF is targetting this surface and should communicate
+              // TODO The CKF is targeting this surface and should communicate
               //      the resulting parameters
               // TODO Removing this requires changes in the core CKF
               //      implementation
