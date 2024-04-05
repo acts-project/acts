@@ -15,14 +15,18 @@
 
 namespace Acts {
 
+MeasurementSelector::MeasurementSelector(Config config)
+  : m_config(std::move(config))
+{}
+  
 double MeasurementSelector::calculateChi2(
     const double* fullCalibrated, const double* fullCalibratedCovariance,
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters& predicted,
+                     false>::Parameters predicted,
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance& predictedCovariance,
+                     false>::Covariance predictedCovariance,
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector& projector,
+                     false>::Projector projector,
     unsigned int calibratedSize) const {
   return visit_measurement(calibratedSize, [&fullCalibrated, &fullCalibratedCovariance,
 					    &predicted, &predictedCovariance, &projector] (auto N) -> double {

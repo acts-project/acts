@@ -7,28 +7,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
-
-#include <cassert>
-#include <cstddef>
-#include <iterator>
-#include <limits>
-#include <utility>
-#include <vector>
-#include <chrono>
-#include <iostream>
-
 namespace Acts {
 
   template <typename traj_t>
@@ -41,7 +19,8 @@ namespace Acts {
     using Result = Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
 			    typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
-    
+
+
     auto start = std::chrono::high_resolution_clock::now();
     
     ACTS_VERBOSE("Invoked MeasurementSelector");
@@ -64,62 +43,79 @@ namespace Acts {
     }
 
     assert(!cuts->chi2CutOff.empty());
-    const std::vector<double>& chi2CutOff = cuts->chi2CutOff;
-    const double maxChi2Cut = *std::max_element(chi2CutOff.begin(), chi2CutOff.end());
-
+    const auto& chi2CutOff = cuts->chi2CutOff;
+    auto maxChi2Cut = *std::max_element(chi2CutOff.begin(), chi2CutOff.end());
     double minChi2 = std::numeric_limits<double>::max();
     std::size_t minIndex = 0;
-
-    std::vector<std::size_t> indexes(candidates.size(), 0ul);
-    for (std::size_t i(0ul); i<candidates.size(); ++i) indexes[i] = i;
-    
-    std::size_t acceptedMeasurements = 0ul;
-    for (std::size_t i(0ul); i<indexes.size(); ++i) {
-      auto& trackState = candidates[indexes[i]];
-      double chi2 = calculateChi2(
+    auto trackStateIterEnd = candidates.end();
+    {
+      auto trackStateIter = candidates.begin();
+      // Loop over all measurements to select the compatible measurements
+      // Sort track states which do not satisfy the chi2 cut to the end.
+      // When done trackStateIterEnd will point to the first element that
+      // does not satisfy the chi2 cut.
+      assert(trackStateIter != trackStateIterEnd);
+      for (;;) {
+        double chi2 = calculateChi2(
             // This abuses an incorrectly sized vector / matrix to access the
             // data pointer! This works (don't use the matrix as is!), but be
             // careful!
-            trackState.template calibrated<
+            trackStateIter
+                ->template calibrated<
                     MultiTrajectoryTraits::MeasurementSizeMax>()
                 .data(),
-            trackState.template calibratedCovariance<
+            trackStateIter
+                ->template calibratedCovariance<
                     MultiTrajectoryTraits::MeasurementSizeMax>()
                 .data(),
-            trackState.predicted(), trackState.predictedCovariance(),
-            trackState.projector(), trackState.calibratedSize());
+            trackStateIter->predicted(), trackStateIter->predictedCovariance(),
+            trackStateIter->projector(), trackStateIter->calibratedSize());
 
-      trackState.chi2() = chi2;
+        trackStateIter->chi2() = chi2;
 
-      if (chi2 < minChi2) {
-	minChi2 = chi2;
-	minIndex = i;
+        // only consider track states which pass the chi2 cut
+        if (chi2 >= maxChi2Cut ||
+            chi2 >= VariableCut<traj_t>(*trackStateIter, cuts, chi2CutOff,
+                                        logger)) {
+          --trackStateIterEnd;
+          // still check whether the element has the smallest chi2 in case an
+          // outlier is returned.
+          if (chi2 < minChi2) {
+            minChi2 = chi2;
+            // the current element will be swapped with the last unchecked
+            // element if they are different
+            minIndex = std::distance(candidates.begin(), trackStateIterEnd);
+          }
+
+          if (trackStateIter == trackStateIterEnd) {
+            break;
+          } else {
+            // swap rejected element with last element in list
+            std::swap(*trackStateIter, *trackStateIterEnd);
+          }
+        } else {
+          // Search for the measurement with the min chi2
+          // @if there is a track state which passes the cut-off there is
+          // no need to remember the track state with the smallest chi2.
+          ++trackStateIter;
+          if (trackStateIter == trackStateIterEnd) {
+            break;
+          }
+        }
       }
-      
-      if (chi2 >= maxChi2Cut ||
-	  chi2 >= VariableCut<traj_t>(&trackState, cuts, chi2CutOff,
-				      logger)) {	
-	continue;
-      }
-
-      if (acceptedMeasurements != i) indexes[acceptedMeasurements] = i;
-      ++acceptedMeasurements;     
     }
 
     // If there are no measurements below the chi2 cut off, return the
     // measurement with the best chi2 and tag it as an outlier
-    if (acceptedMeasurements == 0ul) {
-      const auto bestIt = candidates.begin() + minIndex;
+    if (candidates.begin() == trackStateIterEnd) {
+      const auto bestIt = std::next(candidates.begin(), minIndex);
       ACTS_VERBOSE(
           "No measurement candidate. Return an outlier measurement chi2="
           << bestIt->chi2());
       isOutlier = true;
-      // return single item range, no sorting necessary  
-      return Result::success(std::make_pair(bestIt, bestIt+1));
+      // return single item range, no sorting necessary
+      return Result::success(std::pair{bestIt, std::next(bestIt, 1)});
     }
-
-    if (acceptedMeasurements <= numMeasurementsCut && numMeasurementsCut > 0)
-    
 
     std::sort(candidates.begin(), trackStateIterEnd,
               [](const auto& tsa, const auto& tsb) {
@@ -133,7 +129,7 @@ namespace Acts {
     if (static_cast<std::size_t>(std::distance(
             candidates.begin(), trackStateIterEnd)) > numMeasurementsCut &&
         numMeasurementsCut > 0) {
-      trackStateIterEnd = candidates.begin() + numMeasurementsCut;
+      trackStateIterEnd = std::next(candidates.begin(), numMeasurementsCut);
     }
 
     ACTS_VERBOSE("Number of selected measurements: "
@@ -150,12 +146,10 @@ namespace Acts {
   }
 
   template <typename traj_t, typename cut_value_t>
-  cut_value_t
-  MeasurementSelector::VariableCut(
-				   const typename traj_t::TrackStateProxy& trackState,
-				   const Acts::MeasurementSelector::Config::Iterator selector,
-				   const std::vector<cut_value_t>& cuts, const Logger& logger)
-  {
+  cut_value_t MeasurementSelector::VariableCut(
+      const typename traj_t::TrackStateProxy& trackState,
+      const Acts::MeasurementSelector::Config::Iterator selector,
+      const std::vector<cut_value_t>& cuts, const Logger& logger) {
     const auto& etaBins = selector->etaBins;
     if (etaBins.empty()) {
       return cuts[0];  // shortcut if no etaBins
@@ -177,3 +171,5 @@ namespace Acts {
   }
 
 }  // namespace Acts
+
+
