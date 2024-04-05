@@ -182,8 +182,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
-      // TODO select track
-
       auto firstSmoothingResult =
           Acts::smoothTrack(ctx.geoContext, firstTrack, logger());
       if (!firstSmoothingResult.ok()) {
@@ -234,8 +232,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              // TODO select track
               if (secondTrack.nTrackStates() < 2) {
+                continue;
+              }
+              if (!secondTrack.hasReferenceSurface()) {
+                ACTS_WARNING("Second track has no reference surface");
                 continue;
               }
 
@@ -248,22 +249,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               secondTrack.tipIndex() = firstTrack.tipIndex();
 
               Acts::calculateTrackQuantities(secondTrack);
-
-              // TODO this extrapolation should not be necessary as the CKF will
-              // target this surface anyway and could communicate the parameters
-              auto secondExtrapolationResult =
-                  Acts::extrapolateTrackToReferenceSurface(
-                      secondTrack, *pSurface, extrapolator,
-                      extrapolationOptions, m_cfg.extrapolationStrategy,
-                      logger());
-              if (!secondExtrapolationResult.ok()) {
-                m_nFailedExtrapolation++;
-                ACTS_ERROR("Second extrapolation for seed "
-                           << iSeed << " and track " << secondTrack.index()
-                           << " failed with error "
-                           << secondExtrapolationResult.error());
-                continue;
-              }
 
               if (!m_trackSelector.has_value() ||
                   m_trackSelector->isValidTrack(secondTrack)) {
