@@ -108,7 +108,7 @@ def runMaterialMapping(
         level=acts.logging.VERBOSE,
         converterCfg=jmConverterCfg,
         fileName=os.path.join(outputDir, mapName),
-        writeFormat=JsonFormat.Json,
+        writeFormat=mapFormat,
     )
 
     mmAlgCfg.materialWriters = [jmw]
