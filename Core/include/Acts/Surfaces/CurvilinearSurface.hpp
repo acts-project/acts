@@ -43,6 +43,8 @@ class CurvilinearSurface final {
   /// @return The normal vector at the given position and direction
   Vector3 normal() const { return m_direction; }
 
+  bool isStandardRepresentation() const;
+
   /// Return method for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)

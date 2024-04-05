@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -18,13 +19,20 @@
 
 namespace Acts {
 
+bool CurvilinearSurface::isStandardRepresentation() const {
+  Vector3 T = m_direction.normalized();
+  return std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance;
+}
+
 RotationMatrix3 CurvilinearSurface::referenceFrame() const {
   /// the right-handed coordinate system is defined as
   /// T = normal
-  /// U = Z x T
+  /// U = Z x T if T not parallel to Z otherwise U = X x T
   /// V = T x U
-  Vector3 T = m_direction;
-  Vector3 U = Vector3::UnitZ().cross(T).normalized();
+  Vector3 T = m_direction.normalized();
+  Vector3 U = (isStandardRepresentation() ? Vector3::UnitZ() : Vector3::UnitX())
+                  .cross(T)
+                  .normalized();
   Vector3 V = T.cross(U);
 
   RotationMatrix3 rframe;
@@ -38,54 +46,46 @@ Transform3 CurvilinearSurface::transform() const {
   return transform;
 }
 
-/// Calculate the jacobian from local to global which the surface knows best,
-/// hence the calculation is done here.
-///
-/// @return Jacobian from local to global
 BoundToFreeMatrix CurvilinearSurface::boundToFreeJacobian() const {
-  // Prepare the jacobian to free
+  // this is copied from the `Surface::boundToFreeJacobian`
+  // implementation without bounds check and definite direction
+
+  // Initialize the jacobian from local to global
   BoundToFreeMatrix jacobian = BoundToFreeMatrix::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-      VectorHelpers::evaluateTrigonomics(m_direction);
-  jacobian(eFreePos0, eBoundLoc0) = -sinPhi;
-  jacobian(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
-  jacobian(eFreePos1, eBoundLoc0) = cosPhi;
-  jacobian(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
-  jacobian(eFreePos2, eBoundLoc1) = sinTheta;
-  // Time parameter: stays as is
+  // retrieve the reference frame
+  const auto rframe = referenceFrame();
+
+  // the local error components - given by reference frame
+  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
+  // the time component
   jacobian(eFreeTime, eBoundTime) = 1;
+  // the momentum components
   jacobian.block<3, 2>(eFreeDir0, eBoundPhi) =
       sphericalToFreeDirectionJacobian(m_direction);
-  // Q/P parameter: stays as is
   jacobian(eFreeQOverP, eBoundQOverP) = 1;
 
   return jacobian;
 }
 
-/// Calculate the jacobian from global to local which the surface knows best,
-/// hence the calculation is done here.
-///
-/// @return Jacobian from global to local
 FreeToBoundMatrix CurvilinearSurface::freeToBoundJacobian() const {
-  // Prepare the jacobian to curvilinear
+  // this is copied from the `Surface::freeToBoundJacobian`
+  // implementation without bounds check and definite direction
+
+  // Initialize the jacobian from global to local
   FreeToBoundMatrix jacobian = FreeToBoundMatrix::Zero();
 
-  auto [cosPhi, sinPhi, cosTheta, sinTheta] =
-      VectorHelpers::evaluateTrigonomics(m_direction);
-  // We operate in curvilinear coordinates defined as follows
-  jacobian(eBoundLoc0, eFreePos0) = -sinPhi;
-  jacobian(eBoundLoc0, eFreePos1) = cosPhi;
-  jacobian(eBoundLoc1, eFreePos0) = -cosPhi * cosTheta;
-  jacobian(eBoundLoc1, eFreePos1) = -sinPhi * cosTheta;
-  jacobian(eBoundLoc1, eFreePos2) = sinTheta;
-  // Time parameter: stays as is
-  jacobian(eBoundTime, eFreeTime) = 1.;
-  // Directional and momentum parameters for curvilinear
+  // The measurement frame of the surface
+  RotationMatrix3 rframeT = referenceFrame().transpose();
+
+  // Local position component given by the reference frame
+  jacobian.block<2, 3>(eBoundLoc0, eFreePos0) = rframeT.block<2, 3>(0, 0);
+  // Time component
+  jacobian(eBoundTime, eFreeTime) = 1;
+  // Directional and momentum elements for reference frame surface
   jacobian.block<2, 3>(eBoundPhi, eFreeDir0) =
       freeToSphericalDirectionJacobian(m_direction);
-  // Q/P parameter: stays as is
-  jacobian(eBoundQOverP, eFreeQOverP) = 1.;
+  jacobian(eBoundQOverP, eFreeQOverP) = 1;
 
   return jacobian;
 }
