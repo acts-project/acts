@@ -266,7 +266,7 @@ class VectorMultiTrajectoryBase {
   }
 
   template <typename T>
-  static constexpr bool hasColumn_impl(T& instance, HashedString key) {
+  static bool hasColumn_impl(T& instance, HashedString key) {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "predicted"_hash:
@@ -434,7 +434,7 @@ class VectorMultiTrajectory final
 
   void unset_impl(TrackStatePropMask target, IndexType istate);
 
-  constexpr bool has_impl(HashedString key, IndexType istate) const {
+  bool has_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
@@ -455,12 +455,12 @@ class VectorMultiTrajectory final
   }
 
   template <typename T>
-  constexpr void addColumn_impl(const std::string& key) {
+  void addColumn_impl(const std::string& key) {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
-  constexpr bool hasColumn_impl(HashedString key) const {
+  bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
@@ -561,7 +561,7 @@ class ConstVectorMultiTrajectory final
         &m_measCov[offset]};
   }
 
-  constexpr bool has_impl(HashedString key, IndexType istate) const {
+  bool has_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
@@ -574,7 +574,7 @@ class ConstVectorMultiTrajectory final
         *this, key, istate);
   }
 
-  constexpr bool hasColumn_impl(HashedString key) const {
+  bool hasColumn_impl(HashedString key) const {
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
