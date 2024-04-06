@@ -21,8 +21,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Test Radial
 BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
@@ -84,5 +83,4 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Trapezoid) {
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 30);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

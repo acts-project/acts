@@ -16,9 +16,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace Acts {
-
-namespace DetrayJsonHelper {
+namespace Acts::DetrayJsonHelper {
 
 /// @brief Helper function to switch keys from ACTS to detray
 ///
@@ -130,5 +128,4 @@ inline static std::size_t accelerationLink(const binning_values_t& casts) {
   return accLink;
 }
 
-}  // namespace DetrayJsonHelper
-}  // namespace Acts
+}  // namespace Acts::DetrayJsonHelper

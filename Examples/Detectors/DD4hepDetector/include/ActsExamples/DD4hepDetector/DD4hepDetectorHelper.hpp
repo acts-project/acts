@@ -104,8 +104,7 @@ class DigitizationModule;
 /// created for this DetElement.
 /// @endcode
 
-namespace ActsExamples {
-namespace DD4hep {
+namespace ActsExamples::DD4hep {
 
 struct DD4hepDetectorHelper {
   /// Global method to build an Acts::DigitizationModule with rectangular
@@ -138,5 +137,4 @@ struct DD4hepDetectorHelper {
       double thickness, const dd4hep::Segmentation& segmentation);
 };
 
-}  // end of namespace DD4hep
-}  // end of namespace ActsExamples
+}  // end of namespace ActsExamples::DD4hep
