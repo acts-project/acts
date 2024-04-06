@@ -372,7 +372,7 @@ With these dynamic columns registered, it is now possible to set and get values 
 
 ```cpp
 using namespace Acts::HashedStringLiterals;
-auto track = tc.getTrack(tc.addTrack());
+auto track = tc.makeTrack();
 
 // these two are equivalent
 track.component<float, "col_a"_hash>() = 42.42;
