@@ -1,6 +1,3 @@
-Checks: '-*,readability-container-size-empty,readability-implicit-bool-cast,readability-implicit-bool-conversion,modernize-concat-nested-namespaces,modernize-use-equals-default,modernize-use-override,modernize-use-using,readability-braces-around-statements,modernize-use-nullptr,performance-move-const-arg,cppcoreguidelines-pro-type-member-init,cppcoreguidelines-init-variables,clang-analyzer-optin.cplusplus.UninitializedObject,readability-operators-representation'
+Checks: '-*'
 HeaderFilterRegex: '.*(?<!nlohmann\/json)\.(hpp|cpp|ipp)$'
 AnalyzeTemporaryDtors: true
-CheckOptions:
-  readability-operators-representation.BinaryOperators: '&&;&=;&;|;~;!;!=;||;|=;^;^='
-  readability-operators-representation.OverloadedOperators: '&&;&=;&;|;~;!;!=;||;|=;^;^='
