@@ -1,3 +1,3 @@
-Checks: '-*'
+Checks: '*'
 HeaderFilterRegex: '.*(?<!nlohmann\/json)\.(hpp|cpp|ipp)$'
 AnalyzeTemporaryDtors: true
