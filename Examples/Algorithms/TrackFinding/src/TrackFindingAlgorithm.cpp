@@ -257,6 +257,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                       extrapolationOptions, m_cfg.extrapolationStrategy,
                       logger());
               if (!secondExtrapolationResult.ok()) {
+                // restore first track
+                (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
+
                 m_nFailedExtrapolation++;
                 ACTS_ERROR("Second extrapolation for seed "
                            << iSeed << " and track " << secondTrack.index()
@@ -270,6 +273,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                 auto destProxy = tracks.makeTrack();
                 destProxy.copyFrom(secondTrack, true);
               }
+
+              // restore first track
+              (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
 
               ++nSecond;
             }

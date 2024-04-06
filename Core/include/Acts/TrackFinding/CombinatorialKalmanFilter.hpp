@@ -671,7 +671,8 @@ class CombinatorialKalmanFilter {
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
           auto stateMask =
-              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
+              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
+                TrackStatePropMask::Smoothed);
 
           // Increment of number of processed states
           tipState.nStates++;
