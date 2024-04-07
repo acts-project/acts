@@ -19,8 +19,7 @@
 
 #include <unordered_map>
 
-namespace ActsAlignment {
-namespace detail {
+namespace ActsAlignment::detail {
 
 using namespace Acts;
 ///
@@ -299,5 +298,4 @@ TrackAlignmentState trackAlignmentState(
   return alignState;
 }
 
-}  // namespace detail
-}  // namespace ActsAlignment
+}  // namespace ActsAlignment::detail
