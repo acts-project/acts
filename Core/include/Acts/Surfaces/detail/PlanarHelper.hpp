@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
+/// @brief Helpers for planar surfaces that share the same maths
 namespace Acts::PlanarHelper {
 
 /// Intersection with a planar surface
