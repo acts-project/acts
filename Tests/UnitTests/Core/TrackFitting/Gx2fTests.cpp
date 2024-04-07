@@ -42,8 +42,7 @@ using namespace Acts::detail::Test;
 Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 const auto gx2fLogger = Acts::getDefaultLogger("Gx2f", logLevel);
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
@@ -804,5 +803,4 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
   ACTS_INFO("*** Test: NotEnoughMeasurements -- Finish");
 }
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

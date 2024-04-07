@@ -25,9 +25,7 @@ class ISurfaceMaterial;
 class DigitizationModule;
 }  // namespace Acts
 
-namespace ActsExamples {
-
-namespace Generic {
+namespace ActsExamples::Generic {
 
 /// @class GenericDetectorElement
 ///
@@ -151,6 +149,4 @@ ActsExamples::Generic::GenericDetectorElement::digitizationModule() const {
   return m_digitizationModule;
 }
 
-}  // end of namespace Generic
-
-}  // end of namespace ActsExamples
+}  // end of namespace ActsExamples::Generic

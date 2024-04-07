@@ -23,8 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 class Object {};
 
@@ -202,5 +201,4 @@ BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

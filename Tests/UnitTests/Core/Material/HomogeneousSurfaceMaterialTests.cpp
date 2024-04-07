@@ -18,9 +18,7 @@
 
 #include <utility>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
@@ -172,5 +170,4 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(mat, matFwdPre);
   BOOST_CHECK_EQUAL(vacuum, matBwdPre);
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

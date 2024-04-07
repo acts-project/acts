@@ -20,8 +20,7 @@
 #include <cmath>
 #include <memory>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// Helper function tests
 BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
@@ -265,5 +264,4 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   BOOST_CHECK(newFreeCovariance1.isApprox(newFreeCovariance2));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
