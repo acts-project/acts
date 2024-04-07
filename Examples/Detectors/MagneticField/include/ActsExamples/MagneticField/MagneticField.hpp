@@ -24,8 +24,7 @@
 #include <variant>
 #include <vector>
 
-namespace ActsExamples {
-namespace detail {
+namespace ActsExamples::detail {
 
 using InterpolatedMagneticField2 = Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
@@ -35,6 +34,4 @@ using InterpolatedMagneticField3 = Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
                Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>;
 
-}  // namespace detail
-
-}  // namespace ActsExamples
+}  // namespace ActsExamples::detail

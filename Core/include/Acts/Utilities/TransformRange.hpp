@@ -12,9 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 template <typename Callable, typename iterator_t, bool force_const>
 struct TransformRangeIterator;
@@ -224,5 +222,4 @@ struct DotGet {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

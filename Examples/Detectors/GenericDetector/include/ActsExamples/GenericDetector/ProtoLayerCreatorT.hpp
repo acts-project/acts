@@ -35,9 +35,7 @@ class Surface;
 class DetecorElementBase;
 }  // namespace Acts
 
-namespace ActsExamples {
-
-namespace Generic {
+namespace ActsExamples::Generic {
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -579,5 +577,4 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
   return epLayers;
 }
 
-}  // end of namespace Generic
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Generic

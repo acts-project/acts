@@ -22,8 +22,7 @@
 #include <cmath>
 #include <limits>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Fatras simulation actor for the Acts propagator.
 ///
@@ -353,5 +352,4 @@ struct SimulationActor {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

@@ -23,8 +23,7 @@
 #include <random>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// All supported simulated measurement types.
 enum class MeasurementType {
@@ -172,5 +171,4 @@ Measurements createMeasurements(const propagator_t& propagator,
   return std::move(result.template get<Measurements>());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -15,8 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @defgroup subspace Linear subspace definitions
 ///
@@ -204,5 +203,4 @@ class FixedSizeSubspace {
 
 /// @}
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail
