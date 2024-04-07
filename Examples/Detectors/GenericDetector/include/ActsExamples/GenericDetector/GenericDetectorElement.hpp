@@ -149,4 +149,4 @@ ActsExamples::Generic::GenericDetectorElement::digitizationModule() const {
   return m_digitizationModule;
 }
 
-}  // end of namespace ActsExamples::Generic
+}  // namespace ActsExamples::Generic

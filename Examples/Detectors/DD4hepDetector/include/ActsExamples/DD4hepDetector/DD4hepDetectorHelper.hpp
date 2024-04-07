@@ -137,4 +137,4 @@ struct DD4hepDetectorHelper {
       double thickness, const dd4hep::Segmentation& segmentation);
 };
 
-}  // end of namespace ActsExamples::DD4hep
+}  // namespace ActsExamples::DD4hep

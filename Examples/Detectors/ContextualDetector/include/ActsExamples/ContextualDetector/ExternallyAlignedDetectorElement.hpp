@@ -82,4 +82,4 @@ inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
   return alignContext.alignmentStore->transforms[idValue];
 }
 
-}  // end of namespace ActsExamples::Contextual
+}  // namespace ActsExamples::Contextual
