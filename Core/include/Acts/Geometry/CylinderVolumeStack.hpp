@@ -29,10 +29,11 @@ class CylinderVolumeStack : public Volume {
       ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
 
-  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) override;
+  void update(std::shared_ptr<const VolumeBounds> volbounds,
+              std::optional<Transform3> transform = std::nullopt) override;
 
-  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds,
-                          const Logger& logger);
+  void update(std::shared_ptr<const CylinderVolumeBounds> newBounds,
+              std::optional<Transform3> transform, const Logger& logger);
 
   std::vector<std::shared_ptr<Volume>>& gaps();
   const std::vector<std::shared_ptr<Volume>>& gaps() const;

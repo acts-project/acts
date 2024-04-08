@@ -427,7 +427,7 @@ BOOST_DATA_TEST_CASE(RotationInZ, boost::unit_test::data::make(strategies),
   }
 }
 
-BOOST_DATA_TEST_CASE(AssignVolumeBounds,
+BOOST_DATA_TEST_CASE(UpdateStack,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
                       boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
                                                    Vector3{20_mm, 0_mm, 0_mm},
@@ -491,7 +491,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     // Assign a copy of the identical bounds gives identical bounds
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
-    cylStack.assignVolumeBounds(bounds, *logger);
+    cylStack.update(bounds, std::nullopt, *logger);
     assertOriginalBounds();
   }
 
@@ -500,7 +500,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMinR, 200_mm);
-    BOOST_CHECK_THROW(cylStack.assignVolumeBounds(bounds, *logger),
+    BOOST_CHECK_THROW(cylStack.update(bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -510,7 +510,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMaxR, 500_mm);
-    BOOST_CHECK_THROW(cylStack.assignVolumeBounds(bounds, *logger),
+    BOOST_CHECK_THROW(cylStack.update(bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -520,7 +520,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
     bounds->set(CylinderVolumeBounds::eHalfLengthZ, 2 * hlZ);
-    BOOST_CHECK_THROW(cylStack.assignVolumeBounds(bounds, *logger),
+    BOOST_CHECK_THROW(cylStack.update(bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -530,7 +530,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMinR, 50_mm);
-    cylStack.assignVolumeBounds(bounds, *logger);
+    cylStack.update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -563,7 +563,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMaxR, 700_mm);
-    cylStack.assignVolumeBounds(bounds, *logger);
+    cylStack.update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -596,7 +596,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
     bounds->set(CylinderVolumeBounds::eHalfLengthZ, 4 * hlZ);
-    cylStack.assignVolumeBounds(bounds, *logger);
+    cylStack.update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -932,7 +932,7 @@ BOOST_DATA_TEST_CASE(Baseline,
   }
 }
 
-BOOST_DATA_TEST_CASE(AssignVolumeBounds,
+BOOST_DATA_TEST_CASE(UpdateStack,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
                       boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
                                                    Vector3{20_mm, 0_mm, 0_mm},
@@ -1023,7 +1023,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     // Assign a copy of the identical bounds gives identical bounds
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
-    cylStack->assignVolumeBounds(bounds, *logger);
+    cylStack->update(bounds, std::nullopt, *logger);
     assertOriginalBounds();
   }
 
@@ -1032,7 +1032,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMinR, 200_mm);
-    BOOST_CHECK_THROW(cylStack->assignVolumeBounds(bounds, *logger),
+    BOOST_CHECK_THROW(cylStack->update(bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -1042,7 +1042,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMaxR, 500_mm);
-    BOOST_CHECK_THROW(cylStack->assignVolumeBounds(bounds, *logger),
+    BOOST_CHECK_THROW(cylStack->update(bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -1052,7 +1052,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
     bounds->set(CylinderVolumeBounds::eHalfLengthZ, 0.5 * hlZ);
-    BOOST_CHECK_THROW(cylStack->assignVolumeBounds(bounds, *logger),
+    BOOST_CHECK_THROW(cylStack->update(bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -1062,7 +1062,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMinR, 50_mm);
-    cylStack->assignVolumeBounds(bounds, *logger);
+    cylStack->update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack->volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -1119,7 +1119,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
     bounds->set(CylinderVolumeBounds::eMaxR, 1000_mm);
-    cylStack->assignVolumeBounds(bounds, *logger);
+    cylStack->update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack->volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -1180,7 +1180,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
         {CylinderVolumeBounds::eMaxR, 1100_mm},
     });
 
-    cylStack->assignVolumeBounds(bounds, *logger);
+    cylStack->update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack->volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -1248,7 +1248,7 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
     auto bounds = std::make_shared<CylinderVolumeBounds>(
         dynamic_cast<const CylinderVolumeBounds&>(cylStack->volumeBounds()));
     bounds->set(CylinderVolumeBounds::eHalfLengthZ, 2 * hlZ);
-    cylStack->assignVolumeBounds(bounds, *logger);
+    cylStack->update(bounds, std::nullopt, *logger);
     const auto* cylBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&cylStack->volumeBounds());
     BOOST_REQUIRE(cylBounds != nullptr);
@@ -1279,6 +1279,88 @@ BOOST_DATA_TEST_CASE(AssignVolumeBounds,
       // Position stayed the same
       BOOST_CHECK_EQUAL(volume->transform().matrix(), base.matrix());
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(UpdateStackOneSided) {
+  auto trf = Transform3::Identity();
+
+  auto vol1 = std::make_shared<Volume>(
+      trf, std::make_shared<CylinderVolumeBounds>(100_mm, 300_mm, 400_mm));
+
+  auto vol2 = std::make_shared<Volume>(
+      trf, std::make_shared<CylinderVolumeBounds>(400_mm, 600_mm, 400_mm));
+
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  CylinderVolumeStack cylStack{
+      volumes, binR, CylinderVolumeStack::AttachmentStrategy::Gap,
+      CylinderVolumeStack::ResizeStrategy::Gap, *logger};
+  const auto* originalBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
+
+  // Increase halflength by 50mm
+  auto newBounds = std::make_shared<CylinderVolumeBounds>(
+      dynamic_cast<const CylinderVolumeBounds&>(cylStack.volumeBounds()));
+  newBounds->set(CylinderVolumeBounds::eHalfLengthZ, 450_mm);
+  // Shift to +z by 50mm
+  trf *= Translation3{Vector3{0_mm, 0_mm, 50_mm}};
+  // -> left edge should stay at -400mm, right edge should be at 500mm
+
+  // @TODO: Check invalid doesn't change bounds
+
+  auto checkUnchanged = [&]() {
+    const auto* cylBounds =
+        dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
+    BOOST_REQUIRE(cylBounds != nullptr);
+    BOOST_CHECK_EQUAL(*cylBounds, *originalBounds);
+  };
+
+  // Invalid: shift too far in z
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * Translation3{Vector3{0, 0, 20_mm}},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
+
+  // Invalid: shift in x
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * Translation3{Vector3{10_mm, 0, 0}},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
+
+  // Invalid: shift in y
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * Translation3{Vector3{0, 10_mm, 0}},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
+
+  // Invalid: rotation
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * AngleAxis3{10_degree, Vector3::UnitY()},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
+
+  cylStack.update(newBounds, trf, *logger);
+
+  BOOST_CHECK_EQUAL(cylStack.transform().matrix(), trf.matrix());
+  const auto* cylBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
+  BOOST_REQUIRE(cylBounds != nullptr);
+  BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMinR), 100_mm);
+  BOOST_CHECK_EQUAL(cylBounds->get(CylinderVolumeBounds::eMaxR), 600_mm);
+
+  // All volumes including gaps should have same new position and halflength
+  for (const auto* vol : volumes) {
+    const auto* volBounds =
+        dynamic_cast<const CylinderVolumeBounds*>(&vol->volumeBounds());
+    BOOST_REQUIRE(volBounds != nullptr);
+    BOOST_CHECK_EQUAL(vol->transform().matrix(), trf.matrix());
+    BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                      450_mm);
   }
 }
 
@@ -1390,7 +1472,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
           CylinderVolumeStack cylStack(volumes, direction, strategy,
                                        CylinderVolumeStack::ResizeStrategy::Gap,
                                        *logger);
-          BOOST_CHECK_THROW(cylStack.assignVolumeBounds(invalid, *logger),
+          BOOST_CHECK_THROW(cylStack.update(invalid, std::nullopt, *logger),
                             std::invalid_argument);
         }
 
@@ -1445,5 +1527,7 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END();
+
+// @TODO: Update with neither now
 
 }  // namespace Acts::Test
