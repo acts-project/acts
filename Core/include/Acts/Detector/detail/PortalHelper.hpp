@@ -36,8 +36,7 @@ using PortalReplacement =
     std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int, Direction,
                std::vector<ActsScalar>, BinningValue>;
 
-namespace detail {
-namespace PortalHelper {
+namespace detail::PortalHelper {
 
 /// @brief Method to attach a single detector volume to a portal
 ///
@@ -108,7 +107,6 @@ stripSideVolumes(
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
-}  // namespace PortalHelper
-}  // namespace detail
+}  // namespace detail::PortalHelper
 }  // namespace Experimental
 }  // namespace Acts

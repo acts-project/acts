@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-namespace Acts {
-/// @cond detail
-namespace detail {
+namespace Acts::detail {
 /**
  * @brief check whether integral values are within a given range
  *
@@ -44,6 +42,4 @@ struct are_within<T, MIN, MAX, a, others...> {
   };
 };
 /// @endcond
-}  // namespace detail
-/// @endcond
-}  // namespace Acts
+}  // namespace Acts::detail

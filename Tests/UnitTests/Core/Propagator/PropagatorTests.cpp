@@ -59,8 +59,7 @@ using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -485,5 +484,4 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                   "Propagator unexpectedly inherits from BasePropagator");
   }
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

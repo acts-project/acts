@@ -48,8 +48,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
@@ -609,5 +608,4 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

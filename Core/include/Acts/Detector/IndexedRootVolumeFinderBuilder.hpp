@@ -16,9 +16,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 
@@ -45,5 +43,4 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
   std::vector<Acts::BinningValue> m_casts;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

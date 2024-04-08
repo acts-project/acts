@@ -36,11 +36,9 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class Portal;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 using namespace Acts;
 using namespace Experimental;

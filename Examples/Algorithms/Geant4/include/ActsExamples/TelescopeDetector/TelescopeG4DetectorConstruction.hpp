@@ -16,8 +16,7 @@
 class G4VPhysicalVolume;
 class G4LogicalVolume;
 
-namespace ActsExamples {
-namespace Telescope {
+namespace ActsExamples::Telescope {
 
 class TelescopeG4DetectorConstruction final
     : public G4VUserDetectorConstruction {
@@ -43,5 +42,4 @@ class TelescopeG4DetectorConstructionFactory final
   TelescopeDetector::Config m_cfg;
 };
 
-}  // namespace Telescope
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Telescope

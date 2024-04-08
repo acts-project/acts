@@ -12,8 +12,7 @@
 
 #include <TMathBase.h>
 
-namespace ActsExamples {
-namespace RootUtility {
+namespace ActsExamples::RootUtility {
 
 /// @brief Sorts an array of elements and outputs the indices of the sorted elements.
 ///
@@ -53,5 +52,4 @@ void stableSort(index_t numElements, const element_t* elements,
   }
 }
 
-}  // namespace RootUtility
-}  // namespace ActsExamples
+}  // namespace ActsExamples::RootUtility
