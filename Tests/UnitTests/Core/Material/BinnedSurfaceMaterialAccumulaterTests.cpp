@@ -26,9 +26,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 auto tContext = GeometryContext();
 
