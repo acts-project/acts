@@ -74,8 +74,18 @@ Volume::BoundingBox Volume::orientedBoundingBox() const {
                                      this);
 }
 
-void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
-  m_volumeBounds = std::move(volbounds);
+void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
+  update(volbounds);
+}
+
+void Volume::update(std::shared_ptr<const VolumeBounds> volbounds,
+                    std::optional<Transform3> transform) {
+  if (volbounds) {
+    m_volumeBounds = volbounds;
+  }
+  if (transform.has_value()) {
+    setTransform(*transform);
+  }
 }
 
 const Transform3& Volume::transform() const {

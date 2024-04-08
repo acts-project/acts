@@ -16,6 +16,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <optional>
 
 namespace Acts {
 
@@ -72,7 +73,10 @@ class Volume : public GeometryObject {
   std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
 
   /// Set volume bounds and update volume bounding boxes implicitly
-  virtual void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
+  void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
+
+  virtual void update(std::shared_ptr<const VolumeBounds> volbounds,
+                      std::optional<Transform3> transform = std::nullopt);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
