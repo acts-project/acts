@@ -10,8 +10,7 @@
 
 #include "Acts/Material/Interactions.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
     bool multipleScattering, bool energyLoss) {
@@ -52,5 +51,4 @@ double PointwiseMaterialInteraction::updateVariance(
   return std::max(0., variance + std::copysign(change, updateMode));
 }
 
-}  // namespace detail
-}  // end of namespace Acts
+}  // namespace Acts::detail

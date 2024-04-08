@@ -24,8 +24,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Rectangle = std::array<int, 4>;
 
@@ -248,5 +247,4 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

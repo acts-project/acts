@@ -22,8 +22,7 @@
 
 #include <limits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 auto tContext = GeometryContext();
 
@@ -302,5 +301,4 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

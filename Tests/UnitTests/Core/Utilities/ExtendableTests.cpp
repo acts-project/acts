@@ -15,8 +15,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // This tests the implementation of the ActionList
 // and the standard aborters
@@ -59,5 +58,4 @@ BOOST_AUTO_TEST_CASE(Extendable_) {
   BOOST_CHECK_EQUAL(abcList.get<TypeC>().vaC, '4');
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

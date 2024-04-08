@@ -12,9 +12,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
-namespace Acts {
-
-namespace Concepts {
+namespace Acts::Concepts {
 
 // Types to check compatibility of
 template <typename propagator_state_t, typename navigator_t>
@@ -48,6 +46,4 @@ template <typename propagator_state_t, typename navigator_t>
 constexpr bool NavigationCompatibilityConcept =
     NavigationCompatibilityConceptImpl<propagator_state_t, navigator_t>::value;
 
-}  // namespace Concepts
-
-}  // namespace Acts
+}  // namespace Acts::Concepts

@@ -42,8 +42,7 @@ namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -482,5 +481,4 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   CHECK_CLOSE_ABS(covZZ1, covZZ2, 1e-4);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

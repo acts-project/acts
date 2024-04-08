@@ -22,8 +22,7 @@
 #include <memory>
 #include <tuple>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 struct AllPortalsImpl : public INavigationDelegate {
   /// A ordered portal provider
@@ -155,5 +154,4 @@ template <typename grid_type, template <typename> class indexed_updator>
 using IndexedSurfacesAllPortalsImpl =
     ChainedUpdaterImpl<AllPortalsImpl, indexed_updator<grid_type>>;
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

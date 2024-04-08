@@ -21,8 +21,7 @@
 #include <memory>
 #include <utility>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(VolumeTest) {
   using namespace Acts::UnitLiterals;
@@ -76,5 +75,4 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   BOOST_CHECK_EQUAL(volume.binningPosition(gctx, binX), volume.center());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

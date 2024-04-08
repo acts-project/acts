@@ -22,11 +22,9 @@
 // A test context
 Acts::GeometryContext tContext;
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 auto volumeA = std::make_shared<Acts::Experimental::DetectorVolume>();
 auto volumeB = std::make_shared<Acts::Experimental::DetectorVolume>();
