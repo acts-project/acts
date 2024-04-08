@@ -15,15 +15,19 @@
 
 namespace Acts {
 
+MeasurementSelector::MeasurementSelector(Config config)
+  : m_config(std::move(config))
+{}
+  
 double MeasurementSelector::calculateChi2(
-    double* fullCalibrated, double* fullCalibratedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+    const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance predictedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+    const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector projector,
-    unsigned int calibratedSize) const {
+    const unsigned int calibratedSize) const {
   return visit_measurement(calibratedSize, [&](auto N) -> double {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
@@ -40,12 +44,11 @@ double MeasurementSelector::calculateChi2(
         projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
 
     // Get the residuals
-    ParametersVector res;
-    res = calibrated - H * predicted;
+    ParametersVector res = calibrated - H * predicted;
 
     // Get the chi2
     return (res.transpose() *
-            ((calibratedCovariance + H * predictedCovariance * H.transpose()))
+            (calibratedCovariance + H * predictedCovariance * H.transpose())
                 .inverse() *
             res)
         .eval()(0, 0);
