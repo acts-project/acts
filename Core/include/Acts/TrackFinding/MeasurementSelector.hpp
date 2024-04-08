@@ -180,6 +180,9 @@ class MeasurementSelector {
           << bestIt->chi2());
       isOutlier = true;
       // return single item range, no sorting necessary
+      auto stop = std::chrono::high_resolution_clock::now();
+      auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+      std::cout << "Duration: " << duration << std::endl;
       return Result::success(std::pair{bestIt, std::next(bestIt, 1)});
     }
 
