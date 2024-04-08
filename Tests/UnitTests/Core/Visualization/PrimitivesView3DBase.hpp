@@ -22,9 +22,7 @@
 #include <sstream>
 #include <string>
 
-namespace Acts {
-
-namespace PrimitivesView3DTest {
+namespace Acts::PrimitivesView3DTest {
 
 // Test on a plane
 auto identity = Transform3::Identity();
@@ -117,5 +115,4 @@ static inline std::string run(IVisualization3D& helper) {
   return ss.str();
 }
 
-}  // namespace PrimitivesView3DTest
-}  // namespace Acts
+}  // namespace Acts::PrimitivesView3DTest

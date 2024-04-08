@@ -18,9 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief  Simple helper class to define a binning structure
 ///
@@ -146,5 +144,4 @@ struct BinningDescription {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

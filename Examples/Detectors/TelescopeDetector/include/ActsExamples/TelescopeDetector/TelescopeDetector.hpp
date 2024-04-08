@@ -28,8 +28,7 @@ namespace ActsExamples {
 class IContextDecorator;
 }  // namespace ActsExamples
 
-namespace ActsExamples {
-namespace Telescope {
+namespace ActsExamples::Telescope {
 
 class TelescopeDetectorElement;
 class TelescopeG4DetectorConstruction;
@@ -62,5 +61,4 @@ struct TelescopeDetector {
       const std::shared_ptr<const Acts::IMaterialDecorator>& mdecorator);
 };
 
-}  // namespace Telescope
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Telescope

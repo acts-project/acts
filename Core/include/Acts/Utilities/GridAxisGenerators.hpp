@@ -16,16 +16,13 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
 /// Axis generators are used to allow defining different grid types
 /// for indexed geometry objects.
 ///
 /// The call operator() API allows to plug axis generators into
 /// dedicated code snippets and create fitting axis types on the fly
 /// which then turn into concrete Grid types.
-///
-namespace GridAxisGenerators {
+namespace Acts::GridAxisGenerators {
 
 /// @brief  Templated base generator for equidistant axis as a tuple - 1D
 ///
@@ -318,5 +315,4 @@ using PossibleAxes =
              VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
              VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>;
 
-}  // namespace GridAxisGenerators
-}  // namespace Acts
+}  // namespace Acts::GridAxisGenerators

@@ -18,8 +18,7 @@ namespace Experimental {
 
 struct BinningDescription;
 
-namespace detail {
-namespace ProtoMaterialHelper {
+namespace detail::ProtoMaterialHelper {
 
 /// @brief Method that attaches proto material to a surface given
 /// a proto binning description
@@ -34,7 +33,6 @@ BinningDescription attachProtoMaterial(const GeometryContext& gctx,
                                        Surface& surface,
                                        const BinningDescription& bDescription);
 
-}  // namespace ProtoMaterialHelper
-}  // namespace detail
+}  // namespace detail::ProtoMaterialHelper
 }  // namespace Experimental
 }  // namespace Acts

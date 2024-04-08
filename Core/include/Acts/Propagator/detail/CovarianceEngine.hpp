@@ -21,8 +21,7 @@
 
 #include <tuple>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @brief These functions perform the transport of a covariance matrix using
 /// given Jacobians. The required data is provided by the stepper object
@@ -147,5 +146,4 @@ Result<BoundTrackParameters> boundToBoundConversion(
     const GeometryContext& gctx, const BoundTrackParameters& boundParameters,
     const Surface& targetSurface, const Vector3& bField = Vector3::Zero());
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

@@ -16,8 +16,7 @@
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief A surface provider that extracts surfaces from a gdml file
 ///
@@ -157,5 +156,4 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   G4Transform3D m_g4ToWorld;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -37,8 +37,7 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 Acts::GeometryContext gctx;
 Acts::MagneticFieldContext mctx;
@@ -505,5 +504,4 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
   CHECK_CLOSE_ABS(covB, covC, 1e-7);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

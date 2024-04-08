@@ -47,8 +47,7 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace UnitLiterals;
 
@@ -321,5 +320,4 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   BOOST_CHECK_EQUAL(spacePoints.size(), 6);
 }
 
-}  // end of namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

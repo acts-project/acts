@@ -26,8 +26,7 @@ using namespace Acts::UnitLiterals;
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
-namespace IntegrationTest {
+namespace Acts::IntegrationTest {
 
 const double L = 5.8_m;
 const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
@@ -129,5 +128,4 @@ BOOST_DATA_TEST_CASE(
   ofstr << Bm.x() << ";" << Bm.y() << ";" << Bm.z() << std::endl;
 }
 
-}  // namespace IntegrationTest
-}  // namespace Acts
+}  // namespace Acts::IntegrationTest
