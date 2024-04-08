@@ -20,9 +20,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief A wrapper class around a KDTree of surfaces
 ///
@@ -195,6 +193,4 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   Extent m_region;
 };
 
-}  // namespace Experimental
-
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -11,8 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Estimate the loop protection limit
 template <typename path_aborter_t, typename propagator_state_t,
@@ -64,5 +63,4 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   }
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

@@ -238,4 +238,4 @@ class PlaneSurface : public RegularSurface {
 
 ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
 
-}  // end of namespace Acts
+}  // namespace Acts

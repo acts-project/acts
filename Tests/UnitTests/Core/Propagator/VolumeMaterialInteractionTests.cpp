@@ -25,8 +25,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// @brief Simplified stepper state
 struct StepperState {
@@ -136,5 +135,4 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

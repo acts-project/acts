@@ -16,8 +16,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// These tests do not test for a correct covariance transport but only for the
 /// correct conservation or modification of certain variables. A test suite for
@@ -192,5 +191,4 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   BOOST_CHECK(newFreeCovariance1.isApprox(newFreeCovariance2));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

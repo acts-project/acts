@@ -35,8 +35,16 @@ Result<void> GainMatrixSmoother::calculate(
                   predictedCovariance(prev_ts).inverse();
 
   if (G.hasNaN()) {
-    // error = KalmanFitterError::SmoothFailed;  // set to error
-    // return false;                             // abort execution
+    ACTS_VERBOSE("Gain smoothing matrix G has NaNs");
+
+    ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance(ts));
+    ACTS_VERBOSE("Jacobian:\n" << jacobian(prev_ts));
+    ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance(prev_ts));
+    ACTS_VERBOSE("Inverse of predicted covariance:\n"
+                 << predictedCovariance(prev_ts).inverse());
+
+    ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
+
     return KalmanFitterError::SmoothFailed;
   }
 

@@ -38,8 +38,7 @@
 #include <functional>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct CylindricalTrackingGeometry {
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -334,5 +333,4 @@ struct CylindricalTrackingGeometry {
   }
 };
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

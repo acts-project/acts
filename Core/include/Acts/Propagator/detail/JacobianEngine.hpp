@@ -15,8 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @brief These functions perform the calculation of the Jacobians for the
 /// the covariance transport. This is a purely algebraic problem the
@@ -211,5 +210,4 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                            BoundToFreeMatrix& boundToFreeJacobian,
                            const Vector3& direction);
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail
