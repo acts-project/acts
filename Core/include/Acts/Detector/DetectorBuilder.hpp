@@ -15,8 +15,7 @@
 #include <memory>
 #include <string>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class IGeometryIdGenerator;
 
@@ -69,5 +68,4 @@ class DetectorBuilder final : public IDetectorBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

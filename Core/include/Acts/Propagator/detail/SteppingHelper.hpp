@@ -17,8 +17,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Update surface status - Single component
 ///
@@ -83,5 +82,4 @@ void updateSingleStepSize(typename stepper_t::State& state,
   state.stepSize.update(stepSize, ConstrainedStep::actor, release);
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

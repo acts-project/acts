@@ -22,8 +22,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -122,5 +121,4 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache).value());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

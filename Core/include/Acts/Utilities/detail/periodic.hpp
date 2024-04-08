@@ -10,8 +10,7 @@
 
 #include <cmath>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Wrap a periodic value back into the nominal range.
 template <typename T>
@@ -91,5 +90,4 @@ inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
   return {radian_sym(phi), theta};
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

@@ -21,8 +21,7 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create grid values
@@ -125,5 +124,4 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   CHECK_CLOSE_ABS(value1_xyz.parameters(), mat1_xyz.parameters(), 1e-9);
   CHECK_CLOSE_ABS(value2_xyz.parameters(), mat2_xyz.parameters(), 1e-9);
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

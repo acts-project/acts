@@ -17,9 +17,7 @@
 #include <functional>
 #include <unordered_map>
 
-namespace Acts {
-
-namespace MultiTrajectoryHelpers {
+namespace Acts::MultiTrajectoryHelpers {
 
 /// @brief Struct for brief trajectory summary info
 ///
@@ -164,6 +162,4 @@ FreeVector freeSmoothed(const GeometryContext& gctx,
   return transformBoundToFreeParameters(trackStateProxy.referenceSurface(),
                                         gctx, trackStateProxy.smoothed());
 }
-}  // namespace MultiTrajectoryHelpers
-
-}  // namespace Acts
+}  // namespace Acts::MultiTrajectoryHelpers

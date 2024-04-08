@@ -15,8 +15,7 @@
 
 #include <Eigen/Core>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Residuals between bound reference parameters and a measured subspace.
 ///
@@ -94,5 +93,4 @@ inline void calculateResiduals(FreeIndices size,
   }
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

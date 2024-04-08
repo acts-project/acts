@@ -25,8 +25,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 std::size_t nbinsx = 100;
 std::size_t nbinsy = 200;
@@ -127,5 +126,4 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   CHECK_CLOSE_REL(tAngle, lAngle, 0.001);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

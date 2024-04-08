@@ -17,9 +17,7 @@
 #include <array>
 #include <memory>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// @brief  A templated indexed grid generator.
 ///
@@ -104,6 +102,4 @@ struct IndexedSurfacesGenerator {
   const Logger& logger() const { return *oLogger; }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

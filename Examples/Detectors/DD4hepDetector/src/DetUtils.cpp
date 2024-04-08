@@ -20,8 +20,7 @@
 #include <DD4hep/Segmentations.h>
 #include <XML/XMLTags.h>
 
-namespace det {
-namespace utils {
+namespace det::utils {
 
 std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
     double halflengthX, double halflengthZ, double thickness,
@@ -179,5 +178,4 @@ double getAttrValueWithFallback(const dd4hep::xml::Component& node,
     return defaultValue;
   }
 }
-}  // namespace utils
-}  // namespace det
+}  // namespace det::utils

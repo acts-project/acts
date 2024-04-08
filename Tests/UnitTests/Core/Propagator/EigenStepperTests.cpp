@@ -75,8 +75,7 @@ class Logger;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -1155,5 +1154,4 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
     }
   }
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
