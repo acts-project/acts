@@ -679,12 +679,12 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   }
 }
 
-// @TODO: Strategies!
-BOOST_DATA_TEST_CASE(UpdateStackOneSided,
-                     boost::unit_test::data::make(-1.0, 1.0), f) {
-  CylinderVolumeStack::ResizeStrategy strategy =
-      CylinderVolumeStack::ResizeStrategy::Gap;
-
+BOOST_DATA_TEST_CASE(
+    UpdateStackOneSided,
+    (boost::unit_test::data::make(-1.0, 1.0) ^
+     boost::unit_test::data::make(CylinderVolumeStack::ResizeStrategy::Gap,
+                                  CylinderVolumeStack::ResizeStrategy::Expand)),
+    f, strategy) {
   auto trf = Transform3::Identity();
 
   auto trf1 = trf * Translation3{Vector3{0_mm, 0_mm, -500_mm}};
@@ -712,42 +712,40 @@ BOOST_DATA_TEST_CASE(UpdateStackOneSided,
   // -> left edge should stay at -400mm, right edge should be at 500mm or the
   // other direction
 
-  // @TODO: Check invalid doesn't change bounds
+  auto checkUnchanged = [&]() {
+    const auto* cylBounds =
+        dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
+    BOOST_REQUIRE(cylBounds != nullptr);
+    BOOST_CHECK_EQUAL(*cylBounds, *originalBounds);
+  };
 
-  // auto checkUnchanged = [&]() {
-  // const auto* cylBounds =
-  // dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
-  // BOOST_REQUIRE(cylBounds != nullptr);
-  // BOOST_CHECK_EQUAL(*cylBounds, *originalBounds);
-  // };
+  // Invalid: shift too far in z
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * Translation3{Vector3{0, 0, f * 20_mm}},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
 
-  // // Invalid: shift too far in z
-  // BOOST_CHECK_THROW(
-  // cylStack.update(newBounds, trf * Translation3{Vector3{0, 0, 20_mm}},
-  // *logger),
-  // std::invalid_argument);
-  // checkUnchanged();
+  // Invalid: shift in x
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * Translation3{Vector3{10_mm, 0, 0}},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
 
-  // // Invalid: shift in x
-  // BOOST_CHECK_THROW(
-  // cylStack.update(newBounds, trf * Translation3{Vector3{10_mm, 0, 0}},
-  // *logger),
-  // std::invalid_argument);
-  // checkUnchanged();
+  // Invalid: shift in y
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * Translation3{Vector3{0, 10_mm, 0}},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
 
-  // // Invalid: shift in y
-  // BOOST_CHECK_THROW(
-  // cylStack.update(newBounds, trf * Translation3{Vector3{0, 10_mm, 0}},
-  // *logger),
-  // std::invalid_argument);
-  // checkUnchanged();
-
-  // // Invalid: rotation
-  // BOOST_CHECK_THROW(
-  // cylStack.update(newBounds, trf * AngleAxis3{10_degree, Vector3::UnitY()},
-  // *logger),
-  // std::invalid_argument);
-  // checkUnchanged();
+  // Invalid: rotation
+  BOOST_CHECK_THROW(
+      cylStack.update(newBounds, trf * AngleAxis3{10_degree, Vector3::UnitY()},
+                      *logger),
+      std::invalid_argument);
+  checkUnchanged();
 
   cylStack.update(newBounds, trf, *logger);
 
@@ -1407,8 +1405,14 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   }
 }
 
-BOOST_DATA_TEST_CASE(UpdateStackOneSided,
-                     boost::unit_test::data::make(-1.0, 1.0), f) {
+BOOST_DATA_TEST_CASE(
+    UpdateStackOneSided,
+    (boost::unit_test::data::make(-1.0, 1.0) ^
+     boost::unit_test::data::make(CylinderVolumeStack::ResizeStrategy::Gap,
+                                  CylinderVolumeStack::ResizeStrategy::Expand)),
+    f, strategy) {
+  // Strategy should not affect the sizing here at all
+
   auto trf = Transform3::Identity();
 
   auto vol1 = std::make_shared<Volume>(
@@ -1419,9 +1423,9 @@ BOOST_DATA_TEST_CASE(UpdateStackOneSided,
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
 
-  CylinderVolumeStack cylStack{
-      volumes, binR, CylinderVolumeStack::AttachmentStrategy::Gap,
-      CylinderVolumeStack::ResizeStrategy::Gap, *logger};
+  CylinderVolumeStack cylStack{volumes, binR,
+                               CylinderVolumeStack::AttachmentStrategy::Gap,
+                               strategy, *logger};
   const auto* originalBounds =
       dynamic_cast<const CylinderVolumeBounds*>(&cylStack.volumeBounds());
 
@@ -1432,8 +1436,6 @@ BOOST_DATA_TEST_CASE(UpdateStackOneSided,
   // Shift to +z by 50mm
   trf *= Translation3{Vector3{0_mm, 0_mm, f * 50_mm}};
   // -> left edge should stay at -400mm, right edge should be at 500mm
-
-  // @TODO: Check invalid doesn't change bounds
 
   auto checkUnchanged = [&]() {
     const auto* cylBounds =
@@ -1653,7 +1655,5 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END();
-
-// @TODO: Update with neither now
 
 }  // namespace Acts::Test
