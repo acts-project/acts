@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   m02.direction = d0;
 
   std::vector<MaterialInteraction> mInteractions = {m01, m01, m02};
-  std::vector<std::tuple<const Surface*, Vector3, Vector3>> emptyHits = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> emptyHits = {
       {surfaces[2u].get(), 50 * d0, d0}};
 
   bsma.accumulate(*state, mInteractions, emptyHits);

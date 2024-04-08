@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/interface/IAssignmentFinder.hpp"
 
 #include <map>
 #include <memory>
@@ -24,9 +25,6 @@ class Surface;
 /// @brief Interface for the material mapping, this is the accumulation step
 class ISurfaceMaterialAccumulater {
  public:
-  /// @brief SurfaceAssignment is a surface, a position and a direction
-  using SurfaceAssignment = std::tuple<const Surface*, Vector3, Vector3>;
-
   /// The state of the material accumulater, this is used
   /// to cache information across tracks/events
   class State {
@@ -47,10 +45,10 @@ class ISurfaceMaterialAccumulater {
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
-  virtual void accumulate(State& state,
-                          const std::vector<MaterialInteraction>& interactions,
-                          const std::vector<SurfaceAssignment>&
-                              surfacesWithoutAssignment) const = 0;
+  virtual void accumulate(
+      State& state, const std::vector<MaterialInteraction>& interactions,
+      const std::vector<IAssignmentFinder::SurfaceAssignment>&
+          surfacesWithoutAssignment) const = 0;
 
   /// Finalize the surface material maps
   ///

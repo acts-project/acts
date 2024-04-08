@@ -50,20 +50,6 @@ struct InteractionVolume {
     }
   }
 
-  /// Forward the inside check
-  ///
-  /// @param gctx The geometry context
-  /// @param position The position to check
-  bool inside(const GeometryContext& gctx, const Vector3& position) const {
-    if (trackingVolume != nullptr) {
-      return trackingVolume->inside(position);
-    } else if (detectorVolume != nullptr) {
-      return detectorVolume->exclusivelyInside(gctx, position);
-    } else {
-      return false;
-    }
-  }
-
   /// Check if the volume is valid
   bool empty() const {
     return trackingVolume == nullptr && detectorVolume == nullptr;

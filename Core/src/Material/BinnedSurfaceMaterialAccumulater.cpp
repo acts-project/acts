@@ -77,8 +77,9 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
 void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
     ISurfaceMaterialAccumulater::State& state,
     const std::vector<MaterialInteraction>& interactions,
-    const std::vector<SurfaceAssignment>& surfacesWithoutAssignment) const {
-  // Cast into the right state object (guaranteed by upstream algroithm)
+    const std::vector<IAssignmentFinder::SurfaceAssignment>&
+        surfacesWithoutAssignment) const {
+  // Cast into the right state object (guaranteed by upstream algorithm)
   State* cState = static_cast<State*>(&state);
   if (cState == nullptr) {
     throw std::invalid_argument(
@@ -136,7 +137,7 @@ Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
       sMaterials;
 
-  // Cast into the right state object (guaranteed by upstream algroithm)
+  // Cast into the right state object (guaranteed by upstream algorithm)
   State* cState = static_cast<State*>(&state);
   if (cState == nullptr) {
     throw std::invalid_argument(

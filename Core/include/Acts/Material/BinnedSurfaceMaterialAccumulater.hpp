@@ -63,7 +63,7 @@ class BinnedSurfaceMaterialAccumulater final
   /// @note this the track average over the binned material
   void accumulate(ISurfaceMaterialAccumulater::State& state,
                   const std::vector<MaterialInteraction>& interactions,
-                  const std::vector<SurfaceAssignment>&
+                  const std::vector<IAssignmentFinder::SurfaceAssignment>&
                       surfacesWithoutAssignment) const override;
 
   /// Finalize the surface material maps
