@@ -109,4 +109,7 @@ bool Volume::operator==(const Volume& other) const {
          (*m_volumeBounds == *other.m_volumeBounds);
 }
 
+bool Volume::operator!=(const Volume& other) const {
+  return !(*this == other);
+}
 }  // namespace Acts

@@ -104,6 +104,7 @@ class Volume : public GeometryObject {
                           BinningValue bValue) const override;
 
   bool operator==(const Volume& other) const;
+  bool operator!=(const Volume& other) const;
 
  protected:
   Transform3 m_transform;
