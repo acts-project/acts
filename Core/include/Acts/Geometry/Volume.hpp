@@ -24,12 +24,11 @@ class VolumeBounds;
 
 /// @class Volume
 ///
-/// It inhertis of GeometryObject for TDD identification
+/// It inherits from GeometryObject for geometry identification
 ///
-/// Base class for all volumes inside the tracking realm, it defines
-/// the interface for inherited Volume classes
-/// regarding the geometrical information.
-
+/// Base class for all volumes inside the tracking realm, it defines the
+/// interface for inherited Volume classes regarding the geometrical
+/// information.
 class Volume : public GeometryObject {
  public:
   using BoundingBox = AxisAlignedBoundingBox<Volume, ActsScalar, 3>;
@@ -73,8 +72,12 @@ class Volume : public GeometryObject {
   std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
 
   /// Set volume bounds and update volume bounding boxes implicitly
+  /// @param volbounds The volume bounds to be assigned
   void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
 
+  /// Set the volume bounds and optionally also update the volume transform
+  /// @param volbounds The volume bounds to be assigned
+  /// @param transform The transform to be assigned, can be optional
   virtual void update(std::shared_ptr<const VolumeBounds> volbounds,
                       std::optional<Transform3> transform = std::nullopt);
 
