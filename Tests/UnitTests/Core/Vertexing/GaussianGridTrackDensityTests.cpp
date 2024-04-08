@@ -30,8 +30,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -309,5 +308,4 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   BOOST_CHECK_NE(width, 0.);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

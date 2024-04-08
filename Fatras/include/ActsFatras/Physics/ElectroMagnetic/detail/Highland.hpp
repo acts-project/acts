@@ -12,8 +12,7 @@
 
 #include <random>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Generate scattering angles using the Highland/PDG parametrization.
 ///
@@ -40,5 +39,4 @@ struct Highland {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

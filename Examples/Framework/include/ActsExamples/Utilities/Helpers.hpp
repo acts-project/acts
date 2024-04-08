@@ -25,9 +25,7 @@ class TH1F;
 class TH2F;
 class TProfile;
 
-namespace ActsExamples {
-
-namespace PlotHelpers {
+namespace ActsExamples::PlotHelpers {
 /// @brief Nested binning struct for booking plots
 class Binning {
  public:
@@ -145,6 +143,4 @@ TProfile* bookProf(const char* profName, const char* profTitle,
 void fillProf(TProfile* profile, float xValue, float yValue,
               float weight = 1.0);
 
-}  // namespace PlotHelpers
-
-}  // namespace ActsExamples
+}  // namespace ActsExamples::PlotHelpers

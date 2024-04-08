@@ -19,8 +19,7 @@
 
 #include "Eigen/Dense"
 
-namespace Acts {
-namespace VectorHelpers {
+namespace Acts::VectorHelpers {
 
 namespace detail {
 template <class T>
@@ -235,5 +234,4 @@ inline std::pair<double, double> incidentAngles(
   return {phi, theta};
 }
 
-}  // namespace VectorHelpers
-}  // namespace Acts
+}  // namespace Acts::VectorHelpers

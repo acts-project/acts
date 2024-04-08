@@ -44,8 +44,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 // We will compare analytical and numerical computations in the case of a
@@ -277,5 +276,4 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

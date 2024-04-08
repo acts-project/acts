@@ -15,8 +15,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// This function encapsulates the Kalman update performed on a MultiTrajectory
 /// for a single source link.
@@ -190,5 +189,4 @@ auto kalmanHandleNoMeasurement(
   return trackStateProxy;
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

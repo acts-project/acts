@@ -13,9 +13,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 /// This sctruct defines an extendable std::tuple
 ///
@@ -112,5 +110,4 @@ struct Extendable {
   std::tuple<extensions_t...> m_extensions;
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

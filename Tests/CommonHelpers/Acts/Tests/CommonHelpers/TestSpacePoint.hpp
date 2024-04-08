@@ -18,8 +18,7 @@
 
 #include <boost/container/static_vector.hpp>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// Space point representation of a measurement suitable for track seeding.
 class TestSpacePoint {
@@ -97,5 +96,4 @@ inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
 /// Container of space points.
 using TestSpacePointContainer = std::vector<TestSpacePoint>;
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -88,4 +88,4 @@ template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
     const InternalSpacePoint<SpacePoint>& sp) = default;
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -35,8 +35,7 @@
 
 #include <limits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 auto tContext = GeometryContext();
 auto mContext = MagneticFieldContext();
@@ -203,5 +202,4 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -22,11 +22,9 @@
 
 #include <nlohmann/json.hpp>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 Acts::GeometryContext tContext;
 

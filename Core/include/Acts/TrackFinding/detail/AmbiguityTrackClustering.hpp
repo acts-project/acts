@@ -13,8 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Clusterise tracks based on shared hits
 ///
@@ -25,5 +24,4 @@ clusterDuplicateTracks(
     const std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>&
         trackMap);
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

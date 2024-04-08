@@ -48,8 +48,7 @@ class IMaterialDecorator;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples {
-namespace Generic {
+namespace ActsExamples::Generic {
 
 /// Helper method for positioning
 /// @param radius is the cylinder radius
@@ -835,5 +834,4 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   return trackingGeometry;
 }
 
-}  // end of namespace Generic
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Generic
