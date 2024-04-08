@@ -543,7 +543,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     // No gap volumes were added
     BOOST_CHECK_EQUAL(volumes.size(), 3);
 
-    // All volumes reduces min r to accomodate
+    // All volumes reduces min r to accommodate
     for (const auto& [volume, origTransform] :
          zip(volumes, originalTransforms)) {
       const auto* newBounds =
@@ -576,7 +576,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     // No gap volumes were added
     BOOST_CHECK_EQUAL(volumes.size(), 3);
 
-    // All volumes reduces min r to accomodate
+    // All volumes reduces min r to accommodate
     for (const auto& [volume, origTransform] :
          zip(volumes, originalTransforms)) {
       const auto* newBounds =
@@ -822,7 +822,7 @@ BOOST_DATA_TEST_CASE(Baseline,
   ActsScalar fInner = 1.0 + f;
   ActsScalar fOuter = 1.0 - f;
 
-  // Cylinder volumes which already line up in r but have differnt z and hl
+  // Cylinder volumes which already line up in r but have different z and hl
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(fInner * 100_mm,
                                                         fOuter * 300_mm, hlZ);
   auto bounds2 = std::make_shared<CylinderVolumeBounds>(fInner * 300_mm,
@@ -1067,7 +1067,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
                      angle, offset, zshift, strategy) {
   ActsScalar hlZ = 400_mm;
 
-  // Cylinder volumes which already line up in r but have differnt z and hl
+  // Cylinder volumes which already line up in r but have different z and hl
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(100_mm, 300_mm, hlZ);
   auto bounds2 = std::make_shared<CylinderVolumeBounds>(300_mm, 600_mm, hlZ);
   auto bounds3 = std::make_shared<CylinderVolumeBounds>(600_mm, 900_mm, hlZ);
