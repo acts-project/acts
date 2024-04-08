@@ -14,9 +14,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 
@@ -38,5 +36,4 @@ class IRootVolumeFinderBuilder {
       const = 0;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

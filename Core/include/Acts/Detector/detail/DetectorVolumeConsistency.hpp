@@ -15,13 +15,11 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 
-namespace detail {
-namespace DetectorVolumeConsistency {
+namespace detail::DetectorVolumeConsistency {
 
 /// @brief Helper method to check alignment of the volumes, this method checks
 /// if the rotational part of the transform is identical
@@ -52,7 +50,5 @@ std::vector<ActsScalar> checkCenterAlignment(
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
     BinningValue axisValue);
 
-}  // namespace DetectorVolumeConsistency
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace detail::DetectorVolumeConsistency
+}  // namespace Acts::Experimental

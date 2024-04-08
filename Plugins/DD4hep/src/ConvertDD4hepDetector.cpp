@@ -634,4 +634,4 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-}  // End of namespace Acts
+}  // namespace Acts

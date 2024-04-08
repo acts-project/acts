@@ -19,8 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // the test positions in 3D
 Vector3 xyzPosition(0.5, 1.5, 2.5);
@@ -403,5 +402,4 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), std::size_t(4));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

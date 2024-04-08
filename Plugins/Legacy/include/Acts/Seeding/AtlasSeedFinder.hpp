@@ -21,8 +21,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Legacy {
+namespace Acts::Legacy {
 template <typename SpacePoint>
 class AtlasSeedFinder {
   struct Config {
@@ -351,6 +350,5 @@ class comCurvature {
     return i1.first < i2.first;
   }
 };
-}  // namespace Legacy
-}  // namespace Acts
+}  // namespace Acts::Legacy
 #include "Acts/Seeding/AtlasSeedFinder.ipp"
