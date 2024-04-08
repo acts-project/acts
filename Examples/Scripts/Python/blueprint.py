@@ -13,21 +13,23 @@ print(repr(pixel))
 trf = acts.Transform3.Identity() * acts.Translation3(acts.Vector3(0, 0, 0 * mm))
 
 
-barrel = acts.CylinderContainerBlueprintNode(
-    "PixelBarrel",
-    acts.BinningValue.binR,
-    attachmentStrategy=acts.CylinderVolumeStack.AttachmentStrategy.Gap,
-)
-pixel.addChild(barrel)
+if True:
+    barrel = acts.CylinderContainerBlueprintNode(
+        "PixelBarrel",
+        acts.BinningValue.binR,
+        attachmentStrategy=acts.CylinderVolumeStack.AttachmentStrategy.Gap,
+        resizeStrategy=acts.CylinderVolumeStack.ResizeStrategy.Gap,
+    )
+    pixel.addChild(barrel)
 
-print("Barrel")
-r = 25 * mm
-for i in range(0, 4):
-    r += 50 * mm
-    bounds = acts.CylinderVolumeBounds(r, r + 20 * mm, 200 * mm)
-    print(bounds)
-    brlLayer = barrel.addStaticVolume(trf, bounds, name=f"PixelBarrelLayer{i}")
-    assert brlLayer.name == f"PixelBarrelLayer{i}"
+    print("Barrel")
+    r = 25 * mm
+    for i in range(0, 4):
+        r += 50 * mm
+        bounds = acts.CylinderVolumeBounds(r, r + 20 * mm, 200 * mm)
+        print(bounds)
+        brlLayer = barrel.addStaticVolume(trf, bounds, name=f"PixelBarrelLayer{i}")
+        assert brlLayer.name == f"PixelBarrelLayer{i}"
 
 
 if True:
@@ -54,7 +56,7 @@ if True:
             assert PixelEndcapDisk.name == f"PixelPosEndcapDisk{i}"
 
 
-if False:
+if True:
     with pixel.Material() as mat:
         with mat.CylinderContainer(acts.BinningValue.binZ, name="PixelNegEndcap") as ec:
             ec.attachmentStrategy = acts.CylinderVolumeStack.AttachmentStrategy.Gap
