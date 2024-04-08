@@ -16,8 +16,7 @@
 
 #include <cmath>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(jacobian_test) {
   // (1a) Standard test with curvilinear not glazingly close to z axis
@@ -73,5 +72,4 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   CHECK_CLOSE_REL(c2fJacobian(eFreeQOverP, eBoundQOverP), 1, 1e-5);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
