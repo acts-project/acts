@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -29,10 +30,13 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -44,13 +48,71 @@
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
+#include <unordered_set>
 #include <utility>
 
-#include <boost/histogram.hpp>
+#include <boost/functional/hash.hpp>
 
-ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
-    Config config, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
+namespace ActsExamples {
+namespace {
+
+/// Source link indices of the bottom, middle, top measurements.
+/// In case of strip seeds only the first source link of the pair is used.
+using SeedIdentifier = std::array<Index, 3>;
+
+SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
+  SeedIdentifier result;
+
+  for (const auto& [i, sp] : Acts::enumerate(seed.sp())) {
+    const Acts::SourceLink& firstSourceLink = sp->sourceLinks().front();
+    result.at(i) = firstSourceLink.get<IndexSourceLink>().index();
+  }
+
+  return result;
+}
+
+template <typename Visiter>
+void visitSeedIdentifiers(const TrackProxy& track, Visiter visiter) {
+  std::vector<Index> sourceLinkIndices;
+  sourceLinkIndices.reserve(track.nMeasurements());
+  for (const auto& trackState : track.trackStatesReversed()) {
+    if (!trackState.hasUncalibratedSourceLink()) {
+      continue;
+    }
+    const Acts::SourceLink& sourceLink = trackState.getUncalibratedSourceLink();
+    sourceLinkIndices.push_back(sourceLink.get<IndexSourceLink>().index());
+  }
+
+  for (std::size_t i = 0; i < sourceLinkIndices.size(); ++i) {
+    for (std::size_t j = i + 1; j < sourceLinkIndices.size(); ++j) {
+      for (std::size_t k = j + 1; k < sourceLinkIndices.size(); ++k) {
+        visiter({sourceLinkIndices.at(i), sourceLinkIndices.at(j),
+                 sourceLinkIndices.at(k)});
+      }
+    }
+  }
+}
+
+}  // namespace
+}  // namespace ActsExamples
+
+template <class T, size_t N>
+struct std::hash<std::array<T, N>> {
+  std::size_t operator()(const std::array<T, N>& array) const {
+    std::hash<T> hasher;
+    std::size_t result = 0;
+    for (auto&& element : array) {
+      boost::hash_combine(result, hasher(element));
+    }
+    return result;
+  }
+};
+
+namespace ActsExamples {
+
+TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
+                                             Acts::Logging::Level level)
+    : IAlgorithm("TrackFindingAlgorithm", level),
       m_cfg(std::move(config)),
       m_trackSelector(
           m_cfg.trackSelectorCfg.has_value()
@@ -74,18 +136,36 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     throw std::invalid_argument("Missing tracks output collection");
   }
 
+  if (m_cfg.seedDeduplication && m_cfg.inputSeeds.empty()) {
+    throw std::invalid_argument(
+        "Missing seeds input collection. This is "
+        "required for seed deduplication.");
+  }
+
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
+  const SimSeedContainer* seeds = nullptr;
+
+  if (m_inputSeeds.isInitialized()) {
+    seeds = &m_inputSeeds(ctx);
+
+    if (initialParameters.size() != seeds->size()) {
+      throw std::runtime_error(
+          "Number of initial parameters and seeds do not match.");
+    }
+  }
+
+  std::unordered_set<SeedIdentifier> encounteredSeeds;
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -118,7 +198,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   pOptions.direction = Acts::Direction::Forward;
 
   // Set the CombinatorialKalmanFilter options
-  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
+  TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, pOptions);
 
@@ -152,7 +232,31 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   unsigned int nSeed = 0;
 
+  auto addTrack = [&](const TrackProxy& track) {
+    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
+      return;
+    }
+
+    auto destProxy = tracks.makeTrack();
+    // make sure we copy track states!
+    destProxy.copyFrom(track, true);
+
+    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
+      encounteredSeeds.insert(seedIdentifier);
+    });
+  };
+
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    if (seeds != nullptr && m_cfg.seedDeduplication) {
+      const SimSeed& seed = seeds->at(iseed);
+      SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
+      if (encounteredSeeds.find(seedIdentifier) != encounteredSeeds.end()) {
+        m_nDeduplicatedSeeds++;
+        ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
+        continue;
+      }
+    }
+
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
@@ -193,11 +297,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       // Set the seed number, this number decrease by 1 since the seed number
       seedNumber(track) = nSeed - 1;
 
-      if (!m_trackSelector.has_value() ||
-          m_trackSelector->isValidTrack(track)) {
-        auto destProxy = tracks.makeTrack();
-        destProxy.copyFrom(track, true);  // make sure we copy track states!
-      }
+      addTrack(track);
     }
   }
 
@@ -223,12 +323,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                   constTrackStateContainer};
 
   m_outputTracks(ctx, std::move(constTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize() {
+ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("TrackFindingAlgorithm statistics:");
   ACTS_INFO("- total seeds: " << m_nTotalSeeds);
+  ACTS_INFO("- deduplicated seeds: " << m_nDeduplicatedSeeds);
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
   ACTS_INFO("- failed smoothing: " << m_nFailedSmoothing);
   ACTS_INFO("- failed extrapolation: " << m_nFailedExtrapolation);
@@ -246,3 +347,5 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize() {
   ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
