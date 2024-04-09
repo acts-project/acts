@@ -86,7 +86,7 @@ class MeasurementSelector {
   select(std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 
- private:
+private:
   template <typename traj_t, typename cut_value_t>
   static cut_value_t VariableCut(
       const typename traj_t::TrackStateProxy& trackState,
@@ -101,7 +101,7 @@ class MeasurementSelector {
                        false>::Covariance predictedCovariance,
       const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Projector projector,
-      unsigned int calibratedSize) const;
+      const unsigned int calibratedSize) const;
 
   Config m_config;
 };

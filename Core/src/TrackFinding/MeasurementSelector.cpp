@@ -27,7 +27,7 @@ double MeasurementSelector::calculateChi2(
                      false>::Covariance predictedCovariance,
     const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector projector,
-    unsigned int calibratedSize) const {
+    const unsigned int calibratedSize) const {
   return visit_measurement(calibratedSize, [&fullCalibrated, &fullCalibratedCovariance,
 					    &predicted, &predictedCovariance, &projector] (auto N) -> double {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
@@ -45,8 +45,7 @@ double MeasurementSelector::calculateChi2(
         projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
 
     // Get the residuals
-    ParametersVector res;
-    res = calibrated - H * predicted;
+    ParametersVector res = calibrated - H * predicted;
 
     // Get the chi2
     return (res.transpose() *
