@@ -86,20 +86,20 @@ class MeasurementSelector {
 
  private:
   template <typename traj_t, typename cut_value_t>
-  static cut_value_t VariableCut(
+  static cut_value_t getCut(
       const typename traj_t::TrackStateProxy& trackState,
       const Acts::MeasurementSelector::Config::Iterator selector,
       const std::vector<cut_value_t>& cuts, const Logger& logger);
 
   double calculateChi2(
       const double* fullCalibrated, const double* fullCalibratedCovariance,
-      const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                             false>::Parameters predicted,
-      const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                             false>::Covariance predictedCovariance,
-      const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                             false>::Projector projector,
-      const unsigned int calibratedSize) const;
+      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Parameters predicted,
+      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Covariance predictedCovariance,
+      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                       false>::Projector projector,
+      unsigned int calibratedSize) const;
 
   Config m_config;
 };

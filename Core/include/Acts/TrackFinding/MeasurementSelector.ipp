@@ -39,10 +39,10 @@ MeasurementSelector::select(
 
   assert(!cuts->chi2CutOff.empty());
   const std::vector<double>& chi2CutOff = cuts->chi2CutOff;
-  const double maxChi2Cut = std::min(
-      *std::max_element(chi2CutOff.begin(), chi2CutOff.end()),
-      VariableCut<traj_t>(candidates.front(), cuts, chi2CutOff, logger));
-  const std::size_t numMeasurementsCut = VariableCut<traj_t>(
+  const double maxChi2Cut =
+      std::min(*std::max_element(chi2CutOff.begin(), chi2CutOff.end()),
+               getCut<traj_t>(candidates.front(), cuts, chi2CutOff, logger));
+  const std::size_t numMeasurementsCut = getCut<traj_t>(
       candidates.front(), cuts, cuts->numMeasurementsCutOff, logger);
 
   if (numMeasurementsCut == 0ul) {
@@ -129,7 +129,7 @@ MeasurementSelector::select(
 }
 
 template <typename traj_t, typename cut_value_t>
-cut_value_t MeasurementSelector::VariableCut(
+cut_value_t MeasurementSelector::getCut(
     const typename traj_t::TrackStateProxy& trackState,
     const Acts::MeasurementSelector::Config::Iterator selector,
     const std::vector<cut_value_t>& cuts, const Logger& logger) {
@@ -149,7 +149,7 @@ cut_value_t MeasurementSelector::VariableCut(
   if (bin >= cuts.size()) {
     bin = cuts.size() - 1;
   }
-  ACTS_VERBOSE("Variable cut for eta=" << eta << ": " << cuts[bin]);
+  ACTS_VERBOSE("Get cut for eta=" << eta << ": " << cuts[bin]);
   return cuts[bin];
 }
 
