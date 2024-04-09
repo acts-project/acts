@@ -9,19 +9,18 @@
 
 namespace Acts {
 
-  template <typename traj_t>
-  Result<std::pair<
-	   typename std::vector<typename traj_t::TrackStateProxy>::iterator,
-	   typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
-  MeasurementSelector::select(std::vector<typename traj_t::TrackStateProxy>& candidates,
-			      bool& isOutlier, const Logger& logger) const
-  {
-      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
-      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
-  MeasurementSelector::select(std::vector<typename traj_t::TrackStateProxy>& candidates,
-			      bool& isOutlier,
-			      const Logger& logger) const
-  {
+template <typename traj_t>
+Result<
+    std::pair<typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+              typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+MeasurementSelector::select(
+    std::vector<typename traj_t::TrackStateProxy>& candidates, bool& isOutlier,
+    const Logger& logger) const {
+  typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator >>
+          MeasurementSelector::select(
+              std::vector<typename traj_t::TrackStateProxy> & candidates,
+              bool& isOutlier, const Logger& logger) const {
     using Result = Result<std::pair<
         typename std::vector<typename traj_t::TrackStateProxy>::iterator,
         typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
@@ -47,17 +46,16 @@ namespace Acts {
 
     assert(!cuts->chi2CutOff.empty());
     const std::vector<double>& chi2CutOff = cuts->chi2CutOff;
-    const double maxChi2Cut = std::min(*std::max_element(chi2CutOff.begin(), chi2CutOff.end()),
-				       VariableCut<traj_t>(candidates.front(), cuts, chi2CutOff, logger));    
-    const std::size_t numMeasurementsCut = VariableCut<traj_t>(candidates.front(),
-							       cuts,
-							       cuts->numMeasurementsCutOff,
-							       logger);
+    const double maxChi2Cut = std::min(
+        *std::max_element(chi2CutOff.begin(), chi2CutOff.end()),
+        VariableCut<traj_t>(candidates.front(), cuts, chi2CutOff, logger));
+    const std::size_t numMeasurementsCut = VariableCut<traj_t>(
+        candidates.front(), cuts, cuts->numMeasurementsCutOff, logger);
 
     if (numMeasurementsCut == 0ul) {
       return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
-    
+
     double minChi2 = std::numeric_limits<double>::max();
     std::size_t minIndex = std::numeric_limits<std::size_t>::max();
 
@@ -66,58 +64,63 @@ namespace Acts {
     // Loop over all measurements to select the compatible measurements
     // Sort track states which do not satisfy the chi2 cut to the end.
     // When done trackStateIterEnd will point to the first element that
-    // does not satisfy the chi2 cut.    
+    // does not satisfy the chi2 cut.
     std::size_t passedCandidates = 0ul;
-    for (std::size_t i(0ul); i<candidates.size(); ++i) {
+    for (std::size_t i(0ul); i < candidates.size(); ++i) {
       auto& trackState = candidates[i];
 
       // This abuses an incorrectly sized vector / matrix to access the
       // data pointer! This works (don't use the matrix as is!), but be
       // careful!
       double chi2 = calculateChi2(
-				  trackState.template calibrated<
-				  MultiTrajectoryTraits::MeasurementSizeMax>()
-				  .data(),				  
-				  trackState.template calibratedCovariance<
-				  MultiTrajectoryTraits::MeasurementSizeMax>()
-				  .data(),
-				  trackState.predicted(), trackState.predictedCovariance(),
-				  trackState.projector(), trackState.calibratedSize());      
+          trackState
+              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
+              .data(),
+          trackState
+              .template calibratedCovariance<
+                  MultiTrajectoryTraits::MeasurementSizeMax>()
+              .data(),
+          trackState.predicted(), trackState.predictedCovariance(),
+          trackState.projector(), trackState.calibratedSize());
       trackState.chi2() = chi2;
 
       if (chi2 < minChi2) {
-	minChi2 = chi2;
-	minIndex = i;
+        minChi2 = chi2;
+        minIndex = i;
       }
 
       // only consider track states which pass the chi2 cut
       if (chi2 >= maxChi2Cut) {
-	continue;
+        continue;
       }
 
       if (passedCandidates != i) {
-	std::swap(candidates[passedCandidates], candidates[i]);
-	if (minIndex == i) minIndex = passedCandidates;
+        std::swap(candidates[passedCandidates], candidates[i]);
+        if (minIndex == i)
+          minIndex = passedCandidates;
       }
       ++passedCandidates;
     }
-    
+
     // If there are no measurements below the chi2 cut off, return the
-    // measurement with the best chi2 and tag it as an outlier    
+    // measurement with the best chi2 and tag it as an outlier
     if (passedCandidates == 0ul) {
       ACTS_VERBOSE(
           "No measurement candidate. Return an outlier measurement chi2="
-	  << minChi2);
+          << minChi2);
       isOutlier = true;
     }
-    
+
     if (passedCandidates <= 1ul || numMeasurementsCut == 1ul) {
       // return single item range, no sorting necessary
       auto stop = std::chrono::high_resolution_clock::now();
-      auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+      auto duration =
+          std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
+              .count();
       ACTS_VERBOSE("Returning only 1 element");
       std::cout << "Duration: " << duration << std::endl;
-      return Result::success(std::make_pair(candidates.begin() + minIndex, candidates.begin() + minIndex + 1));
+      return Result::success(std::make_pair(candidates.begin() + minIndex,
+                                            candidates.begin() + minIndex + 1));
     }
 
     std::sort(candidates.begin(), candidates.begin() + passedCandidates,
@@ -127,19 +130,21 @@ namespace Acts {
 
     if (passedCandidates <= numMeasurementsCut) {
       ACTS_VERBOSE("Number of selected measurements: "
-		   << passedCandidates
-		   << ", max: " << numMeasurementsCut);
-      return Result::success(std::make_pair(candidates.begin(), candidates.begin() + passedCandidates));
+                   << passedCandidates << ", max: " << numMeasurementsCut);
+      return Result::success(std::make_pair(
+          candidates.begin(), candidates.begin() + passedCandidates));
     }
 
     ACTS_VERBOSE("Number of selected measurements: "
-		 << numMeasurementsCut
-		 << ", max: " << numMeasurementsCut);
-    
+                 << numMeasurementsCut << ", max: " << numMeasurementsCut);
+
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
+            .count();
     std::cout << "Duration: " << duration << std::endl;
-    return Result::success(std::make_pair(candidates.begin(), candidates.begin() + numMeasurementsCut));
+    return Result::success(std::make_pair(
+        candidates.begin(), candidates.begin() + numMeasurementsCut));
   }
 
   template <typename traj_t, typename cut_value_t>

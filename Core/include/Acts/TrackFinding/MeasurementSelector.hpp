@@ -20,13 +20,13 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
+#include <chrono>
 #include <cstddef>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <utility>
 #include <vector>
-#include <chrono>
-#include <iostream>
 
 namespace Acts {
 
@@ -86,7 +86,7 @@ class MeasurementSelector {
   select(std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const;
 
-private:
+ private:
   template <typename traj_t, typename cut_value_t>
   static cut_value_t VariableCut(
       const typename traj_t::TrackStateProxy& trackState,
@@ -96,11 +96,11 @@ private:
   double calculateChi2(
       const double* fullCalibrated, const double* fullCalibratedCovariance,
       const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Parameters predicted,
+                             false>::Parameters predicted,
       const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Covariance predictedCovariance,
+                             false>::Covariance predictedCovariance,
       const TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Projector projector,
+                             false>::Projector projector,
       const unsigned int calibratedSize) const;
 
   Config m_config;
