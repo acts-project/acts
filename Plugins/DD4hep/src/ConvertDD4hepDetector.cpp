@@ -167,7 +167,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                << subDetType << "], compound: "
                << (subDetector.type() == "compound" ? "yes" : "no"));
   if (subDetector.type() == "compound") {
-    ACTS_VERBOSE("Subdetector : '" << subDetector.name()
+    ACTS_VERBOSE("Subdetector: '" << subDetector.name()
                                    << "' has type compound ");
     ACTS_VERBOSE(
         "handling as a compound volume (a hierarchy of a "
@@ -196,7 +196,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     bool pEndCap = false;
     bool barrel = false;
     for (auto& volumeDetElement : compounds) {
-      ACTS_VERBOSE("Volume : '"
+      ACTS_VERBOSE("Volume: '"
                    << subDetector.name()
                    << "' is a compound volume -> resolve the sub volumes");
 
@@ -219,7 +219,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       dd4hep::DetType type{volumeDetElement.typeFlag()};
 
       if (type.is(dd4hep::DetType::ENDCAP)) {
-        ACTS_VERBOSE(std::string("Subvolume : '") + volumeDetElement.name() +
+        ACTS_VERBOSE(std::string("Subvolume: '") + volumeDetElement.name() +
                      std::string("' is marked ENDCAP"));
         if (zPos < 0.) {
           if (nEndCap) {
@@ -532,8 +532,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             logger.clone(std::string("D2A_V:") + subDetector.name()));
     return cylinderVolumeBuilder;
   } else {
-    ACTS_INFO(
-        "Subdetector with name : '"
+    ACTS_WARNING(
+        "Subdetector with name: '"
         << subDetector.name()
         << "' has inconsistent information for translation and is not of type "
            "'compound'. If you want to have this DetElement be translated "
