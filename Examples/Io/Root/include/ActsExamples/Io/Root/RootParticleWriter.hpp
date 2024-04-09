@@ -41,8 +41,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
     /// Optional. If given, the the energy loss and traversed material is
     /// computed and written.
     std::string inputFinalParticles;
-    /// Optional. If given, the number of measurements is computed and written.
-    std::string inputSimHits;
     /// Path to the output file.
     std::string filePath;
     /// Output file access mode.
@@ -79,7 +77,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
 
   ReadDataHandle<SimParticleContainer> m_inputFinalParticles{
       this, "InputFinalParticles"};
-  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 
   std::mutex m_writeMutex;
 
@@ -98,7 +95,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_vx;
   std::vector<float> m_vy;
   std::vector<float> m_vz;
-  // Production time in ns.
   std::vector<float> m_vt;
   /// Total momentum in GeV
   std::vector<float> m_p;

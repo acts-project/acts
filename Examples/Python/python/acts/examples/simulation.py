@@ -11,6 +11,7 @@ from acts.examples import (
     CsvParticleWriter,
     ParticlesPrinter,
     RootParticleWriter,
+    RootVertexWriter,
 )
 
 # Defaults (given as `None` here) use class defaults defined in
@@ -130,12 +131,14 @@ def addParticleGun(
             )
         ],
         outputParticles="particles_input",
+        outputVertices="vertices_input",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
+    s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
 
     if printParticles:
         s.addAlgorithm(
@@ -172,6 +175,14 @@ def addParticleGun(
             )
         )
 
+        s.addWriter(
+            RootVertexWriter(
+                level=customLogLevel(),
+                inputVertices=evGen.config.outputVertices,
+                filePath=str(outputDirRoot / "vertices.root"),
+            )
+        )
+
     return s
 
 
@@ -186,7 +197,7 @@ def addPythia8(
     cmsEnergy: Optional[float] = None,  # default: 14 * acts.UnitConstants.TeV
     hardProcess: Optional[Iterable] = None,  # default: ["HardQCD:all = on"]
     pileupProcess: Iterable = ["SoftQCD:all = on"],
-    vtxGen: Optional[acts.examples.EventGenerator.VertexGenerator] = None,
+    vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
@@ -284,12 +295,14 @@ def addPythia8(
         level=customLogLevel(),
         generators=generators,
         outputParticles="particles_input",
+        outputVertices="vertices_input",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
+    s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
 
     if printParticles:
         s.addAlgorithm(
@@ -323,6 +336,14 @@ def addPythia8(
                 level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
                 filePath=str(outputDirRoot / "pythia8_particles.root"),
+            )
+        )
+
+        s.addWriter(
+            acts.examples.RootVertexWriter(
+                level=customLogLevel(),
+                inputVertices=evGen.config.outputVertices,
+                filePath=str(outputDirRoot / "pythia8_vertices.root"),
             )
         )
 
@@ -551,7 +572,6 @@ def addSimWriters(
                 level=customLogLevel(),
                 inputParticles=particlesInitial,
                 inputFinalParticles=particlesFinal,
-                inputSimHits=simHits,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
@@ -600,7 +620,7 @@ def addGeant4(
     rnd: acts.examples.RandomNumbers,
     g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
-    materialMappings: List[str] = [],
+    materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
     outputParticlesInitial: str = "particles_initial",
     outputParticlesFinal: str = "particles_final",

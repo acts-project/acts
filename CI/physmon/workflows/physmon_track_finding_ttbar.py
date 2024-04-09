@@ -108,7 +108,11 @@ with tempfile.TemporaryDirectory() as temp:
 
     addAmbiguityResolution(
         s,
-        AmbiguityResolutionConfig(maximumSharedHits=3),
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3,
+            maximumIterations=100000,
+            nMeasurementsMin=6,
+        ),
         outputDirRoot=tp,
     )
 
@@ -140,6 +144,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",
         seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+        useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gridseeder",
     )

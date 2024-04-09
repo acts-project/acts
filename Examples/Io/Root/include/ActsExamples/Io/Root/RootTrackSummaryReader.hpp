@@ -29,7 +29,6 @@
 class TChain;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootTrackSummaryReader
 ///
@@ -39,14 +38,14 @@ class RootTrackSummaryReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::string outputTracks = "outputTracks";  ///< track collection to read
-    std::string outputParticles =
-        "outputParticles";                  ///< particle collection to read
-    std::string treeName = "tracksummary";  ///< name of the input tree
-    std::string filePath;                   ///< The name of the input file
-
-    /// Whether the events are ordered or not
-    bool orderedEvents = true;
+    /// track collection to read
+    std::string outputTracks = "outputTracks";
+    /// particle collection to read
+    std::string outputParticles = "outputParticles";
+    /// name of the input tree
+    std::string treeName = "tracksummary";
+    /// The name of the input file
+    std::string filePath;
   };
 
   /// Constructor
@@ -96,102 +95,104 @@ class RootTrackSummaryReader : public IReader {
   /// The input tree name
   TChain* m_inputChain = nullptr;
 
-  uint32_t m_eventNr{0};  ///< the event number
-  std::vector<uint32_t>* m_multiTrajNr =
-      new std::vector<uint32_t>;  ///< the multi-trajectory number
-  std::vector<unsigned int>* m_subTrajNr =
-      new std::vector<unsigned int>;  ///< the multi-trajectory sub-trajectory
-                                      ///< number
+  /// the event number
+  uint32_t m_eventNr{0};
+  /// the multi-trajectory number
+  std::vector<uint32_t>* m_multiTrajNr = new std::vector<uint32_t>;
+  /// the multi-trajectory sub-trajectory number
+  std::vector<unsigned int>* m_subTrajNr = new std::vector<unsigned int>;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<unsigned int>* m_nStates =
-      new std::vector<unsigned int>;  ///< The number of states
-  std::vector<unsigned int>* m_nMeasurements =
-      new std::vector<unsigned int>;  ///< The number of measurements
-  std::vector<unsigned int>* m_nOutliers =
-      new std::vector<unsigned int>;  ///< The number of outliers
-  std::vector<unsigned int>* m_nHoles =
-      new std::vector<unsigned int>;  ///< The number of holes
-  std::vector<float>* m_chi2Sum = new std::vector<float>;  ///< The total chi2
-  std::vector<unsigned int>* m_NDF =
-      new std::vector<unsigned int>;  ///< The number of ndf of the
-                                      ///< measurements+outliers
+  /// The number of states
+  std::vector<unsigned int>* m_nStates = new std::vector<unsigned int>;
+  /// The number of measurements
+  std::vector<unsigned int>* m_nMeasurements = new std::vector<unsigned int>;
+  /// The number of outliers
+  std::vector<unsigned int>* m_nOutliers = new std::vector<unsigned int>;
+  /// The number of holes
+  std::vector<unsigned int>* m_nHoles = new std::vector<unsigned int>;
+  /// The total chi2
+  std::vector<float>* m_chi2Sum = new std::vector<float>;
+  /// The number of ndf of the measurements+outliers
+  std::vector<unsigned int>* m_NDF = new std::vector<unsigned int>;
+  /// The chi2 on all measurement states
   std::vector<std::vector<double>>* m_measurementChi2 =
-      new std::vector<std::vector<double>>;  ///< The chi2 on all measurement
-                                             ///< states
+      new std::vector<std::vector<double>>;
+  /// The chi2 on all outlier states
   std::vector<std::vector<double>>* m_outlierChi2 =
-      new std::vector<std::vector<double>>;  ///< The chi2 on all outlier states
-  std::vector<std::vector<double>>* m_measurementVolume =
-      new std::vector<std::vector<double>>;  ///< The volume id of the
-                                             ///< measurements
-  std::vector<std::vector<double>>* m_measurementLayer =
-      new std::vector<std::vector<double>>;  ///< The layer id of the
-                                             ///< measurements
-  std::vector<std::vector<double>>* m_outlierVolume =
-      new std::vector<std::vector<double>>;  ///< The volume id of the outliers
-  std::vector<std::vector<double>>* m_outlierLayer =
-      new std::vector<std::vector<double>>;  ///< The layer id of the outliers
+      new std::vector<std::vector<double>>;
+  /// The volume id of the measurements
+  std::vector<std::vector<std::uint32_t>>* m_measurementVolume =
+      new std::vector<std::vector<std::uint32_t>>;
+  /// The layer id of the measurements
+  std::vector<std::vector<std::uint32_t>>* m_measurementLayer =
+      new std::vector<std::vector<std::uint32_t>>;
+  /// The volume id of the outliers
+  std::vector<std::vector<std::uint32_t>>* m_outlierVolume =
+      new std::vector<std::vector<std::uint32_t>>;
+  /// The layer id of the outliers
+  std::vector<std::vector<std::uint32_t>>* m_outlierLayer =
+      new std::vector<std::vector<std::uint32_t>>;
 
   // The majority truth particle info
-  std::vector<unsigned int>* m_nMajorityHits =
-      new std::vector<unsigned int>;  ///< The number of hits from majority
-                                      ///< particle
-  std::vector<uint64_t>* m_majorityParticleId =
-      new std::vector<uint64_t>;  ///< The particle Id of the majority particle
-  std::vector<int>* m_t_charge =
-      new std::vector<int>;  ///< Charge of majority particle
-  std::vector<float>* m_t_time =
-      new std::vector<float>;  ///< Time of majority particle
-  std::vector<float>* m_t_vx =
-      new std::vector<float>;  ///< Vertex x positions of majority particle
-  std::vector<float>* m_t_vy =
-      new std::vector<float>;  ///< Vertex y positions of majority particle
-  std::vector<float>* m_t_vz =
-      new std::vector<float>;  ///< Vertex z positions of majority particle
-  std::vector<float>* m_t_px =
-      new std::vector<float>;  ///< Initial momenta px of majority particle
-  std::vector<float>* m_t_py =
-      new std::vector<float>;  ///< Initial momenta py of majority particle
-  std::vector<float>* m_t_pz =
-      new std::vector<float>;  ///< Initial momenta pz of majority particle
-  std::vector<float>* m_t_theta =
-      new std::vector<float>;  ///< Initial momenta theta of majority particle
-  std::vector<float>* m_t_phi =
-      new std::vector<float>;  ///< Initial momenta phi of majority particle
-  std::vector<float>* m_t_pT =
-      new std::vector<float>;  ///< Initial momenta pT of majority particle
-  std::vector<float>* m_t_eta =
-      new std::vector<float>;  ///< Initial momenta eta of majority particle
+  /// The number of hits from majority particle
+  std::vector<unsigned int>* m_nMajorityHits = new std::vector<unsigned int>;
+  /// The particle Id of the majority particle
+  std::vector<uint64_t>* m_majorityParticleId = new std::vector<uint64_t>;
+  /// Charge of majority particle
+  std::vector<int>* m_t_charge = new std::vector<int>;
+  /// Time of majority particle
+  std::vector<float>* m_t_time = new std::vector<float>;
+  /// Vertex x positions of majority particle
+  std::vector<float>* m_t_vx = new std::vector<float>;
+  /// Vertex y positions of majority particle
+  std::vector<float>* m_t_vy = new std::vector<float>;
+  /// Vertex z positions of majority particle
+  std::vector<float>* m_t_vz = new std::vector<float>;
+  /// Initial momenta px of majority particle
+  std::vector<float>* m_t_px = new std::vector<float>;
+  /// Initial momenta py of majority particle
+  std::vector<float>* m_t_py = new std::vector<float>;
+  /// Initial momenta pz of majority particle
+  std::vector<float>* m_t_pz = new std::vector<float>;
+  /// Initial momenta theta of majority particle
+  std::vector<float>* m_t_theta = new std::vector<float>;
+  /// Initial momenta phi of majority particle
+  std::vector<float>* m_t_phi = new std::vector<float>;
+  /// Initial momenta pT of majority particle
+  std::vector<float>* m_t_pT = new std::vector<float>;
+  /// Initial momenta eta of majority particle
+  std::vector<float>* m_t_eta = new std::vector<float>;
 
-  std::vector<bool>* m_hasFittedParams =
-      new std::vector<bool>;  ///< If the track has fitted parameter
-  std::vector<float>* m_eLOC0_fit =
-      new std::vector<float>;  ///< Fitted parameters eBoundLoc0 of track
-  std::vector<float>* m_eLOC1_fit =
-      new std::vector<float>;  ///< Fitted parameters eBoundLoc1 of track
-  std::vector<float>* m_ePHI_fit =
-      new std::vector<float>;  ///< Fitted parameters ePHI of track
-  std::vector<float>* m_eTHETA_fit =
-      new std::vector<float>;  ///< Fitted parameters eTHETA of track
-  std::vector<float>* m_eQOP_fit =
-      new std::vector<float>;  ///< Fitted parameters eQOP of track
-  std::vector<float>* m_eT_fit =
-      new std::vector<float>;  ///< Fitted parameters eT of track
-  std::vector<float>* m_err_eLOC0_fit =
-      new std::vector<float>;  ///< Fitted parameters eLOC err of track
-  std::vector<float>* m_err_eLOC1_fit =
-      new std::vector<float>;  ///< Fitted parameters eBoundLoc1 err of track
-  std::vector<float>* m_err_ePHI_fit =
-      new std::vector<float>;  ///< Fitted parameters ePHI err of track
-  std::vector<float>* m_err_eTHETA_fit =
-      new std::vector<float>;  ///< Fitted parameters eTHETA err of track
-  std::vector<float>* m_err_eQOP_fit =
-      new std::vector<float>;  ///< Fitted parameters eQOP err of track
-  std::vector<float>* m_err_eT_fit =
-      new std::vector<float>;  ///< Fitted parameters eT err of track
+  /// If the track has fitted parameter
+  std::vector<bool>* m_hasFittedParams = new std::vector<bool>;
+  /// Fitted parameters eBoundLoc0 of track
+  std::vector<float>* m_eLOC0_fit = new std::vector<float>;
+  /// Fitted parameters eBoundLoc1 of track
+  std::vector<float>* m_eLOC1_fit = new std::vector<float>;
+  /// Fitted parameters ePHI of track
+  std::vector<float>* m_ePHI_fit = new std::vector<float>;
+  /// Fitted parameters eTHETA of track
+  std::vector<float>* m_eTHETA_fit = new std::vector<float>;
+  /// Fitted parameters eQOP of track
+  std::vector<float>* m_eQOP_fit = new std::vector<float>;
+  /// Fitted parameters eT of track
+  std::vector<float>* m_eT_fit = new std::vector<float>;
+  /// Fitted parameters eLOC err of track
+  std::vector<float>* m_err_eLOC0_fit = new std::vector<float>;
+  /// Fitted parameters eBoundLoc1 err of track
+  std::vector<float>* m_err_eLOC1_fit = new std::vector<float>;
+  /// Fitted parameters ePHI err of track
+  std::vector<float>* m_err_ePHI_fit = new std::vector<float>;
+  /// Fitted parameters eTHETA err of track
+  std::vector<float>* m_err_eTHETA_fit = new std::vector<float>;
+  /// Fitted parameters eQOP err of track
+  std::vector<float>* m_err_eQOP_fit = new std::vector<float>;
+  /// Fitted parameters eT err of track
+  std::vector<float>* m_err_eT_fit = new std::vector<float>;
 };
 
 }  // namespace ActsExamples

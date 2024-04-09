@@ -19,8 +19,7 @@
 #include <sstream>
 #include <tuple>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Basic non-timing tests do not validate the core performance aspects of the
 // benchmark tools, but have the advantage of being runnable on any system.
@@ -296,5 +295,4 @@ BOOST_AUTO_TEST_CASE(assume_written) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

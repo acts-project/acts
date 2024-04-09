@@ -13,13 +13,13 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
@@ -96,10 +96,11 @@ struct Fixture {
     surface->assignGeometryId(gid);
 
     // generate random track parameters
-    auto [par, cov] = Acts::Test::generateBoundParametersCovariance(rng);
+    auto [par, cov] =
+        Acts::detail::Test::generateBoundParametersCovariance(rng);
     boundParams = par;
-    freeParams = Acts::detail::transformBoundToFreeParameters(*surface, geoCtx,
-                                                              boundParams);
+    freeParams =
+        Acts::transformBoundToFreeParameters(*surface, geoCtx, boundParams);
 
     // construct hit from free parameters
     Acts::Vector4 r4;

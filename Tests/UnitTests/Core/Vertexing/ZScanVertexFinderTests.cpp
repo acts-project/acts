@@ -29,7 +29,6 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 
@@ -50,12 +49,11 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
-using Linearizer_t = HelicalTrackLinearizer<Propagator>;
+using Linearizer_t = HelicalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -107,8 +105,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    using BilloirFitter =
-        FullBilloirVertexFitter<BoundTrackParameters, Linearizer_t>;
+    using BilloirFitter = FullBilloirVertexFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -158,31 +155,25 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
                           ParticleHypothesis::pion());
     }
 
-    std::vector<const BoundTrackParameters*> tracksPtr;
+    std::vector<InputTrack> inputTracks;
     for (const auto& trk : tracks) {
-      tracksPtr.push_back(&trk);
+      inputTracks.emplace_back(&trk);
     }
 
-    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
+    using VertexFinder = ZScanVertexFinder;
 
-    static_assert(VertexFinderConcept<VertexFinder>,
-                  "Vertex finder does not fulfill vertex finder concept.");
-
-    // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
-
-    IPEstimator::Config ipEstimatorCfg(bField, propagator);
-    IPEstimator ipEstimator(ipEstimatorCfg);
+    ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+    ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
     VertexFinder::Config cfg(ipEstimator);
+    cfg.extractParameters.connect<&InputTrack::extractParameters>();
 
     VertexFinder finder(cfg);
 
-    VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                            magFieldContext);
+    VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-    VertexFinder::State state;
-    auto res = finder.find(tracksPtr, vertexingOptions, state);
+    auto state = finder.makeState(magFieldContext);
+    auto res = finder.find(inputTracks, vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
 
@@ -198,9 +189,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
   }
 }
 
-// Dummy user-defined InputTrack type
-struct InputTrack {
-  InputTrack(const BoundTrackParameters& params) : m_parameters(params) {}
+// Dummy user-defined InputTrackStub type
+struct InputTrackStub {
+  InputTrackStub(const BoundTrackParameters& params) : m_parameters(params) {}
 
   const BoundTrackParameters& parameters() const { return m_parameters; }
 
@@ -233,7 +224,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer_t>;
+    using BilloirFitter = FullBilloirVertexFitter;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -249,7 +240,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
-    std::vector<InputTrack> tracks;
+    std::vector<InputTrackStub> tracks;
 
     // Construct random track emerging from vicinity of vertex position
     // Vector to store track objects used for vertex fit
@@ -282,35 +273,31 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
                                                ParticleHypothesis::pion()));
     }
 
-    std::vector<const InputTrack*> tracksPtr;
+    std::vector<InputTrack> inputTracks;
     for (const auto& trk : tracks) {
-      tracksPtr.push_back(&trk);
+      inputTracks.emplace_back(&trk);
     }
 
-    using VertexFinder = ZScanVertexFinder<BilloirFitter>;
+    using VertexFinder = ZScanVertexFinder;
 
-    static_assert(VertexFinderConcept<VertexFinder>,
-                  "Vertex finder does not fulfill vertex finder concept.");
-
-    // Impact point estimator
-    using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
-
-    IPEstimator::Config ipEstimatorCfg(bField, propagator);
-    IPEstimator ipEstimator(ipEstimatorCfg);
+    ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
+    ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
     VertexFinder::Config cfg(ipEstimator);
 
     // Create a custom std::function to extract BoundTrackParameters from
-    // user-defined InputTrack
-    std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](const InputTrack& params) { return params.parameters(); };
+    // user-defined InputTrackStub
+    auto extractParameters = [](const InputTrack& params) {
+      return params.as<InputTrackStub>()->parameters();
+    };
 
-    VertexFinder finder(cfg, extractParameters);
-    VertexFinder::State state;
+    cfg.extractParameters.connect(extractParameters);
+    VertexFinder finder(cfg);
+    auto state = finder.makeState(magFieldContext);
 
-    VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
+    VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
-    auto res = finder.find(tracksPtr, vertexingOptions, state);
+    auto res = finder.find(inputTracks, vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
 
@@ -326,5 +313,4 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

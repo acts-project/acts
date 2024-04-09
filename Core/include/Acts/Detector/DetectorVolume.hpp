@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/DetectorVolumeVisitorConcept.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -19,7 +21,9 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -40,7 +44,6 @@ class VolumeBounds;
 namespace Experimental {
 
 class DetectorVolume;
-class Portal;
 class Detector;
 
 /// A detector volume description which can be:
@@ -282,6 +285,80 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Const access to the detector volume updator
   const DetectorVolumeUpdater& detectorVolumeUpdater() const;
 
+  /// @brief Visit all reachable surfaces of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called for each found surface,
+  /// it will be handed down to contained volumes and portals
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    for (const auto& s : surfaces()) {
+      visitor(s);
+    }
+    for (const auto& p : portals()) {
+      p->visitSurface(std::forward<visitor_t>(visitor));
+    }
+    for (const auto& v : volumes()) {
+      v->visitSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called for each found surface,
+  /// it will be handed down to contained volumes and portals
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurfaces(visitor_t&& visitor) {
+    for (auto& s : surfacePtrs()) {
+      visitor(s.get());
+    }
+    for (auto& p : portalPtrs()) {
+      p->visitMutableSurface(std::forward<visitor_t>(visitor));
+    }
+    for (auto& v : volumePtrs()) {
+      v->visitMutableSurfaces(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  void visitVolumes(visitor_t&& visitor) const {
+    visitor(this);
+    for (const auto& v : volumes()) {
+      v->visitVolumes(std::forward<visitor_t>(visitor));
+    }
+  }
+
+  /// @brief Visit all reachable detector volumes of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be handed to each root volume,
+  /// eventually contained volumes within the root volumes are
+  /// handled by the root volume
+  ///
+  /// @note if a context is needed for the visit, the vistitor has to provide
+  /// it, e.g. as a private member
+  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
+  void visitMutableVolumes(visitor_t&& visitor) {
+    visitor(this);
+    for (auto& v : volumePtrs()) {
+      v->visitMutableVolumes(std::forward<visitor_t>(visitor));
+    }
+  }
+
   /// This method allows to udate the navigation state updator
   /// module.
   ///
@@ -407,6 +484,9 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 /// @brief  A detector volume factory which first constructs the detector volume
 /// and then constructs the portals. This ensures that the std::shared_ptr
 /// holding the detector volume is not weak when assigning to the portals.
+///
+/// @note Optional containment check is invoked by setting the number
+/// of segments nSeg to be greater than 0
 class DetectorVolumeFactory {
  public:
   /// Create a detector volume - from factory
@@ -417,11 +497,19 @@ class DetectorVolumeFactory {
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
       DetectorVolumeUpdater detectorVolumeUpdater,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater) {
+      SurfaceCandidatesUpdater surfaceCandidateUpdater, int nSeg = -1) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
         std::move(detectorVolumeUpdater), std::move(surfaceCandidateUpdater));
     dVolume->construct(gctx, portalGenerator);
+
+    /// Volume extent is constructed from the portals
+    /// So the surface/subvolume containment
+    /// check has to happen here
+    if (nSeg > 0 && !dVolume->checkContainment(gctx, nSeg)) {
+      throw std::invalid_argument(
+          "DetectorVolume: surfaces or subvolumes are not contained by volume");
+    }
     return dVolume;
   }
 

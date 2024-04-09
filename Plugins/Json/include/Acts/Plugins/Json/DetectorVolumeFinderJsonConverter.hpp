@@ -17,9 +17,7 @@
 
 #include <vector>
 
-namespace Acts {
-
-namespace DetectorVolumeFinderJsonConverter {
+namespace Acts::DetectorVolumeFinderJsonConverter {
 
 /// @brief Convert the single delegate if it is of the type of the reference
 ///
@@ -85,7 +83,7 @@ static inline nlohmann::json toJson(
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedVolumes;
   unrollConvert(jIndexedVolumes, delegate, detray,
-                Experimental::detail::GridAxisGenerators::PossibleAxes{});
+                GridAxisGenerators::PossibleAxes{});
   // Return the newly filled ones
   return jIndexedVolumes;
 }
@@ -98,5 +96,4 @@ static inline nlohmann::json toJson(
 Experimental::DetectorVolumeUpdater fromJson(
     const nlohmann::json& jVolumeFinder);
 
-}  // namespace DetectorVolumeFinderJsonConverter
-}  // namespace Acts
+}  // namespace Acts::DetectorVolumeFinderJsonConverter

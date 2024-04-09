@@ -27,7 +27,6 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -53,8 +52,7 @@ struct FreeToBoundCorrection;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -458,15 +456,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navCfg.resolvePassive = false;
   Navigator navigator{navCfg};
 
-  // create a navigator for the Bounding Volume Hierarchy test
-  CubicBVHTrackingGeometry grid(20, 1000, 5);
-  Navigator::Config bvhNavCfg;
-  bvhNavCfg.trackingGeometry = grid.trackingGeometry;
-  bvhNavCfg.resolveSensitive = true;
-  bvhNavCfg.resolveMaterial = true;
-  bvhNavCfg.resolvePassive = false;
-  Navigator BVHNavigator{bvhNavCfg};
-
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
@@ -508,7 +497,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK_EQUAL(state.navigation.navLayerIndex, 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().position());
+  double beamPipeR = perp(state.navigation.navLayer().first.position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -701,47 +690,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     std::cout << state.options.debugString << std::endl;
     state.options.debugString = "";
   }
-
-  // test the navigation in a bounding volume hierarchy
-  // ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< BVH Navigation >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
-
-  // position and direction vector
-  Vector4 BVHPosition4(0., 0., 0, 0);
-  Vector3 BVHMomentum(1., 1., 0.);
-
-  // the propagator cache
-  PropagatorState BVHState;
-  BVHState.options.debug = debug;
-
-  // the stepper cache
-  BVHState.stepping.pos4 = BVHPosition4;
-  BVHState.stepping.dir = BVHMomentum.normalized();
-
-  // Stepper
-  PropagatorState::Stepper BVHStepper;
-
-  BVHNavigator.initialize(BVHState, BVHStepper);
-
-  // Check that the currentVolume is set
-  BOOST_CHECK_NE(BVHState.navigation.currentVolume, nullptr);
-  // Check that the currentVolume is the startVolume
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentVolume,
-                    BVHState.navigation.startVolume);
-  // Check that the currentSurface is reset to:
-  BOOST_CHECK_EQUAL(BVHState.navigation.currentSurface, nullptr);
-  // No layer has been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
-  // ACTORS-ABORTERS-TARGET
-  navigator.preStep(BVHState, BVHStepper);
-  // Still no layer
-  BOOST_CHECK_EQUAL(BVHState.navigation.navLayers.size(), 0u);
-  // Surfaces have been found
-  BOOST_CHECK_EQUAL(BVHState.navigation.navSurfaces.size(), 42u);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

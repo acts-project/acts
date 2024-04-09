@@ -31,8 +31,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// a simple link to volume struct
 class LinkToVolumeImpl : public INavigationDelegate {
@@ -50,8 +49,7 @@ class LinkToVolumeImpl : public INavigationDelegate {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 using namespace Acts::Experimental;
 
@@ -145,24 +143,35 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK_EQUAL(portalA->surface().center(gctx),
                     portalB->surface().center(gctx));
 
-  // An invalid fusing setup
-  auto linkToAIImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
-  auto linkToBIImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
+  // Test visitor pattern - const access
+  bool reached = false;
+  const Portal* cportalB = portalB.get();
+  cportalB->visitSurface([&reached](const auto* s) {
+    if (s != nullptr) {
+      reached = true;
+    }
+  });
+  BOOST_CHECK(reached);
 
-  auto portalAI = std::make_shared<Portal>(surface);
-  DetectorVolumeUpdater linkToAI;
-  linkToAI.connect<&LinkToVolumeImpl::link>(std::move(linkToAIImpl));
-  portalAI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                        std::move(linkToAI), {volumeA});
+  // Test visitor pattern - non-const access
+  struct SetMaterial {
+    /// The material to set
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material =
+        std::make_shared<Acts::HomogeneousSurfaceMaterial>(Acts::MaterialSlab(
+            Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.));
+    /// The visitor call
+    void operator()(Acts::Surface* s) {
+      if (s != nullptr) {
+        s->assignSurfaceMaterial(material);
+      }
+    }
+  };
 
-  auto portalBI = std::make_shared<Portal>(surface);
-  DetectorVolumeUpdater linkToBI;
-  linkToBI.connect<&LinkToVolumeImpl::link>(std::move(linkToBIImpl));
-  portalBI->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                        std::move(linkToBI), {volumeB});
-
-  BOOST_CHECK_THROW(Portal::fuse(portalAI, portalBI), std::runtime_error);
-  BOOST_CHECK_THROW(Portal::fuse(portalBI, portalAI), std::runtime_error);
+  SetMaterial setMaterial;
+  BOOST_CHECK(portalA->surface().surfaceMaterial() == nullptr);
+  portalA->visitMutableSurface(setMaterial);
+  BOOST_CHECK(portalA->surface().surfaceMaterial() ==
+              setMaterial.material.get());
 }
 
 BOOST_AUTO_TEST_CASE(PortalMaterialTest) {

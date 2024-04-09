@@ -21,9 +21,7 @@
 #include <mutex>
 #include <unordered_map>
 
-namespace ActsExamples {
-
-namespace Contextual {
+namespace ActsExamples::Contextual {
 
 /// @class InternallyAlignedDetectorElement extends GenericDetectorElement
 ///
@@ -121,5 +119,4 @@ inline void InternallyAlignedDetectorElement::clearAlignedTransform(
   }
 }
 
-}  // namespace Contextual
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Contextual

@@ -85,6 +85,10 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
   res[DimPhi].shrinkMin(pL - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pL + m_config.deltaPhiMax);
 
+  // Cut: Ensure that z-distance between SPs is within max and min values.
+  res[DimZ].shrinkMin(zL - m_config.deltaZMax);
+  res[DimZ].shrinkMax(zL + m_config.deltaZMax);
+
   return res;
 }
 
@@ -93,6 +97,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
     const internal_sp_t &high) const -> typename tree_t::range_t {
   float pM = high.phi();
   float rM = high.radius();
+  float zM = high.z();
 
   typename tree_t::range_t res;
 
@@ -129,19 +134,23 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    */
   float fracR = res[DimR].min() / rM;
 
-  float zMin = (high.z() - m_config.collisionRegionMin) * fracR +
-               m_config.collisionRegionMin;
-  float zMax = (high.z() - m_config.collisionRegionMax) * fracR +
-               m_config.collisionRegionMax;
+  float zMin =
+      (zM - m_config.collisionRegionMin) * fracR + m_config.collisionRegionMin;
+  float zMax =
+      (zM - m_config.collisionRegionMax) * fracR + m_config.collisionRegionMax;
 
-  res[DimZ].shrinkMin(std::min(zMin, high.z()));
-  res[DimZ].shrinkMax(std::max(zMax, high.z()));
+  res[DimZ].shrinkMin(std::min(zMin, zM));
+  res[DimZ].shrinkMax(std::max(zMax, zM));
 
   /*
    * Cut: Shrink the φ range, such that Δφ_min ≤ φ - φ_H ≤ Δφ_max
    */
   res[DimPhi].shrinkMin(pM - m_config.deltaPhiMax);
   res[DimPhi].shrinkMax(pM + m_config.deltaPhiMax);
+
+  // Cut: Ensure that z-distance between SPs is within max and min values.
+  res[DimZ].shrinkMin(zM - m_config.deltaZMax);
+  res[DimZ].shrinkMax(zM + m_config.deltaZMax);
 
   return res;
 }
@@ -217,12 +226,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-    return false;
-  }
-  /*
-   * Cut: Ensure that z-distance between SPs is within max and min values.
-   */
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
     return false;
   }
 
@@ -739,9 +742,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   spacePointData.resize(spacePoints.size());
 
   for (const external_spacepoint_t *p : spacePoints) {
-    auto [position, variance] = extract_coordinates(p);
+    auto [position, variance, time] = extract_coordinates(p);
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        counter++, *p, position, options.beamPos, variance));
+        counter++, *p, position, options.beamPos, variance, time));
     // store x,y,z values in extent
     rRangeSPExtent.extend(position);
   }

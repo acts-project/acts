@@ -72,7 +72,7 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
 std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
-    const OrientedSurfaces& orientedSurfaces,
+    const std::vector<OrientedSurface>& orientedSurfaces,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& option) {
   // The overall return object
@@ -92,7 +92,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
     // Get the direction from the volume to the surface, correct link
     const auto volumeToSurface = surfaceCenter - volumeCenter;
-    if (volumeToSurface.dot(surfaceNormal) < 0) {
+    if (volumeToSurface.dot(surfaceNormal) < 0.) {
       outside = 0u;
     }
   } else {
@@ -176,7 +176,8 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           if (boundaries[ib - 1] >= clipRange[1u]) {
             break;
           }
-          if (highEdge <= clipRange[0u]) {
+          if (highEdge <= clipRange[0u] ||
+              std::abs(highEdge - clipRange[0u]) < 1e-5) {
             continue;
           }
           if (highEdge > clipRange[1u]) {
@@ -186,7 +187,6 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           clippedBoundaries.push_back(highEdge);
         }
       }
-
       // Interpret the clipped information
       //
       // Clipped cylinder case

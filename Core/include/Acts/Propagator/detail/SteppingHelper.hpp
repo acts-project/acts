@@ -17,8 +17,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Update surface status - Single component
 ///
@@ -36,8 +35,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const Surface& surface, std::uint8_t index, Direction navDir,
     const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
     const Logger& logger) {
-  ACTS_VERBOSE(
-      "Update single surface status for surface: " << surface.geometryId());
+  ACTS_VERBOSE("Update single surface status for surface: "
+               << surface.geometryId() << " index " << (int)index);
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
@@ -52,12 +51,11 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   }
 
   // Path and overstep limit checking
-  const double pLimit = state.stepSize.value(ConstrainedStep::aborter);
-  const double oLimit = stepper.overstepLimit(state);
+  const double nearLimit = stepper.overstepLimit(state);
+  const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
 
-  if (sIntersection &&
-      detail::checkIntersection(sIntersection.intersection(), pLimit, oLimit,
-                                surfaceTolerance, logger)) {
+  if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
+                                                 nearLimit, farLimit, logger)) {
     ACTS_VERBOSE("Surface is reachable");
     stepper.updateStepSize(state, sIntersection.pathLength(),
                            ConstrainedStep::actor);
@@ -84,5 +82,4 @@ void updateSingleStepSize(typename stepper_t::State& state,
   state.stepSize.update(stepSize, ConstrainedStep::actor, release);
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

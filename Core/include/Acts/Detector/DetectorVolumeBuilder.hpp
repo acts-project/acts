@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -16,8 +17,7 @@
 #include <memory>
 #include <string>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class IExternalStructureBuilder;
 class IInternalStructureBuilder;
 class IGeometryIdGenerator;
@@ -42,6 +42,8 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// Material binning to be assigned to portals
+    std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
     /// Auxiliary information
@@ -76,5 +78,4 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

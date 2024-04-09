@@ -17,6 +17,7 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -39,7 +40,11 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 
   navCfg.trackingGeometry = cubicBuilder();
   Stepper stepper(std::move(magField));
-  Propagator propagator(stepper, Acts::Navigator(navCfg));
+  Propagator propagator(
+      stepper,
+      Acts::Navigator(navCfg,
+                      Acts::getDefaultLogger("nav", Acts::Logging::VERBOSE)),
+      Acts::getDefaultLogger("nav", Acts::Logging::VERBOSE));
 
   // Start with a slightly tilted direction that does not hit the surfaces at
   // x=2000 with 0 B-Field
@@ -89,25 +94,6 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
                     0);
 }
 
-BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
-  auto navCfg = Acts::Navigator::Config{};
-  navCfg.boundaryCheckLayerResolving = Acts::BoundaryCheck(false);
-  const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
-
-  // without bField we exit at the side so we don't hit the surfaces at x ~
-  // 2000 and also not the boundary surface at x = 3000, regardless of the
-  // boundary checking
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 999.0), 1);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1001.0),
-                    1);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1999.0),
-                    0);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 2001.0),
-                    0);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 3000.0),
-                    0);
-}
-
 BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
   auto navCfg = Acts::Navigator::Config{};
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
@@ -121,24 +107,6 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
                     0);
   BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 2001.0),
                     0);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 3000.0),
-                    1);
-}
-
-BOOST_AUTO_TEST_CASE(no_boundary_check_with_bfield) {
-  auto navCfg = Acts::Navigator::Config{};
-  navCfg.boundaryCheckLayerResolving = Acts::BoundaryCheck(false);
-  const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
-
-  // Without boundary check at layer resolving, we also hit the surfaces at x ~
-  // 2000
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 999.0), 1);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1001.0),
-                    1);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 1999.0),
-                    1);
-  BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 2001.0),
-                    1);
   BOOST_CHECK_EQUAL(std::count(xPositions.begin(), xPositions.end(), 3000.0),
                     1);
 }

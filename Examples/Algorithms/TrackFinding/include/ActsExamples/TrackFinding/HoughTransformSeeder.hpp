@@ -128,7 +128,8 @@ namespace ActsExamples {
 /// each bin. Size m_houghHistSize_y * m_houghHistSize_x. (NOTE y is row
 /// coordinate) For now, what is stored is actually the index of the object in
 /// the vectors, so we can get the Index layer
-using HoughHist = vector2D<std::pair<int, std::unordered_set<unsigned>>>;
+using HoughHist =
+    MultiIndexedVector2D<std::pair<int, std::unordered_set<unsigned>>>;
 
 enum HoughHitType { SP = 0, MEASUREMENT = 1 };
 

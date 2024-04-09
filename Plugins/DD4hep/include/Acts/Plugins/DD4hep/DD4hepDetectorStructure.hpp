@@ -22,9 +22,7 @@ namespace dd4hep {
 class DetElement;
 }
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief This class allows to generate layer structure builders for dd4hep sub detectors
 /// It performs an intermediate step by taking dd4hep::DetElemnent objects that
@@ -39,8 +37,11 @@ class DD4hepDetectorStructure {
   struct Options {
     /// The log level of the tools
     Logging::Level logLevel = Logging::INFO;
-    /// Boolean to flag if blueprint should be written out
-    bool blueprintDot = false;
+    /// If this string is not empty, the detector is not built, but only
+    /// a building graph is generated as `.dot` file with the given name
+    std::string emulateToGraph = "";
+    /// A Top level geometry id generator
+    std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
   };
 
   /// Constructor with from file name
@@ -60,7 +61,11 @@ class DD4hepDetectorStructure {
   /// @param dd4hepElement is the dd4hep::DetElement of the world volume
   /// @param options is the options struct
   ///
-  /// @return a detector, a blue node and a store
+  /// @note the lifetime of the detector elements in the returned store
+  /// has to exceed the lifetime of the detector for memory management
+  /// reasons.
+  ///
+  /// @return a detector, and the detector element store
   std::tuple<std::shared_ptr<const Detector>, DD4hepDetectorElement::Store>
   construct(const GeometryContext& gctx,
             const dd4hep::DetElement& dd4hepElement,
@@ -74,5 +79,4 @@ class DD4hepDetectorStructure {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -31,8 +31,9 @@ namespace Acts {
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const RadialBounds& rBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -80,8 +81,9 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const CylinderBounds& cBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -133,9 +135,9 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const RectangleBounds& pBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const RectangleBounds& pBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -183,9 +185,9 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const TrapezoidBounds& pBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const TrapezoidBounds& pBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -233,8 +235,9 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param gctx Geometry context to get the surfaces transform
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface,
-                            const GeometryContext& gctx) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const Surface& surface,
+                                          const GeometryContext& gctx) {
   // The surface type is a cylinder
   if (surface.type() == Surface::Cylinder) {
     // Cast to Cylinder bounds and return

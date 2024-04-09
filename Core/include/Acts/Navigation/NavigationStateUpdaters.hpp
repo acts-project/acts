@@ -12,18 +12,18 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 #include <memory>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// Helper method to update the candidates (portals/surfaces),
 /// this can be called for initial surface/portal estimation,
@@ -38,10 +38,11 @@ inline void updateCandidates(const GeometryContext& gctx,
                              NavigationState& nState) {
   const auto& position = nState.position;
   const auto& direction = nState.direction;
-  auto& nCandidates = nState.surfaceCandidates;
 
-  for (auto& c : nCandidates) {
-    // Get the surface representation: either native surfcae of portal
+  NavigationState::SurfaceCandidates nextSurfaceCandidates;
+
+  for (NavigationState::SurfaceCandidate c : nState.surfaceCandidates) {
+    // Get the surface representation: either native surface of portal
     const Surface& sRep =
         c.surface != nullptr ? *c.surface : c.portal->surface();
 
@@ -49,8 +50,16 @@ inline void updateCandidates(const GeometryContext& gctx,
     // TODO surface tolerance
     auto sIntersection = sRep.intersect(gctx, position, direction,
                                         c.boundaryCheck, s_onSurfaceTolerance);
-    c.objectIntersection = sIntersection[c.objectIntersection.index()];
+    for (auto& si : sIntersection.split()) {
+      c.objectIntersection = si;
+      if (c.objectIntersection &&
+          c.objectIntersection.pathLength() > nState.overstepTolerance) {
+        nextSurfaceCandidates.emplace_back(c);
+      }
+    }
   }
+
+  nState.surfaceCandidates = std::move(nextSurfaceCandidates);
 }
 
 /// @brief  This sets a single object, e.g. single surface or single volume
@@ -149,35 +158,13 @@ class IndexedUpdaterImpl : public INavigationDelegate {
   /// @note this is attaching objects without intersecting nor checking
   void update(const GeometryContext& gctx, NavigationState& nState) const {
     // Extract the index grid entry
-    const auto& entry = grid.atPosition(castPosition(nState.position));
+    const auto& entry =
+        grid.atPosition(GridAccessHelpers::castPosition<grid_type>(
+            transform * nState.position, casts));
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
 
     updateCandidates(gctx, nState);
-  }
-
-  /// Cast into a lookup position
-  ///
-  /// @param position is the position of the update call
-  std::array<ActsScalar, grid_type::DIM> castPosition(
-      const Vector3& position) const {
-    // Transform into local 3D frame
-    Vector3 tposition = transform * position;
-
-    std::array<ActsScalar, grid_type::DIM> casted{};
-    fillCasts(tposition, casted,
-              std::make_integer_sequence<std::size_t, grid_type::DIM>{});
-    return casted;
-  }
-
- private:
-  /// Unroll the cast loop
-  /// @param position is the position of the update call
-  /// @param a is the array to be filled
-  template <typename Array, std::size_t... idx>
-  void fillCasts(const Vector3& position, Array& a,
-                 std::index_sequence<idx...> /*indices*/) const {
-    ((a[idx] = VectorHelpers::cast(position, casts[idx])), ...);
   }
 };
 
@@ -212,5 +199,4 @@ class ChainedUpdaterImpl : public INavigationDelegate {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

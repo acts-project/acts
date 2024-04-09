@@ -46,8 +46,7 @@ class Surface;
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -200,5 +199,4 @@ BOOST_DATA_TEST_CASE(
   runTest(rpropagator, dpropagator, pT, phi, theta, charge, index);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

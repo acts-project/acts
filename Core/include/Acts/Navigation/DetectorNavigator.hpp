@@ -29,8 +29,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/container/small_vector.hpp>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorNavigator {
  public:
@@ -83,22 +82,12 @@ class DetectorNavigator {
     return result;
   }
 
-  void resetState(State& state, const GeometryContext& /*geoContext*/,
-                  const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  const Surface* /*ssurface*/,
-                  const Surface* /*tsurface*/) const {
-    // Reset everything first
-    state = State();
-
-    // TODO fill state
-  }
-
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
 
-  const TrackingVolume* currentVolume(const State& /*state*/) const {
-    return nullptr;  // TODO we do not have a tracking volume
+  const DetectorVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
   }
 
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
@@ -156,14 +145,22 @@ class DetectorNavigator {
     auto& nState = state.navigation;
 
     if (nState.currentDetector == nullptr) {
-      ACTS_VERBOSE("assigning detector from the config.");
+      ACTS_VERBOSE("Assigning detector from the config.");
       nState.currentDetector = m_cfg.detector;
     }
-
     if (nState.currentDetector == nullptr) {
-      ACTS_ERROR("panic: no detector");
-      return;
+      throw std::invalid_argument("DetectorNavigator: no detector assigned");
     }
+
+    fillNavigationState(state, stepper, nState);
+    if (nState.currentVolume == nullptr) {
+      nState.currentVolume = nState.currentDetector->findDetectorVolume(
+          state.geoContext, nState.position);
+    }
+    if (nState.currentVolume == nullptr) {
+      throw std::invalid_argument("DetectorNavigator: no current volume found");
+    }
+    updateCandidateSurfaces(state, stepper);
   }
 
   /// @brief Navigator pre step call
@@ -181,18 +178,14 @@ class DetectorNavigator {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
 
-    auto& nState = state.navigation;
-    fillNavigationState(state, stepper, nState);
-
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "navigator inactive");
       return;
     }
 
-    if (nState.currentVolume == nullptr) {
-      initializeTarget(state, stepper);
-    }
+    auto& nState = state.navigation;
+    fillNavigationState(state, stepper, nState);
 
     if (nState.currentSurface != nullptr) {
       ACTS_VERBOSE(volInfo(state)
@@ -202,40 +195,56 @@ class DetectorNavigator {
                    << posInfo(state, stepper) << "stepping through portal");
 
       nState.surfaceCandidates.clear();
-      nState.surfaceCandidate = nState.surfaceCandidates.cend();
+      nState.surfaceCandidateIndex = 0;
 
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
 
-      initializeTarget(state, stepper);
-    }
+      // If no Volume is found, we are at the end of the world
+      if (nState.currentVolume == nullptr) {
+        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                    << "no volume after Portal update");
+        nState.navigationBreak = true;
+        return;
+      }
 
-    for (; nState.surfaceCandidate != nState.surfaceCandidates.cend();
-         ++nState.surfaceCandidate) {
+      // Switched to a new volume
+      // Update candidate surfaces
+      updateCandidateSurfaces(state, stepper);
+    }
+    for (; nState.surfaceCandidateIndex != nState.surfaceCandidates.size();
+         ++nState.surfaceCandidateIndex) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
-                   << std::distance(nState.surfaceCandidate,
-                                    nState.surfaceCandidates.cend())
+                   << (nState.surfaceCandidates.size() -
+                       nState.surfaceCandidateIndex)
                    << " out of " << nState.surfaceCandidates.size()
                    << " surfaces remain to try.");
       // Take the surface
-      const auto& c = *(nState.surfaceCandidate);
+      const auto& c = nState.surfaceCandidate();
       const auto& surface =
           (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
       // Screen output which surface you are on
-      ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
-                                  << "next surface candidate will be "
-                                  << surface.geometryId());
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper)
+                   << "next surface candidate will be " << surface.geometryId()
+                   << " (" << surface.center(state.geoContext).transpose()
+                   << ")");
       // Estimate the surface status
-      bool boundaryCheck = c.boundaryCheck;
+      bool boundaryCheck = c.boundaryCheck.isEnabled();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, BoundaryCheck(boundaryCheck),
           state.options.surfaceTolerance, logger());
+
+      ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                  << "surface status is " << surfaceStatus);
+
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
-                     << posInfo(state, stepper)
-                     << "surface reachable, step size updated to "
+                     << posInfo(state, stepper) << "surface "
+                     << surface.center(state.geoContext).transpose()
+                     << " is reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
         break;
       }
@@ -266,12 +275,7 @@ class DetectorNavigator {
       return;
     }
 
-    if (nState.currentDetector == nullptr) {
-      initialize(state, stepper);
-      return;
-    }
-
-    if (nState.surfaceCandidate == nState.surfaceCandidates.cend()) {
+    if (nState.surfaceCandidateIndex == nState.surfaceCandidates.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
                    << "no surface candidates - waiting for target call");
@@ -281,25 +285,25 @@ class DetectorNavigator {
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    bool boundaryCheck = nState.surfaceCandidate->boundaryCheck;
+    bool boundaryCheck = nState.surfaceCandidate().boundaryCheck.isEnabled();
 
-    if (nState.surfaceCandidate->surface != nullptr) {
-      nextSurface = nState.surfaceCandidate->surface;
-    } else if (nState.surfaceCandidate->portal != nullptr) {
-      nextPortal = nState.surfaceCandidate->portal;
+    if (nState.surfaceCandidate().surface != nullptr) {
+      nextSurface = nState.surfaceCandidate().surface;
+    } else if (nState.surfaceCandidate().portal != nullptr) {
+      nextPortal = nState.surfaceCandidate().portal;
       nextSurface = &nextPortal->surface();
       isPortal = true;
     } else {
-      ACTS_ERROR(volInfo(state)
-                 << posInfo(state, stepper)
-                 << "panic: not a surface not a portal - what is it?");
-      return;
+      std::string msg = "DetectorNavigator: " + volInfo(state) +
+                        posInfo(state, stepper) +
+                        "panic: not a surface not a portal - what is it?";
+      throw std::runtime_error(msg);
     }
 
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *nextSurface,
-        nState.surfaceCandidate->objectIntersection.index(),
+        nState.surfaceCandidate().objectIntersection.index(),
         state.options.direction, BoundaryCheck(boundaryCheck),
         state.options.surfaceTolerance, logger());
 
@@ -327,7 +331,7 @@ class DetectorNavigator {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper) << "current surface set to "
                      << nState.currentSurface->geometryId());
-        ++nState.surfaceCandidate;
+        ++nState.surfaceCandidateIndex;
       }
     }
   }
@@ -391,30 +395,17 @@ class DetectorNavigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  void initializeTarget(propagator_state_t& state,
-                        const stepper_t& stepper) const {
+  void updateCandidateSurfaces(propagator_state_t& state,
+                               const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, stepper) << "initialize target");
 
     auto& nState = state.navigation;
 
-    if (nState.currentVolume == nullptr) {
-      nState.currentVolume = nState.currentDetector->findDetectorVolume(
-          state.geoContext, nState.position);
-
-      if (nState.currentVolume != nullptr) {
-        ACTS_VERBOSE(volInfo(state)
-                     << posInfo(state, stepper) << "switched detector volume");
-      }
-    }
-
-    if (nState.currentVolume == nullptr) {
-      ACTS_ERROR(volInfo(state)
-                 << posInfo(state, stepper) << "panic: no current volume");
-      return;
-    }
-
+    // Here we get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
+
+    ACTS_VERBOSE("SURFACE CANDIDATES: " << nState.surfaceCandidates.size());
 
     // Sort properly the surface candidates
     auto& nCandidates = nState.surfaceCandidates;
@@ -426,23 +417,25 @@ class DetectorNavigator {
                 return pathToA < pathToB;
               });
     // Set the surface candidate
-    nState.surfaceCandidate = nCandidates.begin();
+    nState.surfaceCandidateIndex = 0;
   }
 
   template <typename propagator_state_t, typename stepper_t>
   void fillNavigationState(propagator_state_t& state, const stepper_t& stepper,
                            NavigationState& nState) const {
     nState.position = stepper.position(state.stepping);
-    nState.direction = stepper.direction(state.stepping);
+    nState.direction =
+        state.options.direction * stepper.direction(state.stepping);
     nState.absMomentum = stepper.absoluteMomentum(state.stepping);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
-      ACTS_ERROR(volInfo(state) << posInfo(state, stepper)
-                                << "could not read from the magnetic field");
+      std::string msg = "DetectorNavigator: " + volInfo(state) +
+                        posInfo(state, stepper) +
+                        "could not read from the magnetic field";
+      throw std::runtime_error(msg);
     }
     nState.magneticField = *fieldResult;
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
