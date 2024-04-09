@@ -10,9 +10,7 @@
 
 #include <array>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 /// @brief check types for requirements needed by interpolation
 ///
@@ -130,6 +128,4 @@ struct interpolate_impl<T, Point1, Point2, Point3, D, 2u> {
   }
 };
 /// @endcond
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

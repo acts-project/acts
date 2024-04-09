@@ -15,6 +15,7 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -22,8 +23,7 @@
 
 #include <limits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 auto tContext = GeometryContext();
 
@@ -41,9 +41,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -65,12 +63,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest) {
   MaterialInteractionAssignment::Options options;
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfacesLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
   BOOST_CHECK_EQUAL(assigned.size(), materialInteractions.size());
   BOOST_CHECK_EQUAL(unassigned.size(), 0u);
+  BOOST_CHECK_EQUAL(surfacesLeft.size(), 0u);
 
   // Check that it is assigned to the closest surface always
   for (const auto& mi : assigned) {
@@ -99,9 +99,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -131,12 +129,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
   options.globalVetos.push_back(RadialVeto{40});
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfacesLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
   BOOST_CHECK_EQUAL(assigned.size(), 40u);
   BOOST_CHECK_EQUAL(unassigned.size(), 9u);
+  BOOST_CHECK_EQUAL(surfacesLeft.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
@@ -151,9 +151,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -174,8 +172,9 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
 
   // Veto in a specific one
   struct VetoThisOne {
-    bool operator()(const MaterialInteraction& /*unused*/,
-                    const SurfaceHit& /*unused*/) const {
+    bool operator()(
+        const MaterialInteraction& /*unused*/,
+        const IAssignmentFinder::SurfaceAssignment& /*unused*/) const {
       return true;
     }
   };
@@ -190,12 +189,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
   options.localVetos = localVetos;
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfacesLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
-  BOOST_CHECK_EQUAL(assigned.size(), 34);
-  BOOST_CHECK_EQUAL(unassigned.size(), 15);
+  BOOST_CHECK_EQUAL(assigned.size(), 34u);
+  BOOST_CHECK_EQUAL(unassigned.size(), 15u);
+  BOOST_CHECK_EQUAL(surfacesLeft.size(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
@@ -210,9 +211,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
     surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
   }
 
-  using SurfaceHit = std::tuple<const Surface*, Vector3, Vector3>;
-
-  std::vector<SurfaceHit> intersectedSurfaces = {
+  std::vector<IAssignmentFinder::SurfaceAssignment> intersectedSurfaces = {
       {surfaces[0].get(), {20., 0., 0.}, {1., 0., 0.}},
       {surfaces[1].get(), {30., 0., 0.}, {1., 0., 0.}},
       {surfaces[2].get(), {50., 0., 0.}, {1., 0., 0.}}};
@@ -233,8 +232,9 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
 
   // Veto in a specific one
   struct ReAssignToNeighbor {
-    void operator()(MaterialInteraction& m, const SurfaceHit& /*unused*/,
-                    const SurfaceHit& n) const {
+    void operator()(MaterialInteraction& m,
+                    const IAssignmentFinder::SurfaceAssignment& /*unused*/,
+                    const IAssignmentFinder::SurfaceAssignment& n) const {
       auto [surface, position, direction] = n;
       m.surface = surface;
       m.position = position;
@@ -255,12 +255,14 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
   options.reAssignments = reassignments;
 
   // Assign the material interactions to the surface hits
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, materialInteractions, intersectedSurfaces, options);
+  auto [assigned, unassigned, surfaceLeft] =
+      MaterialInteractionAssignment::assign(tContext, materialInteractions,
+                                            intersectedSurfaces, options);
 
   // Check that the material interaction was assigned
-  BOOST_CHECK_EQUAL(assigned.size(), 49);
-  BOOST_CHECK_EQUAL(unassigned.size(), 0);
+  BOOST_CHECK_EQUAL(assigned.size(), 49u);
+  BOOST_CHECK_EQUAL(unassigned.size(), 0u);
+  BOOST_CHECK_EQUAL(surfaceLeft.size(), 1u);
 
   // Check that the geoid with number 2 never shows up
   for (const auto& mi : assigned) {
@@ -278,7 +280,8 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
   Vector3 position = {20., 10., 0.};
   Vector3 direction = position.normalized();
 
-  SurfaceHit surfaceHit = {surface.get(), position, direction};
+  IAssignmentFinder::SurfaceAssignment surfaceHit{surface.get(), position,
+                                                  direction};
 
   Material material = Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0);
 
@@ -289,12 +292,14 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
 
   MaterialInteractionAssignment::Options options;
 
-  auto [assigned, unassigned] = MaterialInteractionAssignment::assign(
-      tContext, {materialInteraction}, {surfaceHit}, options);
+  auto [assigned, unassigned, surfaceLeft] =
+      MaterialInteractionAssignment::assign(tContext, {materialInteraction},
+                                            {surfaceHit}, options);
 
   // Check that the material interaction was assigned
-  BOOST_CHECK_EQUAL(assigned.size(), 1);
-  BOOST_CHECK_EQUAL(unassigned.size(), 0);
+  BOOST_CHECK_EQUAL(assigned.size(), 1u);
+  BOOST_CHECK_EQUAL(unassigned.size(), 0u);
+  BOOST_CHECK_EQUAL(surfaceLeft.size(), 0u);
 
   // Check that the path correction is set
   BOOST_CHECK_NE(assigned[0].pathCorrection, 0.);
@@ -302,5 +307,4 @@ BOOST_AUTO_TEST_CASE(AssignWithPathLength) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

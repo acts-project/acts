@@ -28,8 +28,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief This is a builder of layer structures to be contained
 /// within a DetectorVolume, it extends the IInternalStructureBuilder
@@ -130,5 +129,4 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

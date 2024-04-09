@@ -55,8 +55,7 @@
 
 #include "VertexingDataHelper.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 
@@ -671,5 +670,4 @@ BOOST_AUTO_TEST_CASE(
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

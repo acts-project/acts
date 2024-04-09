@@ -38,8 +38,7 @@
 
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -392,5 +391,4 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

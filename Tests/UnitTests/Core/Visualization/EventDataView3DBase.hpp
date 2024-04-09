@@ -47,8 +47,7 @@
 
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace EventDataView3DTest {
+namespace Acts::EventDataView3DTest {
 
 using Covariance = BoundSquareMatrix;
 
@@ -400,5 +399,4 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   return ss.str();
 }
 
-}  // namespace EventDataView3DTest
-}  // namespace Acts
+}  // namespace Acts::EventDataView3DTest

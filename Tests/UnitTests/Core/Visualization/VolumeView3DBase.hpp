@@ -21,9 +21,7 @@
 #include <sstream>
 #include <string>
 
-namespace Acts {
-
-namespace VolumeView3DTest {
+namespace Acts::VolumeView3DTest {
 
 /// Helper method to visualize all types of surfaces
 ///
@@ -181,5 +179,4 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   return cStream.str();
 }
 
-}  // namespace VolumeView3DTest
-}  // namespace Acts
+}  // namespace Acts::VolumeView3DTest
