@@ -1190,7 +1190,6 @@ class CombinatorialKalmanFilter {
     }
 
     std::vector<typename TrackContainer::TrackProxy> tracks;
-    tracks.reserve(combKalmanResult.lastMeasurementIndices.size());
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
       auto track = trackContainer.makeTrack();
@@ -1210,7 +1209,7 @@ class CombinatorialKalmanFilter {
 
       calculateTrackQuantities(track);
 
-      tracks.push_back(std::move(track));
+      tracks.push_back(track);
     }
 
     return tracks;
