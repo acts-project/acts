@@ -20,9 +20,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
-#include <chrono>
 #include <cstddef>
-#include <iostream>
 #include <iterator>
 #include <limits>
 #include <utility>

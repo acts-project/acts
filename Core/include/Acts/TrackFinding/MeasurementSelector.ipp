@@ -24,7 +24,6 @@ MeasurementSelector::select(
     using Result = Result<std::pair<
         typename std::vector<typename traj_t::TrackStateProxy>::iterator,
         typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
-    auto start = std::chrono::high_resolution_clock::now();
 
     ACTS_VERBOSE("Invoked MeasurementSelector");
 
@@ -113,12 +112,7 @@ MeasurementSelector::select(
 
     if (passedCandidates <= 1ul || numMeasurementsCut == 1ul) {
       // return single item range, no sorting necessary
-      auto stop = std::chrono::high_resolution_clock::now();
-      auto duration =
-          std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
-              .count();
       ACTS_VERBOSE("Returning only 1 element");
-      std::cout << "Duration: " << duration << std::endl;
       return Result::success(std::make_pair(candidates.begin() + minIndex,
                                             candidates.begin() + minIndex + 1));
     }
@@ -138,11 +132,6 @@ MeasurementSelector::select(
     ACTS_VERBOSE("Number of selected measurements: "
                  << numMeasurementsCut << ", max: " << numMeasurementsCut);
 
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
-            .count();
-    std::cout << "Duration: " << duration << std::endl;
     return Result::success(std::make_pair(
         candidates.begin(), candidates.begin() + numMeasurementsCut));
   }
