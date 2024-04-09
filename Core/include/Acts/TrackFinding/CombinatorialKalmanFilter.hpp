@@ -847,9 +847,8 @@ class CombinatorialKalmanFilter {
 
         // copy this trackstate into fitted states MultiTrajectory
         typename traj_t::TrackStateProxy trackState =
-            result.fittedStates->getTrackState(
-                result.fittedStates->addTrackState(
-                    mask, candidateTrackState.previous()));
+            result.fittedStates->makeTrackState(mask,
+                                                candidateTrackState.previous());
         ACTS_VERBOSE("Create SourceLink output track state #"
                      << trackState.index() << " with mask: " << mask);
 
