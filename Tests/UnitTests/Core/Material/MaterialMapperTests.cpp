@@ -139,7 +139,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   /// @param state the state of the accumulator
   ///
   /// @note this does the run average over the (binned) material
-  virtual std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
+  std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
   finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override {
     auto cState = static_cast<State*>(&state);
 
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
   auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state);
 
   BOOST_CHECK(surfaceMaps.size() == 3);
-  BOOST_CHECK(volumeMaps.size() == 0);
+  BOOST_CHECK(volumeMaps.empty());
 }
 
 BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {
