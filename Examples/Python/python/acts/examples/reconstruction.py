@@ -135,8 +135,14 @@ TrackSelectorConfig = namedtuple(
 
 CkfConfig = namedtuple(
     "CkfConfig",
-    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps", "seedDeduplication"],
-    defaults=[15.0, 10, None, None],
+    [
+        "chi2CutOff",
+        "numMeasurementsCutOff",
+        "maxSteps",
+        "seedDeduplication",
+        "stayOnSeed",
+    ],
+    defaults=[15.0, 10, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -1270,6 +1276,7 @@ def addCKFTracks(
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
             seedDeduplication=ckfConfig.seedDeduplication,
+            stayOnSeed=ckfConfig.stayOnSeed,
         ),
     )
     s.addAlgorithm(trackFinder)

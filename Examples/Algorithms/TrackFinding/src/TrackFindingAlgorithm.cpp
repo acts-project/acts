@@ -95,6 +95,58 @@ void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
   }
 }
 
+class MeasurementSelector {
+ public:
+  using Traj = Acts::VectorMultiTrajectory;
+
+  explicit MeasurementSelector(Acts::MeasurementSelector selector)
+      : m_selector(std::move(selector)) {}
+
+  void setSeed(const std::optional<SimSeed>& seed) { m_seed = seed; }
+
+  Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
+                         std::vector<Traj::TrackStateProxy>::iterator>>
+  select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
+         const Acts::Logger& logger) const {
+    if (m_seed.has_value()) {
+      std::vector<Traj::TrackStateProxy> newCandidates;
+
+      for (const auto& candidate : candidates) {
+        if (isSeedCandidate(candidate)) {
+          newCandidates.push_back(candidate);
+        }
+      }
+
+      if (!newCandidates.empty()) {
+        candidates = std::move(newCandidates);
+      }
+    }
+
+    return m_selector.select<Acts::VectorMultiTrajectory>(candidates, isOutlier,
+                                                          logger);
+  }
+
+ private:
+  Acts::MeasurementSelector m_selector;
+  std::optional<SimSeed> m_seed;
+
+  bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
+    assert(candidate.hasUncalibratedSourceLink());
+
+    const Acts::SourceLink& sourceLink = candidate.getUncalibratedSourceLink();
+
+    for (const auto& sp : m_seed->sp()) {
+      for (const auto& sl : sp->sourceLinks()) {
+        if (sourceLink.get<IndexSourceLink>() == sl.get<IndexSourceLink>()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+};
+
 }  // namespace
 }  // namespace ActsExamples
 
@@ -143,6 +195,11 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
         "Missing seeds input collection. This is "
         "required for seed deduplication.");
   }
+  if (m_cfg.stayOnSeed && m_cfg.inputSeeds.empty()) {
+    throw std::invalid_argument(
+        "Missing seeds input collection. This is "
+        "required for staying on seed.");
+  }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
@@ -176,7 +233,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
+  MeasurementSelector measSel{
+      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
       extensions;
@@ -185,9 +243,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.measurementSelector
-      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
-          &measSel);
+  extensions.measurementSelector.connect<&MeasurementSelector::select>(
+      &measSel);
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &sourceLinks;
@@ -251,13 +308,20 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     m_nTotalSeeds++;
 
-    if (seeds != nullptr && m_cfg.seedDeduplication) {
+    if (seeds != nullptr) {
       const SimSeed& seed = seeds->at(iseed);
-      SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-      if (encounteredSeeds.find(seedIdentifier) != encounteredSeeds.end()) {
-        m_nDeduplicatedSeeds++;
-        ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
-        continue;
+
+      if (m_cfg.seedDeduplication) {
+        SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
+        if (encounteredSeeds.find(seedIdentifier) != encounteredSeeds.end()) {
+          m_nDeduplicatedSeeds++;
+          ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
+          continue;
+        }
+      }
+
+      if (m_cfg.stayOnSeed) {
+        measSel.setSeed(seed);
       }
     }
 
