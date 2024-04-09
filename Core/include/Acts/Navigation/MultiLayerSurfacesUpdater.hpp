@@ -58,7 +58,6 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
                           std::pow(grid.binWidth()[1], 2));
     auto path = pgenerator(lposition, ldirection, step, grid.numLocalBins()[1]);
 
-
     std::vector<const Acts::Surface*> surfCandidates = {};
 
     for (const auto& p : path) {
@@ -122,8 +121,7 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
 
 struct PathGridSurfacesGenerator {
   std::vector<Vector3> operator()(Vector3 startPosition,
-                                  const Vector3& direction,
-                                  ActsScalar stepSize,
+                                  const Vector3& direction, ActsScalar stepSize,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
@@ -133,8 +131,7 @@ struct PathGridSurfacesGenerator {
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
       pathCoordinates.push_back(position);
-      position = position +step;
-      
+      position = position + step;
     }
 
     return pathCoordinates;
