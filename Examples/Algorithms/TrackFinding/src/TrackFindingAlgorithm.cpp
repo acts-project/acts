@@ -130,7 +130,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // For the second pass we do not want to branch which is the default behavior
   // of the MeasurementSelector
   Acts::MeasurementSelector secondMeasSel{Acts::MeasurementSelector::Config{
-      {Acts::GeometryIdentifier(), Acts::MeasurementSelectorCuts{}}}};
+      {Acts::GeometryIdentifier(),
+       Acts::MeasurementSelectorCuts{{}, {5}, {1}}}}};
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
@@ -239,6 +240,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                 std::next(firstTrack.trackStatesReversed().begin(),
                           firstTrack.nTrackStates() - 1);
             assert((*firstFirstState).previous() == Acts::kTrackIndexInvalid);
+
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
               if (secondTrack.nTrackStates() < 2) {
@@ -248,6 +250,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               // Note that this is only valid if there are no branches
               // We disabled this in the second finding step
               secondTrack.reverseTrackStates(true);
+
+              // Set the seed number, this number decrease by 1 since the seed
+              // number has already been updated
               seedNumber(secondTrack) = nSeed - 1;
 
               (*firstFirstState).previous() =
@@ -268,7 +273,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                       extrapolationOptions, m_cfg.extrapolationStrategy,
                       logger());
               if (!secondExtrapolationResult.ok()) {
-                // restore first track
+                // restore first track. not strictly necessary with a single
+                // second track but a reminder that this is necessary if we
+                // handle multiple second tracks
                 (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
 
                 m_nFailedExtrapolation++;
@@ -276,7 +283,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                            << iSeed << " and track " << secondTrack.index()
                            << " failed with error "
                            << secondExtrapolationResult.error());
-                continue;
+
+                // we can only handle a single second track at the moment
+                // TODO handle multiple second tracks
+                break;
               }
 
               if (!m_trackSelector.has_value() ||
@@ -285,10 +295,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                 destProxy.copyFrom(secondTrack, true);
               }
 
-              // restore first track
+              // restore first track. not strictly necessary with a single
+              // second track but a reminder that this is necessary if we
+              // handle multiple second tracks
               (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
 
               ++nSecond;
+
+              // we can only handle a single second track at the moment
+              // TODO handle multiple second tracks
+              break;
             }
           }
         }
