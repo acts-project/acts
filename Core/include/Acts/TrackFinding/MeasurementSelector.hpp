@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -61,11 +62,16 @@ class MeasurementSelector {
   using Config = Acts::GeometryHierarchyMap<MeasurementSelectorCuts>;
 
   /// @brief Default constructor
-  MeasurementSelector() = default;
+  MeasurementSelector()
+      : m_config{{GeometryIdentifier(), MeasurementSelectorCuts{}}} {}
+
+  explicit MeasurementSelector(const MeasurementSelectorCuts& cuts)
+      : m_config{{GeometryIdentifier(), cuts}} {}
+
   /// @brief Constructor with config and (non-owning) logger
   ///
   /// @param config a config instance
-  MeasurementSelector(Config config) : m_config(std::move(config)) {}
+  explicit MeasurementSelector(Config config) : m_config(std::move(config)) {}
 
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
