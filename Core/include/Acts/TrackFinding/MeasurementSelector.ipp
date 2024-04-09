@@ -89,8 +89,9 @@ MeasurementSelector::select(
 
     if (passedCandidates != i) {
       std::swap(candidates[passedCandidates], candidates[i]);
-      if (minIndex == i)
+      if (minIndex == i) {
         minIndex = passedCandidates;
+      }
     }
     ++passedCandidates;
   }
