@@ -238,7 +238,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
             auto firstFirstState =
                 std::next(firstTrack.trackStatesReversed().begin(),
                           firstTrack.nTrackStates() - 1);
-             assert((*firstFirstState).previous() == Acts::kTrackIndexInvalid);
+            assert((*firstFirstState).previous() == Acts::kTrackIndexInvalid);
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
               if (secondTrack.nTrackStates() < 2) {
