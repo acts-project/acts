@@ -136,7 +136,7 @@ TrackSelectorConfig = namedtuple(
 CkfConfig = namedtuple(
     "CkfConfig",
     ["chi2CutOff", "numMeasurementsCutOff", "maxSteps"],
-    defaults=[15.0, 10, None],
+    defaults=[15.0, 1, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
