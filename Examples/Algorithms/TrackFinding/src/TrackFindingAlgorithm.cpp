@@ -16,6 +16,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
@@ -126,10 +127,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, firstPropOptions);
 
+  // For the second pass we do not want to branch which is the default behavior
+  // of the MeasurementSelector
+  Acts::MeasurementSelector secondMeasSel{Acts::MeasurementSelector::Config{
+      {Acts::GeometryIdentifier(), Acts::MeasurementSelectorCuts{}}}};
+
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
+  secondOptions.extensions.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
+          &secondMeasSel);
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
@@ -236,6 +245,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                 continue;
               }
 
+              // Note that this is only valid if there are no branches
+              // We disabled this in the second finding step
               secondTrack.reverseTrackStates(true);
               seedNumber(secondTrack) = nSeed - 1;
 
