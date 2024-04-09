@@ -128,7 +128,7 @@ Acts::Experimental::MultiWireStructureBuilder::construct(
   MultiWireInternalStructureBuilder::Config iConfig;
   iConfig.iSurfaces = mCfg.mlSurfaces;
   iConfig.binning = mCfg.mlBinning;
-  iConfig.transform = mCfg.transform;
+  iConfig.transform = mCfg.transform.inverse();
   iConfig.auxiliary = "Construct Internal Structure";
 
   Acts::Experimental::DetectorVolumeBuilder::Config dvConfig;

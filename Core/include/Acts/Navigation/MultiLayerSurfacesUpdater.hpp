@@ -35,7 +35,7 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// These are the cast parameters - copied from constructor
   std::array<BinningValue, grid_type::DIM> casts{};
 
-  /// A transform to be applied to the position
+  /// An inverse transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
   /// @brief  Constructor for a grid based surface attacher
@@ -43,9 +43,9 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   MultiLayerSurfacesUpdaterImpl(
-      grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
+      grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity())
-      : grid(std::move(igrid)), casts(icasts), transform(itr.inverse()) {}
+      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   MultiLayerSurfacesUpdaterImpl() = delete;
 
@@ -57,6 +57,7 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +
                           std::pow(grid.binWidth()[1], 2));
     auto path = pgenerator(lposition, ldirection, step, grid.numLocalBins()[1]);
+
 
     std::vector<const Acts::Surface*> surfCandidates = {};
 
@@ -120,19 +121,20 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
 };
 
 struct PathGridSurfacesGenerator {
-  std::vector<Vector3> operator()(Vector3 lstartPosition,
-                                  const Vector3& ldirection,
+  std::vector<Vector3> operator()(Vector3 startPosition,
+                                  const Vector3& direction,
                                   ActsScalar stepSize,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
 
-    auto lposition = std::move(lstartPosition);
-    auto step = stepSize * ldirection;
+    Vector3 position = startPosition;
+    Vector3 step = stepSize * direction;
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
-      pathCoordinates.push_back(lposition);
-      lposition = lposition + step;
+      pathCoordinates.push_back(position);
+      position = position +step;
+      
     }
 
     return pathCoordinates;
