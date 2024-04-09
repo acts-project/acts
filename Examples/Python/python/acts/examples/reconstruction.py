@@ -135,8 +135,8 @@ TrackSelectorConfig = namedtuple(
 
 CkfConfig = namedtuple(
     "CkfConfig",
-    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps"],
-    defaults=[15.0, 10, None],
+    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps", "seedDeduplication"],
+    defaults=[15.0, 10, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -357,6 +357,7 @@ def addSeeding(
             level=logLevel,
             inputSeeds=seeds,
             outputTrackParameters="estimatedparameters",
+            outputSeeds="estimatedseeds",
             trackingGeometry=trackingGeometry,
             magneticField=field,
             **acts.examples.defaultKWArgs(
@@ -1258,6 +1259,7 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
+        inputSeeds="estimatedseeds" if ckfConfig.seedDeduplication else "",
         outputTracks="ckf_tracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
@@ -1267,6 +1269,7 @@ def addCKFTracks(
             magneticField=field,
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
+            seedDeduplication=ckfConfig.seedDeduplication,
         ),
     )
     s.addAlgorithm(trackFinder)

@@ -71,8 +71,8 @@ SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
   return result;
 }
 
-template <typename Visiter>
-void visitSeedIdentifiers(const TrackProxy& track, Visiter visiter) {
+template <typename Visitor>
+void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
   std::vector<Index> sourceLinkIndices;
   sourceLinkIndices.reserve(track.nMeasurements());
   for (const auto& trackState : track.trackStatesReversed()) {
@@ -86,8 +86,10 @@ void visitSeedIdentifiers(const TrackProxy& track, Visiter visiter) {
   for (std::size_t i = 0; i < sourceLinkIndices.size(); ++i) {
     for (std::size_t j = i + 1; j < sourceLinkIndices.size(); ++j) {
       for (std::size_t k = j + 1; k < sourceLinkIndices.size(); ++k) {
-        visiter({sourceLinkIndices.at(i), sourceLinkIndices.at(j),
-                 sourceLinkIndices.at(k)});
+        // Putting them into reverse order (k, j, i) to compensate for the
+        // `trackStatesReversed` above.
+        visitor({sourceLinkIndices.at(k), sourceLinkIndices.at(j),
+                 sourceLinkIndices.at(i)});
       }
     }
   }
@@ -96,7 +98,7 @@ void visitSeedIdentifiers(const TrackProxy& track, Visiter visiter) {
 }  // namespace
 }  // namespace ActsExamples
 
-template <class T, size_t N>
+template <class T, std::size_t N>
 struct std::hash<std::array<T, N>> {
   std::size_t operator()(const std::array<T, N>& array) const {
     std::hash<T> hasher;
@@ -160,8 +162,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     seeds = &m_inputSeeds(ctx);
 
     if (initialParameters.size() != seeds->size()) {
-      throw std::runtime_error(
-          "Number of initial parameters and seeds do not match.");
+      ACTS_ERROR("Number of initial parameters and seeds do not match. "
+                 << initialParameters.size() << " != " << seeds->size());
     }
   }
 
@@ -247,6 +249,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   };
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    m_nTotalSeeds++;
+
     if (seeds != nullptr && m_cfg.seedDeduplication) {
       const SimSeed& seed = seeds->at(iseed);
       SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
@@ -262,7 +266,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     auto result =
         (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
-    m_nTotalSeeds++;
     nSeed++;
 
     if (!result.ok()) {
