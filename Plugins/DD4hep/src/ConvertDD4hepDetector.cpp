@@ -219,8 +219,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       dd4hep::DetType type{volumeDetElement.typeFlag()};
 
       if (type.is(dd4hep::DetType::ENDCAP)) {
-        ACTS_VERBOSE(std::string("Subvolume: '") + volumeDetElement.name() +
-                     std::string("' is marked ENDCAP"));
+        ACTS_VERBOSE("Subvolume: '" << volumeDetElement.name()
+                                    << "' is marked ENDCAP");
         if (zPos < 0.) {
           if (nEndCap) {
             throw std::logic_error(
