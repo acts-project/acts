@@ -127,19 +127,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, firstPropOptions);
 
-  // For the second pass we do not want to branch which is the default behavior
-  // of the MeasurementSelector
-  Acts::MeasurementSelector secondMeasSel{Acts::MeasurementSelector::Config{
-      {Acts::GeometryIdentifier(),
-       Acts::MeasurementSelectorCuts{{}, {5}, {1}}}}};
-
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
-  secondOptions.extensions.measurementSelector
-      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
-          &secondMeasSel);
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
@@ -301,6 +292,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
               ++nSecond;
             }
+
+            // restore `trackCandidate` to its original state in case we need it
+            // again
+            (*firstState).previous() = Acts::kTrackIndexInvalid;
           }
         }
       }
