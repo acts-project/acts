@@ -223,10 +223,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         }
 
         if (firstMeasurement.has_value()) {
-          Acts::BoundTrackParameters secondInitialParameters(
-              firstMeasurement->referenceSurface().getSharedPtr(),
-              firstMeasurement->parameters(), firstMeasurement->covariance(),
-              firstInitialParameters.particleHypothesis());
+          Acts::BoundTrackParameters secondInitialParameters =
+              trackCandidate.createParametersFromState(*firstMeasurement);
 
           auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
                                                   secondOptions, tracksTemp);
@@ -236,9 +234,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                          << iSeed << " with error" << secondResult.error());
           } else {
             auto firstState =
-                std::next(trackCandidate.trackStatesReversed().begin(),
-                          trackCandidate.nTrackStates() - 1);
-            assert((*firstState).previous() == Acts::kTrackIndexInvalid);
+                *std::next(trackCandidate.trackStatesReversed().begin(),
+                           trackCandidate.nTrackStates() - 1);
+            assert(firstState.previous() == Acts::kTrackIndexInvalid);
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
@@ -258,7 +256,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               // processed
               secondTrackCopy.reverseTrackStates(true);
 
-              (*firstState).previous() =
+              firstState.previous() =
                   (*std::next(secondTrackCopy.trackStatesReversed().begin()))
                       .index();
 
@@ -295,7 +293,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
             // restore `trackCandidate` to its original state in case we need it
             // again
-            (*firstState).previous() = Acts::kTrackIndexInvalid;
+            firstState.previous() = Acts::kTrackIndexInvalid;
+            Acts::calculateTrackQuantities(trackCandidate);
           }
         }
       }
