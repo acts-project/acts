@@ -13,8 +13,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -37,8 +37,7 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 Acts::GeometryContext gctx;
 Acts::MagneticFieldContext mctx;
@@ -505,5 +504,4 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
   CHECK_CLOSE_ABS(covB, covC, 1e-7);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

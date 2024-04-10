@@ -59,8 +59,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
@@ -646,5 +645,4 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   // }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

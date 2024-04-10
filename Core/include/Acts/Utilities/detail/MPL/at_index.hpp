@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-namespace Acts {
-/// @cond detail
-namespace detail {
+namespace Acts::detail {
 /**
  * @brief return integral constant at position in template parameter pack
  *
@@ -35,6 +33,4 @@ struct at_index<T, 0, next, others...> {
   static constexpr T value = next;
 };
 /// @endcond
-}  // namespace detail
-/// @endcond
-}  // namespace Acts
+}  // namespace Acts::detail

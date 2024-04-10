@@ -95,7 +95,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_vx;
   std::vector<float> m_vy;
   std::vector<float> m_vz;
-  // Production time in ns.
   std::vector<float> m_vt;
   /// Total momentum in GeV
   std::vector<float> m_p;

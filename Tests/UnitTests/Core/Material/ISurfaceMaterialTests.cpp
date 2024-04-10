@@ -17,9 +17,7 @@
 #include <cstddef>
 #include <ostream>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
@@ -70,5 +68,4 @@ BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
       1 - splitFactor);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

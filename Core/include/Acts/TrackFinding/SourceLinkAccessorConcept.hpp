@@ -16,8 +16,7 @@ namespace Acts {
 
 class Surface;
 
-namespace Concepts {
-namespace SourceLinkAccessor {
+namespace Concepts::SourceLinkAccessor {
 
 template <typename T>
 using container_t = typename T::Container;
@@ -69,8 +68,7 @@ METHOD_TRAIT(at_t, at);
                                               at_exists>;
       };
 // clang-format on
-}  // namespace SourceLinkAccessor
-}  // namespace Concepts
+}  // namespace Concepts::SourceLinkAccessor
 
 template <typename accessor>
 constexpr bool SourceLinkAccessorConcept =

@@ -17,8 +17,7 @@
 #include <array>
 #include <memory>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 template <typename grid_t, typename path_generator>
 class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
@@ -138,6 +137,4 @@ struct PathGridSurfacesGenerator {
   }
 };
 
-}  // namespace Experimental
-
-}  // namespace Acts
+}  // namespace Acts::Experimental

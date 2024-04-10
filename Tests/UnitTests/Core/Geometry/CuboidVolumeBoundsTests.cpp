@@ -26,8 +26,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 GeometryContext gctx = GeometryContext();
 
@@ -176,7 +175,32 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   BOOST_CHECK(pFaceZX.col(2).isApprox(yaxis));
 }
 
+BOOST_AUTO_TEST_CASE(CuboidVolumeBoundsSetValues) {
+  CuboidVolumeBounds box(5, 8, 7);
+
+  for (auto bValue :
+       {CuboidVolumeBounds::eHalfLengthX, CuboidVolumeBounds::eHalfLengthY,
+        CuboidVolumeBounds::eHalfLengthZ}) {
+    ActsScalar target = 0.5 * box.get(bValue);
+    ActsScalar previous = box.get(bValue);
+    BOOST_CHECK_THROW(box.set(bValue, -1), std::logic_error);
+    BOOST_CHECK_EQUAL(box.get(bValue), previous);
+    box.set(bValue, target);
+    BOOST_CHECK_EQUAL(box.get(bValue), target);
+  }
+
+  auto previous = box.values();
+
+  BOOST_CHECK_THROW(box.set({
+                        {CuboidVolumeBounds::eHalfLengthX, -1},
+                        {CuboidVolumeBounds::eHalfLengthY, 1},
+                    }),
+                    std::logic_error);
+  auto act = box.values();
+  BOOST_CHECK_EQUAL_COLLECTIONS(previous.begin(), previous.end(), act.begin(),
+                                act.end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

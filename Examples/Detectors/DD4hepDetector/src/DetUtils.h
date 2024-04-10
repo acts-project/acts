@@ -28,8 +28,7 @@ class DigitizationModule;
  given value
  e.g. returns <layer name="2"/> when called with (detector, "layer", "name",
  "1") */
-namespace det {
-namespace utils {
+namespace det::utils {
 
 /// Global method to build an Acts::DigitizationModule with rectangular
 /// segmentation.
@@ -106,5 +105,4 @@ dd4hep::xml::Component getNodeByStrAttr(const dd4hep::xml::Handle_t& mother,
 double getAttrValueWithFallback(const dd4hep::xml::Component& node,
                                 const std::string& attrName,
                                 const double& defaultValue);
-}  // namespace utils
-}  // namespace det
+}  // namespace det::utils

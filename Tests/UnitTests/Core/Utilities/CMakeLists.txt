@@ -39,7 +39,7 @@ add_unittest(TypeTraits TypeTraitsTest.cpp)
 add_unittest(UnitVectors UnitVectorsTests.cpp)
 add_unittest(Delegate DelegateTests.cpp)
 add_unittest(HashedString HashedStringTests.cpp)
-if (ACTS_BUILD_CUDA_FEATURES)  
+if (ACTS_BUILD_CUDA_FEATURES)
   add_unittest(Cuda CudaTests.cu)
   add_unittest(CudaMostSimplified CudaMostSimplifiedTests.cu)
 endif()
@@ -50,3 +50,4 @@ target_compile_definitions(ActsUnitTestAnyDebug PRIVATE _ACTS_ANY_ENABLE_VERBOSE
 
 add_unittest(ParticleData ParticleDataTests.cpp)
 add_unittest(Zip ZipTests.cpp)
+add_unittest(TransformRange TransformRangeTests.cpp)

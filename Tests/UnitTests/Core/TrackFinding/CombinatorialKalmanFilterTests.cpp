@@ -201,8 +201,6 @@ struct Fixture {
         .template connect<&testSourceLinkCalibrator<Trajectory>>();
     extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
         &kfUpdater);
-    extensions.smoother
-        .template connect<&KalmanSmoother::operator()<Trajectory>>(&kfSmoother);
     extensions.measurementSelector
         .template connect<&Acts::MeasurementSelector::select<Trajectory>>(
             &measSel);
@@ -308,8 +306,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-  // Set the target surface
-  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -367,8 +363,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
-  // Set the target surface
-  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;

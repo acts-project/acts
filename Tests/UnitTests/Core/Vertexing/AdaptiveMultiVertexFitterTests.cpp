@@ -49,8 +49,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
@@ -733,5 +732,4 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
