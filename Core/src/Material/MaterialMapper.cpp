@@ -8,8 +8,6 @@
 
 #include "Acts/Material/MaterialMapper.hpp"
 
-#include "Acts/Utilities/Enumerate.hpp"
-
 Acts::MaterialMapper::MaterialMapper(const Config& cfg,
                                      std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {
@@ -67,7 +65,8 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
   m_cfg.surfaceMaterialAccumulater->accumulate(
       *state.surfaceMaterialAccumulaterState.get(), assigned, emptyBinSurfaces);
 
-  // The calculate the total material before returning
+  // The function to calculate the total material before returning
+
   auto calculateTotalMaterial = [](RecordedMaterialTrack& rTrack) -> void {
     for (const auto& mi : rTrack.second.materialInteractions) {
       rTrack.second.materialInX0 += mi.materialSlab.thicknessInX0();
