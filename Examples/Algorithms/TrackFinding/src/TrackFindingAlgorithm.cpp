@@ -48,7 +48,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
-#include <unordered_set>
+#include <unordered_map>
 #include <utility>
 
 #include <boost/functional/hash.hpp>
@@ -167,8 +167,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  std::unordered_set<SeedIdentifier> encounteredSeeds;
-
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
@@ -234,9 +232,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   unsigned int nSeed = 0;
 
+  std::unordered_map<SeedIdentifier, bool> undiscoveredSeeds;
+
   auto addTrack = [&](const TrackProxy& track) {
     visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      encounteredSeeds.insert(seedIdentifier);
+      if (auto it = undiscoveredSeeds.find(seedIdentifier);
+          it != undiscoveredSeeds.end()) {
+        it->second = false;
+      }
     });
 
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
@@ -248,13 +251,21 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     destProxy.copyFrom(track, true);
   };
 
+  if (seeds != nullptr && m_cfg.seedDeduplication) {
+    for (const auto& seed : *seeds) {
+      SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
+      undiscoveredSeeds.emplace(seedIdentifier, true);
+    }
+  }
+
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     m_nTotalSeeds++;
 
     if (seeds != nullptr && m_cfg.seedDeduplication) {
       const SimSeed& seed = seeds->at(iseed);
       SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-      if (encounteredSeeds.find(seedIdentifier) != encounteredSeeds.end()) {
+      if (auto it = undiscoveredSeeds.find(seedIdentifier);
+          it != undiscoveredSeeds.end() && !it->second) {
         m_nDeduplicatedSeeds++;
         ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
         continue;
