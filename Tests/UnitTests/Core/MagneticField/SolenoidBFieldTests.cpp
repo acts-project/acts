@@ -23,8 +23,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // Create a test context
@@ -111,5 +110,4 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // outf.close();
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

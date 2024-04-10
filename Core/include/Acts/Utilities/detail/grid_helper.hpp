@@ -19,9 +19,7 @@
 
 #include <boost/container/small_vector.hpp>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 template <typename T>
 constexpr T ipow(T num, unsigned int pow) {
@@ -887,6 +885,4 @@ struct grid_helper {
   }
 };
 
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

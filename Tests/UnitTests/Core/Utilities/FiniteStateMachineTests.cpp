@@ -14,8 +14,7 @@
 #include <optional>
 #include <stdexcept>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 namespace states {
 struct Disconnected {};
@@ -298,5 +297,4 @@ BOOST_AUTO_TEST_CASE(InternalTransitions) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

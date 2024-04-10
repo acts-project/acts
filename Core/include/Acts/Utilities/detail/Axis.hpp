@@ -15,9 +15,7 @@
 #include <cmath>
 #include <vector>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 // This object can be iterated to produce up to two sequences of integer
 // indices, corresponding to the half-open integer ranges [begin1, end1[ and
@@ -660,6 +658,4 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// vector of bin edges (sorted in ascending order)
   std::vector<ActsScalar> m_binEdges;
 };
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

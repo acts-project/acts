@@ -19,9 +19,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 /// @brief Support surface building instructions
 ///
 /// There are two ways to build a support surface:
@@ -78,5 +76,4 @@ struct ProtoSupport {
   bool assignToAll = true;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

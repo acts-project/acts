@@ -21,11 +21,9 @@
 #include <stdexcept>
 #include <utility>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
     const Acts::Experimental::CuboidalContainerBuilder::Config& cfg,

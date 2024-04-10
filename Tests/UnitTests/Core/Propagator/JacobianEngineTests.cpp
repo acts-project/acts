@@ -12,85 +12,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <memory>
-
-namespace Acts {
-namespace Test {
-
-/// Helper function tests
-BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
-  // (1a) Standard test with curvilinear not glazingly close to z axis
-  Vector3 direction = Vector3(7., 8., 9.).normalized();
-  FreeToBoundMatrix f2cJacobian = detail::freeToCurvilinearJacobian(direction);
-
-  ActsScalar phi = VectorHelpers::phi(direction);
-  ActsScalar theta = VectorHelpers::theta(direction);
-  ActsScalar sinPhi = std::sin(phi);
-  ActsScalar cosPhi = std::cos(phi);
-  ActsScalar sinTheta = std::sin(theta);
-  ActsScalar cosTheta = std::cos(theta);
-
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos0), -sinPhi, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), cosPhi, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos0), -cosPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos1), -sinPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos2), sinTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTime, eFreeTime), 1., 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundPhi, eFreeDir0), -sinPhi / sinTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundPhi, eFreeDir1), cosPhi / sinTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir0), cosPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir1), sinPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundTheta, eFreeDir2), -sinTheta, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundQOverP, eFreeQOverP), 1., 1e-5);
-
-  // (1b) Test with curvilinear glazingly close to z axis
-  direction = Vector3(1., 1., 999.).normalized();
-  f2cJacobian = detail::freeToCurvilinearJacobian(direction);
-
-  const ActsScalar c = std::hypot(direction.y(), direction.z());
-  const ActsScalar invC = 1. / c;
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), -direction.z() * invC,
-                  1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos2), direction.y() * invC,
-                  1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos0), c, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos1),
-                  -direction.x() * direction.y() * invC, 1e-5);
-  CHECK_CLOSE_REL(f2cJacobian(eBoundLoc1, eFreePos2),
-                  -direction.x() * direction.z() * invC, 1e-5);
-
-  // (2a) Standard test with curvilinear not glazingly close to z axis
-  direction = Vector3(7., 8., 9.).normalized();
-  BoundToFreeMatrix c2fJacobian = detail::curvilinearToFreeJacobian(direction);
-
-  phi = VectorHelpers::phi(direction);
-  theta = VectorHelpers::theta(direction);
-  sinPhi = std::sin(phi);
-  cosPhi = std::cos(phi);
-  sinTheta = std::sin(theta);
-  cosTheta = std::cos(theta);
-
-  CHECK_CLOSE_REL(c2fJacobian(eFreePos0, eBoundLoc0), -sinPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreePos0, eBoundLoc1), -cosPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreePos1, eBoundLoc0), cosPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreePos1, eBoundLoc1), -sinPhi * cosTheta, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreePos2, eBoundLoc1), sinTheta, 1e-5);
-  // Time parameter: stays as is
-  CHECK_CLOSE_REL(c2fJacobian(eFreeTime, eBoundTime), 1, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir0, eBoundPhi), -sinTheta * sinPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir0, eBoundTheta), cosTheta * cosPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir1, eBoundPhi), sinTheta * cosPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir1, eBoundTheta), cosTheta * sinPhi, 1e-5);
-  CHECK_CLOSE_REL(c2fJacobian(eFreeDir2, eBoundTheta), -sinTheta, 1e-5);
-  // Q/P parameter: stays as is
-  CHECK_CLOSE_REL(c2fJacobian(eFreeQOverP, eBoundQOverP), 1, 1e-5);
-}
+namespace Acts::Test {
 
 /// These tests do not test for a correct covariance transport but only for the
 /// correct conservation or modification of certain variables. A test suite for
@@ -130,9 +56,9 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
   FreeMatrix realTransportJacobian = 2 * FreeMatrix::Identity();
 
   FreeToPathMatrix freeToPathDerivatives =
-      pSurface->freeToPathDerivative(tgContext, freeParameters);
+      pSurface->freeToPathDerivative(tgContext, position, direction);
   BoundToFreeMatrix boundToFreeJacobian =
-      pSurface->boundToFreeJacobian(tgContext, freeParameters);
+      pSurface->boundToFreeJacobian(tgContext, position, direction);
 
   // (1) curvilinear/bound to bound transport jacobian
   // a) test without actual transport into the same surface
@@ -179,21 +105,10 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
-  double time = 4.;
   Vector3 direction = Vector3(5., 2., 7.).normalized();
-  double qop = 0.125;
 
   // Build a surface, starting surface for curvilinear
   auto pSurface = Surface::makeShared<PlaneSurface>(position, direction);
-
-  // The free parameter vector
-  FreeVector freeParameters;
-  freeParameters << position[0], position[1], position[2], time, direction[0],
-      direction[1], direction[2], qop;
-  // And its associated bound vector
-  BoundVector boundParameters;
-  boundParameters << 0., 0., VectorHelpers::phi(direction),
-      VectorHelpers::theta(direction), qop, time;
 
   // Build covariance matrices for bound and free case
   BoundSquareMatrix boundCovariance = 0.025 * BoundSquareMatrix::Identity();
@@ -202,9 +117,9 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
   FreeMatrix noTransportJacobian = FreeMatrix::Identity();
 
   FreeToPathMatrix freeToPathDerivatives =
-      pSurface->freeToPathDerivative(tgContext, freeParameters);
+      pSurface->freeToPathDerivative(tgContext, position, direction);
   BoundToFreeMatrix boundToFreeJacobian =
-      detail::curvilinearToFreeJacobian(direction);
+      CurvilinearSurface(direction).boundToFreeJacobian();
 
   // (1) curvilinear/bound to curvilinear transport jacobian
   // a) test without actual transport into the same surface
@@ -242,21 +157,10 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
-  double time = 4.;
   Vector3 direction = Vector3(5., 2., 7.).normalized();
-  double qop = 0.125;
 
   // Build a surface, starting surface for curvilinear
   auto pSurface = Surface::makeShared<PlaneSurface>(position, direction);
-
-  // The free parameter vector
-  FreeVector freeParameters;
-  freeParameters << position[0], position[1], position[2], time, direction[0],
-      direction[1], direction[2], qop;
-  // And its associated bound vector
-  BoundVector boundParameters;
-  boundParameters << 0., 0., VectorHelpers::phi(direction),
-      VectorHelpers::theta(direction), qop, time;
 
   // Build covariance matrices for bound and free case
   BoundSquareMatrix boundCovariance = 0.025 * BoundSquareMatrix::Identity();
@@ -265,7 +169,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   FreeMatrix noTransportJacobian = FreeMatrix::Identity();
 
   BoundToFreeMatrix boundToFreeJacobian =
-      pSurface->boundToFreeJacobian(tgContext, freeParameters);
+      pSurface->boundToFreeJacobian(tgContext, position, direction);
 
   // (1) bound to free
   BoundToFreeMatrix b2fTransportJacobian = detail::boundToFreeTransportJacobian(
@@ -276,7 +180,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   BOOST_CHECK(!newFreeCovariance1.isApprox(freeCovariance));
 
   // (2) curvilinear to free
-  boundToFreeJacobian = detail::curvilinearToFreeJacobian(direction);
+  boundToFreeJacobian = CurvilinearSurface(direction).boundToFreeJacobian();
   BoundToFreeMatrix c2fTransportJacobian = detail::boundToFreeTransportJacobian(
       boundToFreeJacobian, noTransportJacobian);
 
@@ -287,5 +191,4 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   BOOST_CHECK(newFreeCovariance1.isApprox(newFreeCovariance2));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

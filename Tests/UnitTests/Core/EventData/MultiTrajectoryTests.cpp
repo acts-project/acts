@@ -131,6 +131,11 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   ct.testAddTrackStateWithBitMask();
 }
 
+BOOST_AUTO_TEST_CASE(AddTrackStateComponents) {
+  CommonTests ct;
+  ct.testAddTrackStateComponents();
+}
+
 // assert expected "cross-talk" between trackstate proxies
 BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   CommonTests ct;
@@ -225,7 +230,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
   }
 
   TestTrackState pc(rng, 2u);
-  auto ts = mt.getTrackState(mt.addTrackState());
+  auto ts = mt.makeTrackState();
   fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
 
   stats = mt.statistics();
@@ -251,7 +256,7 @@ BOOST_AUTO_TEST_CASE(Accessors) {
   mtj.addColumn<unsigned int>("ndof");
   mtj.addColumn<double>("super_chi2");
 
-  auto ts = mtj.getTrackState(mtj.addTrackState());
+  auto ts = mtj.makeTrackState();
 
   ProxyAccessor<unsigned int> ndof("ndof");
   ConstProxyAccessor<unsigned int> ndofConst("ndof");

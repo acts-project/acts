@@ -15,8 +15,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 inline Material makeBeryllium() {
   using namespace UnitLiterals;
@@ -46,5 +45,4 @@ inline MaterialSlab makePercentSlab() {
   return slab;
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

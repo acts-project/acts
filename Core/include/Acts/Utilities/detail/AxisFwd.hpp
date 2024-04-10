@@ -8,8 +8,7 @@
 
 #pragma once
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
 /// - Open is the default behaviour: out of bounds
@@ -40,5 +39,4 @@ class Axis;
 using EquidistantAxis = Axis<AxisType::Equidistant>;
 using VariableAxis = Axis<AxisType::Variable>;
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

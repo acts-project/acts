@@ -31,8 +31,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// a simple link to volume struct
 class LinkToVolumeImpl : public INavigationDelegate {
@@ -50,8 +49,7 @@ class LinkToVolumeImpl : public INavigationDelegate {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 using namespace Acts::Experimental;
 

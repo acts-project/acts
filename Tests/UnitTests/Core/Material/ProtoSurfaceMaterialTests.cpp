@@ -14,9 +14,7 @@
 
 #include <utility>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
@@ -31,5 +29,4 @@ BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
   ProtoSurfaceMaterial smpCopyMoved(std::move(smpCopy));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
