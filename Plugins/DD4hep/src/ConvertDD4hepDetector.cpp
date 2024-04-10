@@ -293,8 +293,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
               "hierarchy.");
         }
         barrel = true;
-        ACTS_VERBOSE("Subvolume : " << volumeDetElement.name()
-                                    << " is marked as BARREL");
+        ACTS_VERBOSE("Subvolume: " << volumeDetElement.name()
+                                   << " is marked as BARREL");
         ACTS_VERBOSE("-> collecting layers");
         collectLayers_dd4hep(volumeDetElement, centralLayers, logger);
         // Fill the volume material for barrel case
@@ -391,8 +391,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     return cylinderVolumeBuilder;
   } else if (subDetType.is(dd4hep::DetType::BEAMPIPE) ||
              getParamOr<bool>("passive_layer", subDetector, false)) {
-    ACTS_VERBOSE("Subdetector : " << subDetector.name()
-                                  << " - building a passive cylinder.");
+    ACTS_VERBOSE("Subdetector: " << subDetector.name()
+                                 << " - building a passive cylinder.");
 
     if (subDetType.is(dd4hep::DetType::BEAMPIPE)) {
       ACTS_VERBOSE("This is the beam pipe - will be built to r -> 0.");
