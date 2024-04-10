@@ -36,7 +36,7 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
 
     # Create a sequencer
-    print("Creating the sequencer with 1 thread (accross event information needed)")
+    print("Creating the sequencer with 1 thread (inter event information needed)")
 
     s = Sequencer(numThreads=1)
 
