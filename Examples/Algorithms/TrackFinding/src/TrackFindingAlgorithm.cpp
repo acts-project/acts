@@ -248,7 +248,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               }
 
               // Note that this is only valid if there are no branches
-              // We disabled this in the second finding step
+              // We disallow this by breaking this look after a second track was
+              // processed
               secondTrack.reverseTrackStates(true);
 
               // Set the seed number, this number decrease by 1 since the seed
@@ -273,9 +274,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                       extrapolationOptions, m_cfg.extrapolationStrategy,
                       logger());
               if (!secondExtrapolationResult.ok()) {
-                // restore first track. not strictly necessary with a single
-                // second track but a reminder that this is necessary if we
-                // handle multiple second tracks
+                // restore first track
+                // this is necessary as next smoothing could continue into the
+                // second track
                 (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
 
                 m_nFailedExtrapolation++;
@@ -295,9 +296,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                 destProxy.copyFrom(secondTrack, true);
               }
 
-              // restore first track. not strictly necessary with a single
-              // second track but a reminder that this is necessary if we
-              // handle multiple second tracks
+              // restore first track
+              // this is necessary as next smoothing could continue into the
+              // second track
               (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
 
               ++nSecond;
