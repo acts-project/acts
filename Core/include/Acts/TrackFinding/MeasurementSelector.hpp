@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -37,7 +38,7 @@ struct MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
   std::vector<double> etaBins{};
   /// Maximum local chi2 contribution.
-  std::vector<double> chi2CutOff{std::numeric_limits<double>::max()};
+  std::vector<double> chi2CutOff{15};
   /// Maximum number of associated measurements on a single surface.
   std::vector<std::size_t> numMeasurementsCutOff{1};
 };
@@ -61,11 +62,19 @@ class MeasurementSelector {
   using Config = Acts::GeometryHierarchyMap<MeasurementSelectorCuts>;
 
   /// @brief Default constructor
-  MeasurementSelector() = default;
-  /// @brief Constructor with config and (non-owning) logger
+  ///
+  /// This will use the default configuration for the cuts.
+  MeasurementSelector();
+
+  /// @brief Constructor with cuts
+  ///
+  /// @param cuts The cuts to use
+  explicit MeasurementSelector(const MeasurementSelectorCuts& cuts);
+
+  /// @brief Constructor with config
   ///
   /// @param config a config instance
-  MeasurementSelector(Config config);
+  explicit MeasurementSelector(Config config);
 
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
