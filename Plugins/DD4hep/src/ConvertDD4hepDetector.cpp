@@ -168,7 +168,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
 
   if (subDetector.type() == "compound") {
     ACTS_VERBOSE("Subdetector: '" << subDetector.name()
-                                   << "' has type compound ");
+                                  << "' has type compound ");
     ACTS_VERBOSE(
         "handling as a compound volume (a hierarchy of a "
         "barrel-endcap structure) and resolving the "
