@@ -15,6 +15,12 @@
 
 namespace Acts {
 
+MeasurementSelector::MeasurementSelector()
+    : m_config{{GeometryIdentifier(), MeasurementSelectorCuts{}}} {}
+
+MeasurementSelector::MeasurementSelector(const MeasurementSelectorCuts& cuts)
+    : m_config{{GeometryIdentifier(), cuts}} {}
+
 MeasurementSelector::MeasurementSelector(Config config)
     : m_config(std::move(config)) {}
 
