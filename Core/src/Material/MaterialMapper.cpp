@@ -67,7 +67,7 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
   m_cfg.surfaceMaterialAccumulater->accumulate(
       *state.surfaceMaterialAccumulaterState.get(), assigned, emptyBinSurfaces);
 
-  // The calculate the total material before returning
+  // The funtion to calculate the total material before returning
   auto calculateTotalMaterial = [](RecordedMaterialTrack& rTrack) -> void {
     for (const auto& mi : rTrack.second.materialInteractions) {
       rTrack.second.materialInX0 += mi.materialSlab.thicknessInX0();
