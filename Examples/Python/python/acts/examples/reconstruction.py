@@ -141,7 +141,7 @@ CkfConfig = namedtuple(
         "maxSteps",
         "stayOnSeed",
     ],
-    defaults=[15.0, 10, None, None, None],
+    defaults=[15.0, 10, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
