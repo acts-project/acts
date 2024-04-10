@@ -194,7 +194,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     for (auto& firstTrack : firstTracksForSeed) {
       // TODO a copy of the track should not be necessary but is the safest way
       //      with the current EDM
-      // TODO a lightweight copy wihout copying all the track state components
+      // TODO a lightweight copy without copying all the track state components
       //      might be a solution
       auto trackCandidate = tracksTemp.makeTrack();
       trackCandidate.copyFrom(firstTrack, true);
@@ -257,7 +257,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
               // TODO a copy of the track should not be necessary but is the
               //      safest way with the current EDM
-              // TODO a lightweight copy wihout copying all the track state
+              // TODO a lightweight copy without copying all the track state
               //      components might be a solution
               auto secondTrackCopy = tracksTemp.makeTrack();
               secondTrackCopy.copyFrom(secondTrack, true);
