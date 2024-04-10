@@ -192,8 +192,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
     auto& firstTracksForSeed = firstResult.value();
     for (auto& firstTrack : firstTracksForSeed) {
+      // TODO a copy of the track should not be necessary but is the safest way
+      //      with the current EDM
+      // TODO a lightweight copy wihout copying all the track state components
+      //      might be a solution
+      auto trackCandidate = tracksTemp.makeTrack();
+      trackCandidate.copyFrom(firstTrack, true);
+
       auto firstSmoothingResult =
-          Acts::smoothTrack(ctx.geoContext, firstTrack, logger());
+          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("First smoothing for seed "
@@ -206,27 +213,28 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
-      seedNumber(firstTrack) = nSeed - 1;
+      seedNumber(trackCandidate) = nSeed - 1;
 
       if (m_cfg.twoWay) {
-        std::optional<Acts::VectorMultiTrajectory::TrackStateProxy> firstState;
-        for (auto st : firstTrack.trackStatesReversed()) {
-          bool isMeasurement =
-              st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag);
+        std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
+            firstMeasurement;
+        for (auto trackState : trackCandidate.trackStatesReversed()) {
+          bool isMeasurement = trackState.typeFlags().test(
+              Acts::TrackStateFlag::MeasurementFlag);
           bool isOutlier =
-              st.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+              trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
           // We are excluding non measurement states and outlier here. Those can
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
           if (isMeasurement && !isOutlier) {
-            firstState = st;
+            firstMeasurement = trackState;
           }
         }
 
-        if (firstState.has_value()) {
+        if (firstMeasurement.has_value()) {
           Acts::BoundTrackParameters secondInitialParameters(
-              firstState->referenceSurface().getSharedPtr(),
-              firstState->parameters(), firstState->covariance(),
+              firstMeasurement->referenceSurface().getSharedPtr(),
+              firstMeasurement->parameters(), firstMeasurement->covariance(),
               firstInitialParameters.particleHypothesis());
 
           auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
@@ -236,10 +244,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
             ACTS_WARNING("Second track finding failed for seed "
                          << iSeed << " with error" << secondResult.error());
           } else {
-            auto firstFirstState =
-                std::next(firstTrack.trackStatesReversed().begin(),
-                          firstTrack.nTrackStates() - 1);
-            assert((*firstFirstState).previous() == Acts::kTrackIndexInvalid);
+            auto firstState =
+                std::next(trackCandidate.trackStatesReversed().begin(),
+                          trackCandidate.nTrackStates() - 1);
+            assert((*firstState).previous() == Acts::kTrackIndexInvalid);
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
@@ -247,21 +255,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                 continue;
               }
 
+              // TODO a copy of the track should not be necessary but is the
+              //      safest way with the current EDM
+              // TODO a lightweight copy wihout copying all the track state
+              //      components might be a solution
+              auto secondTrackCopy = tracksTemp.makeTrack();
+              secondTrackCopy.copyFrom(secondTrack, true);
+
               // Note that this is only valid if there are no branches
               // We disallow this by breaking this look after a second track was
               // processed
-              secondTrack.reverseTrackStates(true);
+              secondTrackCopy.reverseTrackStates(true);
 
-              // Set the seed number, this number decrease by 1 since the seed
-              // number has already been updated
-              seedNumber(secondTrack) = nSeed - 1;
-
-              (*firstFirstState).previous() =
-                  (*std::next(secondTrack.trackStatesReversed().begin()))
+              (*firstState).previous() =
+                  (*std::next(secondTrackCopy.trackStatesReversed().begin()))
                       .index();
-              secondTrack.tipIndex() = firstTrack.tipIndex();
 
-              Acts::calculateTrackQuantities(secondTrack);
+              Acts::calculateTrackQuantities(trackCandidate);
 
               // TODO This extrapolation should not be necessary
               // TODO The CKF is targeting this surface and should communicate
@@ -270,42 +280,26 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
               //      implementation
               auto secondExtrapolationResult =
                   Acts::extrapolateTrackToReferenceSurface(
-                      secondTrack, *pSurface, extrapolator,
+                      trackCandidate, *pSurface, extrapolator,
                       extrapolationOptions, m_cfg.extrapolationStrategy,
                       logger());
               if (!secondExtrapolationResult.ok()) {
-                // restore first track
-                // this is necessary as next smoothing could continue into the
-                // second track
-                (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
-
                 m_nFailedExtrapolation++;
                 ACTS_ERROR("Second extrapolation for seed "
                            << iSeed << " and track " << secondTrack.index()
                            << " failed with error "
                            << secondExtrapolationResult.error());
 
-                // we can only handle a single second track at the moment
-                // TODO handle multiple second tracks
-                break;
+                continue;
               }
 
               if (!m_trackSelector.has_value() ||
-                  m_trackSelector->isValidTrack(secondTrack)) {
+                  m_trackSelector->isValidTrack(trackCandidate)) {
                 auto destProxy = tracks.makeTrack();
-                destProxy.copyFrom(secondTrack, true);
+                destProxy.copyFrom(trackCandidate, true);
               }
 
-              // restore first track
-              // this is necessary as next smoothing could continue into the
-              // second track
-              (*firstFirstState).previous() = Acts::kTrackIndexInvalid;
-
               ++nSecond;
-
-              // we can only handle a single second track at the moment
-              // TODO handle multiple second tracks
-              break;
             }
           }
         }
@@ -314,7 +308,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       if (nSecond == 0) {
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
-                firstTrack, *pSurface, extrapolator, extrapolationOptions,
+                trackCandidate, *pSurface, extrapolator, extrapolationOptions,
                 m_cfg.extrapolationStrategy, logger());
         if (!firstExtrapolationResult.ok()) {
           m_nFailedExtrapolation++;
@@ -326,9 +320,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         }
 
         if (!m_trackSelector.has_value() ||
-            m_trackSelector->isValidTrack(firstTrack)) {
+            m_trackSelector->isValidTrack(trackCandidate)) {
           auto destProxy = tracks.makeTrack();
-          destProxy.copyFrom(firstTrack, true);
+          destProxy.copyFrom(trackCandidate, true);
         }
       }
     }
