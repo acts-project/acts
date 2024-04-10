@@ -235,6 +235,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   unsigned int nSeed = 0;
 
   auto addTrack = [&](const TrackProxy& track) {
+    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
+      encounteredSeeds.insert(seedIdentifier);
+    });
+
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
     }
@@ -242,10 +246,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     auto destProxy = tracks.makeTrack();
     // make sure we copy track states!
     destProxy.copyFrom(track, true);
-
-    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      encounteredSeeds.insert(seedIdentifier);
-    });
   };
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
