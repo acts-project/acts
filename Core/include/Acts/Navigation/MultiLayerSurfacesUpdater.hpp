@@ -34,7 +34,7 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// These are the cast parameters - copied from constructor
   std::array<BinningValue, grid_type::DIM> casts{};
 
-  /// A transform to be applied to the position
+  /// An inverse transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
   /// @brief  Constructor for a grid based surface attacher
@@ -42,17 +42,20 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   MultiLayerSurfacesUpdaterImpl(
-      grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
+      grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   MultiLayerSurfacesUpdaterImpl() = delete;
 
   void update(const GeometryContext& gctx, NavigationState& nState) const {
+    // get the local position and direction
+    auto lposition = transform * nState.position;
+    auto ldirection = transform.linear() * nState.direction;
+
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +
                           std::pow(grid.binWidth()[1], 2));
-    auto path = pgenerator(nState.position, nState.direction, step,
-                           grid.numLocalBins()[1]);
+    auto path = pgenerator(lposition, ldirection, step, grid.numLocalBins()[1]);
 
     std::vector<const Acts::Surface*> surfCandidates = {};
 
@@ -75,11 +78,8 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param position is the position of the update call
   std::array<ActsScalar, grid_type::DIM> castPosition(
       const Vector3& position) const {
-    // Transform into local 3D frame
-    Vector3 tposition = transform * position;
-
     std::array<ActsScalar, grid_type::DIM> casted{};
-    fillCasts(tposition, casted,
+    fillCasts(position, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
     return casted;
   }
@@ -125,14 +125,12 @@ struct PathGridSurfacesGenerator {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
 
-    auto tposition = std::move(startPosition);
-    auto stepSizeY = stepSize * sin(Acts::VectorHelpers::phi(direction));
-    auto stepSizeX = stepSize * cos(Acts::VectorHelpers::phi(direction));
+    Vector3 position = std::move(startPosition);
+    Vector3 step = stepSize * direction;
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
-      pathCoordinates.push_back(tposition);
-      tposition.y() = tposition.y() + stepSizeY;
-      tposition.x() = tposition.x() + stepSizeX;
+      pathCoordinates.push_back(position);
+      position = position + step;
     }
 
     return pathCoordinates;
