@@ -10,7 +10,7 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 
 namespace Acts {
 
@@ -46,7 +46,7 @@ class GenericCurvilinearTrackParameters
                                     Scalar qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
-      : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
+      : Base(CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
              transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
              std::move(cov), std::move(particleHypothesis)) {}
 
@@ -62,8 +62,9 @@ class GenericCurvilinearTrackParameters
                                     Scalar theta, Scalar qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
-      : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
+      : Base(CurvilinearSurface(pos4.segment<3>(ePos0),
+                                makeDirectionFromPhiTheta(phi, theta))
+                 .surface(),
              transformFreeToCurvilinearParameters(pos4[eTime], phi, theta,
                                                   qOverP),
              std::move(cov), std::move(particleHypothesis)) {}
