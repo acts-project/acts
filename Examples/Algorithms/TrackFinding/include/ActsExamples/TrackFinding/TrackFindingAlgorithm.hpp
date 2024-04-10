@@ -112,9 +112,6 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Extrapolation strategy
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
-    /// Whether to use seed deduplication
-    /// This is only available if `inputSeeds` is set.
-    bool seedDeduplication = false;
     /// Whether to stick on the seed measurements during track finding.
     /// This is only available if `inputSeeds` is set.
     bool stayOnSeed = false;

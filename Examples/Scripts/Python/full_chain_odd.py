@@ -258,7 +258,6 @@ addCKFTracks(
         nMeasurementsMin=7,
     ),
     CkfConfig(
-        seedDeduplication=True,
         stayOnSeed=True,
     ),
     outputDirRoot=outputDir,

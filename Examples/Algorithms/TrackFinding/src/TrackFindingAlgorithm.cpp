@@ -56,45 +56,6 @@
 namespace ActsExamples {
 namespace {
 
-/// Source link indices of the bottom, middle, top measurements.
-/// In case of strip seeds only the first source link of the pair is used.
-using SeedIdentifier = std::array<Index, 3>;
-
-SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
-  SeedIdentifier result;
-
-  for (const auto& [i, sp] : Acts::enumerate(seed.sp())) {
-    const Acts::SourceLink& firstSourceLink = sp->sourceLinks().front();
-    result.at(i) = firstSourceLink.get<IndexSourceLink>().index();
-  }
-
-  return result;
-}
-
-template <typename Visitor>
-void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
-  std::vector<Index> sourceLinkIndices;
-  sourceLinkIndices.reserve(track.nMeasurements());
-  for (const auto& trackState : track.trackStatesReversed()) {
-    if (!trackState.hasUncalibratedSourceLink()) {
-      continue;
-    }
-    const Acts::SourceLink& sourceLink = trackState.getUncalibratedSourceLink();
-    sourceLinkIndices.push_back(sourceLink.get<IndexSourceLink>().index());
-  }
-
-  for (std::size_t i = 0; i < sourceLinkIndices.size(); ++i) {
-    for (std::size_t j = i + 1; j < sourceLinkIndices.size(); ++j) {
-      for (std::size_t k = j + 1; k < sourceLinkIndices.size(); ++k) {
-        // Putting them into reverse order (k, j, i) to compensate for the
-        // `trackStatesReversed` above.
-        visitor({sourceLinkIndices.at(k), sourceLinkIndices.at(j),
-                 sourceLinkIndices.at(i)});
-      }
-    }
-  }
-}
-
 class MeasurementSelector {
  public:
   using Traj = Acts::VectorMultiTrajectory;
@@ -148,21 +109,6 @@ class MeasurementSelector {
 };
 
 }  // namespace
-}  // namespace ActsExamples
-
-template <class T, std::size_t N>
-struct std::hash<std::array<T, N>> {
-  std::size_t operator()(const std::array<T, N>& array) const {
-    std::hash<T> hasher;
-    std::size_t result = 0;
-    for (auto&& element : array) {
-      boost::hash_combine(result, hasher(element));
-    }
-    return result;
-  }
-};
-
-namespace ActsExamples {
 
 TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
                                              Acts::Logging::Level level)
@@ -190,11 +136,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
     throw std::invalid_argument("Missing tracks output collection");
   }
 
-  if (m_cfg.seedDeduplication && m_cfg.inputSeeds.empty()) {
-    throw std::invalid_argument(
-        "Missing seeds input collection. This is "
-        "required for seed deduplication.");
-  }
   if (m_cfg.stayOnSeed && m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument(
         "Missing seeds input collection. This is "
@@ -223,8 +164,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                  << initialParameters.size() << " != " << seeds->size());
     }
   }
-
-  std::unordered_set<SeedIdentifier> encounteredSeeds;
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -299,10 +238,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     auto destProxy = tracks.makeTrack();
     // make sure we copy track states!
     destProxy.copyFrom(track, true);
-
-    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      encounteredSeeds.insert(seedIdentifier);
-    });
   };
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
@@ -310,15 +245,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     if (seeds != nullptr) {
       const SimSeed& seed = seeds->at(iseed);
-
-      if (m_cfg.seedDeduplication) {
-        SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-        if (encounteredSeeds.find(seedIdentifier) != encounteredSeeds.end()) {
-          m_nDeduplicatedSeeds++;
-          ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
-          continue;
-        }
-      }
 
       if (m_cfg.stayOnSeed) {
         measSel.setSeed(seed);

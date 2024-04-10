@@ -139,7 +139,6 @@ CkfConfig = namedtuple(
         "chi2CutOff",
         "numMeasurementsCutOff",
         "maxSteps",
-        "seedDeduplication",
         "stayOnSeed",
     ],
     defaults=[15.0, 10, None, None, None],
@@ -1265,7 +1264,7 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
-        inputSeeds="estimatedseeds" if ckfConfig.seedDeduplication else "",
+        inputSeeds="estimatedseeds" if ckfConfig.stayOnSeed else "",
         outputTracks="ckf_tracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
@@ -1275,7 +1274,6 @@ def addCKFTracks(
             magneticField=field,
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
-            seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
         ),
     )
