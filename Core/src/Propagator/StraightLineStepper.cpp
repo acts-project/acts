@@ -8,7 +8,7 @@
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 namespace Acts {
@@ -38,7 +38,9 @@ void StraightLineStepper::update(State& state, const FreeVector& freeParams,
                                  const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
@@ -69,8 +71,8 @@ void StraightLineStepper::resetState(State& state,
                                      const BoundSquareMatrix& cov,
                                      const Surface& surface,
                                      const double stepSize) const {
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
-      surface, state.geoContext, boundParams);
+  FreeVector freeParams =
+      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
@@ -79,7 +81,9 @@ void StraightLineStepper::resetState(State& state,
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();

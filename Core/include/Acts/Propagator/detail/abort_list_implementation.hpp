@@ -12,8 +12,7 @@
 
 #include <utility>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 namespace {
 
@@ -106,5 +105,4 @@ struct abort_list_impl<> {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

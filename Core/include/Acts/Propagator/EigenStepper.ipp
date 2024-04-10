@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
@@ -29,8 +29,8 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundSquareMatrix& cov,
                                           const Surface& surface,
                                           const double stepSize) const {
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
-      surface, state.geoContext, boundParams);
+  FreeVector freeParams =
+      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
@@ -39,7 +39,9 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
@@ -112,7 +114,9 @@ void Acts::EigenStepper<E, A>::update(State& state,
                                       const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
-  state.jacToGlobal = surface.boundToFreeJacobian(state.geoContext, freeParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
 }
 
 template <typename E, typename A>

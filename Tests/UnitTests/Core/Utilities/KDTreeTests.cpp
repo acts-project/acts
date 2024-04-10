@@ -73,8 +73,7 @@ std::vector<std::pair<std::array<double, 3>, int>> test_vector{
     {{-6.0, 3.5, -7.4}, 7},    {{3.2, -6.2, 3.9}, -25}};
 }
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct TreeFixture1DDoubleInt1 {
   TreeFixture1DDoubleInt1()
@@ -634,5 +633,4 @@ BOOST_AUTO_TEST_CASE(range_search_many_same) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

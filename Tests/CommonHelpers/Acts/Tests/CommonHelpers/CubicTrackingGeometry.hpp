@@ -33,8 +33,7 @@
 #include <functional>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct CubicTrackingGeometry {
   /// Default constructor for the Cubic tracking geometry
@@ -202,5 +201,4 @@ struct CubicTrackingGeometry {
 
   std::reference_wrapper<const GeometryContext> geoContext;
 };
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

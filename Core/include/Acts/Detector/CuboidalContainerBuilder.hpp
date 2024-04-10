@@ -19,8 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class IRootVolumeFinderBuilder;
 class IGeometryIdGenerator;
@@ -106,5 +105,4 @@ class CuboidalContainerBuilder : public IDetectorComponentBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

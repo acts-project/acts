@@ -35,8 +35,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Construct builder
@@ -236,5 +235,4 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
       volumeConfig2.name);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

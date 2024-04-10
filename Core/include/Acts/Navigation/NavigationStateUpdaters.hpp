@@ -23,9 +23,7 @@
 #include <array>
 #include <memory>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// Helper method to update the candidates (portals/surfaces),
 /// this can be called for initial surface/portal estimation,
@@ -201,5 +199,4 @@ class ChainedUpdaterImpl : public INavigationDelegate {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

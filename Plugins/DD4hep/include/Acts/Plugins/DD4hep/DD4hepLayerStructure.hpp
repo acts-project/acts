@@ -26,9 +26,7 @@ namespace dd4hep {
 class DetElement;
 }
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief This class allows to generate layer structure builders for dd4hep sub detectors
 /// It performs an intermediate step by taking dd4hep::DetElemnent objects that
@@ -103,5 +101,4 @@ class DD4hepLayerStructure {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

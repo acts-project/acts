@@ -27,8 +27,7 @@
 #include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
 
-namespace ActsExamples {
-namespace EDM4hepUtil {
+namespace ActsExamples::EDM4hepUtil {
 
 using MapParticleIdFrom =
     std::function<ActsFatras::Barcode(const edm4hep::MCParticle& particle)>;
@@ -138,5 +137,4 @@ uint64_t podioObjectIDToInteger(T&& o) {
   }
 }
 
-}  // namespace EDM4hepUtil
-}  // namespace ActsExamples
+}  // namespace ActsExamples::EDM4hepUtil
