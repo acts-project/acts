@@ -115,6 +115,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
         Acts::TrackExtrapolationStrategy::firstOrLast;
     /// Run finding in two directions
     bool twoWay = true;
+    /// Whether to use seed deduplication
+    /// This is only available if `inputSeeds` is set.
+    bool seedDeduplication = false;
     /// Whether to stick on the seed measurements during track finding.
     /// This is only available if `inputSeeds` is set.
     bool stayOnSeed = false;

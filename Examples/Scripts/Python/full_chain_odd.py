@@ -259,6 +259,7 @@ addCKFTracks(
     ),
     CkfConfig(
         stayOnSeed=True,
+        seedDeduplication=True,
     ),
     outputDirRoot=outputDir,
     writeCovMat=True,
