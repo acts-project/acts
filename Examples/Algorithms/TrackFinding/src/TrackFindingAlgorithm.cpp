@@ -200,6 +200,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         continue;
       }
 
+      // number of second tracks found
       std::size_t nSecond = 0;
 
       // Set the seed number, this number decrease by 1 since the seed number
@@ -299,6 +300,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
         }
       }
 
+      // if no second track was found, we will use only the first track
       if (nSecond == 0) {
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
