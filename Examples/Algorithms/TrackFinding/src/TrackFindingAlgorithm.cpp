@@ -17,6 +17,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
@@ -205,14 +206,23 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = m_cfg.maxSteps;
-  pOptions.direction = Acts::Direction::Forward;
+  Acts::PropagatorPlainOptions firstPropOptions;
+  firstPropOptions.maxSteps = m_cfg.maxSteps;
+  firstPropOptions.direction = Acts::Direction::Forward;
+
+  Acts::PropagatorPlainOptions secondPropOptions;
+  secondPropOptions.maxSteps = m_cfg.maxSteps;
+  secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  TrackFindingAlgorithm::TrackFinderOptions options(
+  TrackFindingAlgorithm::TrackFinderOptions firstOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions);
+      extensions, firstPropOptions);
+
+  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
+      extensions, secondPropOptions);
+  secondOptions.targetSurface = pSurface.get();
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
@@ -273,17 +283,17 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+  for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
     m_nTotalSeeds++;
 
     if (seeds != nullptr && m_cfg.seedDeduplication) {
-      const SimSeed& seed = seeds->at(iseed);
+      const SimSeed& seed = seeds->at(iSeed);
       SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
       // check if the seed has been discovered already
       if (auto it = discoveredSeeds.find(seedIdentifier);
           it != discoveredSeeds.end() && it->second) {
         m_nDeduplicatedSeeds++;
-        ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
+        ACTS_VERBOSE("Skipping seed " << iSeed << " due to deduplication.");
         continue;
       }
     }
@@ -291,43 +301,153 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
-    auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
+    const Acts::BoundTrackParameters& firstInitialParameters =
+        initialParameters.at(iSeed);
+
+    auto firstResult =
+        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
+
     nSeed++;
 
-    if (!result.ok()) {
+    if (!firstResult.ok()) {
       m_nFailedSeeds++;
-      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
-                                                    << result.error());
+      ACTS_WARNING("Track finding failed for seed " << iSeed << " with error"
+                                                    << firstResult.error());
       continue;
     }
 
-    auto& tracksForSeed = result.value();
-    for (auto& track : tracksForSeed) {
-      auto smoothingResult = Acts::smoothTrack(ctx.geoContext, track, logger());
-      if (!smoothingResult.ok()) {
+    auto& firstTracksForSeed = firstResult.value();
+    for (auto& firstTrack : firstTracksForSeed) {
+      // TODO a copy of the track should not be necessary but is the safest way
+      //      with the current EDM
+      // TODO a lightweight copy without copying all the track state components
+      //      might be a solution
+      auto trackCandidate = tracksTemp.makeTrack();
+      trackCandidate.copyFrom(firstTrack, true);
+
+      auto firstSmoothingResult =
+          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+      if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
-        ACTS_ERROR("Smoothing for seed "
-                   << iseed << " and track " << track.index()
-                   << " failed with error " << smoothingResult.error());
+        ACTS_ERROR("First smoothing for seed "
+                   << iSeed << " and track " << firstTrack.index()
+                   << " failed with error " << firstSmoothingResult.error());
         continue;
       }
 
-      auto extrapolationResult = Acts::extrapolateTrackToReferenceSurface(
-          track, *pSurface, extrapolator, extrapolationOptions,
-          m_cfg.extrapolationStrategy, logger());
-      if (!extrapolationResult.ok()) {
-        m_nFailedExtrapolation++;
-        ACTS_ERROR("Extrapolation for seed "
-                   << iseed << " and track " << track.index()
-                   << " failed with error " << extrapolationResult.error());
-        continue;
-      }
+      // number of second tracks found
+      std::size_t nSecond = 0;
 
       // Set the seed number, this number decrease by 1 since the seed number
-      seedNumber(track) = nSeed - 1;
+      // has already been updated
+      seedNumber(trackCandidate) = nSeed - 1;
 
-      addTrack(track);
+      if (m_cfg.twoWay) {
+        std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
+            firstMeasurement;
+        for (auto trackState : trackCandidate.trackStatesReversed()) {
+          bool isMeasurement = trackState.typeFlags().test(
+              Acts::TrackStateFlag::MeasurementFlag);
+          bool isOutlier =
+              trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+          // We are excluding non measurement states and outlier here. Those can
+          // decrease resolution because only the smoothing corrected the very
+          // first prediction as filtering is not possible.
+          if (isMeasurement && !isOutlier) {
+            firstMeasurement = trackState;
+          }
+        }
+
+        if (firstMeasurement.has_value()) {
+          Acts::BoundTrackParameters secondInitialParameters =
+              trackCandidate.createParametersFromState(*firstMeasurement);
+
+          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
+                                                  secondOptions, tracksTemp);
+
+          if (!secondResult.ok()) {
+            ACTS_WARNING("Second track finding failed for seed "
+                         << iSeed << " with error" << secondResult.error());
+          } else {
+            auto firstState =
+                *std::next(trackCandidate.trackStatesReversed().begin(),
+                           trackCandidate.nTrackStates() - 1);
+            assert(firstState.previous() == Acts::kTrackIndexInvalid);
+
+            auto& secondTracksForSeed = secondResult.value();
+            for (auto& secondTrack : secondTracksForSeed) {
+              if (secondTrack.nTrackStates() < 2) {
+                continue;
+              }
+
+              // TODO a copy of the track should not be necessary but is the
+              //      safest way with the current EDM
+              // TODO a lightweight copy without copying all the track state
+              //      components might be a solution
+              auto secondTrackCopy = tracksTemp.makeTrack();
+              secondTrackCopy.copyFrom(secondTrack, true);
+
+              // Note that this is only valid if there are no branches
+              // We disallow this by breaking this look after a second track was
+              // processed
+              secondTrackCopy.reverseTrackStates(true);
+
+              firstState.previous() =
+                  (*std::next(secondTrackCopy.trackStatesReversed().begin()))
+                      .index();
+
+              Acts::calculateTrackQuantities(trackCandidate);
+
+              // TODO This extrapolation should not be necessary
+              // TODO The CKF is targeting this surface and should communicate
+              //      the resulting parameters
+              // TODO Removing this requires changes in the core CKF
+              //      implementation
+              auto secondExtrapolationResult =
+                  Acts::extrapolateTrackToReferenceSurface(
+                      trackCandidate, *pSurface, extrapolator,
+                      extrapolationOptions, m_cfg.extrapolationStrategy,
+                      logger());
+              if (!secondExtrapolationResult.ok()) {
+                m_nFailedExtrapolation++;
+                ACTS_ERROR("Second extrapolation for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error "
+                           << secondExtrapolationResult.error());
+
+                continue;
+              }
+
+              addTrack(trackCandidate);
+
+              ++nSecond;
+            }
+
+            // restore `trackCandidate` to its original state in case we need it
+            // again
+            firstState.previous() = Acts::kTrackIndexInvalid;
+            Acts::calculateTrackQuantities(trackCandidate);
+          }
+        }
+      }
+
+      // if no second track was found, we will use only the first track
+      if (nSecond == 0) {
+        auto firstExtrapolationResult =
+            Acts::extrapolateTrackToReferenceSurface(
+                trackCandidate, *pSurface, extrapolator, extrapolationOptions,
+                m_cfg.extrapolationStrategy, logger());
+        if (!firstExtrapolationResult.ok()) {
+          m_nFailedExtrapolation++;
+          ACTS_ERROR("Extrapolation for seed "
+                     << iSeed << " and track " << firstTrack.index()
+                     << " failed with error "
+                     << firstExtrapolationResult.error());
+          continue;
+        }
+
+        addTrack(trackCandidate);
+      }
     }
   }
 

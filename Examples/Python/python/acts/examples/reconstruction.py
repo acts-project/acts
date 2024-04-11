@@ -1165,6 +1165,7 @@ def addCKFTracks(
         Union[TrackSelectorConfig, List[TrackSelectorConfig]]
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
+    twoWay: bool = True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1269,6 +1270,7 @@ def addCKFTracks(
             magneticField=field,
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
+            twoWay=twoWay,
             seedDeduplication=ckfConfig.seedDeduplication,
         ),
     )
