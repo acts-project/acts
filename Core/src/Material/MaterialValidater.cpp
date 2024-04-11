@@ -8,6 +8,10 @@
 
 #include "Acts/Material/MaterialValidater.hpp"
 
+#include "Acts/Material/interface/IAssignmentFinder.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+
 Acts::MaterialValidater::MaterialValidater(
     const Acts::MaterialValidater::Config& cfg,
     std::unique_ptr<const Acts::Logger> mlogger)
@@ -20,11 +24,35 @@ Acts::MaterialValidater::MaterialValidater(
 Acts::RecordedMaterialTrack Acts::MaterialValidater::recordMaterial(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Vector3& position, const Vector3& direction) const {
-  Acts::RecordedMaterialTrack mTrack;
+  ACTS_DEBUG("MaterialValidater::recordMaterial with position "
+             << toString(position) << " and direction " << toString(direction));
+
+  // Prepare the material track
+  Acts::RecordedMaterialTrack mTrack{{position, direction}, {}};
 
   auto [surfaceAssignments, volumeAssignments] =
       m_cfg.materialAssigner->assignmentCandidates(gctx, mctx, position,
                                                    direction);
+
+  for (auto [surface, sposition, sdirection] : surfaceAssignments) {
+    // The slab and the path correction
+    auto materialSlab = surface->surfaceMaterial()->materialSlab(sposition);
+    auto pathCorrection = surface->pathCorrection(gctx, sposition, sdirection);
+    // Get the material information
+    Acts::MaterialInteraction mInteraction;
+    mInteraction.surface = surface;
+    mInteraction.position = sposition;
+    mInteraction.direction = sdirection;
+    mInteraction.materialSlab = materialSlab;
+    mInteraction.pathCorrection = pathCorrection;
+    mInteraction.intersection = sposition;
+    mInteraction.intersectionID = surface->geometryId();
+    mTrack.second.materialInteractions.push_back(mInteraction);
+  }
+
+  ACTS_VERBOSE("Recorded material track with "
+               << mTrack.second.materialInteractions.size()
+               << " material interactions.");
 
   return mTrack;
 }
