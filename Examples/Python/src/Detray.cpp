@@ -20,6 +20,8 @@
 
 #include "Detray.hpp"
 
+#include <vecmem/memory/memory_resource.hpp>
+
 #include <fstream>
 #include <initializer_list>
 #include <memory>
@@ -30,6 +32,7 @@
 #include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/operators.h>
 
 namespace Acts {
 class IMaterialDecorator;
@@ -56,32 +59,33 @@ namespace Acts::Python {
     void addDetray(Context& ctx) {
 
         auto [m, mex] = ctx.get("main", "examples");
+
+        {
+            py::class_<detector<default_metadata>>(m, "detray_detector");
+                //.def(py::init<detector<default_metadata>&&>(), py::arg("detector"), py::return_value_policy::move);
+                //.def(py::init<vecmem::memory_resource &>(),py::arg("resource"), py::return_value_policy::move)//, py::return_value_policy::move
+        }
+        
+        {
+            mex.def("DetrayPrinter", &detray::detray_detector_print);
+        }
+
         {
             mex.def("DetrayConverter",
                     [](const Acts::GeometryContext& gctx,
                     const Acts::Experimental::Detector& acts_detector,
-                    const std::string& name) -> detector_t {
+                    const std::string& name) -> detector_t {//detector_t
                         
-                        //DETRAY
-                        //build a mini detector
-                        typename detector_t::name_map names{};
-                        vecmem::host_memory_resource host_mr;
-                        detector_builder<default_metadata> det_builder{};
-                        detray::io::detail::detector_components_reader<detector_t> readers;
+                        //detector_t d_detray = detray_tree_converter(acts_detector, gctx);   
+                        //bool res = detray_tree_converter(acts_detector, gctx);
+                        
+                        detector_t d_detray(std::move(detray_tree_converter(acts_detector, gctx)));
 
-                        readers.set_detector_name(acts_detector.name());
-                        //readers.read(det_builder, names);
-                        const detector_t d = det_builder.build(host_mr);
-                        //bool ret2 = detray_converter(d);
-
-
-                        //ACTS
-                        //call the converters from plugin 
-                        //bool ret = detray_converter(acts_detector);
-                        //detector_t d_detray = detray_tree_converter(acts_detector, gctx);                           
-
-                        return std::move(detray_tree_converter(acts_detector, gctx));
-                    });
+                        return std::move(d_detray);
+                        //return std::move(detray_tree_converter(acts_detector, gctx));
+                        //return detray_tree_converter(acts_detector, gctx);
+                        //return true;
+                    }, py::return_value_policy::move);//, py::return_value_policy::move
         }
     }
 }
