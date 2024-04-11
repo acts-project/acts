@@ -1,0 +1,861 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7e5fc1291..df1545f8e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -51,10 +51,6 @@ option(ACTS_SETUP_VECMEM "Explicitly set up vecmem for the project" OFF)
+ option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
+ option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
+ option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
+-#detray changes
+-option(ACTS_SETUP_DETRAY "Explicitly set up detray for the project" ON)
+-option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
+-option(ACTS_BUILD_PLUGIN_DETRAY "Build the detray plugin" OFF)
+ # fatras related options
+ option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
+ option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
+@@ -244,14 +240,6 @@ if (ACTS_SETUP_VECMEM)
+   endif()
+ endif()
+ 
+-if (ACTS_SETUP_DETRAY)
+-  if (ACTS_USE_SYSTEM_DETRAY)
+-    find_package(detray REQUIRED)
+-  else()
+-    add_subdirectory(thirdparty/detray)
+-  endif()
+-endif()
+-
+ find_package(Filesystem REQUIRED)
+ 
+ # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
+diff --git a/Examples/Python/CMakeLists.txt b/Examples/Python/CMakeLists.txt
+index 3862bc977..0fe34b2d5 100644
+--- a/Examples/Python/CMakeLists.txt
++++ b/Examples/Python/CMakeLists.txt
+@@ -76,13 +76,6 @@ else()
+   target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
+ endif()
+ 
+-if(ACTS_BUILD_PLUGIN_DETRAY)
+-  target_link_libraries(ActsPythonBindings PUBLIC ActsPluginDetray)
+-  target_sources(ActsPythonBindings PRIVATE src/Detray.cpp)
+-else()
+-  target_sources(ActsPythonBindings PRIVATE src/DetrayStub.cpp)
+-endif()
+-
+ if(ACTS_BUILD_PLUGIN_ACTSVG)
+   target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
+   target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
+diff --git a/Examples/Python/src/Detray.cpp b/Examples/Python/src/Detray.cpp
+deleted file mode 100644
+index e1bca358e..000000000
+--- a/Examples/Python/src/Detray.cpp
++++ /dev/null
+@@ -1,101 +0,0 @@
+-// This file is part of the Acts project.
+-//
+-// Copyright (C) 2021 CERN for the benefit of the Acts project
+-//
+-// This Source Code Form is subject to the terms of the Mozilla Public
+-// License, v. 2.0. If a copy of the MPL was not distributed with this
+-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-
+-#include "Acts/Definitions/Algebra.hpp"
+-#include "Acts/Detector/Detector.hpp"
+-#include "Acts/Detector/ProtoDetector.hpp"
+-#include "Acts/Plugins/Python/Utilities.hpp"
+-#include "Acts/Utilities/Logger.hpp"
+-
+-#include "detray/builders/detector_builder.hpp"
+-#include "detray/io/frontend/detector_reader_config.hpp"
+-#include "detray/io/frontend/implementation/json_readers.hpp"
+-#include "detray/io/frontend/utils/detector_components_reader.hpp"
+-#include "detray/utils/consistency_checker.hpp"
+-
+-#include "Detray.hpp"
+-
+-#include <vecmem/memory/memory_resource.hpp>
+-#include <vecmem/memory/host_memory_resource.hpp>
+-
+-#include <fstream>
+-#include <initializer_list>
+-#include <memory>
+-#include <string>
+-#include <tuple>
+-#include <vector>
+-
+-#include <nlohmann/json.hpp>
+-#include <pybind11/pybind11.h>
+-#include <pybind11/stl.h>
+-#include <pybind11/operators.h>
+-
+-namespace Acts {
+-class IMaterialDecorator;
+-}  // namespace Acts
+-namespace ActsExamples {
+-class IMaterialWriter;
+-class IWriter;
+-}  // namespace ActsExamples
+-
+-namespace py = pybind11;
+-using namespace pybind11::literals;
+-
+-using namespace Acts;
+-using namespace ActsExamples;
+-using namespace detray;
+-using namespace detray::io::detail;
+-
+-using detector_t = detector<default_metadata>;
+-
+-
+-//example pybind lamda function
+-namespace Acts::Python {
+-
+-    void addDetray(Context& ctx) {
+-
+-        auto [m, mex] = ctx.get("main", "examples");
+-
+-        {
+-            py::class_<detector<default_metadata>, std::shared_ptr<detector<default_metadata>>>(m, "detray_detector");
+-                //.def(py::init<detector<default_metadata>&&>(), py::arg("detector"), py::return_value_policy::move);
+-                //.def(py::init<vecmem::memory_resource &>(),py::arg("resource"), py::return_value_policy::move)//, py::return_value_policy::move
+-        }
+-        
+-        {
+-            mex.def("DetrayPrinter", &detray::detray_detector_print);
+-        }
+-
+-        //detray from json function-> give good json and get detector from that
+-            //check if my detector building(det payload) is wrong or not
+-            //what consistency check is catching/missing
+-        
+-        {
+-            mex.def("DetrayConverter",
+-                    [](const Acts::GeometryContext& gctx,
+-                    const Acts::Experimental::Detector& acts_detector,
+-                    const std::string& name) -> auto {//detector_t
+-                        
+-                        //auto d_detray = std::make_shared<detector_t>(detray_from_json());
+-                        vecmem::host_memory_resource host_mr;
+-                        //auto d_detray = detray_from_json(host_mr);
+-                        
+-                        auto d_detray = detray_tree_converter(acts_detector, gctx, host_mr);   
+-                        //bool res = detray_tree_converter(acts_detector, gctx);
+-                        
+-                        //auto d_detray = std::make_shared<detector_t>(detray_tree_converter(acts_detector, gctx));
+-                        //detector_t d_detray(std::move(detray_tree_converter(acts_detector, gctx)));
+-                        //auto d_detray = std::make_shared<detector_t>(detray_tree_converter(acts_detector, gctx));
+-                        return true;
+-                        //return std::move(detray_tree_converter(acts_detector, gctx));
+-                        //return detray_tree_converter(acts_detector, gctx);
+-                        //return true;
+-                    });//, py::return_value_policy::move
+-        }
+-    }
+-}
+\ No newline at end of file
+diff --git a/Examples/Python/src/DetrayStub.cpp b/Examples/Python/src/DetrayStub.cpp
+deleted file mode 100644
+index bd739c9f2..000000000
+--- a/Examples/Python/src/DetrayStub.cpp
++++ /dev/null
+@@ -1,5 +0,0 @@
+-//void body for python 
+-
+-namespace Acts::Python {
+-void addDetray(Context& /*ctx*/) {}
+-}  // namespace Acts::Python
+diff --git a/Examples/Python/src/ModuleEntry.cpp b/Examples/Python/src/ModuleEntry.cpp
+index 0facd8f8f..68aa575ad 100644
+--- a/Examples/Python/src/ModuleEntry.cpp
++++ b/Examples/Python/src/ModuleEntry.cpp
+@@ -70,7 +70,6 @@ void addAmbiguityResolution(Context& ctx);
+ void addDigitization(Context& ctx);
+ void addPythia8(Context& ctx);
+ void addJson(Context& ctx);
+-void addDetray(Context& ctx);
+ void addHepMC3(Context& ctx);
+ void addExaTrkXTrackFinding(Context& ctx);
+ void addSvg(Context& ctx);
+@@ -131,7 +130,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
+   addDigitization(ctx);
+   addPythia8(ctx);
+   addJson(ctx);
+-  addDetray(ctx);
+   addHepMC3(ctx);
+   addExaTrkXTrackFinding(ctx);
+   addObj(ctx);
+diff --git a/Examples/Scripts/Python/detector_creation.py b/Examples/Scripts/Python/detector_creation.py
+index ada2edc85..b3d2e0f03 100644
+--- a/Examples/Scripts/Python/detector_creation.py
++++ b/Examples/Scripts/Python/detector_creation.py
+@@ -90,8 +90,5 @@ if "__main__" == __name__:
+         [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
+         "detector",
+     )
+-    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+-    
+-    det_detector = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
+-    acts.examples.DetrayPrinter(det_detector)
+ 
++    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+diff --git a/Plugins/CMakeLists.txt b/Plugins/CMakeLists.txt
+index 13ed2a16f..6bae783f9 100644
+--- a/Plugins/CMakeLists.txt
++++ b/Plugins/CMakeLists.txt
+@@ -11,7 +11,6 @@ add_component_if(Legacy PluginLegacy ACTS_BUILD_PLUGIN_LEGACY)
+ add_component_if(Onnx PluginOnnx ACTS_BUILD_PLUGIN_ONNX)
+ add_component_if(Sycl PluginSycl ACTS_BUILD_PLUGIN_SYCL)
+ add_component_if(ExaTrkX PluginExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
+-add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_DETRAY)
+ 
+ # dependent plugins. depend either on a independent plugins or on one another
+ add_component_if(TGeo PluginTGeo ACTS_BUILD_PLUGIN_TGEO)
+diff --git a/Plugins/Detray/CMakeLists.txt b/Plugins/Detray/CMakeLists.txt
+deleted file mode 100644
+index 47c5fea1f..000000000
+--- a/Plugins/Detray/CMakeLists.txt
++++ /dev/null
+@@ -1,30 +0,0 @@
+-add_library(
+-  ActsPluginDetray SHARED#not sure about "shared" library type sos
+-  src/Detray.cpp)
+-  #include/*.hpp
+-
+-target_include_directories(
+-  ActsPluginDetray
+-  PUBLIC
+-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+-    $<INSTALL_INTERFACE:include>)
+-    
+-target_link_libraries(
+-  ActsPluginDetray 
+-  PUBLIC 
+-    ActsCore
+-    detray::core
+-    detray::core_array#changed i shoudl check SOS
+-    detray::io
+-    detray::utils
+-    detray::svgtools
+-    vecmem::core)
+-
+-install(
+-  TARGETS ActsPluginDetray
+-  EXPORT ActsPluginDetrayTargets
+-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+-  
+-install(
+-  DIRECTORY include/Acts
+-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+diff --git a/Plugins/Detray/include/Detray.hpp b/Plugins/Detray/include/Detray.hpp
+deleted file mode 100644
+index 130683322..000000000
+--- a/Plugins/Detray/include/Detray.hpp
++++ /dev/null
+@@ -1,544 +0,0 @@
+-
+-
+-// Project include(s)
+-
+-#include "Acts/Definitions/Algebra.hpp"
+-#include "Acts/Detector/Detector.hpp"
+-#include "Acts/Detector/ProtoDetector.hpp"
+-//#include "Acts/Plugins/Python/Utilities.hpp"
+-#include "Acts/Utilities/Logger.hpp"
+-#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
+-#include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
+-
+-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+-
+-#include "Acts/Surfaces/CylinderBounds.hpp"
+-#include "Acts/Surfaces/CylinderSurface.hpp"
+-#include "Acts/Surfaces/DiscSurface.hpp"
+-#include "Acts/Surfaces/RadialBounds.hpp"
+-#include "Acts/Surfaces/RegularSurface.hpp"
+-#include "Acts/Surfaces/Surface.hpp"
+-
+-// detray geometry
+-#include "detray/builders/detector_builder.hpp"
+-#include "detray/io/frontend/payloads.hpp"
+-#include "detray/io/frontend/detector_reader_config.hpp"
+-#include "detray/io/frontend/implementation/json_readers.hpp"
+-#include "detray/io/frontend/utils/detector_components_reader.hpp"
+-
+-#include "detray/io/common/geometry_reader.hpp"
+-#include "detray/io/common/geometry_writer.hpp"
+-
+-#include "detray/io/json/json_reader.hpp"
+-#include "detray/io/json/json_writer.hpp"
+-#include "detray/io/json/json_io.hpp"
+-#include "detray/io/frontend/writer_interface.hpp"
+-
+-// surface grid
+-#include "Acts/Utilities/IAxis.hpp"
+-#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
+-
+-// checks - prints
+-#include "detray/utils/consistency_checker.hpp"
+-#include "detray/io/frontend/detector_reader.hpp"
+-#include "detray/navigation/volume_graph.hpp"
+-
+-
+-// System include(s)
+-#include <fstream>
+-#include <optional>
+-#include <initializer_list>
+-#include <memory>
+-#include <string>
+-#include <tuple>
+-#include <utility>
+-#include <vector>
+-#include <ios>
+-
+-
+-namespace Acts {
+-class IMaterialDecorator;
+-}  // namespace Acts
+-namespace ActsExamples {
+-class IMaterialWriter;
+-class IWriter;
+-}  // namespace ActsExamples
+-
+-using namespace Acts;
+-using namespace ActsExamples;
+-using namespace detray;
+-
+-using detector_t = detector<default_metadata>;
+-
+-//
+-//ACTS GEOMETRY TO DETRAY CONVERSION
+-//use acts detector data to fill in all the payloads and convert these to a detray detector
+-
+-namespace {
+-
+-/// Find the position of the volume to point to
+-///
+-/// @param volume the volume to find
+-/// @param the collection of volumes
+-///
+-/// @note return -1 if not found, to be interpreted by the caller
+-int findVolume(
+-    const Acts::Experimental::DetectorVolume* volume,
+-    const std::vector<const Acts::Experimental::DetectorVolume*>& volumes) {
+-  auto candidate = std::find(volumes.begin(), volumes.end(), volume);
+-  if (candidate != volumes.end()) {
+-    return std::distance(volumes.begin(), candidate);
+-  }
+-  return -1;
+-}
+-}  // namespace
+-
+-namespace detray{
+-
+-    // detray geometry writer function, debug purposes 
+-    void detray_detector_print(const detector_t& det){
+-
+-        std::ofstream outputFile("data_try.json");
+-        nlohmann::ordered_json out_json;
+-        typename detector_t::name_map names{};
+-        out_json["data"] = detray::io::geometry_writer::convert(det, names);
+-        outputFile << out_json << std::endl;
+-        return;
+-    }
+-    
+-    /// @return the transform_payload(translation, rotation) of each surface/volume
+-    static io::transform_payload detray_converter_transf(
+-        const Transform3& t, const Transform3JsonConverter::Options& options){
+-        //nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t, const Transform3JsonConverter::Options& options)
+-
+-        io::transform_payload p_acts;
+-
+-        auto translation = t.translation();
+-        if (translation != Acts::Vector3(0., 0., 0) || options.writeIdentity) {
+-            std::array<Acts::ActsScalar, 3> tdata = {translation.x(), translation.y(),
+-                                                    translation.z()};
+-            p_acts.tr = tdata;
+-        } else {
+-            p_acts.tr = {};
+-        }
+-        auto rotation =  options.transpose ? t.rotation().transpose() : t.rotation();
+-        std::array<Acts::ActsScalar, 9> rdata;
+-        if (rotation != Acts::RotationMatrix3::Identity() || options.writeIdentity) {
+-            rdata = {
+-                rotation(0, 0), rotation(0, 1), rotation(0, 2),
+-                rotation(1, 0), rotation(1, 1), rotation(1, 2),
+-                rotation(2, 0), rotation(2, 1), rotation(2, 2)};
+-            p_acts.rot = rdata;
+-        } else {
+-            p_acts.rot = {};
+-        }
+-
+-        return p_acts;
+-    }
+-
+-
+-
+-    /// @return the mask_payload of the surface @param bounds, @param portal
+-    static io::mask_payload detray_converter_mask(
+-        const Acts::SurfaceBounds& bounds, bool portal){
+-        //Acts::SurfaceBoundsJsonConverter::toJsonDetray
+-
+-        detray::io::mask_payload mask_pd;
+-        auto [shape, boundaries] = DetrayJsonHelper::maskFromBounds(bounds, portal);
+-        mask_pd.shape = static_cast<io::mask_payload::mask_shape>(shape);
+-        mask_pd.boundaries = static_cast<std::vector<real_io>>(boundaries); //conversion sos??
+-
+-        ///home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/common/geometry_reader.hpp
+-        //sos use inline single_link_payload convert(const std::size_t idx) 
+-        detray::io::single_link_payload lnk;
+-        mask_pd.volume_link = lnk;
+-
+-        return mask_pd;
+-    }
+-
+-    /// @return the surface_payload for portals and volumes by @param Surface acts object
+-    static io::surface_payload detray_converter_surf(
+-        const Surface& surface, const Acts::GeometryContext& gctx, const SurfaceJsonConverter::Options& options){
+-        //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/core/include/detray/geometry/detail/surface_descriptor.hpp
+-        using material_link_payload = io::typed_link_payload<io::material_id>;
+-
+-        detray::io::surface_payload surf_pd;
+-        Transform3JsonConverter::Options writtenOption;
+-    
+-        surf_pd.transform = detray_converter_transf(surface.transform(gctx), writtenOption);
+-        surf_pd.source = surface.geometryId().value();
+-        surf_pd.barcode = std::nullopt;//(long unsigned int)0;
+-        surf_pd.type = static_cast<detray::surface_id>(options.portal ? 0 : (surface.geometryId().sensitive() > 0 ? 1u : 2u));
+-        surf_pd.mask = detray_converter_mask(surface.bounds(),options.portal);
+-        //surf_pd.material =io::typed_link_payload<io::material_id>();
+-        return surf_pd;
+-        
+-    }
+-
+-    /// construct and @return vector of portals and volumes 
+-    static std::vector<io::surface_payload> detray_portals(
+-        const GeometryContext& gctx, const Experimental::Portal& portal,
+-        std::size_t ip, const Experimental::DetectorVolume& volume,
+-        const OrientedSurfaces& orientedSurfaces,
+-        const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
+-        const Acts::PortalJsonConverter::Options& option){
+-        //acts/Plugins/Json/src/PortalJsonConverter.cpp
+-
+-        std::vector<io::surface_payload> portals {};
+-
+-        const RegularSurface& surface = portal.surface();
+-        const auto& volumeLinks = portal.detectorVolumeUpdaters();
+-
+-        // First assumption for outside link (along direction)
+-        std::size_t outside = 1u;
+-
+-        // Find out if you need to take the outside or inside volume
+-        // for planar surfaces that's easy
+-        if (surface.type() != Acts::Surface::SurfaceType::Cylinder) {
+-            // Get the two volume center
+-            const auto volumeCenter = volume.transform(gctx).translation();
+-            const auto surfaceCenter = surface.center(gctx);
+-            const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
+-            // Get the direction from the volume to the surface, correct link
+-            const auto volumeToSurface = surfaceCenter - volumeCenter;
+-            if (volumeToSurface.dot(surfaceNormal) < 0.) {
+-                outside = 0u;
+-            }
+-        } else {
+-            // This is a cylinder portal, inner cover reverses the normal
+-            if (ip == 3u) {
+-            outside = 0u;
+-            }
+-        }
+-
+-        const auto& outsideLink = volumeLinks[outside];
+-        // Grab the corresponding volume link
+-        // If it is a single link, we are done
+-        const auto* instance = outsideLink.instance();
+-        // Single link cast
+-        auto singleLink =
+-            dynamic_cast<const Acts::Experimental::SingleDetectorVolumeImpl*>(
+-                instance);
+-
+-        auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
+-
+-        SurfaceJsonConverter::Options surfaceOptions = option.surfaceOptions;
+-        surfaceOptions.portal = true;
+-        // Single link detected - just write it out, we use the oriented surface
+-        // in order to make sure the size is adjusted
+-        if (singleLink != nullptr) {
+-            // Single link can be written out
+-            std::size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
+-            auto portal_pd = detray_converter_surf(*surfaceAdjusted, gctx, surfaceOptions);
+-            portal_pd.mask.volume_link.link= vLink;
+-            portals.push_back(portal_pd);
+-        } else {
+-            // Multi link detected - 1D
+-            auto multiLink1D =
+-                dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);
+-            if (multiLink1D != nullptr) {
+-            // Resolve the multi link 1D
+-            auto boundaries =
+-                multiLink1D->indexedUpdater.grid.axes()[0u]->getBinEdges();
+-            const auto& cast = multiLink1D->indexedUpdater.casts[0u];
+-            const auto& transform = multiLink1D->indexedUpdater.transform;
+-            const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
+-
+-            // Apply the correction from local to global boundaries
+-            ActsScalar gCorr = VectorHelpers::cast(transform.translation(), cast);
+-            std::for_each(boundaries.begin(), boundaries.end(),
+-                            [&gCorr](ActsScalar& b) { b -= gCorr; });
+-
+-            // Get the volume indices
+-            auto surfaceType = surfaceAdjusted->type();
+-            std::vector<unsigned int> vIndices = {};
+-            for (const auto& v : volumes) {
+-                vIndices.push_back(findVolume(v, detectorVolumes));
+-            }
+-
+-            // Pick the surface dimension - via poly
+-            std::array<ActsScalar, 2u> clipRange = {0., 0.};
+-            std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
+-            if (surfaceType == Surface::SurfaceType::Cylinder && cast == binZ) {
+-                ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
+-                clipRange = {
+-                    zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
+-                    zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
+-            } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
+-                clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
+-                            boundValues[RadialBounds::BoundValues::eMaxR]};
+-            } else {
+-                throw std::runtime_error(
+-                    "PortalJsonConverter: surface type not (yet) supported for detray "
+-                    "conversion, only cylinder and disc are currently supported.");
+-            }
+-
+-            // Need to clip the parameter space to the surface dimension
+-            std::vector<unsigned int> clippedIndices = {};
+-            std::vector<ActsScalar> clippedBoundaries = {};
+-            clippedBoundaries.push_back(clipRange[0u]);
+-            for (const auto [ib, b] : enumerate(boundaries)) {
+-                if (ib > 0) {
+-                unsigned int vI = vIndices[ib - 1u];
+-                ActsScalar highEdge = boundaries[ib];
+-                if (boundaries[ib - 1] >= clipRange[1u]) {
+-                    break;
+-                }
+-                if (highEdge <= clipRange[0u] ||
+-                    std::abs(highEdge - clipRange[0u]) < 1e-5) {
+-                    continue;
+-                }
+-                if (highEdge > clipRange[1u]) {
+-                    highEdge = clipRange[1u];
+-                }
+-                clippedIndices.push_back(vI);
+-                clippedBoundaries.push_back(highEdge);
+-                }
+-            }
+-            // Interpret the clipped information
+-            //
+-            // Clipped cylinder case
+-            if (surfaceType == Surface::SurfaceType::Cylinder) {
+-                for (auto [ib, b] : enumerate(clippedBoundaries)) {
+-                if (ib > 0) {
+-                    // Create sub surfaces
+-                    std::array<ActsScalar, CylinderBounds::BoundValues::eSize>
+-                        subBoundValues = {};
+-                    for (auto [ibv, bv] : enumerate(boundValues)) {
+-                    subBoundValues[ibv] = bv;
+-                    }
+-                    subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ] =
+-                        0.5 * (b - clippedBoundaries[ib - 1u]);
+-                    auto subBounds = std::make_shared<CylinderBounds>(subBoundValues);
+-                    auto subTransform = Transform3::Identity();
+-                    subTransform.pretranslate(Vector3(
+-                        0., 0.,
+-                        clippedBoundaries[ib - 1u] +
+-                            subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
+-                    auto subSurface = Surface::makeShared<CylinderSurface>(subTransform, subBounds);
+-                    
+-                    auto portal_pd = detray_converter_surf(*subSurface, gctx, surfaceOptions);
+-                    portal_pd.mask.volume_link.link= clippedIndices[ib - 1u];
+-                    portals.push_back(portal_pd);
+-                }
+-                }
+-            } else {
+-                for (auto [ib, b] : enumerate(clippedBoundaries)) {
+-                    if (ib > 0) {
+-                        // Create sub surfaces
+-                        std::array<ActsScalar, RadialBounds::BoundValues::eSize>
+-                            subBoundValues = {};
+-                        for (auto [ibv, bv] : enumerate(boundValues)) {
+-                        subBoundValues[ibv] = bv;
+-                        }
+-                        subBoundValues[RadialBounds::BoundValues::eMinR] =
+-                            clippedBoundaries[ib - 1u];
+-                        subBoundValues[RadialBounds::BoundValues::eMaxR] = b;
+-                        auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
+-                        auto subSurface = Surface::makeShared<DiscSurface>(
+-                            portal.surface().transform(gctx), subBounds);
+-
+-                        auto portal_pd = detray_converter_surf(*subSurface, gctx, surfaceOptions);
+-                        portal_pd.mask.volume_link.link= clippedIndices[ib - 1u];
+-                        portals.push_back(portal_pd);
+-                    }
+-                }
+-            }
+-
+-            } else {
+-            // End of world
+-            // Write surface with invalid link
+-
+-                auto portal_pd = detray_converter_surf(*surfaceAdjusted, gctx, surfaceOptions);
+-                portal_pd.mask.volume_link.link= std::numeric_limits<std::uint_least16_t>::max();
+-                portals.push_back(portal_pd);
+-            }
+-        }
+-        
+-
+-        return portals;
+-    }
+-
+-    /// @return the volume_payload for portals and volumes by @param Surface acts object
+-    static io::volume_payload detray_converter_vol(
+-        const Acts::Experimental::DetectorVolume& volume, 
+-        const std::vector<const Experimental::DetectorVolume*>& detectorVolumes, 
+-        const Acts::GeometryContext& gctx){
+-        //see DetectorVolumeJsonConverter.cpp >>DetectorVolumeJsonConverter::toJsonDetray
+-
+-        detray::io::volume_payload vol_pd;
+-        Transform3JsonConverter::Options writtenOption;
+-        vol_pd.name = volume.name();
+-        vol_pd.index.link = findVolume(&volume, detectorVolumes);
+-        std::cout<<vol_pd.name<<std::endl;
+-        vol_pd.transform = detray_converter_transf(volume.transform(gctx), writtenOption);
+-
+-        SurfaceJsonConverter::Options surfaceOptions = SurfaceJsonConverter::Options{};
+-
+-        std::size_t sIndex =0;
+-        for (const auto surface : volume.surfaces()) {
+-            io::surface_payload surf_pd = detray_converter_surf(*surface, gctx, surfaceOptions);// acts transf
+-            surf_pd.index_in_coll= sIndex++;
+-            surf_pd.mask.volume_link.link= vol_pd.index.link;//link surface' mask to volume
+-            vol_pd.surfaces.push_back(surf_pd);
+-        }
+-
+-        auto orientedSurfaces = volume.volumeBounds().orientedSurfaces(volume.transform(gctx));
+-
+-        const Acts::PortalJsonConverter::Options options = Acts::PortalJsonConverter::Options{};
+-
+-        int portals_counter=0;
+-        for (const auto& [ip, p] : enumerate(volume.portals())) {
+-
+-            auto portals = (detray_portals(gctx, *p, ip, volume, orientedSurfaces, detectorVolumes, options));
+-            std::for_each(portals.begin(), portals.end(),
+-                        [&](auto& portal_pd) {
+-                            //io::surface_payload portal_pd = detray_converter_portal(*p, gctx);
+-                            portal_pd.index_in_coll = sIndex++;
+-                            vol_pd.surfaces.push_back(portal_pd);
+-                            portals_counter++;
+-                        });
+-        }
+-
+-        return vol_pd;
+-    }
+-    
+-    
+-    //GRID related functions
+-
+-    static io::detector_grids_payload<std::size_t, io::accel_id> detray_converter_grid(
+-    const Acts::Experimental::Detector& detector){
+-    
+-        io::detector_grids_payload<std::size_t, io::accel_id> grid_pd = io::detector_grids_payload<std::size_t, io::accel_id>();
+-        auto volumes = detector.volumes();
+-
+-        for (const auto [iv, volume] : enumerate(volumes)) {
+-
+-            //Call an equivalent of IndexedSurfacesJsonConverter::toJson
+-                //check if it is null
+-
+-                
+-
+-            // Patch axes for cylindrical grid surfaces, axes are swapped
+-            // at this point
+-            // get jAccLink 
+-            // get accLinkType 
+-            // Radial value to transfer phi to rphi
+-            // get the axes
+-            // r*phi axis is the first one
+-            // Write back the patches axis edges
+-            // Complete the grid json for detray usage
+-            // jSurfacesDelegate["acc_link"] =
+-            }
+-        
+-
+-        return grid_pd;
+-    }
+-
+-    io::axis_payload axis_converter(const IAxis& ia) {
+-        ///home/exochell/docker_dir/ACTS_ODD_D/acts/Plugins/Json/src/GridJsonConverter.cpp: nlohmann::json Acts::AxisJsonConverter::toJsonDetray
+-        io::axis_payload axis_pd;
+-        axis_pd.bounds = {
+-            ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? axis::bounds::e_closed : axis::bounds::e_circular};
+-        axis_pd.binning = ia.isEquidistant() ? axis::binning::e_regular : axis::binning::e_irregular;
+-        axis_pd.bins = ia.getNBins();
+-        if (ia.isEquidistant()) {
+-            axis_pd.edges = {ia.getBinEdges().front(), ia.getBinEdges().back()};
+-        } else {
+-            axis_pd.edges = ia.getBinEdges();
+-        }
+-
+-        return axis_pd;
+-    }
+-
+-    template <typename grid_type>
+-    io::grid_payload<std::size_t, io::accel_id> grid_converter(
+-        //nlohmann::json toJsonDetray
+-        const grid_type& grid, bool swapAxis = false) {
+-        //nlohmann::json jGrid;
+-        // Get the grid axes & potentially swap them
+-        io::grid_payload<std::size_t, io::accel_id> grid_pd;
+-
+-        std::array<const Acts::IAxis*, grid_type::DIM> axes = grid.axes();
+-        if (swapAxis && grid_type::DIM == 2u) {
+-            std::swap(axes[0u], axes[1u]);
+-        }
+-
+-        // Fill the axes in the order they are
+-        for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {            
+-            grid_pd.axes.push_back(axis_converter(*axes[ia]));//push axis to axes
+-            //TO DO:        axis_pd.label = static_cast<axis::label>(ia);
+-        }
+-        ///TO DO : much body missing
+-        return grid_pd;
+-    }
+-    
+-    //TO DO 
+-    //nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false, bool checkSwap = false) {
+-    template <typename index_grid>
+-    io::grid_payload<std::size_t, io::accel_id> convertImpl(const index_grid& indexGrid) {
+-        
+-        //TO DO: casts implementation (if needed for detray)
+-        io::grid_payload<std::size_t, io::accel_id> grid_pd = grid_converter(indexGrid.grid, true);
+-
+-        return grid_pd;
+-    }
+-
+-    /// @return the geo_header_payload from @param detector object of ACTS
+-    static io::geo_header_payload detray_converter_head(
+-        const Acts::Experimental::Detector& detector){
+-        
+-        detray::io::geo_header_payload header_pd;
+-        detray::io::common_header_payload header_data_pd;
+-        
+-
+-        //SOS use inline common_header_payload convert(const std::string_view det_name, const std::string_view tag)
+-        header_data_pd.version = io::detail::get_detray_version();
+-        header_data_pd.detector = detector.name();
+-        header_data_pd.tag = "geometry"; 
+-        header_data_pd.date = io::detail::get_current_date();
+-
+-        return header_pd;
+-    }
+-
+-    /// @brief visit all ACTS detector information, depth-first hierarchically and construct the corresponding payloads and detray detector 
+-    /// @return detray detector from @param detector and @param gctx of ACTS  (depth-first hierarchical traversal)
+-    detector_t detray_tree_converter(
+-        const Acts::Experimental::Detector& detector,
+-        const Acts::GeometryContext& gctx, vecmem::memory_resource& mr){
+-        
+-        detray::io::detector_payload dp;
+-        std::cout<<"-----tree converter-------"<<std::endl;
+-        for (const auto volume : detector.volumes()) {
+-            dp.volumes.push_back(detray_converter_vol(*volume, detector.volumes(), gctx));
+-            std::cout<<std::endl;
+-        }
+-        typename detector_t::name_map names{};
+-        detector_builder<default_metadata> det_builder{};
+-
+-        detray::io::geometry_reader::convert<detector_t>(det_builder, names, dp);
+-        detector_t detrayDet(det_builder.build(mr));
+-        //io::json_writer<detector_t, io::geometry_writer> geo_writer;
+-        //auto file_name = geo_writer.write(detrayDet, names, std::ios::out | std::ios::binary | std::ios::trunc);
+-
+-        detray_detector_print(detrayDet);
+-
+-        detray::detail::check_consistency(detrayDet); 
+-        
+-        //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
+-        
+-        return std::move(detrayDet);
+-        //return true;
+-    }
+-
+-}
+-
+-
+-//NOTES
+-//inline single_link_payload convert(const std::size_t idx) {
+-//use basic_converter.hpp
+-//check sos
+-//raw string assignment(type, )
+diff --git a/Plugins/Detray/readme b/Plugins/Detray/readme
+deleted file mode 100644
+index 514f38105..000000000
+--- a/Plugins/Detray/readme
++++ /dev/null
+@@ -1 +0,0 @@
+-Meant to include cpp converting to payloads for detray
+diff --git a/Plugins/Detray/src/Detray.cpp b/Plugins/Detray/src/Detray.cpp
+deleted file mode 100644
+index 8b1378917..000000000
+--- a/Plugins/Detray/src/Detray.cpp
++++ /dev/null
+@@ -1 +0,0 @@
+-
+diff --git a/thirdparty/OpenDataDetector b/thirdparty/OpenDataDetector
+index ec4ee841f..5d9950adb 160000
+--- a/thirdparty/OpenDataDetector
++++ b/thirdparty/OpenDataDetector
+@@ -1 +1 @@
+-Subproject commit ec4ee841f732fcc3e6e0fd119a45323e8754c4d0
++Subproject commit 5d9950adb3e264e717daef92500eaa304f370b6d
+diff --git a/thirdparty/detray/CMakeLists.txt b/thirdparty/detray/CMakeLists.txt
+deleted file mode 100644
+index bac7594e3..000000000
+--- a/thirdparty/detray/CMakeLists.txt
++++ /dev/null
+@@ -1,35 +0,0 @@
+-# This file is part of the Acts project.
+-#
+-# Copyright (C) 2021 CERN for the benefit of the Acts project
+-#
+-# This Source Code Form is subject to the terms of the Mozilla Public
+-# License, v. 2.0. If a copy of the MPL was not distributed with this
+-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-
+-# CMake include(s).
+-cmake_minimum_required( VERSION 3.11 )
+-include( FetchContent )
+-
+-# Tell the user what's happening.
+-message( STATUS "Building Detray as part of the Acts project" )
+-
+-# Declare where to get Detray from.
+-set( ACTS_DETRAY_GIT_REPOSITORY "https://github.com/acts-project/detray.git"
+-   CACHE STRING "Git repository to take Detray from" )
+-set( ACTS_DETRAY_GIT_TAG "v0.63.0" CACHE STRING "Version of Detray to build" )
+-mark_as_advanced( ACTS_DETRAY_GIT_REPOSITORY ACTS_DETRAY_GIT_TAG )
+-FetchContent_Declare( Detray
+-   GIT_REPOSITORY "${ACTS_DETRAY_GIT_REPOSITORY}"
+-   GIT_TAG "${ACTS_DETRAY_GIT_TAG}" )
+-
+-
+-set( DETRAY_SETUP_ACTSVG FALSE CACHE BOOL
+-   "Do not set up Actsvg as part of Detray" )
+-#set( DETRAY_SETUP_VECMEM FALSE CACHE BOOL
+-#   "Do not set up VecMem as part of Detray" )
+-set( DETRAY_SETUP_NLOHMANN FALSE CACHE BOOL
+-   "Do not set up Nlohmann as part of Detray" )
+-
+-
+-#Now set up its build.
+-FetchContent_MakeAvailable(Detray)
