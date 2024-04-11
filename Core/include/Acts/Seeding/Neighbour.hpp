@@ -73,8 +73,8 @@ Neighbour<grid_t>::Neighbour(const grid_t& grid, std::size_t idx,
   /// Cannot decide a priori. We need to find the first element such that it's
   /// radius is > lower bound. We use a binary search in this case
   else {
-    // custom binary search which was observed to be faster than `std::lower_bound`
-    // see https://github.com/acts-project/acts/pull/3095
+    // custom binary search which was observed to be faster than
+    // `std::lower_bound` see https://github.com/acts-project/acts/pull/3095
     std::size_t start = 0ul;
     std::size_t stop = collection.size() - 1;
     while (start <= stop) {
