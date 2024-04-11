@@ -122,6 +122,7 @@ def run_vertexing(fitter, mu, events):
                 nMeasurementsMin=6,
             ),
             CkfConfig(
+                seedDeduplication=True,
                 stayOnSeed=True,
             ),
         )
