@@ -34,7 +34,6 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
-
     # Create a sequencer
     print("Creating the sequencer with 1 thread (inter event information needed)")
 
@@ -157,7 +156,6 @@ if "__main__" == __name__:
     args = p.parse_args()
 
     if args.experimental:
-
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 
         # Create the dd4hep geometry service and detector
