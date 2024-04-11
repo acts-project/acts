@@ -16,7 +16,7 @@ message( STATUS "Building Detray as part of the Acts project" )
 # Declare where to get Detray from.
 set( ACTS_DETRAY_GIT_REPOSITORY "https://github.com/acts-project/detray.git"
    CACHE STRING "Git repository to take Detray from" )
-set( ACTS_DETRAY_GIT_TAG "v0.54.0" CACHE STRING "Version of Detray to build" )
+set( ACTS_DETRAY_GIT_TAG "v0.63.0" CACHE STRING "Version of Detray to build" )
 mark_as_advanced( ACTS_DETRAY_GIT_REPOSITORY ACTS_DETRAY_GIT_TAG )
 FetchContent_Declare( Detray
    GIT_REPOSITORY "${ACTS_DETRAY_GIT_REPOSITORY}"
