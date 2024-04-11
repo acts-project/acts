@@ -21,8 +21,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // === INTRODUCTION ===
 //
@@ -553,5 +552,4 @@ MicroBenchmarkResult microBenchmark(
       inputs.size(), num_runs, warmup_time);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

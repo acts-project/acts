@@ -20,8 +20,7 @@
 
 #include <stdexcept>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 struct NoopFinder : public INavigationDelegate {
   inline void update(const GeometryContext& /*gctx*/,
@@ -120,5 +119,4 @@ using IndexedDetectorVolumesImpl =
     IndexedUpdaterImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

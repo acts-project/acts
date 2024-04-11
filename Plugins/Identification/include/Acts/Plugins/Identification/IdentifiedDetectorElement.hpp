@@ -37,4 +37,4 @@ class IdentifiedDetectorElement : public DetectorElementBase {
       const = 0;
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

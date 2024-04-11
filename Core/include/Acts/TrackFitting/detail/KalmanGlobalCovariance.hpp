@@ -17,8 +17,7 @@
 
 #include <unordered_map>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Calculate the global track parameters covariance for a smoothed trajectory
 /// stored in MultiTrajecty based on formulas at Journal of Physics: Conference
@@ -99,5 +98,4 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
   return std::make_pair(fullGlobalTrackParamsCov, stateRowIndices);
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

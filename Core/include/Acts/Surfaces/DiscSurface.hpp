@@ -337,4 +337,4 @@ class DiscSurface : public RegularSurface {
 
 ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, DiscSurface);
 
-}  // end of namespace Acts
+}  // namespace Acts

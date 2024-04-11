@@ -17,9 +17,7 @@
 
 #include <vector>
 
-namespace Acts {
-
-namespace DetectorVolumeFinderJsonConverter {
+namespace Acts::DetectorVolumeFinderJsonConverter {
 
 /// @brief Convert the single delegate if it is of the type of the reference
 ///
@@ -98,5 +96,4 @@ static inline nlohmann::json toJson(
 Experimental::DetectorVolumeUpdater fromJson(
     const nlohmann::json& jVolumeFinder);
 
-}  // namespace DetectorVolumeFinderJsonConverter
-}  // namespace Acts
+}  // namespace Acts::DetectorVolumeFinderJsonConverter

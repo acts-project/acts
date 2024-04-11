@@ -18,9 +18,7 @@
 
 #include <map>
 
-namespace ActsExamples {
-
-namespace Contextual {
+namespace ActsExamples::Contextual {
 
 /// @class ExternallyAlignedDetectorElement extends GenericDetectorElement
 ///
@@ -84,5 +82,4 @@ inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
   return alignContext.alignmentStore->transforms[idValue];
 }
 
-}  // end of namespace Contextual
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Contextual

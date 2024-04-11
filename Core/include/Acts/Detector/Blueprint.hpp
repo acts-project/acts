@@ -20,8 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class IGeometryIdGenerator;
 class IInternalStructureBuilder;
@@ -122,5 +121,4 @@ struct Node final {
 };
 
 }  // namespace Blueprint
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

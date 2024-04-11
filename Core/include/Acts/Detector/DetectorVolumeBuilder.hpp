@@ -17,8 +17,7 @@
 #include <memory>
 #include <string>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class IExternalStructureBuilder;
 class IInternalStructureBuilder;
 class IGeometryIdGenerator;
@@ -79,5 +78,4 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
