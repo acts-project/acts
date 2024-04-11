@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
@@ -18,6 +19,7 @@
 #include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 
@@ -92,7 +94,7 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
   auto material1 = std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab(
       Acts::Material::fromMolarDensity(41.0, 42.0, 43.0, 44.0, 45.0), 4.0));
   auto material2 = std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab(
-      Acts::Material::fromMolarDensity(41.0, 62.0, 63.0, 64.0, 65.0), 6.0));
+      Acts::Material::fromMolarDensity(61.0, 62.0, 63.0, 64.0, 65.0), 6.0));
 
   cylinder0->assignSurfaceMaterial(material0);
   cylinder1->assignSurfaceMaterial(material1);
@@ -105,10 +107,30 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
   MaterialValidater::Config mvConfig;
   mvConfig.materialAssigner = materialAssinger;
 
-  auto materialValidater = MaterialValidater(mvConfig, getDefaultLogger("MaterialValidater", Logging::VERBOSE));
+  auto materialValidater = MaterialValidater(
+      mvConfig, getDefaultLogger("MaterialValidater", Logging::VERBOSE));
 
-  // Test one cenral ray
+  // Test one central ray
+  auto [posDir, rMaterial] = materialValidater.recordMaterial(
+      tContext, MagneticFieldContext(), Vector3(0, 0, 0), Vector3(1, 0, 0));
 
+  BOOST_CHECK(posDir.first == Vector3(0, 0, 0));
+  BOOST_CHECK(posDir.second == Vector3(1, 0, 0));
+  CHECK_CLOSE_ABS(rMaterial.materialInX0, 2. / 21. + 4. / 41. + 6. / 61., 1e-6);
+  CHECK_CLOSE_ABS(rMaterial.materialInL0, 2. / 22. + 4. / 42. + 6. / 62., 1e-6);
+  BOOST_CHECK_EQUAL(rMaterial.materialInteractions.size(), 3u);
+
+  // Test a ray at 45 degrees
+  auto [posDir2, rMaterial2] = materialValidater.recordMaterial(
+      tContext, MagneticFieldContext(), Vector3(0, 0, 0),
+      Vector3(1, 0, 1).normalized());
+
+  ActsScalar pathCorrection = std::sqrt(2.);
+  CHECK_CLOSE_ABS(rMaterial2.materialInX0,
+                  pathCorrection * (2. / 21. + 4. / 41. + 6. / 61.), 1e-6);
+  CHECK_CLOSE_ABS(rMaterial2.materialInL0,
+                  pathCorrection * (2. / 22. + 4. / 42. + 6. / 62.), 1e-6);
+  BOOST_CHECK_EQUAL(rMaterial2.materialInteractions.size(), 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

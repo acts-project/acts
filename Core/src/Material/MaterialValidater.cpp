@@ -8,8 +8,8 @@
 
 #include "Acts/Material/MaterialValidater.hpp"
 
-#include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 Acts::MaterialValidater::MaterialValidater(
@@ -43,10 +43,14 @@ Acts::RecordedMaterialTrack Acts::MaterialValidater::recordMaterial(
     mInteraction.surface = surface;
     mInteraction.position = sposition;
     mInteraction.direction = sdirection;
-    mInteraction.materialSlab = materialSlab;
+    mInteraction.materialSlab = MaterialSlab(
+        materialSlab.material(), materialSlab.thickness() * pathCorrection);
     mInteraction.pathCorrection = pathCorrection;
     mInteraction.intersection = sposition;
     mInteraction.intersectionID = surface->geometryId();
+    // Assemble the recorded material track
+    mTrack.second.materialInX0 += mInteraction.materialSlab.thicknessInX0();
+    mTrack.second.materialInL0 += mInteraction.materialSlab.thicknessInL0();
     mTrack.second.materialInteractions.push_back(mInteraction);
   }
 
