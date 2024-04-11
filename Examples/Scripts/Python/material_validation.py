@@ -17,7 +17,7 @@ def runMaterialValidation(
     field,
     outputDir,
     nevents=1000,
-    ntracks=100,
+    ntracks=1000,
     outputName="propagation-material",
     s=None,
 ):
@@ -70,7 +70,7 @@ if "__main__" == __name__:
         "-n", "--events", type=int, default=1000, help="Number of events to process"
     )
     p.add_argument(
-        "-t", "--tracks", type=int, default=100, help="Number of tracks per event"
+        "-t", "--tracks", type=int, default=1000, help="Number of tracks per event"
     )
     p.add_argument(
         "-m", "--map", type=str, default="", help="Input file for the material map"
