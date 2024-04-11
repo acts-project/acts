@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import tempfile
 from pathlib import Path
 import shutil
@@ -12,11 +13,10 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
-    ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
+    CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -102,6 +102,9 @@ with tempfile.TemporaryDirectory() as temp:
             pt=(500 * u.MeV, None),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
+        ),
+        CkfConfig(
+            seedDeduplication=True,
         ),
         outputDirRoot=tp,
     )

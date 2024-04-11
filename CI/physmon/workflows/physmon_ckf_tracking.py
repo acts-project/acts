@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import tempfile
 from pathlib import Path
 import shutil
@@ -22,6 +23,7 @@ from acts.examples.reconstruction import (
     SeedFinderOptionsArg,
     SeedingAlgorithm,
     TruthEstimatedSeedingAlgorithmConfigArg,
+    CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -134,6 +136,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
+            ),
+            CkfConfig(
+                seedDeduplication=False if truthSmearedSeeded else True,
             ),
             outputDirRoot=tp,
         )
