@@ -107,11 +107,14 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::optional<std::variant<Acts::TrackSelector::Config,
                                Acts::TrackSelector::EtaBinnedConfig>>
         trackSelectorCfg = std::nullopt;
+
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
     /// Extrapolation strategy
     Acts::TrackExtrapolationStrategy extrapolationStrategy =
         Acts::TrackExtrapolationStrategy::firstOrLast;
+    /// Run finding in two directions
+    bool twoWay = true;
     /// Whether to stick on the seed measurements during track finding.
     /// This is only available if `inputSeeds` is set.
     bool stayOnSeed = false;

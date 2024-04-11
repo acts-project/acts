@@ -333,7 +333,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
     ACTS_PYTHON_MEMBER(maxSteps);
+<<<<<<< HEAD
     ACTS_PYTHON_MEMBER(stayOnSeed);
+=======
+    ACTS_PYTHON_MEMBER(twoWay);
+>>>>>>> d1f4939d6a940614184ebd590986cdf6aa73be20
     ACTS_PYTHON_STRUCT_END();
   }
 
