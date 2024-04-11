@@ -60,6 +60,10 @@ namespace {
 /// In case of strip seeds only the first source link of the pair is used.
 using SeedIdentifier = std::array<Index, 3>;
 
+/// Build a seed identifier from a seed.
+///
+/// @param seed The seed to build the identifier from.
+/// @return The seed identifier.
 SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
   SeedIdentifier result;
 
@@ -71,8 +75,13 @@ SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
   return result;
 }
 
+/// Visit all possible seed identifiers of a track.
+///
+/// @param track The track to visit the seed identifiers of.
+/// @param visitor The visitor to call for each seed identifier.
 template <typename Visitor>
 void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
+  // first we collect the source link indices of the track states
   std::vector<Index> sourceLinkIndices;
   sourceLinkIndices.reserve(track.nMeasurements());
   for (const auto& trackState : track.trackStatesReversed()) {
@@ -83,6 +92,7 @@ void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
     sourceLinkIndices.push_back(sourceLink.get<IndexSourceLink>().index());
   }
 
+  // then we iterate over all possible triplets and form seed identifiers
   for (std::size_t i = 0; i < sourceLinkIndices.size(); ++i) {
     for (std::size_t j = i + 1; j < sourceLinkIndices.size(); ++j) {
       for (std::size_t k = j + 1; k < sourceLinkIndices.size(); ++k) {
@@ -98,6 +108,8 @@ void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
 }  // namespace
 }  // namespace ActsExamples
 
+// Specialize std::hash for SeedIdentifier
+// This is required to use SeedIdentifier as a key in an `std::unordered_map`.
 template <class T, std::size_t N>
 struct std::hash<std::array<T, N>> {
   std::size_t operator()(const std::array<T, N>& array) const {
@@ -232,13 +244,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   unsigned int nSeed = 0;
 
-  std::unordered_map<SeedIdentifier, bool> undiscoveredSeeds;
+  // A map indicating whether a seed has been discovered already
+  std::unordered_map<SeedIdentifier, bool> discoveredSeeds;
 
   auto addTrack = [&](const TrackProxy& track) {
+    // flag seeds which are covered by the track
     visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      if (auto it = undiscoveredSeeds.find(seedIdentifier);
-          it != undiscoveredSeeds.end()) {
-        it->second = false;
+      if (auto it = discoveredSeeds.find(seedIdentifier);
+          it != discoveredSeeds.end()) {
+        it->second = true;
       }
     });
 
@@ -252,9 +266,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   };
 
   if (seeds != nullptr && m_cfg.seedDeduplication) {
+    // Index the seeds for deduplication
     for (const auto& seed : *seeds) {
       SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-      undiscoveredSeeds.emplace(seedIdentifier, true);
+      discoveredSeeds.emplace(seedIdentifier, false);
     }
   }
 
@@ -264,8 +279,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (seeds != nullptr && m_cfg.seedDeduplication) {
       const SimSeed& seed = seeds->at(iseed);
       SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-      if (auto it = undiscoveredSeeds.find(seedIdentifier);
-          it != undiscoveredSeeds.end() && !it->second) {
+      // check if the seed has been discovered already
+      if (auto it = discoveredSeeds.find(seedIdentifier);
+          it != discoveredSeeds.end() && it->second) {
         m_nDeduplicatedSeeds++;
         ACTS_VERBOSE("Skipping seed " << iseed << " due to deduplication.");
         continue;
