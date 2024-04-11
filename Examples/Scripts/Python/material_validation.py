@@ -19,10 +19,11 @@ def runMaterialValidation(
     field,
     outputDir,
     outputName="propagation-material",
+    s=None,
 ):
 
     # Create a sequencer
-    s = Sequencer(events=nevents, numThreads=-1)
+    s = s or Sequencer(events=nevents, numThreads=-1)
 
     for decorator in decorators:
         s.addContextDecorator(decorator)
