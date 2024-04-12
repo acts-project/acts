@@ -137,7 +137,7 @@ class BranchStopper {
       return false;
     }
 
-    const Acts::TrackSelector::Config& config = std::visit(
+    const Acts::TrackSelector::Config& singleConfig = std::visit(
         [&](const auto& config) -> const Acts::TrackSelector::Config& {
           using T = std::decay_t<decltype(config)>;
           if constexpr (std::is_same_v<T, Acts::TrackSelector::Config>) {
@@ -151,11 +151,11 @@ class BranchStopper {
         },
         *m_config);
 
-    if (tipState.nMeasurements >= config.minMeasurements) {
+    if (tipState.nMeasurements >= singleConfig.minMeasurements) {
       return false;
     }
 
-    if (tipState.nHoles >= config.maxHoles) {
+    if (tipState.nHoles >= singleConfig.maxHoles) {
       return true;
     }
 
