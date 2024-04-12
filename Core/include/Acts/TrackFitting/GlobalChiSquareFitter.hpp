@@ -385,6 +385,16 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      if (state.navigation.externalSurfaces.size() == 0) {
+        for (auto measurementIt = inputMeasurements->begin();
+             measurementIt != inputMeasurements->end(); measurementIt++) {
+          navigator.insertExternalSurface(state.navigation,
+                                          measurementIt->first);
+        }
+      }
+
       if (state.navigation.navigationBreak) {
         ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
         result.finished = true;
@@ -667,16 +677,19 @@ class Gx2Fitter {
 
       // This check takes into account the evaluated dimensions of the
       // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we n-dimensional measurements count for n measurements, reducing the
+      // we count n-dimensional measurements for n measurements, reducing the
       // effective number of needed measurements.
       // We might encounter the case, where we cannot use some (parts of a)
       // measurements, maybe if we do not support that kind of measurement. This
       // is also taken into account here.
       // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
       // a more general approach is desired.
+      // We skip the check during the first iteration, since we can not guarntee
+      // to hit all/enough measurement surfaces with the initial parameter
+      // guess.
       // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
-      if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
+      if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
         ACTS_INFO("Not enough measurements. Require "
                   << ndf + 1 << ", but only "
                   << gx2fResult.collectorResiduals.size() << " could be used.");
