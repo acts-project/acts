@@ -137,6 +137,24 @@ class BranchStopper {
       return false;
     }
 
+    bool haveCuts = std::visit(
+        [&](const auto& config) -> bool {
+          using T = std::decay_t<decltype(config)>;
+          if constexpr (std::is_same_v<T, Acts::TrackSelector::Config>) {
+            return true;
+          } else if constexpr (std::is_same_v<
+                                   T, Acts::TrackSelector::EtaBinnedConfig>) {
+            double theta = trackState.parameters()[Acts::eBoundTheta];
+            double eta = -std::log(std::tan(0.5 * theta));
+            return config.hasCuts(eta);
+          }
+        },
+        *m_config);
+
+    if (!haveCuts) {
+      return false;
+    }
+
     const Acts::TrackSelector::Config& singleConfig = std::visit(
         [&](const auto& config) -> const Acts::TrackSelector::Config& {
           using T = std::decay_t<decltype(config)>;
