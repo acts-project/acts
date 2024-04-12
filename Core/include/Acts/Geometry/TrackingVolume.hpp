@@ -141,9 +141,9 @@ class TrackingVolume : public Volume {
       const std::string& volumeName = "undefined");
 
   /// Constructor from a regular volume
-  /// @param other is the volume to be converted
+  /// @param volume is the volume to be converted
   /// @param volumeName is a string identifier
-  TrackingVolume(const Volume& other,
+  TrackingVolume(const Volume& volume,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume

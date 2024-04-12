@@ -81,7 +81,7 @@ void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
 void Volume::update(std::shared_ptr<const VolumeBounds> volbounds,
                     std::optional<Transform3> transform) {
   if (volbounds) {
-    m_volumeBounds = volbounds;
+    m_volumeBounds = std::move(volbounds);
   }
   if (transform.has_value()) {
     setTransform(*transform);

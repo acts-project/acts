@@ -13,8 +13,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 
@@ -62,5 +61,4 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
