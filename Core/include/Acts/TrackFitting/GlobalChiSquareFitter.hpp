@@ -684,7 +684,7 @@ class Gx2Fitter {
       // is also taken into account here.
       // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
       // a more general approach is desired.
-      // We skip the check during the first iteration, since we can not
+      // We skip the check during the first iteration, since we cannot
       // guarantee to hit all/enough measurement surfaces with the initial
       // parameter guess.
       // TODO genernalize for n-dimensional fit
