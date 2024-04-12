@@ -15,6 +15,7 @@ target_sources(
     MaterialGridHelper.cpp
     MaterialInteractionAssignment.cpp
     MaterialMapUtils.cpp
+    MaterialMapper.cpp
     MaterialSlab.cpp
     ProtoVolumeMaterial.cpp
     SurfaceMaterialMapper.cpp

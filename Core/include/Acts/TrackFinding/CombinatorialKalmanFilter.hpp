@@ -654,8 +654,7 @@ class CombinatorialKalmanFilter {
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
         bool isMaterial = (surface->surfaceMaterial() != nullptr);
-        std::string type = isSensitive ? "sensitive" : "passive";
-        ACTS_VERBOSE("Detected " << type
+        ACTS_VERBOSE("Detected " << (isSensitive ? "sensitive" : "passive")
                                  << " surface: " << surface->geometryId());
         if (isSensitive) {
           // Increment of number of passed sensitive surfaces
@@ -1190,6 +1189,7 @@ class CombinatorialKalmanFilter {
     }
 
     std::vector<typename TrackContainer::TrackProxy> tracks;
+    tracks.reserve(combKalmanResult.lastMeasurementIndices.size());
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
       auto track = trackContainer.makeTrack();
@@ -1209,7 +1209,7 @@ class CombinatorialKalmanFilter {
 
       calculateTrackQuantities(track);
 
-      tracks.push_back(track);
+      tracks.push_back(std::move(track));
     }
 
     return tracks;
