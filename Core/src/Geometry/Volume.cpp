@@ -75,7 +75,7 @@ Volume::BoundingBox Volume::orientedBoundingBox() const {
 }
 
 void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
-  update(volbounds);
+  update(std::move(volbounds));
 }
 
 void Volume::update(std::shared_ptr<const VolumeBounds> volbounds,

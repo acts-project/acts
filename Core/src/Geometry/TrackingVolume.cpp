@@ -51,8 +51,9 @@ TrackingVolume::TrackingVolume(
 }
 
 TrackingVolume::TrackingVolume(const Volume& volume,
-                               const std::string& volumName)
-    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), volumName) {}
+                               const std::string& volumeName)
+    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), volumeName) {
+}
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
                                std::shared_ptr<const VolumeBounds> volumeBounds,
