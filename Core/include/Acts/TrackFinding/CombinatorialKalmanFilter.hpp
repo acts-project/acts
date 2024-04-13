@@ -668,10 +668,8 @@ class CombinatorialKalmanFilter {
           }
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
-          // measurement and filtered parameter
-          auto stateMask =
-              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
-                TrackStatePropMask::Smoothed);
+          // measurement, filtered parameter and jacobian
+          auto stateMask = TrackStatePropMask::Predicted;
 
           // Increment of number of processed states
           tipState.nStates++;
@@ -682,7 +680,7 @@ class CombinatorialKalmanFilter {
           }
 
           // Transport & bind the state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface);
+          auto res = stepper.boundState(state.stepping, *surface, false);
           if (!res.ok()) {
             ACTS_ERROR("Error in filter: " << res.error());
             return res.error();
@@ -940,10 +938,6 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
-      if (boundParams.covariance().has_value()) {
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-      }
-      trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
       trackStateProxy.setReferenceSurface(
@@ -960,9 +954,6 @@ class CombinatorialKalmanFilter {
       if (isSensitive) {
         typeFlags.set(TrackStateFlag::HoleFlag);
       }
-
-      trackStateProxy.shareFrom(TrackStatePropMask::Predicted,
-                                TrackStatePropMask::Filtered);
 
       return trackStateProxy.index();
     }

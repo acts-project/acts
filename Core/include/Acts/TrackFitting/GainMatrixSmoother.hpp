@@ -85,6 +85,7 @@ class GainMatrixSmoother {
     // ensure the track state has a smoothed component
     prev_ts.addComponents(TrackStatePropMask::Smoothed);
 
+    // TODO state component could also be shared
     prev_ts.smoothed() = prev_ts.filtered();
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
@@ -100,6 +101,11 @@ class GainMatrixSmoother {
     // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
     trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
+      // skip over track states without a filtered component
+      if (!ts.hasFiltered()) {
+        return true;  // continue execution
+      }
+
       // should have filtered and predicted, this should also include the
       // covariances.
       assert(ts.hasFiltered());

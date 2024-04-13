@@ -730,7 +730,7 @@ class TrackProxy {
       prev = ts.previous();
       ts.template component<IndexType>(hashString("next")) = prev;
       ts.previous() = next;
-      if (invertJacobians) {
+      if (invertJacobians && ts.hasJacobian()) {
         if (next != kInvalid) {
           BoundMatrix curJacobian = ts.jacobian();
           ts.jacobian() = nextJacobian.inverse();
