@@ -801,7 +801,7 @@ class TrackStateProxy {
   template <std::size_t kMeasurementSize, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   void setCalibrated(
-      const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
+      const Acts::FixedSizeMeasurement<BoundIndices, kMeasurementSize>& meas) {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
 

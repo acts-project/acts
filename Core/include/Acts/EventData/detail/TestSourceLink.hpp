@@ -119,14 +119,14 @@ Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
 
   if ((sl.indices[0] != Acts::eBoundSize) &&
       (sl.indices[1] != Acts::eBoundSize)) {
-    auto meas =
-        makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,
-                        sl.covariance, sl.indices[0], sl.indices[1]);
+    auto meas = makeFixedSizeMeasurement(trackState.getUncalibratedSourceLink(),
+                                         sl.parameters, sl.covariance,
+                                         sl.indices[0], sl.indices[1]);
     trackState.allocateCalibrated(2);
     trackState.setCalibrated(meas);
     return meas;
   } else if (sl.indices[0] != Acts::eBoundSize) {
-    auto meas = makeMeasurement(
+    auto meas = makeFixedSizeMeasurement(
         trackState.getUncalibratedSourceLink(), sl.parameters.head<1>(),
         sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
     trackState.allocateCalibrated(1);

@@ -450,7 +450,7 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         ttsb.sourceLink.sourceId);
-    auto m2 = std::get<Acts::Measurement<BoundIndices, 2u>>(meas);
+    auto m2 = std::get<Acts::FixedSizeMeasurement<BoundIndices, 2u>>(meas);
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
     BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), m2.parameters());

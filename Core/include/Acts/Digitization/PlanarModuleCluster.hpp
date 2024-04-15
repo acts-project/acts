@@ -18,8 +18,8 @@
 
 namespace Acts {
 
-class PlanarModuleCluster : public Measurement<BoundIndices, 3> {
-  using Base = Measurement<BoundIndices, 3>;
+class PlanarModuleCluster : public FixedSizeMeasurement<BoundIndices, 3> {
+  using Base = FixedSizeMeasurement<BoundIndices, 3>;
 
   static constexpr std::array<BoundIndices, 3> kIndices = {
       eBoundLoc0, eBoundLoc1, eBoundTime};
