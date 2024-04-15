@@ -16,8 +16,7 @@
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief A surface provider that extracts surfaces from a gdml file
 ///
@@ -127,8 +126,10 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
 
     /// Find and store surfaces in the cache object
+    auto g4ToWorldConsistent = G4Transform3D(
+        m_g4ToWorld.getRotation().inverse(), m_g4ToWorld.getTranslation());
     Acts::Geant4DetectorSurfaceFactory{}.construct(
-        g4SurfaceCache, m_g4ToWorld, *m_g4World, g4SurfaceOptions);
+        g4SurfaceCache, g4ToWorldConsistent, *m_g4World, g4SurfaceOptions);
 
     auto surfaces = g4SurfaceCache.passiveSurfaces;
 
@@ -155,5 +156,4 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   G4Transform3D m_g4ToWorld;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

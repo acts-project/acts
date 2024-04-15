@@ -14,8 +14,7 @@
 #include <cmath>
 #include <utility>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @struct RealQuadradicEquation
 ///   Mathematic struct for solving real quadratic equations
@@ -66,5 +65,4 @@ struct RealQuadraticEquation {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

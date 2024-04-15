@@ -10,9 +10,7 @@
 
 #include <cmath>
 
-namespace ActsExamples {
-
-namespace Generic {
+namespace ActsExamples::Generic {
 
 /// helper method for cylinder
 std::vector<Acts::Vector3> modulePositionsCylinder(
@@ -130,6 +128,4 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   return rPositions;
 }
 
-}  // end of namespace Generic
-
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Generic

@@ -21,8 +21,7 @@
 
 #include "HoughVectors.hpp"
 
-namespace Acts {
-namespace HoughTransformUtils {
+namespace Acts::HoughTransformUtils {
 
 /// this type is responsible for encoding the parameters of our hough space
 using CoordType = double;
@@ -370,7 +369,6 @@ class IslandsAroundMax {
       std::make_pair(0, 1),   std::make_pair(1, 1)};
 };
 }  // namespace PeakFinders
-}  // namespace HoughTransformUtils
-}  // namespace Acts
+}  // namespace Acts::HoughTransformUtils
 
 #include "HoughTransformUtils.ipp"

@@ -38,8 +38,7 @@ namespace Acts {
 class AssertionFailureException;
 }  // namespace Acts
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext testContext = GeometryContext();
@@ -329,6 +328,4 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -12,8 +12,7 @@
 
 #include <type_traits>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 /// @brief check and correct covariance matrix
 ///
 /// @tparam CovMatrix_t The type of covariance matrix
@@ -70,5 +69,4 @@ struct covariance_helper {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

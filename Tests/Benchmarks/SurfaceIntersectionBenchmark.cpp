@@ -27,8 +27,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Some randomness & number crunching
 unsigned int ntests = 10;
@@ -123,5 +122,4 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

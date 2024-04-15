@@ -27,8 +27,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -649,5 +648,4 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   CHECK_CLOSE_ABS(0., sixthDensitySum2D, 1e-4);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

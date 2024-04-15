@@ -22,15 +22,12 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 class Portal;
 
-namespace detail {
-namespace CuboidalDetectorHelper {
+namespace detail::CuboidalDetectorHelper {
 
 /// @brief Connect detector volumes given a binning value
 ///
@@ -81,7 +78,5 @@ std::array<std::vector<ActsScalar>, 3u> xyzBoundaries(
     const std::vector<const DetectorVolume*>& volumes,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
-}  // namespace CuboidalDetectorHelper
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace detail::CuboidalDetectorHelper
+}  // namespace Acts::Experimental

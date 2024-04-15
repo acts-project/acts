@@ -19,9 +19,7 @@
 #include <mutex>
 #include <vector>
 
-namespace ActsExamples {
-
-namespace Contextual {
+namespace ActsExamples::Contextual {
 
 /// @brief A mockup service that rotates the modules in a
 /// simple tracking geometry
@@ -87,5 +85,4 @@ class AlignmentDecorator : public IContextDecorator {
     }
   }
 };
-}  // namespace Contextual
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Contextual

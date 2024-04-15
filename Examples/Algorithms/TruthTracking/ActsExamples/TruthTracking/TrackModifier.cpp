@@ -64,7 +64,7 @@ ProcessCode TrackModifier::execute(
   outputTracks.ensureDynamicColumns(inputTracks);
 
   for (const auto& inputTrack : inputTracks) {
-    auto outputTrack = outputTracks.getTrack(outputTracks.addTrack());
+    auto outputTrack = outputTracks.makeTrack();
     outputTrack.copyFrom(inputTrack);
     modifyTrack(outputTrack);
   }

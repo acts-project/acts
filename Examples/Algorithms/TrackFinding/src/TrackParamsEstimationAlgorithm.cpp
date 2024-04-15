@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -72,13 +72,13 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   TrackParametersContainer trackParameters;
   trackParameters.reserve(seeds.size());
 
-  std::optional<SimSeedContainer> outputSeeds;
+  SimSeedContainer outputSeeds;
   if (m_outputSeeds.isInitialized()) {
-    outputSeeds->reserve(seeds.size());
+    outputSeeds.reserve(seeds.size());
   }
 
   const ProtoTrackContainer* inputTracks = nullptr;
-  std::optional<ProtoTrackContainer> outputTracks;
+  ProtoTrackContainer outputTracks;
   if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
     const auto& inputTracksRef = m_inputTracks(ctx);
     if (seeds.size() != inputTracksRef.size()) {
@@ -86,8 +86,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       return ProcessCode::ABORT;
     }
     inputTracks = &inputTracksRef;
-    outputTracks.emplace();
-    outputTracks->reserve(seeds.size());
+    outputTracks.reserve(seeds.size());
   }
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
@@ -141,11 +140,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
     trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
                                  m_cfg.particleHypothesis);
-    if (outputSeeds) {
-      outputSeeds->push_back(seed);
+    if (m_outputSeeds.isInitialized()) {
+      outputSeeds.push_back(seed);
     }
-    if (outputTracks && inputTracks != nullptr) {
-      outputTracks->push_back(inputTracks->at(iseed));
+    if (m_outputTracks.isInitialized() && inputTracks != nullptr) {
+      outputTracks.push_back(inputTracks->at(iseed));
     }
   }
 
@@ -153,11 +152,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
   if (m_outputSeeds.isInitialized()) {
-    m_outputSeeds(ctx, std::move(*outputSeeds));
+    m_outputSeeds(ctx, std::move(outputSeeds));
   }
 
   if (m_outputTracks.isInitialized()) {
-    m_outputTracks(ctx, std::move(*outputTracks));
+    m_outputTracks(ctx, std::move(outputTracks));
   }
 
   return ProcessCode::SUCCESS;

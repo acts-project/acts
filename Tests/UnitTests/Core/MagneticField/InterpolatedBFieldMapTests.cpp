@@ -32,8 +32,7 @@
 
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -170,5 +169,4 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
   BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -23,9 +23,7 @@
 
 #include <boost/format.hpp>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -78,6 +76,4 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
       sbm(tgContext, binPhi, oneSurface.get(), similarPhiSurface.get()));
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

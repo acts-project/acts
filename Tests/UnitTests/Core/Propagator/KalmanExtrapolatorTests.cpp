@@ -42,8 +42,7 @@ struct EndOfWorldReached;
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Jacobian = BoundMatrix;
 using Covariance = BoundSquareMatrix;
@@ -184,5 +183,4 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -149,6 +149,7 @@ def test_root_material_track_reader(material_recording):
         RootMaterialTrackReader(
             level=acts.logging.INFO,
             fileList=[str(input_tracks)],
+            outputMaterialTracks="material-tracks",
         )
     )
 
