@@ -73,14 +73,21 @@ struct CombinatorialKalmanFilterExtensions {
   using candidate_container_t =
       typename std::vector<typename traj_t::TrackStateProxy>;
 
+  enum class BranchStopperResult {
+    Continue,
+    StopAndDrop,
+    StopAndKeep,
+  };
+
   using Calibrator = typename KalmanFitterExtensions<traj_t>::Calibrator;
   using Updater = typename KalmanFitterExtensions<traj_t>::Updater;
   using MeasurementSelector =
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
           candidate_container_t& trackStates, bool&, const Logger&)>;
-  using BranchStopper = Delegate<bool(const CombinatorialKalmanFilterTipState&,
-                                      typename traj_t::TrackStateProxy&)>;
+  using BranchStopper =
+      Delegate<BranchStopperResult(const CombinatorialKalmanFilterTipState&,
+                                   typename traj_t::TrackStateProxy&)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows to
   /// calibrate measurements using track information, this could be e.g. sagging
@@ -118,12 +125,12 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param tipState The tip state to decide whether to stop (unused)
   /// @param trackState The track state to decide whether to stop (unused)
   /// @return false
-  static bool voidBranchStopper(
+  static BranchStopperResult voidBranchStopper(
       const CombinatorialKalmanFilterTipState& tipState,
       typename traj_t::TrackStateProxy& trackState) {
     (void)tipState;
     (void)trackState;
-    return false;
+    return BranchStopperResult::Continue;
   }
 };
 
@@ -695,13 +702,23 @@ class CombinatorialKalmanFilter {
           auto nonSourcelinkState =
               result.fittedStates->getTrackState(currentTip);
 
+          using BranchStopperResult =
+              typename CombinatorialKalmanFilterExtensions<
+                  traj_t>::BranchStopperResult;
+          BranchStopperResult branchStopperResult =
+              m_extensions.branchStopper(tipState, nonSourcelinkState);
+
           // Check the branch
-          if (!m_extensions.branchStopper(tipState, nonSourcelinkState)) {
+          if (branchStopperResult == BranchStopperResult::Continue) {
             // Remember the active tip and its state
             result.activeTips.emplace_back(currentTip, tipState);
           } else {
             // No branch on this surface
             nBranchesOnSurface = 0;
+
+            if (branchStopperResult == BranchStopperResult::StopAndKeep) {
+              result.lastMeasurementIndices.emplace_back(currentTip);
+            }
           }
         }
 
@@ -905,13 +922,10 @@ class CombinatorialKalmanFilter {
           tipState.nMeasurements++;
         }
 
-        // Check if need to stop this branch
-        if (!m_extensions.branchStopper(tipState, trackState)) {
-          // Put tipstate back into active tips to continue with it
-          result.activeTips.emplace_back(currentTip, tipState);
-          // Record the number of branches on surface
-          nBranchesOnSurface++;
-        }
+        // Put tipstate back into active tips to continue with it
+        result.activeTips.emplace_back(currentTip, tipState);
+        // Record the number of branches on surface
+        nBranchesOnSurface++;
       }
       return Result<void>::success();
     }
