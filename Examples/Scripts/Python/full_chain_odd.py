@@ -93,7 +93,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args["events"],
     skip=args["skip"],
-    numThreads=1,
+    numThreads=1 if g4_simulation else -1,
     outputDir=str(outputDir),
 )
 
@@ -157,7 +157,7 @@ else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=200,
+            npileup=50,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
