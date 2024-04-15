@@ -197,6 +197,13 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_COVFIE)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsPluginCovfie)
+  target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/CovfieStub.cpp)
+endif()
+
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES ${_python_dir}/setup.sh DESTINATION "python")
 

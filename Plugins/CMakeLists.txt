@@ -10,6 +10,7 @@ add_component_if(Json PluginJson ACTS_BUILD_PLUGIN_JSON)
 add_component_if(Legacy PluginLegacy ACTS_BUILD_PLUGIN_LEGACY)
 add_component_if(Onnx PluginOnnx ACTS_BUILD_PLUGIN_ONNX)
 add_component_if(ExaTrkX PluginExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
+add_component_if(Covfie PluginCovfie ACTS_BUILD_PLUGIN_COVFIE)
 
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(TGeo PluginTGeo ACTS_BUILD_PLUGIN_TGEO)

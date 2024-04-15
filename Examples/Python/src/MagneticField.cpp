@@ -45,7 +45,9 @@ void addMagneticField(Context& ctx) {
 
   py::class_<Acts::InterpolatedMagneticField,
              std::shared_ptr<Acts::InterpolatedMagneticField>>(
-      m, "InterpolatedMagneticField");
+      m, "InterpolatedMagneticField")
+      .def("getFieldUnchecked",
+           &Acts::InterpolatedMagneticField::getFieldUnchecked);
 
   m.def("solenoidFieldMap", &Acts::solenoidFieldMap, py::arg("rlim"),
         py::arg("zlim"), py::arg("nbins"), py::arg("field"));
