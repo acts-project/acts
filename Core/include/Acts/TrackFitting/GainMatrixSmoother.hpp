@@ -85,6 +85,7 @@ class GainMatrixSmoother {
     // ensure the track state has a smoothed component
     prev_ts.addComponents(TrackStatePropMask::Smoothed);
 
+    // TODO state component could also be shared
     prev_ts.smoothed() = prev_ts.filtered();
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 

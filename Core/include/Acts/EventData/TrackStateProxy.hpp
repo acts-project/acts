@@ -808,13 +808,8 @@ class TrackStateProxy {
     allocateCalibrated(kMeasurementSize);
     assert(hasCalibrated());
 
-    calibrated<kMeasurementSize>().setZero();
-    calibrated<kMeasurementSize>().template head<kMeasurementSize>() =
-        meas.parameters();
-    calibratedCovariance<kMeasurementSize>().setZero();
-    calibratedCovariance<kMeasurementSize>()
-        .template topLeftCorner<kMeasurementSize, kMeasurementSize>() =
-        meas.covariance();
+    calibrated<kMeasurementSize>() = meas.parameters();
+    calibratedCovariance<kMeasurementSize>() = meas.covariance();
     setProjector(meas.projector());
   }
 

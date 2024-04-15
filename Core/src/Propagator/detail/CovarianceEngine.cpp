@@ -60,6 +60,7 @@ Result<BoundState> detail::boundState(
                                freeToPathDerivatives, boundToFreeJacobian,
                                freeParameters, freeToBoundCorrection);
   }
+  // TODO this looks a bit like a hack and expensive
   if (boundCovariance != BoundSquareMatrix::Zero()) {
     cov = boundCovariance;
   }
