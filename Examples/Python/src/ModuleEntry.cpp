@@ -78,6 +78,7 @@ void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
+void addCovfie(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -140,4 +141,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addSvg(ctx);
   addOnnx(ctx);
   addOnnxNeuralCalibrator(ctx);
+  addCovfie(ctx);
 }
