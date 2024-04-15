@@ -16,13 +16,7 @@ message( STATUS "Building tracc as part of the Acts project" )
 set( TRACCC_VERSION "${_acts_traccc_version}")
 
 # Declare where to get traccc from.
-set( ACTS_TRACCC_GIT_REPOSITORY "https://github.com/acts-project/traccc.git"
-   CACHE STRING "Git repository to take traccc from" )
-set( ACTS_TRACCC_GIT_TAG "${TRACCC_VERSION}" CACHE STRING "Version of traccc to build" )
-mark_as_advanced( ACTS_TRACCC_GIT_REPOSITORY ACTS_TRACCC_GIT_TAG )
-FetchContent_Declare( traccc
-   GIT_REPOSITORY "${ACTS_TRACCC_GIT_REPOSITORY}"
-   GIT_TAG "${ACTS_TRACCC_GIT_TAG}" )
+FetchContent_Declare( traccc ${ACTS_TRACCC_SOURCE} )
 
 set( TRACCC_SETUP_VECMEM OFF CACHE BOOL
    "Do not set up Actsvg as part of Traccc" )

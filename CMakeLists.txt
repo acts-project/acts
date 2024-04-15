@@ -38,7 +38,7 @@ option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_COVFIE "Build Covfie plugin" OFF)
-#option(ACTS_BUILD_PLUGIN_DETRAY "Build Detray plugin" OFF)
+option(ACTS_BUILD_PLUGIN_DETRAY "Build Detray plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_USE_SYSTEM_GEOMODEL "Use a system-provided GeoModel installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
@@ -135,6 +135,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
+
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
@@ -194,6 +195,10 @@ if(ACTS_FORCE_ASSERTIONS)
   message(STATUS "Injecting headers to force assertions. This can have side-effects, USE WITH CAUTION!")
   include_directories(BEFORE SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/cmake/assert_include)
 endif()
+
+
+# Include the sources for the external dependencies.
+include(ActsExternSources)
 
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the

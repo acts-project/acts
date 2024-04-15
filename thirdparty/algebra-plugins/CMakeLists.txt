@@ -13,18 +13,7 @@ include(FetchContent)
 # Tell the user what's happening.
 message( STATUS "Building algebra-plugins as part of the Acts project" )
 
-set( ALGEBRAPLUGINS_VERSION "v${_acts_algebraplugins_version}")
-
-# Declare where to get AlgebraPlugins from.
-set( ACTS_ALGEBRAPLUGINS_GIT_REPOSITORY "https://github.com/acts-project/algebra-plugins.git"
-   CACHE STRING "Git repository to take algebra-plugins from" )
-set( ACTS_ALGEBRAPLUGINS_GIT_TAG "${ALGEBRAPLUGINS_VERSION}" CACHE STRING "Version of algebra-plugins to build" )
-mark_as_advanced( ACTS_ALGEBRAPLUGINS_GIT_REPOSITORY ACTS_ALGEBRAPLUGINS_GIT_TAG )
-FetchContent_Declare( AlgebraPlugins
-   GIT_REPOSITORY "${ACTS_ALGEBRAPLUGINS_GIT_REPOSITORY}"
-   GIT_TAG "${ACTS_ALGEBRAPLUGINS_GIT_TAG}" )
-
-
+FetchContent_Declare( AlgebraPlugins ${ACTS_ALGEBRAPLUGINS_SOURCE} )
 
 # Options used in the build of Algebra Plugins.
 set(ALGEBRA_PLUGINS_BUILD_TESTING FALSE CACHE BOOL

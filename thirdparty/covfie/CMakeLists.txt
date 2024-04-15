@@ -16,13 +16,7 @@ message( STATUS "Building Covfie as part of the Acts project" )
 set( COVFIE_VERSION "v${_acts_covfie_version}")
 
 # Declare where to get covfie from.
-set( ACTS_COVFIE_GIT_REPOSITORY "https://github.com/acts-project/covfie.git"
-   CACHE STRING "Git repository to take covfie from" )
-set( ACTS_COVFIE_GIT_TAG "${COVFIE_VERSION}" CACHE STRING "Version of covfie to build" )
-mark_as_advanced( ACTS_COVFIE_GIT_REPOSITORY ACTS_COVFIE_GIT_TAG )
-FetchContent_Declare( covfie
-   GIT_REPOSITORY "${ACTS_COVFIE_GIT_REPOSITORY}"
-   GIT_TAG "${ACTS_COVFIE_GIT_TAG}" )
+FetchContent_Declare( covfie ${ACTS_COVFIE_SOURCE} )
 
 # Options used for covfie.
 set( COVFIE_BUILD_EXAMPLES OFF CACHE BOOL "Build covfie examples")
