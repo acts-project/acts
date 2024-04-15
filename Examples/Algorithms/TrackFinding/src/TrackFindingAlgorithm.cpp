@@ -137,43 +137,29 @@ class BranchStopper {
       return false;
     }
 
-    bool haveCuts = std::visit(
-        [&](const auto& config) -> bool {
+    const Acts::TrackSelector::Config* singleConfig = std::visit(
+        [&](const auto& config) -> const Acts::TrackSelector::Config* {
           using T = std::decay_t<decltype(config)>;
           if constexpr (std::is_same_v<T, Acts::TrackSelector::Config>) {
-            return true;
+            return &config;
           } else if constexpr (std::is_same_v<
                                    T, Acts::TrackSelector::EtaBinnedConfig>) {
             double theta = trackState.parameters()[Acts::eBoundTheta];
             double eta = -std::log(std::tan(0.5 * theta));
-            return config.hasCuts(eta);
+            return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
         *m_config);
 
-    if (!haveCuts) {
+    if (singleConfig == nullptr) {
+      return true;
+    }
+
+    if (tipState.nMeasurements >= singleConfig->minMeasurements) {
       return false;
     }
 
-    const Acts::TrackSelector::Config& singleConfig = std::visit(
-        [&](const auto& config) -> const Acts::TrackSelector::Config& {
-          using T = std::decay_t<decltype(config)>;
-          if constexpr (std::is_same_v<T, Acts::TrackSelector::Config>) {
-            return config;
-          } else if constexpr (std::is_same_v<
-                                   T, Acts::TrackSelector::EtaBinnedConfig>) {
-            double theta = trackState.parameters()[Acts::eBoundTheta];
-            double eta = -std::log(std::tan(0.5 * theta));
-            return config.getCuts(eta);
-          }
-        },
-        *m_config);
-
-    if (tipState.nMeasurements >= singleConfig.minMeasurements) {
-      return false;
-    }
-
-    if (tipState.nHoles >= singleConfig.maxHoles) {
+    if (tipState.nHoles >= singleConfig->maxHoles) {
       return true;
     }
 
