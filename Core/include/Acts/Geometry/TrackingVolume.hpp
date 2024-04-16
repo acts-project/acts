@@ -120,6 +120,20 @@ class TrackingVolume : public Volume {
   TrackingVolume(const TrackingVolume&) = delete;
   TrackingVolume& operator=(const TrackingVolume&) = delete;
 
+  /// Constructor for a container Volume
+  /// - vacuum filled volume either as a for other tracking volumes
+  ///
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
+  /// @param volbounds is the description of the volume boundaries
+  /// @param containedVolumeArray are the static volumes that fill this volume
+  /// @param volumeName is a string identifier
+  TrackingVolume(const Transform3& transform,
+                 std::shared_ptr<const VolumeBounds> volbounds,
+                 const std::shared_ptr<const TrackingVolumeArray>&
+                     containedVolumeArray = nullptr,
+                 const std::string& volumeName = "undefined");
+
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param transform is the global 3D transform to position the volume in
@@ -139,20 +153,6 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
       MutableTrackingVolumeVector denseVolumeVector = {},
       const std::string& volumeName = "undefined");
-
-  /// Constructor for a full equipped Tracking Volume
-  ///
-  /// @param transform is the global 3D transform to position the volume in
-  /// space
-  /// @param volbounds is the description of the volume boundaries
-  /// @param containedVolumeArray are the sub volumes if the volume is a
-  /// container
-  /// @param volumeName is a string identifier
-  TrackingVolume(const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> volbounds,
-                 const std::shared_ptr<const TrackingVolumeArray>&
-                     containedVolumeArray = nullptr,
-                 const std::string& volumeName = "undefined");
 
   /// Constructor from a regular volume
   /// @param volume is the volume to be converted
