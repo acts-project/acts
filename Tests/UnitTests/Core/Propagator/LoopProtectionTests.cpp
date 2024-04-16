@@ -134,8 +134,10 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-M_PI,
                                                                   M_PI))) ^
         bdata::xrange(1),
-    phi, /*deltaPhi*/,
-    /*index*/) {
+    phi, deltaPhi, index) {
+  (void)index;
+  (void)deltaPhi;
+
   PropagatorState pState;
   pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
   pState.stepping.p = 100_MeV;

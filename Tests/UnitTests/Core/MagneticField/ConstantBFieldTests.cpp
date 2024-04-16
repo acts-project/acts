@@ -58,8 +58,8 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-10_m,
                                                                   10_m))) ^
         bdata::xrange(10),
-    x, y, z, bx, by, bz,
-    /*index*/) {
+    x, y, z, bx, by, bz, index) {
+  (void)index;
   const Vector3 Btrue(bx, by, bz);
   const Vector3 pos(x, y, z);
   const ConstantBField BField(Btrue);
@@ -104,8 +104,9 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-10_m,
                                                                   10_m))) ^
         bdata::xrange(10),
-    x, y, z, bx, by, bz,
-    /*index*/) {
+    x, y, z, bx, by, bz, index) {
+  (void)index;
+
   ConstantBField BField{Vector3{0, 0, 0}};
   const Vector3 Btrue(bx, by, bz);
   const Vector3 pos(x, y, z);

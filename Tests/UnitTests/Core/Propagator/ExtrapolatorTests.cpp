@@ -98,10 +98,10 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge,
-    /*index*/) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
+  (void)index;
 
   // define start parameters
   /// a covariance matrix to transport
@@ -140,10 +140,10 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge,
-    /*index*/) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
+  (void)index;
 
   // define start parameters
   /// a covariance matrix to transport
@@ -205,10 +205,10 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge,
-    /*index*/) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
+  (void)index;
 
   // define start parameters
   /// a covariance matrix to transport
@@ -252,10 +252,10 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge,
-    /*index*/) {
+    pT, phi, theta, charge, index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
+  (void)index;
 
   // define start parameters
   /// a covariance matrix to transport
