@@ -361,33 +361,28 @@ class SurfaceArray {
     SingleElementLookup(const SurfaceVector& elements) : m_element(elements) {}
 
     /// @brief Lookup, always returns @c element
-    /// @param position is ignored
     /// @return reference to vector containing only @c element
     SurfaceVector& lookup(const Vector3& /*position*/) override {
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
-    /// @param position is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector& lookup(const Vector3& /*position*/) const override {
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
-    /// @param bin is ignored
     /// @return reference to vector containing only @c element
     SurfaceVector& lookup(std::size_t /*bin*/) override { return m_element; }
 
     /// @brief Lookup, always returns @c element
-    /// @param bin is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector& lookup(std::size_t /*bin*/) const override {
       return m_element;
     }
 
     /// @brief Lookup, always returns @c element
-    /// @param position is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector& neighbors(const Vector3& /*position*/) const override {
       return m_element;
@@ -398,7 +393,6 @@ class SurfaceArray {
     std::size_t size() const override { return 1; }
 
     /// @brief Gets the bin center, but always returns (0, 0, 0)
-    /// @param bin is ignored
     /// @return (0, 0, 0)
     Vector3 getBinCenter(std::size_t /*bin*/) const override {
       return Vector3(0, 0, 0);
@@ -425,7 +419,6 @@ class SurfaceArray {
     }
 
     /// @brief Returns if the bin is valid (it is)
-    /// @param bin is ignored
     /// @return always true
     bool isValidBin(std::size_t /*bin*/) const override { return true; }
 

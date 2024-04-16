@@ -36,7 +36,6 @@ class ProtoLayerHelper {
 
   /// Constructor with explicit config
   ///
-  /// @param config Explicit config struct
   /// @param logger logging instance
   ProtoLayerHelper(const Config& /*config*/,
                    std::unique_ptr<const Logger> logger =

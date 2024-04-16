@@ -312,8 +312,6 @@ class EigenStepper {
   }
 
   /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
   double overstepLimit(const State& /*state*/) const {
     // A dynamic overstep limit could sit here
     return -m_overstepLimit;

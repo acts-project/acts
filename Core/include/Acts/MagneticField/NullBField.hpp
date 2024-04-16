@@ -55,7 +55,6 @@ class NullBField final : public MagneticFieldProvider {
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
-  /// @param [in] position global 3D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   /// @note The method will always return true for the null B-Field

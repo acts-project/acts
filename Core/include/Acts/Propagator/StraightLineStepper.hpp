@@ -60,7 +60,6 @@ class StraightLineStepper {
     /// Constructor from the initial bound track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
-    /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
@@ -156,10 +155,6 @@ class StraightLineStepper {
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, this gives back a zero field
-  ///
-  /// @param [in,out] state is the propagation state associated with the track
-  ///                 the magnetic field cell is used (and potentially updated)
-  /// @param [in] pos is the field position
   Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success({0., 0., 0.});
@@ -218,8 +213,6 @@ class StraightLineStepper {
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
   double overstepLimit(const State& /*state*/) const {
     return -m_overstepLimit;
   }

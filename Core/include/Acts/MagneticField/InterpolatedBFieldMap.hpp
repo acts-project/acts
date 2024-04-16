@@ -146,8 +146,6 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   struct Cache {
     /// @brief Constructor with magnetic field context
-    ///
-    /// @param mctx the magnetic field context
     Cache(const MagneticFieldContext& /*mctx*/) {}
 
     std::optional<FieldCell> fieldCell;

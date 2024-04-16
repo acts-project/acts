@@ -292,7 +292,6 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @brief Retrieve material value & its "gradient"
   ///
   /// @param [in]  position   Global 3D position
-  /// @param [out] derivative "Gradient" of material as (5x5) matrix
   /// @return Material
   ///
   /// @note Currently the derivative is not calculated
@@ -305,8 +304,6 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @brief Retrieve material value & its "gradient"
   ///
   /// @param [in]  position   Global 3D position
-  /// @param [out] derivative "Gradient" of material as (5x5) matrix
-  /// @param [in,out] cache Cache object. Contains cell used for
   /// @return Material
   ///
   /// @note Currently the derivative is not calculated
