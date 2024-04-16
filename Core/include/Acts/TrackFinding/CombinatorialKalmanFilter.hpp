@@ -108,9 +108,7 @@ struct CombinatorialKalmanFilterExtensions {
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
       typename std::vector<typename traj_t::TrackStateProxy>& candidates,
-      bool& isOutlier, const Logger& logger) {
-    (void)isOutlier;
-    (void)logger;
+      bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};
   };
 
@@ -119,10 +117,8 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param trackState The track state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& tipState,
-      typename traj_t::TrackStateProxy& trackState) {
-    (void)tipState;
-    (void)trackState;
+      const CombinatorialKalmanFilterTipState& /*tipState*/,
+      typename traj_t::TrackStateProxy& /*trackState*/) {
     return false;
   }
 };

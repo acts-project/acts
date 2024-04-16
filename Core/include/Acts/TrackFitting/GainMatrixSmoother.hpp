@@ -36,11 +36,9 @@ class GainMatrixSmoother {
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
+  Result<void> operator()(const GeometryContext& /*gctx*/, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
-
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
     GetParameters filtered;
