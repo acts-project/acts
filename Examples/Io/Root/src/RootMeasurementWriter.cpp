@@ -117,57 +117,52 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     const auto& meas = measurements[hitIdx];
 
-    std::visit(
-        [&](const auto& m) {
-          Acts::GeometryIdentifier geoId =
-              m.sourceLink().template get<IndexSourceLink>().geometryId();
-          // find the corresponding surface
-          const Acts::Surface* surfacePtr =
-              m_cfg.trackingGeometry->findSurface(geoId);
-          if (!surfacePtr) {
-            return;
-          }
-          const Acts::Surface& surface = *surfacePtr;
-          // find the corresponding output tree
-          auto dTreeItr = m_outputTrees.find(geoId);
-          if (dTreeItr == m_outputTrees.end()) {
-            return;
-          }
-          auto& dTree = *dTreeItr;
+    Acts::GeometryIdentifier geoId =
+        meas.sourceLink().template get<IndexSourceLink>().geometryId();
+    // find the corresponding surface
+    const Acts::Surface* surfacePtr =
+        m_cfg.trackingGeometry->findSurface(geoId);
+    if (surfacePtr == nullptr) {
+      continue;
+    }
+    const Acts::Surface& surface = *surfacePtr;
+    // find the corresponding output tree
+    auto dTreeItr = m_outputTrees.find(geoId);
+    if (dTreeItr == m_outputTrees.end()) {
+      continue;
+    }
+    auto& dTree = *dTreeItr;
 
-          // Fill the identification
-          dTree->fillIdentification(ctx.eventNumber, geoId);
+    // Fill the identification
+    dTree->fillIdentification(ctx.eventNumber, geoId);
 
-          // Find the contributing simulated hits
-          auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-          // Use average truth in the case of multiple contributing sim hits
-          auto [local, pos4, dir] = averageSimHits(ctx.geoContext, surface,
-                                                   simHits, indices, logger());
-          Acts::RotationMatrix3 rot =
-              surface
-                  .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0),
-                                  dir)
-                  .inverse();
-          std::pair<double, double> angles =
-              Acts::VectorHelpers::incidentAngles(dir, rot);
-          dTree->fillTruthParameters(local, pos4, dir, angles);
-          dTree->fillBoundMeasurement(m);
-          if (!clusters.empty()) {
-            const auto& c = clusters[hitIdx];
-            dTree->fillCluster(c);
-          }
-          dTree->tree->Fill();
-          if (dTree->chValue != nullptr) {
-            dTree->chValue->clear();
-          }
-          if (dTree->chId[0] != nullptr) {
-            dTree->chId[0]->clear();
-          }
-          if (dTree->chId[1] != nullptr) {
-            dTree->chId[1]->clear();
-          }
-        },
-        meas);
+    // Find the contributing simulated hits
+    auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+    // Use average truth in the case of multiple contributing sim hits
+    auto [local, pos4, dir] =
+        averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+    Acts::RotationMatrix3 rot =
+        surface
+            .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0), dir)
+            .inverse();
+    std::pair<double, double> angles =
+        Acts::VectorHelpers::incidentAngles(dir, rot);
+    dTree->fillTruthParameters(local, pos4, dir, angles);
+    dTree->fillBoundMeasurement(meas);
+    if (!clusters.empty()) {
+      const auto& c = clusters[hitIdx];
+      dTree->fillCluster(c);
+    }
+    dTree->tree->Fill();
+    if (dTree->chValue != nullptr) {
+      dTree->chValue->clear();
+    }
+    if (dTree->chId[0] != nullptr) {
+      dTree->chId[0]->clear();
+    }
+    if (dTree->chId[1] != nullptr) {
+      dTree->chId[1]->clear();
+    }
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

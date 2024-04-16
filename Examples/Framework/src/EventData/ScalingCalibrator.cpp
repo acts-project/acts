@@ -151,32 +151,12 @@ void ActsExamples::ScalingCalibrator::calibrate(
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
-  std::visit(
-      [&](const auto& meas) {
-        auto E = meas.expander();
-        auto P = meas.projector();
+  const auto& meas = measurements[idxSourceLink.index()];
 
-        Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
-
-        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
-            E * meas.covariance() * E.transpose();
-
-        fpar[Acts::eBoundLoc0] += ct.x_offset;
-        fpar[Acts::eBoundLoc1] += ct.y_offset;
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
-
-        constexpr std::size_t kSize =
-            std::remove_reference_t<decltype(meas)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
-        Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
-
-        Acts::FixedSizeMeasurement<Acts::BoundIndices, kSize> cmeas(
-            Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
-
-        trackState.allocateCalibrated(cmeas.size());
-        trackState.setCalibrated(cmeas);
-      },
-      (measurements)[idxSourceLink.index()]);
+  Measurement measCopy = meas;
+  measCopy.parameters()[Acts::eBoundLoc0] += ct.x_offset;
+  measCopy.parameters()[Acts::eBoundLoc1] += ct.y_offset;
+  measCopy.covariance()(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
+  measCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
+  trackState.setCalibrated(measCopy);
 }

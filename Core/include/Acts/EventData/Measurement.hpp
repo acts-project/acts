@@ -98,6 +98,8 @@ class FixedSizeMeasurement {
   /// Source link that connects to the underlying detector readout.
   const SourceLink& sourceLink() const { return m_source; }
 
+  const Subspace& subspace() const { return m_subspace; }
+
   /// Number of measured parameters.
   static constexpr std::size_t size() { return kSize; }
 
@@ -173,8 +175,16 @@ class VariableSizeMeasurement {
  public:
   using Scalar = ActsScalar;
   /// Vector type containing for measured parameter values.
-  using FullParametersVector = ActsVector<kFullSize>;
+  using ParametersVector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+  using ParametersVectorMap = Eigen::Map<ParametersVector>;
+  using ConstParametersVectorMap = Eigen::Map<const ParametersVector>;
   /// Matrix type for the measurement covariance.
+  using CovarianceMatrix =
+      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
+  using CovarianceMatrixMap = Eigen::Map<CovarianceMatrix>;
+  using ConstCovarianceMatrixMap = Eigen::Map<const CovarianceMatrix>;
+
+  using FullParametersVector = ActsVector<kFullSize>;
   using FullCovarianceMatrix = ActsSquareMatrix<kFullSize>;
 
   /// Construct from source link, subset indices, and measured data.
@@ -192,7 +202,7 @@ class VariableSizeMeasurement {
   VariableSizeMeasurement(SourceLink source,
                           const std::array<indices_t, kSize>& indices,
                           const parameters_t& params, const covariance_t& cov)
-      : m_source(std::move(source)) {
+      : m_source(std::move(source)), m_subspace(indices) {
     // TODO we should be able to support arbitrary ordering, by sorting the
     //   indices and reordering parameters/covariance. since the parameter order
     //   can be modified by the user, the user can not always know what the
@@ -207,16 +217,8 @@ class VariableSizeMeasurement {
     static_assert(kSize == covariance_t::ColsAtCompileTime,
                   "Covariance cols mismatch");
 
-    m_subspace = Subspace(indices);
-
-    m_fullParams = FullParametersVector::Zero();
-    m_fullCov = FullCovarianceMatrix::Zero();
-    for (std::size_t i = 0; i < kSize; i++) {
-      m_fullParams[i] = params[i];
-      for (std::size_t j = 0; j < kSize; j++) {
-        m_fullCov(i, j) = cov(i, j);
-      }
-    }
+    parameters() = params;
+    covariance() = cov;
   }
   /// A measurement can only be constructed with valid parameters.
   VariableSizeMeasurement() = delete;
@@ -231,42 +233,50 @@ class VariableSizeMeasurement {
   /// Source link that connects to the underlying detector readout.
   const SourceLink& sourceLink() const { return m_source; }
 
+  const Subspace& subspace() const { return m_subspace; }
+
   /// Check if a specific parameter is part of this measurement.
   bool contains(indices_t i) const { return m_subspace.contains(i); }
 
-  /// Measured parameters values.
-  const FullParametersVector& fullParameters() const { return m_fullParams; }
-
-  /// Measured parameters covariance.
-  const FullCovarianceMatrix& fullCovariance() const { return m_fullCov; }
-
-  template <std::size_t kSize>
-  ActsVector<kSize> parameters() const {
-    assert(kSize == size() && "Size mismatch");
-    ActsVector<kSize> params;
-    for (std::size_t i = 0; i < kSize; ++i) {
-      params[i] = m_fullParams[m_subspace[i]];
-    }
-    return params;
+  ConstParametersVectorMap parameters() const {
+    return {m_params.data(), static_cast<Eigen::Index>(size())};
+  }
+  ParametersVectorMap parameters() {
+    return {m_params.data(), static_cast<Eigen::Index>(size())};
   }
 
-  template <std::size_t kSize>
-  ActsSquareMatrix<kSize> covariance() const {
-    assert(kSize == size() && "Size mismatch");
-    ActsSquareMatrix<kSize> cov;
-    for (std::size_t i = 0; i < kSize; ++i) {
-      for (std::size_t j = 0; j < kSize; ++j) {
-        cov(i, j) = m_fullCov(m_subspace[i], m_subspace[j]);
+  ConstCovarianceMatrixMap covariance() const {
+    return {m_cov.data(), static_cast<Eigen::Index>(size()),
+            static_cast<Eigen::Index>(size())};
+  }
+  CovarianceMatrixMap covariance() {
+    return {m_cov.data(), static_cast<Eigen::Index>(size()),
+            static_cast<Eigen::Index>(size())};
+  }
+
+  FullParametersVector fullParameters() const {
+    FullParametersVector result = FullParametersVector::Zero();
+    for (std::size_t i = 0; i < size(); ++i) {
+      result[m_subspace[i]] = parameters()[i];
+    }
+    return result;
+  }
+
+  FullCovarianceMatrix fullCovariance() const {
+    FullCovarianceMatrix result = FullCovarianceMatrix::Zero();
+    for (std::size_t i = 0; i < size(); ++i) {
+      for (std::size_t j = 0; j < size(); ++j) {
+        result(m_subspace[i], m_subspace[j]) = covariance()(i, j);
       }
     }
-    return cov;
+    return result;
   }
 
  private:
   SourceLink m_source;
   Subspace m_subspace;
-  FullParametersVector m_fullParams;
-  FullCovarianceMatrix m_fullCov;
+  std::array<Scalar, kFullSize> m_params{};
+  std::array<Scalar, kFullSize * kFullSize> m_cov{};
 };
 
 /// Construct a fixed-size measurement for the given indices.

@@ -315,15 +315,16 @@ class VectorMultiTrajectoryBase {
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
   std::vector<IndexType> m_next;
-  std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
-  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
+      m_params;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
 
   std::vector<double> m_meas;
   std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
   std::vector<double> m_measCov;
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
-  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_jac;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
@@ -418,6 +419,36 @@ class VectorMultiTrajectory final
     IndexType offset = m_measCovOffset[istate];
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         &m_measCov[offset]};
+  }
+
+  TrackStateProxy::EffectiveMeasurement effectiveMeasurement_impl(
+      IndexType istate) {
+    IndexType offset = m_measOffset[istate];
+    IndexType size = calibratedSize_impl(istate);
+    return TrackStateProxy::EffectiveMeasurement{&m_meas[offset], size};
+  }
+
+  ConstTrackStateProxy::EffectiveMeasurement effectiveMeasurement_impl(
+      IndexType istate) const {
+    IndexType offset = m_measOffset[istate];
+    IndexType size = calibratedSize_impl(istate);
+    return ConstTrackStateProxy::EffectiveMeasurement{&m_meas[offset], size};
+  }
+
+  TrackStateProxy::EffectiveMeasurementCovariance
+  effectiveMeasurementCovariance_impl(IndexType istate) {
+    IndexType offset = m_measCovOffset[istate];
+    IndexType size = calibratedSize_impl(istate);
+    return TrackStateProxy::EffectiveMeasurementCovariance{&m_measCov[offset],
+                                                           size, size};
+  }
+
+  ConstTrackStateProxy::EffectiveMeasurementCovariance
+  effectiveMeasurementCovariance_impl(IndexType istate) const {
+    IndexType offset = m_measCovOffset[istate];
+    IndexType size = calibratedSize_impl(istate);
+    return ConstTrackStateProxy::EffectiveMeasurementCovariance{
+        &m_measCov[offset], size, size};
   }
 
   IndexType addTrackState_impl(
@@ -559,6 +590,21 @@ class ConstVectorMultiTrajectory final
     IndexType offset = m_measCovOffset[istate];
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         &m_measCov[offset]};
+  }
+
+  ConstTrackStateProxy::EffectiveMeasurement effectiveMeasurement_impl(
+      IndexType istate) const {
+    IndexType offset = m_measOffset[istate];
+    IndexType size = calibratedSize_impl(istate);
+    return ConstTrackStateProxy::EffectiveMeasurement{&m_meas[offset], size};
+  }
+
+  ConstTrackStateProxy::EffectiveMeasurementCovariance
+  effectiveMeasurementCovariance_impl(IndexType istate) const {
+    IndexType offset = m_measCovOffset[istate];
+    IndexType size = calibratedSize_impl(istate);
+    return ConstTrackStateProxy::EffectiveMeasurementCovariance{
+        &m_measCov[offset], size, size};
   }
 
   bool has_impl(HashedString key, IndexType istate) const {

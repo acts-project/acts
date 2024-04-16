@@ -76,44 +76,63 @@ class TransitiveConstPointer {
   T* m_ptr;
 };
 
-/// Type construction helper for coefficients and associated covariances.
+/// Type construction helper for fixed size coefficients and associated
+/// covariances.
 template <std::size_t Size, bool ReadOnlyMaps = true>
-struct Types {
+struct FixedSizeTypes {
   enum {
     Flags = Eigen::ColMajor | Eigen::AutoAlign,
   };
 
   using Scalar = ActsScalar;
+
   // single items
   using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
   using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
+};
 
-  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
-  using DynamicCovariance =
+/// Type construction helper for dynamic sized coefficients and associated
+/// covariances.
+template <bool ReadOnlyMaps = true>
+struct DynamicSizeTypes {
+  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
+
+  using Scalar = ActsScalar;
+
+  using Coefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using Covariance =
       Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
-  using DynamicCoefficientsMap =
-      Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
-  using DynamicCovarianceMap =
-      Eigen::Map<ConstIf<DynamicCovariance, ReadOnlyMaps>>;
+  using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
+  using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
 }  // namespace detail_lt
 
 // This is public
 template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
-  using Parameters =
-      typename detail_lt::Types<eBoundSize, ReadOnly>::CoefficientsMap;
-  using Covariance =
-      typename detail_lt::Types<eBoundSize, ReadOnly>::CovarianceMap;
-  using Measurement = typename detail_lt::Types<M, ReadOnly>::CoefficientsMap;
-  using MeasurementCovariance =
-      typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
+  using Scalar = ActsScalar;
 
-  constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector =
-      Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
+  using Parameters =
+      typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
+  using Covariance =
+      typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CovarianceMap;
+  using Measurement =
+      typename detail_lt::FixedSizeTypes<M, ReadOnly>::CoefficientsMap;
+  using MeasurementCovariance =
+      typename detail_lt::FixedSizeTypes<M, ReadOnly>::CovarianceMap;
+  using EffectiveMeasurement =
+      typename detail_lt::DynamicSizeTypes<ReadOnly>::CoefficientsMap;
+  using EffectiveMeasurementCovariance =
+      typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
+
+  constexpr static auto ProjectorFlags = Eigen::ColMajor | Eigen::AutoAlign;
+  using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
+  using EffectiveProjector =
+      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic,
+                    TrackStateTraits<M, ReadOnly>::ProjectorFlags, M,
+                    eBoundSize>;
 };
 
 /// Proxy object to access a single point on the trajectory.
@@ -165,6 +184,24 @@ class TrackStateProxy {
   using ConstMeasurementCovariance =
       typename TrackStateTraits<N, true>::MeasurementCovariance;
 
+  /// Map-type for a measurement vector, where the local measurement dimension
+  /// is variable.
+  using EffectiveMeasurement =
+      typename TrackStateTraits<M, ReadOnly>::EffectiveMeasurement;
+
+  /// Same as @c EffectiveMeasurement, but with const semantics
+  using ConstEffectiveMeasurement =
+      typename TrackStateTraits<M, true>::EffectiveMeasurement;
+
+  /// Map-type for a measurement covariance matrix, where the local measurement
+  /// dimension is variable.
+  using EffectiveMeasurementCovariance =
+      typename TrackStateTraits<M, ReadOnly>::EffectiveMeasurementCovariance;
+
+  /// Same as @ref EffectiveMeasurementCovariance, but with const semantics
+  using ConstEffectiveMeasurementCovariance =
+      typename TrackStateTraits<M, true>::EffectiveMeasurementCovariance;
+
   /// The index type of the track state container
   using IndexType = TrackIndexType;
 
@@ -180,9 +217,7 @@ class TrackStateProxy {
   /// Dynamic variant of the projector matrix
   /// @warning Using this type is discouraged, as it has a runtime overhead
   using EffectiveProjector =
-      Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
-                    TrackStateTraits<M, ReadOnly>::ProjectorFlags, M,
-                    eBoundSize>;
+      typename TrackStateTraits<M, ReadOnly>::EffectiveProjector;
 
   /// The track state container backend given as a template parameter
   using Trajectory = trajectory_t;
@@ -714,33 +749,17 @@ class TrackStateProxy {
   /// @warning The dynamic vector has a runtime overhead!
   /// @return The effective calibrated measurement vector
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto effectiveCalibrated() {
-    // repackage the data pointer to a dynamic map type
-    // workaround for gcc8 bug:
-    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
-    auto* self = this;
-    return visit_measurement(calibratedSize(), [&](auto N) {
-      constexpr int kMeasurementSize = decltype(N)::value;
-      return typename detail_lt::Types<M, ReadOnly>::DynamicCoefficientsMap{
-          self->template calibrated<kMeasurementSize>().data(),
-          kMeasurementSize};
-    });
+  EffectiveMeasurement effectiveCalibrated() {
+    assert(has<hashString("calibrated")>());
+    return m_traj->self().effectiveMeasurement(m_istate);
   }
 
   /// Const dynamic measurement vector with only the valid dimensions.
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated measurement vector
-  auto effectiveCalibrated() const {
-    // repackage the data pointer to a dynamic map type
-    // workaround for gcc8 bug:
-    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
-    auto* self = this;
-    return visit_measurement(calibratedSize(), [&](auto N) {
-      constexpr int kMeasurementSize = decltype(N)::value;
-      return typename detail_lt::Types<M, true>::DynamicCoefficientsMap{
-          self->template calibrated<kMeasurementSize>().data(),
-          kMeasurementSize};
-    });
+  ConstEffectiveMeasurement effectiveCalibrated() const {
+    assert(has<hashString("calibrated")>());
+    return m_traj->self().effectiveMeasurement(m_istate);
   }
 
   /// Mutable dynamic measurement covariance matrix with only the valid
@@ -748,34 +767,18 @@ class TrackStateProxy {
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated covariance matrix
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto effectiveCalibratedCovariance() {
-    // repackage the data pointer to a dynamic map type
-    // workaround for gcc8 bug:
-    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
-    auto* self = this;
-    return visit_measurement(calibratedSize(), [&](auto N) {
-      constexpr int kMeasurementSize = decltype(N)::value;
-      return typename detail_lt::Types<M, ReadOnly>::DynamicCovarianceMap{
-          self->template calibratedCovariance<kMeasurementSize>().data(),
-          kMeasurementSize, kMeasurementSize};
-    });
+  EffectiveMeasurementCovariance effectiveCalibratedCovariance() {
+    assert(has<hashString("calibratedCov")>());
+    return m_traj->self().effectiveMeasurementCovariance(m_istate);
   }
 
   /// Const dynamic measurement covariance matrix with only the valid
   /// dimensions.
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated covariance matrix
-  auto effectiveCalibratedCovariance() const {
-    // repackage the data pointer to a dynamic map type
-    // workaround for gcc8 bug:
-    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
-    auto* self = this;
-    return visit_measurement(calibratedSize(), [&](auto N) {
-      constexpr int kMeasurementSize = decltype(N)::value;
-      return typename detail_lt::Types<M, true>::DynamicCovarianceMap{
-          self->template calibratedCovariance<kMeasurementSize>().data(),
-          kMeasurementSize, kMeasurementSize};
-    });
+  ConstEffectiveMeasurementCovariance effectiveCalibratedCovariance() const {
+    assert(has<hashString("calibratedCov")>());
+    return m_traj->self().effectiveMeasurementCovariance(m_istate);
   }
 
   /// Return the (dynamic) number of dimensions stored for this measurement.
@@ -816,6 +819,17 @@ class TrackStateProxy {
         .template topLeftCorner<kMeasurementSize, kMeasurementSize>() =
         meas.covariance();
     setProjector(meas.projector());
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setCalibrated(const Acts::VariableSizeMeasurement<BoundIndices>& meas) {
+    allocateCalibrated(meas.size());
+    assert(hasCalibrated());
+
+    effectiveCalibrated() = meas.parameters();
+    effectiveCalibratedCovariance() = meas.covariance();
+
+    setProjectorBitset(meas.subspace().fullProjectorBits());
   }
 
   /// Allocate storage to be able to store a measurement of size @p measdim.

@@ -22,23 +22,19 @@ ActsExamples::Measurement ActsExamples::createMeasurement(
   switch (dParams.indices.size()) {
     case 1u: {
       auto [indices, par, cov] = measurementConstituents<1>(dParams);
-      return Acts::FixedSizeMeasurement<Acts::BoundIndices, 1>(
-          std::move(sl), indices, par, cov);
+      return ActsExamples::Measurement(std::move(sl), indices, par, cov);
     }
     case 2u: {
       auto [indices, par, cov] = measurementConstituents<2>(dParams);
-      return Acts::FixedSizeMeasurement<Acts::BoundIndices, 2>(
-          std::move(sl), indices, par, cov);
+      return ActsExamples::Measurement(std::move(sl), indices, par, cov);
     };
     case 3u: {
       auto [indices, par, cov] = measurementConstituents<3>(dParams);
-      return Acts::FixedSizeMeasurement<Acts::BoundIndices, 3>(
-          std::move(sl), indices, par, cov);
+      return ActsExamples::Measurement(std::move(sl), indices, par, cov);
     };
     case 4u: {
       auto [indices, par, cov] = measurementConstituents<4>(dParams);
-      return Acts::FixedSizeMeasurement<Acts::BoundIndices, 4>(
-          std::move(sl), indices, par, cov);
+      return ActsExamples::Measurement(std::move(sl), indices, par, cov);
     };
     default:
       std::string errorMsg = "Invalid/mismatching measurement dimension: " +

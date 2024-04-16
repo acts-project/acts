@@ -220,9 +220,10 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
       sourceLinks.insert(sourceLinks.end(), sourceLink);
 
-      auto meas = Acts::makeFixedSizeMeasurement(
-          Acts::SourceLink{sourceLink}, par, cov, Acts::eBoundLoc0,
-          Acts::eBoundLoc1, Acts::eBoundTime);
+      auto meas = Measurement(
+          Acts::SourceLink{sourceLink},
+          std::array{Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime}, par,
+          cov);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.

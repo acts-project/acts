@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -30,12 +31,9 @@ void ActsExamples::PassThroughCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) &&
          "Source link index is outside the container bounds");
 
-  std::visit(
-      [&trackState](const auto& meas) {
-        trackState.allocateCalibrated(meas.size());
-        trackState.setCalibrated(meas);
-      },
-      (measurements)[idxSourceLink.index()]);
+  const auto& meas = measurements[idxSourceLink.index()];
+
+  trackState.setCalibrated(meas);
 }
 
 ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(

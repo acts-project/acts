@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/detail/Subspace.hpp"
 
@@ -166,9 +167,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(VariableSizeSubspace, ScalarAndSubspace,
     std::uint64_t fixedProjectorBits =
         matrixToBitset(fixedProjector).to_ullong();
 
+    Eigen::Matrix<Scalar, FixedSubspace::fullSize(), FixedSubspace::fullSize()>
+        fixedFullProjector;
+    fixedFullProjector.setZero();
+    fixedFullProjector.template topLeftCorner<FixedSubspace::size(),
+                                              FixedSubspace::fullSize()>() =
+        fixedProjector;
+    std::uint64_t fixedFullProjectorBits =
+        matrixToBitset(fixedFullProjector).to_ullong();
+
     std::uint64_t variableProjectorBits = variableSubspace.projectorBits();
+    std::uint64_t variableFullProjectorBits =
+        variableSubspace.fullProjectorBits();
 
     BOOST_CHECK_EQUAL(variableProjectorBits, fixedProjectorBits);
+    BOOST_CHECK_EQUAL(variableFullProjectorBits, fixedFullProjectorBits);
   } while (std::next_permutation(fullIndices.begin(), fullIndices.end()));
 }
 

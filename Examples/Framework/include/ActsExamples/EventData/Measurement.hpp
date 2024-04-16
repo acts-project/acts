@@ -8,14 +8,15 @@
 
 #pragma once
 
-#include <Acts/EventData/Measurement.hpp>
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Measurement.hpp"
 
 #include <vector>
 
 namespace ActsExamples {
 
 /// Variable measurement type that can contain all possible combinations.
-using Measurement = ::Acts::BoundVariantMeasurement;
+using Measurement = ::Acts::VariableSizeMeasurement<Acts::BoundIndices>;
 
 /// Container of measurements.
 ///

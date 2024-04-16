@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     // NOTE this fails:
     // auto m = Acts::makeFixedSizeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
     // because we don't support non-consecutive parameters here for now
-    auto m = Acts::makeFixedSizeMeasurement(Acts::SourceLink{sl}, p, c,
-                                            Acts::eBoundLoc0, Acts::eBoundLoc1);
+    auto m = Measurement(Acts::SourceLink{sl},
+                         std::array{Acts::eBoundLoc0, Acts::eBoundLoc1}, p, c);
 
     measOriginal.push_back(m);
 
@@ -132,19 +132,13 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   ///////////
   // Check //
   ///////////
-  auto checkMeasurementClose = [](const auto &m1, const auto &m2) {
-    constexpr auto SizeA = std::decay_t<decltype(m1)>::size();
-    constexpr auto SizeB = std::decay_t<decltype(m2)>::size();
-    if constexpr (SizeA == SizeB) {
-      CHECK_CLOSE_REL(m1.parameters(), m2.parameters(), 1e-4);
-    }
-  };
-
   static_assert(
       std::is_same_v<std::decay_t<decltype(measRead)>, decltype(measOriginal)>);
   BOOST_REQUIRE(measRead.size() == measOriginal.size());
   for (const auto &[a, b] : Acts::zip(measRead, measOriginal)) {
-    std::visit(checkMeasurementClose, a, b);
+    if (a.size() == b.size()) {
+      CHECK_CLOSE_REL(a.parameters(), b.parameters(), 1e-4);
+    }
   }
 
   static_assert(std::is_same_v<std::decay_t<decltype(clusterRead)>,

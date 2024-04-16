@@ -518,6 +518,28 @@ class MultiTrajectory {
     return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  typename TrackStateProxy::EffectiveMeasurement effectiveMeasurement(
+      IndexType measIdx) {
+    return self().effectiveMeasurement_impl(measIdx);
+  }
+
+  typename ConstTrackStateProxy::EffectiveMeasurement effectiveMeasurement(
+      IndexType measIdx) const {
+    return self().effectiveMeasurement_impl(measIdx);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  typename TrackStateProxy::EffectiveMeasurementCovariance
+  effectiveMeasurementCovariance(IndexType covIdx) {
+    return self().effectiveMeasurementCovariance_impl(covIdx);
+  }
+
+  constexpr typename ConstTrackStateProxy::EffectiveMeasurementCovariance
+  effectiveMeasurementCovariance(IndexType covIdx) const {
+    return self().effectiveMeasurementCovariance_impl(covIdx);
+  }
+
   /// Get the calibrated measurement size for a track state
   /// @param istate The track state
   /// @return the calibrated size

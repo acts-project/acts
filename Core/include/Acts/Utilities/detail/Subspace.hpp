@@ -84,12 +84,12 @@ class FixedSizeSubspace {
   // indices of the subspace. storing the subspace indices directly requires a
   // bit more memory but is easier to work with. for our typical use cases with
   // n<=8, this still takes only 64bit of memory.
-  std::array<uint8_t, kSize> m_axes;
+  std::array<std::uint8_t, kSize> m_axes;
 
  public:
   /// Construct from a container of axis indices.
   ///
-  /// @tparam index_t Input index type, must be convertible to uint8_t
+  /// @tparam index_t Input index type, must be convertible to std::uint8_t
   /// @param indices Unique, ordered indices
   template <typename index_t>
   constexpr FixedSizeSubspace(const std::array<index_t, kSize>& indices) {
@@ -102,7 +102,7 @@ class FixedSizeSubspace {
       }
     }
     for (std::size_t i = 0; i < kSize; ++i) {
-      m_axes[i] = static_cast<uint8_t>(indices[i]);
+      m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
   // The subset can not be constructed w/o defining its axis indices.
@@ -128,7 +128,9 @@ class FixedSizeSubspace {
   /// The specific container and index type should be considered an
   /// implementation detail. Users should treat the return type as a generic
   /// container whose elements are convertible to `std::size_t`.
-  constexpr const std::array<uint8_t, kSize>& indices() const { return m_axes; }
+  constexpr const std::array<std::uint8_t, kSize>& indices() const {
+    return m_axes;
+  }
 
   /// Check if the given axis index in the full space is part of the subspace.
   constexpr bool contains(std::size_t index) const {
@@ -229,12 +231,12 @@ class VariableSizeSubspace {
   // indices of the subspace. storing the subspace indices directly requires a
   // bit more memory but is easier to work with. for our typical use cases with
   // n<=8, this still takes only 64bit of memory.
-  std::array<uint8_t, kFullSize> m_axes{};
+  std::array<std::uint8_t, kFullSize> m_axes{};
 
  public:
   /// Construct from a container of axis indices.
   ///
-  /// @tparam index_t Input index type, must be convertible to uint8_t
+  /// @tparam index_t Input index type, must be convertible to std::uint8_t
   /// @param indices Unique, ordered indices
   template <typename index_t, std::size_t kSize>
   constexpr VariableSizeSubspace(const std::array<index_t, kSize>& indices) {
@@ -248,7 +250,7 @@ class VariableSizeSubspace {
       }
     }
     for (std::size_t i = 0; i < kSize; ++i) {
-      m_axes[i] = static_cast<uint8_t>(indices[i]);
+      m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
   // The subset can not be constructed w/o defining its axis indices.
@@ -259,7 +261,7 @@ class VariableSizeSubspace {
   VariableSizeSubspace& operator=(VariableSizeSubspace&&) = default;
 
   /// Size of the subspace.
-  constexpr std::size_t size() { return m_size; }
+  constexpr std::size_t size() const { return m_size; }
   /// Size of the full vector space.
   static constexpr std::size_t fullSize() { return kFullSize; }
 
@@ -292,6 +294,23 @@ class VariableSizeSubspace {
         // in `matrixToBitset`
         std::size_t index = m_size * kFullSize - 1 - (i + j * m_size);
         if (m_axes[i] == j) {
+          result |= (1ull << index);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  std::uint64_t fullProjectorBits() const {
+    std::uint64_t result = 0;
+
+    for (std::size_t i = 0; i < kFullSize; ++i) {
+      for (std::size_t j = 0; j < kFullSize; ++j) {
+        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
+        // in `matrixToBitset`
+        std::size_t index = kFullSize * kFullSize - 1 - (i + j * kFullSize);
+        if (i < m_size && m_axes[i] == j) {
           result |= (1ull << index);
         }
       }

@@ -225,15 +225,14 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// @param m The measurement set
     template <typename measurement_t>
     void fillBoundMeasurement(const measurement_t& m) {
-      Acts::BoundVector fullVect = m.expander() * m.parameters();
+      Acts::BoundVector fullVect = m.fullParameters();
       recBound[Acts::eBoundLoc0] = fullVect[Acts::eBoundLoc0];
       recBound[Acts::eBoundLoc1] = fullVect[Acts::eBoundLoc1];
       recBound[Acts::eBoundPhi] = fullVect[Acts::eBoundPhi];
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
 
-      Acts::BoundSquareMatrix fullVar =
-          m.expander() * m.covariance() * m.expander().transpose();
+      Acts::BoundSquareMatrix fullVar = m.fullCovariance();
       varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
       varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);
       varBound[Acts::eBoundPhi] = fullVar(Acts::eBoundPhi, Acts::eBoundPhi);
