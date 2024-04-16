@@ -22,6 +22,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
+    CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
     addAmbiguityResolution,
@@ -255,6 +256,9 @@ addCKFTracks(
         absEta=(None, 3.0),
         loc0=(-4.0 * u.mm, 4.0 * u.mm),
         nMeasurementsMin=7,
+    ),
+    CkfConfig(
+        seedDeduplication=True,
     ),
     outputDirRoot=outputDir,
     writeCovMat=True,
