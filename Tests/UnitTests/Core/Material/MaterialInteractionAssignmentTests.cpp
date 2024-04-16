@@ -173,8 +173,9 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withLocalVeto) {
   // Veto in a specific one
   struct VetoThisOne {
     bool operator()(
-        const MaterialInteraction& /*unused*/,
-        const IAssignmentFinder::SurfaceAssignment& /*unused*/) const {
+        const MaterialInteraction& /*m*/,
+        const IAssignmentFinder::SurfaceAssignment& /*suggestedAssignment*/)
+        const {
       return true;
     }
   };
@@ -232,9 +233,10 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withReassignment) {
 
   // Veto in a specific one
   struct ReAssignToNeighbor {
-    void operator()(MaterialInteraction& m,
-                    const IAssignmentFinder::SurfaceAssignment& /*unused*/,
-                    const IAssignmentFinder::SurfaceAssignment& n) const {
+    void operator()(
+        MaterialInteraction& m,
+        const IAssignmentFinder::SurfaceAssignment& /*suggestedAssignment*/,
+        const IAssignmentFinder::SurfaceAssignment& n) const {
       auto [surface, position, direction] = n;
       m.surface = surface;
       m.position = position;

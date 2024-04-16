@@ -25,7 +25,7 @@ struct FixedPrimaryVertexPositionGenerator
   /// The fixed vertex position and time.
   Acts::Vector4 fixed = Acts::Vector4::Zero();
 
-  Acts::Vector4 operator()(RandomEngine& /* unused */) const override {
+  Acts::Vector4 operator()(RandomEngine& /*rng*/) const override {
     return fixed;
   }
 };

@@ -68,7 +68,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Scale operator - dummy implementation
   ///
-  ProtoSurfaceMaterialT<BinningType>& operator*=(double /*unused*/) final {
+  ProtoSurfaceMaterialT<BinningType>& operator*=(double /*scale*/) final {
     return (*this);
   }
 
@@ -79,7 +79,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector2& /*unused*/) const final {
+  const MaterialSlab& materialSlab(const Vector2& /*lp*/) const final {
     return (m_materialSlab);
   }
 
@@ -87,7 +87,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// global coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& /*unused*/) const final {
+  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
     return (m_materialSlab);
   }
 

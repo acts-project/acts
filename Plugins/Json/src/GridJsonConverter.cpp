@@ -50,7 +50,7 @@ template <typename Subspace>
 void encodeSubspace(
     nlohmann::json& jGlobalToGridLocal,
     const Acts::GridAccess::IGlobalToGridLocal& globalToGridLocal,
-    const Subspace& /*unused*/) {
+    const Subspace& /*subspace*/) {
   const Subspace* subspace = dynamic_cast<const Subspace*>(&globalToGridLocal);
   if (subspace != nullptr) {
     jGlobalToGridLocal["type"] = "subspace";
@@ -97,7 +97,7 @@ void encodeSubspaces(
 
 template <Acts::BinningValue... Args>
 std::unique_ptr<const Acts::GridAccess::GlobalSubspace<Args...>> decodeSubspace(
-    const nlohmann::json& /*unused*/) {
+    const nlohmann::json& /*j*/) {
   return std::make_unique<const Acts::GridAccess::GlobalSubspace<Args...>>();
 }
 

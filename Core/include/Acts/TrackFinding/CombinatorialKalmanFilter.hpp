@@ -1066,9 +1066,9 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                    const navigator_t& /*unused*/,
-                    const Logger& /*unused*/) const {
+    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/,
+                    const Logger& /*logger*/) const {
       return false;
     }
   };
