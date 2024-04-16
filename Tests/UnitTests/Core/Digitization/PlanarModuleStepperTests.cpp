@@ -79,7 +79,10 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-halfY,
                                                                   halfY))) ^
         bdata::xrange(ntests),
-    entryX, entryY, exitX, exitY) {
+    entryX, entryY, exitX, exitY, index) {
+  // avoid warning with void
+  (void)index;
+
   // Entry and exit point
   Vector3 entry(entryX, entryY, -hThickness);
   Vector3 exit(exitX, exitY, hThickness);
