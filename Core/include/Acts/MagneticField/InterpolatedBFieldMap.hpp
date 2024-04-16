@@ -148,7 +148,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @brief Constructor with magnetic field context
     ///
     /// @param mctx the magnetic field context
-    Cache(const MagneticFieldContext& mctx) { (void)mctx; }
+    Cache(const MagneticFieldContext& /*mctx*/) {}
 
     std::optional<FieldCell> fieldCell;
     bool initialized = false;
@@ -317,9 +317,8 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @note Cache is not used currently
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      const Vector3& position, ActsMatrix<3, 3>& /*derivative*/,
       MagneticFieldProvider::Cache& cache) const final {
-    (void)derivative;
     return getField(position, cache);
   }
 
