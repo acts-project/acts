@@ -140,20 +140,24 @@ class TrackingVolume : public Volume {
       MutableTrackingVolumeVector denseVolumeVector = {},
       const std::string& volumeName = "undefined");
 
-  /// Constructor from a regular volume
-  /// @param volume is the volume to be converted
-  /// @param volumeName is a string identifier
-  TrackingVolume(const Volume& volume,
-                 const std::string& volumeName = "undefined");
-
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param transform is the global 3D transform to position the volume in
   /// space
-  /// @param volumeBounds is the description of the volume boundaries
+  /// @param volbounds is the description of the volume boundaries
+  /// @param containedVolumeArray are the sub volumes if the volume is a
+  /// container
   /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
-                 std::shared_ptr<const VolumeBounds> volumeBounds,
+                 std::shared_ptr<const VolumeBounds> volbounds,
+                 const std::shared_ptr<const TrackingVolumeArray>&
+                     containedVolumeArray = nullptr,
+                 const std::string& volumeName = "undefined");
+
+  /// Constructor from a regular volume
+  /// @param volume is the volume to be converted
+  /// @param volumeName is a string identifier
+  TrackingVolume(const Volume& volume,
                  const std::string& volumeName = "undefined");
 
   // @TODO: This needs to be refactored to include Gen3 volumes

@@ -52,14 +52,15 @@ TrackingVolume::TrackingVolume(
 
 TrackingVolume::TrackingVolume(const Volume& volume,
                                const std::string& volumeName)
-    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), volumeName) {
-}
+    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
+                     volumeName) {}
 
-TrackingVolume::TrackingVolume(const Transform3& transform,
-                               std::shared_ptr<const VolumeBounds> volumeBounds,
-                               const std::string& volumeName)
-    : TrackingVolume(transform, std::move(volumeBounds), nullptr, nullptr,
-                     nullptr, {}, volumeName) {}
+TrackingVolume::TrackingVolume(
+    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
+    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
+    const std::string& volumeName)
+    : TrackingVolume(transform, volbounds, nullptr, nullptr,
+                     containedVolumeArray, {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;
