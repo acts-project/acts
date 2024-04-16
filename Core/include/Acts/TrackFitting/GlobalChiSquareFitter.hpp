@@ -385,6 +385,15 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
+      if (state.navigation.navigationBreak) {
+        ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
+        result.finished = true;
+      }
+
+      if (result.finished) {
+        return;
+      }
+
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
       if (state.navigation.externalSurfaces.size() == 0) {
@@ -393,15 +402,6 @@ class Gx2Fitter {
           navigator.insertExternalSurface(state.navigation,
                                           measurementIt->first);
         }
-      }
-
-      if (state.navigation.navigationBreak) {
-        ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
-        result.finished = true;
-      }
-
-      if (result.finished) {
-        return;
       }
 
       // Update:
