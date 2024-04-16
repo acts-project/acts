@@ -337,8 +337,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   const auto& ct = t;
 
-  for (const auto& ts : ct.trackStatesReversed()) {
-    (void)ts;
+  for (const auto& /*ts*/ : ct.trackStatesReversed()) {
   }
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
@@ -350,8 +349,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   BOOST_CHECK(tsRange.begin() == tsRange.end());
 
   std::size_t i = 0;
-  for (const auto& state : tNone.trackStatesReversed()) {
-    (void)state;
+  for (const auto& /*state*/ : tNone.trackStatesReversed()) {
     i++;
   }
   BOOST_CHECK_EQUAL(i, 0);

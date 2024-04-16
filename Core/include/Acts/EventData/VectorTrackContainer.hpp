@@ -109,7 +109,6 @@ class VectorTrackContainerBase {
 
   bool checkConsistency() const {
     std::size_t size = m_tipIndex.size();
-    (void)size;
 
     bool result = true;
     result = result && m_tipIndex.size() == size;
@@ -136,8 +135,7 @@ class VectorTrackContainerBase {
     assert(result);
     result = result && m_nSharedHits.size() == size;
 
-    for (const auto& [key, col] : m_dynamic) {
-      (void)key;
+    for (const auto& [/*key*/, col] : m_dynamic) {
       result = result && col->size() == size;
     }
 
