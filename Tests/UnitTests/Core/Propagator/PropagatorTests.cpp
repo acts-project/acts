@@ -187,9 +187,9 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-1_ns,
                                                                   1_ns))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, time,
+    /*index*/) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
   using ActionListType = ActionList<CylinderObserver>;
@@ -249,9 +249,9 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-1_ns,
                                                                   1_ns))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, time,
+    /*index*/) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
 
   // setup propagation options - the tow step options
   PropagatorOptions<> options_2s(tgContext, mfContext);
@@ -329,9 +329,9 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-1_ns,
                                                                   1_ns))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, time,
+    /*index*/) {
   double dcharge = -1 + 2 * charge;
-  (void)index;
 
   // setup propagation options - 2 setp options
   PropagatorOptions<> options_2s(tgContext, mfContext);

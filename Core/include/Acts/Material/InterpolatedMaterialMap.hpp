@@ -298,8 +298,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Currently the derivative is not calculated
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& derivative) const {
-    (void)derivative;
+                               ActsMatrix<5, 5>& /*derivative*/) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -314,10 +313,8 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Cache is not used currently
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& derivative,
-                               Cache& cache) const {
-    (void)derivative;
-    (void)cache;
+                               ActsMatrix<5, 5>& /*derivative*/,
+                               Cache& /*cache*/) const {
     return m_mapper.getMaterial(position);
   }
 

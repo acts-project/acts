@@ -123,9 +123,7 @@ const MeasurementResolutionMap resolutions = {
 
 std::default_random_engine rng(42);
 
-BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
-  (void)index;
-
+BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), /*index*/) {
   double phi = 5._degree;
   double theta = 95._degree;
   double p = 50._GeV;

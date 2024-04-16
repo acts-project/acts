@@ -257,9 +257,8 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_real_distribution<double>(-20., 20.))) ^
         bdata::xrange(10),
-    x, y, z, index) {
-  (void)index;
-
+    x, y, z,
+    /*index*/) {
   std::vector<double> rPos;
   std::vector<double> xPos;
   std::vector<double> yPos;

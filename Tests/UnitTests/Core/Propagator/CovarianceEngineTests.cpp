@@ -274,8 +274,8 @@ BOOST_DATA_TEST_CASE(CovarianceConversionSamePlane,
                       angleDist ^ angleDist ^ posDist ^ posDist ^ posDist ^
                       locDist ^ locDist) ^
                          bdata::xrange(100),
-                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, index) {
-  (void)index;
+                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1,
+                     /*index*/) {
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
@@ -316,8 +316,8 @@ BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
                       angleDist ^ angleDist ^ posDist ^ posDist ^ posDist ^
                       locDist ^ locDist ^ angleDist) ^
                          bdata::xrange(100),
-                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, angle, index) {
-  (void)index;
+                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, angle,
+                     /*index*/) {
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
@@ -365,8 +365,8 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL0TiltedPlane,
                       angleDist ^ angleDist ^ posDist ^ posDist ^ posDist ^
                       locDist ^ angleDist) ^
                          bdata::xrange(100),
-                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l1, angle, index) {
-  (void)index;
+                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l1, angle,
+                     /*index*/) {
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
@@ -414,8 +414,8 @@ BOOST_DATA_TEST_CASE(CovarianceConversionL1TiltedPlane,
                       angleDist ^ angleDist ^ posDist ^ posDist ^ posDist ^
                       locDist ^ angleDist) ^
                          bdata::xrange(100),
-                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, angle, index) {
-  (void)index;
+                     Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, angle,
+                     /*index*/) {
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
@@ -464,8 +464,7 @@ BOOST_DATA_TEST_CASE(CovarianceConversionPerigee,
                       locDist ^ locDist ^ angleDist ^ angleDist ^ angleDist) ^
                          bdata::xrange(100),
                      Bx, By, Bz, Rx, Ry, Rz, gx, gy, gz, l0, l1, pRx, pRy, pRz,
-                     index) {
-  (void)index;
+                     /*index*/) {
   const Vector3 bField{Bx, By, Bz};
 
   auto planeSurfaceA = MAKE_SURFACE();
