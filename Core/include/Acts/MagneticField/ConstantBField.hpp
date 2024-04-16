@@ -35,7 +35,7 @@ class ConstantBField final : public MagneticFieldProvider {
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
   ///
-  /// @note The @p position is ignored and only kept as argument to provide
+  /// @note The parameter position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   Result<Vector3> getField(
       const Vector3& /*position*/,
@@ -45,7 +45,7 @@ class ConstantBField final : public MagneticFieldProvider {
 
   /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
   ///
-  /// @note The @p position is ignored and only kept as argument to provide
+  /// @note The parameter position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
@@ -63,7 +63,6 @@ class ConstantBField final : public MagneticFieldProvider {
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
-  /// @param [in] position global 3D position
   /// @return Always true for constant magnetic field
   bool isInside(const Vector3& /*position*/) const { return true; }
 
