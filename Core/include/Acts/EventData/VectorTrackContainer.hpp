@@ -135,7 +135,8 @@ class VectorTrackContainerBase {
     assert(result);
     result = result && m_nSharedHits.size() == size;
 
-    for (const auto& [/*key*/, col] : m_dynamic) {
+    for (const auto& [key, col] : m_dynamic) {
+      (void)key;
       result = result && col->size() == size;
     }
 
