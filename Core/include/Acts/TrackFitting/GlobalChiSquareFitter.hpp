@@ -609,7 +609,7 @@ class Gx2Fitter {
 
             ++result.processedStates;
           } else {
-            ACTS_VERBOSE("Ignoring hole, because no preceeding measurements.");
+            ACTS_VERBOSE("Ignoring hole, because no preceding measurements.");
           }
 
           if (surface->surfaceMaterial() != nullptr) {

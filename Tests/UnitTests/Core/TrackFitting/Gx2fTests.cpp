@@ -829,16 +829,16 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
   ACTS_VERBOSE("sourceLinks.size() [before] = " << sourceLinks.size());
 
-  // We remove the first measurment in the list. This does not create a hole.
+  // We remove the first measurement in the list. This does not create a hole.
   sourceLinks.erase(std::next(sourceLinks.begin(), 0));
   ACTS_VERBOSE(
       "sourceLinks.size() [after first erase] = " << sourceLinks.size());
 
-  // We remove the last measurment in the list. This does not create a hole.
+  // We remove the last measurement in the list. This does not create a hole.
   sourceLinks.pop_back();
   ACTS_VERBOSE("sourceLinks.size() [after pop] = " << sourceLinks.size());
 
-  // We remove the second to last measurment in the list. This effectivly
+  // We remove the second to last measurement in the list. This effectivly
   // creates a hole on that surface.
   const std::size_t indexHole = sourceLinks.size() - 2;
   ACTS_VERBOSE("Remove measurement " << indexHole);
