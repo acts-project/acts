@@ -20,6 +20,7 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
+    CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -120,6 +121,10 @@ def run_vertexing(fitter, mu, events):
                 pt=(500 * u.MeV, None),
                 nMeasurementsMin=6,
                 maxHoles=2,
+            ),
+            CkfConfig(
+                seedDeduplication=True,
+                stayOnSeed=True,
             ),
         )
 

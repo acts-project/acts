@@ -106,6 +106,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         CkfConfig(
             seedDeduplication=True,
+            stayOnSeed=True,
         ),
         outputDirRoot=tp,
     )
