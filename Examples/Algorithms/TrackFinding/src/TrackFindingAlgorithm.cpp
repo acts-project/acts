@@ -207,14 +207,24 @@ class BranchStopper {
       return true;
     }
 
-    if (tipState.nMeasurements >= singleConfig->minMeasurements) {
+    // Continue if the number of holes is below the maximum
+    if (tipState.nHoles <= singleConfig->maxHoles) {
       return false;
     }
 
-    if (tipState.nHoles >= singleConfig->maxHoles) {
+    // If there are not enough measurements but more holes than allowed we stop
+    if (tipState.nMeasurements < singleConfig->minMeasurements) {
       return true;
     }
 
+    // Getting another measurement guarantees that the holes are in the middle
+    // of the track
+    if (trackState.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      return true;
+    }
+
+    // We cannot be sure if the holes are just at the end of the track so we
+    // have to keep going
     return false;
   }
 
