@@ -457,17 +457,14 @@ class Gx2Fitter {
               result.result = res.error();
               return;
             }
-            auto& [boundParams, jacobian, pathLength] = *res;
+            const auto& [boundParams, jacobian, pathLength] = *res;
 
             // Fill the track state
-            trackStateProxy.predicted() = std::move(boundParams.parameters());
-            if (boundParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*boundParams.covariance());
-            }
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
           }
 
           // We have predicted parameters, so calibrate the uncalibrated input

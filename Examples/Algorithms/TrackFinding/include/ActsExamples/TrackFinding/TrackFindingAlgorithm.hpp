@@ -118,6 +118,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
+    /// Whether to stick on the seed measurements during track finding.
+    /// This is only available if `inputSeeds` is set.
+    bool stayOnSeed = false;
     /// Compute shared hit information
     bool computeSharedHits = false;
   };
