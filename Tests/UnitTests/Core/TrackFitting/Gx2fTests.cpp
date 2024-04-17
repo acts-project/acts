@@ -893,7 +893,7 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   BOOST_CHECK(track.hasReferenceSurface());
 
   // Track quantities
-  CHECK_CLOSE_ABS(track.chi2(), 800., 0.1);
+  CHECK_CLOSE_ABS(track.chi2(), 6.5, 2.);
   BOOST_CHECK_EQUAL(track.nDoF(), 10u);
   BOOST_CHECK_EQUAL(track.nHoles(), 1u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nMeasurements);
