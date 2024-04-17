@@ -187,6 +187,9 @@ class VariableSizeMeasurement {
   using FullParametersVector = ActsVector<kFullSize>;
   using FullCovarianceMatrix = ActsSquareMatrix<kFullSize>;
 
+  using ProjectionMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, kFullSize>;
+  using ExpansionMatrix = Eigen::Matrix<Scalar, kFullSize, Eigen::Dynamic>;
+
   /// Construct from source link, subset indices, and measured data.
   ///
   /// @tparam parameters_t Input parameters vector type
@@ -272,6 +275,21 @@ class VariableSizeMeasurement {
     return result;
   }
 
+  /// Projection matrix from the full space into the measured subspace.
+  ProjectionMatrix projector() const {
+    return m_subspace.template projector<Scalar>();
+  }
+
+  /// Expansion matrix from the measured subspace into the full space.
+  ///
+  /// This is equivalent to the transpose of the projection matrix only in the
+  /// case of a trivial projection matrix. While this is the case here, it is
+  /// still recommended to use the expansion matrix directly in cases where it
+  /// is explicitly used.
+  ExpansionMatrix expander() const {
+    return m_subspace.template expander<Scalar>();
+  }
+
  private:
   SourceLink m_source;
   Subspace m_subspace;
@@ -314,52 +332,8 @@ auto makeFixedSizeMeasurement(SourceLink source,
           cov};
 }
 
-namespace detail {
-/// @cond
+using BoundVariableMeasurement = VariableSizeMeasurement<BoundIndices>;
 
-// Recursive construction of the measurement variant. `kN` is counted down until
-// zero while the sizes are accumulated in the parameter pack.
-//
-// Example:
-//
-//        VariantFixedSizeMeasurementGenerator<..., 4>
-//     -> VariantFixedSizeMeasurementGenerator<..., 3, 4>
-//     -> VariantFixedSizeMeasurementGenerator<..., 2, 3, 4>
-//     -> VariantFixedSizeMeasurementGenerator<..., 1, 2, 3, 4>
-//     -> VariantFixedSizeMeasurementGenerator<..., 0, 1, 2, 3, 4>
-//
-template <typename indices_t, std::size_t kN, std::size_t... kSizes>
-struct VariantFixedSizeMeasurementGenerator
-    : VariantFixedSizeMeasurementGenerator<indices_t, kN - 1u, kN, kSizes...> {
-};
-template <typename indices_t, std::size_t... kSizes>
-struct VariantFixedSizeMeasurementGenerator<indices_t, 0u, kSizes...> {
-  using Type = std::variant<FixedSizeMeasurement<indices_t, kSizes>...>;
-};
-
-/// @endcond
-}  // namespace detail
-
-/// Variant that can contain all possible measurements in a parameter space.
-///
-/// @tparam indices_t Parameter index type, determines the full parameter space
-template <typename indices_t>
-using VariantFixedSizeMeasurement =
-    typename detail::VariantFixedSizeMeasurementGenerator<
-        indices_t, detail::kParametersSize<indices_t>>::Type;
-
-/// Variant that can hold all possible bound measurements.
-///
-using BoundVariantMeasurement = VariantFixedSizeMeasurement<BoundIndices>;
-
-/// Variant that can hold all possible free measurements.
-///
-using FreeVariantMeasurement = VariantFixedSizeMeasurement<FreeIndices>;
-
-template <typename indices_t>
-std::ostream& operator<<(std::ostream& os,
-                         const VariantFixedSizeMeasurement<indices_t>& vm) {
-  return std::visit([&](const auto& m) { return (os << m); }, vm);
-}
+using FreeVariableMeasurement = VariableSizeMeasurement<FreeIndices>;
 
 }  // namespace Acts

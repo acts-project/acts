@@ -512,32 +512,49 @@ class MultiTrajectory {
   /// @param istate The track state index
   /// @return Const proxy
   template <std::size_t measdim>
-  constexpr
-      typename ConstTrackStateProxy::template MeasurementCovariance<measdim>
-      measurementCovariance(IndexType istate) const {
+  typename ConstTrackStateProxy::template MeasurementCovariance<measdim>
+  measurementCovariance(IndexType istate) const {
     return self().template measurementCovariance_impl<measdim>(istate);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   typename TrackStateProxy::EffectiveMeasurement effectiveMeasurement(
-      IndexType measIdx) {
-    return self().effectiveMeasurement_impl(measIdx);
+      IndexType istate) {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename TrackStateProxy::EffectiveMeasurement{
+        measurement<eBoundSize>(istate).data(), calibratedSize(istate)};
   }
 
   typename ConstTrackStateProxy::EffectiveMeasurement effectiveMeasurement(
-      IndexType measIdx) const {
-    return self().effectiveMeasurement_impl(measIdx);
+      IndexType istate) const {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename ConstTrackStateProxy::EffectiveMeasurement{
+        measurement<eBoundSize>(istate).data(), calibratedSize(istate)};
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   typename TrackStateProxy::EffectiveMeasurementCovariance
-  effectiveMeasurementCovariance(IndexType covIdx) {
-    return self().effectiveMeasurementCovariance_impl(covIdx);
+  effectiveMeasurementCovariance(IndexType istate) {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename TrackStateProxy::EffectiveMeasurementCovariance{
+        measurementCovariance<eBoundSize>(istate).data(),
+        calibratedSize(istate), calibratedSize(istate)};
   }
 
-  constexpr typename ConstTrackStateProxy::EffectiveMeasurementCovariance
-  effectiveMeasurementCovariance(IndexType covIdx) const {
-    return self().effectiveMeasurementCovariance_impl(covIdx);
+  typename ConstTrackStateProxy::EffectiveMeasurementCovariance
+  effectiveMeasurementCovariance(IndexType istate) const {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename ConstTrackStateProxy::EffectiveMeasurementCovariance{
+        measurementCovariance<eBoundSize>(istate).data(),
+        calibratedSize(istate), calibratedSize(istate)};
   }
 
   /// Get the calibrated measurement size for a track state

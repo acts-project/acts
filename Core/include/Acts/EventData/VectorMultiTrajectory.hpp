@@ -421,36 +421,6 @@ class VectorMultiTrajectory final
         &m_measCov[offset]};
   }
 
-  TrackStateProxy::EffectiveMeasurement effectiveMeasurement_impl(
-      IndexType istate) {
-    IndexType offset = m_measOffset[istate];
-    IndexType size = calibratedSize_impl(istate);
-    return TrackStateProxy::EffectiveMeasurement{&m_meas[offset], size};
-  }
-
-  ConstTrackStateProxy::EffectiveMeasurement effectiveMeasurement_impl(
-      IndexType istate) const {
-    IndexType offset = m_measOffset[istate];
-    IndexType size = calibratedSize_impl(istate);
-    return ConstTrackStateProxy::EffectiveMeasurement{&m_meas[offset], size};
-  }
-
-  TrackStateProxy::EffectiveMeasurementCovariance
-  effectiveMeasurementCovariance_impl(IndexType istate) {
-    IndexType offset = m_measCovOffset[istate];
-    IndexType size = calibratedSize_impl(istate);
-    return TrackStateProxy::EffectiveMeasurementCovariance{&m_measCov[offset],
-                                                           size, size};
-  }
-
-  ConstTrackStateProxy::EffectiveMeasurementCovariance
-  effectiveMeasurementCovariance_impl(IndexType istate) const {
-    IndexType offset = m_measCovOffset[istate];
-    IndexType size = calibratedSize_impl(istate);
-    return ConstTrackStateProxy::EffectiveMeasurementCovariance{
-        &m_measCov[offset], size, size};
-  }
-
   IndexType addTrackState_impl(
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
@@ -590,21 +560,6 @@ class ConstVectorMultiTrajectory final
     IndexType offset = m_measCovOffset[istate];
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         &m_measCov[offset]};
-  }
-
-  ConstTrackStateProxy::EffectiveMeasurement effectiveMeasurement_impl(
-      IndexType istate) const {
-    IndexType offset = m_measOffset[istate];
-    IndexType size = calibratedSize_impl(istate);
-    return ConstTrackStateProxy::EffectiveMeasurement{&m_meas[offset], size};
-  }
-
-  ConstTrackStateProxy::EffectiveMeasurementCovariance
-  effectiveMeasurementCovariance_impl(IndexType istate) const {
-    IndexType offset = m_measCovOffset[istate];
-    IndexType size = calibratedSize_impl(istate);
-    return ConstTrackStateProxy::EffectiveMeasurementCovariance{
-        &m_measCov[offset], size, size};
   }
 
   bool has_impl(HashedString key, IndexType istate) const {

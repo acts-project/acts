@@ -450,12 +450,11 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         ttsb.sourceLink.sourceId);
-    auto m2 = std::get<Acts::FixedSizeMeasurement<BoundIndices, 2u>>(meas);
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
-    BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), m2.parameters());
-    BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), m2.covariance());
-    BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());
+    BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), meas.parameters());
+    BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), meas.covariance());
+    BOOST_CHECK_EQUAL(ts.effectiveProjector(), meas.projector());
   }
 
   void testTrackStateProxyStorage(std::default_random_engine& rng,
@@ -534,11 +533,7 @@ class MultiTrajectoryTestsCommon {
       // create a temporary measurement to extract the projector matrix
       auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
           gctx, cctx, SourceLink{pc.sourceLink}, ts);
-      std::visit(
-          [&](const auto& m) {
-            fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();
-          },
-          meas);
+      fullProj.topLeftCorner(nMeasurements, eBoundSize) = meas.projector();
     }
     BOOST_CHECK_EQUAL(ts.effectiveProjector(),
                       fullProj.topLeftCorner(nMeasurements, eBoundSize));

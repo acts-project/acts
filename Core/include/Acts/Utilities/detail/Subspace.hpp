@@ -218,9 +218,15 @@ class VariableSizeSubspace {
   static_assert(kFullSize <= static_cast<std::size_t>(UINT8_MAX),
                 "Full vector space size is larger than the supported range");
 
-  template <typename source_t>
-  using FullspaceVectorFor =
-      Eigen::Matrix<typename source_t::Scalar, kFullSize, 1>;
+  template <typename scalar_t>
+  using ProjectionMatrix = Eigen::Matrix<scalar_t, Eigen::Dynamic, kFullSize>;
+  template <typename scalar_t>
+  using ExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, Eigen::Dynamic>;
+
+  template <typename scalar_t>
+  using FullProjectionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
+  template <typename scalar_t>
+  using FullExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
 
   std::size_t m_size{};
 
@@ -283,6 +289,58 @@ class VariableSizeSubspace {
       isContained |= ((i < m_size) & (m_axes[i] == index));
     }
     return isContained;
+  }
+
+  /// Projection matrix that maps from the full space into the subspace.
+  ///
+  /// @tparam scalar_t Scalar type for the projection matrix
+  template <typename scalar_t>
+  auto projector() const -> ProjectionMatrix<scalar_t> {
+    ProjectionMatrix<scalar_t> proj;
+    proj.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      proj(i, m_axes[i]) = 1;
+    }
+    return proj;
+  }
+
+  /// Expansion matrix that maps from the subspace into the full space.
+  ///
+  /// @tparam scalar_t Scalar type of the generated expansion matrix
+  template <typename scalar_t>
+  auto expander() const -> ExpansionMatrix<scalar_t> {
+    ExpansionMatrix<scalar_t> expn;
+    expn.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      expn(m_axes[i], i) = 1;
+    }
+    return expn;
+  }
+
+  /// Projection matrix that maps from the full space into the subspace.
+  ///
+  /// @tparam scalar_t Scalar type for the projection matrix
+  template <typename scalar_t>
+  auto fullProjector() const -> FullProjectionMatrix<scalar_t> {
+    FullProjectionMatrix<scalar_t> proj;
+    proj.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      proj(i, m_axes[i]) = 1;
+    }
+    return proj;
+  }
+
+  /// Expansion matrix that maps from the subspace into the full space.
+  ///
+  /// @tparam scalar_t Scalar type of the generated expansion matrix
+  template <typename scalar_t>
+  auto fullExpander() const -> FullExpansionMatrix<scalar_t> {
+    FullExpansionMatrix<scalar_t> expn;
+    expn.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      expn(m_axes[i], i) = 1;
+    }
+    return expn;
   }
 
   std::uint64_t projectorBits() const {
