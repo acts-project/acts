@@ -188,10 +188,14 @@ VertexPerformanceWriter::VertexPerformanceWriter(
   m_outputTree->Branch("vertex_primary", &m_vertexPrimary);
   m_outputTree->Branch("vertex_secondary", &m_vertexSecondary);
 
+  m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
+
+  m_outputTree->Branch("truthPrimaryVertexDensity",
+                       &m_truthPrimaryVertexDensity);
+
   m_outputTree->Branch("truthVertexTrackWeights", &m_truthVertexTrackWeights);
   m_outputTree->Branch("truthVertexMatchRatio", &m_truthVertexMatchRatio);
-
-  m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
+  m_outputTree->Branch("recoVertexContamination", &m_recoVertexContamination);
 
   m_outputTree->Branch("recoVertexClassification", &m_recoVertexClassification);
 
@@ -358,6 +362,22 @@ ProcessCode VertexPerformanceWriter::writeT(
         return diff / std;
       };
 
+  auto calculateTruthPrimaryVertexDensity =
+      [this, truthVertices](const Acts::Vertex& vtx) {
+        double z = vtx.fullPosition()[Acts::CoordinateIndices::eZ];
+        int count = 0;
+        for (const SimVertex& truthVertex : truthVertices) {
+          if (truthVertex.vertexId().vertexSecondary() != 0) {
+            continue;
+          }
+          double zTruth = truthVertex.position4[Acts::CoordinateIndices::eZ];
+          if (std::abs(z - zTruth) <= m_cfg.vertexDensityWindow) {
+            ++count;
+          }
+        }
+        return count / (2 * m_cfg.vertexDensityWindow);
+      };
+
   if (m_cfg.useTracks) {
     tracks = &m_inputTracks(ctx);
 
@@ -421,6 +441,7 @@ ProcessCode VertexPerformanceWriter::writeT(
   struct ToTruthMatching {
     std::optional<SimVertexBarcode> vertexId;
     double totalTrackWeight{};
+    double truthMajorityTrackWeights{};
     double matchFraction{};
 
     RecoVertexClassification classification{RecoVertexClassification::Unknown};
@@ -473,19 +494,19 @@ ProcessCode VertexPerformanceWriter::writeT(
       ++fmap[vtxId].first;
       fmap[vtxId].second += weight;
     }
-    double maxOccurrence = -1;
-    SimVertexBarcode maxOccurrenceId = -1;
+    double truthMajorityVertexTrackWeights = 0;
+    SimVertexBarcode truthMajorityVertexId = 0;
     for (const auto& [vtxId, counter] : fmap) {
-      if (counter.second > maxOccurrence) {
-        maxOccurrenceId = vtxId;
-        maxOccurrence = counter.second;
+      if (counter.second > truthMajorityVertexTrackWeights) {
+        truthMajorityVertexId = vtxId;
+        truthMajorityVertexTrackWeights = counter.second;
       }
     }
 
     double sumPt2 = calcSumPt2(vtx);
 
     double vertexMatchFraction =
-        fmap[maxOccurrenceId].second / totalTrackWeight;
+        truthMajorityVertexTrackWeights / totalTrackWeight;
     RecoVertexClassification recoVertexClassification =
         RecoVertexClassification::Unknown;
 
@@ -495,14 +516,15 @@ ProcessCode VertexPerformanceWriter::writeT(
       recoVertexClassification = RecoVertexClassification::Merged;
     }
 
-    recoToTruthMatching.push_back({maxOccurrenceId, totalTrackWeight,
+    recoToTruthMatching.push_back({truthMajorityVertexId, totalTrackWeight,
+                                   truthMajorityVertexTrackWeights,
                                    vertexMatchFraction,
                                    recoVertexClassification});
 
     auto& recoToTruth = recoToTruthMatching.back();
 
     // We have to decide if this reco vertex is a split vertex.
-    if (auto it = truthToRecoMatching.find(maxOccurrenceId);
+    if (auto it = truthToRecoMatching.find(truthMajorityVertexId);
         it != truthToRecoMatching.end()) {
       // This truth vertex is already matched to a reconstructed vertex so we
       // are dealing with a split vertex.
@@ -527,7 +549,7 @@ ProcessCode VertexPerformanceWriter::writeT(
         it->second = {vtxIndex, sumPt2};
       }
     } else {
-      truthToRecoMatching[maxOccurrenceId] = {vtxIndex, sumPt2};
+      truthToRecoMatching[truthMajorityVertexId] = {vtxIndex, sumPt2};
     }
   }
 
@@ -541,41 +563,47 @@ ProcessCode VertexPerformanceWriter::writeT(
 
     const auto& toTruthMatching = recoToTruthMatching[vtxIndex];
 
-    m_recoX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0]);
-    m_recoY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1]);
-    m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
-    m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
+    m_recoX.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eX]);
+    m_recoY.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eY]);
+    m_recoZ.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eZ]);
+    m_recoT.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eTime]);
 
-    Acts::ActsScalar varX = vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                                 Acts::FreeIndices::eFreePos0);
-    Acts::ActsScalar varY = vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                                 Acts::FreeIndices::eFreePos1);
-    Acts::ActsScalar varZ = vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
-                                                 Acts::FreeIndices::eFreePos2);
+    Acts::ActsScalar varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+                                                 Acts::CoordinateIndices::eX);
+    Acts::ActsScalar varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
+                                                 Acts::CoordinateIndices::eY);
+    Acts::ActsScalar varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
+                                                 Acts::CoordinateIndices::eZ);
     Acts::ActsScalar varTime = vtx.fullCovariance()(
-        Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime);
+        Acts::CoordinateIndices::eTime, Acts::CoordinateIndices::eTime);
 
     m_covXX.push_back(varX);
     m_covYY.push_back(varY);
     m_covZZ.push_back(varZ);
     m_covTT.push_back(varTime);
-    m_covXY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                           Acts::FreeIndices::eFreePos1));
-    m_covXZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                           Acts::FreeIndices::eFreePos2));
-    m_covXT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                           Acts::FreeIndices::eFreeTime));
-    m_covYZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                           Acts::FreeIndices::eFreePos2));
-    m_covYT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                           Acts::FreeIndices::eFreeTime));
-    m_covZT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
-                                           Acts::FreeIndices::eFreeTime));
+    m_covXY.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+                                           Acts::CoordinateIndices::eY));
+    m_covXZ.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+                                           Acts::CoordinateIndices::eZ));
+    m_covXT.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+                                           Acts::CoordinateIndices::eTime));
+    m_covYZ.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eY,
+                                           Acts::CoordinateIndices::eZ));
+    m_covYT.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eY,
+                                           Acts::CoordinateIndices::eTime));
+    m_covZT.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
+                                           Acts::CoordinateIndices::eTime));
 
     double sumPt2 = calcSumPt2(vtx);
     m_sumPt2.push_back(sumPt2);
 
-    double recoVertexTrackWeights = toTruthMatching.totalTrackWeight;
+    double recoVertexTrackWeights = 0;
+    for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
+      if (trk.trackWeight < m_cfg.minTrkWeight) {
+        continue;
+      }
+      recoVertexTrackWeights += trk.trackWeight;
+    }
     m_recoVertexTrackWeights.push_back(recoVertexTrackWeights);
 
     unsigned int nTracksOnRecoVertex =
@@ -593,6 +621,9 @@ ProcessCode VertexPerformanceWriter::writeT(
       }
       const SimVertex& truthVertex = *iTruthVertex;
 
+      m_vertexPrimary.push_back(truthVertex.vertexId().vertexPrimary());
+      m_vertexSecondary.push_back(truthVertex.vertexId().vertexSecondary());
+
       // Count number of reconstructible tracks on truth vertex
       int nTracksOnTruthVertex = 0;
       for (const auto& particle : selectedParticles) {
@@ -601,6 +632,20 @@ ProcessCode VertexPerformanceWriter::writeT(
         }
       }
       m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
+
+      double truthPrimaryVertexDensity =
+          calculateTruthPrimaryVertexDensity(vtx);
+      m_truthPrimaryVertexDensity.push_back(truthPrimaryVertexDensity);
+
+      double truthVertexTrackWeights =
+          toTruthMatching.truthMajorityTrackWeights;
+      m_truthVertexTrackWeights.push_back(truthVertexTrackWeights);
+
+      double truthVertexMatchRatio = toTruthMatching.matchFraction;
+      m_truthVertexMatchRatio.push_back(truthVertexMatchRatio);
+
+      double recoVertexContamination = 1 - truthVertexMatchRatio;
+      m_recoVertexContamination.push_back(recoVertexContamination);
 
       RecoVertexClassification recoVertexClassification =
           toTruthMatching.classification;
@@ -613,39 +658,41 @@ ProcessCode VertexPerformanceWriter::writeT(
         ++m_nSplitVtx;
       }
 
-      m_truthVertexMatchRatio.push_back(toTruthMatching.matchFraction);
-
-      m_vertexPrimary.push_back(truthVertex.vertexId().vertexPrimary());
-      m_vertexSecondary.push_back(truthVertex.vertexId().vertexSecondary());
-
       const Acts::Vector4& truePos = truthVertex.position4;
       truthPos = truePos;
-      m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
-      m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
-      m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
-      m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
+      m_truthX.push_back(truePos[Acts::CoordinateIndices::eX]);
+      m_truthY.push_back(truePos[Acts::CoordinateIndices::eY]);
+      m_truthZ.push_back(truePos[Acts::CoordinateIndices::eZ]);
+      m_truthT.push_back(truePos[Acts::CoordinateIndices::eTime]);
 
       const Acts::Vector4 diffPos = vtx.fullPosition() - truePos;
-      m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
-      m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
-      m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
-      m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
+      m_resX.push_back(diffPos[Acts::CoordinateIndices::eX]);
+      m_resY.push_back(diffPos[Acts::CoordinateIndices::eY]);
+      m_resZ.push_back(diffPos[Acts::CoordinateIndices::eZ]);
+      m_resT.push_back(diffPos[Acts::CoordinateIndices::eTime]);
 
-      m_pullX.push_back(pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
-      m_pullY.push_back(pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
-      m_pullZ.push_back(pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
+      m_pullX.push_back(pull(diffPos[Acts::CoordinateIndices::eX], varX, "X"));
+      m_pullY.push_back(pull(diffPos[Acts::CoordinateIndices::eY], varY, "Y"));
+      m_pullZ.push_back(pull(diffPos[Acts::CoordinateIndices::eZ], varZ, "Z"));
       m_pullT.push_back(
-          pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
+          pull(diffPos[Acts::CoordinateIndices::eTime], varTime, "T"));
 
       truthInfoWritten = true;
     }
     if (!truthInfoWritten) {
-      m_nTracksOnTruthVertex.push_back(-1);
-
-      m_truthVertexMatchRatio.push_back(-1);
-
       m_vertexPrimary.push_back(-1);
       m_vertexSecondary.push_back(-1);
+
+      m_nTracksOnTruthVertex.push_back(-1);
+
+      m_truthPrimaryVertexDensity.push_back(nan);
+
+      m_truthVertexTrackWeights.push_back(nan);
+      m_truthVertexMatchRatio.push_back(nan);
+      m_recoVertexContamination.push_back(nan);
+
+      m_recoVertexClassification.push_back(
+          static_cast<int>(RecoVertexClassification::Unknown));
 
       m_truthX.push_back(nan);
       m_truthY.push_back(nan);
@@ -910,9 +957,11 @@ ProcessCode VertexPerformanceWriter::writeT(
   m_seedT.clear();
   m_vertexPrimary.clear();
   m_vertexSecondary.clear();
+  m_nTracksOnTruthVertex.clear();
+  m_truthPrimaryVertexDensity.clear();
   m_truthVertexTrackWeights.clear();
   m_truthVertexMatchRatio.clear();
-  m_nTracksOnTruthVertex.clear();
+  m_recoVertexContamination.clear();
   m_recoVertexClassification.clear();
   m_truthX.clear();
   m_truthY.clear();
