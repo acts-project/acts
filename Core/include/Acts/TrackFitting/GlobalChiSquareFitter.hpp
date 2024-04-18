@@ -394,6 +394,11 @@ class Gx2Fitter {
       }
 
       if (result.finished) {
+        // Remove the missing surfaces that occur after the last measurement
+        if (result.measurementStates > 0) {
+          result.missedActiveSurfaces.resize(result.measurementHoles);
+        }
+
         return;
       }
 
@@ -518,7 +523,11 @@ class Gx2Fitter {
           // We count the state with measurement
           ++result.measurementStates;
 
+          // We count the processed state
           ++result.processedStates;
+          // Update the number of holes count only when encountering a
+          // measurement
+          result.measurementHoles = result.missedActiveSurfaces.size();
         } else if (surface->associatedDetectorElement() != nullptr ||
                    surface->surfaceMaterial() != nullptr) {
           // Here we handle material and holes
@@ -569,23 +578,23 @@ class Gx2Fitter {
                 trackStateProxy.pathLength() = pathLength;
               }
 
-//              // Get and set the type flags
-//              auto typeFlags = trackStateProxy.typeFlags();
-//              typeFlags.set(TrackStateFlag::ParameterFlag);
-//              if (surface->surfaceMaterial() != nullptr) {
-//                typeFlags.set(TrackStateFlag::MaterialFlag);
-//              }
-//
-//              // Set hole only, if we are on a sensitive surface
-//              if (surface->associatedDetectorElement() != nullptr) {
-//                ACTS_VERBOSE("Detected hole on " << surface->geometryId());
-//                // If the surface is sensitive, set the hole type flag
-//                typeFlags.set(TrackStateFlag::HoleFlag);
-//              } else {
-//                ACTS_VERBOSE("Detected in-sensitive surface "
-//                             << surface->geometryId());
-//              }
-//
+              // Get and set the type flags
+              auto typeFlags = trackStateProxy.typeFlags();
+              typeFlags.set(TrackStateFlag::ParameterFlag);
+              if (surface->surfaceMaterial() != nullptr) {
+                typeFlags.set(TrackStateFlag::MaterialFlag);
+              }
+
+              // Set hole only, if we are on a sensitive surface
+              if (surface->associatedDetectorElement() != nullptr) {
+                ACTS_VERBOSE("Detected hole on " << surface->geometryId());
+                // If the surface is sensitive, set the hole type flag
+                typeFlags.set(TrackStateFlag::HoleFlag);
+              } else {
+                ACTS_VERBOSE("Detected in-sensitive surface "
+                             << surface->geometryId());
+              }
+
 //              result.jacobianFromStart =
 //                  trackStateProxy.jacobian() * result.jacobianFromStart;
             }
@@ -612,12 +621,12 @@ class Gx2Fitter {
             ACTS_VERBOSE("Ignoring hole, because no preceding measurements.");
           }
 
-//          if (surface->surfaceMaterial() != nullptr) {
-//            // TODO write similar to KF?
-//            // Update state and stepper with material effects
-//            // materialInteractor(surface, state, stepper, navigator,
-//            // MaterialUpdateStage::FullUpdate);
-//          }
+          if (surface->surfaceMaterial() != nullptr) {
+            // TODO write similar to KF?
+            // Update state and stepper with material effects
+            // materialInteractor(surface, state, stepper, navigator,
+            // MaterialUpdateStage::FullUpdate);
+          }
 
         } else {
           ACTS_INFO("Actor: This case is not implemented yet")
