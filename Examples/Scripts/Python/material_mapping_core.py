@@ -35,7 +35,7 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
     # Create a sequencer
-    print("Creating the sequencer with 1 thread (across event information needed)")
+    print("Creating the sequencer with 1 thread (inter event information needed)")
 
     s = Sequencer(numThreads=1)
 
@@ -156,7 +156,6 @@ if "__main__" == __name__:
     args = p.parse_args()
 
     if args.experimental:
-
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 
         # Create the dd4hep geometry service and detector
@@ -173,7 +172,6 @@ if "__main__" == __name__:
         [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
         materialSurfaces = detector.extractMaterialSurfaces()
-        print("Extracted number of material surfaces: ", len(materialSurfaces))
 
     else:
         matDeco = None
@@ -183,7 +181,6 @@ if "__main__" == __name__:
         [detector, trackingGeometry, decorators] = getOpenDataDetector(matDeco)
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
-        print("Extracted number of material surfaces: ", len(materialSurfaces))
 
     runMaterialMapping(
         materialSurfaces, args.input, args.output, args.map, acts.logging.INFO

@@ -2,6 +2,7 @@
 
 import os
 import argparse
+from pathlib import Path
 
 import acts
 from acts import (
@@ -93,7 +94,7 @@ if "__main__" == __name__:
 
     if args.experimental:
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
-
+            
         # Create the dd4hep geometry service and detector
         dd4hepConfig = DD4hepGeometryService.Config()
         dd4hepConfig.logLevel = acts.logging.INFO
@@ -107,8 +108,18 @@ if "__main__" == __name__:
         geoContext = acts.GeometryContext()
         [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
+        if args.map != "":
+            mapsFile = Path(args.map)
+            # Load material maps from json or cbor file
+            if mapsFile.suffix in (".json", ".cbor"):
+                materialMaps = acts.examples.materialMapsFromJson(args.map)
+                # Load material maps from root file
+                acts.examples.assignMaterialToDetector(detector, materialMaps)
+            elif mapsFile.suffix == ".root":
+                materialMaps = acts.examples.materialMapsFromRoot(args.map)
+                acts.examples.assignMaterialToDetector(detector, materialMaps)
+            
         materialSurfaces = detector.extractMaterialSurfaces()
-        print("Extracted number of material surfaces: ", len(materialSurfaces))
 
     else:
         decorators = None
@@ -118,7 +129,6 @@ if "__main__" == __name__:
         [detector, trackingGeometry, decorators] = getOpenDataDetector(decorators)
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
-        print("Extracted number of material surfaces: ", len(materialSurfaces))
 
     s = acts.examples.Sequencer(events=args.events, numThreads=args.threads)
 

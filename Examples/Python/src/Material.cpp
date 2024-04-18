@@ -6,16 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Detector/DetectorMaterialHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/PropagatorMaterialAssigner.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -50,6 +55,15 @@ using namespace ActsExamples;
 namespace Acts::Python {
 void addMaterial(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
+
+  {
+    py::class_<Acts::ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
+        m, "ISurfaceMaterial");
+
+    py::class_<Acts::IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
+        m, "IVolumeMaterial");
+  }
+
   {
     py::class_<Acts::IMaterialDecorator,
                std::shared_ptr<Acts::IMaterialDecorator>>(m,
@@ -87,6 +101,26 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(rhotag);
     ACTS_PYTHON_MEMBER(fileName);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    mex.def("materialMapsFromJson", [](const std::string& fileName) {
+      // Read file into json
+      std::ifstream i(fileName);
+      nlohmann::json j;
+      i >> j;
+
+      MaterialMapJsonConverter::Config config{};
+      MaterialMapJsonConverter converter(config, Acts::Logging::INFO);
+      return converter.jsonToMaterialMaps(j);
+    });
+
+    mex.def("materialMapsFromRoot", [](const std::string& fileName) {
+      RootMaterialDecorator::Config config{};
+      config.fileName = fileName;
+      RootMaterialDecorator decorator(config, Acts::Logging::INFO);
+      return decorator.materialMaps();
+    });
   }
 
   {
@@ -316,6 +350,15 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(materialValidater);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using MaterialMaps =
+        Acts::Experimental::DetectorMaterialHelper::DetectorMaterialMaps;
+
+    mex.def("assignMaterialToDetector",
+            &Acts::Experimental::DetectorMaterialHelper::assignMaterial,
+            "detector"_a, "materialMaps"_a);
   }
 }
 
