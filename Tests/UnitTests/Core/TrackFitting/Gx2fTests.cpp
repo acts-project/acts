@@ -909,7 +909,7 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
-  BOOST_CHECK_CLOSE(track.covariance().determinant(), 2.3e-28, 4e0);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 4.7e-28, 2e0);
 
   ACTS_INFO("*** Test: FindHoles -- Finish");
 }

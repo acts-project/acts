@@ -535,7 +535,7 @@ class Gx2Fitter {
           ACTS_VERBOSE("Non-Measurement surface " << surface->geometryId()
                                                   << " detected.");
 
-          // We only create track states here if there is already measurement
+          // We only create track states here if there is already a measurement
           // detected or if the surface has material (no holes before the first
           // measurement)
           if (result.measurementStates > 0
@@ -594,9 +594,6 @@ class Gx2Fitter {
                 ACTS_VERBOSE("Detected in-sensitive surface "
                              << surface->geometryId());
               }
-
-//              result.jacobianFromStart =
-//                  trackStateProxy.jacobian() * result.jacobianFromStart;
             }
 
             ACTS_VERBOSE(
