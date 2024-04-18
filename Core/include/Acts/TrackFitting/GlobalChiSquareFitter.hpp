@@ -385,14 +385,16 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
-      if (result.measurementStates == inputMeasurements->size() ||
-          state.navigation.navigationBreak) {
-        ACTS_INFO(
-            "Actor: finish: All measurements are found or navigationBreak is "
-            "received.");
+      // Check if we can stop to propagate
+      if (result.measurementStates == inputMeasurements->size()) {
+        ACTS_INFO("Actor: finish: All measurements have been found.");
+        result.finished = true;
+      } else if (state.navigation.navigationBreak) {
+        ACTS_INFO("Actor: finish: navigationBreak.");
         result.finished = true;
       }
 
+      // End the propagation and return to the fitter
       if (result.finished) {
         return;
       }
