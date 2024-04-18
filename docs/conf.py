@@ -68,7 +68,7 @@ linkcheck_ignore = [
     r"https://pythia.org.*",
     r"https://lcginfo.cern.ch/.*",
     r"https://.*\.?intel.com/.*",
-    r"https://conventionalcommits.org/.*",
+    r"https://www.conventionalcommits.org/.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------
