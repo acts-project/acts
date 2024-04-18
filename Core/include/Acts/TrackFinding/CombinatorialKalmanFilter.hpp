@@ -572,7 +572,9 @@ class CombinatorialKalmanFilter {
         if (!boundStateRes.ok()) {
           return boundStateRes.error();
         }
-        auto boundState = *boundStateRes;
+        auto& boundState = *boundStateRes;
+        auto& [boundParams, jacobian, pathLength] = boundState;
+        boundParams.covariance() = state.stepping.cov;
 
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
@@ -939,9 +941,7 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
-      if (boundParams.covariance().has_value()) {
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-      }
+      trackStateProxy.predictedCovariance() = boundParams.covariance().value();
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface

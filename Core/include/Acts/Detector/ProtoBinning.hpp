@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
@@ -130,6 +131,54 @@ struct ProtoBinning {
 
 /// @brief A binning description, it helps for screen output
 struct BinningDescription {
+  /// Convert the binning description into a bin utility
+  ///
+  /// @param binUtility the bin utility to be converted into a BinningDescription
+  static BinningDescription fromBinUtility(const BinUtility& binUtility) {
+    BinningDescription bDesc;
+    for (const auto& bData : binUtility.binningData()) {
+      // One proto binning per binning data
+      Acts::detail::AxisBoundaryType boundaryType =
+          bData.option == open ? Acts::detail::AxisBoundaryType::Bound
+                               : Acts::detail::AxisBoundaryType::Closed;
+      std::vector<ActsScalar> edges;
+      if (bData.type == equidistant) {
+        bDesc.binning.push_back(ProtoBinning(bData.binvalue, boundaryType,
+                                             bData.min, bData.max, bData.bins(),
+                                             0u));
+
+      } else {
+        std::for_each(bData.boundaries().begin(), bData.boundaries().end(),
+                      [&](ActsScalar edge) { edges.push_back(edge); });
+        bDesc.binning.push_back(
+            ProtoBinning(bData.binvalue, boundaryType, edges, 0u));
+      }
+    }
+    return bDesc;
+  }
+
+  /// Convert to a BinUtility - only basic types are supported
+  ///
+  BinUtility toBinUtility() const {
+    BinUtility binUtility;
+    for (const auto& b : binning) {
+      Acts::BinningOption bOption =
+          b.boundaryType == Acts::detail::AxisBoundaryType::Bound
+              ? Acts::open
+              : Acts::closed;
+      if (b.axisType == Acts::detail::AxisType::Equidistant) {
+        binUtility += BinUtility(b.bins(), b.edges.front(), b.edges.back(),
+                                 bOption, b.binValue);
+      } else {
+        std::vector<float> edges;
+        std::for_each(b.edges.begin(), b.edges.end(),
+                      [&](ActsScalar edge) { edges.push_back(edge); });
+        binUtility += BinUtility(edges, bOption, b.binValue);
+      }
+    }
+    return binUtility;
+  }
+
   /// The contained binnings
   std::vector<ProtoBinning> binning;
 

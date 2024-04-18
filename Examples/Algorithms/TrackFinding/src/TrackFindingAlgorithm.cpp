@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -54,8 +55,75 @@
 
 #include <boost/functional/hash.hpp>
 
+// Specialize std::hash for SeedIdentifier
+// This is required to use SeedIdentifier as a key in an `std::unordered_map`.
+template <class T, std::size_t N>
+struct std::hash<std::array<T, N>> {
+  std::size_t operator()(const std::array<T, N>& array) const {
+    std::hash<T> hasher;
+    std::size_t result = 0;
+    for (auto&& element : array) {
+      boost::hash_combine(result, hasher(element));
+    }
+    return result;
+  }
+};
+
 namespace ActsExamples {
+
 namespace {
+
+class MeasurementSelector {
+ public:
+  using Traj = Acts::VectorMultiTrajectory;
+
+  explicit MeasurementSelector(Acts::MeasurementSelector selector)
+      : m_selector(std::move(selector)) {}
+
+  void setSeed(const std::optional<SimSeed>& seed) { m_seed = seed; }
+
+  Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
+                         std::vector<Traj::TrackStateProxy>::iterator>>
+  select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
+         const Acts::Logger& logger) const {
+    if (m_seed.has_value()) {
+      std::vector<Traj::TrackStateProxy> newCandidates;
+
+      for (const auto& candidate : candidates) {
+        if (isSeedCandidate(candidate)) {
+          newCandidates.push_back(candidate);
+        }
+      }
+
+      if (!newCandidates.empty()) {
+        candidates = std::move(newCandidates);
+      }
+    }
+
+    return m_selector.select<Acts::VectorMultiTrajectory>(candidates, isOutlier,
+                                                          logger);
+  }
+
+ private:
+  Acts::MeasurementSelector m_selector;
+  std::optional<SimSeed> m_seed;
+
+  bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
+    assert(candidate.hasUncalibratedSourceLink());
+
+    const Acts::SourceLink& sourceLink = candidate.getUncalibratedSourceLink();
+
+    for (const auto& sp : m_seed->sp()) {
+      for (const auto& sl : sp->sourceLinks()) {
+        if (sourceLink.get<IndexSourceLink>() == sl.get<IndexSourceLink>()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+};
 
 /// Source link indices of the bottom, middle, top measurements.
 /// In case of strip seeds only the first source link of the pair is used.
@@ -106,37 +174,69 @@ void visitSeedIdentifiers(const TrackProxy& track, Visitor visitor) {
   }
 }
 
-}  // namespace
-}  // namespace ActsExamples
+class BranchStopper {
+ public:
+  using Config =
+      std::optional<std::variant<Acts::TrackSelector::Config,
+                                 Acts::TrackSelector::EtaBinnedConfig>>;
 
-// Specialize std::hash for SeedIdentifier
-// This is required to use SeedIdentifier as a key in an `std::unordered_map`.
-template <class T, std::size_t N>
-struct std::hash<std::array<T, N>> {
-  std::size_t operator()(const std::array<T, N>& array) const {
-    std::hash<T> hasher;
-    std::size_t result = 0;
-    for (auto&& element : array) {
-      boost::hash_combine(result, hasher(element));
+  explicit BranchStopper(const Config& config) : m_config(config) {}
+
+  bool operator()(
+      const Acts::CombinatorialKalmanFilterTipState& tipState,
+      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
+    if (!m_config.has_value()) {
+      return false;
     }
-    return result;
+
+    const Acts::TrackSelector::Config* singleConfig = std::visit(
+        [&](const auto& config) -> const Acts::TrackSelector::Config* {
+          using T = std::decay_t<decltype(config)>;
+          if constexpr (std::is_same_v<T, Acts::TrackSelector::Config>) {
+            return &config;
+          } else if constexpr (std::is_same_v<
+                                   T, Acts::TrackSelector::EtaBinnedConfig>) {
+            double theta = trackState.parameters()[Acts::eBoundTheta];
+            double eta = -std::log(std::tan(0.5 * theta));
+            return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
+          }
+        },
+        *m_config);
+
+    if (singleConfig == nullptr) {
+      return true;
+    }
+
+    // Continue if the number of holes is below the maximum
+    if (tipState.nHoles <= singleConfig->maxHoles) {
+      return false;
+    }
+
+    // If there are not enough measurements but more holes than allowed we stop
+    if (tipState.nMeasurements < singleConfig->minMeasurements) {
+      return true;
+    }
+
+    // Getting another measurement guarantees that the holes are in the middle
+    // of the track
+    if (trackState.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      return true;
+    }
+
+    // We cannot be sure if the holes are just at the end of the track so we
+    // have to keep going
+    return false;
   }
+
+ private:
+  Config m_config;
 };
 
-namespace ActsExamples {
+}  // namespace
 
 TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
                                              Acts::Logging::Level level)
-    : IAlgorithm("TrackFindingAlgorithm", level),
-      m_cfg(std::move(config)),
-      m_trackSelector(
-          m_cfg.trackSelectorCfg.has_value()
-              ? std::visit(
-                    [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
-                      return {cfg};
-                    },
-                    m_cfg.trackSelectorCfg.value())
-              : std::nullopt) {
+    : IAlgorithm("TrackFindingAlgorithm", level), m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -155,6 +255,19 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
     throw std::invalid_argument(
         "Missing seeds input collection. This is "
         "required for seed deduplication.");
+  }
+  if (m_cfg.stayOnSeed && m_cfg.inputSeeds.empty()) {
+    throw std::invalid_argument(
+        "Missing seeds input collection. This is "
+        "required for staying on seed.");
+  }
+
+  if (m_cfg.trackSelectorCfg.has_value()) {
+    m_trackSelector = std::visit(
+        [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
+          return {cfg};
+        },
+        m_cfg.trackSelectorCfg.value());
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
@@ -187,18 +300,23 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
+  MeasurementSelector measSel{
+      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
-      extensions;
+  using Extensions =
+      Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>;
+
+  BranchStopper branchStopper(m_cfg.trackSelectorCfg);
+
+  Extensions extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.measurementSelector
-      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
-          &measSel);
+  extensions.measurementSelector.connect<&MeasurementSelector::select>(
+      &measSel);
+  extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &sourceLinks;
@@ -219,7 +337,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, firstPropOptions);
 
-  ActsExamples::TrackFindingAlgorithm::TrackFinderOptions secondOptions(
+  TrackFindingAlgorithm::TrackFinderOptions secondOptions(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
       extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
@@ -286,15 +404,22 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   for (std::size_t iSeed = 0; iSeed < initialParameters.size(); ++iSeed) {
     m_nTotalSeeds++;
 
-    if (seeds != nullptr && m_cfg.seedDeduplication) {
+    if (seeds != nullptr) {
       const SimSeed& seed = seeds->at(iSeed);
-      SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
-      // check if the seed has been discovered already
-      if (auto it = discoveredSeeds.find(seedIdentifier);
-          it != discoveredSeeds.end() && it->second) {
-        m_nDeduplicatedSeeds++;
-        ACTS_VERBOSE("Skipping seed " << iSeed << " due to deduplication.");
-        continue;
+
+      if (m_cfg.seedDeduplication) {
+        SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
+        // check if the seed has been discovered already
+        if (auto it = discoveredSeeds.find(seedIdentifier);
+            it != discoveredSeeds.end() && it->second) {
+          m_nDeduplicatedSeeds++;
+          ACTS_VERBOSE("Skipping seed " << iSeed << " due to deduplication.");
+          continue;
+        }
+      }
+
+      if (m_cfg.stayOnSeed) {
+        measSel.setSeed(seed);
       }
     }
 
@@ -306,7 +431,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     auto firstResult =
         (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
-
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -414,7 +538,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                            << iSeed << " and track " << secondTrack.index()
                            << " failed with error "
                            << secondExtrapolationResult.error());
-
                 continue;
               }
 

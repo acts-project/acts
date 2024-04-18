@@ -394,6 +394,16 @@ class Gx2Fitter {
         return;
       }
 
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      if (state.navigation.externalSurfaces.size() == 0) {
+        for (auto measurementIt = inputMeasurements->begin();
+             measurementIt != inputMeasurements->end(); measurementIt++) {
+          navigator.insertExternalSurface(state.navigation,
+                                          measurementIt->first);
+        }
+      }
+
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -447,17 +457,14 @@ class Gx2Fitter {
               result.result = res.error();
               return;
             }
-            auto& [boundParams, jacobian, pathLength] = *res;
+            const auto& [boundParams, jacobian, pathLength] = *res;
 
             // Fill the track state
-            trackStateProxy.predicted() = std::move(boundParams.parameters());
-            if (boundParams.covariance().has_value()) {
-              trackStateProxy.predictedCovariance() =
-                  std::move(*boundParams.covariance());
-            }
+            trackStateProxy.predicted() = boundParams.parameters();
+            trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-            trackStateProxy.jacobian() = std::move(jacobian);
-            trackStateProxy.pathLength() = std::move(pathLength);
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
           }
 
           // We have predicted parameters, so calibrate the uncalibrated input
@@ -667,16 +674,19 @@ class Gx2Fitter {
 
       // This check takes into account the evaluated dimensions of the
       // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we n-dimensional measurements count for n measurements, reducing the
+      // we count n-dimensional measurements for n measurements, reducing the
       // effective number of needed measurements.
       // We might encounter the case, where we cannot use some (parts of a)
       // measurements, maybe if we do not support that kind of measurement. This
       // is also taken into account here.
       // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
       // a more general approach is desired.
+      // We skip the check during the first iteration, since we cannot
+      // guarantee to hit all/enough measurement surfaces with the initial
+      // parameter guess.
       // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
-      if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
+      if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
         ACTS_INFO("Not enough measurements. Require "
                   << ndf + 1 << ", but only "
                   << gx2fResult.collectorResiduals.size() << " could be used.");
