@@ -387,7 +387,9 @@ class Gx2Fitter {
 
       if (result.measurementStates == inputMeasurements->size() ||
           state.navigation.navigationBreak) {
-        ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
+        ACTS_INFO(
+            "Actor: finish: All measurements are found or navigationBreak is "
+            "received.");
         result.finished = true;
       }
 
