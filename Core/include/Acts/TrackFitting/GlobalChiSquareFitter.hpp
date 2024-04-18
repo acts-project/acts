@@ -516,10 +516,6 @@ class Gx2Fitter {
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
 
-          // TODO check for outlier first
-          // We count the state with measurement
-          ++result.measurementStates;
-
           // We count the processed state
           ++result.processedStates;
         } else {
