@@ -385,7 +385,8 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
-      if (state.navigation.navigationBreak) {
+      if (result.measurementStates == inputMeasurements->size() ||
+          state.navigation.navigationBreak) {
         ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
         result.finished = true;
       }
@@ -512,6 +513,10 @@ class Gx2Fitter {
                        << "currentTrackIndex: " << currentTrackIndex)
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
+
+          // TODO check for outlier first
+          // We count the state with measurement
+          ++result.measurementStates;
         } else {
           ACTS_INFO("Actor: This case is not implemented yet")
         }
