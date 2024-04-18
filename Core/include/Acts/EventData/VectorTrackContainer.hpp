@@ -109,7 +109,6 @@ class VectorTrackContainerBase {
 
   bool checkConsistency() const {
     std::size_t size = m_tipIndex.size();
-    (void)size;
 
     bool result = true;
     result = result && m_tipIndex.size() == size;
