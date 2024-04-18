@@ -256,6 +256,7 @@ addCKFTracks(
         absEta=(None, 3.0),
         loc0=(-4.0 * u.mm, 4.0 * u.mm),
         nMeasurementsMin=7,
+        maxHoles=2,
     ),
     CkfConfig(
         seedDeduplication=True,
