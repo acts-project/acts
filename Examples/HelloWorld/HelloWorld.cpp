@@ -16,9 +16,7 @@
 #include "HelloRandomAlgorithm.hpp"
 #include "HelloWhiteBoardAlgorithm.hpp"
 
-int main(int argc, char* argv[]) {
-  (void)argc;
-  (void)argv;
+int main(void) {
   Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
   // setup basic tools shared among algorithms
