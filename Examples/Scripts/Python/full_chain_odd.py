@@ -61,11 +61,13 @@ parser.add_argument(
 parser.add_argument(
     "--ttbar-pu",
     help="Number of pile-up events for ttbar",
+    type=int,
     default=200,
 )
 parser.add_argument(
     "--gun-multiplicity",
     help="Multiplicity of the particle gun",
+    type=int,
     default=200,
 )
 parser.add_argument(
