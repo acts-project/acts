@@ -22,9 +22,7 @@ struct FixedMultiplicityGenerator
   FixedMultiplicityGenerator(std::size_t _n) : n{_n} {}
   FixedMultiplicityGenerator() = default;
 
-  std::size_t operator()(RandomEngine& /* unused */) const override {
-    return n;
-  }
+  std::size_t operator()(RandomEngine& /*rng*/) const override { return n; }
 };
 
 struct PoissonMultiplicityGenerator
