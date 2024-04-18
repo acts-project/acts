@@ -201,6 +201,9 @@ struct Gx2FitterResult {
   // between the first and last measurements.
   std::size_t measurementHoles = 0;
 
+  // Counter for handled states
+  std::size_t processedStates = 0;
+
   // Counter for handled measurements
   std::size_t processedMeasurements = 0;
 
@@ -521,6 +524,9 @@ class Gx2Fitter {
           // TODO check for outlier first
           // We count the state with measurement
           ++result.measurementStates;
+
+          // We count the processed state
+          ++result.processedStates;
         } else {
           ACTS_INFO("Actor: This case is not implemented yet")
         }
