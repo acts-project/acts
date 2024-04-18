@@ -103,7 +103,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args["events"],
     skip=args["skip"],
-    numThreads=1,
+    numThreads=1 if g4_simulation else -1,
     outputDir=str(outputDir),
 )
 
@@ -159,14 +159,14 @@ else:
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=args.gun_multiplicity,
+            multiplicity=args["gun_multiplicity"],
             rnd=rnd,
         )
     else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=args.ttbar_pu,
+            npileup=args["ttbar_pu"],
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
