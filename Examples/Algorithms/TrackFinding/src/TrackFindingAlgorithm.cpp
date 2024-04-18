@@ -212,6 +212,11 @@ class BranchStopper {
       return false;
     }
 
+    // Continue if the number of outliers is below the maximum
+    if (tipState.nOutliers <= singleConfig->maxOutliers) {
+      return false;
+    }
+
     // If there are not enough measurements but more holes than allowed we stop
     if (tipState.nMeasurements < singleConfig->minMeasurements) {
       return true;
