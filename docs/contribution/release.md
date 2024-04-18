@@ -1,6 +1,6 @@
 # How to make a release
 
-We use conventional commits (https://www.conventionalcommits.org/en/v1.0.0/#summary) for all of our PRs. We use the common prefixes: `fix:`, `feat:`, `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`.
+We use conventional commits for all of our PRs. We use the common prefixes: `fix:`, `feat:`, `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`.
 
 The next version number for a release is automatically determined from the PRs (commits) that have been merged since the last release, following semantic versioning. On top of that, release notes are automatically generated from the PR titles, using the prefixes as groups.
 
