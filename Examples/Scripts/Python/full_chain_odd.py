@@ -59,6 +59,18 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
+    "--ttbar-pu",
+    help="Number of pile-up events for ttbar",
+    type=int,
+    default=200,
+)
+parser.add_argument(
+    "--gun-multiplicity",
+    help="Multiplicity of the particle gun",
+    type=int,
+    default=200,
+)
+parser.add_argument(
     "--MLSolver",
     help="Use the Ml Ambiguity Solver instead of the classical one",
     action="store_true",
@@ -135,7 +147,6 @@ if args["edm4hep"]:
         inputParticles="particles",
         outputParticles="particles_selected",
     )
-
 else:
     if not ttbar:
         addParticleGun(
@@ -150,14 +161,14 @@ else:
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=200,
+            multiplicity=args["gun_multiplicity"],
             rnd=rnd,
         )
     else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=50,
+            npileup=args["ttbar_pu"],
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
@@ -235,6 +246,7 @@ addSeeding(
     outputDirRoot=outputDir,
     # outputDirCsv=outputDir,
 )
+
 if seedFilter_ML:
     addSeedFilterML(
         s,
