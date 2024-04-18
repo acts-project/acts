@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -109,5 +110,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 };
 
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
+
+using ProtoGridSurfaceMaterial =
+    ProtoSurfaceMaterialT<Acts::Experimental::BinningDescription>;
 
 }  // namespace Acts
