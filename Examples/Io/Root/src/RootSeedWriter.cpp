@@ -51,7 +51,7 @@ ActsExamples::RootSeedWriter::RootSeedWriter(
                        "measurement_id_2/l");
   m_outputTree->Branch("measurement_id_3", &m_measurementId_3,
                        "measurement_id_3/l");
-  if (strcmp(m_cfg.writingMode.c_str(), "small") != 0) {
+  if (m_cfg.writingMode != "small") {
     m_outputTree->Branch("geometry_id_1", &m_geometryId_1, "geometry_id_1/l");
     m_outputTree->Branch("geometry_id_2", &m_geometryId_2, "geometry_id_2/l");
     m_outputTree->Branch("geometry_id_3", &m_geometryId_3, "geometry_id_3/l");
@@ -109,7 +109,7 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
         spacepoints[2]->sourceLinks()[0].get<IndexSourceLink>();
 
     m_measurementId_1 = slink_1.index();
-    if (strcmp(m_cfg.writingMode.c_str(), "small") != 0) {
+    if (m_cfg.writingMode != "small") {
       m_geometryId_1 = slink_1.geometryId().value();
       m_x_1 = spacepoints[0]->x();
       m_y_1 = spacepoints[0]->y();
@@ -119,7 +119,7 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
     }
 
     m_measurementId_2 = slink_2.index();
-    if (strcmp(m_cfg.writingMode.c_str(), "small") != 0) {
+    if (m_cfg.writingMode != "small") {
       m_geometryId_2 = slink_2.geometryId().value();
       m_x_2 = spacepoints[1]->x();
       m_y_2 = spacepoints[1]->y();
@@ -129,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
     }
 
     m_measurementId_3 = slink_3.index();
-    if (strcmp(m_cfg.writingMode.c_str(), "small") != 0) {
+    if (m_cfg.writingMode != "small") {
       m_geometryId_3 = slink_3.geometryId().value();
       m_x_3 = spacepoints[2]->x();
       m_y_3 = spacepoints[2]->y();
@@ -138,7 +138,7 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
       m_var_z_3 = spacepoints[2]->varianceZ();
     }
 
-    if (strcmp(m_cfg.writingMode.c_str(), "small") != 0) {
+    if (m_cfg.writingMode != "small") {
       m_z_vertex = seed.z();
       m_seed_quality = seed.seedQuality();
     }
