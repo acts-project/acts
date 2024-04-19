@@ -394,6 +394,14 @@ struct TimingInfo {
   DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
 };
 
+// struct to store timing data
+struct EventTimingInfo {
+  std::string identifier;
+  double time_s = 0;
+  int eventId;
+  DFE_NAMEDTUPLE(EventTimingInfo, identifier, time_s, eventId);
+};
+
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  const std::string& path) {
@@ -416,6 +424,7 @@ int Sequencer::run() {
   std::vector<std::string> names = listAlgorithmNames();
   std::vector<Duration> clocksAlgorithms(names.size(), Duration::zero());
   tbbWrap::queuing_mutex clocksAlgorithmsMutex;
+  std::vector<EventTimingInfo> eventTimingData;
 
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
@@ -542,6 +551,19 @@ int Sequencer::run() {
               context.fpeMonitor = nullptr;
             }
 
+            if (m_cfg.enableEventTiming) {
+              // Collect the event timing data
+              for (std::size_t i = 0; i < names.size(); i++) {
+                EventTimingInfo eventInfo;
+                eventInfo.identifier = names[i];
+                eventInfo.time_s = std::chrono::duration_cast<Seconds>(
+                                       localClocksAlgorithms[i])
+                                       .count();
+                eventInfo.eventId = event;
+                eventTimingData.push_back(eventInfo);
+              }
+            }
+
             nProcessedEvents++;
             if (logger().level() <= Acts::Logging::DEBUG) {
               ACTS_DEBUG("finished event " << event);
@@ -596,6 +618,17 @@ int Sequencer::run() {
 
   if (m_nUnmaskedFpe > 0) {
     return EXIT_FAILURE;
+  }
+
+  if (m_cfg.enableEventTiming) {
+    // Write the data to a file
+    std::string eventTimingPath =
+        joinPaths(m_cfg.outputDir, "event_timing.tsv");
+    dfe::NamedTupleTsvWriter<EventTimingInfo> eventTimingWriter(eventTimingPath,
+                                                                4);
+    for (EventTimingInfo info : eventTimingData) {
+      eventTimingWriter.append(info);
+    }
   }
 
   return EXIT_SUCCESS;

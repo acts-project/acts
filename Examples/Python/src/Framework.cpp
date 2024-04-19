@@ -188,6 +188,7 @@ void addFramework(Context& ctx) {
   ACTS_PYTHON_MEMBER(numThreads);
   ACTS_PYTHON_MEMBER(outputDir);
   ACTS_PYTHON_MEMBER(outputTimingFile);
+  ACTS_PYTHON_MEMBER(enableEventTiming);
   ACTS_PYTHON_MEMBER(trackFpes);
   ACTS_PYTHON_MEMBER(fpeMasks);
   ACTS_PYTHON_MEMBER(failOnFirstFpe);
