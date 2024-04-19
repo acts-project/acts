@@ -250,8 +250,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
     const std::size_t numQualitySeeds,
-    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-    const {
+    GenericBackInserter<Seed<external_spacepoint_t>> outIt) const {
   // retrieve all candidates
   // this collection is already sorted
   // higher weights first
@@ -267,8 +266,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
         const InternalSpacePoint<external_spacepoint_t>>::value_type>&
         candidates,
     const std::size_t numQualitySeeds,
-    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-    const {
+    GenericBackInserter<Seed<external_spacepoint_t>> outIt) const {
   if (m_experimentCuts != nullptr) {
     candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
   }

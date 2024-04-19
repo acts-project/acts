@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
+#include "Acts/Seeding/ContainerPolicy.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -84,8 +85,7 @@ class SeedFilter {
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
       const std::size_t numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-      const;
+      GenericBackInserter<Seed<external_spacepoint_t>> outIt) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param spacePointData Auxiliary variables used by the seeding
@@ -99,8 +99,7 @@ class SeedFilter {
           const InternalSpacePoint<external_spacepoint_t>>::value_type>&
           candidates,
       const std::size_t numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-      const;
+      GenericBackInserter<Seed<external_spacepoint_t>> outIt) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {

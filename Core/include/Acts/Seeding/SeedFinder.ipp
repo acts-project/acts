@@ -36,11 +36,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <template <typename...> typename container_t, typename sp_range_t>
+template <typename sp_range_t>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid,
-    std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
+    const grid_t& grid, GenericBackInserter<Seed<external_spacepoint_t>> outIt,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
@@ -837,8 +836,11 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   const Acts::Range1D<float> rMiddleSPRange;
   std::vector<Seed<external_spacepoint_t>> ret;
 
-  createSeedsForGroup(options, state, grid, std::back_inserter(ret), bottomSPs,
-                      middleSPs, topSPs, rMiddleSPRange);
+  VectorPolicy outPolicyContainer(ret);
+  GenericBackInserter backInserter(outPolicyContainer);
+
+  createSeedsForGroup(options, state, grid, backInserter, bottomSPs, middleSPs,
+                      topSPs, rMiddleSPRange);
 
   return ret;
 }
