@@ -180,6 +180,8 @@ class BranchStopper {
       std::optional<std::variant<Acts::TrackSelector::Config,
                                  Acts::TrackSelector::EtaBinnedConfig>>;
 
+  mutable std::atomic<std::size_t> m_nStoppedBranches{0};
+
   explicit BranchStopper(const Config& config) : m_config(config) {}
 
   bool operator()(
@@ -204,6 +206,7 @@ class BranchStopper {
         *m_config);
 
     if (singleConfig == nullptr) {
+      ++m_nStoppedBranches;
       return true;
     }
 
@@ -219,12 +222,14 @@ class BranchStopper {
 
     // If there are not enough measurements but more holes than allowed we stop
     if (tipState.nMeasurements < singleConfig->minMeasurements) {
+      ++m_nStoppedBranches;
       return true;
     }
 
     // Getting another measurement guarantees that the holes are in the middle
     // of the track
     if (trackState.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      ++m_nStoppedBranches;
       return true;
     }
 
@@ -381,6 +386,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   std::unordered_map<SeedIdentifier, bool> discoveredSeeds;
 
   auto addTrack = [&](const TrackProxy& track) {
+    ++m_nFoundTracks;
+
     // flag seeds which are covered by the track
     visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
       if (auto it = discoveredSeeds.find(seedIdentifier);
@@ -392,6 +399,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
     }
+
+    ++m_nSelectedTracks;
 
     auto destProxy = tracks.makeTrack();
     // make sure we copy track states!
@@ -587,6 +596,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
                                              << " track candidates.");
 
+  m_nStoppedBranches += branchStopper.m_nStoppedBranches;
+
   m_memoryStatistics.local().hist +=
       tracks.trackStateContainer().statistics().hist;
 
@@ -613,6 +624,9 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- failed extrapolation: " << m_nFailedExtrapolation);
   ACTS_INFO("- failure ratio seeds: " << static_cast<double>(m_nFailedSeeds) /
                                              m_nTotalSeeds);
+  ACTS_INFO("- found tracks: " << m_nFoundTracks);
+  ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
+  ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {

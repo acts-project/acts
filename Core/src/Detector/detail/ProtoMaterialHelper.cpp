@@ -17,9 +17,6 @@ Acts::Experimental::BinningDescription
 Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
     const BinningDescription& bDescription) {
-  // Shorthand definition
-  using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<BinningDescription>;
-
   // The binning description, with eventually fixed range
   BinningDescription fbDescription;
   // Measure the surface
