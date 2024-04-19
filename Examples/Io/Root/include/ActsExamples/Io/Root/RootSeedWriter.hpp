@@ -83,27 +83,27 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   uint64_t m_geometryId_1 = 0;
   uint64_t m_geometryId_2 = 0;
   uint64_t m_geometryId_3 = 0;
-  /// Global space point position components in mm.
-  float m_x_1 = std::numeric_limits<float>::infinity();
-  float m_x_2 = std::numeric_limits<float>::infinity();
-  float m_x_3 = std::numeric_limits<float>::infinity();
-  float m_y_1 = std::numeric_limits<float>::infinity();
-  float m_y_2 = std::numeric_limits<float>::infinity();
-  float m_y_3 = std::numeric_limits<float>::infinity();
-  float m_z_1 = std::numeric_limits<float>::infinity();
-  float m_z_2 = std::numeric_limits<float>::infinity();
-  float m_z_3 = std::numeric_limits<float>::infinity();
+  /// Global space point position components in mm. init to NaN
+  float m_x_1 = std::numeric_limits<float>::signaling_NaN();
+  float m_x_2 = std::numeric_limits<float>::signaling_NaN();
+  float m_x_3 = std::numeric_limits<float>::signaling_NaN();
+  float m_y_1 = std::numeric_limits<float>::signaling_NaN();
+  float m_y_2 = std::numeric_limits<float>::signaling_NaN();
+  float m_y_3 = std::numeric_limits<float>::signaling_NaN();
+  float m_z_1 = std::numeric_limits<float>::signaling_NaN();
+  float m_z_2 = std::numeric_limits<float>::signaling_NaN();
+  float m_z_3 = std::numeric_limits<float>::signaling_NaN();
   // Global space point position uncertainties
-  float m_var_r_1 = std::numeric_limits<float>::infinity();
-  float m_var_r_2 = std::numeric_limits<float>::infinity();
-  float m_var_r_3 = std::numeric_limits<float>::infinity();
-  float m_var_z_1 = std::numeric_limits<float>::infinity();
-  float m_var_z_2 = std::numeric_limits<float>::infinity();
-  float m_var_z_3 = std::numeric_limits<float>::infinity();
+  float m_var_r_1 = std::numeric_limits<float>::signaling_NaN();
+  float m_var_r_2 = std::numeric_limits<float>::signaling_NaN();
+  float m_var_r_3 = std::numeric_limits<float>::signaling_NaN();
+  float m_var_z_1 = std::numeric_limits<float>::signaling_NaN();
+  float m_var_z_2 = std::numeric_limits<float>::signaling_NaN();
+  float m_var_z_3 = std::numeric_limits<float>::signaling_NaN();
   // Seed vertex position
-  double m_z_vertex = std::numeric_limits<double>::infinity();
+  double m_z_vertex = std::numeric_limits<double>::signaling_NaN();
   // Seed quality
-  float m_seed_quality = std::numeric_limits<float>::infinity();
+  float m_seed_quality = std::numeric_limits<float>::signaling_NaN();
 };
 
 }  // namespace ActsExamples
