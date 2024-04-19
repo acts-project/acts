@@ -76,9 +76,13 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   /// Event identifier.
   uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  uint64_t m_measurementId_1 = 0, m_measurementId_2 = 0, m_measurementId_3 = 0;
+  uint64_t m_measurementId_1 = 0;
+  uint64_t m_measurementId_2 = 0;
+  uint64_t m_measurementId_3 = 0;
   /// Space point surface identifier.
-  uint64_t m_geometryId_1 = 0, m_geometryId_2 = 0, m_geometryId_3 = 0;
+  uint64_t m_geometryId_1 = 0;
+  uint64_t m_geometryId_2 = 0;
+  uint64_t m_geometryId_3 = 0;
   /// Global space point position components in mm.
   float m_x_1 = std::numeric_limits<float>::infinity();
   float m_x_2 = std::numeric_limits<float>::infinity();
