@@ -21,6 +21,7 @@
 // Acts include(s).
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/ContainerPolicy.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -200,9 +201,11 @@ int main(int argc, char* argv[]) {
       auto& group = seeds_host.emplace_back();
       auto [bottom, middle, top] = *spGroup_itr;
 
+      VectorPolicy seedPolicyContainer(group);
+      GenericBackInserter backInserter(seedPolicyContainer);
       seedFinder_host.createSeedsForGroup(sfOptions, state, spGroup.grid(),
-                                          std::back_inserter(group), bottom,
-                                          middle, top, rMiddleSPRange);
+                                          backInserter, bottom, middle, top,
+                                          rMiddleSPRange);
     }
   }
 

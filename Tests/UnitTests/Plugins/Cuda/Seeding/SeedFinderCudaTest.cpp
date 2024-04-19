@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/ContainerPolicy.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -288,10 +289,11 @@ int main(int argc, char** argv) {
     state.spacePointData.resize(spVec.size());
     for (; groupIt != spGroup.end(); ++groupIt) {
       const auto [bottom, middle, top] = *groupIt;
-      seedFinder_cpu.createSeedsForGroup(
-          options, state, spGroup.grid(),
-          std::back_inserter(seedVector_cpu.emplace_back()), bottom, middle,
-          top, rMiddleSPRange);
+      VectorPolicy seedPolicyContainer(seedVector_cpu.emplace_back());
+      GenericBackInserter backInserter(seedPolicyContainer);
+      seedFinder_cpu.createSeedsForGroup(options, state, spGroup.grid(),
+                                         backInserter, bottom, middle, top,
+                                         rMiddleSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)
