@@ -62,7 +62,7 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
-  // If the events are not ordered, we need to sort the entry numbers
+  // Sort the entry numbers of the events
   {
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_id", "", "goff");
