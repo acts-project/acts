@@ -29,6 +29,8 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionConfig,
     addAmbiguityResolutionML,
     AmbiguityResolutionMLConfig,
+    addAthenaAmbiguityResolution,
+    AthenaAmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
     addSeedFilterML,
@@ -71,10 +73,18 @@ parser.add_argument(
     default=200,
 )
 parser.add_argument(
-    "--MLSolver",
-    help="Use the Ml Ambiguity Solver instead of the classical one",
-    action="store_true",
+    "--SolverType",
+    help="Set which ambiguity solver to use, default is the classical one",
+    type=str,
+    default="classical",
 )
+parser.add_argument(
+    "--ambi_config",
+    help="Set the configuration file for the Athena ambiguity resolution",
+    type=pathlib.Path,
+    default=pathlib.Path.cwd() / "ambi_config.json",
+)
+
 parser.add_argument(
     "--MLSeedFilter",
     help="Use the Ml seed filter to select seed after the seeding step",
@@ -86,7 +96,9 @@ args = vars(parser.parse_args())
 outputDir = args["output"]
 ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
-ambiguity_MLSolver = args["MLSolver"]
+ambiguity_MLSolver = args["SolverType"] == "ML"
+athena_ambiguity_resolution = args["SolverType"] == "athena"
+ambi_config = args["ambi_config"]
 seedFilter_ML = args["MLSeedFilter"]
 geoDir = getOpenDataDetectorDirectory()
 # acts.examples.dump_args_calls(locals())  # show python binding calls
@@ -210,15 +222,17 @@ else:
             s,
             trackingGeometry,
             field,
-            preSelectParticles=ParticleSelectorConfig(
-                rho=(0.0, 24 * u.mm),
-                absZ=(0.0, 1.0 * u.m),
-                eta=(-3.0, 3.0),
-                pt=(150 * u.MeV, None),
-                removeNeutral=True,
-            )
-            if ttbar
-            else ParticleSelectorConfig(),
+            preSelectParticles=(
+                ParticleSelectorConfig(
+                    rho=(0.0, 24 * u.mm),
+                    absZ=(0.0, 1.0 * u.m),
+                    eta=(-3.0, 3.0),
+                    pt=(150 * u.MeV, None),
+                    removeNeutral=True,
+                )
+                if ttbar
+                else ParticleSelectorConfig()
+            ),
             enableInteractions=True,
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
@@ -239,9 +253,11 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-    if ttbar
-    else TruthSeedRanges(),
+    (
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+        if ttbar
+        else TruthSeedRanges()
+    ),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
     # outputDirCsv=outputDir,
@@ -269,7 +285,6 @@ addCKFTracks(
         loc0=(-4.0 * u.mm, 4.0 * u.mm),
         nMeasurementsMin=7,
         maxHoles=2,
-        maxOutliers=2,
     ),
     CkfConfig(
         seedDeduplication=True,
@@ -290,6 +305,28 @@ if ambiguity_MLSolver:
         # outputDirCsv=outputDir,
         onnxModelFile=os.path.dirname(__file__)
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+    )
+
+elif athena_ambiguity_resolution:
+    addAthenaAmbiguityResolution(
+        s,
+        AthenaAmbiguityResolutionConfig(
+            minScore=0,
+            minScoreSharedTracks=1,
+            maxShared=2,
+            maxSharedTracksPerMeasurement=2,
+            pTMax=1400,
+            pTMin=0.5,
+            phiMax=3.14,
+            phiMin=-3.14,
+            etaMax=4,
+            etaMin=-4,
+            useAmbiguityFunction=False,
+        ),
+        outputDirRoot=outputDir,
+        AmbiVolumeFile=ambi_config,
+        writeCovMat=True,
+        # outputDirCsv=outputDir,
     )
 else:
     addAmbiguityResolution(
