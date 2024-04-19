@@ -102,9 +102,12 @@ with tempfile.TemporaryDirectory() as temp:
             pt=(500 * u.MeV, None),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
+            maxHoles=2,
+            maxOutliers=2,
         ),
         CkfConfig(
             seedDeduplication=True,
+            stayOnSeed=True,
         ),
         outputDirRoot=tp,
     )

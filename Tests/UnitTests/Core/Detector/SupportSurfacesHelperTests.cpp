@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(addMisconfiguredSupportCase) {
 
   // Wrong surface type
   struct InvalidCreator {
-    auto operator()(const Acts::Extent& /*unused*/) const {
+    auto operator()(const Acts::Extent& /*e*/) const {
       return std::make_tuple(Acts::Surface::SurfaceType::Perigee,
                              std::vector<Acts::ActsScalar>{},
                              Acts::Transform3::Identity());
