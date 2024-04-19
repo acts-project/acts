@@ -5,7 +5,6 @@ import os
 import re
 
 from acts.ActsPythonBindings._examples import *
-from .ActsPythonBindings import __version__
 from acts import ActsPythonBindings
 import acts
 from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstructor
