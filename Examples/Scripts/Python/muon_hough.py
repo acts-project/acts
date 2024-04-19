@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import os
 import argparse
-import tempfile
 
-import pathlib, acts
+import acts
 
 from acts.examples import CsvMuonSimHitReader, CsvDriftCircleReader, MuonHoughSeeder
 

@@ -1,4 +1,3 @@
-import math
 import acts
 import argparse
 import acts.examples

@@ -5,7 +5,6 @@ import warnings
 
 
 from .ActsPythonBindings import *
-from .ActsPythonBindings import __version__
 from . import ActsPythonBindings
 from ._adapter import _patch_config
 

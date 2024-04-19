@@ -2,7 +2,6 @@
 from pathlib import Path
 import os
 import re
-import sys
 
 import asyncio
 import aiohttp
