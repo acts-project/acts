@@ -185,9 +185,9 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
                              "TrackFinderPerformanceWriter", inputProtoTracks,
-                             inputParticles, inputMeasurementParticlesMap,
-                             inputProtoTrackParticleMatching, filePath,
-                             fileMode, treeNameTracks, treeNameParticles);
+                             inputMeasurementParticlesMap, inputParticles,
+                             filePath, fileMode, treeNameTracks,
+                             treeNameParticles);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFitterPerformanceWriter, mex,
                              "TrackFitterPerformanceWriter", inputTracks,
@@ -206,10 +206,10 @@ void addOutput(Context& ctx) {
       inputMeasurementParticlesMap, inputMeasurementSimHitsMap, filePath,
       treeName, fileMode);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::RootMaterialTrackWriter, mex, "RootMaterialTrackWriter",
-      inputMaterialTracks, filePath, fileMode, treeName, recalculateTotals,
-      prePostStep, storeSurface, storeVolume, collapseInteractions);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootMaterialTrackWriter, mex,
+                             "RootMaterialTrackWriter", collection, filePath,
+                             fileMode, treeName, recalculateTotals, prePostStep,
+                             storeSurface, storeVolume, collapseInteractions);
 
   {
     using Writer = ActsExamples::RootBFieldWriter;
