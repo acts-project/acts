@@ -11,7 +11,7 @@ struct Context;
 }  // namespace Acts::Python
 
 namespace Acts::Python {
-void addOnnx(Context& /*unused*/) {
+void addOnnx(Context& /*ctx*/) {
   // dummy function
 }
 }  // namespace Acts::Python

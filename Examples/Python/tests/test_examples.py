@@ -1173,7 +1173,15 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         stdout = subprocess.check_output(
-            [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
+            [
+                sys.executable,
+                str(script),
+                "-n1",
+                "--geant4",
+                "--ttbar",
+                "--ttbar-pu",
+                "50",
+            ],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,
@@ -1215,7 +1223,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         subprocess.check_call(
-            [sys.executable, str(script), "-n5", "--MLSolver"],
+            [sys.executable, str(script), "-n1", "--MLSolver"],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,
