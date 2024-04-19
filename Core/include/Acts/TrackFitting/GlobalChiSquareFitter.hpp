@@ -388,11 +388,16 @@ class Gx2Fitter {
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
-      if (state.navigation.navigationBreak) {
-        ACTS_INFO("Actor: finish: state.navigation.navigationBreak");
+      // Check if we can stop to propagate
+      if (result.measurementStates == inputMeasurements->size()) {
+        ACTS_INFO("Actor: finish: All measurements have been found.");
+        result.finished = true;
+      } else if (state.navigation.navigationBreak) {
+        ACTS_INFO("Actor: finish: navigationBreak.");
         result.finished = true;
       }
 
+      // End the propagation and return to the fitter
       if (result.finished) {
         // Remove the missing surfaces that occur after the last measurement
         if (result.measurementStates > 0) {
@@ -525,6 +530,7 @@ class Gx2Fitter {
 
           // We count the processed state
           ++result.processedStates;
+
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
@@ -624,7 +630,6 @@ class Gx2Fitter {
             // materialInteractor(surface, state, stepper, navigator,
             // MaterialUpdateStage::FullUpdate);
           }
-
         } else {
           ACTS_INFO("Actor: This case is not implemented yet")
         }
