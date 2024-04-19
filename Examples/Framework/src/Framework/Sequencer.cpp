@@ -470,6 +470,7 @@ int Sequencer::run() {
   }
 
   // execute the parallel event loop
+  bool enableEventTiming = m_cfg.outputEventTimingFile.has_value();
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
   m_taskArena.execute([&] {
@@ -551,7 +552,7 @@ int Sequencer::run() {
               context.fpeMonitor = nullptr;
             }
 
-            if (m_cfg.enableEventTiming) {
+            if (enableEventTiming) {
               // Collect the event timing data
               for (std::size_t i = 0; i < names.size(); i++) {
                 EventTimingInfo eventInfo;
@@ -620,10 +621,10 @@ int Sequencer::run() {
     return EXIT_FAILURE;
   }
 
-  if (m_cfg.enableEventTiming) {
+  if (enableEventTiming) {
     // Write the data to a file
     std::string eventTimingPath =
-        joinPaths(m_cfg.outputDir, "event_timing.tsv");
+        joinPaths(m_cfg.outputDir, m_cfg.outputEventTimingFile.value());
     dfe::NamedTupleTsvWriter<EventTimingInfo> eventTimingWriter(eventTimingPath,
                                                                 4);
     for (EventTimingInfo info : eventTimingData) {
