@@ -103,6 +103,7 @@ with tempfile.TemporaryDirectory() as temp:
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
             maxHoles=2,
+            maxOutliers=2,
         ),
         CkfConfig(
             seedDeduplication=True,
