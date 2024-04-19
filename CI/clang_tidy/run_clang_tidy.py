@@ -58,9 +58,6 @@ def main():
         args.source.exists() and args.source.is_dir()
     ), f"{args.source} is not a directory"
 
-    with (args.build / "compile_commands.json").open() as f:
-        compilation_database = json.load(f)
-
     futures = []
     files = []
     active_files = {}

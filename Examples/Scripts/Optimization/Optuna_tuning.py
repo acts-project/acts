@@ -192,7 +192,7 @@ def main():
     # creating a new optuna study
     study = optuna.create_study(
         study_name=study_name,
-        storage="sqlite:///{}.db".format(study_name),
+        storage=storage_name,
         direction="maximize",
         load_if_exists=True,
     )

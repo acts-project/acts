@@ -35,7 +35,6 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     data = data.set_index("particleId")
     # Transform the hit list from a string to an actual list
     hitsIds = []
-    mergedIds = []
     for list in data["Hits_ID"].values:
         hitsIds.append(ast.literal_eval(list))
     data["Hits_ID"] = hitsIds
