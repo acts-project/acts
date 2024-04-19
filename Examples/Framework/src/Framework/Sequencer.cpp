@@ -313,7 +313,8 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
   // since we use event ranges (and not just num events) they might not
   // overlap
   if (end < beg) {
-    ACTS_ERROR("Available events ranges from readers do not overlap");
+    ACTS_ERROR("Available events ranges from readers do not overlap (beg="
+               << beg << ", end=" << end << ")");
     return kInvalidEventsRange;
   }
   // configured readers without available events makes no sense
