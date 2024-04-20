@@ -69,13 +69,13 @@ int main(int argc, char* argv[]) {
   ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
                            << "GeV in a " << BzInT << "T B-field");
 
-  using BField_type = ConstantBField;
+  using BField = ConstantBField;
   using Stepper = EigenStepper<>;
   using Propagator = Propagator<Stepper>;
   using Covariance = BoundSquareMatrix;
 
   auto bField =
-      std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
+      std::make_shared<BField>(Vector3{0, 0, BzInT * UnitConstants::T});
   Stepper stepper(std::move(bField));
   Propagator propagator(std::move(stepper));
 
