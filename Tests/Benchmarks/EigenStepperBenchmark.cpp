@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -69,14 +70,14 @@ int main(int argc, char* argv[]) {
                            << "GeV in a " << BzInT << "T B-field");
 
   using BField_type = ConstantBField;
-  using Stepper_type = EigenStepper<>;
-  using Propagator_type = Propagator<Stepper_type>;
+  using Stepper = EigenStepper<>;
+  using Propagator = Propagator<Stepper>;
   using Covariance = BoundSquareMatrix;
 
   auto bField =
       std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
-  Stepper_type atlas_stepper(std::move(bField));
-  Propagator_type propagator(std::move(atlas_stepper));
+  Stepper stepper(std::move(bField));
+  Propagator propagator(std::move(stepper));
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPathInM * UnitConstants::m;
@@ -101,8 +102,9 @@ int main(int argc, char* argv[]) {
                                   ParticleHypothesis::pion());
 
   double totalPathLength = 0;
-  std::size_t num_iters = 0;
-  const auto propagation_bench_result = Acts::Test::microBenchmark(
+  std::size_t numSteps = 0;
+  std::size_t numIters = 0;
+  const auto propagationBenchResult = Acts::Test::microBenchmark(
       [&] {
         auto r = propagator.propagate(pars, options).value();
         if (totalPathLength == 0.) {
@@ -111,14 +113,16 @@ int main(int argc, char* argv[]) {
                      << " in " << r.steps << " steps");
         }
         totalPathLength += r.pathLength;
-        ++num_iters;
+        numSteps += r.steps;
+        ++numIters;
         return r;
       },
       1, toys);
 
-  ACTS_INFO("Execution stats: " << propagation_bench_result);
-  ACTS_INFO("average path length = " << totalPathLength / num_iters / 1_mm
+  ACTS_INFO("Execution stats: " << propagationBenchResult);
+  ACTS_INFO("average path length = " << totalPathLength / numIters / 1_mm
                                      << "mm");
+  ACTS_INFO("average number of steps = " << 1.0 * numSteps / numIters);
 
   return 0;
 }
