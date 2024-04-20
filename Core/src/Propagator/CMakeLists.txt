@@ -3,6 +3,7 @@ target_sources(
   PRIVATE
     EigenStepperError.cpp
     MultiStepperError.cpp
+    OptimizedStepper.cpp
     PropagatorError.cpp
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
