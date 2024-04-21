@@ -69,19 +69,21 @@ int main(int argc, char* argv[]) {
   ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
                            << "GeV in a " << BzInT << "T B-field");
 
-  using BField_type = ConstantBField;
-  using Stepper_type = AtlasStepper;
-  using Propagator_type = Propagator<Stepper_type>;
+  using BField = ConstantBField;
+  using Stepper = AtlasStepper;
+  using Propagator = Propagator<Stepper>;
   using Covariance = BoundSquareMatrix;
 
   auto bField =
-      std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});
-  Stepper_type atlas_stepper(std::move(bField));
-  Propagator_type propagator(std::move(atlas_stepper));
+      std::make_shared<BField>(Vector3{0, 0, BzInT * UnitConstants::T});
+  Stepper stepper(std::move(bField));
+  Propagator propagator(std::move(stepper));
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPathInM * UnitConstants::m;
 
+  Vector4 pos4(0, 0, 0, 0);
+  Vector3 dir(1, 0, 0);
   Covariance cov;
   // clang-format off
   cov << 10_mm, 0, 0, 0, 0, 0,
@@ -92,17 +94,17 @@ int main(int argc, char* argv[]) {
          0, 0, 0, 0, 0, 0;
   // clang-format on
 
-  std::optional<Covariance> optCov = std::nullopt;
+  std::optional<Covariance> covOpt = std::nullopt;
   if (withCov) {
-    optCov = cov;
+    covOpt = cov;
   }
-  CurvilinearTrackParameters pars(Vector4::Zero(), 0_degree, 90_degree,
-                                  1_e / ptInGeV * UnitConstants::GeV, optCov,
+  CurvilinearTrackParameters pars(pos4, dir, +1 / ptInGeV, covOpt,
                                   ParticleHypothesis::pion());
 
   double totalPathLength = 0;
-  std::size_t num_iters = 0;
-  const auto propagation_bench_result = Acts::Test::microBenchmark(
+  std::size_t numSteps = 0;
+  std::size_t numIters = 0;
+  const auto propagationBenchResult = Acts::Test::microBenchmark(
       [&] {
         auto r = propagator.propagate(pars, options).value();
         if (totalPathLength == 0.) {
@@ -111,13 +113,16 @@ int main(int argc, char* argv[]) {
                      << " in " << r.steps << " steps");
         }
         totalPathLength += r.pathLength;
-        ++num_iters;
+        numSteps += r.steps;
+        ++numIters;
         return r;
       },
       1, toys);
 
-  ACTS_INFO("Execution stats: " << propagation_bench_result);
-  ACTS_INFO("average path length = " << totalPathLength / num_iters / 1_mm
+  ACTS_INFO("Execution stats: " << propagationBenchResult);
+  ACTS_INFO("average path length = " << totalPathLength / numIters / 1_mm
                                      << "mm");
+  ACTS_INFO("average number of steps = " << 1.0 * numSteps / numIters);
+
   return 0;
 }
