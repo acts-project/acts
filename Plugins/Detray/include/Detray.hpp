@@ -399,6 +399,91 @@ namespace detray{
         return vol_pd;
     }
     
+    static io::detector_grids_payload<std::size_t, io::accel_id> detray_converter_grid(
+    const Acts::Experimental::Detector& detector){
+    
+        io::detector_grids_payload<std::size_t, io::accel_id> grid_pd = io::detector_grids_payload<std::size_t, io::accel_id>();
+        auto volumes = detector.volumes();
+
+        for (const auto [iv, volume] : enumerate(volumes)) {
+
+            //Call an equivalent of IndexedSurfacesJsonConverter::toJson
+                //check if it is null
+
+            
+
+            // Patch axes for cylindrical grid surfaces, axes are swapped
+            // at this point
+            // get jAccLink 
+            // get accLinkType 
+            // Radial value to transfer phi to rphi
+            // get the axes
+            // r*phi axis is the first one
+            // Write back the patches axis edges
+            // Complete the grid json for detray usage
+            // jSurfacesDelegate["acc_link"] =
+            }
+
+
+        return grid_pd;
+    }
+
+    io::axis_payload axis_converter(const IAxis& ia) {
+        ///home/exochell/docker_dir/ACTS_ODD_D/acts/Plugins/Json/src/GridJsonConverter.cpp: nlohmann::json Acts::AxisJsonConverter::toJsonDetray
+        io::axis_payload axis_pd;
+        axis_pd.bounds = {
+            ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? axis::bounds::e_closed : axis::bounds::e_circular};
+        axis_pd.binning = ia.isEquidistant() ? axis::binning::e_regular : axis::binning::e_irregular;
+        axis_pd.bins = ia.getNBins();
+        if (ia.isEquidistant()) {
+            axis_pd.edges = {ia.getBinEdges().front(), ia.getBinEdges().back()};
+        } else {
+            axis_pd.edges = ia.getBinEdges();
+        }
+
+        return axis_pd;
+    }
+
+    template <typename grid_type>
+    io::grid_payload<std::size_t, io::accel_id> grid_converter(
+        //nlohmann::json toJsonDetray
+        const grid_type& grid, bool swapAxis = false) {
+        //nlohmann::json jGrid;
+        // Get the grid axes & potentially swap them
+        io::grid_payload<std::size_t, io::accel_id> grid_pd;
+
+        std::array<const Acts::IAxis*, grid_type::DIM> axes = grid.axes();
+        if (swapAxis && grid_type::DIM == 2u) {
+            std::swap(axes[0u], axes[1u]);
+        }
+
+        // Fill the axes in the order they are
+        for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {            
+            grid_pd.axes.push_back(axis_converter(*axes[ia]));//push axis to axes
+            //TO DO:        axis_pd.label = static_cast<axis::label>(ia);
+        }
+        ///TO DO : much body missing
+        return grid_pd;
+    }
+
+    //TO DO 
+    //nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false, bool checkSwap = false) {
+    template <typename index_grid>
+    io::grid_payload<std::size_t, io::accel_id> convertImpl(const index_grid& indexGrid, bool checkSwap = false) {
+        
+        nlohmann::json jIndexedGrid;
+
+        // Axis swapping (detray version)
+        bool swapAxes = checkSwap;
+
+        //TO DO: casts implementation (if needed for detray)
+
+        io::grid_payload<std::size_t, io::accel_id> grid_pd = grid_converter(indexGrid.grid, swapAxes);
+        grid_pd.transform = detray_converter_transf(indexGrid.transform);
+
+        return grid_pd;
+    }
+    
     /// @return the geo_header_payload from @param detector object of ACTS
     static io::geo_header_payload detray_converter_head(
         const Acts::Experimental::Detector& detector){
