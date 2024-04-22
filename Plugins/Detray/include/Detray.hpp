@@ -22,6 +22,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+// detray
 #include "detray/builders/detector_builder.hpp"
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
@@ -35,6 +36,9 @@
 #include "detray/io/json/json_writer.hpp"
 #include "detray/io/json/json_io.hpp"
 #include "detray/io/frontend/writer_interface.hpp"
+
+// surface grid
+#include "Acts/Utilities/IAxis.hpp"
 
 #include "detray/utils/consistency_checker.hpp"
 
@@ -102,7 +106,7 @@ namespace detray{
     
     /// @return the transform_payload of the surface/volume
     static io::transform_payload detray_converter_transf(
-        const Transform3& t, const Transform3JsonConverter::Options& options){
+        const Transform3& t, const Transform3JsonConverter::Options& options = Transform3JsonConverter::Options()){
         //nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t, const Transform3JsonConverter::Options& options)
 
         io::transform_payload p_acts;
@@ -136,8 +140,6 @@ namespace detray{
         //Acts::SurfaceBoundsJsonConverter::toJsonDetray
 
         detray::io::mask_payload mask_pd;
-        std::cout<<"\t\tm\n\t"<<std::endl;
-
         auto [shape, boundaries] = DetrayJsonHelper::maskFromBounds(bounds, portal);
         mask_pd.shape = static_cast<io::mask_payload::mask_shape>(shape);
         mask_pd.boundaries = static_cast<std::vector<real_io>>(boundaries); //conversion sos??
@@ -158,48 +160,15 @@ namespace detray{
 
         detray::io::surface_payload surf_pd;
         Transform3JsonConverter::Options writtenOption;
-        //std::cout<<"\ts\n\t"<<std::endl;
     
         surf_pd.transform = detray_converter_transf(surface.transform(gctx), writtenOption);
         surf_pd.source = surface.geometryId().value();
         surf_pd.barcode = std::nullopt;//(long unsigned int)0;
-
-        std::optional<material_link_payload> a,b,c,d;
-        a=std::nullopt;
-        //b.type= std::nullopt;
-        //b.index= std::nullopt;
-        c.reset();
-        if(!a.has_value()){
-            std::cout<<"a no value";
-        }
-        if(!b.has_value()){
-            std::cout<<"b no value";
-        }
-        if(!c.has_value()){
-            std::cout<<"c no value";
-        }
-        else{
-            std::cout<<"has value";
-        }
-        if(!d.has_value()){
-            std::cout<<"d no value";
-        }
-
         surf_pd.type = static_cast<detray::surface_id>(options.portal ? 0 : (surface.geometryId().sensitive() > 0 ? 1u : 2u));
         surf_pd.mask = detray_converter_mask(surface.bounds(),options.portal);
-        //detray::io::typed_link_payload<io::material_id> m;
-        //m.type = NULL;
-        //m.index = NULL;
-        surf_pd.material = std::nullopt;
-        if(surf_pd.material.has_value()){
-            std::cout<<"material has value";
-        }
-        else{
-            std::cout<<"material has no value";
-        }
-        //std::cout<<"barcode";
-        //std::cout<<surf_pd.barcode.value()<<std::endl;
+        //surf_pd.material =io::typed_link_payload<io::material_id>();
         return surf_pd;
+        
     }
 
     /// construct and @return vector of portals and volumes 
@@ -213,9 +182,6 @@ namespace detray{
 
         std::vector<io::surface_payload> portals {};
 
-        std::cout<<"inside detray portals"<<std::endl;
-        // The overall return object
-        //std::vector<nlohmann::json> jPortals = {};
         const RegularSurface& surface = portal.surface();
         const auto& volumeLinks = portal.detectorVolumeUpdaters();
 
@@ -259,14 +225,9 @@ namespace detray{
         if (singleLink != nullptr) {
             // Single link can be written out
             std::size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
-            //auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *surfaceAdjusted, surfaceOptions);
-            //DetrayJsonHelper::addVolumeLink(jPortal["mask"], vLink);
             auto portal_pd = detray_converter_surf(*surfaceAdjusted, gctx, surfaceOptions);
             portal_pd.mask.volume_link.link= vLink;
             portals.push_back(portal_pd);
-            if(portal_pd.type == detray::surface_id::e_passive){
-               std::cout<<"here 1"<<std::endl; 
-            }
         } else {
             // Multi link detected - 1D
             auto multiLink1D =
@@ -352,17 +313,9 @@ namespace detray{
                             subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
                     auto subSurface = Surface::makeShared<CylinderSurface>(subTransform, subBounds);
                     
-                    
-                    //auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *subSurface, surfaceOptions);
-                    //DetrayJsonHelper::addVolumeLink(jPortal["mask"], clippedIndices[ib - 1u]);
-                    //jPortals.push_back(jPortal);
-
                     auto portal_pd = detray_converter_surf(*subSurface, gctx, surfaceOptions);
                     portal_pd.mask.volume_link.link= clippedIndices[ib - 1u];
                     portals.push_back(portal_pd);
-                    if(portal_pd.type == detray::surface_id::e_passive){
-                        std::cout<<"here 2"<<std::endl; 
-                    }
                 }
                 }
             } else {
@@ -380,16 +333,10 @@ namespace detray{
                         auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
                         auto subSurface = Surface::makeShared<DiscSurface>(
                             portal.surface().transform(gctx), subBounds);
-                        //auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *subSurface, surfaceOptions);
-                        //etrayJsonHelper::addVolumeLink(jPortal["mask"], clippedIndices[ib - 1u]);
-                        //jPortals.push_back(jPortal);
 
                         auto portal_pd = detray_converter_surf(*subSurface, gctx, surfaceOptions);
                         portal_pd.mask.volume_link.link= clippedIndices[ib - 1u];
                         portals.push_back(portal_pd);
-                        if(portal_pd.type == detray::surface_id::e_passive){
-                            std::cout<<"here 3"<<std::endl; 
-                        }
                     }
                 }
             }
@@ -397,16 +344,10 @@ namespace detray{
             } else {
             // End of world
             // Write surface with invalid link
-            //auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *surfaceAdjusted, surfaceOptions);
-            //DetrayJsonHelper::addVolumeLink(jPortal["mask"], std::numeric_limits<std::uint_least16_t>::max());
-            //jPortals.push_back(jPortal);
 
                 auto portal_pd = detray_converter_surf(*surfaceAdjusted, gctx, surfaceOptions);
                 portal_pd.mask.volume_link.link= std::numeric_limits<std::uint_least16_t>::max();
                 portals.push_back(portal_pd);
-                if(portal_pd.type == detray::surface_id::e_passive){
-                    std::cout<<"here 4"<<std::endl; 
-                }
             }
         }
         
@@ -452,7 +393,6 @@ namespace detray{
                             portal_pd.index_in_coll = sIndex++;
                             vol_pd.surfaces.push_back(portal_pd);
                             portals_counter++;
-                            //maybe append to volume_payload.surfaces
                         });
         }
 
@@ -460,7 +400,8 @@ namespace detray{
     }
     
     /// @return the geo_header_payload from @param detector object of ACTS
-    static detray::io::geo_header_payload detray_converter_head(const Acts::Experimental::Detector& detector){
+    static io::geo_header_payload detray_converter_head(
+        const Acts::Experimental::Detector& detector){
         
         detray::io::geo_header_payload header_pd;
         detray::io::common_header_payload header_data_pd;
@@ -472,10 +413,9 @@ namespace detray{
         header_data_pd.tag = "geometry"; 
         header_data_pd.date = io::detail::get_current_date();
 
-
         return header_pd;
     }
-    
+
     /// @brief visit all ACTS detector information, depth-first hierarchically and construct the corresponding payloads and detray detector 
     /// @return detray detector from @param detector and @param gctx of ACTS  (depth-first hierarchical traversal)
     detector_t detray_tree_converter(
@@ -487,16 +427,22 @@ namespace detray{
             dp.volumes.push_back(detray_converter_vol(*volume, detector.volumes(), gctx));
             std::cout<<std::endl;
         }
-
+        std::cout<<"first material has value: ";
+        std::cout<<(dp.volumes.front().surfaces.front().material.has_value());
+        std::cout<<"\nfirst barcode has value: ";
+        std::cout<<(dp.volumes.front().surfaces.front().barcode.has_value());
         typename detector_t::name_map names{};
         vecmem::host_memory_resource host_mr;
         detector_builder<default_metadata> det_builder{};
 
         detray::io::geometry_reader::convert<detector_t>(det_builder, names, dp);
+        std::cout<<"\nfinal material has value: ";
+        std::cout<<(dp.volumes.front().surfaces.front().material.has_value());
+        std::cout<<"\nfinal barcode has value: ";
+        std::cout<<(dp.volumes.front().surfaces.front().barcode.has_value())<<std::endl;
         detector_t detrayDet(det_builder.build(host_mr));
         //io::json_writer<detector_t, io::geometry_writer> geo_writer;
         //auto file_name = geo_writer.write(detrayDet, names, std::ios::out | std::ios::binary | std::ios::trunc);
-
 
         detray_detector_print(detrayDet);
 
