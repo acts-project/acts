@@ -11,8 +11,6 @@
 #include <iterator>
 #include <vector>
 
-#include <stdlib.h>
-
 template <typename T>
 class ContainerPolicy {
  public:
