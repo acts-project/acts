@@ -9,6 +9,8 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
+#include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -23,6 +25,7 @@
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -189,6 +192,27 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::HashingAlgorithmConfig;
+    auto c = py::class_<Config>(m, "HashingAlgorithmConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(bucketSize);
+    ACTS_PYTHON_MEMBER(zBins);
+    ACTS_PYTHON_MEMBER(phiBins);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using Config = Acts::HashingTrainingConfig;
+    auto c = py::class_<Config>(m, "HashingTrainingConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(AnnoySeed);
+    ACTS_PYTHON_MEMBER(f);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
     using Config = Acts::SeedFinderGbtsConfig<SimSpacePoint>;
     auto c = py::class_<Config>(m, "SeedFinderGbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -258,6 +282,13 @@ void addTrackFinding(Context& ctx) {
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
       zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingAlgorithmHashing, mex, "SeedingAlgorithmHashing",
+      inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
+      seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
+      allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
+      hashingConfig, hashingTrainingConfig, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
