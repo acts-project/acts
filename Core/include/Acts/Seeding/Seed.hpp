@@ -26,6 +26,35 @@ class Seed {
        float seedQuality = -std::numeric_limits<float>::infinity());
   Seed(const Seed&) = default;
   Seed& operator=(const Seed&) = default;
+  inline bool operator<(const Seed& rhs) const {
+    // not relevant ordering
+    if (this->sp()[0]->z() != rhs.sp()[0]->z()) {
+      return this->sp()[0]->z() < rhs.sp()[0]->z();
+    } else if (this->sp()[1]->z() != rhs.sp()[1]->z()) {
+      return this->sp()[1]->z() < rhs.sp()[1]->z();
+    } else if (this->sp()[2]->z() != rhs.sp()[2]->z()) {
+      return this->sp()[2]->z() < rhs.sp()[2]->z();
+    }
+    if (this->sp()[0]->x() != rhs.sp()[0]->x()) {
+      return this->sp()[0]->x() < rhs.sp()[0]->x();
+    } else if (this->sp()[1]->x() != rhs.sp()[1]->x()) {
+      return this->sp()[1]->x() < rhs.sp()[1]->x();
+    } else if (this->sp()[2]->x() != rhs.sp()[2]->x()) {
+      return this->sp()[2]->x() < rhs.sp()[2]->x();
+    }
+    if (this->sp()[0]->y() != rhs.sp()[0]->y()) {
+      return this->sp()[0]->y() < rhs.sp()[0]->y();
+    } else if (this->sp()[1]->y() != rhs.sp()[1]->y()) {
+      return this->sp()[1]->y() < rhs.sp()[1]->y();
+    } else if (this->sp()[2]->y() != rhs.sp()[2]->y()) {
+      return this->sp()[2]->y() < rhs.sp()[2]->y();
+    }
+
+    assert(this->sp()[0] == rhs.sp()[0]);
+    assert(this->sp()[1] == rhs.sp()[1]);
+    assert(this->sp()[2] == rhs.sp()[2]);
+    return false;
+  }
 
   const auto& sp() const { return m_spacepoints; }
   double z() const { return m_zvertex; }
