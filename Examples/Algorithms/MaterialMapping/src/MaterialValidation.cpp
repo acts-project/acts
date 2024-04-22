@@ -29,8 +29,6 @@ MaterialValidation::MaterialValidation(const MaterialValidation::Config& cfg,
   }
 }
 
-MaterialValidation::~MaterialValidation() {}
-
 ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   // Create a random number generator
   ActsExamples::RandomEngine rng =

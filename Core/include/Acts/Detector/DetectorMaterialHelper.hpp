@@ -21,8 +21,7 @@ namespace Acts {
 class ISurfaceMaterial;
 class IVolumeMaterial;
 
-namespace Experimental {
-namespace DetectorMaterialHelper {
+namespace Experimental::DetectorMaterialHelper {
 
 using SurfaceMaterialMaps =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
@@ -67,6 +66,5 @@ struct VolumeMaterialAssigner {
 void assignMaterial(Detector& detector,
                     const DetectorMaterialMaps& materialMaps);
 
-}  // namespace DetectorMaterialHelper
-}  // namespace Experimental
+}  // namespace Experimental::DetectorMaterialHelper
 }  // namespace Acts

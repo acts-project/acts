@@ -59,7 +59,7 @@ class MaterialValidation : public IAlgorithm {
 
   /// Destructor
   /// - it also writes out the file
-  ~MaterialValidation() override;
+  ~MaterialValidation() override = default;
 
   /// Framework execute method
   ///
