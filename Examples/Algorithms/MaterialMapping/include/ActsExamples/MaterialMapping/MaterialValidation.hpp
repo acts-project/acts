@@ -29,7 +29,7 @@ class MaterialValidation : public IAlgorithm {
   /// of the MaterialMapping algorithm
   struct Config {
     /// Number of tracks per event
-    size_t ntracks = 1000;
+    std::size_t ntracks = 1000;
 
     /// Start position for the scan
     Acts::Vector3 startPosition = Acts::Vector3(0., 0., 0.);

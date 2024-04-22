@@ -18,8 +18,6 @@ def runMaterialValidation(
     decorators,
     field,
     outputDir,
-    nevents=1000,
-    ntracks=1000,
     outputName="propagation-material",
 ):
     # Create a sequencer
