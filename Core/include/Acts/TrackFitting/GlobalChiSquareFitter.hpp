@@ -552,8 +552,9 @@ class Gx2Fitter {
             auto& fittedStates = *result.fittedStates;
 
             // Mask for the track states. We don't need Smoothed and Filtered
-            TrackStatePropMask mask =
-                ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered);
+            TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                      TrackStatePropMask::Jacobian |
+                                      TrackStatePropMask::Calibrated;
 
             ACTS_VERBOSE("    processSurface: addTrackState");
 
