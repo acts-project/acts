@@ -349,4 +349,18 @@ struct ProtoTrackData {
   DFE_NAMEDTUPLE(ProtoTrackData, trackId, measurementId, x, y, z);
 };
 
+struct BucketData {
+  uint64_t bucketIdx;
+  uint64_t bucketSize;
+  uint64_t measurement_id[20];
+  DFE_NAMEDTUPLE(BucketData, bucketIdx, bucketSize, measurement_id[0],
+                 measurement_id[1], measurement_id[2], measurement_id[3],
+                 measurement_id[4], measurement_id[5], measurement_id[6],
+                 measurement_id[7], measurement_id[8], measurement_id[9],
+                 measurement_id[10], measurement_id[11], measurement_id[12],
+                 measurement_id[13], measurement_id[14], measurement_id[15],
+                 measurement_id[16], measurement_id[17], measurement_id[18],
+                 measurement_id[19]);
+};
+
 }  // namespace ActsExamples
