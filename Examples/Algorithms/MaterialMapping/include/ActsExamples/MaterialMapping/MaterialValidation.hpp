@@ -37,7 +37,7 @@ class MaterialValidation : public IAlgorithm {
     /// Start direction for the scan: phi
     std::pair<Acts::ActsScalar, Acts::ActsScalar> phiRange = {-M_PI, M_PI};
 
-    /// Start directon for the scan: eta
+    /// Start direction for the scan: eta
     std::pair<Acts::ActsScalar, Acts::ActsScalar> etaRange = {-4., 4.};
 
     /// Random number service

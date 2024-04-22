@@ -47,7 +47,7 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
       recordedMaterialTracks;
 
   // Loop over the number of tracks
-  for (size_t iTrack = 0; iTrack < m_cfg.ntracks; ++iTrack) {
+  for (std::size_t iTrack = 0; iTrack < m_cfg.ntracks; ++iTrack) {
     // Generate a random phi and eta
     Acts::ActsScalar phi = phiDist(rng);
     Acts::ActsScalar eta = etaDist(rng);

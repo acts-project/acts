@@ -43,6 +43,7 @@ class MaterialValidater {
   /// @param gctx the geometry context
   /// @param mctx the magnetic field context
   /// @param position the starting position of the ray
+  /// @param direction the direction of the ray (unit vector)
   ///
   /// @return a rerorded material track
   RecordedMaterialTrack recordMaterial(const GeometryContext& gctx,

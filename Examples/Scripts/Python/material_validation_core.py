@@ -94,7 +94,7 @@ if "__main__" == __name__:
 
     if args.experimental:
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
-            
+
         # Create the dd4hep geometry service and detector
         dd4hepConfig = DD4hepGeometryService.Config()
         dd4hepConfig.logLevel = acts.logging.INFO
@@ -118,7 +118,7 @@ if "__main__" == __name__:
             elif mapsFile.suffix == ".root":
                 materialMaps = acts.examples.materialMapsFromRoot(args.map)
                 acts.examples.assignMaterialToDetector(detector, materialMaps)
-            
+
         materialSurfaces = detector.extractMaterialSurfaces()
 
     else:

@@ -22,7 +22,6 @@ def runMaterialValidation(
     ntracks=1000,
     outputName="propagation-material",
 ):
-
     # Create a sequencer
     s = Sequencer(events=nevents, numThreads=-1)
 
@@ -66,7 +65,6 @@ def runMaterialValidation(
 
 
 if "__main__" == __name__:
-
     p = argparse.ArgumentParser()
 
     p.add_argument(
