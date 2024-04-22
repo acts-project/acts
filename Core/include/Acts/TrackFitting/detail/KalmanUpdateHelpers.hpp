@@ -44,7 +44,10 @@ auto kalmanHandleMeasurement(
         false)) -> Result<typename traj_t::TrackStateProxy> {
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
-  TrackStatePropMask mask = TrackStatePropMask::All;
+  TrackStatePropMask mask =
+      TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+      TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
+      TrackStatePropMask::Calibrated;
   typename traj_t::TrackStateProxy trackStateProxy =
       fittedStates.makeTrackState(mask, lastTrackIndex);
 
