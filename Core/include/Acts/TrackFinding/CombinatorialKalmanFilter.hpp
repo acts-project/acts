@@ -663,7 +663,8 @@ class CombinatorialKalmanFilter {
           // No source links on surface, add either hole or passive material
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
-          auto stateMask = TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
+          auto stateMask =
+              TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
 
           // Increment of number of processed states
           tipState.nStates++;
