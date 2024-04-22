@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,10 +12,8 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 
-#include <memory>
-#include <mutex>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -56,6 +54,8 @@ struct EventStore {
 
   /// Particle hit count (for hit indexing)
   std::unordered_map<SimBarcode, std::size_t> particleHitCount;
+  /// Particle status
+  std::unordered_map<SimBarcode, ActsFatras::ParticleOutcome> particleOutcome;
   /// Geant4 Track ID to Barcode mapping
   std::unordered_map<G4int, SimBarcode> trackIdMapping;
   /// Geant4 Track ID subparticle counter (for subparticle indexing)

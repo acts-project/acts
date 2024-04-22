@@ -101,9 +101,9 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
                                            Acts::UnitConstants::mm));
     // TODO ingoing particles
     // outgoing particles
-    std::vector<double> outgoing;
+    std::vector<std::uint64_t> outgoing;
     for (const auto& particle : vertex.outgoing) {
-      outgoing.push_back(static_cast<double>(particle.value()));
+      outgoing.push_back(particle.value());
     }
     m_outgoingParticles.push_back(std::move(outgoing));
     // decoded barcode components
