@@ -398,7 +398,7 @@ struct TimingInfo {
 struct EventTimingInfo {
   std::string identifier;
   double time_s = 0;
-  int eventId;
+  int eventId = 0;
   DFE_NAMEDTUPLE(EventTimingInfo, identifier, time_s, eventId);
 };
 
