@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   }
 
   ACTS_LOCAL_LOGGER(
-      getDefaultLogger("ATLAS_Stepper", Acts::Logging::Level(lvl)));
+      getDefaultLogger("Optimized_Stepper", Acts::Logging::Level(lvl)));
 
   // print information about profiling setup
   ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
