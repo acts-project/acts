@@ -16,10 +16,6 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     addCKFTracks,
     TrackSelectorConfig,
-    addAmbiguityResolution,
-    AmbiguityResolutionConfig,
-    addVertexFitting,
-    VertexFinder,
 )
 
 ttbar_pu200 = False

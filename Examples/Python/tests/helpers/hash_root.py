@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import hashlib
 from pathlib import Path
-import sys
-from typing import Optional
 import argparse
 
 import uproot

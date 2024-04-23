@@ -16,6 +16,7 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ostream>
@@ -41,6 +42,12 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using PropagatorOptions = Acts::PropagatorOptions<>;
+  using Linearizer = Acts::HelicalTrackLinearizer;
+  using VertexFitter = Acts::FullBilloirVertexFitter;
+  using VertexFitterOptions = Acts::VertexingOptions;
+
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
@@ -74,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
 
   std::vector<Acts::InputTrack> inputTracks;
 
-  VertexCollection fittedVertices;
+  VertexContainer fittedVertices;
 
   for (const auto& protoVertex : protoVertices) {
     // un-constrained fit requires at least two tracks
