@@ -67,6 +67,7 @@ linkcheck_ignore = [
     r"https://lcginfo.cern.ch/.*",
     r"https://.*\.?intel.com/.*",
     r"https://www.conventionalcommits.org/.*",
+    r"https://cds.cern.ch/record/.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------
