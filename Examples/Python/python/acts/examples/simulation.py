@@ -365,7 +365,7 @@ def addParticleSelection(
     ----------
     s: Sequencer
         the sequencer module to which we add the ParticleSelector
-    preselectedParticles: ParticleSelectorConfig
+    config: ParticleSelectorConfig
         the particle selection configuration
     inputParticles: str
         the identifier for the input particles to be selected
@@ -586,13 +586,14 @@ def addSimWriters(
 
 def getG4DetectorConstructionFactory(
     detector: Any,
+    regionList: List[Any] = [],
 ) -> Any:
     try:
         from acts.examples import TelescopeDetector
         from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
 
         if type(detector) is TelescopeDetector:
-            return TelescopeG4DetectorConstructionFactory(detector)
+            return TelescopeG4DetectorConstructionFactory(detector, regionList)
     except Exception as e:
         print(e)
 
@@ -601,7 +602,7 @@ def getG4DetectorConstructionFactory(
         from acts.examples.geant4.dd4hep import DDG4DetectorConstructionFactory
 
         if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstructionFactory(detector)
+            return DDG4DetectorConstructionFactory(detector, regionList)
     except Exception as e:
         print(e)
 
@@ -636,6 +637,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
+    regionList: List[Any] = [],
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -684,7 +686,9 @@ def addGeant4(
     if g4DetectorConstructionFactory is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(detector)
+        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(
+            detector, regionList
+        )
 
     global __geant4Handle
 

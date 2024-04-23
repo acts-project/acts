@@ -22,6 +22,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
+    CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
     addAmbiguityResolution,
@@ -56,6 +57,18 @@ parser.add_argument(
     "--ttbar",
     help="Use Pythia8 (ttbar, pile-up 200) instead of particle gun",
     action="store_true",
+)
+parser.add_argument(
+    "--ttbar-pu",
+    help="Number of pile-up events for ttbar",
+    type=int,
+    default=200,
+)
+parser.add_argument(
+    "--gun-multiplicity",
+    help="Multiplicity of the particle gun",
+    type=int,
+    default=200,
 )
 parser.add_argument(
     "--MLSolver",
@@ -134,7 +147,6 @@ if args["edm4hep"]:
         inputParticles="particles",
         outputParticles="particles_selected",
     )
-
 else:
     if not ttbar:
         addParticleGun(
@@ -149,14 +161,14 @@ else:
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=200,
+            multiplicity=args["gun_multiplicity"],
             rnd=rnd,
         )
     else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=50,
+            npileup=args["ttbar_pu"],
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
@@ -234,6 +246,7 @@ addSeeding(
     outputDirRoot=outputDir,
     # outputDirCsv=outputDir,
 )
+
 if seedFilter_ML:
     addSeedFilterML(
         s,
@@ -255,6 +268,12 @@ addCKFTracks(
         absEta=(None, 3.0),
         loc0=(-4.0 * u.mm, 4.0 * u.mm),
         nMeasurementsMin=7,
+        maxHoles=2,
+        maxOutliers=2,
+    ),
+    CkfConfig(
+        seedDeduplication=True,
+        stayOnSeed=True,
     ),
     outputDirRoot=outputDir,
     writeCovMat=True,

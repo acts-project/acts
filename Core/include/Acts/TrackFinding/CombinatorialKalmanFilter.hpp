@@ -101,28 +101,20 @@ struct CombinatorialKalmanFilterExtensions {
  private:
   /// Default measurement selector which will return all measurements
   /// @param candidates Measurement track state candidates
-  /// @param isOutlier Output variable indicating whether the returned state is an outlier (unused)
-  /// @param logger A logger instance
   static Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
       typename std::vector<typename traj_t::TrackStateProxy>& candidates,
-      bool& isOutlier, const Logger& logger) {
-    (void)isOutlier;
-    (void)logger;
+      bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};
   };
 
   /// Default branch stopper which will never stop
-  /// @param tipState The tip state to decide whether to stop (unused)
-  /// @param trackState The track state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& tipState,
-      typename traj_t::TrackStateProxy& trackState) {
-    (void)tipState;
-    (void)trackState;
+      const CombinatorialKalmanFilterTipState& /*tipState*/,
+      typename traj_t::TrackStateProxy& /*trackState*/) {
     return false;
   }
 };
@@ -359,10 +351,10 @@ class CombinatorialKalmanFilter {
           result.lastError = res.error();
         } else {
           const auto& fittedState = *res;
+          std::size_t currentTip = result.activeTips.back().first;
           // Assign the fitted parameters
           result.fittedParameters.emplace(
-              result.lastMeasurementIndices.back(),
-              std::get<BoundTrackParameters>(fittedState));
+              currentTip, std::get<BoundTrackParameters>(fittedState));
         }
 
         navigator.navigationBreak(state.navigation, true);
@@ -572,7 +564,9 @@ class CombinatorialKalmanFilter {
         if (!boundStateRes.ok()) {
           return boundStateRes.error();
         }
-        auto boundState = *boundStateRes;
+        auto& boundState = *boundStateRes;
+        auto& [boundParams, jacobian, pathLength] = boundState;
+        boundParams.covariance() = state.stepping.cov;
 
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
@@ -654,8 +648,7 @@ class CombinatorialKalmanFilter {
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
         bool isMaterial = (surface->surfaceMaterial() != nullptr);
-        std::string type = isSensitive ? "sensitive" : "passive";
-        ACTS_VERBOSE("Detected " << type
+        ACTS_VERBOSE("Detected " << (isSensitive ? "sensitive" : "passive")
                                  << " surface: " << surface->geometryId());
         if (isSensitive) {
           // Increment of number of passed sensitive surfaces
@@ -671,7 +664,7 @@ class CombinatorialKalmanFilter {
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
           auto stateMask =
-              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
+              TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
 
           // Increment of number of processed states
           tipState.nStates++;
@@ -776,10 +769,7 @@ class CombinatorialKalmanFilter {
           mask = PM::Calibrated;
         }
 
-        ACTS_VERBOSE(
-            "Create temp track state with mask: " << std::bitset<
-                sizeof(std::underlying_type_t<TrackStatePropMask>) * 8>(
-                static_cast<std::underlying_type_t<TrackStatePropMask>>(mask)));
+        ACTS_VERBOSE("Create temp track state with mask: " << mask);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
         // fail!
@@ -834,29 +824,25 @@ class CombinatorialKalmanFilter {
       for (auto it = begin; it != end; ++it) {
         auto& candidateTrackState = *it;
 
-        PM mask = PM::All;
+        PM mask = PM::Predicted | PM::Filtered | PM::Jacobian | PM::Calibrated;
 
         if (it != begin) {
-          // subsequent track states don't need storage for these
-          mask = ~PM::Predicted & ~PM::Jacobian;
+          // subsequent track states don't need storage for these as they will
+          // be shared
+          mask &= ~PM::Predicted & ~PM::Jacobian;
         }
 
         if (isOutlier) {
-          mask &= ~PM::Filtered;  // outlier won't have separate filtered
-                                  // parameters
+          // outlier won't have separate filtered parameters
+          mask &= ~PM::Filtered;
         }
 
         // copy this trackstate into fitted states MultiTrajectory
         typename traj_t::TrackStateProxy trackState =
             result.fittedStates->makeTrackState(mask,
                                                 candidateTrackState.previous());
-        ACTS_VERBOSE(
-            "Create SourceLink output track state #"
-            << trackState.index() << " with mask: "
-            << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
-                           8>{
-                   static_cast<std::underlying_type_t<TrackStatePropMask>>(
-                       mask)});
+        ACTS_VERBOSE("Create SourceLink output track state #"
+                     << trackState.index() << " with mask: " << mask);
 
         if (it != begin) {
           // assign indices pointing to first track state
@@ -896,7 +882,6 @@ class CombinatorialKalmanFilter {
           // Set the filtered parameter index to be the same with predicted
           // parameter
           trackState.shareFrom(PM::Predicted, PM::Filtered);
-
         } else {
           // Kalman update
           auto updateRes = m_extensions.updater(
@@ -933,28 +918,22 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    std::size_t addNonSourcelinkState(const TrackStatePropMask& stateMask,
+    std::size_t addNonSourcelinkState(TrackStatePropMask stateMask,
                                       const BoundState& boundState,
                                       result_type& result, bool isSensitive,
                                       std::size_t prevTip) const {
       // Add a track state
       auto trackStateProxy =
           result.fittedStates->makeTrackState(stateMask, prevTip);
-      ACTS_VERBOSE(
-          "Create "
-          << (isSensitive ? "Hole" : "Material") << " output track state #"
-          << trackStateProxy.index() << " with mask: "
-          << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
-                         8>{
-                 static_cast<std::underlying_type_t<TrackStatePropMask>>(
-                     stateMask)});
+      ACTS_VERBOSE("Create " << (isSensitive ? "Hole" : "Material")
+                             << " output track state #"
+                             << trackStateProxy.index()
+                             << " with mask: " << stateMask);
 
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
-      if (boundParams.covariance().has_value()) {
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-      }
+      trackStateProxy.predictedCovariance() = boundParams.covariance().value();
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
@@ -1082,9 +1061,9 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                    const navigator_t& /*unused*/,
-                    const Logger& /*unused*/) const {
+    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/,
+                    const Logger& /*logger*/) const {
       return false;
     }
   };
@@ -1201,6 +1180,7 @@ class CombinatorialKalmanFilter {
     }
 
     std::vector<typename TrackContainer::TrackProxy> tracks;
+    tracks.reserve(combKalmanResult.lastMeasurementIndices.size());
 
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
       auto track = trackContainer.makeTrack();
@@ -1220,7 +1200,7 @@ class CombinatorialKalmanFilter {
 
       calculateTrackQuantities(track);
 
-      tracks.push_back(track);
+      tracks.push_back(std::move(track));
     }
 
     return tracks;

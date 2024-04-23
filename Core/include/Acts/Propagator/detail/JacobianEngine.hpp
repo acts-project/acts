@@ -65,8 +65,6 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
                                    const FreeVector& freeToPathDerivatives,
                                    BoundMatrix& fullTransportJacobian);
 
-/// TODO this should be removed but Athena depends on it
-///
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation
 ///
