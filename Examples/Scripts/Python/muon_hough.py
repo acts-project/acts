@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 import os
 import argparse
-import tempfile
 
-import pathlib, acts
+import acts
 
 from acts.examples import CsvMuonSimHitReader, CsvDriftCircleReader, MuonHoughSeeder
 
@@ -19,7 +18,7 @@ u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
 
-def runHoughFromCsv(inDir, outputDir):
+def runHoughFromCsv(inDir):
     # create temporary file with pixel SPs and run the seeding
 
     s = acts.examples.Sequencer(events=8, numThreads=1, logLevel=acts.logging.VERBOSE)
@@ -60,6 +59,4 @@ if "__main__" == __name__:
 
     args = p.parse_args()
 
-    outputDir = pathlib.Path.cwd() / "muon_output"
-
-    runHoughFromCsv(args.indir, outputDir)
+    runHoughFromCsv(args.indir)

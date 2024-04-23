@@ -6,9 +6,6 @@ from pathlib import Path
 from acts.examples import Sequencer, RootMaterialTrackWriter
 
 import acts
-from acts import (
-    UnitConstants as u,
-)
 
 
 def runMaterialValidation(

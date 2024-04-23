@@ -379,7 +379,6 @@ def itkSeedingAlgConfig(
 
     # variables that change for pixel and strip SPs:
     if inputSpacePointsType is InputSpacePointsType.PixelSpacePoints:
-        outputSeeds = "PixelSeeds"
         allowSeparateRMax = False
         rMaxGridConfig = 320 * u.mm
         rMaxSeedFinderConfig = rMaxGridConfig
@@ -431,12 +430,10 @@ def itkSeedingAlgConfig(
         ]
         deltaRMiddleMinSPRange = 10 * u.mm
         deltaRMiddleMaxSPRange = 10 * u.mm
-        seedConfirmationFilter = True
         impactWeightFactor = 100
         compatSeedLimit = 3
         numSeedIncrement = 100
         seedWeightIncrement = 0
-        useDetailedDoubleMeasurementInfo = False
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
@@ -447,7 +444,6 @@ def itkSeedingAlgConfig(
             zBinsCustomLooping = [2, 10, 3, 9, 6, 4, 8, 5, 7]
 
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
-        outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
         rMaxSeedFinderConfig = 1200.0 * u.mm
@@ -487,12 +483,10 @@ def itkSeedingAlgConfig(
         ]
         deltaRMiddleMinSPRange = 30 * u.mm
         deltaRMiddleMaxSPRange = 150 * u.mm
-        seedConfirmationFilter = False
         impactWeightFactor = 1
         compatSeedLimit = 4
         numSeedIncrement = 1
         seedWeightIncrement = 10100
-        useDetailedDoubleMeasurementInfo = True
         maxSeedsPerSpMConf = 100
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
