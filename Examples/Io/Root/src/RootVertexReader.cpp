@@ -62,8 +62,8 @@ RootVertexReader::RootVertexReader(const RootVertexReader::Config& config,
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 
-  // If the events are not in order, get the entry numbers for ordered events
-  if (!m_cfg.orderedEvents) {
+  // Sort the entry numbers of the events
+  {
     m_entryNumbers.resize(m_events);
     m_inputChain->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
@@ -104,13 +104,10 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
   SimVertexContainer vertices;
 
   // Read the correct entry
-  auto entry = context.eventNumber;
-  if (!m_cfg.orderedEvents && entry < m_entryNumbers.size()) {
-    entry = m_entryNumbers[entry];
-  }
+  auto entry = m_entryNumbers.at(context.eventNumber);
   m_inputChain->GetEntry(entry);
-  ACTS_INFO("Reading event: " << context.eventNumber
-                              << " stored as entry: " << entry);
+  ACTS_DEBUG("Reading event: " << context.eventNumber
+                               << " stored as entry: " << entry);
 
   unsigned int nVertices = m_vertexId->size();
 
@@ -132,6 +129,9 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
 
     vertices.insert(v);
   }
+
+  ACTS_DEBUG("Read " << vertices.size() << " vertices for event "
+                     << context.eventNumber);
 
   // Write the collections to the EventStore
   m_outputVertices(context, std::move(vertices));
