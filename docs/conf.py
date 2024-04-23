@@ -2,12 +2,10 @@
 
 import os
 import sys
-import re
 import subprocess
 from pathlib import Path
 import shutil
 import datetime
-from typing import List, Tuple
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"

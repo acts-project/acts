@@ -28,7 +28,6 @@ def runGeometry(
     outputObj=True,
     outputCsv=True,
     outputJson=True,
-    outputRoot=True,
 ):
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
