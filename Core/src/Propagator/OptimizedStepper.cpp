@@ -86,48 +86,21 @@ template <typename T>
 void rk4_fin(const T* p, const T* d, const T h, const T* k1, const T* k2,
              const T* k3, const T* k4, T* new_p, T* new_d) {
   const auto x0 = (1.0 / 6.0) * h;
-  new_p[0] =
-      (1.0 / 6.0) * std::pow(h, 2) * (k1[0] + k2[0] + k3[0]) + h * d[0] + p[0];
-  new_p[1] =
-      (1.0 / 6.0) * std::pow(h, 2) * (k1[1] + k2[1] + k3[1]) + h * d[1] + p[1];
-  new_p[2] =
-      (1.0 / 6.0) * std::pow(h, 2) * (k1[2] + k2[2] + k3[2]) + h * d[2] + p[2];
-  new_d[0] =
-      (x0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) + d[0]) /
-      std::sqrt(
-          std::pow(
-              std::abs(x0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) + d[0]),
-              2) +
-          std::pow(
-              std::abs(x0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) + d[1]),
-              2) +
-          std::pow(
-              std::abs(x0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) + d[2]),
-              2));
-  new_d[1] =
-      (x0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) + d[1]) /
-      std::sqrt(
-          std::pow(
-              std::abs(x0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) + d[0]),
-              2) +
-          std::pow(
-              std::abs(x0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) + d[1]),
-              2) +
-          std::pow(
-              std::abs(x0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) + d[2]),
-              2));
-  new_d[2] =
-      (x0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) + d[2]) /
-      std::sqrt(
-          std::pow(
-              std::abs(x0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) + d[0]),
-              2) +
-          std::pow(
-              std::abs(x0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) + d[1]),
-              2) +
-          std::pow(
-              std::abs(x0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) + d[2]),
-              2));
+
+  const auto x1 = (1.0 / 6.0) * std::pow(h, 2);
+
+  new_p[0] = x1 * (k1[0] + k2[0] + k3[0]) + h * d[0] + p[0];
+  new_p[1] = x1 * (k1[1] + k2[1] + k3[1]) + h * d[1] + p[1];
+  new_p[2] = x1 * (k1[2] + k2[2] + k3[2]) + h * d[2] + p[2];
+  new_d[0] = x0 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) + d[0];
+  new_d[1] = x0 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) + d[1];
+  new_d[2] = x0 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) + d[2];
+
+  double D = new_d[0] * new_d[0] + new_d[1] * new_d[1] + new_d[2] * new_d[2] - 1;
+  D = 1 - ((1. / 648.) * D) * (12. - D);
+  new_d[0] *= D;
+  new_d[1] *= D;
+  new_d[2] *= D;
 }
 
 }  // namespace
