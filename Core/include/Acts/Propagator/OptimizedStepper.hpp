@@ -8,6 +8,9 @@
 
 #pragma once
 
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
@@ -19,9 +22,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 namespace Acts {
 
@@ -319,8 +319,11 @@ class OptimizedStepper {
   /// @param [in] navigator the navigator of the propagation
   /// @return true if nothing is missing after this call, false otherwise.
   template <typename propagator_state_t, typename navigator_t>
-  bool prepareCurvilinearState(propagator_state_t& prop_state,
-                               const navigator_t& navigator) const;
+  bool prepareCurvilinearState(
+      [[maybe_unused]] propagator_state_t& prop_state,
+      [[maybe_unused]] const navigator_t& navigator) const {
+    return true;
+  }
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -404,6 +407,11 @@ class OptimizedStepper {
 
   /// Overstep limit
   double m_overstepLimit;
+
+ private:
+  Result<double> stepImpl(State& state, Direction stepDirection,
+                          double stepTolerance, double stepSizeCutOff,
+                          std::size_t maxRungeKuttaStepTrials) const;
 };
 
 template <typename navigator_t>
@@ -411,3 +419,5 @@ struct SupportsBoundParameters<OptimizedStepper, navigator_t>
     : public std::true_type {};
 
 }  // namespace Acts
+
+#include "Acts/Propagator/OptimizedStepper.ipp"
