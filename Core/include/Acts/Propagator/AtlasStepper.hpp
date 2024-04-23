@@ -1282,18 +1282,18 @@ class AtlasStepper {
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
-      double mass = particleHypothesis(state.stepping).mass();
+      double m = particleHypothesis(state.stepping).mass();
+      double p = absoluteMomentum(state.stepping);
 
       // Evaluate the time propagation
-      double dtds = std::hypot(1, mass / absoluteMomentum(state.stepping));
+      double dtds = std::sqrt(1 + m * m / (p * p));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl = h * mass * mass * charge(state.stepping) /
-                      (absoluteMomentum(state.stepping) * dtds);
+        double dtdl = h * m * m * qOverP(state.stepping) / dtds;
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation
