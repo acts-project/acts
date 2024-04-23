@@ -355,7 +355,7 @@ std::vector<double> Acts::AthenaAmbiguityResolution::simpleScore(
     if (track.chi2() > 0 && track.nDoF() > 0) {
       double chi2 = track.chi2();
       int indf = track.nDoF();
-      double fac = 1. / log10(10. + 10. * chi2 / indf);
+      double fac = 1. / std::log10(10. + 10. * chi2 / indf);
       prob = prob * fac;
       ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
                                         << " is : " << fac
