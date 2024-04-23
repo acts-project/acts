@@ -365,7 +365,7 @@ def addParticleSelection(
     ----------
     s: Sequencer
         the sequencer module to which we add the ParticleSelector
-    preselectedParticles: ParticleSelectorConfig
+    config: ParticleSelectorConfig
         the particle selection configuration
     inputParticles: str
         the identifier for the input particles to be selected
