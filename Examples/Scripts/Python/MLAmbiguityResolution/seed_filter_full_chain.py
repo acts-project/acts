@@ -1,6 +1,4 @@
 import glob
-import os
-import math
 
 import pandas as pd
 import numpy as np
@@ -10,7 +8,7 @@ import torch.utils
 from sklearn.cluster import DBSCAN, KMeans
 
 from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
-from seed_solver_network import prepareDataSet, DuplicateClassifier, Normalise
+from seed_solver_network import prepareDataSet
 
 
 def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
