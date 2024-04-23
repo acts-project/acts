@@ -27,11 +27,12 @@ void rk4_k1(const T* d, const T lambda, const T* B, T* k1) {
 
 template <typename T>
 void rk4_p2(const T* p, const T* d, const T h, const T* k1, T* p2) {
-  const auto x0 = (1.0 / 8.0) * std::pow(h, 2);
+  const auto x0 = (1.0 / 8.0) * h * h;
+  const auto x1 = (1.0 / 2.0) * h;
 
-  p2[0] = x0 * k1[0] + (1.0 / 2.0) * h * d[0] + p[0];
-  p2[1] = x0 * k1[1] + (1.0 / 2.0) * h * d[1] + p[1];
-  p2[2] = x0 * k1[2] + (1.0 / 2.0) * h * d[2] + p[2];
+  p2[0] = x0 * k1[0] + x1 * d[0] + p[0];
+  p2[1] = x0 * k1[1] + x1 * d[1] + p[1];
+  p2[2] = x0 * k1[2] + x1 * d[2] + p[2];
 }
 
 template <typename T>
@@ -60,7 +61,7 @@ void rk4_k3(const T* d, const T h, const T lambda, const T* B, const T* k2,
 
 template <typename T>
 void rk4_p3(const T* p, const T* d, const T h, const T* k3, T* p3) {
-  const auto x0 = (1.0 / 2.0) * std::pow(h, 2);
+  const auto x0 = (1.0 / 2.0) * h * h;
 
   p3[0] = x0 * k3[0] + h * d[0] + p[0];
   p3[1] = x0 * k3[1] + h * d[1] + p[1];
@@ -81,7 +82,7 @@ void rk4_k4(const T* d, const T h, const T lambda, const T* B, const T* k3,
 template <typename T>
 void rk4_err(const T h, const T* k1, const T* k2, const T* k3, const T* k4,
              T* err) {
-  *err = std::pow(h, 2) * (std::abs(k1[0] - k2[0] - k3[0] + k4[0]) +
+  *err = h * h * (std::abs(k1[0] - k2[0] - k3[0] + k4[0]) +
                            std::abs(k1[1] - k2[1] - k3[1] + k4[1]) +
                            std::abs(k1[2] - k2[2] - k3[2] + k4[2]));
 }
@@ -91,7 +92,7 @@ void rk4_fin(const T* p, const T* d, const T h, const T* k1, const T* k2,
              const T* k3, const T* k4, T* new_p, T* new_d) {
   const auto x0 = (1.0 / 6.0) * h;
 
-  const auto x1 = (1.0 / 6.0) * std::pow(h, 2);
+  const auto x1 = (1.0 / 6.0) * h * h;
 
   new_p[0] = x1 * (k1[0] + k2[0] + k3[0]) + h * d[0] + p[0];
   new_p[1] = x1 * (k1[1] + k2[1] + k3[1]) + h * d[1] + p[1];
