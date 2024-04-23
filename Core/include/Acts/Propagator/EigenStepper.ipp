@@ -240,12 +240,16 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
+    /*
     // double std::sqrt is 3x faster than std::pow
-    const double stepSizeScaling =
-        std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
-                                       std::abs(2. * error_estimate))),
-                   0.25, 4.0);
+    const double stepSizeScaling = std::clamp(
+        std::sqrt(std::sqrt(stepTolerance / std::abs(2. * error_estimate))),
+        0.25, 4.0);
     h *= stepSizeScaling;
+    */
+
+    h *= 0.5;
+    state.stepping.stepSize.setAccuracy(h);
 
     // If step size becomes too small the particle remains at the initial
     // place
@@ -321,17 +325,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-  // double std::sqrt is 3x faster than std::pow
-  const double stepSizeScaling =
-      std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
-                                     std::abs(error_estimate))),
-                 0.25, 4.0);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
-  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
-    state.stepping.stepSize.setAccuracy(nextAccuracy);
-  }
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;

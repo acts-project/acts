@@ -274,6 +274,14 @@ Result<double> OptimizedStepper::stepImpl(
       break;
     }
 
+    /*
+    // double std::sqrt is 3x faster than std::pow
+    const double stepSizeScaling = std::clamp(
+        std::sqrt(std::sqrt(stepTolerance / std::abs(2. * error_estimate))),
+        0.25, 4.0);
+    h *= stepSizeScaling;
+    */
+
     h *= 0.5;
     state.stepSize.setAccuracy(h);
 
@@ -298,7 +306,7 @@ Result<double> OptimizedStepper::stepImpl(
 
   // Update the track parameters according to the equations of motion
   rk4_fin(pos.data(), dir.data(), h, sd.k1.data(), sd.k2.data(), sd.k3.data(),
-          sd.k4.data(), state.pars.template segment<3>(eFreeDir0).data(),
+          sd.k4.data(), state.pars.template segment<3>(eFreePos0).data(),
           state.pars.template segment<3>(eFreeDir0).data());
 
   /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
