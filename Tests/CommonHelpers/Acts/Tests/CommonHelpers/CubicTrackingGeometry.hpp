@@ -187,7 +187,8 @@ struct CubicTrackingGeometry {
         new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
     MutableTrackingVolumePtr mtvpWorld(std::make_shared<TrackingVolume>(
-        trafoWorld, worldVolBds, trVolArr, "World"));
+        trafoWorld, worldVolBds, nullptr, nullptr, trVolArr,
+        MutableTrackingVolumeVector{}, "World"));
 
     // Build and return tracking geometry
     return std::make_shared<TrackingGeometry>(mtvpWorld);
