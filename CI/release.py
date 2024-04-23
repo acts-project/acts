@@ -2,7 +2,6 @@
 import os
 import asyncio
 from typing import List, Optional, Tuple
-import re
 from pathlib import Path
 import sys
 import http

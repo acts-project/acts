@@ -1,4 +1,3 @@
-import math
 import acts
 import argparse
 import acts.examples
@@ -356,10 +355,10 @@ def main():
     geoContext = GeometryContext()
 
     # Convert the detector surfaces to GDML
-    [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
+    [_, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
         args.input, [args.sensitives], [args.passives]
     )
-    odd_light = get_detector(geoContext, ssurfaces, psurfaces, acts.logging.DEBUG)
+    get_detector(geoContext, ssurfaces, psurfaces, acts.logging.DEBUG)
 
 
 if "__main__" == __name__:
