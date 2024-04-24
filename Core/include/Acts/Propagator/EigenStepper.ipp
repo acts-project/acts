@@ -151,8 +151,6 @@ template <typename E, typename A>
 template <typename propagator_state_t, typename navigator_t>
 Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state, const navigator_t& navigator) const {
-  using namespace UnitLiterals;
-
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
   double error_estimate = 0.;
@@ -242,11 +240,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
+    // double std::sqrt is 3x faster than std::pow
     const double stepSizeScaling =
-        std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
-                                     state.options.stepTolerance /
-                                     std::abs(2. * error_estimate))))),
-                 4.0f);
+        std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
+                                       std::abs(2. * error_estimate))),
+                   0.25, 4.0);
     h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
@@ -323,11 +321,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-  const double stepSizeScaling = std::min(
-      std::max(0.25f,
-               std::sqrt(std::sqrt(static_cast<float>(
-                   state.options.stepTolerance / std::abs(error_estimate))))),
-      4.0f);
+  // double std::sqrt is 3x faster than std::pow
+  const double stepSizeScaling =
+      std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
+                                     std::abs(error_estimate))),
+                 0.25, 4.0);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
   const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
   const double initialStepLength = std::abs(initialH);
