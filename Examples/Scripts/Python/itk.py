@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 from pathlib import Path
 import argparse
 
@@ -16,7 +15,7 @@ from acts.examples import (
 
 import acts
 
-from acts import MaterialMapJsonConverter, UnitConstants as u
+from acts import MaterialMapJsonConverter
 
 
 def runITk(

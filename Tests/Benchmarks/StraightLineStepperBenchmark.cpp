@@ -10,10 +10,9 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -44,7 +43,6 @@ int main(int argc, char* argv[]) {
       ("help", "produce help message")
       ("toys",po::value<unsigned int>(&toys)->default_value(20000),"number of tracks to propagate")
       ("pT",po::value<double>(&ptInGeV)->default_value(1),"transverse momentum in GeV")
-      ("B",po::value<double>(&BzInT)->default_value(2),"z-component of B-field in T")
       ("path",po::value<double>(&maxPathInM)->default_value(5),"maximum path length in m")
       ("cov",po::value<bool>(&withCov)->default_value(true),"propagation with covariance matrix")
       ("verbose",po::value<unsigned int>(&lvl)->default_value(Acts::Logging::INFO),"logging level");
@@ -69,15 +67,12 @@ int main(int argc, char* argv[]) {
   ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
                            << "GeV in a " << BzInT << "T B-field");
 
-  using BField = ConstantBField;
-  using Stepper = AtlasStepper;
+  using Stepper = StraightLineStepper;
   using Propagator = Propagator<Stepper>;
   using Covariance = BoundSquareMatrix;
 
-  auto bField =
-      std::make_shared<BField>(Vector3{0, 0, BzInT * UnitConstants::T});
-  Stepper stepper(std::move(bField));
-  Propagator propagator(std::move(stepper));
+  Stepper stepper;
+  Propagator propagator(stepper);
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPathInM * UnitConstants::m;
