@@ -133,7 +133,7 @@ struct DefaultExtension {
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
     auto m = stepper.particleHypothesis(state.stepping).mass();
     auto p = stepper.absoluteMomentum(state.stepping);
-    auto dtds = std::hypot(1, m / p);
+    auto dtds = std::sqrt(1 + m * m / (p * p));
     state.stepping.pars[eFreeTime] += h * dtds;
     if (state.stepping.covTransport) {
       state.stepping.derivative(3) = dtds;
@@ -178,7 +178,7 @@ struct DefaultExtension {
     auto dir = stepper.direction(state.stepping);
     auto qop = stepper.qOverP(state.stepping);
     auto p = stepper.absoluteMomentum(state.stepping);
-    auto dtds = std::hypot(1, m / p);
+    auto dtds = std::sqrt(1 + m * m / (p * p));
 
     D = FreeMatrix::Identity();
 

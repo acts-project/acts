@@ -101,28 +101,20 @@ struct CombinatorialKalmanFilterExtensions {
  private:
   /// Default measurement selector which will return all measurements
   /// @param candidates Measurement track state candidates
-  /// @param isOutlier Output variable indicating whether the returned state is an outlier (unused)
-  /// @param logger A logger instance
   static Result<std::pair<
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
       typename std::vector<typename traj_t::TrackStateProxy>& candidates,
-      bool& isOutlier, const Logger& logger) {
-    (void)isOutlier;
-    (void)logger;
+      bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};
   };
 
   /// Default branch stopper which will never stop
-  /// @param tipState The tip state to decide whether to stop (unused)
-  /// @param trackState The track state to decide whether to stop (unused)
   /// @return false
   static bool voidBranchStopper(
-      const CombinatorialKalmanFilterTipState& tipState,
-      typename traj_t::TrackStateProxy& trackState) {
-    (void)tipState;
-    (void)trackState;
+      const CombinatorialKalmanFilterTipState& /*tipState*/,
+      typename traj_t::TrackStateProxy& /*trackState*/) {
     return false;
   }
 };
@@ -572,7 +564,9 @@ class CombinatorialKalmanFilter {
         if (!boundStateRes.ok()) {
           return boundStateRes.error();
         }
-        auto boundState = *boundStateRes;
+        auto& boundState = *boundStateRes;
+        auto& [boundParams, jacobian, pathLength] = boundState;
+        boundParams.covariance() = state.stepping.cov;
 
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
@@ -670,8 +664,7 @@ class CombinatorialKalmanFilter {
           // TrackState. No storage allocation for uncalibrated/calibrated
           // measurement and filtered parameter
           auto stateMask =
-              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
-                TrackStatePropMask::Smoothed);
+              TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
 
           // Increment of number of processed states
           tipState.nStates++;
@@ -940,9 +933,7 @@ class CombinatorialKalmanFilter {
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
-      if (boundParams.covariance().has_value()) {
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-      }
+      trackStateProxy.predictedCovariance() = boundParams.covariance().value();
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
@@ -1070,9 +1061,9 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    bool operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                    const navigator_t& /*unused*/,
-                    const Logger& /*unused*/) const {
+    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/,
+                    const Logger& /*logger*/) const {
       return false;
     }
   };
