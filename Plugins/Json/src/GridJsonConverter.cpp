@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
