@@ -1293,8 +1293,7 @@ class AtlasStepper {
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl =
-            h * mass * mass * charge(state.stepping) / (momentum * dtds);
+        double dtdl = h * mass * mass * qOverP(state.stepping) / dtds;
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation
