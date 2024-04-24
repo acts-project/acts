@@ -726,7 +726,10 @@ class KalmanFitter {
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
-        TrackStatePropMask mask = TrackStatePropMask::All;
+        TrackStatePropMask mask =
+            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+            TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
+            TrackStatePropMask::Calibrated;
         const std::size_t currentTrackIndex = fittedStates.addTrackState(
             mask, Acts::MultiTrajectoryTraits::kInvalid);
 

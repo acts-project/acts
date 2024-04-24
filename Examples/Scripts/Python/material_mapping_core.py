@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
 
 import acts
@@ -15,7 +14,6 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
-    ProcessCode,
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
     CoreMaterialMapping,
