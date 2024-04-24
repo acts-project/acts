@@ -2,7 +2,6 @@
 from pathlib import Path
 import os
 import re
-import sys
 
 import asyncio
 import aiohttp
@@ -53,12 +52,10 @@ async def check(token: str, repo: str):
 
                                 loc = f"{rel}:{i}"
                                 this_ok = True
-                                issue_info = number
                                 try:
                                     issue = await gh.getitem(
                                         f"repos/{repo}/issues/{number}"
                                     )
-                                    issue_info = issue["html_url"]
                                 except gidgethub.BadRequest as e:
                                     print(
                                         f":red_circle: [bold]FPE mask at {loc} has invalid issue number {number}[/bold]"

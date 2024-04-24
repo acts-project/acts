@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,13 +18,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <iosfwd>
-#include <limits>
-#include <memory>
 #include <optional>
 
 namespace ActsFatras {
@@ -295,6 +293,17 @@ class Particle {
   /// Number of hits.
   constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
 
+  /// Set the outcome of particle.
+  ///
+  /// @param outcome outcome code
+  constexpr Particle &setOutcome(ParticleOutcome outcome) {
+    m_outcome = outcome;
+    return *this;
+  }
+
+  /// Particle outcome.
+  constexpr ParticleOutcome outcome() const { return m_outcome; }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -319,6 +328,8 @@ class Particle {
   std::uint32_t m_numberOfHits = 0;
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
+  /// outcome
+  ParticleOutcome m_outcome = ParticleOutcome::Alive;
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

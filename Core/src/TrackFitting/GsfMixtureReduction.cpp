@@ -51,7 +51,7 @@ namespace Acts {
 
 void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
-                                 const Surface & /*unused*/) {
+                                 const Surface & /*surface*/) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }

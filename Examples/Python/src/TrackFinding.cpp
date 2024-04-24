@@ -292,8 +292,8 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialVarInflation,
-      particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSimgaQoverPCoefficients,
+      initialVarInflation, noTimeVarInflation, particleHypothesis);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;

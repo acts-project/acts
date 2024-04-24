@@ -31,16 +31,13 @@ class GainMatrixSmoother {
  public:
   /// Run the Kalman smoothing for one trajectory.
   ///
-  /// @param[in] gctx The geometry context for the smoothing
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
+  Result<void> operator()(const GeometryContext& /*gctx*/, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
-
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
     GetParameters filtered;
@@ -82,12 +79,8 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Getting previous track state");
     auto prev_ts = trajectory.getTrackState(entryIndex);
 
-    // ensure the track state has a smoothed component
-    prev_ts.addComponents(TrackStatePropMask::Smoothed);
-
-    // TODO state component could also be shared
-    prev_ts.smoothed() = prev_ts.filtered();
-    prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
+    prev_ts.shareFrom(TrackStatePropMask::Filtered,
+                      TrackStatePropMask::Smoothed);
 
     // make sure there is more than one track state
     if (!prev_ts.hasPrevious()) {

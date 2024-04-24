@@ -121,6 +121,7 @@ def run_vertexing(fitter, mu, events):
                 pt=(500 * u.MeV, None),
                 nMeasurementsMin=6,
                 maxHoles=2,
+                maxOutliers=2,
             ),
             CkfConfig(
                 seedDeduplication=True,
