@@ -90,7 +90,8 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   auto vCylinderTop = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 110.);
 
   auto topVolume = std::make_shared<TrackingVolume>(
-      Transform3::Identity(), vCylinderTop, volumes, "TopVolume");
+      Transform3::Identity(), vCylinderTop, nullptr, nullptr, volumes,
+      MutableTrackingVolumeVector{}, "TopVolume");
 
   auto tGeometry = std::make_shared<TrackingGeometry>(topVolume);
 
