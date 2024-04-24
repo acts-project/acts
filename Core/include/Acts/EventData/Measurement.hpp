@@ -297,6 +297,10 @@ class VariableSizeMeasurement {
   std::array<Scalar, kFullSize * kFullSize> m_cov{};
 };
 
+// Typedef `FixedSizeMeasurement` to `Measurement` for compatibility.
+template <typename indices_t, std::size_t kSize>
+using Measurement = FixedSizeMeasurement<indices_t, kSize>;
+
 /// Construct a fixed-size measurement for the given indices.
 ///
 /// @tparam parameters_t Input parameters vector type
@@ -314,7 +318,7 @@ class VariableSizeMeasurement {
 /// This helper function can be used to create a fixed-size measurement using an
 /// explicit set of indices, e.g.
 ///
-///     auto m = makeFixedSizeMeasurement(s, p, c, eBoundLoc0, eBoundTime);
+///     auto m = makeMeasurement(s, p, c, eBoundLoc0, eBoundTime);
 ///
 /// for a 2d measurement w/ one position and time.
 ///
@@ -322,18 +326,63 @@ class VariableSizeMeasurement {
 ///   parameters and covariance.
 template <typename parameters_t, typename covariance_t, typename indices_t,
           typename... tail_indices_t>
-auto makeFixedSizeMeasurement(SourceLink source,
-                              const Eigen::MatrixBase<parameters_t>& params,
-                              const Eigen::MatrixBase<covariance_t>& cov,
-                              indices_t index0, tail_indices_t... tailIndices)
+auto makeMeasurement(SourceLink source,
+                     const Eigen::MatrixBase<parameters_t>& params,
+                     const Eigen::MatrixBase<covariance_t>& cov,
+                     indices_t index0, tail_indices_t... tailIndices)
     -> FixedSizeMeasurement<indices_t, 1u + sizeof...(tail_indices_t)> {
   using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
   return {std::move(source), IndexContainer{index0, tailIndices...}, params,
           cov};
 }
 
-using BoundVariableMeasurement = VariableSizeMeasurement<BoundIndices>;
+namespace detail {
+/// @cond
 
+// Recursive construction of the measurement variant. `kN` is counted down until
+// zero while the sizes are accumulated in the parameter pack.
+//
+// Example:
+//
+//        VariantMeasurementGenerator<..., 4>
+//     -> VariantMeasurementGenerator<..., 3, 4>
+//     -> VariantMeasurementGenerator<..., 2, 3, 4>
+//     -> VariantMeasurementGenerator<..., 1, 2, 3, 4>
+//     -> VariantMeasurementGenerator<..., 0, 1, 2, 3, 4>
+//
+template <typename indices_t, std::size_t kN, std::size_t... kSizes>
+struct VariantMeasurementGenerator
+    : VariantMeasurementGenerator<indices_t, kN - 1u, kN, kSizes...> {};
+template <typename indices_t, std::size_t... kSizes>
+struct VariantMeasurementGenerator<indices_t, 0u, kSizes...> {
+  using Type = std::variant<Measurement<indices_t, kSizes>...>;
+};
+
+/// @endcond
+}  // namespace detail
+
+/// Variant that can contain all possible measurements in a parameter space.
+///
+/// @tparam indices_t Parameter index type, determines the full parameter space
+template <typename indices_t>
+using VariantMeasurement = typename detail::VariantMeasurementGenerator<
+    indices_t, detail::kParametersSize<indices_t>>::Type;
+
+/// Variant that can hold all possible bound measurements.
+///
+using BoundVariantMeasurement = VariantMeasurement<BoundIndices>;
+
+/// Variant that can hold all possible free measurements.
+///
+using FreeVariantMeasurement = VariantMeasurement<FreeIndices>;
+
+using BoundVariableMeasurement = VariableSizeMeasurement<BoundIndices>;
 using FreeVariableMeasurement = VariableSizeMeasurement<FreeIndices>;
+
+template <typename indices_t>
+std::ostream& operator<<(std::ostream& os,
+                         const VariantMeasurement<indices_t>& vm) {
+  return std::visit([&](const auto& m) { return (os << m); }, vm);
+}
 
 }  // namespace Acts
