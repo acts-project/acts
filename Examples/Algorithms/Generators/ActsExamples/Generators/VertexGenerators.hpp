@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file
-/// @date 2018-03-13
-/// @author Moritz Kiehn <msmk@cern.ch>
-
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -25,7 +21,7 @@ struct FixedPrimaryVertexPositionGenerator
   /// The fixed vertex position and time.
   Acts::Vector4 fixed = Acts::Vector4::Zero();
 
-  Acts::Vector4 operator()(RandomEngine& /* unused */) const override {
+  Acts::Vector4 operator()(RandomEngine& /*rng*/) const override {
     return fixed;
   }
 };
