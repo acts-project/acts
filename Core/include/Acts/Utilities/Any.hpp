@@ -40,13 +40,13 @@
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
 #define _ACTS_ANY_VERBOSE(x) std::cout << x << std::endl;
-#define _ACTS_ANY_VERBOSE_BUFFER(s, b) \
-  do {                                 \
-    std::cout << "" << s << ": 0x";    \
-    for (char c : b) {                 \
-      std::cout << std::hex << (int)c; \
-    }                                  \
-    std::cout << std::endl;            \
+#define _ACTS_ANY_VERBOSE_BUFFER(s, b)              \
+  do {                                              \
+    std::cout << "" << s << ": 0x";                 \
+    for (char c : b) {                              \
+      std::cout << std::hex << static_cast<int>(c); \
+    }                                               \
+    std::cout << std::endl;                         \
   } while (0)
 #else
 #define _ACTS_ANY_VERBOSE(x)

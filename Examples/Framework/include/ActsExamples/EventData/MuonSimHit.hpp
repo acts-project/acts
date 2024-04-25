@@ -52,7 +52,7 @@ muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
   theID = theID >> g_fieldShift;
   f.stationPhi = theID & 0xFF;
   theID = theID >> g_fieldShift;
-  f.stationEta = (int)(theID & 0xFF);
+  f.stationEta = static_cast<int>(theID & 0xFF);
   theID = theID >> g_fieldShift;
   f.stationName = theID & 0xFF;
   return f;
