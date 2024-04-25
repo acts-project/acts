@@ -16,7 +16,7 @@ def runMaterialValidation(
     field,
     outputDir,
     outputName="propagation-material",
-    s = None
+    s=None,
 ):
     # Create a sequencer
     s = s or Sequencer(events=nevents, numThreads=-1)
