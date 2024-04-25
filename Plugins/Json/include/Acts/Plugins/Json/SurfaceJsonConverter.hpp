@@ -33,18 +33,6 @@ using SurfaceAndMaterialWithContext =
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 
-// This macro create a conversion for the surface type
-NLOHMANN_JSON_SERIALIZE_ENUM(
-    Surface::SurfaceType,
-    {{Surface::SurfaceType::Cone, "ConeSurface"},
-     {Surface::SurfaceType::Cylinder, "CylinderSurface"},
-     {Surface::SurfaceType::Disc, "DiscSurface"},
-     {Surface::SurfaceType::Perigee, "PerigeeSurface"},
-     {Surface::SurfaceType::Plane, "PlaneSurface"},
-     {Surface::SurfaceType::Straw, "StrawSurface"},
-     {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
-     {Surface::SurfaceType::Other, "Other"}})
-
 /// Conversion of a pair of surface and material used for the material mapping
 void to_json(nlohmann::json& j, const SurfaceAndMaterialWithContext& surface);
 
@@ -136,4 +124,17 @@ nlohmann::json toJsonDetray(const GeometryContext& gctx, const Surface& surface,
 std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
 
 }  // namespace SurfaceJsonConverter
+
+// This macro create a conversion for the surface type
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    Surface::SurfaceType,
+    {{Surface::SurfaceType::Cone, "ConeSurface"},
+     {Surface::SurfaceType::Cylinder, "CylinderSurface"},
+     {Surface::SurfaceType::Disc, "DiscSurface"},
+     {Surface::SurfaceType::Perigee, "PerigeeSurface"},
+     {Surface::SurfaceType::Plane, "PlaneSurface"},
+     {Surface::SurfaceType::Straw, "StrawSurface"},
+     {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
+     {Surface::SurfaceType::Other, "Other"}})
+
 }  // namespace Acts
