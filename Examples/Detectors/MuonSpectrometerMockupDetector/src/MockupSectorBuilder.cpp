@@ -103,7 +103,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
     strawSurfaces.push_back(g4ConvSurf);
 
     min_max[0].first =
-        std::min(min_max[0].first, static_cast<float>(g4ConvSurf->center(context).x());
+        std::min(min_max[0].first, static_cast<float>(g4ConvSurf->center(context).x()));
     min_max[0].second =
         std::max(min_max[0].second, static_cast<float>(g4ConvSurf->center(context).x()));
 
