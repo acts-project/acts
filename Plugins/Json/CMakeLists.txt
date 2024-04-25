@@ -30,7 +30,7 @@ acts_target_link_libraries_system(
   ActsPluginJson PUBLIC nlohmann_json::nlohmann_json)
 target_compile_definitions(
   ActsPluginJson
-  PUBLIC JSON_DISABLE_ENUM_SERIALIZATION=1)
+  PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1)
 
 install(
   TARGETS ActsPluginJson
