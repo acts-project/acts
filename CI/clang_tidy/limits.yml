@@ -6,6 +6,7 @@ limits:
   "readability-implicit-bool-cast": 0
   "readability-implicit-bool-conversion": 0
   "modernize-concat-nested-namespaces": 0
+  "modernize-use-cpp-casts": 0
   "modernize-use-using": 0
   "modernize-use-override": 0
   "modernize-use-equals-default" : 0
