@@ -40,9 +40,10 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, halfphi, averagePhi).type(),
                     SurfaceBounds::eCylinder);
   BOOST_CHECK_EQUAL(
-      CylinderBounds(radius, halfz, (double)M_PI, (double)0., minBevelZ).type(),
+      CylinderBounds(radius, halfz, static_cast<double>(M_PI), 0., minBevelZ)
+          .type(),
       SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, (double)M_PI, (double)0.,
+  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, static_cast<double>(M_PI), 0.,
                                    minBevelZ, maxBevelZ)
                         .type(),
                     SurfaceBounds::eCylinder);
