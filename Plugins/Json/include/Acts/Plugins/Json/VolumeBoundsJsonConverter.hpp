@@ -25,7 +25,15 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-class VolumeBounds;
+// This macro creates a conversion for the volume bounds type
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    VolumeBounds::BoundsType,
+    {{VolumeBounds::BoundsType::eCone, "Cone"},
+     {VolumeBounds::BoundsType::eCuboid, "Cuboid"},
+     {VolumeBounds::BoundsType::eCutoutCylinder, "CutoutCylinder"},
+     {VolumeBounds::BoundsType::eCylinder, "Cylinder"},
+     {VolumeBounds::BoundsType::eGenericCuboid, "GenericCuboid"},
+     {VolumeBounds::BoundsType::eTrapezoid, "Trapezoid"}})
 
 void to_json(nlohmann::json& j, const VolumeBounds& bounds);
 
@@ -62,15 +70,4 @@ std::unique_ptr<bounds_t> fromJson(const nlohmann::json& jVolumeBounds) {
 std::unique_ptr<VolumeBounds> fromJson(const nlohmann::json& jVolumeBounds);
 
 }  // namespace VolumeBoundsJsonConverter
-
-// This macro creates a conversion for the volume bounds type
-NLOHMANN_JSON_SERIALIZE_ENUM(
-    VolumeBounds::BoundsType,
-    {{VolumeBounds::BoundsType::eCone, "Cone"},
-     {VolumeBounds::BoundsType::eCuboid, "Cuboid"},
-     {VolumeBounds::BoundsType::eCutoutCylinder, "CutoutCylinder"},
-     {VolumeBounds::BoundsType::eCylinder, "Cylinder"},
-     {VolumeBounds::BoundsType::eGenericCuboid, "GenericCuboid"},
-     {VolumeBounds::BoundsType::eTrapezoid, "Trapezoid"}})
-
 }  // namespace Acts
