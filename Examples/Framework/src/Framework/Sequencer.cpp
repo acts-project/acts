@@ -424,7 +424,6 @@ int Sequencer::run() {
   std::vector<std::string> names = listAlgorithmNames();
   std::vector<Duration> clocksAlgorithms(names.size(), Duration::zero());
   tbbWrap::queuing_mutex clocksAlgorithmsMutex;
-  std::vector<EventTimingInfo> eventTimingData;
 
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
@@ -469,10 +468,19 @@ int Sequencer::run() {
     }
   }
 
-  // execute the parallel event loop
-  bool enableEventTiming = m_cfg.outputEventTimingFile.has_value();
+  // loop preparation
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
+
+  // prepare event timing data
+  bool enableEventTiming = m_cfg.outputEventTimingFile.has_value();
+  std::size_t nEventTimingData = 0;
+  if (enableEventTiming) {
+    nEventTimingData = nTotalEvents * names.size();
+  }
+  std::vector<EventTimingInfo> eventTimingData(nEventTimingData);
+
+  // execute the parallel event loop
   m_taskArena.execute([&] {
     tbbWrap::parallel_for(
         tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
@@ -555,13 +563,16 @@ int Sequencer::run() {
             if (enableEventTiming) {
               // Collect the event timing data
               for (std::size_t i = 0; i < names.size(); i++) {
+                std::size_t eventTimingIndex =
+                    nProcessedEvents * names.size() + i;
+
                 EventTimingInfo eventInfo;
                 eventInfo.identifier = names[i];
                 eventInfo.time_s = std::chrono::duration_cast<Seconds>(
                                        localClocksAlgorithms[i])
                                        .count();
                 eventInfo.eventId = event;
-                eventTimingData.push_back(eventInfo);
+                eventTimingData[eventTimingIndex] = eventInfo;
               }
             }
 
