@@ -38,24 +38,7 @@ Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
     : RegularSurface(), m_bounds(nullptr) {
-  /// the right-handed coordinate system is defined as
-  /// T = normal
-  /// U = Z x T if T not parallel to Z otherwise U = X x T
-  /// V = T x U
-  Vector3 T = normal.normalized();
-  Vector3 U = std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance
-                  ? Vector3::UnitZ().cross(T).normalized()
-                  : Vector3::UnitX().cross(T).normalized();
-  Vector3 V = T.cross(U);
-  RotationMatrix3 curvilinearRotation;
-  curvilinearRotation.col(0) = U;
-  curvilinearRotation.col(1) = V;
-  curvilinearRotation.col(2) = T;
-
-  // curvilinear surfaces are boundless
-  Transform3 trf{curvilinearRotation};
-  trf.pretranslate(center);
-  m_transform = std::make_unique<Transform3>(std::move(trf));
+  m_transform = std::make_unique<Transform3>(CurvilinearSurface(center, normal).transform());
 }
 
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
