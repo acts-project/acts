@@ -61,7 +61,7 @@ Acts::GeometryIdentifier::Value compressId(muonMdtIdentifierFields f) {
   using longIdType = Acts::GeometryIdentifier::Value;
   longIdType out{0};
   out = out << g_fieldShift | f.stationName;
-  out = out << g_fieldShift | (u_int8_t)f.stationEta;
+  out = out << g_fieldShift | static_cast<u_int8_t>(f.stationEta);
   out = out << g_fieldShift | f.stationPhi;
   out = out << g_fieldShift | f.multilayer;
   out = out << g_fieldShift | f.tubeLayer;

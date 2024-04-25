@@ -195,8 +195,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     if (angleZfrom < M_PI) {
       Acts::ActsScalar new_deltaZfrom =
           rMiddle[isLessFrom] / std::tan(angleZfrom) / zBinLength;
-      nearZFrom = (std::uint32_t)std::max(
-          new_deltaZfrom * rNearRatio[isLessFrom] + limitAbsZSliceFrom, 0.);
+      nearZFrom = static_cast<std::uint32_t>(std::max(
+          new_deltaZfrom * rNearRatio[isLessFrom] + limitAbsZSliceFrom, 0.));
     }
 
     bool isLessTo = (middleZ < limitAbsZSliceTo);
@@ -207,8 +207,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     if (angleZto > 0) {
       Acts::ActsScalar new_deltaZto =
           rMiddle[!isLessTo] / std::tan(angleZto) / zBinLength;
-      nearZTo = (std::uint32_t)std::max(
-          new_deltaZto * rNearRatio[!isLessTo] + limitAbsZSliceTo, 0.);
+      nearZTo = static_cast<std::uint32_t>(std::max(
+          new_deltaZto * rNearRatio[!isLessTo] + limitAbsZSliceTo, 0.));
       if (nearZTo > m_cfg.numZSlices) {
         nearZTo = m_cfg.numZSlices;
       }
@@ -225,10 +225,10 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
           m_cfg.maxXYZdeviation;
       std::uint32_t farZFrom = 0;
       if (angle2Zfrom < M_PI) {
-        farZFrom = (std::uint32_t)std::max(
+        farZFrom = static_cast<std::uint32_t>(std::max(
             (rFarDelta[isMiddleLess] / std::tan(angle2Zfrom) / zBinLength) +
                 middleZ,
-            0.);
+            0.));
         if (farZFrom >= m_cfg.numZSlices) {
           continue;
         }
@@ -241,10 +241,10 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
           m_cfg.maxXYZdeviation;
       std::uint32_t farZTo = m_cfg.numZSlices;
       if (angle2Zto > 0) {
-        farZTo = (std::uint32_t)std::max(
+        farZTo = static_cast<std::uint32_t>(std::max(
             (rFarDelta[!isMiddleLess] / std::tan(angle2Zto) / zBinLength) +
                 middleZ + 1,
-            0.);
+            0.));
         if (farZTo > m_cfg.numZSlices) {
           farZTo = m_cfg.numZSlices;
         } else if (farZTo == 0) {
