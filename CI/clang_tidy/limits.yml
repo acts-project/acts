@@ -4,7 +4,6 @@ limits:
   "cppcoreguidelines-init-variables": 0
   "cppcoreguidelines-pro-type-member-init": 0
   "modernize-concat-nested-namespaces": 0
-  "modernize-use-cpp-casts": 0
   "modernize-use-equals-default": 0
   "modernize-use-default-member-init": 0
   "modernize-use-nullptr": 0
