@@ -2,6 +2,7 @@ limits:
   "clang-analyzer-optin.cplusplus.UninitializedObject": 0
   "clang-diagnostic-error": 0
   "cppcoreguidelines-init-variables": 0
+  "cppcoreguidelines-pro-type-cstyle-cast": 0
   "cppcoreguidelines-pro-type-member-init": 0
   "modernize-concat-nested-namespaces": 0
   "modernize-use-cpp-casts": 0
