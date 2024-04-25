@@ -4,9 +4,6 @@ import os
 import argparse
 
 import acts
-from acts import (
-    UnitConstants as u,
-)
 from acts.examples import Sequencer, RootMaterialTrackWriter
 from acts.examples.odd import getOpenDataDetector
 

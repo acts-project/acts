@@ -380,10 +380,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         addSeeding,
         TruthSeedRanges,
     )
-    from acts.examples.reconstruction import (
-        addSeeding,
-        TruthSeedRanges,
-    )
     from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
     addSeeding(
