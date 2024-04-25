@@ -43,7 +43,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
     auto& its = pv.internal.value();
     nlohmann::json jinternal;
     if (its.layerType != Surface::SurfaceType::Other) {
-      jinternal["layerType"] = static_cast<int>(its.layerType);
+      jinternal["layerType"] = its.layerType;
     }
     if (!its.surfaceBinning.empty()) {
       writeBinning(jinternal, its.surfaceBinning, "surfaceBinning");
