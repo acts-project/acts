@@ -71,7 +71,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
       mean[j] += event[j];
     }
   }
-  mean /= (float)events.size();
+  mean /= static_cast<float>(events.size());
 
   // Calculate the covariance matrix
   Matrix covariance = Matrix::Zero(multiplicity, multiplicity);
@@ -82,7 +82,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
       }
     }
   }
-  covariance /= (float)events.size();
+  covariance /= static_cast<float>(events.size());
 
   return std::make_pair(mean, covariance);
 }
@@ -351,7 +351,7 @@ TVectorF softProbability(const EventCollection& events) {
   }
 
   TVectorF result(1);
-  result[0] = counter / (float)events.size();
+  result[0] = counter / static_cast<float>(events.size());
   return result;
 }
 
@@ -361,8 +361,10 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   float min = std::numeric_limits<float>::max();
   float max = 0.;
   for (const EventFraction& event : events) {
-    min = std::min((float)event.interactingParticle.pathInL0(), min);
-    max = std::max((float)event.interactingParticle.pathInL0(), max);
+    min =
+        std::min(static_cast<float>(event.interactingParticle.pathInL0()), min);
+    max =
+        std::max(static_cast<float>(event.interactingParticle.pathInL0()), max);
   }
 
   // Fill the histogram
