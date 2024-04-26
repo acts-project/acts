@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.energy(),
-                    Particle::Scalar(std::hypot(1_GeV, 2_GeV) - 100_MeV));
+                    Particle::Scalar{std::hypot(1_GeV, 2_GeV) - 100_MeV});
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
   // particle is still alive
   BOOST_CHECK(particle.isAlive());
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.energy(),
-                    Particle::Scalar(std::hypot(1_GeV, 2_GeV) - 300_MeV));
+                    Particle::Scalar{std::hypot(1_GeV, 2_GeV) - 300_MeV});
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
   // particle is still alive
   BOOST_CHECK(particle.isAlive());

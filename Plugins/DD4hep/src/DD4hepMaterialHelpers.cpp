@@ -38,7 +38,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     auto bit = std::find(Acts::binningValueNames().begin(),
                          Acts::binningValueNames().end(), bin.first);
     std::size_t indx = std::distance(Acts::binningValueNames().begin(), bit);
-    Acts::BinningValue bval = Acts::BinningValue(indx);
+    Acts::BinningValue bval = Acts::BinningValue{indx};
     Acts::BinningOption bopt = bin.second;
     double min = 0.;
     double max = 0.;

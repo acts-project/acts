@@ -204,7 +204,7 @@ struct SimulationActor {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
+          Hit::Scalar{0.5} * (before.fourPosition() + after.fourPosition()),
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
 
       after.setNumberOfHits(result.hits.size());

@@ -108,7 +108,7 @@ class MultiIndex {
   constexpr MultiIndex makeLastDescendant(std::size_t lvl) const {
     assert((lvl < NumLevels) && "Index level outside allowed range");
     // mask everything below the selected level
-    Value maskLower = (Value(1u) << shift(lvl)) - 1u;
+    Value maskLower = (Value{1u} << shift(lvl)) - 1u;
     // replace the masked lower levels w/ ones
     return (m_value & ~maskLower) | maskLower;
   }
