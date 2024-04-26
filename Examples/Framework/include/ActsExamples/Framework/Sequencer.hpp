@@ -80,7 +80,7 @@ class Sequencer {
     std::string outputTimingFile = "timing.tsv";
     /// Output name of the per event timing file
     /// Enable detailed per event timing writing
-    std::optional<std::string> outputEventTimingFile = std::nullopt;
+    std::string outputEventTimingFile = "";
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};

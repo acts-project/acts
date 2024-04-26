@@ -473,7 +473,7 @@ int Sequencer::run() {
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
 
   // prepare event timing data
-  bool enableEventTiming = m_cfg.outputEventTimingFile.has_value();
+  const bool enableEventTiming = !m_cfg.outputEventTimingFile.empty();
   std::vector<EventTimingInfo> eventTimingData;
   if (enableEventTiming) {
     eventTimingData.resize(nTotalEvents * names.size());
@@ -634,7 +634,7 @@ int Sequencer::run() {
   if (enableEventTiming) {
     // Write the data to a file
     std::string eventTimingPath =
-        joinPaths(m_cfg.outputDir, m_cfg.outputEventTimingFile.value());
+        joinPaths(m_cfg.outputDir, m_cfg.outputEventTimingFile);
     dfe::NamedTupleTsvWriter<EventTimingInfo> eventTimingWriter(eventTimingPath,
                                                                 4);
     for (EventTimingInfo info : eventTimingData) {
