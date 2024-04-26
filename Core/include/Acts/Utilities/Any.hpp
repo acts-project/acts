@@ -490,13 +490,13 @@ class AnyBase : public AnyBaseAll {
   static constexpr std::size_t kMaxAlignment =
       std::max(alignof(std::max_align_t),
 #if defined(__AVX512F__)
-               std::size_t(64)
+               std::size_t{64}
 #elif defined(__AVX__)
-               std::size_t(32)
+               std::size_t{32}
 #elif defined(__SSE__)
-               std::size_t(16)
+               std::size_t{16}
 #else
-               std::size_t(0)  // Neutral element
+               std::size_t{0}  // Neutral element
                                // for maximum
 #endif
       );
