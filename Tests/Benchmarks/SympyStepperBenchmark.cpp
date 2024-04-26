@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,8 +12,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/OptimizedStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -63,14 +63,14 @@ int main(int argc, char* argv[]) {
   }
 
   ACTS_LOCAL_LOGGER(
-      getDefaultLogger("Optimized_Stepper", Acts::Logging::Level(lvl)));
+      getDefaultLogger("Sympy_Stepper", Acts::Logging::Level(lvl)));
 
   // print information about profiling setup
   ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
                            << "GeV in a " << BzInT << "T B-field");
 
   using BField = ConstantBField;
-  using Stepper = OptimizedStepper;
+  using Stepper = SympyStepper;
   using Propagator = Propagator<Stepper>;
   using Covariance = BoundSquareMatrix;
 

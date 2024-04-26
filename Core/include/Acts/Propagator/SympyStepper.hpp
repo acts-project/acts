@@ -25,7 +25,7 @@
 
 namespace Acts {
 
-class OptimizedStepper {
+class SympyStepper {
  public:
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
@@ -127,8 +127,8 @@ class OptimizedStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  OptimizedStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-                   double overstepLimit = 100 * UnitConstants::um);
+  SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
+               double overstepLimit = 100 * UnitConstants::um);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -227,7 +227,7 @@ class OptimizedStepper {
       Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
-    return detail::updateSingleSurfaceStatus<OptimizedStepper>(
+    return detail::updateSingleSurfaceStatus<SympyStepper>(
         *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
@@ -244,8 +244,7 @@ class OptimizedStepper {
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction /*direction*/, bool release = true) const {
-    detail::updateSingleStepSize<OptimizedStepper>(state, oIntersection,
-                                                   release);
+    detail::updateSingleStepSize<SympyStepper>(state, oIntersection, release);
   }
 
   /// Update step size - explicitly with a double
@@ -415,9 +414,9 @@ class OptimizedStepper {
 };
 
 template <typename navigator_t>
-struct SupportsBoundParameters<OptimizedStepper, navigator_t>
+struct SupportsBoundParameters<SympyStepper, navigator_t>
     : public std::true_type {};
 
 }  // namespace Acts
 
-#include "Acts/Propagator/OptimizedStepper.ipp"
+#include "Acts/Propagator/SympyStepper.ipp"
