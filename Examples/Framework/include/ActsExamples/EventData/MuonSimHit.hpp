@@ -42,9 +42,8 @@ struct muonMdtIdentifierFields {
   int8_t tube = 0;
 };
 muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
-  using longIdType = Acts::GeometryIdentifier::Value;
   muonMdtIdentifierFields f;
-  f.tube = (theID)&0xFF;
+  f.tube = theID & 0xFF;
   theID = theID >> g_fieldShift;
   f.tubeLayer = theID & 0xFF;
   theID = theID >> g_fieldShift;
@@ -52,16 +51,15 @@ muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
   theID = theID >> g_fieldShift;
   f.stationPhi = theID & 0xFF;
   theID = theID >> g_fieldShift;
-  f.stationEta = static_cast<int>(theID & 0xFF);
+  f.stationEta = theID & 0xFF;
   theID = theID >> g_fieldShift;
   f.stationName = theID & 0xFF;
   return f;
 }
 Acts::GeometryIdentifier::Value compressId(muonMdtIdentifierFields f) {
-  using longIdType = Acts::GeometryIdentifier::Value;
-  longIdType out{0};
+  Acts::GeometryIdentifier::Value out{0};
   out = out << g_fieldShift | f.stationName;
-  out = out << g_fieldShift | static_cast<u_int8_t>(f.stationEta);
+  out = out << g_fieldShift | f.stationEta;
   out = out << g_fieldShift | f.stationPhi;
   out = out << g_fieldShift | f.multilayer;
   out = out << g_fieldShift | f.tubeLayer;
