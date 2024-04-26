@@ -474,11 +474,10 @@ int Sequencer::run() {
 
   // prepare event timing data
   bool enableEventTiming = m_cfg.outputEventTimingFile.has_value();
-  std::size_t nEventTimingData = 0;
+  std::vector<EventTimingInfo> eventTimingData;
   if (enableEventTiming) {
-    nEventTimingData = nTotalEvents * names.size();
+    eventTimingData.resize(nTotalEvents * names.size());
   }
-  std::vector<EventTimingInfo> eventTimingData(nEventTimingData);
 
   // execute the parallel event loop
   m_taskArena.execute([&] {
