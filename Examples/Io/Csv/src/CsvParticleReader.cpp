@@ -65,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
 
   while (reader.read(data)) {
     ActsFatras::Particle particle(ActsFatras::Barcode(data.particle_id),
-                                  Acts::PdgParticle(data.particle_type),
+                                  Acts::PdgParticle{data.particle_type},
                                   data.q * Acts::UnitConstants::e,
                                   data.m * Acts::UnitConstants::GeV);
     particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));

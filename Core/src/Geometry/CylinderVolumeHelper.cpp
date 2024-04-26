@@ -276,7 +276,7 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     const GeometryContext& gctx, const TrackingVolumeVector& volumes) const {
   // check if you have more than one volume
-  if (volumes.size() <= std::size_t(1)) {
+  if (volumes.size() <= std::size_t{1}) {
     ACTS_WARNING(
         "None (only one) TrackingVolume given to create container "
         "volume (min required: 2) - returning 0 ");

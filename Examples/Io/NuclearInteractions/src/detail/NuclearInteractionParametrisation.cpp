@@ -34,8 +34,8 @@ namespace {
 /// @return The location in a standard normal distribution
 float gaussianValue(TH1F const* histo, const float mom) {
   // Get the cumulative probability distribution
-  TH1F* normalised = (TH1F*)histo->DrawNormalized();
-  TH1F* cumulative = (TH1F*)normalised->GetCumulative();
+  TH1F* normalised = static_cast<TH1F*>(histo->DrawNormalized());
+  TH1F* cumulative = static_cast<TH1F*>(normalised->GetCumulative());
   // Find the cumulative probability
   const float binContent = cumulative->GetBinContent(cumulative->FindBin(mom));
   // Transform the probability to an entry in a standard normal distribution

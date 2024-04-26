@@ -141,7 +141,7 @@ class GeometryHierarchyMap {
   /// Construct a mask where all leading non-zero levels are set.
   static constexpr Identifier makeLeadingLevelsMask(GeometryIdentifier id) {
     // construct id from encoded value with all bits set
-    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value(0u));
+    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value{0u});
     // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
       // all levels are valid; keep all bits set.
