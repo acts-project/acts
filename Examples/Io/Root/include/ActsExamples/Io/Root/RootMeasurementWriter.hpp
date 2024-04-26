@@ -123,8 +123,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       tree->Branch("layer_id", &layerID);
       tree->Branch("surface_id", &surfaceID);
       tree->Branch("measurement_type", &measType);
-      for (unsigned int ib = 0; ib < int(Acts::eBoundSize); ++ib) {
-        if (ib != int(Acts::eBoundQOverP)) {
+      for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
+        if (ib != Acts::eBoundQOverP) {
           tree->Branch(std::string("true_" + bNames[ib]).c_str(),
                        &trueBound[ib]);
         }

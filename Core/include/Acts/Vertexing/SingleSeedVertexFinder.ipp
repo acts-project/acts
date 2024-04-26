@@ -104,7 +104,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
           continue;
         }
         sortedSpacepoints.addSP(0, phislice, zslice)
-            .emplace_back((spacepoint_t const*)&sp, phi);
+            .emplace_back(static_cast<spacepoint_t const*>(&sp), phi);
       }
     } else if (sp.r() < m_cfg.rMinFar) {
       if (sp.r() < m_cfg.rMaxMiddle) {
@@ -113,11 +113,11 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
           continue;
         }
         sortedSpacepoints.addSP(1, phislice, zslice)
-            .emplace_back((spacepoint_t const*)&sp, phi);
+            .emplace_back(static_cast<spacepoint_t const*>(&sp), phi);
       }
     } else if (sp.r() < m_cfg.rMaxFar) {
       sortedSpacepoints.addSP(2, phislice, zslice)
-          .emplace_back((spacepoint_t const*)&sp, phi);
+          .emplace_back(static_cast<spacepoint_t const*>(&sp), phi);
     }
   }
 

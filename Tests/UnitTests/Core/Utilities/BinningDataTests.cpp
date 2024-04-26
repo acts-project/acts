@@ -301,12 +301,13 @@ BOOST_AUTO_TEST_CASE(BinningData_boundaries) {
                                 boundaries.end());
 
   float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiBoundaries_eq = {-M_PI,
-                                         float(-M_PI + 1 * phiStep),
-                                         float(-M_PI + 2 * phiStep),
-                                         float(-M_PI + 3 * phiStep),
-                                         float(-M_PI + 4 * phiStep),
-                                         float(-M_PI + 5 * phiStep)};
+  std::vector<float> phiBoundaries_eq = {
+      -M_PI,
+      static_cast<float>(-M_PI + 1 * phiStep),
+      static_cast<float>(-M_PI + 2 * phiStep),
+      static_cast<float>(-M_PI + 3 * phiStep),
+      static_cast<float>(-M_PI + 4 * phiStep),
+      static_cast<float>(-M_PI + 5 * phiStep)};
   CHECK_CLOSE_REL(phiData_eq.boundaries(), phiBoundaries_eq, 1e-5);
 }
 
@@ -352,9 +353,11 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   // running into rounding errors here
   float phiStep = M_PI * 2. / 5.;
   std::vector<float> phiCenters_eq = {
-      float(-M_PI + 0.5 * phiStep), float(-M_PI + 1.5 * phiStep),
-      float(-M_PI + 2.5 * phiStep), float(-M_PI + 3.5 * phiStep),
-      float(-M_PI + 4.5 * phiStep)};
+      static_cast<float>(-M_PI + 0.5 * phiStep),
+      static_cast<float>(-M_PI + 1.5 * phiStep),
+      static_cast<float>(-M_PI + 2.5 * phiStep),
+      static_cast<float>(-M_PI + 3.5 * phiStep),
+      static_cast<float>(-M_PI + 4.5 * phiStep)};
 
   for (std::size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
     CHECK_CLOSE_ABS(phiData_eq.center(ib), phiCenters_eq[ib], 1e-3);
@@ -369,12 +372,12 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
   BinningData phiData_mod(closed, binPhi, 5, -M_PI + deltaPhi, M_PI + deltaPhi);
   float phiStep = M_PI * 2. / 5.;
   std::vector<float> phiBoundaries_mod = {
-      float(-M_PI + deltaPhi),
-      float(-M_PI + 1 * phiStep) + deltaPhi,
-      float(-M_PI + 2 * phiStep) + deltaPhi,
-      float(-M_PI + 3 * phiStep) + deltaPhi,
-      float(-M_PI + 4 * phiStep) + deltaPhi,
-      float(-M_PI + 5 * phiStep) + deltaPhi};
+      static_cast<float>(-M_PI + deltaPhi),
+      static_cast<float>(-M_PI + 1 * phiStep) + deltaPhi,
+      static_cast<float>(-M_PI + 2 * phiStep) + deltaPhi,
+      static_cast<float>(-M_PI + 3 * phiStep) + deltaPhi,
+      static_cast<float>(-M_PI + 4 * phiStep) + deltaPhi,
+      static_cast<float>(-M_PI + 5 * phiStep) + deltaPhi};
   // this is the boundary test
   CHECK_CLOSE_REL(phiData_mod.boundaries(), phiBoundaries_mod, 1e-5);
 

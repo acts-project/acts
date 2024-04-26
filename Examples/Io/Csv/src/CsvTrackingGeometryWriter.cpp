@@ -335,13 +335,13 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
             if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
               auto loc0Values = axes[0]->getBinEdges();
               sfGrid.nbins_loc0 = loc0Values.size() - 1;
-              sfGrid.type_loc0 = int(binning[0]);
+              sfGrid.type_loc0 = static_cast<int>(binning[0]);
               sfGrid.min_loc0 = loc0Values[0];
               sfGrid.max_loc0 = loc0Values[loc0Values.size() - 1];
 
               auto loc1Values = axes[1]->getBinEdges();
               sfGrid.nbins_loc1 = loc1Values.size() - 1;
-              sfGrid.type_loc1 = int(binning[1]);
+              sfGrid.type_loc1 = static_cast<int>(binning[1]);
               sfGrid.min_loc1 = loc1Values[0];
               sfGrid.max_loc1 = loc1Values[loc1Values.size() - 1];
             }

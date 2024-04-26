@@ -73,7 +73,7 @@ GaussianGridTrackDensity::addTrack(const BoundTrackParameters& trk,
   }
 
   // Calculate bin in z
-  int zBin = int(z0 / m_cfg.binSize + m_cfg.mainGridSize / 2.);
+  int zBin = static_cast<int>(z0 / m_cfg.binSize + m_cfg.mainGridSize / 2.);
 
   if (zBin < 0 || zBin >= m_cfg.mainGridSize) {
     return {-1, TrackGridVector::Zero(m_cfg.trkGridSize)};
@@ -147,7 +147,7 @@ Result<float> GaussianGridTrackDensity::estimateSeedWidth(
     return VertexingError::EmptyInput;
   }
   // Get z bin of max density z value
-  int zBin = int(maxZ / m_cfg.binSize + m_cfg.mainGridSize / 2.);
+  int zBin = static_cast<int>(maxZ / m_cfg.binSize + m_cfg.mainGridSize / 2.);
 
   const float maxValue = mainGrid(zBin);
   float gridValue = mainGrid(zBin);

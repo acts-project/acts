@@ -22,17 +22,18 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   std::vector<Acts::Vector3> mPositions;
   mPositions.reserve(nPhiBins * nZbins);
   // prep work
-  double phiStep = 2 * M_PI / (nPhiBins);
+  double phiStep = 2 * M_PI / static_cast<double>(nPhiBins);
   double minPhi = -M_PI + 0.5 * phiStep;
   double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
   double zStep = 2 * std::abs(zStart) / (nZbins - 1);
   // loop over the bins
-  for (std::size_t zBin = 0; zBin < std::size_t(nZbins); ++zBin) {
+  for (std::size_t zBin = 0; zBin < static_cast<std::size_t>(nZbins); ++zBin) {
     // prepare z and r
     double moduleZ = zStart + zBin * zStep;
     double moduleR =
         (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
-    for (std::size_t phiBin = 0; phiBin < std::size_t(nPhiBins); ++phiBin) {
+    for (std::size_t phiBin = 0; phiBin < static_cast<std::size_t>(nPhiBins);
+         ++phiBin) {
       // calculate the current phi value
       double modulePhi = minPhi + phiBin * phiStep;
       mPositions.push_back(Acts::Vector3(moduleR * cos(modulePhi),
@@ -101,10 +102,11 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
   // prep work
-  double phiStep = 2 * M_PI / (nPhiBins);
+  double phiStep = 2 * M_PI / static_cast<double>(nPhiBins);
   double minPhi = -M_PI + 0.5 * phiStep;
   // phi loop
-  for (std::size_t iphi = 0; iphi < std::size_t(nPhiBins); ++iphi) {
+  for (std::size_t iphi = 0; iphi < static_cast<std::size_t>(nPhiBins);
+       ++iphi) {
     // if we have a phi sub stagger presents
     double rzs = 0.;
     // phi stagger affects 0 vs 1, 2 vs 3 ... etc
