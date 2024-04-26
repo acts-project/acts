@@ -138,7 +138,11 @@ inline void set_error_from_errno(char** error, const char* msg) {
   annoylib_showUpdate("%s: %s (%d)\n", msg, strerror(errno), errno);
   if (error) {
     *error = (char*)malloc(256);  // TODO: win doesn't support snprintf
+#if defined(_MSC_VER) || defined(__MINGW32__)
     sprintf(*error, "%s: %s (%d)", msg, strerror(errno), errno);
+#else
+    snprintf(*error, 256, "%s: %s (%d)", msg, strerror(errno), errno);
+#endif
   }
 }
 
