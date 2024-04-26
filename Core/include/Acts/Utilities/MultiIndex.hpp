@@ -131,7 +131,7 @@ class MultiIndex {
     return s;
   }
   static constexpr Value mask(std::size_t lvl) {
-    return (Value(1u) << s_bits[lvl]) - 1u;
+    return (Value{1u} << s_bits[lvl]) - 1u;
   }
 
   Value m_value;
