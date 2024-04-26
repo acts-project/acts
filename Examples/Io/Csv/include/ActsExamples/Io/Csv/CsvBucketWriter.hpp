@@ -40,7 +40,7 @@ class CsvBucketWriter final
     : public WriterT<std::vector<SimSpacePointContainer>> {
  public:
   struct Config {
-    /// Which measurement collection to write.
+    /// Which bucket collection to write.
     std::string inputBuckets;
     /// Where to place output files
     std::string outputDir;
