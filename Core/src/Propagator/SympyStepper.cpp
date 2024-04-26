@@ -22,84 +22,54 @@ template <typename T, typename GetB>
 bool rk4(const T* p, const T* d, const T h, const T lambda, const T m,
          const T p_abs, T* new_p, T* new_d, T* new_time, T* J, GetB getB,
          bool covTransport) {
-  const auto x7 = std::pow(h, 2);
-  const auto x11 = (1.0 / 2.0) * h;
   const auto B1 = getB(p);
-  const auto x6 = h * d[0];
-  const auto x9 = h * d[1];
-  const auto x10 = h * d[2];
-  const auto x8 = (1.0 / 8.0) * x7;
-  const auto x24 = (1.0 / 2.0) * x7;
-  const auto x0 = -B1[1] * d[2] + B1[2] * d[1];
-  const auto x2 = B1[0] * d[2] - B1[2] * d[0];
-  const auto x4 = -B1[0] * d[1] + B1[1] * d[0];
-  const auto x25 = x6 + p[0];
-  const auto x26 = x9 + p[1];
-  const auto x27 = x10 + p[2];
-  const auto x1 = lambda * x0;
-  const auto x3 = lambda * x2;
-  const auto x5 = lambda * x4;
   T k1[3];
-  k1[0] = x1;
-  k1[1] = x3;
-  k1[2] = x5;
-  const auto x15 = x11 * k1[0] + d[0];
-  const auto x12 = x11 * k1[1] + d[1];
-  const auto x13 = x11 * k1[2] + d[2];
+  k1[0] = lambda * (-B1[1] * d[2] + B1[2] * d[1]);
+  k1[1] = lambda * (B1[0] * d[2] - B1[2] * d[0]);
+  k1[2] = lambda * (-B1[0] * d[1] + B1[1] * d[0]);
   T p2[3];
-  p2[0] = (1.0 / 2.0) * x6 + x8 * k1[0] + p[0];
-  p2[1] = (1.0 / 2.0) * x9 + x8 * k1[1] + p[1];
-  p2[2] = (1.0 / 2.0) * x10 + x8 * k1[2] + p[2];
+  p2[0] = (1.0 / 8.0) * std::pow(h, 2) * k1[0] + (1.0 / 2.0) * h * d[0] + p[0];
+  p2[1] = (1.0 / 8.0) * std::pow(h, 2) * k1[1] + (1.0 / 2.0) * h * d[1] + p[1];
+  p2[2] = (1.0 / 8.0) * std::pow(h, 2) * k1[2] + (1.0 / 2.0) * h * d[2] + p[2];
   const auto B2 = getB(p2);
-  const auto x17 = x12 * B2[0];
-  const auto x14 = x13 * B2[1];
-  const auto x16 = x15 * B2[2];
   T k2[3];
-  k2[0] = lambda * (x12 * B2[2] - x14);
-  k2[1] = lambda * (x13 * B2[0] - x16);
-  k2[2] = lambda * (x15 * B2[1] - x17);
-  const auto x21 = x11 * k2[0] + d[0];
-  const auto x18 = x11 * k2[1] + d[1];
-  const auto x19 = x11 * k2[2] + d[2];
-  const auto x23 = x18 * B2[0];
-  const auto x20 = x19 * B2[1];
-  const auto x22 = x21 * B2[2];
+  k2[0] = lambda * (((1.0 / 2.0) * h * k1[1] + d[1]) * B2[2] -
+                    ((1.0 / 2.0) * h * k1[2] + d[2]) * B2[1]);
+  k2[1] = lambda * (-((1.0 / 2.0) * h * k1[0] + d[0]) * B2[2] +
+                    ((1.0 / 2.0) * h * k1[2] + d[2]) * B2[0]);
+  k2[2] = lambda * (((1.0 / 2.0) * h * k1[0] + d[0]) * B2[1] -
+                    ((1.0 / 2.0) * h * k1[1] + d[1]) * B2[0]);
   T k3[3];
-  k3[0] = lambda * (x18 * B2[2] - x20);
-  k3[1] = lambda * (x19 * B2[0] - x22);
-  k3[2] = lambda * (x21 * B2[1] - x23);
-  const auto x31 = h * k3[0] + d[0];
-  const auto x28 = h * k3[1] + d[1];
-  const auto x29 = h * k3[2] + d[2];
+  k3[0] = lambda * (((1.0 / 2.0) * h * k2[1] + d[1]) * B2[2] -
+                    ((1.0 / 2.0) * h * k2[2] + d[2]) * B2[1]);
+  k3[1] = lambda * (-((1.0 / 2.0) * h * k2[0] + d[0]) * B2[2] +
+                    ((1.0 / 2.0) * h * k2[2] + d[2]) * B2[0]);
+  k3[2] = lambda * (((1.0 / 2.0) * h * k2[0] + d[0]) * B2[1] -
+                    ((1.0 / 2.0) * h * k2[1] + d[1]) * B2[0]);
   T p3[3];
-  p3[0] = x24 * k3[0] + x25;
-  p3[1] = x24 * k3[1] + x26;
-  p3[2] = x24 * k3[2] + x27;
+  p3[0] = (1.0 / 2.0) * std::pow(h, 2) * k3[0] + h * d[0] + p[0];
+  p3[1] = (1.0 / 2.0) * std::pow(h, 2) * k3[1] + h * d[1] + p[1];
+  p3[2] = (1.0 / 2.0) * std::pow(h, 2) * k3[2] + h * d[2] + p[2];
   const auto B3 = getB(p3);
-  const auto x33 = x28 * B3[0];
-  const auto x30 = x29 * B3[1];
-  const auto x32 = x31 * B3[2];
   T k4[3];
-  k4[0] = lambda * (x28 * B3[2] - x30);
-  k4[1] = lambda * (x29 * B3[0] - x32);
-  k4[2] = lambda * (x31 * B3[1] - x33);
-  const auto x34 = k1[0] + k4[0];
-  const auto x35 = k1[1] + k4[1];
-  const auto x36 = k1[2] + k4[2];
-  const auto err =
-      x7 * (std::fabs(-x34 + k2[0] + k3[0]) + std::fabs(-x35 + k2[1] + k3[1]) +
-            std::fabs(-x36 + k2[2] + k3[2]));
+  k4[0] = lambda * ((h * k3[1] + d[1]) * B3[2] - (h * k3[2] + d[2]) * B3[1]);
+  k4[1] = lambda * (-(h * k3[0] + d[0]) * B3[2] + (h * k3[2] + d[2]) * B3[0]);
+  k4[2] = lambda * ((h * k3[0] + d[0]) * B3[1] - (h * k3[1] + d[1]) * B3[0]);
+  T err = std::pow(h, 2) * (std::fabs(k1[0] - k2[0] - k3[0] + k4[0]) +
+                            std::fabs(k1[1] - k2[1] - k3[1] + k4[1]) +
+                            std::fabs(k1[2] - k2[2] - k3[2] + k4[2]));
   if (err > 1e-4) {
     return false;
   }
-  const auto x37 = (1.0 / 6.0) * x7;
-  new_p[0] = x25 + x37 * (k1[0] + k2[0] + k3[0]);
-  new_p[1] = x26 + x37 * (k1[1] + k2[1] + k3[1]);
-  new_p[2] = x27 + x37 * (k1[2] + k2[2] + k3[2]);
-  const auto x38 = (1.0 / 6.0) * h;
-  new_d[0] = x38 * (x34 + 2 * k2[0] + 2 * k3[0]) + d[0];
-  new_d[1] = x38 * (x35 + 2 * k2[1] + 2 * k3[1]) + d[1];
-  new_d[2] = x38 * (x36 + 2 * k2[2] + 2 * k3[2]) + d[2];
+  new_p[0] =
+      (1.0 / 6.0) * std::pow(h, 2) * (k1[0] + k2[0] + k3[0]) + h * d[0] + p[0];
+  new_p[1] =
+      (1.0 / 6.0) * std::pow(h, 2) * (k1[1] + k2[1] + k3[1]) + h * d[1] + p[1];
+  new_p[2] =
+      (1.0 / 6.0) * std::pow(h, 2) * (k1[2] + k2[2] + k3[2]) + h * d[2] + p[2];
+  new_d[0] = (1.0 / 6.0) * h * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) + d[0];
+  new_d[1] = (1.0 / 6.0) * h * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) + d[1];
+  new_d[2] = (1.0 / 6.0) * h * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) + d[2];
 
   /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
   /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
@@ -108,175 +78,414 @@ bool rk4(const T* p, const T* d, const T h, const T lambda, const T m,
   *new_time += h * dtds;
 
   if (covTransport) {
-    const auto x75 = (1.0 / 3.0) * h;
-    const auto x39 = std::pow(lambda, 2) * x11;
-    const auto x48 = lambda * B2[0];
-    const auto x45 = lambda * B2[1];
-    const auto x44 = lambda * B2[2];
-    const auto x56 = lambda * B3[0];
-    const auto x52 = lambda * B3[1];
-    const auto x54 = lambda * B3[2];
-    const auto x58 = x11 * x5;
-    const auto x60 = lambda * x37;
-    const auto x77 = lambda * x38;
-    const auto x46 = x39 * B2[0];
-    const auto x40 = x39 * B2[1];
-    const auto x42 = x39 * B2[2];
-    const auto x49 = x11 * x45;
-    const auto x50 = x11 * x44;
-    const auto x51 = x11 * x48;
-    const auto x53 = h * x52;
-    const auto x55 = h * x54;
-    const auto x57 = h * x56;
-    const auto x67 = x60 * B1[0];
-    const auto x63 = x60 * B1[1];
-    const auto x61 = x60 * B1[2];
-    const auto x84 = x77 * B1[0];
-    const auto x80 = x77 * B1[1];
-    const auto x78 = x77 * B1[2];
-    T dk2dL[3];
-    dk2dL[0] =
-        (1.0 / 2.0) * h * lambda * x2 * B2[2] + x12 * B2[2] - x14 - x58 * B2[1];
-    dk2dL[1] = -x1 * x11 * B2[2] + x13 * B2[0] - x16 + x58 * B2[0];
-    dk2dL[2] = (1.0 / 2.0) * h * lambda * x0 * B2[1] - x11 * x3 * B2[0] +
-               x15 * B2[1] - x17;
-    const auto x47 = x46 * B1[0];
-    const auto x41 = x40 * B1[1];
-    const auto x43 = x42 * B1[2];
-    T dk3dL[3];
-    dk3dL[0] = (1.0 / 2.0) * h * lambda * B2[2] * dk2dL[1] + x18 * B2[2] - x20 -
-               x49 * dk2dL[2];
-    dk3dL[1] = x19 * B2[0] - x22 - x50 * dk2dL[0] + x51 * dk2dL[2];
-    dk3dL[2] = (1.0 / 2.0) * h * lambda * B2[1] * dk2dL[0] + x21 * B2[1] - x23 -
-               x51 * dk2dL[1];
-    const auto x72 = x0 * x37 + x37 * dk2dL[0] + x37 * dk3dL[0];
-    const auto x73 = x2 * x37 + x37 * dk2dL[1] + x37 * dk3dL[1];
-    const auto x74 = x37 * x4 + x37 * dk2dL[2] + x37 * dk3dL[2];
-    T dk2dT[9];
-    dk2dT[0] = -x41 - x43;
-    dk2dT[1] = x40 * B1[0] + x44;
-    dk2dT[2] = x42 * B1[0] - x45;
-    dk2dT[3] = -x44 + x46 * B1[1];
-    dk2dT[4] = -x43 - x47;
-    dk2dT[5] = x42 * B1[1] + x48;
-    dk2dT[6] = x45 + x46 * B1[2];
-    dk2dT[7] = x40 * B1[2] - x48;
-    dk2dT[8] = -x41 - x47;
-    T dk4dL[3];
-    dk4dL[0] =
-        h * lambda * B3[2] * dk3dL[1] + x28 * B3[2] - x30 - x53 * dk3dL[2];
-    dk4dL[1] = x29 * B3[0] - x32 - x55 * dk3dL[0] + x57 * dk3dL[2];
-    dk4dL[2] =
-        h * lambda * B3[1] * dk3dL[0] + x31 * B3[1] - x33 - x57 * dk3dL[1];
-    const auto x89 =
-        x0 * x38 + x38 * dk4dL[0] + x75 * dk2dL[0] + x75 * dk3dL[0];
-    const auto x90 =
-        x2 * x38 + x38 * dk4dL[1] + x75 * dk2dL[1] + x75 * dk3dL[1];
-    const auto x91 =
-        x38 * x4 + x38 * dk4dL[2] + x75 * dk2dL[2] + x75 * dk3dL[2];
-    T dk3dT[9];
-    dk3dT[0] = (1.0 / 2.0) * h * lambda * B2[2] * dk2dT[3] - x49 * dk2dT[6];
-    dk3dT[1] = x44 - x49 * dk2dT[7] + x50 * dk2dT[4];
-    dk3dT[2] =
-        (1.0 / 2.0) * h * lambda * B2[2] * dk2dT[5] - x45 - x49 * dk2dT[8];
-    dk3dT[3] =
-        (1.0 / 2.0) * h * lambda * B2[0] * dk2dT[6] - x44 - x50 * dk2dT[0];
-    dk3dT[4] = -x50 * dk2dT[1] + x51 * dk2dT[7];
-    dk3dT[5] = x48 - x50 * dk2dT[2] + x51 * dk2dT[8];
-    dk3dT[6] = x45 + x49 * dk2dT[0] - x51 * dk2dT[3];
-    dk3dT[7] =
-        (1.0 / 2.0) * h * lambda * B2[1] * dk2dT[1] - x48 - x51 * dk2dT[4];
-    dk3dT[8] = (1.0 / 2.0) * h * lambda * B2[1] * dk2dT[2] - x51 * dk2dT[5];
-    const auto x59 = x37 * dk2dT[0] + x37 * dk3dT[0] + 1;
-    const auto x62 = x37 * dk2dT[1] + x37 * dk3dT[1] + x61;
-    const auto x64 = x37 * dk2dT[2] + x37 * dk3dT[2] - x63;
-    const auto x65 = x37 * dk2dT[3] + x37 * dk3dT[3] - x61;
-    const auto x66 = x37 * dk2dT[4] + x37 * dk3dT[4] + 1;
-    const auto x68 = x37 * dk2dT[5] + x37 * dk3dT[5] + x67;
-    const auto x69 = x37 * dk2dT[6] + x37 * dk3dT[6] + x63;
-    const auto x70 = x37 * dk2dT[7] + x37 * dk3dT[7] - x67;
-    const auto x71 = x37 * dk2dT[8] + x37 * dk3dT[8] + 1;
-    T dk4dT[9];
-    dk4dT[0] = h * lambda * B3[2] * dk3dT[3] - x53 * dk3dT[6];
-    dk4dT[1] = -x53 * dk3dT[7] + x54 + x55 * dk3dT[4];
-    dk4dT[2] = h * lambda * B3[2] * dk3dT[5] - x52 - x53 * dk3dT[8];
-    dk4dT[3] = h * lambda * B3[0] * dk3dT[6] - x54 - x55 * dk3dT[0];
-    dk4dT[4] = -x55 * dk3dT[1] + x57 * dk3dT[7];
-    dk4dT[5] = -x55 * dk3dT[2] + x56 + x57 * dk3dT[8];
-    dk4dT[6] = x52 + x53 * dk3dT[0] - x57 * dk3dT[3];
-    dk4dT[7] = h * lambda * B3[1] * dk3dT[1] - x56 - x57 * dk3dT[4];
-    dk4dT[8] = h * lambda * B3[1] * dk3dT[2] - x57 * dk3dT[5];
-    const auto x76 = x38 * dk4dT[0] + x75 * dk2dT[0] + x75 * dk3dT[0];
-    const auto x79 = x38 * dk4dT[1] + x75 * dk2dT[1] + x75 * dk3dT[1] + x78;
-    const auto x81 = x38 * dk4dT[2] + x75 * dk2dT[2] + x75 * dk3dT[2] - x80;
-    const auto x82 = x38 * dk4dT[3] + x75 * dk2dT[3] + x75 * dk3dT[3] - x78;
-    const auto x83 = x38 * dk4dT[4] + x75 * dk2dT[4] + x75 * dk3dT[4];
-    const auto x85 = x38 * dk4dT[5] + x75 * dk2dT[5] + x75 * dk3dT[5] + x84;
-    const auto x86 = x38 * dk4dT[6] + x75 * dk2dT[6] + x75 * dk3dT[6] + x80;
-    const auto x87 = x38 * dk4dT[7] + x75 * dk2dT[7] + x75 * dk3dT[7] - x84;
-    const auto x88 = x38 * dk4dT[8] + x75 * dk2dT[8] + x75 * dk3dT[8];
-
-    double j4 = x59 + x76 * J[4] + x82 * J[5] + x86 * J[6];
-    double j5 = x62 + x79 * J[4] + x83 * J[5] + x87 * J[6];
-    double j6 = x64 + x81 * J[4] + x85 * J[5] + x88 * J[6];
-    double j7 = x72 + x89 * J[4] + x90 * J[5] + x91 * J[6];
-
-    double j12 = x65 + x76 * J[12] + x82 * J[13] + x86 * J[14];
-    double j13 = x66 + x79 * J[12] + x83 * J[13] + x87 * J[14];
-    double j14 = x68 + x81 * J[12] + x85 * J[13] + x88 * J[14];
-    double j15 = x73 + x89 * J[12] + x90 * J[13] + x91 * J[14];
-
-    double j20 = x69 + x76 * J[20] + x82 * J[21] + x86 * J[22];
-    double j21 = x70 + x79 * J[20] + x83 * J[21] + x87 * J[22];
-    double j22 = x71 + x81 * J[20] + x85 * J[21] + x88 * J[22];
-    double j23 = x74 + x89 * J[20] + x90 * J[21] + x91 * J[22];
-
-    double j36 = x76 * J[36] + x82 * J[37] + x86 * J[38];
-    double j37 = x79 * J[36] + x83 * J[37] + x87 * J[38];
-    double j38 = x81 * J[36] + x85 * J[37] + x88 * J[38];
-    double j39 = x89 * J[36] + x90 * J[37] + x91 * J[38];
-
-    double j44 = x76 * J[44] + x82 * J[45] + x86 * J[46];
-    double j45 = x79 * J[44] + x83 * J[45] + x87 * J[46];
-    double j46 = x81 * J[44] + x85 * J[45] + x88 * J[46];
-    double j47 = x89 * J[44] + x90 * J[45] + x91 * J[46];
-
-    double j52 = x76 * J[52] + x82 * J[53] + x86 * J[54];
-    double j53 = x79 * J[52] + x83 * J[53] + x87 * J[54];
-    double j54 = x81 * J[52] + x85 * J[53] + x88 * J[54];
-    double j55 = x89 * J[52] + x90 * J[53] + x91 * J[54];
-
-    J[4] = j4;
-    J[5] = j5;
-    J[6] = j6;
-    J[7] += j7;
-
-    J[12] = j12;
-    J[13] = j13;
-    J[14] = j14;
-    J[15] += j15;
-
-    J[20] = j20;
-    J[21] = j21;
-    J[22] = j22;
-    J[23] += j23;
-
-    J[31] += h * lambda * std::pow(m, 2) / dtds;
-
-    J[36] = j36;
-    J[37] = j37;
-    J[38] = j38;
-    J[39] += j39;
-
-    J[44] = j44;
-    J[45] = j45;
-    J[46] = j46;
-    J[47] += j47;
-
-    J[52] = j52;
-    J[53] = j53;
-    J[54] = j54;
-    J[55] += j55;
+    T dk2dTL[12];
+    dk2dTL[0] = -1.0 / 2.0 * h * std::pow(lambda, 2) * B1[1] * B2[1] -
+                1.0 / 2.0 * h * std::pow(lambda, 2) * B1[2] * B2[2];
+    dk2dTL[1] =
+        (1.0 / 2.0) * h * std::pow(lambda, 2) * B1[0] * B2[1] + lambda * B2[2];
+    dk2dTL[2] =
+        (1.0 / 2.0) * h * std::pow(lambda, 2) * B1[0] * B2[2] - lambda * B2[1];
+    dk2dTL[3] =
+        -1.0 / 2.0 * h * lambda * (-B1[0] * d[1] + B1[1] * d[0]) * B2[1] +
+        (1.0 / 2.0) * h * lambda * (B1[0] * d[2] - B1[2] * d[0]) * B2[2] +
+        ((1.0 / 2.0) * h * k1[1] + d[1]) * B2[2] -
+        ((1.0 / 2.0) * h * k1[2] + d[2]) * B2[1];
+    dk2dTL[4] =
+        (1.0 / 2.0) * h * std::pow(lambda, 2) * B1[1] * B2[0] - lambda * B2[2];
+    dk2dTL[5] = -1.0 / 2.0 * h * std::pow(lambda, 2) * B1[0] * B2[0] -
+                1.0 / 2.0 * h * std::pow(lambda, 2) * B1[2] * B2[2];
+    dk2dTL[6] =
+        (1.0 / 2.0) * h * std::pow(lambda, 2) * B1[1] * B2[2] + lambda * B2[0];
+    dk2dTL[7] =
+        (1.0 / 2.0) * h * lambda * (-B1[0] * d[1] + B1[1] * d[0]) * B2[0] -
+        1.0 / 2.0 * h * lambda * (-B1[1] * d[2] + B1[2] * d[1]) * B2[2] -
+        ((1.0 / 2.0) * h * k1[0] + d[0]) * B2[2] +
+        ((1.0 / 2.0) * h * k1[2] + d[2]) * B2[0];
+    dk2dTL[8] =
+        (1.0 / 2.0) * h * std::pow(lambda, 2) * B1[2] * B2[0] + lambda * B2[1];
+    dk2dTL[9] =
+        (1.0 / 2.0) * h * std::pow(lambda, 2) * B1[2] * B2[1] - lambda * B2[0];
+    dk2dTL[10] = -1.0 / 2.0 * h * std::pow(lambda, 2) * B1[0] * B2[0] -
+                 1.0 / 2.0 * h * std::pow(lambda, 2) * B1[1] * B2[1];
+    dk2dTL[11] =
+        -1.0 / 2.0 * h * lambda * (B1[0] * d[2] - B1[2] * d[0]) * B2[0] +
+        (1.0 / 2.0) * h * lambda * (-B1[1] * d[2] + B1[2] * d[1]) * B2[1] +
+        ((1.0 / 2.0) * h * k1[0] + d[0]) * B2[1] -
+        ((1.0 / 2.0) * h * k1[1] + d[1]) * B2[0];
+    T dk3dTL[12];
+    dk3dTL[0] = -1.0 / 2.0 * h * lambda * B2[1] * dk2dTL[8] +
+                (1.0 / 2.0) * h * lambda * B2[2] * dk2dTL[4];
+    dk3dTL[1] = -1.0 / 2.0 * h * lambda * B2[1] * dk2dTL[9] +
+                (1.0 / 2.0) * h * lambda * B2[2] * dk2dTL[5] + lambda * B2[2];
+    dk3dTL[2] = -1.0 / 2.0 * h * lambda * B2[1] * dk2dTL[10] +
+                (1.0 / 2.0) * h * lambda * B2[2] * dk2dTL[6] - lambda * B2[1];
+    dk3dTL[3] = -1.0 / 2.0 * h * lambda * B2[1] * dk2dTL[11] +
+                (1.0 / 2.0) * h * lambda * B2[2] * dk2dTL[7] +
+                ((1.0 / 2.0) * h * k2[1] + d[1]) * B2[2] -
+                ((1.0 / 2.0) * h * k2[2] + d[2]) * B2[1];
+    dk3dTL[4] = (1.0 / 2.0) * h * lambda * B2[0] * dk2dTL[8] -
+                1.0 / 2.0 * h * lambda * B2[2] * dk2dTL[0] - lambda * B2[2];
+    dk3dTL[5] = (1.0 / 2.0) * h * lambda * B2[0] * dk2dTL[9] -
+                1.0 / 2.0 * h * lambda * B2[2] * dk2dTL[1];
+    dk3dTL[6] = (1.0 / 2.0) * h * lambda * B2[0] * dk2dTL[10] -
+                1.0 / 2.0 * h * lambda * B2[2] * dk2dTL[2] + lambda * B2[0];
+    dk3dTL[7] = (1.0 / 2.0) * h * lambda * B2[0] * dk2dTL[11] -
+                1.0 / 2.0 * h * lambda * B2[2] * dk2dTL[3] -
+                ((1.0 / 2.0) * h * k2[0] + d[0]) * B2[2] +
+                ((1.0 / 2.0) * h * k2[2] + d[2]) * B2[0];
+    dk3dTL[8] = -1.0 / 2.0 * h * lambda * B2[0] * dk2dTL[4] +
+                (1.0 / 2.0) * h * lambda * B2[1] * dk2dTL[0] + lambda * B2[1];
+    dk3dTL[9] = -1.0 / 2.0 * h * lambda * B2[0] * dk2dTL[5] +
+                (1.0 / 2.0) * h * lambda * B2[1] * dk2dTL[1] - lambda * B2[0];
+    dk3dTL[10] = -1.0 / 2.0 * h * lambda * B2[0] * dk2dTL[6] +
+                 (1.0 / 2.0) * h * lambda * B2[1] * dk2dTL[2];
+    dk3dTL[11] = -1.0 / 2.0 * h * lambda * B2[0] * dk2dTL[7] +
+                 (1.0 / 2.0) * h * lambda * B2[1] * dk2dTL[3] +
+                 ((1.0 / 2.0) * h * k2[0] + d[0]) * B2[1] -
+                 ((1.0 / 2.0) * h * k2[1] + d[1]) * B2[0];
+    T dk4dTL[12];
+    dk4dTL[0] =
+        -h * lambda * B3[1] * dk3dTL[8] + h * lambda * B3[2] * dk3dTL[4];
+    dk4dTL[1] = -h * lambda * B3[1] * dk3dTL[9] +
+                h * lambda * B3[2] * dk3dTL[5] + lambda * B3[2];
+    dk4dTL[2] = -h * lambda * B3[1] * dk3dTL[10] +
+                h * lambda * B3[2] * dk3dTL[6] - lambda * B3[1];
+    dk4dTL[3] = -h * lambda * B3[1] * dk3dTL[11] +
+                h * lambda * B3[2] * dk3dTL[7] + (h * k3[1] + d[1]) * B3[2] -
+                (h * k3[2] + d[2]) * B3[1];
+    dk4dTL[4] = h * lambda * B3[0] * dk3dTL[8] -
+                h * lambda * B3[2] * dk3dTL[0] - lambda * B3[2];
+    dk4dTL[5] = h * lambda * B3[0] * dk3dTL[9] - h * lambda * B3[2] * dk3dTL[1];
+    dk4dTL[6] = h * lambda * B3[0] * dk3dTL[10] -
+                h * lambda * B3[2] * dk3dTL[2] + lambda * B3[0];
+    dk4dTL[7] = h * lambda * B3[0] * dk3dTL[11] -
+                h * lambda * B3[2] * dk3dTL[3] - (h * k3[0] + d[0]) * B3[2] +
+                (h * k3[2] + d[2]) * B3[0];
+    dk4dTL[8] = -h * lambda * B3[0] * dk3dTL[4] +
+                h * lambda * B3[1] * dk3dTL[0] + lambda * B3[1];
+    dk4dTL[9] = -h * lambda * B3[0] * dk3dTL[5] +
+                h * lambda * B3[1] * dk3dTL[1] - lambda * B3[0];
+    dk4dTL[10] =
+        -h * lambda * B3[0] * dk3dTL[6] + h * lambda * B3[1] * dk3dTL[2];
+    dk4dTL[11] = -h * lambda * B3[0] * dk3dTL[7] +
+                 h * lambda * B3[1] * dk3dTL[3] + (h * k3[0] + d[0]) * B3[1] -
+                 (h * k3[1] + d[1]) * B3[0];
+    J[0] = 1;
+    J[1] = 0;
+    J[2] = 0;
+    J[3] = 0;
+    J[4] = (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[0] +
+           (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[0] +
+           ((1.0 / 3.0) * h * dk2dTL[0] + (1.0 / 3.0) * h * dk3dTL[0] +
+            (1.0 / 6.0) * h * dk4dTL[0]) *
+               J[4] +
+           ((1.0 / 6.0) * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[8] +
+            (1.0 / 3.0) * h * dk3dTL[8] + (1.0 / 6.0) * h * dk4dTL[8]) *
+               J[6] +
+           (-1.0 / 6.0 * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[4] +
+            (1.0 / 3.0) * h * dk3dTL[4] + (1.0 / 6.0) * h * dk4dTL[4]) *
+               J[5] +
+           1;
+    J[5] = (1.0 / 6.0) * std::pow(h, 2) * lambda * B1[2] +
+           (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[1] +
+           (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[1] +
+           ((1.0 / 3.0) * h * dk2dTL[5] + (1.0 / 3.0) * h * dk3dTL[5] +
+            (1.0 / 6.0) * h * dk4dTL[5]) *
+               J[5] +
+           (-1.0 / 6.0 * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[9] +
+            (1.0 / 3.0) * h * dk3dTL[9] + (1.0 / 6.0) * h * dk4dTL[9]) *
+               J[6] +
+           ((1.0 / 6.0) * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[1] +
+            (1.0 / 3.0) * h * dk3dTL[1] + (1.0 / 6.0) * h * dk4dTL[1]) *
+               J[4];
+    J[6] = -1.0 / 6.0 * std::pow(h, 2) * lambda * B1[1] +
+           (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[2] +
+           (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[2] +
+           ((1.0 / 3.0) * h * dk2dTL[10] + (1.0 / 3.0) * h * dk3dTL[10] +
+            (1.0 / 6.0) * h * dk4dTL[10]) *
+               J[6] +
+           ((1.0 / 6.0) * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[6] +
+            (1.0 / 3.0) * h * dk3dTL[6] + (1.0 / 6.0) * h * dk4dTL[6]) *
+               J[5] +
+           (-1.0 / 6.0 * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[2] +
+            (1.0 / 3.0) * h * dk3dTL[2] + (1.0 / 6.0) * h * dk4dTL[2]) *
+               J[4];
+    J[7] = (1.0 / 6.0) * std::pow(h, 2) * (-B1[1] * d[2] + B1[2] * d[1]) +
+           (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[3] +
+           (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[3] +
+           ((1.0 / 6.0) * h * (-B1[0] * d[1] + B1[1] * d[0]) +
+            (1.0 / 3.0) * h * dk2dTL[11] + (1.0 / 3.0) * h * dk3dTL[11] +
+            (1.0 / 6.0) * h * dk4dTL[11]) *
+               J[6] +
+           ((1.0 / 6.0) * h * (B1[0] * d[2] - B1[2] * d[0]) +
+            (1.0 / 3.0) * h * dk2dTL[7] + (1.0 / 3.0) * h * dk3dTL[7] +
+            (1.0 / 6.0) * h * dk4dTL[7]) *
+               J[5] +
+           ((1.0 / 6.0) * h * (-B1[1] * d[2] + B1[2] * d[1]) +
+            (1.0 / 3.0) * h * dk2dTL[3] + (1.0 / 3.0) * h * dk3dTL[3] +
+            (1.0 / 6.0) * h * dk4dTL[3]) *
+               J[4] +
+           J[7];
+    J[8] = 0;
+    J[9] = 1;
+    J[10] = 0;
+    J[11] = 0;
+    J[12] = -1.0 / 6.0 * std::pow(h, 2) * lambda * B1[2] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[4] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[4] +
+            ((1.0 / 3.0) * h * dk2dTL[0] + (1.0 / 3.0) * h * dk3dTL[0] +
+             (1.0 / 6.0) * h * dk4dTL[0]) *
+                J[12] +
+            ((1.0 / 6.0) * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[8] +
+             (1.0 / 3.0) * h * dk3dTL[8] + (1.0 / 6.0) * h * dk4dTL[8]) *
+                J[14] +
+            (-1.0 / 6.0 * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[4] +
+             (1.0 / 3.0) * h * dk3dTL[4] + (1.0 / 6.0) * h * dk4dTL[4]) *
+                J[13];
+    J[13] = (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[5] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[5] +
+            ((1.0 / 3.0) * h * dk2dTL[5] + (1.0 / 3.0) * h * dk3dTL[5] +
+             (1.0 / 6.0) * h * dk4dTL[5]) *
+                J[13] +
+            (-1.0 / 6.0 * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[9] +
+             (1.0 / 3.0) * h * dk3dTL[9] + (1.0 / 6.0) * h * dk4dTL[9]) *
+                J[14] +
+            ((1.0 / 6.0) * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[1] +
+             (1.0 / 3.0) * h * dk3dTL[1] + (1.0 / 6.0) * h * dk4dTL[1]) *
+                J[12] +
+            1;
+    J[14] = (1.0 / 6.0) * std::pow(h, 2) * lambda * B1[0] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[6] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[6] +
+            ((1.0 / 3.0) * h * dk2dTL[10] + (1.0 / 3.0) * h * dk3dTL[10] +
+             (1.0 / 6.0) * h * dk4dTL[10]) *
+                J[14] +
+            ((1.0 / 6.0) * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[6] +
+             (1.0 / 3.0) * h * dk3dTL[6] + (1.0 / 6.0) * h * dk4dTL[6]) *
+                J[13] +
+            (-1.0 / 6.0 * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[2] +
+             (1.0 / 3.0) * h * dk3dTL[2] + (1.0 / 6.0) * h * dk4dTL[2]) *
+                J[12];
+    J[15] = (1.0 / 6.0) * std::pow(h, 2) * (B1[0] * d[2] - B1[2] * d[0]) +
+            (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[7] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[7] +
+            ((1.0 / 6.0) * h * (-B1[0] * d[1] + B1[1] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[11] + (1.0 / 3.0) * h * dk3dTL[11] +
+             (1.0 / 6.0) * h * dk4dTL[11]) *
+                J[14] +
+            ((1.0 / 6.0) * h * (B1[0] * d[2] - B1[2] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[7] + (1.0 / 3.0) * h * dk3dTL[7] +
+             (1.0 / 6.0) * h * dk4dTL[7]) *
+                J[13] +
+            ((1.0 / 6.0) * h * (-B1[1] * d[2] + B1[2] * d[1]) +
+             (1.0 / 3.0) * h * dk2dTL[3] + (1.0 / 3.0) * h * dk3dTL[3] +
+             (1.0 / 6.0) * h * dk4dTL[3]) *
+                J[12] +
+            J[15];
+    J[16] = 0;
+    J[17] = 0;
+    J[18] = 1;
+    J[19] = 0;
+    J[20] = (1.0 / 6.0) * std::pow(h, 2) * lambda * B1[1] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[8] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[8] +
+            ((1.0 / 3.0) * h * dk2dTL[0] + (1.0 / 3.0) * h * dk3dTL[0] +
+             (1.0 / 6.0) * h * dk4dTL[0]) *
+                J[20] +
+            ((1.0 / 6.0) * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[8] +
+             (1.0 / 3.0) * h * dk3dTL[8] + (1.0 / 6.0) * h * dk4dTL[8]) *
+                J[22] +
+            (-1.0 / 6.0 * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[4] +
+             (1.0 / 3.0) * h * dk3dTL[4] + (1.0 / 6.0) * h * dk4dTL[4]) *
+                J[21];
+    J[21] = -1.0 / 6.0 * std::pow(h, 2) * lambda * B1[0] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[9] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[9] +
+            ((1.0 / 3.0) * h * dk2dTL[5] + (1.0 / 3.0) * h * dk3dTL[5] +
+             (1.0 / 6.0) * h * dk4dTL[5]) *
+                J[21] +
+            (-1.0 / 6.0 * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[9] +
+             (1.0 / 3.0) * h * dk3dTL[9] + (1.0 / 6.0) * h * dk4dTL[9]) *
+                J[22] +
+            ((1.0 / 6.0) * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[1] +
+             (1.0 / 3.0) * h * dk3dTL[1] + (1.0 / 6.0) * h * dk4dTL[1]) *
+                J[20];
+    J[22] = (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[10] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[10] +
+            ((1.0 / 3.0) * h * dk2dTL[10] + (1.0 / 3.0) * h * dk3dTL[10] +
+             (1.0 / 6.0) * h * dk4dTL[10]) *
+                J[22] +
+            ((1.0 / 6.0) * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[6] +
+             (1.0 / 3.0) * h * dk3dTL[6] + (1.0 / 6.0) * h * dk4dTL[6]) *
+                J[21] +
+            (-1.0 / 6.0 * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[2] +
+             (1.0 / 3.0) * h * dk3dTL[2] + (1.0 / 6.0) * h * dk4dTL[2]) *
+                J[20] +
+            1;
+    J[23] = (1.0 / 6.0) * std::pow(h, 2) * (-B1[0] * d[1] + B1[1] * d[0]) +
+            (1.0 / 6.0) * std::pow(h, 2) * dk2dTL[11] +
+            (1.0 / 6.0) * std::pow(h, 2) * dk3dTL[11] +
+            ((1.0 / 6.0) * h * (-B1[0] * d[1] + B1[1] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[11] + (1.0 / 3.0) * h * dk3dTL[11] +
+             (1.0 / 6.0) * h * dk4dTL[11]) *
+                J[22] +
+            ((1.0 / 6.0) * h * (B1[0] * d[2] - B1[2] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[7] + (1.0 / 3.0) * h * dk3dTL[7] +
+             (1.0 / 6.0) * h * dk4dTL[7]) *
+                J[21] +
+            ((1.0 / 6.0) * h * (-B1[1] * d[2] + B1[2] * d[1]) +
+             (1.0 / 3.0) * h * dk2dTL[3] + (1.0 / 3.0) * h * dk3dTL[3] +
+             (1.0 / 6.0) * h * dk4dTL[3]) *
+                J[20] +
+            J[23];
+    J[24] = 0;
+    J[25] = 0;
+    J[26] = 0;
+    J[27] = 1;
+    J[28] = 0;
+    J[29] = 0;
+    J[30] = 0;
+    J[31] = J[31] + h * lambda * std::pow(m, 2) / dtds;
+    J[32] = 0;
+    J[33] = 0;
+    J[34] = 0;
+    J[35] = 0;
+    J[36] = ((1.0 / 3.0) * h * dk2dTL[0] + (1.0 / 3.0) * h * dk3dTL[0] +
+             (1.0 / 6.0) * h * dk4dTL[0]) *
+                J[36] +
+            ((1.0 / 6.0) * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[8] +
+             (1.0 / 3.0) * h * dk3dTL[8] + (1.0 / 6.0) * h * dk4dTL[8]) *
+                J[38] +
+            (-1.0 / 6.0 * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[4] +
+             (1.0 / 3.0) * h * dk3dTL[4] + (1.0 / 6.0) * h * dk4dTL[4]) *
+                J[37];
+    J[37] = ((1.0 / 3.0) * h * dk2dTL[5] + (1.0 / 3.0) * h * dk3dTL[5] +
+             (1.0 / 6.0) * h * dk4dTL[5]) *
+                J[37] +
+            (-1.0 / 6.0 * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[9] +
+             (1.0 / 3.0) * h * dk3dTL[9] + (1.0 / 6.0) * h * dk4dTL[9]) *
+                J[38] +
+            ((1.0 / 6.0) * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[1] +
+             (1.0 / 3.0) * h * dk3dTL[1] + (1.0 / 6.0) * h * dk4dTL[1]) *
+                J[36];
+    J[38] = ((1.0 / 3.0) * h * dk2dTL[10] + (1.0 / 3.0) * h * dk3dTL[10] +
+             (1.0 / 6.0) * h * dk4dTL[10]) *
+                J[38] +
+            ((1.0 / 6.0) * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[6] +
+             (1.0 / 3.0) * h * dk3dTL[6] + (1.0 / 6.0) * h * dk4dTL[6]) *
+                J[37] +
+            (-1.0 / 6.0 * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[2] +
+             (1.0 / 3.0) * h * dk3dTL[2] + (1.0 / 6.0) * h * dk4dTL[2]) *
+                J[36];
+    J[39] = ((1.0 / 6.0) * h * (-B1[0] * d[1] + B1[1] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[11] + (1.0 / 3.0) * h * dk3dTL[11] +
+             (1.0 / 6.0) * h * dk4dTL[11]) *
+                J[38] +
+            ((1.0 / 6.0) * h * (B1[0] * d[2] - B1[2] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[7] + (1.0 / 3.0) * h * dk3dTL[7] +
+             (1.0 / 6.0) * h * dk4dTL[7]) *
+                J[37] +
+            ((1.0 / 6.0) * h * (-B1[1] * d[2] + B1[2] * d[1]) +
+             (1.0 / 3.0) * h * dk2dTL[3] + (1.0 / 3.0) * h * dk3dTL[3] +
+             (1.0 / 6.0) * h * dk4dTL[3]) *
+                J[36] +
+            J[39];
+    J[40] = 0;
+    J[41] = 0;
+    J[42] = 0;
+    J[43] = 0;
+    J[44] = ((1.0 / 3.0) * h * dk2dTL[0] + (1.0 / 3.0) * h * dk3dTL[0] +
+             (1.0 / 6.0) * h * dk4dTL[0]) *
+                J[44] +
+            ((1.0 / 6.0) * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[8] +
+             (1.0 / 3.0) * h * dk3dTL[8] + (1.0 / 6.0) * h * dk4dTL[8]) *
+                J[46] +
+            (-1.0 / 6.0 * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[4] +
+             (1.0 / 3.0) * h * dk3dTL[4] + (1.0 / 6.0) * h * dk4dTL[4]) *
+                J[45];
+    J[45] = ((1.0 / 3.0) * h * dk2dTL[5] + (1.0 / 3.0) * h * dk3dTL[5] +
+             (1.0 / 6.0) * h * dk4dTL[5]) *
+                J[45] +
+            (-1.0 / 6.0 * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[9] +
+             (1.0 / 3.0) * h * dk3dTL[9] + (1.0 / 6.0) * h * dk4dTL[9]) *
+                J[46] +
+            ((1.0 / 6.0) * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[1] +
+             (1.0 / 3.0) * h * dk3dTL[1] + (1.0 / 6.0) * h * dk4dTL[1]) *
+                J[44];
+    J[46] = ((1.0 / 3.0) * h * dk2dTL[10] + (1.0 / 3.0) * h * dk3dTL[10] +
+             (1.0 / 6.0) * h * dk4dTL[10]) *
+                J[46] +
+            ((1.0 / 6.0) * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[6] +
+             (1.0 / 3.0) * h * dk3dTL[6] + (1.0 / 6.0) * h * dk4dTL[6]) *
+                J[45] +
+            (-1.0 / 6.0 * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[2] +
+             (1.0 / 3.0) * h * dk3dTL[2] + (1.0 / 6.0) * h * dk4dTL[2]) *
+                J[44];
+    J[47] = ((1.0 / 6.0) * h * (-B1[0] * d[1] + B1[1] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[11] + (1.0 / 3.0) * h * dk3dTL[11] +
+             (1.0 / 6.0) * h * dk4dTL[11]) *
+                J[46] +
+            ((1.0 / 6.0) * h * (B1[0] * d[2] - B1[2] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[7] + (1.0 / 3.0) * h * dk3dTL[7] +
+             (1.0 / 6.0) * h * dk4dTL[7]) *
+                J[45] +
+            ((1.0 / 6.0) * h * (-B1[1] * d[2] + B1[2] * d[1]) +
+             (1.0 / 3.0) * h * dk2dTL[3] + (1.0 / 3.0) * h * dk3dTL[3] +
+             (1.0 / 6.0) * h * dk4dTL[3]) *
+                J[44] +
+            J[47];
+    J[48] = 0;
+    J[49] = 0;
+    J[50] = 0;
+    J[51] = 0;
+    J[52] = ((1.0 / 3.0) * h * dk2dTL[0] + (1.0 / 3.0) * h * dk3dTL[0] +
+             (1.0 / 6.0) * h * dk4dTL[0]) *
+                J[52] +
+            ((1.0 / 6.0) * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[8] +
+             (1.0 / 3.0) * h * dk3dTL[8] + (1.0 / 6.0) * h * dk4dTL[8]) *
+                J[54] +
+            (-1.0 / 6.0 * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[4] +
+             (1.0 / 3.0) * h * dk3dTL[4] + (1.0 / 6.0) * h * dk4dTL[4]) *
+                J[53];
+    J[53] = ((1.0 / 3.0) * h * dk2dTL[5] + (1.0 / 3.0) * h * dk3dTL[5] +
+             (1.0 / 6.0) * h * dk4dTL[5]) *
+                J[53] +
+            (-1.0 / 6.0 * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[9] +
+             (1.0 / 3.0) * h * dk3dTL[9] + (1.0 / 6.0) * h * dk4dTL[9]) *
+                J[54] +
+            ((1.0 / 6.0) * h * lambda * B1[2] + (1.0 / 3.0) * h * dk2dTL[1] +
+             (1.0 / 3.0) * h * dk3dTL[1] + (1.0 / 6.0) * h * dk4dTL[1]) *
+                J[52];
+    J[54] = ((1.0 / 3.0) * h * dk2dTL[10] + (1.0 / 3.0) * h * dk3dTL[10] +
+             (1.0 / 6.0) * h * dk4dTL[10]) *
+                J[54] +
+            ((1.0 / 6.0) * h * lambda * B1[0] + (1.0 / 3.0) * h * dk2dTL[6] +
+             (1.0 / 3.0) * h * dk3dTL[6] + (1.0 / 6.0) * h * dk4dTL[6]) *
+                J[53] +
+            (-1.0 / 6.0 * h * lambda * B1[1] + (1.0 / 3.0) * h * dk2dTL[2] +
+             (1.0 / 3.0) * h * dk3dTL[2] + (1.0 / 6.0) * h * dk4dTL[2]) *
+                J[52];
+    J[55] = ((1.0 / 6.0) * h * (-B1[0] * d[1] + B1[1] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[11] + (1.0 / 3.0) * h * dk3dTL[11] +
+             (1.0 / 6.0) * h * dk4dTL[11]) *
+                J[54] +
+            ((1.0 / 6.0) * h * (B1[0] * d[2] - B1[2] * d[0]) +
+             (1.0 / 3.0) * h * dk2dTL[7] + (1.0 / 3.0) * h * dk3dTL[7] +
+             (1.0 / 6.0) * h * dk4dTL[7]) *
+                J[53] +
+            ((1.0 / 6.0) * h * (-B1[1] * d[2] + B1[2] * d[1]) +
+             (1.0 / 3.0) * h * dk2dTL[3] + (1.0 / 3.0) * h * dk3dTL[3] +
+             (1.0 / 6.0) * h * dk4dTL[3]) *
+                J[52] +
+            J[55];
+    J[56] = 0;
+    J[57] = 0;
+    J[58] = 0;
+    J[59] = 0;
+    J[60] = 0;
+    J[61] = 0;
+    J[62] = 0;
+    J[63] = 1;
   }
 
   return true;
