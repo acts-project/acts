@@ -80,7 +80,7 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
 
 std::string ActsExamples::WhiteBoard::typeMismatchMessage(
     const std::string &name, const char *req, const char *act) {
-  return "Type mismatch for '" + name + "'. Requested " +
-         boost::core::demangle(req) + " but actually " +
-         boost::core::demangle(act);
+  return std::string{"Type mismatch for '" + name + "'. Requested " +
+                     boost::core::demangle(req) + " but actually " +
+                     boost::core::demangle(act);
 }
