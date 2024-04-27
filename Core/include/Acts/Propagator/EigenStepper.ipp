@@ -240,15 +240,15 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    /*
     // double std::sqrt is 3x faster than std::pow
-    const double stepSizeScaling = std::clamp(
-        std::sqrt(std::sqrt(stepTolerance / std::abs(2. * error_estimate))),
-        0.25, 4.0);
+    const double stepSizeScaling =
+        std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
+                                       std::abs(2. * error_estimate))),
+                   0.25, 4.0);
     h *= stepSizeScaling;
-    */
 
-    h *= 0.5;
+    // h *= 0.5;
+
     state.stepping.stepSize.setAccuracy(h);
 
     // If step size becomes too small the particle remains at the initial
