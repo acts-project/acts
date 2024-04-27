@@ -105,8 +105,7 @@ class MaterialComposition {
       total += element.m_fraction;
     }
     // compute scale factor into the [0, 256) range
-    float scale = static_cast<float>(std::numeric_limits<uint8_t>::max()) /
-                  static_cast<float>(total);
+    float scale = float{std::numeric_limits<uint8_t>::max()} / total;
     for (auto& element : m_elements) {
       element.m_fraction = static_cast<uint8_t>(element.m_fraction * scale);
     }

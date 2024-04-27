@@ -484,8 +484,7 @@ ProcessCode VertexPerformanceWriter::writeT(
         ACTS_VERBOSE("Track has no matching truth particle.");
       } else {
         contributingTruthVertices.emplace_back(
-            static_cast<SimBarcode>(particleOpt->particleId()).vertexId(),
-            trk.trackWeight);
+            SimBarcode{particleOpt->particleId()}.vertexId(), trk.trackWeight);
       }
     }
 

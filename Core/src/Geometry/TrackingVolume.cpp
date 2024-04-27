@@ -124,8 +124,7 @@ void TrackingVolume::connectDenseBoundarySurfaces(
         }
 
         // Update the boundary
-        confDenseVol->updateBoundarySurface(static_cast<BoundarySurfaceFace>(i),
-                                            mutableBs);
+        confDenseVol->updateBoundarySurface(BoundarySurfaceFace{i}, mutableBs);
       }
       // Store the volume
       m_confinedDenseVolumes.push_back(std::move(confDenseVol));

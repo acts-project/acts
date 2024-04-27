@@ -22,7 +22,7 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   std::vector<Acts::Vector3> mPositions;
   mPositions.reserve(nPhiBins * nZbins);
   // prep work
-  double phiStep = 2 * M_PI / static_cast<double>(nPhiBins);
+  double phiStep = 2 * M_PI / nPhiBins;
   double minPhi = -M_PI + 0.5 * phiStep;
   double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
   double zStep = 2 * std::abs(zStart) / (nZbins - 1);
@@ -102,7 +102,7 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
   // prep work
-  double phiStep = 2 * M_PI / static_cast<double>(nPhiBins);
+  double phiStep = 2 * M_PI / nPhiBins;
   double minPhi = -M_PI + 0.5 * phiStep;
   // phi loop
   for (std::size_t iphi = 0; iphi < static_cast<std::size_t>(nPhiBins);

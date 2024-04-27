@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     std::size_t n = 10;
     std::size_t s = 5;
     double min = -10, max = 10;
-    double step = (max - min) / static_cast<double>(s);
+    double step = (max - min) / s;
 
     // BEGIN VISUAL PARAMETER TEST
 
@@ -912,7 +912,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     std::size_t n = 10;
     double min = -10, max = 10;
     std::size_t s = 5;
-    double step = (max - min) / static_cast<double>(s);
+    double step = (max - min) / s;
     std::ofstream os;
 
     // BEGIN VISUAL PARAMETER TEST

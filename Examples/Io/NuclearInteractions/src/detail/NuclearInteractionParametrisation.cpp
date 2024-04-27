@@ -351,7 +351,7 @@ TVectorF softProbability(const EventCollection& events) {
   }
 
   TVectorF result(1);
-  result[0] = counter / static_cast<float>(events.size());
+  result[0] = counter / events.size();
   return result;
 }
 
