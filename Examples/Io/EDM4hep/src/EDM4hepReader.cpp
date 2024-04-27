@@ -395,7 +395,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
         auto& hit = *simHits.nth(hitIndices[i]);
         SimHit updatedHit{hit.geometryId(),     hit.particleId(),
                           hit.fourPosition(),   hit.momentum4Before(),
-                          hit.momentum4After(), static_cast<int32_t>(i)};
+                          hit.momentum4After(), static_cast<std::int32_t>(i)};
         hit = updatedHit;
       }
 
