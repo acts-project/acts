@@ -468,7 +468,7 @@ Result<double> SympyStepper::stepImpl(
   auto dir = direction(state);
   double qop = qOverP(state);
   double m = particleHypothesis(state).mass();
-  double p = absoluteMomentum(state);
+  double p_abs = absoluteMomentum(state);
 
   auto getB = [&](const double* p) -> Vector3 {
     auto fieldRes = getField(state, {p[0], p[1], p[2]});
@@ -481,12 +481,13 @@ Result<double> SympyStepper::stepImpl(
   double error_estimate = 0.;
 
   while (true) {
-    bool ok = rk4(pos.data(), dir.data(), h, qop, m, p, getB, &error_estimate,
-                  state.pars.template segment<3>(eFreePos0).data(),
-                  state.pars.template segment<3>(eFreeDir0).data(),
-                  state.pars.template segment<1>(eFreeTime).data(),
-                  state.derivative.data(),
-                  state.covTransport ? state.jacTransport.data() : nullptr);
+    bool ok =
+        rk4(pos.data(), dir.data(), h, qop, m, p_abs, getB, &error_estimate,
+            state.pars.template segment<3>(eFreePos0).data(),
+            state.pars.template segment<3>(eFreeDir0).data(),
+            state.pars.template segment<1>(eFreeTime).data(),
+            state.derivative.data(),
+            state.covTransport ? state.jacTransport.data() : nullptr);
 
     if (ok) {
       break;
