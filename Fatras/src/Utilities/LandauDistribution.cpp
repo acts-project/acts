@@ -190,7 +190,7 @@ double ActsFatras::LandauDistribution::quantile(double z) {
 
   double ranlan = 0, u = 0, v = 0;
   u = 1000 * z;
-  int i = int(u);
+  int i = static_cast<int>(u);
   u -= i;
   if (i >= 70 && i < 800) {
     ranlan = f[i - 1] + u * (f[i] - f[i - 1]);

@@ -35,15 +35,15 @@ template <typename Point1, typename Point2, typename Point3, typename Value>
 struct can_interpolate {
   template <typename C>
   static auto value_type_test(C* c)
-      -> decltype(C(std::declval<double>() * std::declval<C>() +
-                    std::declval<double>() * std::declval<C>()),
+      -> decltype(static_cast<C>(std::declval<double>() * std::declval<C>() +
+                                 std::declval<double>() * std::declval<C>()),
                   std::true_type());
   template <typename C>
   static std::false_type value_type_test(...);
 
   template <typename C>
   static auto point_type_test(C* c)
-      -> decltype(double(std::declval<C>()[0]), std::true_type());
+      -> decltype(static_cast<double>(std::declval<C>()[0]), std::true_type());
   template <typename C>
   static std::false_type point_type_test(...);
 
