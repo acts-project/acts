@@ -145,7 +145,8 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
   if (castedHolder == nullptr) {
-    std::string msg = typeMismatchMessage(name, typeid(T).name(), holder->type().name());
+    std::string msg =
+        typeMismatchMessage(name, typeid(T).name(), holder->type().name());
     throw std::out_of_range(msg.c_str());
   }
 
