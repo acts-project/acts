@@ -342,16 +342,16 @@ cumulativeMultiplicityProbability(const EventCollection& events,
 }
 
 TVectorF softProbability(const EventCollection& events) {
-  float counter = 0.;
+  std::size_t countSoft = 0;
   // Count the soft events
   for (const EventFraction& event : events) {
     if (event.soft) {
-      counter++;
+      countSoft++;
     }
   }
 
   TVectorF result(1);
-  result[0] = counter / events.size();
+  result[0] = static_cast<float>(countSoft) / events.size();
   return result;
 }
 
