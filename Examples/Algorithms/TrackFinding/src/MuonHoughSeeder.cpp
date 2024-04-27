@@ -160,12 +160,13 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
 
     m_outCanvas->SetTitle(Form("Station %s, Eta %i, Phi %i",
                                stationDict.at(detailedInfo.stationName).c_str(),
-                               (int)detailedInfo.stationEta,
-                               (int)detailedInfo.stationPhi));
+                               static_cast<int>(detailedInfo.stationEta),
+                               static_cast<int>(detailedInfo.stationPhi)));
     houghHistoForPlot.SetTitle(
         Form("Station %s, Eta %i, Phi %i",
              stationDict.at(detailedInfo.stationName).c_str(),
-             (int)detailedInfo.stationEta, (int)detailedInfo.stationPhi));
+             static_cast<int>(detailedInfo.stationEta),
+             static_cast<int>(detailedInfo.stationPhi)));
     m_outCanvas->cd();
     int maxHitsAsInt = static_cast<int>(houghPlane.maxHits());
     houghHistoForPlot.SetContour(maxHitsAsInt + 1);
