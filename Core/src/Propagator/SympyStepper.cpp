@@ -8,8 +8,8 @@
 
 #include "Acts/Propagator/SympyStepper.hpp"
 
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Propagator/detail/SympyCovarianceEngine.hpp"
+#include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -20,8 +20,8 @@ namespace {
 
 template <typename T, typename GetB>
 bool rk4(const T* p, const T* d, const T h, const T lambda, const T m,
-         const T p_abs, GetB getB, T* new_p, T* new_d, T* new_time,
-         T* path_derivatives, T* J) {
+         const T p_abs, GetB getB, T* error_estimate, T* new_p, T* new_d,
+         T* new_time, T* path_derivatives, T* J) {
   const auto B1 = getB(p);
   const auto h_8 = (1.0 / 8.0) * h;
   const auto h_2 = (1.0 / 2.0) * h;
@@ -89,11 +89,10 @@ bool rk4(const T* p, const T* d, const T h, const T lambda, const T m,
   k4[0] = d[1] * hlB3[2] - d[2] * hlB3[1] - hlB3[1] * k3[2] + hlB3[2] * k3[1];
   k4[1] = -d[0] * hlB3[2] + d[2] * hlB3[0] + hlB3[0] * k3[2] - hlB3[2] * k3[0];
   k4[2] = d[0] * hlB3[1] - d[1] * hlB3[0] - hlB3[0] * k3[1] + hlB3[1] * k3[0];
-  T err;
-  err = h * std::fabs(k1[0] - k2[0] - k3[0] + k4[0]) +
-        h * std::fabs(k1[1] - k2[1] - k3[1] + k4[1]) +
-        h * std::fabs(k1[2] - k2[2] - k3[2] + k4[2]);
-  if (err > 1e-4) {
+  *error_estimate = h * std::fabs(k1[0] - k2[0] - k3[0] + k4[0]) +
+                    h * std::fabs(k1[1] - k2[1] - k3[1] + k4[1]) +
+                    h * std::fabs(k1[2] - k2[2] - k3[2] + k4[2]);
+  if (*error_estimate > 1e-4) {
     return false;
   }
   const auto h_6 = (1.0 / 6.0) * h;
@@ -408,7 +407,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
 SympyStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  return detail::boundState(
+  return detail::sympy::boundState(
       state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated,
@@ -417,7 +416,7 @@ SympyStepper::boundState(
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 SympyStepper::curvilinearState(State& state, bool transportCov) const {
-  return detail::curvilinearState(
+  return detail::sympy::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated);
@@ -444,7 +443,7 @@ void SympyStepper::update(State& state, const Vector3& uposition,
 }
 
 void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
-  detail::transportCovarianceToCurvilinear(
+  detail::sympy::transportCovarianceToCurvilinear(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars.template segment<3>(eFreeDir0));
 }
@@ -452,7 +451,7 @@ void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
 void SympyStepper::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  detail::transportCovarianceToBound(
+  detail::sympy::transportCovarianceToBound(
       state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, freeToBoundCorrection);
 }
@@ -460,9 +459,6 @@ void SympyStepper::transportCovarianceToBound(
 Result<double> SympyStepper::stepImpl(
     State& state, Direction stepDirection, double stepTolerance,
     double stepSizeCutOff, std::size_t maxRungeKuttaStepTrials) const {
-  // Runge-Kutta integrator state
-  auto& sd = state.stepData;
-
   auto pos = position(state);
   auto dir = direction(state);
   double qop = qOverP(state);
@@ -479,7 +475,7 @@ Result<double> SympyStepper::stepImpl(
   double error_estimate = 0.;
 
   while (true) {
-    bool ok = rk4(pos.data(), dir.data(), h, qop, m, p, getB,
+    bool ok = rk4(pos.data(), dir.data(), h, qop, m, p, getB, &error_estimate,
                   state.pars.template segment<3>(eFreePos0).data(),
                   state.pars.template segment<3>(eFreeDir0).data(),
                   state.pars.template segment<1>(eFreeTime).data(),
@@ -490,16 +486,14 @@ Result<double> SympyStepper::stepImpl(
       break;
     }
 
-    /*
     // double std::sqrt is 3x faster than std::pow
     const double stepSizeScaling = std::clamp(
         std::sqrt(std::sqrt(stepTolerance / std::abs(2. * error_estimate))),
         0.25, 4.0);
     h *= stepSizeScaling;
-    */
 
-    h *= 0.5;
-    state.stepSize.setAccuracy(h);
+    // h *= 0.5;
+    // state.stepSize.setAccuracy(h);
 
     // If step size becomes too small the particle remains at the initial
     // place

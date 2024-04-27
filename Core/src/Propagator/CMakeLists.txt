@@ -9,4 +9,6 @@ target_sources(
     detail/PointwiseMaterialInteraction.cpp
     detail/CovarianceEngine.cpp
     detail/JacobianEngine.cpp
+    detail/SympyCovarianceEngine.cpp
+    detail/SympyJacobianEngine.cpp
 )
