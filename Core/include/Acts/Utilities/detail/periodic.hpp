@@ -49,13 +49,13 @@ inline T difference_periodic(T lhs, T rhs, T range) {
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 template <typename T>
 inline T radian_pos(T x) {
-  return wrap_periodic<T>(x, T(0), T(2 * M_PI));
+  return wrap_periodic<T>(x, T{0}, T{2 * M_PI});
 }
 
 /// Calculate the equivalent angle in the [-pi, pi) range.
 template <typename T>
 inline T radian_sym(T x) {
-  return wrap_periodic<T>(x, T(-M_PI), T(2 * M_PI));
+  return wrap_periodic<T>(x, T{-M_PI}, T{2 * M_PI});
 }
 
 /// Ensure both phi and theta direction angles are within the allowed range.
