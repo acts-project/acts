@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float(-M_PI / 2));
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float(M_PI / 2));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float{-M_PI / 2});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float{M_PI / 2});
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -150);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 150);
 }
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_CutoutCylinder) {
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float(-M_PI));
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float(M_PI));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float{-M_PI});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float{M_PI});
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -100);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 100);
 }

@@ -204,7 +204,7 @@ struct SimulationActor {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
+          Hit::Scalar{0.5} * (before.fourPosition() + after.fourPosition()),
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
 
       after.setNumberOfHits(result.hits.size());
@@ -313,8 +313,10 @@ struct SimulationActor {
     //   material. simulation is limited to the continuous processes.
     //
     // `clamp` ensures a valid range in all cases.
-    const float fracX0 = std::clamp(float(x0Dist / slabX0), 0.0f, 1.0f);
-    const float fracL0 = std::clamp(float(l0Dist / slabL0), 0.0f, 1.0f);
+    const float fracX0 =
+        std::clamp(static_cast<float>(x0Dist / slabX0), 0.0f, 1.0f);
+    const float fracL0 =
+        std::clamp(static_cast<float>(l0Dist / slabL0), 0.0f, 1.0f);
     // fraction of the material where the first point-like interaction occurs
     const float frac = std::min(fracX0, fracL0);
 
