@@ -18,6 +18,24 @@
 // Custom Json encoder/decoders.
 namespace Acts {
 
+namespace detail {
+
+/// @cond
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisBoundaryType,
+                             {{Acts::detail::AxisBoundaryType::Bound, "Bound"},
+                              {Acts::detail::AxisBoundaryType::Open, "Open"},
+                              {Acts::detail::AxisBoundaryType::Closed,
+                               "Closed"}})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisType,
+                             {{Acts::detail::AxisType::Equidistant,
+                               "Equidistant"},
+                              {Acts::detail::AxisType::Variable, "Variable"}})
+
+/// @endcond
+
+}  // namespace detail
+
 namespace AxisJsonConverter {
 
 /// Convert an axis to json
@@ -269,19 +287,4 @@ auto fromJson(const nlohmann::json& jGrid,
 }
 
 }  // namespace GridJsonConverter
-
-/// @cond
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisBoundaryType,
-                             {{Acts::detail::AxisBoundaryType::Bound, "Bound"},
-                              {Acts::detail::AxisBoundaryType::Open, "Open"},
-                              {Acts::detail::AxisBoundaryType::Closed,
-                               "Closed"}})
-
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisType,
-                             {{Acts::detail::AxisType::Equidistant,
-                               "Equidistant"},
-                              {Acts::detail::AxisType::Variable, "Variable"}})
-
-/// @endcond
-
 }  // namespace Acts
