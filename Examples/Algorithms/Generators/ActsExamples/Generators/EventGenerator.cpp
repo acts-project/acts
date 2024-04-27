@@ -74,8 +74,8 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
         // using the number of primary vertices as the index ensures
         // that barcode=0 is not used, since it is used elsewhere
         // to signify elements w/o an associated particle.
-        const auto pid = SimBarcode{particle.particleId()}
-                             .setVertexPrimary(nPrimaryVertices);
+        const auto pid = SimBarcode{particle.particleId()}.setVertexPrimary(
+            nPrimaryVertices);
         // move particle to the vertex
         const auto pos4 = (vertexPosition + particle.fourPosition()).eval();
         ACTS_VERBOSE(" - particle at " << pos4.transpose());
@@ -91,8 +91,8 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
         // using the number of primary vertices as the index ensures
         // that barcode=0 is not used, since it is used elsewhere
         // to signify elements w/o an associated particle.
-        vertex.id = SimVertexBarcode{vertex.vertexId()}
-                        .setVertexPrimary(nPrimaryVertices);
+        vertex.id = SimVertexBarcode{vertex.vertexId()}.setVertexPrimary(
+            nPrimaryVertices);
         // move vertex
         const auto pos4 = (vertexPosition + vertex.position4).eval();
         ACTS_VERBOSE(" - vertex at " << pos4.transpose());
