@@ -71,7 +71,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
       mean[j] += event[j];
     }
   }
-  mean /= static_cast<float>(events.size());
+  mean /= events.size();
 
   // Calculate the covariance matrix
   Matrix covariance = Matrix::Zero(multiplicity, multiplicity);
@@ -82,7 +82,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
       }
     }
   }
-  covariance /= static_cast<float>(events.size());
+  covariance /= events.size();
 
   return std::make_pair(mean, covariance);
 }
