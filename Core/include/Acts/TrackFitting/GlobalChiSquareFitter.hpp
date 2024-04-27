@@ -399,6 +399,11 @@ class Gx2Fitter {
 
       // End the propagation and return to the fitter
       if (result.finished) {
+        // Remove the missing surfaces that occur after the last measurement
+        if (result.measurementStates > 0) {
+          result.missedActiveSurfaces.resize(result.measurementHoles);
+        }
+
         return;
       }
 
@@ -415,15 +420,13 @@ class Gx2Fitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      if (surface != nullptr &&
-          surface->associatedDetectorElement() != nullptr) {
+      if (surface != nullptr) {
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
-        // check if measurement surface
-        auto sourcelink_it = inputMeasurements->find(surface->geometryId());
-
-        if (sourcelink_it != inputMeasurements->end()) {
+        // Check if we have a measurement surface
+        if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+            sourcelink_it != inputMeasurements->end()) {
           ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                               << " detected.");
 
@@ -528,6 +531,107 @@ class Gx2Fitter {
 
           // We count the processed state
           ++result.processedStates;
+
+          // Update the number of holes count only when encountering a
+          // measurement
+          result.measurementHoles = result.missedActiveSurfaces.size();
+        } else if (surface->associatedDetectorElement() != nullptr ||
+                   surface->surfaceMaterial() != nullptr) {
+          // Here we handle material and holes
+          // TODO add material handling
+          ACTS_VERBOSE("Non-Measurement surface " << surface->geometryId()
+                                                  << " detected.");
+
+          // We only create track states here if there is already a measurement
+          // detected or if the surface has material (no holes before the first
+          // measurement)
+          if (result.measurementStates > 0
+              // || surface->surfaceMaterial() != nullptr
+          ) {
+            ACTS_VERBOSE("Handle hole.");
+
+            auto& fittedStates = *result.fittedStates;
+
+            // Mask for the track states. We don't need Smoothed and Filtered
+            TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                                      TrackStatePropMask::Jacobian |
+                                      TrackStatePropMask::Calibrated;
+
+            ACTS_VERBOSE("    processSurface: addTrackState");
+
+            // Add a <mask> TrackState entry multi trajectory. This allocates
+            // storage for all components, which we will set later.
+            typename traj_t::TrackStateProxy trackStateProxy =
+                fittedStates.makeTrackState(mask, result.lastTrackIndex);
+            std::size_t currentTrackIndex = trackStateProxy.index();
+            {
+              // Set the trackStateProxy components with the state from the
+              // ongoing propagation
+              {
+                trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+                // Bind the transported state to the current surface
+                auto res = stepper.boundState(state.stepping, *surface, false,
+                                              freeToBoundCorrection);
+                if (!res.ok()) {
+                  result.result = res.error();
+                  return;
+                }
+                const auto& [boundParams, jacobian, pathLength] = *res;
+
+                // Fill the track state
+                trackStateProxy.predicted() = boundParams.parameters();
+                trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+                trackStateProxy.jacobian() = jacobian;
+                trackStateProxy.pathLength() = pathLength;
+              }
+
+              // Get and set the type flags
+              auto typeFlags = trackStateProxy.typeFlags();
+              typeFlags.set(TrackStateFlag::ParameterFlag);
+              if (surface->surfaceMaterial() != nullptr) {
+                typeFlags.set(TrackStateFlag::MaterialFlag);
+              }
+
+              // Set hole only, if we are on a sensitive surface
+              if (surface->associatedDetectorElement() != nullptr) {
+                ACTS_VERBOSE("Detected hole on " << surface->geometryId());
+                // If the surface is sensitive, set the hole type flag
+                typeFlags.set(TrackStateFlag::HoleFlag);
+              } else {
+                ACTS_VERBOSE("Detected in-sensitive surface "
+                             << surface->geometryId());
+              }
+            }
+
+            ACTS_VERBOSE(
+                "Actor - indices after processing, before over writing:"
+                << "\n    "
+                << "result.lastMeasurementIndex: "
+                << result.lastMeasurementIndex << "\n    "
+                << "trackStateProxy.index(): " << trackStateProxy.index()
+                << "\n    "
+                << "result.lastTrackIndex: " << result.lastTrackIndex
+                << "\n    "
+                << "currentTrackIndex: " << currentTrackIndex)
+            result.lastTrackIndex = currentTrackIndex;
+
+            if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
+              // Count the missed surface
+              result.missedActiveSurfaces.push_back(surface);
+            }
+
+            ++result.processedStates;
+          } else {
+            ACTS_VERBOSE("Ignoring hole, because no preceding measurements.");
+          }
+
+          if (surface->surfaceMaterial() != nullptr) {
+            // TODO write similar to KF?
+            // Update state and stepper with material effects
+            // materialInteractor(surface, state, stepper, navigator,
+            // MaterialUpdateStage::FullUpdate);
+          }
         } else {
           ACTS_INFO("Actor: This case is not implemented yet")
         }

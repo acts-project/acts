@@ -252,7 +252,7 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
       os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
          << suffix;
     } else {
-      os << std::fixed << std::setw(8) << double(v) / n << suffix;
+      os << std::fixed << std::setw(8) << static_cast<double>(v) / n << suffix;
     }
     os << std::endl;
   };

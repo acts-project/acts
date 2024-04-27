@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,19 +20,17 @@
 #include <vector>
 
 #include "G4Box.hh"
-#include "G4Cons.hh"
 #include "G4LogicalVolume.hh"
 #include "G4NistManager.hh"
-#include "G4Orb.hh"
 #include "G4PVPlacement.hh"
 #include "G4RunManager.hh"
-#include "G4Sphere.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4Trd.hh"
 
 ActsExamples::Telescope::TelescopeG4DetectorConstruction::
-    TelescopeG4DetectorConstruction(const TelescopeDetector::Config& cfg)
-    : m_cfg(cfg) {
+    TelescopeG4DetectorConstruction(
+        const TelescopeDetector::Config& cfg,
+        std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {
   throw_assert(cfg.surfaceType ==
                    static_cast<int>(Telescope::TelescopeSurfaceType::Plane),
                "only plan is supported right now");
@@ -162,15 +160,23 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
         checkOverlaps);  // overlaps checking
   }
 
+  // Create regions
+  for (const auto& regionCreator : m_regionCreators) {
+    regionCreator->Construct();
+  }
+
   return m_world;
 }
 
 ActsExamples::Telescope::TelescopeG4DetectorConstructionFactory::
-    TelescopeG4DetectorConstructionFactory(const TelescopeDetector::Config& cfg)
-    : m_cfg(cfg) {}
+    TelescopeG4DetectorConstructionFactory(
+        const TelescopeDetector::Config& cfg,
+        std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
 ActsExamples::Telescope::TelescopeG4DetectorConstructionFactory::factorize()
     const {
-  return std::make_unique<TelescopeG4DetectorConstruction>(m_cfg);
+  return std::make_unique<TelescopeG4DetectorConstruction>(m_cfg,
+                                                           m_regionCreators);
 }

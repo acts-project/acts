@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   BOOST_CHECK_EQUAL(boundariesPZL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
-  BOOST_CHECK_EQUAL(segSurfacesXPZL.size(), std::size_t(nbinsx - 1));
-  BOOST_CHECK_EQUAL(segSurfacesYPZL.size(), std::size_t(nbinsy - 1));
+  BOOST_CHECK_EQUAL(segSurfacesXPZL.size(), nbinsx - 1);
+  BOOST_CHECK_EQUAL(segSurfacesYPZL.size(), nbinsy - 1);
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutPZL = boundariesPZL[0]->center(tgContext);
@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   BOOST_CHECK_EQUAL(boundariesNZL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
-  BOOST_CHECK_EQUAL(segSurfacesXNZL.size(), std::size_t(nbinsx - 1));
-  BOOST_CHECK_EQUAL(segSurfacesYNZL.size(), std::size_t(nbinsy - 1));
+  BOOST_CHECK_EQUAL(segSurfacesXNZL.size(), nbinsx - 1);
+  BOOST_CHECK_EQUAL(segSurfacesYNZL.size(), nbinsy - 1);
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutNZL = boundariesNZL[0]->center(tgContext);
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   BOOST_CHECK_EQUAL(boundariesPL.size(), 6u);
 
   // There's one less because of the boundary and lorentz plane
-  BOOST_CHECK_EQUAL(segSurfacesXPL.size(), std::size_t(nbinsx - 1));
-  BOOST_CHECK_EQUAL(segSurfacesYPL.size(), std::size_t(nbinsy - 1));
+  BOOST_CHECK_EQUAL(segSurfacesXPL.size(), nbinsx - 1);
+  BOOST_CHECK_EQUAL(segSurfacesYPL.size(), nbinsy - 1);
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutPL = boundariesPL[0]->center(tgContext);

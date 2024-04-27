@@ -113,7 +113,7 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
     G4ThreeVector pos = g4PhysVol.GetTranslation();
     for (auto range : m_ranges) {
       auto& [min, max] = range.second;
-      EAxis axis = EAxis(range.first);
+      EAxis axis = static_cast<EAxis>(range.first);
       matched = (pos[axis] >= min) && (pos[axis] <= max);
       if (!matched) {
         break;

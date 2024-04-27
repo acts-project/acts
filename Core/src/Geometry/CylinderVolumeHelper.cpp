@@ -276,7 +276,7 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     const GeometryContext& gctx, const TrackingVolumeVector& volumes) const {
   // check if you have more than one volume
-  if (volumes.size() <= (std::size_t)1) {
+  if (volumes.size() <= std::size_t{1}) {
     ACTS_WARNING(
         "None (only one) TrackingVolume given to create container "
         "volume (min required: 2) - returning 0 ");
@@ -389,7 +389,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   }
   // we have the bounds and the volume array, create the volume
   std::shared_ptr<TrackingVolume> topVolume = std::make_shared<TrackingVolume>(
-      topVolumeTransform, topVolumeBounds, volumeArray, volumeName);
+      topVolumeTransform, topVolumeBounds, nullptr, nullptr, volumeArray,
+      MutableTrackingVolumeVector{}, volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
   if (!interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,
