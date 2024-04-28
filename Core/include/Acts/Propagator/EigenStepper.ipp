@@ -220,6 +220,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     errorEstimate =
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
     return success(errorEstimate <= state.options.stepTolerance);
   };
