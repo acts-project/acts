@@ -173,15 +173,22 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return 0.;
   }
 
-  const auto calcStepSizeScaling = [&](const double errorEstimate) {
+  const auto calcStepSizeScaling = [&](const double errorEstimate) -> double {
+    constexpr double lower = 0.25;
+    constexpr double upper = 4.0;
+    constexpr double exponent = 0.25;
+
     double x = state.options.stepTolerance / errorEstimate;
+
     if constexpr (std::numeric_limits<double>::is_iec559) {
-      x = fastPow(x, 0.25);
-    } else {
+      x = fastPow(x, exponent);
+    } else if constexpr (exponent == 0.25) {
       x = std::sqrt(std::sqrt(x));
+    } else {
+      x = std::pow(x, exponent);
     }
 
-    return std::clamp(x, 0.25, 4.0);
+    return std::clamp(x, lower, upper);
   };
 
   double errorEstimate = 0.;
@@ -235,6 +242,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     errorEstimate =
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
     return success(errorEstimate <= state.options.stepTolerance);
   };

@@ -9,46 +9,39 @@
 #pragma once
 
 #include <bit>
+#include <cmath>
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 
 namespace Acts {
 
 /// @brief Fast inverse square root function
 /// Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root
 /// @param x the number to calculate the inverse square root of
-constexpr float fastInverseSqrt(float x) noexcept {
-  // enable only on IEEE 754
-  static_assert(std::numeric_limits<double>::is_iec559);
+template <typename T>
+constexpr T fastInverseSqrt(T x, int iterations = 1) noexcept {
+  static_assert(std::numeric_limits<T>::is_iec559 &&
+                "Only IEEE 754 is supported");
+  static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>,
+                "Only float and double are supported");
+  using I = std::conditional_t<std::is_same_v<T, float>, std::uint32_t,
+                               std::uint64_t>;
+
+  constexpr I magic =
+      std::is_same_v<T, float> ? 0x5f3759df : 0x5fe6eb50c7b537a9;
 
   union {
-    float f;
-    std::uint32_t i;
+    T f;
+    I i;
   } u = {x};
 
-  u.i = 0x5f3759df - (u.i >> 1);
-  u.f *= 1.5f - (0.5f * x * u.f * u.f);
-  // 2nd iteration, this can be removed
-  // u.f *= 1.5f - (0.5f * x * u.f * u.f);
-  return u.f;
-}
+  u.i = magic - (u.i >> 1);
 
-/// @brief Fast inverse square root function
-/// Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root
-/// @param x the number to calculate the inverse square root of
-constexpr double fastInverseSqrt(double x) noexcept {
-  // enable only on IEEE 754
-  static_assert(std::numeric_limits<double>::is_iec559);
+  for (int i = 0; i < iterations; ++i) {
+    u.f *= 1.5f - (0.5f * x * u.f * u.f);
+  }
 
-  union {
-    double f;
-    std::uint64_t i;
-  } u = {x};
-
-  u.i = 0x5fe6eb50c7b537a9 - (u.i >> 1);
-  u.f *= 1.5 - (0.5 * x * u.f * u.f);
-  // 2nd iteration, this can be removed
-  // u.f *= 1.5 - (0.5 * x * u.f * u.f);
   return u.f;
 }
 
@@ -61,13 +54,57 @@ constexpr double fastPow(double a, double b) {
   // enable only on IEEE 754
   static_assert(std::numeric_limits<double>::is_iec559);
 
+  constexpr std::int64_t magic = 0x3FEF127F00000000;
+
   union {
-    double d;
-    std::int32_t x[2];
+    double f;
+    std::int64_t i;
   } u = {a};
-  u.x[1] = static_cast<std::int32_t>(b * (u.x[1] - 1072632447) + 1072632447);
-  u.x[0] = 0;
-  return u.d;
+
+  u.i = static_cast<std::int64_t>(b * (u.i - magic) + magic);
+
+  return u.f;
+}
+
+/// @brief Fast power function more precise than @see `fastPow`
+/// Taken from
+/// https://martin.ankerl.com/2012/01/25/optimized-approximative-pow-in-c-and-cpp
+/// @param a the base
+/// @param b the exponent
+constexpr double fastPowMorePrecise(double a, double b) {
+  // binary exponentiation
+  double r = 1.0;
+  int exp = std::abs(static_cast<int>(b));
+  double base = b > 0 ? a : 1 / a;
+  while (exp != 0) {
+    if ((exp & 1) != 0) {
+      r *= base;
+    }
+    base *= base;
+    exp >>= 1;
+  }
+
+  return r * fastPow(a, b - static_cast<int>(b));
+}
+
+/// @brief Another fast power function @see `fastPow`
+// Taken from
+// https://martin.ankerl.com/2007/02/11/optimized-exponential-functions-for-java
+/// @param a the base
+/// @param b the exponent
+constexpr double fastPowAnother(double a, double b) {
+  // enable only on IEEE 754
+  static_assert(std::numeric_limits<double>::is_iec559);
+
+  union {
+    double f;
+    std::int64_t i;
+  } u = {};
+
+  u.i = static_cast<std::int64_t>(
+      9076650 * (a - 1) / (a + 1 + 4 * std::sqrt(a)) * b + 1072632447);
+
+  return u.f;
 }
 
 }  // namespace Acts
