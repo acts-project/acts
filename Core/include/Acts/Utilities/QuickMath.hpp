@@ -19,6 +19,7 @@ namespace Acts {
 /// @brief Fast inverse square root function
 /// Taken from https://en.wikipedia.org/wiki/Fast_inverse_square_root
 /// @param x the number to calculate the inverse square root of
+/// @param iterations the number of newton iterations to perform
 template <typename T>
 constexpr T fastInverseSqrt(T x, int iterations = 1) noexcept {
   static_assert(std::numeric_limits<T>::is_iec559 &&
@@ -103,6 +104,7 @@ constexpr double fastPowAnother(double a, double b) {
 
   u.i = static_cast<std::int64_t>(
       9076650 * (a - 1) / (a + 1 + 4 * std::sqrt(a)) * b + 1072632447);
+  u.i <<= 32;
 
   return u.f;
 }
