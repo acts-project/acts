@@ -24,13 +24,13 @@ constexpr float fastInverseSqrt(float x) noexcept {
   union {
     float f;
     std::uint32_t i;
-  } conv = {.f = x};
+  } u = {x};
 
-  conv.i = 0x5f3759df - (conv.i >> 1);
-  conv.f *= 1.5f - (0.5f * x * conv.f * conv.f);
+  u.i = 0x5f3759df - (u.i >> 1);
+  u.f *= 1.5f - (0.5f * x * u.f * u.f);
   // 2nd iteration, this can be removed
-  // conv.f *= 1.5f - (0.5f * x * conv.f * conv.f);
-  return conv.f;
+  // u.f *= 1.5f - (0.5f * x * u.f * u.f);
+  return u.f;
 }
 
 /// @brief Fast inverse square root function
@@ -43,13 +43,13 @@ constexpr double fastInverseSqrt(double x) noexcept {
   union {
     double f;
     std::uint64_t i;
-  } conv = {.f = x};
+  } u = {x};
 
-  conv.i = 0x5fe6eb50c7b537a9 - (conv.i >> 1);
-  conv.f *= 1.5 - (0.5 * x * conv.f * conv.f);
+  u.i = 0x5fe6eb50c7b537a9 - (u.i >> 1);
+  u.f *= 1.5 - (0.5 * x * u.f * u.f);
   // 2nd iteration, this can be removed
-  // conv.f *= 1.5 - (0.5 * x * conv.f * conv.f);
-  return conv.f;
+  // u.f *= 1.5 - (0.5 * x * u.f * u.f);
+  return u.f;
 }
 
 /// @brief Fast power function @see `std::pow`
