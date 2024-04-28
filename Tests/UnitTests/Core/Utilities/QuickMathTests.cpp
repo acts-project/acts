@@ -43,13 +43,11 @@ BOOST_DATA_TEST_CASE(fastPow, expDist ^ expDist ^ bdata::xrange(100), aExp, b,
 
   const double fast = Acts::fastPow(a, b);
   const double fastMorePrecise = Acts::fastPowMorePrecise(a, b);
-  // const double fastPowAnother = Acts::fastPowAnother(a, b);
 
   const double std = std::pow(a, b);
 
   CHECK_CLOSE_REL(fast, std, 0.15);
   CHECK_CLOSE_REL(fastMorePrecise, std, 0.1);
-  // CHECK_CLOSE_REL(fastPowAnother, std, 0.01);
 }
 
 // BOOST_AUTO_TEST_CASE(fastPowChart) {

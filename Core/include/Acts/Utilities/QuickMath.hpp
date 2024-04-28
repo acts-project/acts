@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <bit>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -86,27 +85,6 @@ constexpr double fastPowMorePrecise(double a, double b) {
   }
 
   return r * fastPow(a, b - static_cast<int>(b));
-}
-
-/// @brief Another fast power function @see `fastPow`
-// Taken from
-// https://martin.ankerl.com/2007/02/11/optimized-exponential-functions-for-java
-/// @param a the base
-/// @param b the exponent
-constexpr double fastPowAnother(double a, double b) {
-  // enable only on IEEE 754
-  static_assert(std::numeric_limits<double>::is_iec559);
-
-  union {
-    double f;
-    std::int64_t i;
-  } u = {};
-
-  u.i = static_cast<std::int64_t>(
-      9076650 * (a - 1) / (a + 1 + 4 * std::sqrt(a)) * b + 1072632447);
-  u.i <<= 32;
-
-  return u.f;
 }
 
 }  // namespace Acts
