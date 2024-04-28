@@ -1,1 +1,1 @@
-add_unittest(AthenaAmbiguityResolution AthenaAmbiguityResolutionTest.cpp)
+add_unittest(ScoreBasedAmbiguityResolution ScoreBasedAmbiguityResolutionTest.cpp)

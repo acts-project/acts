@@ -151,8 +151,8 @@ AmbiguityResolutionConfig = namedtuple(
     defaults=[None] * 3,
 )
 
-AthenaAmbiguityResolutionConfig = namedtuple(
-    "AthenaAmbiguityResolutionConfig",
+ScoreBasedAmbiguityResolutionConfig = namedtuple(
+    "ScoreBasedAmbiguityResolutionConfig",
     [
         "minScore",
         "minScoreSharedTracks",
@@ -1735,11 +1735,11 @@ def addAmbiguityResolution(
 
 
 @acts.examples.NamedTypeArgs(
-    config=AthenaAmbiguityResolutionConfig,
+    config=ScoreBasedAmbiguityResolutionConfig,
 )
-def addAthenaAmbiguityResolution(
+def addScoreBasedAmbiguityResolution(
     s,
-    config: AthenaAmbiguityResolutionConfig = AthenaAmbiguityResolutionConfig(),
+    config: ScoreBasedAmbiguityResolutionConfig = ScoreBasedAmbiguityResolutionConfig(),
     tracks: str = "tracks",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1748,15 +1748,15 @@ def addAthenaAmbiguityResolution(
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ) -> None:
-    from acts.examples import AthenaAmbiguityResolutionAlgorithm
+    from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
 
-    customLogLevel = acts.examples.defaultLogging(s, acts.logging.VERBOSE)
+    customLogLevel = acts.examples.defaultLogging(s, acts.logging.DEBUG)
 
-    algAthena = AthenaAmbiguityResolutionAlgorithm(
+    algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
         configFile=AmbiVolumeFile,
-        outputTracks="ambiTracksAthena",
+        outputTracks="ambiTracksScoreBased",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
@@ -1769,13 +1769,13 @@ def addAthenaAmbiguityResolution(
             useAmbiguityFunction=config.useAmbiguityFunction,
         ),
     )
-    s.addAlgorithm(algAthena)
-    s.addWhiteboardAlias("tracks", algAthena.config.outputTracks)
+    s.addAlgorithm(algScoreBased)
+    s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
 
     addTrackWriters(
         s,
-        name="ambi_athena",
-        tracks=algAthena.config.outputTracks,
+        name="ambi_scorebased",
+        tracks=algScoreBased.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,

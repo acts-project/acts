@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/Json/AmbiguityConfigJsonConverter.hpp"
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
 #include <fstream>
@@ -16,7 +16,7 @@
 namespace Acts {
 
 std::pair<std::map<std::size_t, std::size_t>,
-          std::map<std::size_t, AthenaAmbiguityResolution::DetectorConfig>>
+          std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>>
 AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
   std::ifstream file(configFile);
   if (!file.is_open()) {
@@ -30,11 +30,12 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
 
   file >> j;
 
-  std::map<std::size_t, AthenaAmbiguityResolution::DetectorConfig> detectorMap;
+  std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>
+      detectorMap;
   std::map<std::size_t, std::size_t> volumeMap;
 
   for (auto& [key, value] : j.items()) {
-    AthenaAmbiguityResolution::DetectorConfig detectorConfig;
+    ScoreBasedAmbiguityResolution::DetectorConfig detectorConfig;
 
     std::size_t detectorId = std::stoi(key);
 

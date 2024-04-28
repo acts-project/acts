@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/AmbiguityResolution/AthenaAmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
 
 #include <memory>
 
@@ -30,12 +30,12 @@ void addAmbiguityResolution(Context& ctx) {
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
 }
-void addAthenaAmbiguityResolution(Context& ctx) {
+void addScoreBasedAmbiguityResolution(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AthenaAmbiguityResolutionAlgorithm, mex,
-      "AthenaAmbiguityResolutionAlgorithm", inputTracks, configFile,
+      ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm, mex,
+      "ScoreBasedAmbiguityResolutionAlgorithm", inputTracks, configFile,
       outputTracks, minScore, minScoreSharedTracks, maxShared,
       maxSharedTracksPerMeasurement, pTMin, pTMax, phiMin, phiMax, etaMin,
       etaMax, useAmbiguityFunction);

@@ -8,26 +8,27 @@
 
 #pragma once
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
 #include <fstream>
 
 namespace Acts {
 
-/// @class AthenaAmbiguityResolutionJsonConverter
+/// @class ScoreBasedAmbiguityResolutionJsonConverter
 ///
-/// @brief A converter class for the AthenaAmbiguityResolution algorithm
+/// @brief A converter class for the ScoreBasedAmbiguityResolution algorithm
 ///
-/// This class is used to convert the AthenaAmbiguityResolutionCongig
+/// This class is used to convert the ScoreBasedAmbiguityResolutionCongig
 /// from JSON to C++
 
 class AmbiguityConfigJsonConverter {
-  using DetectorConfig = AthenaAmbiguityResolution::DetectorConfig;
+  using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
 
  public:
-  std::pair<std::map<std::size_t, std::size_t>,
-            std::map<std::size_t, AthenaAmbiguityResolution::DetectorConfig>>
+  std::pair<
+      std::map<std::size_t, std::size_t>,
+      std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>>
   fromJson(const std::string&) const;
 };
 

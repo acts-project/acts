@@ -29,8 +29,8 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionConfig,
     addAmbiguityResolutionML,
     AmbiguityResolutionMLConfig,
-    addAthenaAmbiguityResolution,
-    AthenaAmbiguityResolutionConfig,
+    addScoreBasedAmbiguityResolution,
+    ScoreBasedAmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
     addSeedFilterML,
@@ -80,7 +80,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--ambi_config",
-    help="Set the configuration file for the Athena ambiguity resolution",
+    help="Set the configuration file for the Score Based ambiguity resolution",
     type=pathlib.Path,
     default=pathlib.Path.cwd() / "ambi_config.json",
 )
@@ -97,7 +97,7 @@ outputDir = args["output"]
 ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["SolverType"] == "ML"
-athena_ambiguity_resolution = args["SolverType"] == "athena"
+ScoreBased_ambiguity_resolution = args["SolverType"] == "ScoreBased"
 ambi_config = args["ambi_config"]
 seedFilter_ML = args["MLSeedFilter"]
 geoDir = getOpenDataDetectorDirectory()
@@ -307,10 +307,10 @@ if ambiguity_MLSolver:
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
 
-elif athena_ambiguity_resolution:
-    addAthenaAmbiguityResolution(
+elif ScoreBased_ambiguity_resolution:
+    addScoreBasedAmbiguityResolution(
         s,
-        AthenaAmbiguityResolutionConfig(
+        ScoreBasedAmbiguityResolutionConfig(
             minScore=0,
             minScoreSharedTracks=1,
             maxShared=2,

@@ -6,19 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 
 #include <stdexcept>
 
-std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
-    std::vector<double> trackScore,
-    std::vector<std::map<std::size_t, TrackFeatures>>& counterMaps,
-    std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-        measurementsPerTrack) const {
-  std::vector<std::size_t> cleanTracks;
+std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
+    const std::vector<double>& trackScore,
+    const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
+    const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
+    const {
+  std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
 
   ACTS_VERBOSE("Cleaning tracks");
 
@@ -38,11 +38,10 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
   // measurement.
   for (std::size_t iTrack = 0; iTrack < numberOfTracks; ++iTrack) {
     if (trackScore[iTrack] <= 0) {
-      measurementsPerTrack[iTrack].clear();
       continue;
     }
-    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = std::get<0>(measurements_tuples);
+    for (auto measurementTuples : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = std::get<0>(measurementTuples);
       tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
@@ -71,7 +70,7 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
-    auto counterMap = counterMaps[iTrack];
+    auto trackFeaturesMap = trackFeaturesMaps[iTrack];
 
     bool TrkCouldBeAccepted = true;
 
@@ -83,10 +82,10 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
 
     // Loop over all measurements of the track and for each hit a
     // trackStateTypes is assigned.
-    for (auto measurements_tuples : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = std::get<0>(measurements_tuples);
-      auto iVolume = std::get<1>(measurements_tuples);
-      auto isoutliner = std::get<2>(measurements_tuples);
+    for (auto measurementTuples : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = std::get<0>(measurementTuples);
+      auto iVolume = std::get<1>(measurementTuples);
+      auto isoutliner = std::get<2>(measurementTuples);
 
       auto volume_it = m_cfg.volumeMap.find(iVolume);
 
@@ -138,8 +137,8 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
     // trackStateTypes and other conditions.
     // Good measurements are copied to the newMeasurementsPerTrack vector.
     for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
-      auto measurement_tuples = measurementsPerTrack[iTrack][i];
-      measurement = std::get<0>(measurement_tuples);
+      auto measurementTuples = measurementsPerTrack[iTrack][i];
+      measurement = std::get<0>(measurementTuples);
 
       if (trackStateTypes[i] == RejectedHit) {
         ACTS_DEBUG("Dropping rejected hit");
@@ -186,14 +185,14 @@ std::vector<std::size_t> Acts::AthenaAmbiguityResolution::getCleanedOutTracks(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
-      if (counterMap[detectorId].nSharedHits > detector.maxSharedHits) {
+      if (trackFeaturesMap[detectorId].nSharedHits > detector.maxSharedHits) {
         TrkCouldBeAccepted = false;
         break;
       }
     }
 
     if (TrkCouldBeAccepted) {
-      cleanTracks.push_back(iTrack);
+      cleanTracks[iTrack] = true;
       newMeasurements.push_back(newMeasurementsPerTrack);
       ACTS_VERBOSE("Track " << iTrack << " is accepted");
       continue;

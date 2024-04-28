@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -31,14 +31,15 @@ namespace Acts {
 
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(AthenaAmbiguityResolutionTest)
+BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
+using measurementTuple = ScoreBasedAmbiguityResolution::measurementTuple;
 
-// Test fixture for AthenaAmbiguityResolution
+// Test fixture for ScoreBasedAmbiguityResolution
 struct Fixture {
-  AthenaAmbiguityResolution::Config config;
+  ScoreBasedAmbiguityResolution::Config config;
 
-  using TrackFeatures = AthenaAmbiguityResolution::TrackFeatures;
-  using DetectorConfig = AthenaAmbiguityResolution::DetectorConfig;
+  using TrackFeatures = ScoreBasedAmbiguityResolution::TrackFeatures;
+  using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
 
   Fixture() {
     // Set up any resources used by the tests
@@ -68,8 +69,7 @@ struct Fixture {
 };
 
 // Helper function to create a sample input for getCleanedOutTracks
-std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-createSampleInput() {
+std::vector<std::vector<measurementTuple>> createSampleInput() {
   std::vector<std::pair<std::size_t, std::vector<std::size_t>>> trackVolumes = {
       {0, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
       {1, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
@@ -77,12 +77,11 @@ createSampleInput() {
       {3, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
       {4, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}}};
 
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-      measurementsPerTrack;
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
   // Add sample measurements for each track
 
   for (const auto& trackVolume : trackVolumes) {
-    std::vector<std::tuple<std::size_t, std::size_t, bool>> measurements;
+    std::vector<measurementTuple> measurements;
     for (std::size_t i = 0; i < trackVolume.second.size(); ++i) {
       measurements.push_back(
           std::make_tuple(i + 2, trackVolume.second[i], false));
@@ -95,12 +94,12 @@ createSampleInput() {
 
 BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   Fixture fixture;
-  // Create an instance of AthenaAmbiguityResolution
-  AthenaAmbiguityResolution tester(fixture.config);
+  // Create an instance of ScoreBasedAmbiguityResolution
+  ScoreBasedAmbiguityResolution tester(fixture.config);
 
   // Create sample input
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
-      measurementsPerTrack = createSampleInput();
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack =
+      createSampleInput();
 
   std::vector<double> TrackSore;
   for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
@@ -115,16 +114,17 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
       {{0, {0, 14, 0, 0}}, {1, {0, 0, 0, 0}}}};
 
   // Call the function under testBOOST_FIXTURE_TEST_CASE
-  std::vector<std::size_t> cleanTracks = tester.getCleanedOutTracks(
+  std::vector<bool> cleanTracks = tester.getCleanedOutTracks(
       TrackSore, trackFeaturesMaps, measurementsPerTrack);
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);
-  BOOST_CHECK_EQUAL(cleanTracks.size(), 3);
 
   for (std::size_t i = 0; i < cleanTracks.size(); i++) {
-    auto score = TrackSore[cleanTracks[i]];
-    BOOST_CHECK_GT(score, fixture.config.minScoreSharedTracks);
+    auto score = TrackSore[i];
+    if (cleanTracks[i]) {
+      BOOST_CHECK_GT(score, fixture.config.minScoreSharedTracks);
+    }
   }
 }
 

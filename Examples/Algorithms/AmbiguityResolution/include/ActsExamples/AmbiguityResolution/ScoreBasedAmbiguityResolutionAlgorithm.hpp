@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/AmbiguityResolution/AthenaAmbiguityResolution.hpp"
+#include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -25,7 +25,7 @@ namespace ActsExamples {
 ///  1) Cluster together nearby tracks using shared hits
 ///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
-class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
+class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   /// Configuration for the ambiguity resolution algorithm.
 
@@ -35,7 +35,7 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
     /// Output track collection.
     std::string outputTracks;
 
-    std::map<std::size_t, Acts::AthenaAmbiguityResolution::DetectorConfig>
+    std::map<std::size_t, Acts::ScoreBasedAmbiguityResolution::DetectorConfig>
         detectorMap;
     std::map<std::size_t, std::size_t> volumeMap;
 
@@ -68,7 +68,7 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AthenaAmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  ScoreBasedAmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the ambiguity resolution algorithm.
   ///
@@ -81,7 +81,7 @@ class AthenaAmbiguityResolutionAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::AthenaAmbiguityResolution m_ambi;
+  Acts::ScoreBasedAmbiguityResolution m_ambi;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
