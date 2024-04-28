@@ -153,7 +153,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state, const navigator_t& navigator) const {
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
-  double error_estimate = 0.;
+  double errorEstimate = 0.;
   double h2 = 0, half_h = 0;
 
   auto pos = position(state.stepping);
@@ -217,12 +217,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
 
     // Compute and check the local integration error estimate
-    error_estimate =
+    errorEstimate =
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
-    error_estimate = std::max(error_estimate, 1e-20);
 
-    return success(error_estimate <= state.options.stepTolerance);
+    return success(errorEstimate <= state.options.stepTolerance);
   };
 
   const double initialH =
@@ -243,9 +242,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // double std::sqrt is 3x faster than std::pow
     const double stepSizeScaling =
         std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
-                                       std::abs(2. * error_estimate))),
+                                       (2. * errorEstimate))),
                    0.25, 4.0);
     h *= stepSizeScaling;
+    state.stepping.stepSize.setAccuracy(h);
 
     // If step size becomes too small the particle remains at the initial
     // place
@@ -265,6 +265,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
+    // using the direction before updated below
+
     // The step transport matrix in global coordinates
     FreeMatrix D;
     if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
@@ -316,23 +318,23 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   (state.stepping.pars.template segment<3>(eFreeDir0)).normalize();
 
   if (state.stepping.covTransport) {
+    // using the updated direction
     state.stepping.derivative.template head<3>() =
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
+
   state.stepping.pathAccumulated += h;
-  // double std::sqrt is 3x faster than std::pow
-  const double stepSizeScaling =
-      std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
-                                     std::abs(error_estimate))),
-                 0.25, 4.0);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
-  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
-    state.stepping.stepSize.setAccuracy(nextAccuracy);
-  }
   state.stepping.stepSize.nStepTrials = nStepTrials;
+
+  // Try to scale the step size up if it was not reduced and the error is small
+  // enough
+  if (h == initialH && errorEstimate < state.options.stepTolerance) {
+    // double std::sqrt is 3x faster than std::pow
+    const double stepSizeScaling = std::min(
+        4.0, std::sqrt(std::sqrt(state.options.stepTolerance / errorEstimate)));
+    state.stepping.stepSize.setAccuracy(h * stepSizeScaling);
+  }
 
   return h;
 }
