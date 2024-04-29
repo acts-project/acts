@@ -263,7 +263,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
     const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
-    state.stepping.stepSize.setAccuracy(h);
 
     // If step size becomes too small the particle remains at the initial
     // place
@@ -346,7 +345,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  state.stepping.stepSize.setAccuracy(h * stepSizeScaling);
+  state.stepping.stepSize.setAccuracy(std::abs(h * stepSizeScaling));
 
   return h;
 }
