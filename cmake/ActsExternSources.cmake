@@ -43,11 +43,11 @@ set( ACTS_THRUST_SOURCE
 mark_as_advanced( ACTS_THRUST_SOURCE )
 
 set( ACTS_BOOST_SOURCE
-   "https://boostorg.jfrog.io/artifactory/main/release/${_acts_boost_recommended_version}/source/boost_${_acts_boost_recommended_version_}.tar.gz" CACHE STRING "Source to take boost from")
+   "URL;https://boostorg.jfrog.io/artifactory/main/release/${_acts_boost_recommended_version}/source/boost_${_acts_boost_recommended_version_}.tar.gz" CACHE STRING "Source to take boost from")
 mark_as_advanced( ACTS_BOOST_SOURCE )
 
 set( ACTS_EIGEN3_SOURCE
-   "https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz" CACHE STRING "Source to take eigen3 from")
+   "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz" CACHE STRING "Source to take eigen3 from")
 mark_as_advanced( ACTS_EIGEN3_SOURCE )
 
 set( ACTS_PYBIND11_SOURCE
