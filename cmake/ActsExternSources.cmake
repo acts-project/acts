@@ -11,7 +11,7 @@ set( ACTS_ALGEBRAPLUGINS_SOURCE
 mark_as_advanced( ACTS_ALGEBRAPLUGINS_SOURCE )
 
 set( ACTS_COVFIE_SOURCE
-   "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.9.0.tar.gz;URL_MD5;b310712c6dd1acc8104c734086f40fc0" CACHE STRING "Source to take COVFIE from")
+   "URL;https://github.com/acts-project/covfie/archive/refs/tags/v0.10.0.tar.gz;URL_MD5;af59c6e2a1eebfa765b29f0af9fc70f7" CACHE STRING "Source to take COVFIE from")
 mark_as_advanced( ACTS_COVFIE_SOURCE )
 
 set( ACTS_DETRAY_SOURCE
