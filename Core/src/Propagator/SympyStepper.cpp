@@ -19,9 +19,9 @@ namespace Acts {
 namespace {
 
 template <typename T, typename GetB>
-bool rk4(const T* p, const T* d, const T h, const T lambda, const T m,
-         const T p_abs, GetB getB, T* err, T* new_p, T* new_d, T* new_time,
-         T* path_derivatives, T* J) {
+bool rk4(const T* p, const T* d, const T t, const T h, const T lambda,
+         const T m, const T p_abs, GetB getB, T* err, T* new_p, T* new_d,
+         T* new_time, T* path_derivatives, T* J) {
   const auto B1 = getB(p);
   const auto x13 = std::pow(h, 2);
   const auto h_2 = (1.0 / 2.0) * h;
@@ -111,7 +111,7 @@ bool rk4(const T* p, const T* d, const T h, const T lambda, const T m,
   new_d[2] = h_6 * k1[2] + h_6 * k4[2] + x15 * k2[2] + x15 * k3[2] + d[2];
   const auto x16 = std::pow(m, 2);
   const auto dtds = std::sqrt(1 + x16 / std::pow(p_abs, 2));
-  *new_time = dtds * h;
+  *new_time = dtds * h + t;
   if (J == nullptr) {
     return true;
   }
@@ -466,6 +466,7 @@ Result<double> SympyStepper::stepImpl(
     double stepSizeCutOff, std::size_t maxRungeKuttaStepTrials) const {
   auto pos = position(state);
   auto dir = direction(state);
+  double t = time(state);
   double qop = qOverP(state);
   double m = particleHypothesis(state).mass();
   double p_abs = absoluteMomentum(state);
@@ -478,11 +479,11 @@ Result<double> SympyStepper::stepImpl(
   double h = state.stepSize.value() * stepDirection;
   double initialH = h;
   std::size_t nStepTrials = 0;
-  double error_estimate = 0.;
+  double errorEstimate = 0.;
 
   while (true) {
     bool ok =
-        rk4(pos.data(), dir.data(), h, qop, m, p_abs, getB, &error_estimate,
+        rk4(pos.data(), dir.data(), t, h, qop, m, p_abs, getB, &errorEstimate,
             state.pars.template segment<3>(eFreePos0).data(),
             state.pars.template segment<3>(eFreeDir0).data(),
             state.pars.template segment<1>(eFreeTime).data(),
@@ -495,7 +496,7 @@ Result<double> SympyStepper::stepImpl(
 
     // double std::sqrt is 3x faster than std::pow
     const double stepSizeScaling = std::clamp(
-        std::sqrt(std::sqrt(stepTolerance / std::abs(2. * error_estimate))),
+        std::sqrt(std::sqrt(stepTolerance / std::abs(2. * errorEstimate))),
         0.25, 4.0);
     h *= stepSizeScaling;
 
@@ -522,9 +523,8 @@ Result<double> SympyStepper::stepImpl(
   state.stepSize.nStepTrials = nStepTrials;
 
   // double std::sqrt is 3x faster than std::pow
-  const double stepSizeScaling =
-      std::clamp(std::sqrt(std::sqrt(stepTolerance / std::abs(error_estimate))),
-                 0.25, 4.0);
+  const double stepSizeScaling = std::clamp(
+      std::sqrt(std::sqrt(stepTolerance / std::abs(errorEstimate))), 0.25, 4.0);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
   const double previousAccuracy = std::abs(state.stepSize.accuracy());
   const double initialStepLength = std::abs(initialH);
