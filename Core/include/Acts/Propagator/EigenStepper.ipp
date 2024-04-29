@@ -345,7 +345,12 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
   const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  state.stepping.stepSize.setAccuracy(std::abs(h * stepSizeScaling));
+  const double nextAccuracy = std::abs(h * stepSizeScaling);
+  const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
+  const double initialStepLength = std::abs(initialH);
+  if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
+    state.stepping.stepSize.setAccuracy(nextAccuracy);
+  }
 
   return h;
 }
