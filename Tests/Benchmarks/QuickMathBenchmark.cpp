@@ -50,40 +50,42 @@ BOOST_DATA_TEST_CASE(
     bdata::random(
         (bdata::engine = std::mt19937(), bdata::seed = 21,
          bdata::distribution = std::uniform_real_distribution<double>(-4, 4))) ^
-        bdata::xrange(ntests),
-    aExp, index) {
+        bdata::xrange(nTests),
+    baseExp, index) {
   (void)index;
 
   const double base = std::pow(10, baseExp);
   const double exp = 0.25;
 
   std::cout << std::endl
-            << "Benchmarking a=" << a << ", b=" << b << "..." << std::endl;
+            << "Benchmarking base=" << base << ", exp=" << exp << "..."
+            << std::endl;
   std::cout << "- void: "
-            << Acts::Test::microBenchmark([&] { return 0; }, nrepts)
+            << Acts::Test::microBenchmark([&] { return 0; }, nReps)
             << std::endl;
   std::cout << "- std::pow: "
-            << Acts::Test::microBenchmark([&] { return std::pow(a, b); },
-                                          nrepts)
+            << Acts::Test::microBenchmark([&] { return std::pow(base, exp); },
+                                          nReps)
             << std::endl;
   std::cout << "- std::exp: "
             << Acts::Test::microBenchmark(
-                   [&] { return std::exp(std::log(a) * b); }, nrepts)
+                   [&] { return std::exp(std::log(base) * exp); }, nReps)
             << std::endl;
   std::cout << "- std::sqrt: "
             << Acts::Test::microBenchmark(
-                   [&] { return std::sqrt(std::sqrt(a)); }, nrepts)
+                   [&] { return std::sqrt(std::sqrt(base)); }, nReps)
             << std::endl;
   std::cout << "- fastPow: "
-            << Acts::Test::microBenchmark([&] { return fastPow(a, b); }, nrepts)
+            << Acts::Test::microBenchmark([&] { return fastPow(base, exp); },
+                                          nReps)
             << std::endl;
   std::cout << "- fastPowMorePrecise: "
             << Acts::Test::microBenchmark(
-                   [&] { return fastPowMorePrecise(a, b); }, nrepts)
+                   [&] { return fastPowMorePrecise(base, exp); }, nReps)
             << std::endl;
   std::cout << "- fastPowAnother: "
-            << Acts::Test::microBenchmark([&] { return fastPowAnother(a, b); },
-                                          nrepts)
+            << Acts::Test::microBenchmark(
+                   [&] { return fastPowAnother(base, exp); }, nReps)
             << std::endl;
 }
 
