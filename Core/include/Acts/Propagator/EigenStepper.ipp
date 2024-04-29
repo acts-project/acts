@@ -232,6 +232,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
+    nStepTrials++;
     auto res = tryRungeKuttaStep(h);
     if (!res.ok()) {
       return res.error();
@@ -260,7 +261,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
-    nStepTrials++;
   }
 
   // When doing error propagation, update the associated Jacobian matrix
@@ -320,7 +320,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
+
   state.stepping.pathAccumulated += h;
+  ++state.stepping.nSteps;
+  state.stepping.nStepTrials = nStepTrials;
+
   // double std::sqrt is 3x faster than std::pow
   const double stepSizeScaling =
       std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
@@ -332,7 +336,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
     state.stepping.stepSize.setAccuracy(nextAccuracy);
   }
-  state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;
 }
