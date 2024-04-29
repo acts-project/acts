@@ -15,7 +15,7 @@ set(Boost_B2_FLAGS variant=release threading=multi runtime-link=shared link=shar
 # Note: Since all builds below depend on the headers, use this step to
 # download the boost release
 
-ExternalProject_Add( "boost;${ACTS_BOOST_SOURCE};CONFIGURE_COMMAND;\"\";BUILD_COMMAND;\"\";INSTALL_COMMAND;\"\"" )
+ExternalProject_Add( boost "${ACTS_BOOST_SOURCE};CONFIGURE_COMMAND;;BUILD_COMMAND;;INSTALL_COMMAND;" )
 
 add_library(Boost::boost INTERFACE IMPORTED GLOBAL)
 add_dependencies(Boost::boost boost)
