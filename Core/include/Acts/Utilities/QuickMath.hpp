@@ -39,7 +39,7 @@ constexpr T fastInverseSqrt(T x, int iterations = 1) noexcept {
   u.i = magic - (u.i >> 1);
 
   for (int i = 0; i < iterations; ++i) {
-    u.f *= 1.5f - (0.5f * x * u.f * u.f);
+    u.f *= 1.5f - 0.5f * x * u.f * u.f;
   }
 
   return u.f;

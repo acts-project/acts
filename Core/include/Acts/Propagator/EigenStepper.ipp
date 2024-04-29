@@ -157,6 +157,9 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
 
+  double errorEstimate = 0.;
+  double h2 = 0, half_h = 0;
+
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
 
@@ -190,9 +193,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
     return std::clamp(x, lower, upper);
   };
-
-  double errorEstimate = 0.;
-  double h2 = 0, half_h = 0;
 
   // The following functor starts to perform a Runge-Kutta step of a certain
   // size, going up to the point where it can return an estimate of the local
