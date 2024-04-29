@@ -149,10 +149,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     if (jSurfacesDelegate.is_null()) {
       continue;
     }
-    // Patch axes for cylindrical grid surfaces, axes are swapped
-    // at this point
-    auto jAccLink = jSurfacesDelegate["acc_link"];
-    std::size_t accLinkType = jAccLink["type"];
     // Colplete the grid json for detray usage
     jSurfacesDelegate["volume_link"] = iv;
     // jSurfacesDelegate["acc_link"] =
