@@ -431,7 +431,10 @@ class EigenStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit
-  double m_overstepLimit;
+  double m_overstepLimit{};
+
+  /// Whether to use fast power function if available
+  bool m_tryUseFastPow{false};
 };
 
 template <typename navigator_t>

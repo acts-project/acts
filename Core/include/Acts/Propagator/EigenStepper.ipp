@@ -177,15 +177,18 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   const auto calcStepSizeScaling = [&]() -> double {
+    // For details about these values see ATL-SOFT-PUB-2009-001 for details
     constexpr double lower = 0.25;
     constexpr double upper = 4.0;
+    // This is given by the order of the Runge-Kutta method
     constexpr double exponent = 0.25;
 
     double x = state.options.stepTolerance / errorEstimate;
 
-    if constexpr (std::numeric_limits<double>::is_iec559) {
+    if (std::numeric_limits<double>::is_iec559 && m_tryUseFastPow) {
       x = fastPow(x, exponent);
     } else if constexpr (exponent == 0.25) {
+      // This is 3x faster than std::pow
       x = std::sqrt(std::sqrt(x));
     } else {
       x = std::pow(x, exponent);
@@ -263,7 +266,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    h *= calcStepSizeScaling(2. * errorEstimate);
+    h *= calcStepSizeScaling();
 
     // If step size becomes too small the particle remains at the initial
     // place
@@ -339,8 +342,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;
-  // double std::sqrt is 3x faster than std::pow
-  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+  const double stepSizeScaling = calcStepSizeScaling();
   const double nextAccuracy = std::abs(h * stepSizeScaling);
   const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
   const double initialStepLength = std::abs(initialH);
