@@ -57,26 +57,26 @@ class ScoreBasedAmbiguityResolution {
     int outliersScoreWeight = 0;
     int otherScoreWeight = 0;
 
-    std::size_t minHits;
-    std::size_t maxHits;
-    std::size_t maxHoles;
-    std::size_t maxOutliers;
-    std::size_t maxSharedHits;
+    std::size_t minHits = 0;
+    std::size_t maxHits = 0;
+    std::size_t maxHoles = 0;
+    std::size_t maxOutliers = 0;
+    std::size_t maxSharedHits = 0;
 
     /// if true, the shared hits are considered as bad hits for this detector
-    bool sharedHitsFlag;
+    bool sharedHitsFlag = false;
 
-    std::size_t detectorId;
+    std::size_t detectorId = 0;
 
     /// a list of values from  0 to 1, the higher number of hits, higher value
     /// in the list is multiplied to ambuiguity score applied only if
     /// useAmbiguityFunction is true
-    std::vector<double> factorHits;
+    std::vector<double> factorHits = {1.0};
 
     /// a list of values from  0 to 1, the higher number of holes, lower value
     /// in the list is multiplied to ambuiguity score applied only if
     /// useAmbiguityFunction is true
-    std::vector<double> factorHoles;
+    std::vector<double> factorHoles = {1.0};
   };
 
   /// @brief  TrackFeatures struct : contains the features that are counted for each track.
@@ -131,8 +131,9 @@ class ScoreBasedAmbiguityResolution {
         double&)>;
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
+
+    /// applied only if useAmbiguityFunction is true
     std::vector<OptionalScoreModifier> ambiscores = {};
-    // applied only if useAmbiguityFunction is true
   };
   ScoreBasedAmbiguityResolution(
       const Config& cfg,
@@ -209,10 +210,10 @@ class ScoreBasedAmbiguityResolution {
   Config m_cfg;
 
   /// Logging instance
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger = nullptr;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const ;
 };
 
 }  // namespace Acts

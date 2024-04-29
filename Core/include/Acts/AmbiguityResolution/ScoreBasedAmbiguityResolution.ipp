@@ -18,6 +18,10 @@
 
 namespace Acts {
 
+const Logger& ScoreBasedAmbiguityResolution::logger() const {
+  return *m_logger;
+}
+
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
@@ -243,8 +247,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
         double p = 1. / log10(10. + 10. * track.chi2() / track.nDoF());
         if (p > 0) {
           score += p;
-        } else
+        } else {
           score -= 50;
+        }
       }
     } else {
       ACTS_VERBOSE("Using Ambiguity Scoring function");

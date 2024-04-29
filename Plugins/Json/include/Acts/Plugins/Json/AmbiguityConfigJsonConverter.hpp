@@ -21,7 +21,6 @@ namespace Acts {
 ///
 /// This class is used to convert the ScoreBasedAmbiguityResolutionCongig
 /// from JSON to C++
-
 class AmbiguityConfigJsonConverter {
   using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
 
