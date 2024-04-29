@@ -35,8 +35,8 @@ BOOST_DATA_TEST_CASE(fastInverseSqrt, expDist ^ bdata::xrange(100), exp, i) {
   CHECK_CLOSE_REL(stdDouble, fastDouble, 0.01);
 }
 
-BOOST_DATA_TEST_CASE(fastPow, expDist ^ expDist ^ bdata::xrange(100), baseExp, exp,
-                     i) {
+BOOST_DATA_TEST_CASE(fastPow, expDist ^ expDist ^ bdata::xrange(100), baseExp,
+                     exp, i) {
   (void)i;
 
   const double base = std::pow(10, baseExp);
