@@ -153,8 +153,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state, const navigator_t& navigator) const {
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
-  double errorEstimate = 0.;
-  double h2 = 0, half_h = 0;
+
+  double errorEstimate = 0;
+  double h2 = 0;
+  double half_h = 0;
 
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
@@ -171,6 +173,24 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                                    sd.kQoP)) {
     return 0.;
   }
+
+  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
+    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    constexpr double lower = 0.25;
+    constexpr double upper = 4.0;
+
+    double x = state.options.stepTolerance / errorEstimate_;
+    // double std::sqrt is 3x faster than std::pow
+    x = std::sqrt(std::sqrt(x));
+    return std::clamp(x, lower, upper);
+  };
+
+  const auto isErrorTolerable = [&](const double errorEstimate_) {
+    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    constexpr double marginFactor = 4.0;
+
+    return errorEstimate_ <= marginFactor * state.options.stepTolerance;
+  };
 
   // The following functor starts to perform a Runge-Kutta step of a certain
   // size, going up to the point where it can return an estimate of the local
@@ -223,7 +243,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // Protect against division by zero
     errorEstimate = std::max(1e-20, errorEstimate);
 
-    return success(errorEstimate <= state.options.stepTolerance);
+    return success(isErrorTolerable(errorEstimate));
   };
 
   const double initialH =
@@ -241,11 +261,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    // double std::sqrt is 3x faster than std::pow
-    const double stepSizeScaling =
-        std::clamp(std::sqrt(std::sqrt(state.options.stepTolerance /
-                                       (2. * errorEstimate))),
-                   0.25, 4.0);
+    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
     state.stepping.stepSize.setAccuracy(h);
 
@@ -329,14 +345,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   state.stepping.pathAccumulated += h;
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
-  // Try to scale the step size up if it was not reduced and the error is small
-  // enough
-  if (h == initialH && errorEstimate < state.options.stepTolerance) {
-    // double std::sqrt is 3x faster than std::pow
-    const double stepSizeScaling = std::min(
-        4.0, std::sqrt(std::sqrt(state.options.stepTolerance / errorEstimate)));
-    state.stepping.stepSize.setAccuracy(h * stepSizeScaling);
-  }
+  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+  state.stepping.stepSize.setAccuracy(h * stepSizeScaling);
 
   return h;
 }
