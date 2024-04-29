@@ -87,7 +87,8 @@ Acts::fieldMapRZ(
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
-        std::size_t n = std::abs(int(j) - int(zPos.size()));
+        std::size_t n =
+            std::abs(static_cast<int>(j) - static_cast<int>(zPos.size()));
         Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
 
         grid.atLocalBins(indices) =
@@ -213,9 +214,12 @@ Acts::fieldMapXYZ(
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
-          std::size_t m = std::abs(int(i) - (int(xPos.size())));
-          std::size_t n = std::abs(int(j) - (int(yPos.size())));
-          std::size_t l = std::abs(int(k) - (int(zPos.size())));
+          std::size_t m =
+              std::abs(static_cast<int>(i) - (static_cast<int>(xPos.size())));
+          std::size_t n =
+              std::abs(static_cast<int>(j) - (static_cast<int>(yPos.size())));
+          std::size_t l =
+              std::abs(static_cast<int>(k) - (static_cast<int>(zPos.size())));
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
           grid.atLocalBins(indices) =

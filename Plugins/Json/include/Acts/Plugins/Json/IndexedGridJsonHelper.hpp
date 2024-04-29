@@ -89,7 +89,8 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
   /// Helper extractor for variable axis
   /// @param jAxis the axis
   auto vExtractor = [](const nlohmann::json& jAxis) -> std::vector<ActsScalar> {
-    return std::vector<ActsScalar>(jAxis["boundaries"]);
+    std::vector<ActsScalar> vEx(jAxis["boundaries"]);
+    return vEx;
   };
 
   // Peek into the json object to understand what to do

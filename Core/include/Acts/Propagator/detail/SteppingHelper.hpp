@@ -36,7 +36,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
     const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
-               << surface.geometryId() << " index " << (int)index);
+               << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),

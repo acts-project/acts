@@ -312,7 +312,8 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
               Acts::AngleAxis3(-stereo, Acts::Vector3::UnitZ());
         }
         // count the modules
-        Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
+        Identifier moduleIdentifier =
+            Identifier{static_cast<identifier_type>(imodule++)};
         // Finalize the transform
         auto moduleTransform = std::const_pointer_cast<const Acts::Transform3>(
             mutableModuleTransform);
@@ -329,7 +330,8 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         // and the backside one (if configured to do so)
         if (!m_cfg.centralModuleBacksideGap.empty()) {
           // create the module identifier
-          moduleIdentifier = Identifier(identifier_type(imodule++));
+          moduleIdentifier =
+              Identifier{static_cast<identifier_type>(imodule++)};
           Acts::Vector3 bsModuleCenter =
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
@@ -504,7 +506,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                   Acts::Translation3(moduleCenter) * moduleRotation);
 
           // create the modules identifier
-          Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
+          Identifier moduleIdentifier =
+              Identifier{static_cast<identifier_type>(imodule++)};
 
           // create the module
           auto module = std::make_shared<detector_element_t>(
@@ -515,7 +518,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           // now deal with the potential backside
           if (!m_cfg.posnegModuleBacksideGap.empty()) {
             // increase the counter
-            moduleIdentifier = Identifier(identifier_type(imodule++));
+            moduleIdentifier =
+                Identifier{static_cast<identifier_type>(imodule++)};
             // the new centers
             moduleCenter =
                 moduleCenter +

@@ -85,7 +85,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
     // phi will be saved for later
     Acts::ActsScalar phi = detail::radian_pos(std::atan2(sp.y(), sp.x()));
     std::uint32_t phislice =
-        (std::uint32_t)(phi / (2 * M_PI) * m_cfg.numPhiSlices);
+        static_cast<std::uint32_t>(phi / (2 * M_PI) * m_cfg.numPhiSlices);
     if (phislice >= m_cfg.numPhiSlices) {
       phislice = 0;
     }
@@ -93,7 +93,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
     if (std::abs(sp.z()) >= m_cfg.maxAbsZ) {
       continue;
     }
-    std::uint32_t zslice = (std::uint32_t)(
+    std::uint32_t zslice = static_cast<std::uint32_t>(
         (sp.z() + m_cfg.maxAbsZ) / (2 * m_cfg.maxAbsZ) * m_cfg.numZSlices);
 
     // input spacepoint is sorted into one subset
@@ -104,7 +104,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
           continue;
         }
         sortedSpacepoints.addSP(0, phislice, zslice)
-            .emplace_back((spacepoint_t const*)&sp, phi);
+            .emplace_back(static_cast<spacepoint_t const*>(&sp), phi);
       }
     } else if (sp.r() < m_cfg.rMinFar) {
       if (sp.r() < m_cfg.rMaxMiddle) {
@@ -113,11 +113,11 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
           continue;
         }
         sortedSpacepoints.addSP(1, phislice, zslice)
-            .emplace_back((spacepoint_t const*)&sp, phi);
+            .emplace_back(static_cast<spacepoint_t const*>(&sp), phi);
       }
     } else if (sp.r() < m_cfg.rMaxFar) {
       sortedSpacepoints.addSP(2, phislice, zslice)
-          .emplace_back((spacepoint_t const*)&sp, phi);
+          .emplace_back(static_cast<spacepoint_t const*>(&sp), phi);
     }
   }
 
@@ -132,7 +132,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
   std::vector<Acts::SingleSeedVertexFinder<spacepoint_t>::Triplet> triplets;
 
   std::uint32_t phiStep =
-      (std::uint32_t)(m_cfg.maxPhideviation / (2 * M_PI / m_cfg.numPhiSlices)) +
+      static_cast<std::uint32_t>(m_cfg.maxPhideviation /
+                                 (2 * M_PI / m_cfg.numPhiSlices)) +
       1;
 
   // calculate limits for middle spacepoints
@@ -168,13 +169,13 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
 
   // limits in terms of slice numbers
   std::uint32_t limitMiddleSliceFrom =
-      (std::uint32_t)((-maxZMiddle + m_cfg.maxAbsZ) / zBinLength);
+      static_cast<std::uint32_t>((-maxZMiddle + m_cfg.maxAbsZ) / zBinLength);
   std::uint32_t limitMiddleSliceTo =
-      (std::uint32_t)((maxZMiddle + m_cfg.maxAbsZ) / zBinLength + 1);
-  std::uint32_t limitAbsZSliceFrom = (std::uint32_t)(
+      static_cast<std::uint32_t>((maxZMiddle + m_cfg.maxAbsZ) / zBinLength + 1);
+  std::uint32_t limitAbsZSliceFrom = static_cast<std::uint32_t>(
       (-m_cfg.maxZPosition + m_cfg.maxAbsZ) / zBinLength + 0.01);
-  std::uint32_t limitAbsZSliceTo =
-      (std::uint32_t)((m_cfg.maxZPosition + m_cfg.maxAbsZ) / zBinLength + 1.01);
+  std::uint32_t limitAbsZSliceTo = static_cast<std::uint32_t>(
+      (m_cfg.maxZPosition + m_cfg.maxAbsZ) / zBinLength + 1.01);
 
   for (std::uint32_t middleZ = limitMiddleSliceFrom;
        middleZ < limitMiddleSliceTo; ++middleZ) {
@@ -195,8 +196,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     if (angleZfrom < M_PI) {
       Acts::ActsScalar new_deltaZfrom =
           rMiddle[isLessFrom] / std::tan(angleZfrom) / zBinLength;
-      nearZFrom = (std::uint32_t)std::max(
-          new_deltaZfrom * rNearRatio[isLessFrom] + limitAbsZSliceFrom, 0.);
+      nearZFrom = static_cast<std::uint32_t>(std::max(
+          new_deltaZfrom * rNearRatio[isLessFrom] + limitAbsZSliceFrom, 0.));
     }
 
     bool isLessTo = (middleZ < limitAbsZSliceTo);
@@ -207,8 +208,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     if (angleZto > 0) {
       Acts::ActsScalar new_deltaZto =
           rMiddle[!isLessTo] / std::tan(angleZto) / zBinLength;
-      nearZTo = (std::uint32_t)std::max(
-          new_deltaZto * rNearRatio[!isLessTo] + limitAbsZSliceTo, 0.);
+      nearZTo = static_cast<std::uint32_t>(std::max(
+          new_deltaZto * rNearRatio[!isLessTo] + limitAbsZSliceTo, 0.));
       if (nearZTo > m_cfg.numZSlices) {
         nearZTo = m_cfg.numZSlices;
       }
@@ -225,10 +226,10 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
           m_cfg.maxXYZdeviation;
       std::uint32_t farZFrom = 0;
       if (angle2Zfrom < M_PI) {
-        farZFrom = (std::uint32_t)std::max(
+        farZFrom = static_cast<std::uint32_t>(std::max(
             (rFarDelta[isMiddleLess] / std::tan(angle2Zfrom) / zBinLength) +
                 middleZ,
-            0.);
+            0.));
         if (farZFrom >= m_cfg.numZSlices) {
           continue;
         }
@@ -241,10 +242,10 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
           m_cfg.maxXYZdeviation;
       std::uint32_t farZTo = m_cfg.numZSlices;
       if (angle2Zto > 0) {
-        farZTo = (std::uint32_t)std::max(
+        farZTo = static_cast<std::uint32_t>(std::max(
             (rFarDelta[!isMiddleLess] / std::tan(angle2Zto) / zBinLength) +
                 middleZ + 1,
-            0.);
+            0.));
         if (farZTo > m_cfg.numZSlices) {
           farZTo = m_cfg.numZSlices;
         } else if (farZTo == 0) {
@@ -467,8 +468,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromPlanes(
                   return lhs.second < rhs.second;
                 });
 
-      std::uint32_t threshold = (std::uint32_t)(tripletsWithPlanes.size() *
-                                                (1. - m_cfg.removeFraction));
+      std::uint32_t threshold = static_cast<std::uint32_t>(
+          tripletsWithPlanes.size() * (1. - m_cfg.removeFraction));
 
       for (std::uint32_t tr = threshold + 1; tr < tripletsWithPlanes.size();
            ++tr) {
@@ -575,8 +576,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromRays(
                   return lhs.second < rhs.second;
                 });
 
-      std::uint32_t threshold = (std::uint32_t)(tripletsWithRays.size() *
-                                                (1. - m_cfg.removeFraction));
+      std::uint32_t threshold = static_cast<std::uint32_t>(
+          tripletsWithRays.size() * (1. - m_cfg.removeFraction));
 
       for (std::uint32_t tr = threshold + 1; tr < tripletsWithRays.size();
            ++tr) {
