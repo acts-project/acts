@@ -140,7 +140,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   // (2) surface grid section
   nlohmann::json jSurfaceGrids;
   nlohmann::json jSurfaceGridsData;
-  nlohmann::json jSurfaceGridsCollection;
+  nlohmann::json jSurfaceGridsInfoCollection;
   nlohmann::json jSurfaceGridsHeader;
   for (const auto [iv, volume] : enumerate(volumes)) {
     // And its surface navigation delegates
@@ -151,7 +151,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     }
     // Patch axes for cylindrical grid surfaces, axes are swapped
     // at this point
-    auto jAccLink = jSurfacesDelegate["acc_link"];
+    auto jAccLink = jSurfacesDelegate["grid_link"];
     std::size_t accLinkType = jAccLink["type"];
     if (accLinkType == 4u) {
       // Radial value to transfer phi to rphi
@@ -166,16 +166,23 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
       // Write back the patches axis edges
       jSurfacesDelegate["axes"][0u]["edges"] = jAxesEdges;
     }
+
     // Colplete the grid json for detray usage
-    jSurfacesDelegate["volume_link"] = iv;
+    jSurfacesDelegate["owner_link"] = iv;
     // jSurfacesDelegate["acc_link"] =
+    nlohmann::json jSurfaceGridsCollection;
     jSurfaceGridsCollection.push_back(jSurfacesDelegate);
+
+    nlohmann::json jSurfaceGridsInfo;
+    jSurfaceGridsInfo["volume_link"] = iv;
+    jSurfaceGridsInfo["grid_data"] = jSurfaceGridsCollection;
+    jSurfaceGridsInfoCollection.push_back(jSurfaceGridsInfo);
   }
-  jSurfaceGridsData["grids"] = jSurfaceGridsCollection;
+  jSurfaceGridsData["grids"] = jSurfaceGridsInfoCollection;
 
   jCommonHeader["tag"] = "surface_grids";
   jSurfaceGridsHeader["common"] = jCommonHeader;
-  jSurfaceGridsHeader["grid_count"] = jSurfaceGridsCollection.size();
+  jSurfaceGridsHeader["grid_count"] = jSurfaceGridsInfoCollection.size();
 
   jSurfaceGrids["header"] = jSurfaceGridsHeader;
   jSurfaceGrids["data"] = jSurfaceGridsData;

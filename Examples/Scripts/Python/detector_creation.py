@@ -58,7 +58,7 @@ if "__main__" == __name__:
     volumeOptions = acts.svg.DetectorVolumeOptions()
     volumeOptions.surfaceOptions = surfaceOptions
 
-    for ivol in range(detector.number_volumes()):
+    for ivol in range(detector.numberVolumes()):
         acts.svg.viewDetector(
             geoContext,
             detector,
@@ -75,9 +75,9 @@ if "__main__" == __name__:
         geoContext,
         detector,
         "odd",
-        [[ivol, volumeOptions] for ivol in range(detector.number_volumes())],
+        [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
         [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
         "detector",
     )
 
-    # acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
