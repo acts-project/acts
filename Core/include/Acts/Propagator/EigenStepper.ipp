@@ -323,7 +323,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
   state.stepping.pathAccumulated += h;
   ++state.stepping.nSteps;
-  state.stepping.nStepTrials = nStepTrials;
+  state.stepping.nStepTrials += nStepTrials;
 
   // double std::sqrt is 3x faster than std::pow
   const double stepSizeScaling =

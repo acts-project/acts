@@ -1396,7 +1396,7 @@ class AtlasStepper {
 
     state.stepping.pathAccumulated += h;
     ++state.stepping.nSteps;
-    state.stepping.nStepTrials = nStepTrials;
+    state.stepping.nStepTrials += nStepTrials;
 
     return h;
   }
