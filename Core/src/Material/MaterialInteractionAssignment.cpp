@@ -21,6 +21,7 @@ Acts::MaterialInteractionAssignment::assign(
   // Return container: The unassigned materials
   std::vector<MaterialInteraction> unassignedMaterialInteractions;
 
+  // Check for empty intersection
   if (intersectedSurfaces.empty()) {
     unassignedMaterialInteractions = materialInteractions;
     return {assignedMaterialInteractions, unassignedMaterialInteractions, {}};
@@ -45,6 +46,8 @@ Acts::MaterialInteractionAssignment::assign(
     if (veto) {
       continue;
     }
+
+    // Walk along the sorted intersections
     auto [cSurface, cPosition, cDirection] = intersectedSurfaces[is];
     ActsScalar cDistance = (cPosition - materialInteraction.position).norm();
 
