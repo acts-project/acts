@@ -300,6 +300,14 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
     Acts::Experimental::GeometryIdGenerator::Config geoIdCfg;
     geoIdGenerator =
         std::make_shared<Acts::Experimental::GeometryIdGenerator>(geoIdCfg);
+  } else if (geoIdGen == "container") {
+    aux[2u] = "geo_id gen. : container";
+    Acts::Experimental::GeometryIdGenerator::Config geoIdCfg;
+    geoIdCfg.containerMode = true;
+    geoIdCfg.containerId =
+        Acts::getParamOr<int>(baseName + "_geo_id_base", dd4hepElement, 1);
+    geoIdGenerator =
+        std::make_shared<Acts::Experimental::GeometryIdGenerator>(geoIdCfg);
   }
 
   return std::make_tuple(internalsBuilder, rootsFinderBuilder, geoIdGenerator,
