@@ -47,6 +47,17 @@ if "__main__" == __name__:
     geoContext = acts.GeometryContext()
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
+    # OBJ style output
+    surfaces = []
+    for vol in detector.volumePtrs():
+        for surf in vol.surfacePtrs():
+            if surf.geometryId().sensitive() > 0:
+                surfaces.append(surf)
+    acts.examples.writeSurfacesObj(
+        surfaces, geoContext, [0, 120, 120], "odd-surfaces.obj"
+    )
+
+    # SVG style output
     surfaceStyle = acts.svg.Style()
     surfaceStyle.fillColor = [5, 150, 245]
     surfaceStyle.fillOpacity = 0.5
