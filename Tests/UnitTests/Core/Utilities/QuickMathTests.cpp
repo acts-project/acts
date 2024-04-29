@@ -35,16 +35,16 @@ BOOST_DATA_TEST_CASE(fastInverseSqrt, expDist ^ bdata::xrange(100), exp, i) {
   CHECK_CLOSE_REL(stdDouble, fastDouble, 0.01);
 }
 
-BOOST_DATA_TEST_CASE(fastPow, expDist ^ expDist ^ bdata::xrange(100), aExp, b,
+BOOST_DATA_TEST_CASE(fastPow, expDist ^ expDist ^ bdata::xrange(100), baseExp, exp,
                      i) {
   (void)i;
 
-  const double a = std::pow(10, aExp);
+  const double base = std::pow(10, baseExp);
 
-  const double fast = Acts::fastPow(a, b);
-  const double fastMorePrecise = Acts::fastPowMorePrecise(a, b);
+  const double fast = Acts::fastPow(base, exp);
+  const double fastMorePrecise = Acts::fastPowMorePrecise(base, exp);
 
-  const double std = std::pow(a, b);
+  const double std = std::pow(base, exp);
 
   CHECK_CLOSE_REL(fast, std, 0.15);
   CHECK_CLOSE_REL(fastMorePrecise, std, 0.1);

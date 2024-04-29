@@ -42,8 +42,8 @@ constexpr double fastPowAnother(double a, double b) {
 }
 
 // Some randomness & number crunching
-unsigned int ntests = 10;
-unsigned int nrepts = 10000;
+const unsigned int nTests = 10;
+const unsigned int nReps = 10000;
 
 BOOST_DATA_TEST_CASE(
     benchmark_pow_25,
@@ -54,8 +54,8 @@ BOOST_DATA_TEST_CASE(
     aExp, index) {
   (void)index;
 
-  double a = std::pow(10, aExp);
-  double b = 0.25;
+  const double base = std::pow(10, baseExp);
+  const double exp = 0.25;
 
   std::cout << std::endl
             << "Benchmarking a=" << a << ", b=" << b << "..." << std::endl;
