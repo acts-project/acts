@@ -637,7 +637,7 @@ int Sequencer::run() {
         joinPaths(m_cfg.outputDir, m_cfg.outputEventTimingFile);
     dfe::NamedTupleTsvWriter<EventTimingInfo> eventTimingWriter(eventTimingPath,
                                                                 4);
-    for (EventTimingInfo info : eventTimingData) {
+    for (const EventTimingInfo& info : eventTimingData) {
       eventTimingWriter.append(info);
     }
   }
