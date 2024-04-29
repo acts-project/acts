@@ -19,19 +19,6 @@
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
-namespace ScoreBasedAmbiguitySolver {
-// std::functions defined, to be used in the optional cuts.
-template <typename track_container_t, typename trajectory_t,
-          template <typename> class holder_t>
-using OptionalFilter = std::function<bool(
-    const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&)>;
-template <typename track_container_t, typename trajectory_t,
-          template <typename> class holder_t>
-using OptionalScoreModifier = std::function<void(
-    const Acts::TrackProxy<track_container_t, trajectory_t, holder_t, true>&,
-    double&)>;
-
-}  // namespace ScoreBasedAmbiguitySolver
 
 namespace Acts {
 
@@ -120,14 +107,14 @@ class ScoreBasedAmbiguityResolution {
   /// The optional cuts,weights and score are used to remove tracks that are not
   /// good enough, based on some criteria. Users are free to add their own cuts
   /// with the help of this struct.
-  template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t>
+  template <typename track_container_t, typename traj_t, 
+            template <typename> class holder_t,bool ReadOnly>
   struct Optional_cuts {
     using OptionalFilter = std::function<bool(
-        const Acts::TrackProxy<track_container_t, traj_t, holder_t, true>&)>;
+        const Acts::TrackProxy<track_container_t, traj_t, holder_t, ReadOnly>&)>;
 
     using OptionalScoreModifier = std::function<void(
-        const Acts::TrackProxy<track_container_t, traj_t, holder_t, true>&,
+        const Acts::TrackProxy<track_container_t, traj_t, holder_t, ReadOnly>&,
         double&)>;
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
@@ -155,7 +142,7 @@ class ScoreBasedAmbiguityResolution {
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality,
-      std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps)
+      std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps)
       const;
 
   /// Compute the score of each track.
@@ -165,12 +152,12 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t>
+            template <typename> class holder_t,bool ReadOnly>
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      const std::vector<std::map<std::size_t, TrackFeatures>>&
+      const std::vector<std::vector<TrackFeatures>>&
           trackFeaturesMaps,
-      const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts =
+      const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts =
           {}) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
@@ -183,7 +170,7 @@ class ScoreBasedAmbiguityResolution {
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<bool> getCleanedOutTracks(
       const std::vector<double>& trackScore,
-      const std::vector<std::map<std::size_t, TrackFeatures>>&
+      const std::vector<std::vector<TrackFeatures>>&
           trackFeaturesMaps,
       const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
       const;
@@ -197,13 +184,13 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t>
+            template <typename> class holder_t,bool ReadOnly>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
-      const std::vector<std::map<std::size_t, TrackFeatures>>&
+      const std::vector<std::vector<TrackFeatures>>&
           trackFeaturesMaps,
-      const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts =
+      const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>& optionalCuts =
           {}) const;
 
  private:

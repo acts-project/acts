@@ -30,8 +30,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality,
-    std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps)
-    const {
+    std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps) const {
   auto measurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
                          source_link_equality_t>(0, sourceLinkHash,
@@ -43,7 +42,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
   for (const auto& track : tracks) {
     std::vector<measurementTuple> measurementTuples;
-    std::map<std::size_t, TrackFeatures> trackFeaturesMap;
+    std::vector<TrackFeatures> trackFeaturesMap;
 
     for (auto ts : track.trackStatesReversed()) {
       auto* referenceSurfacePtr = &ts.referenceSurface();
@@ -102,13 +101,13 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 }
 
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+          template <typename> class holder_t, bool ReadOnly>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
-    const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts)
+    const std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps,
+    const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts)
     const {
-  std::vector<double> trackScore;
+  std::vector<double> trackScore(0, trackFeaturesMaps.size());
 
   int iTrack = 0;
 
@@ -178,13 +177,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
-      auto trackFeatures_it = trackFeaturesMap.find(detectorId);
-      if (trackFeatures_it == trackFeaturesMap.end()) {
-        ACTS_DEBUG("Detector " << detectorId
-                               << " not found in the trackFeaturesMap");
-        continue;
-      }
-      auto trackFeatures = trackFeatures_it->second;
+
+      auto trackFeatures = trackFeaturesMap[detectorId];
 
       ACTS_DEBUG("---> Found summary information");
       ACTS_DEBUG("---> Detector ID: " << detectorId);
@@ -224,13 +218,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
-        auto trackFeatures_it = trackFeaturesMap.find(detectorId);
-        if (trackFeatures_it == trackFeaturesMap.end()) {
-          ACTS_WARNING("Detector " << detectorId
-                                   << " not found in the trackFeaturesMap");
-          continue;
-        }
-        auto trackFeatures = trackFeatures_it->second;
+
+        auto trackFeatures = trackFeaturesMap[detectorId];
+
         score += trackFeatures.nHits * detector.hitsScoreWeight;
         score += trackFeatures.nHoles * detector.holesScoreWeight;
         score += trackFeatures.nOutliers * detector.outliersScoreWeight;
@@ -265,13 +255,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
-        auto trackFeatures_it = trackFeaturesMap.find(detectorId);
-        if (trackFeatures_it == trackFeaturesMap.end()) {
-          ACTS_WARNING("Detector " << detectorId
-                                   << " not found in the trackFeaturesMap");
-          continue;
-        }
-        auto trackFeatures = trackFeatures_it->second;
+
+        auto trackFeatures = trackFeaturesMap[detectorId];
 
         // choosing a scaling factor based on the number of hits in a track per
         // detector.
@@ -337,12 +322,12 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 }
 
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+          template <typename> class holder_t,bool ReadOnly>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
-    const std::vector<std::map<std::size_t, TrackFeatures>>& trackFeaturesMaps,
-    const Optional_cuts<track_container_t, traj_t, holder_t>& optionalCuts)
+    const std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps,
+    const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts)
     const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   // vector of trackFeaturesMaps. where each trackFeaturesMap contains the

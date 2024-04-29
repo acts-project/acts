@@ -110,14 +110,14 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
       measurementsPerTracks;
 
   std::vector<
-      std::map<std::size_t, Acts::ScoreBasedAmbiguityResolution::TrackFeatures>>
+      std::vector<Acts::ScoreBasedAmbiguityResolution::TrackFeatures>>
       trackFeaturesMaps;
   measurementsPerTracks = m_ambi.computeInitialState(
       tracks, &sourceLinkHash, &sourceLinkEquality, trackFeaturesMaps);
 
   Acts::ScoreBasedAmbiguityResolution::Optional_cuts<
       Acts::ConstVectorTrackContainer, Acts::ConstVectorMultiTrajectory,
-      std::shared_ptr>
+      std::shared_ptr, true>
       optionalCuts;
   optionalCuts.cuts.push_back(DoubleHolesFilter);
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
