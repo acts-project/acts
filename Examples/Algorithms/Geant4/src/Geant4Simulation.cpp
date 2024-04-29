@@ -269,22 +269,14 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     g4World->GetLogicalVolume()->SetFieldManager(m_fieldManager.get(), true);
   }
 
-  // An ACTS TrackingGeometry is provided, so simulation for sensitive
-  // detectors is turned on - they need to get matched first
-  if (cfg.trackingGeometry) {
+  // ACTS sensitive surfaces are provided, so hit creation is turned on
+  if (cfg.sensitiveSurfaceMapper != nullptr) {
     ACTS_INFO(
         "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
-
-    SensitiveSurfaceMapper::Config ssmCfg;
-    ssmCfg.trackingGeometry = cfg.trackingGeometry;
-    ssmCfg.volumeMappings = cfg.volumeMappings;
-    ssmCfg.materialMappings = cfg.materialMappings;
-
-    SensitiveSurfaceMapper sensitiveSurfaceMapper(
-        ssmCfg, m_logger->cloneWithSuffix("SensitiveSurfaceMapper"));
     int sCounter = 0;
-    sensitiveSurfaceMapper.remapSensitiveNames(
-        g4World, Acts::Transform3::Identity(), sCounter);
+    cfg.sensitiveSurfaceMapper->remapSensitiveNames(
+        Acts::GeometryContext{}, g4World, Acts::Transform3::Identity(),
+        sCounter);
 
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }
