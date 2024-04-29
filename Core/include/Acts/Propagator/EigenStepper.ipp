@@ -176,7 +176,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return 0.;
   }
 
-  const auto calcStepSizeScaling = [&](const double errorEstimate) -> double {
+  const auto calcStepSizeScaling = [&]() -> double {
     constexpr double lower = 0.25;
     constexpr double upper = 4.0;
     constexpr double exponent = 0.25;
