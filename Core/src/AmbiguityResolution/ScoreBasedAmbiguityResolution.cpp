@@ -185,7 +185,8 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
-      if (trackFeaturesVector[detectorId].nSharedHits > detector.maxSharedHits) {
+      if (trackFeaturesVector[detectorId].nSharedHits >
+          detector.maxSharedHits) {
         TrkCouldBeAccepted = false;
         break;
       }

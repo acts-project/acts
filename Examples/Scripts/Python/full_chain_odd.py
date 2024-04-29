@@ -76,6 +76,7 @@ parser.add_argument(
     "--SolverType",
     help="Set which ambiguity solver to use, default is the classical one",
     type=str,
+    choices=["ML", "ScoreBased", "classical"],
     default="classical",
 )
 parser.add_argument(

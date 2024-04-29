@@ -36,8 +36,9 @@ ScoreBasedAmbiguityResolution::computeInitialState(
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
-  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
-
+  int numberOfTracks = tracks.size();
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack(
+      numberOfTracks);
   ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
@@ -105,8 +106,8 @@ template <typename track_container_t, typename traj_t,
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts)
-    const {
+    const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+        optionalCuts) const {
   std::vector<double> trackScore(0, trackFeaturesVectors.size());
 
   int iTrack = 0;
@@ -118,41 +119,41 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
     const auto trackFeaturesVector =
-        trackFeaturesVectors[iTrack];  // get the trackFeatures map for the track
+        trackFeaturesVectors[iTrack];  // get the trackFeatures map for the
+                                       // track
     double score = 1;
+    auto pT = Acts::VectorHelpers::perp(track.momentum());
+    auto eta = Acts::VectorHelpers::eta(track.momentum());
+    auto phi = Acts::VectorHelpers::phi(track.momentum());
     // cuts on pT
-    if (Acts::VectorHelpers::perp(track.momentum()) > m_cfg.pTMax ||
-        Acts::VectorHelpers::perp(track.momentum()) < m_cfg.pTMin) {
+    if (pT < m_cfg.pTMin || pT > m_cfg.pTMax) {
       score = 0;
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to pT cuts --- pT = "
-                           << Acts::VectorHelpers::perp(track.momentum()));
+                           << " has score = 0, due to pT cuts --- pT = " << pT);
       continue;
     }
 
     // cuts on phi
-    if (Acts::VectorHelpers::phi(track.momentum()) > m_cfg.phiMax ||
-        Acts::VectorHelpers::phi(track.momentum()) < m_cfg.phiMin) {
+    if (phi > m_cfg.phiMax || phi < m_cfg.phiMin) {
       score = 0;
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack
                            << " has score = 0, due to phi cuts --- phi =  "
-                           << Acts::VectorHelpers::phi(track.momentum()));
+                           << phi);
       continue;
     }
 
     // cuts on eta
-    if (Acts::VectorHelpers::eta(track.momentum()) > m_cfg.etaMax ||
-        Acts::VectorHelpers::eta(track.momentum()) < m_cfg.etaMin) {
+    if (eta > m_cfg.etaMax || eta < m_cfg.etaMin) {
       score = 0;
       iTrack++;
       trackScore.push_back(score);
       ACTS_DEBUG("Track: " << iTrack
                            << " has score = 0, due to eta cuts --- eta =  "
-                           << Acts::VectorHelpers::eta(track.momentum()));
+                           << eta);
       continue;
     }
 
@@ -244,7 +245,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     } else {
       ACTS_VERBOSE("Using Ambiguity Scoring function");
 
-      double pT = Acts::VectorHelpers::perp(track.momentum());
       // start with larger score for tracks with higher pT.
       score = log10(pT / UnitConstants::MeV) - 1.;
       // pT in GeV, hence 100 MeV is minimum and gets score = 1
@@ -322,13 +322,13 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 }
 
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t,bool ReadOnly>
+          template <typename> class holder_t, bool ReadOnly>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts)
-    const {
+    const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+        optionalCuts) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
   // number of hits/hole/outliers for each detector in a track.
@@ -336,8 +336,8 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<double> trackScore =
       simpleScore(tracks, trackFeaturesVectors, optionalCuts);
 
-  std::vector<bool> cleanTracks =
-      getCleanedOutTracks(trackScore, trackFeaturesVectors, measurementsPerTrack);
+  std::vector<bool> cleanTracks = getCleanedOutTracks(
+      trackScore, trackFeaturesVectors, measurementsPerTrack);
 
   ACTS_VERBOSE("Number of clean tracks: " << cleanTracks.size());
   ACTS_VERBOSE("Min score: " << m_cfg.minScore);

@@ -107,11 +107,12 @@ class ScoreBasedAmbiguityResolution {
   /// The optional cuts,weights and score are used to remove tracks that are not
   /// good enough, based on some criteria. Users are free to add their own cuts
   /// with the help of this struct.
-  template <typename track_container_t, typename traj_t, 
-            template <typename> class holder_t,bool ReadOnly>
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t, bool ReadOnly>
   struct Optional_cuts {
-    using OptionalFilter = std::function<bool(
-        const Acts::TrackProxy<track_container_t, traj_t, holder_t, ReadOnly>&)>;
+    using OptionalFilter =
+        std::function<bool(const Acts::TrackProxy<track_container_t, traj_t,
+                                                  holder_t, ReadOnly>&)>;
 
     using OptionalScoreModifier = std::function<void(
         const Acts::TrackProxy<track_container_t, traj_t, holder_t, ReadOnly>&,
@@ -142,8 +143,7 @@ class ScoreBasedAmbiguityResolution {
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality,
-      std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors)
-      const;
+      std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const;
 
   /// Compute the score of each track.
   ///
@@ -152,13 +152,12 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t,bool ReadOnly>
+            template <typename> class holder_t, bool ReadOnly>
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      const std::vector<std::vector<TrackFeatures>>&
-          trackFeaturesVectors,
-      const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts =
-          {}) const;
+      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
+      const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+          optionalCuts = {}) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
@@ -170,8 +169,7 @@ class ScoreBasedAmbiguityResolution {
   /// @return a vector of IDs of the tracks we want to keep
   std::vector<bool> getCleanedOutTracks(
       const std::vector<double>& trackScore,
-      const std::vector<std::vector<TrackFeatures>>&
-          trackFeaturesVectors,
+      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
       const;
 
@@ -184,14 +182,13 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t,bool ReadOnly>
+            template <typename> class holder_t, bool ReadOnly>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
-      const std::vector<std::vector<TrackFeatures>>&
-          trackFeaturesVectors,
-      const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>& optionalCuts =
-          {}) const;
+      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
+      const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+          optionalCuts = {}) const;
 
  private:
   Config m_cfg;
@@ -200,7 +197,7 @@ class ScoreBasedAmbiguityResolution {
   std::unique_ptr<const Logger> m_logger = nullptr;
 
   /// Private access to logging instance
-  const Logger& logger() const ;
+  const Logger& logger() const;
 };
 
 }  // namespace Acts
