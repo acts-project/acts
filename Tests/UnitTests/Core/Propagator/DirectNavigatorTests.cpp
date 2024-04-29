@@ -78,7 +78,7 @@ bool referenceTiming = false;
 bool oversteppingTest = false;
 double oversteppingMaxStepSize = 1_mm;
 
-/// The actual test nethod that runs the test
+/// The actual test method that runs the test
 /// can be used with several propagator types
 ///
 /// @tparam rpropagator_t is the reference propagator type
@@ -155,6 +155,9 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;
     dCollector.selector.selectMaterial = true;
+    // Counteract the overstepping
+    dOptions.maxStepSize = 30_mm;
+    dOptions.maxSteps = 10000;
 
     // Now redo the propagation with the direct propagator
     const auto& ddResult =
