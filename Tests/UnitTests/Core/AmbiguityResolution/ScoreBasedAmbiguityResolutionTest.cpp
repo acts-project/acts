@@ -105,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   for (std::size_t i = 0; i < measurementsPerTrack.size(); i++) {
     TrackSore.push_back(60 + 40 * i);
   }
-  std::vector<std::vector<TrackFeatures>> trackFeaturesMaps = {
+  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors = {
       {{0, 14, 0, 0}, {0, 2, 0, 0}},
       {{0, 15, 0, 0}, {0, 2, 0, 0}},
       {{0, 17, 0, 0}, {0, 2, 0, 0}},
@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
 
   // Call the function under testBOOST_FIXTURE_TEST_CASE
   std::vector<bool> cleanTracks = tester.getCleanedOutTracks(
-      TrackSore, trackFeaturesMaps, measurementsPerTrack);
+      TrackSore, trackFeaturesVectors, measurementsPerTrack);
 
   // Assert the expected results
   BOOST_CHECK_EQUAL(measurementsPerTrack.size(), 5);

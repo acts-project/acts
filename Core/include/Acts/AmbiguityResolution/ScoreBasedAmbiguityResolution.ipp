@@ -30,7 +30,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality,
-    std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps) const {
+    std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const {
   auto measurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
                          source_link_equality_t>(0, sourceLinkHash,
@@ -42,7 +42,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
   for (const auto& track : tracks) {
     std::vector<measurementTuple> measurementTuples;
-    std::vector<TrackFeatures> trackFeaturesMap;
+    std::vector<TrackFeatures> trackFeaturesVector;
 
     for (auto ts : track.trackStatesReversed()) {
       auto* referenceSurfacePtr = &ts.referenceSurface();
@@ -63,9 +63,9 @@ ScoreBasedAmbiguityResolution::computeInitialState(
         ACTS_DEBUG("Track state type is MeasurementFlag");
 
         if (ts.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
-          trackFeaturesMap[detectorId].nSharedHits++;
+          trackFeaturesVector[detectorId].nSharedHits++;
         }
-        trackFeaturesMap[detectorId].nHits++;
+        trackFeaturesVector[detectorId].nHits++;
 
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(
@@ -78,7 +78,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
         ACTS_DEBUG("Track state type is OutlierFlag");
-        trackFeaturesMap[detectorId].nOutliers++;
+        trackFeaturesVector[detectorId].nOutliers++;
 
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(
@@ -90,11 +90,11 @@ ScoreBasedAmbiguityResolution::computeInitialState(
             std::make_tuple(emplace.first->second, iVolume, isoutliner));
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
         ACTS_DEBUG("Track state type is HoleFlag");
-        trackFeaturesMap[detectorId].nHoles++;
+        trackFeaturesVector[detectorId].nHoles++;
       }
     }
     measurementsPerTrack.push_back(std::move(measurementTuples));
-    trackFeaturesMaps.push_back(std::move(trackFeaturesMap));
+    trackFeaturesVectors.push_back(std::move(trackFeaturesVector));
   }
 
   return measurementsPerTrack;
@@ -104,10 +104,10 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, bool ReadOnly>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    const std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps,
+    const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
     const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts)
     const {
-  std::vector<double> trackScore(0, trackFeaturesMaps.size());
+  std::vector<double> trackScore(0, trackFeaturesVectors.size());
 
   int iTrack = 0;
 
@@ -117,8 +117,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
-    const auto trackFeaturesMap =
-        trackFeaturesMaps[iTrack];  // get the trackFeatures map for the track
+    const auto trackFeaturesVector =
+        trackFeaturesVectors[iTrack];  // get the trackFeatures map for the track
     double score = 1;
     // cuts on pT
     if (Acts::VectorHelpers::perp(track.momentum()) > m_cfg.pTMax ||
@@ -178,7 +178,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
 
-      auto trackFeatures = trackFeaturesMap[detectorId];
+      auto trackFeatures = trackFeaturesVector[detectorId];
 
       ACTS_DEBUG("---> Found summary information");
       ACTS_DEBUG("---> Detector ID: " << detectorId);
@@ -219,7 +219,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
 
-        auto trackFeatures = trackFeaturesMap[detectorId];
+        auto trackFeatures = trackFeaturesVector[detectorId];
 
         score += trackFeatures.nHits * detector.hitsScoreWeight;
         score += trackFeatures.nHoles * detector.holesScoreWeight;
@@ -256,7 +256,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
 
-        auto trackFeatures = trackFeaturesMap[detectorId];
+        auto trackFeatures = trackFeaturesVector[detectorId];
 
         // choosing a scaling factor based on the number of hits in a track per
         // detector.
@@ -326,18 +326,18 @@ template <typename track_container_t, typename traj_t,
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
-    const std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps,
+    const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
     const Optional_cuts<track_container_t, traj_t, holder_t,ReadOnly>& optionalCuts)
     const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
-  // vector of trackFeaturesMaps. where each trackFeaturesMap contains the
+  // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
   // number of hits/hole/outliers for each detector in a track.
 
   std::vector<double> trackScore =
-      simpleScore(tracks, trackFeaturesMaps, optionalCuts);
+      simpleScore(tracks, trackFeaturesVectors, optionalCuts);
 
   std::vector<bool> cleanTracks =
-      getCleanedOutTracks(trackScore, trackFeaturesMaps, measurementsPerTrack);
+      getCleanedOutTracks(trackScore, trackFeaturesVectors, measurementsPerTrack);
 
   ACTS_VERBOSE("Number of clean tracks: " << cleanTracks.size());
   ACTS_VERBOSE("Min score: " << m_cfg.minScore);

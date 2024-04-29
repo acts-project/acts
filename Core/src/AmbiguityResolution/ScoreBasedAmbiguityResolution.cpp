@@ -15,7 +15,7 @@
 
 std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     const std::vector<double>& trackScore,
-    const std::vector<std::vector<TrackFeatures>>& trackFeaturesMaps,
+    const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
     const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
     const {
   std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
@@ -70,7 +70,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
-    auto trackFeaturesMap = trackFeaturesMaps[iTrack];
+    auto trackFeaturesVector = trackFeaturesVectors[iTrack];
 
     bool TrkCouldBeAccepted = true;
 
@@ -185,7 +185,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       auto detector = detector_it->second;
-      if (trackFeaturesMap[detectorId].nSharedHits > detector.maxSharedHits) {
+      if (trackFeaturesVector[detectorId].nSharedHits > detector.maxSharedHits) {
         TrkCouldBeAccepted = false;
         break;
       }
