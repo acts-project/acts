@@ -121,7 +121,7 @@ class ScoreBasedAmbiguityResolution {
     std::vector<OptionalScoreModifier> weights = {};
 
     /// applied only if useAmbiguityFunction is true
-    std::vector<OptionalScoreModifier> ambiscores = {};
+    std::vector<OptionalScoreModifier> scores = {};
   };
   ScoreBasedAmbiguityResolution(
       const Config& cfg,

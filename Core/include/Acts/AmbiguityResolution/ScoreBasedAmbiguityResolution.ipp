@@ -236,7 +236,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
       // Adding the score based on the chi2/ndf
       if (track.chi2() > 0 && track.nDoF() > 0) {
-        double p = 1. / log10(10. + 10. * track.chi2() / track.nDoF());
+        double p = 1. / std::log10(10. + 10. * track.chi2() / track.nDoF());
         if (p > 0) {
           score += p;
         } else {
@@ -296,8 +296,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
                                    << "  New score now: " << score);
       }
 
-      for (const auto& ambiscore : optionalCuts.ambiscores) {
-        ambiscore(track, score);
+      for (const auto& scoreFunction : optionalCuts.scores) {
+        scoreFunction(track, score);
       }
 
       if (track.chi2() > 0 && track.nDoF() > 0) {
