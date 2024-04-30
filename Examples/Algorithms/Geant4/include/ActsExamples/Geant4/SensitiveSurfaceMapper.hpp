@@ -31,7 +31,7 @@ struct SensitiveCandidates {
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   /// Find the sensitive surfaces for a given position
   ///
-  /// This fullfills the concept of a SensitiveCandidates
+  /// This fulfills the concept of a SensitiveCandidates
   ///
   /// @param gctx the geometry context
   /// @param position the position to look for sensitive surfaces
