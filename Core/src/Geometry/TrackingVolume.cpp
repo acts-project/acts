@@ -99,7 +99,7 @@ void TrackingVolume::connectDenseBoundarySurfaces(
     for (auto& confDenseVol : confinedDenseVolumes) {
       // Walk over each boundary surface of the volume
       auto& boundSur = confDenseVol->boundarySurfaces();
-      for (unsigned int i = 0; i < boundSur.size(); i++) {
+      for (std::size_t i = 0; i < boundSur.size(); i++) {
         // Skip empty entries since we do not know the shape of the dense volume
         // and therewith the used indices
         if (boundSur.at(i) == nullptr) {
@@ -124,7 +124,8 @@ void TrackingVolume::connectDenseBoundarySurfaces(
         }
 
         // Update the boundary
-        confDenseVol->updateBoundarySurface((BoundarySurfaceFace)i, mutableBs);
+        confDenseVol->updateBoundarySurface(static_cast<BoundarySurfaceFace>(i),
+                                            mutableBs);
       }
       // Store the volume
       m_confinedDenseVolumes.push_back(std::move(confDenseVol));
