@@ -9,7 +9,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/detail/covariance_helper.hpp"
+#include "Acts/EventData/detail/CovarianceHelper.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
 #include <algorithm>
@@ -68,6 +68,21 @@ Result<void> GainMatrixSmoother::calculate(
       filteredCovariance(ts) +
       G * (smoothedCovariance(prev_ts) - predictedCovariance(prev_ts)) *
           G.transpose();
+
+  if (doCovCheckAndAttemptFix) {
+    // Check if the covariance matrix is semi-positive definite.
+    // If not, make one (could do more) attempt to replace it with the
+    // nearest semi-positive def matrix,
+    // but it could still be non semi-positive
+    BoundSquareMatrix smoothedCov = smoothedCovariance(ts);
+    if (!detail::CovarianceHelper<BoundSquareMatrix>::validate(smoothedCov)) {
+      ACTS_DEBUG(
+          "Smoothed covariance is not positive definite. Could result in "
+          "negative covariance!");
+    }
+    // Reset smoothed covariance
+    smoothedCovariance(ts) = smoothedCov;
+  }
 
   ACTS_VERBOSE("Smoothed covariance is: \n" << smoothedCovariance(ts));
 
