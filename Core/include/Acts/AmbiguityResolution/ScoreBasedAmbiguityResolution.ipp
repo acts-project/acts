@@ -36,14 +36,14 @@ ScoreBasedAmbiguityResolution::computeInitialState(
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
-  int numberOfTracks = tracks.size();
-  std::vector<std::vector<measurementTuple>> measurementsPerTrack(
-      numberOfTracks);
+  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
+  measurementsPerTrack.reserve(tracks.size());
   ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
+    int numberOfDetectors = m_cfg.detectorMap.size();
     std::vector<measurementTuple> measurementTuples;
-    std::vector<TrackFeatures> trackFeaturesVector;
+    std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (auto ts : track.trackStatesReversed()) {
       auto* referenceSurfacePtr = &ts.referenceSurface();
@@ -108,7 +108,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
     const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
         optionalCuts) const {
-  std::vector<double> trackScore(0, trackFeaturesVectors.size());
+  std::vector<double> trackScore;
+  trackScore.reserve(tracks.size());
 
   int iTrack = 0;
 
@@ -339,20 +340,22 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   std::vector<bool> cleanTracks = getCleanedOutTracks(
       trackScore, trackFeaturesVectors, measurementsPerTrack);
 
-  ACTS_VERBOSE("Number of clean tracks: " << cleanTracks.size());
-  ACTS_VERBOSE("Min score: " << m_cfg.minScore);
+
 
   std::vector<int> goodTracks;
+  int cleanTrackIndex = 0;
   std::size_t iTrack = 0;
   for (const auto& track : tracks) {
     if (cleanTracks[iTrack]) {
+      cleanTrackIndex++;
       if (trackScore[iTrack] >= m_cfg.minScore) {
         goodTracks.push_back(track.index());
       }
     }
     iTrack++;
   }
-
+  ACTS_VERBOSE("Number of clean tracks: " << cleanTrackIndex);
+  ACTS_VERBOSE("Min score: " << m_cfg.minScore);
   ACTS_INFO("Number of Good tracks: " << goodTracks.size());
   return goodTracks;
 }
