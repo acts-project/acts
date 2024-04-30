@@ -140,7 +140,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   // (2) surface grid section
   nlohmann::json jSurfaceGrids;
   nlohmann::json jSurfaceGridsData;
-  nlohmann::json jSurfaceGridsCollection;
+  nlohmann::json jSurfaceGridsInfoCollection;
   nlohmann::json jSurfaceGridsHeader;
   for (const auto [iv, volume] : enumerate(volumes)) {
     // And its surface navigation delegates
@@ -150,15 +150,21 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
       continue;
     }
     // Colplete the grid json for detray usage
-    jSurfacesDelegate["volume_link"] = iv;
+    jSurfacesDelegate["owner_link"] = iv;
     // jSurfacesDelegate["acc_link"] =
+    nlohmann::json jSurfaceGridsCollection;
     jSurfaceGridsCollection.push_back(jSurfacesDelegate);
+
+    nlohmann::json jSurfaceGridsInfo;
+    jSurfaceGridsInfo["volume_link"] = iv;
+    jSurfaceGridsInfo["grid_data"] = jSurfaceGridsCollection;
+    jSurfaceGridsInfoCollection.push_back(jSurfaceGridsInfo);
   }
-  jSurfaceGridsData["grids"] = jSurfaceGridsCollection;
+  jSurfaceGridsData["grids"] = jSurfaceGridsInfoCollection;
 
   jCommonHeader["tag"] = "surface_grids";
   jSurfaceGridsHeader["common"] = jCommonHeader;
-  jSurfaceGridsHeader["grid_count"] = jSurfaceGridsCollection.size();
+  jSurfaceGridsHeader["grid_count"] = jSurfaceGridsInfoCollection.size();
 
   jSurfaceGrids["header"] = jSurfaceGridsHeader;
   jSurfaceGrids["data"] = jSurfaceGridsData;
