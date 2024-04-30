@@ -120,7 +120,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
-    const auto trackFeaturesVector =
+    const auto& trackFeaturesVector =
         trackFeaturesVectors[iTrack];  // get the trackFeatures map for the
                                        // track
     double score = 1;
