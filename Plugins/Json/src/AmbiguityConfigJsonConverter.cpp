@@ -30,8 +30,7 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
 
   file >> j;
 
-  std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>
-      detectorConfigs;
+  std::vector<ScoreBasedAmbiguityResolution::DetectorConfig> detectorConfigs;
   std::map<std::size_t, std::size_t> volumeMap;
 
   for (auto& [key, value] : j.items()) {

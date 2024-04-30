@@ -216,8 +216,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       // Adding the score for each detector.
       // detector score is determined by the number of hits/hole/outliers *
       // hit/hole/outlier scoreWeights in a detector.
-      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
-           detectorId++) {
+      for (std::size_t detectorId = 0;
+           detectorId < m_cfg.detectorConfigs.size(); detectorId++) {
         const auto& detector = m_cfg.detectorConfigs.at(detectorId);
         const auto& trackFeatures = trackFeaturesVector[detectorId];
 
@@ -250,9 +250,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                       << "  New score now: " << score);
 
-      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
-           detectorId++) {
-            
+      for (std::size_t detectorId = 0;
+           detectorId < m_cfg.detectorConfigs.size(); detectorId++) {
         const auto& detector = m_cfg.detectorConfigs.at(detectorId);
 
         const auto& trackFeatures = trackFeaturesVector[detectorId];
