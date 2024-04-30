@@ -102,14 +102,14 @@ class ScoreBasedAmbiguityResolution {
     bool useAmbiguityFunction = false;
   };
 
-  /// @brief Optional_cuts struct : contains the optional cuts to be applied.
+  /// @brief OptionalCuts struct : contains the optional cuts to be applied.
   ///
   /// The optional cuts,weights and score are used to remove tracks that are not
   /// good enough, based on some criteria. Users are free to add their own cuts
   /// with the help of this struct.
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, bool ReadOnly>
-  struct Optional_cuts {
+  struct OptionalCuts {
     using OptionalFilter =
         std::function<bool(const Acts::TrackProxy<track_container_t, traj_t,
                                                   holder_t, ReadOnly>&)>;
@@ -156,7 +156,7 @@ class ScoreBasedAmbiguityResolution {
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+      const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
           optionalCuts = {}) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
@@ -187,7 +187,7 @@ class ScoreBasedAmbiguityResolution {
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+      const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
           optionalCuts = {}) const;
 
  private:

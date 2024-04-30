@@ -43,6 +43,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorMap.size();
     std::vector<measurementTuple> measurementTuples;
+    measurementTuples.reserve(track.trackStatesReversed().size());
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (auto ts : track.trackStatesReversed()) {
@@ -106,7 +107,7 @@ template <typename track_container_t, typename traj_t,
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+    const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
         optionalCuts) const {
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
@@ -247,7 +248,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       ACTS_VERBOSE("Using Ambiguity Scoring function");
 
       // start with larger score for tracks with higher pT.
-      score = log10(pT / UnitConstants::MeV) - 1.;
+      score = std::log10(pT / UnitConstants::MeV) - 1.;
       // pT in GeV, hence 100 MeV is minimum and gets score = 1
       ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                       << "  New score now: " << score);
@@ -303,7 +304,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       if (track.chi2() > 0 && track.nDoF() > 0) {
         double chi2 = track.chi2();
         int indf = track.nDoF();
-        double fac = 1. / log10(10. + 10. * chi2 / indf);
+        double fac = 1. / std::log10(10. + 10. * chi2 / indf);
         score = score * fac;
         ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
                                           << " is : " << fac
@@ -328,7 +329,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const Optional_cuts<track_container_t, traj_t, holder_t, ReadOnly>&
+    const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
         optionalCuts) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
@@ -339,8 +340,6 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
 
   std::vector<bool> cleanTracks = getCleanedOutTracks(
       trackScore, trackFeaturesVectors, measurementsPerTrack);
-
-
 
   std::vector<int> goodTracks;
   int cleanTrackIndex = 0;

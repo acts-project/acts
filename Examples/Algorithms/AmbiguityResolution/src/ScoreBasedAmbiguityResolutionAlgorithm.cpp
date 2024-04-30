@@ -114,7 +114,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   measurementsPerTracks = m_ambi.computeInitialState(
       tracks, &sourceLinkHash, &sourceLinkEquality, trackFeaturesVectors);
 
-  Acts::ScoreBasedAmbiguityResolution::Optional_cuts<
+  Acts::ScoreBasedAmbiguityResolution::OptionalCuts<
       Acts::ConstVectorTrackContainer, Acts::ConstVectorMultiTrajectory,
       std::shared_ptr, true>
       optionalCuts;
