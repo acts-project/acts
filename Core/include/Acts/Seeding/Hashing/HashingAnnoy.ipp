@@ -12,13 +12,12 @@
 #include <map>
 #include <set>
 #include <vector>
-
+namespace Acts::detail {
 bool LayerSelection(double r2, double z) {
   bool isInside = (r2 > 25 * 25 && r2 < 40 * 40) && (z > -550 && z < 550);
   return isInside;
 }
 
-namespace Acts {
 int GetBinIndex(double, double z, unsigned int zBins) {
   using Scalar = Acts::ActsScalar;
   Scalar binSize = 1100.0 / zBins;
@@ -32,7 +31,9 @@ int GetBinIndexPhi(double phi, unsigned int phiBins) {
   int binIndex = (int)((phi + M_PI) / binSize);
   return binIndex;
 }
+}  // namespace Acts::detail
 
+namespace Acts {
 template <typename external_spacepoint_t, typename SpacePointContainer>
 void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
     ComputeSpacePointsBuckets(
@@ -76,11 +77,11 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
       // Helix transform
       Scalar r2 = x * x + y * y;
 
-      if (!LayerSelection(r2, z)) {
+      if (!Acts::detail::LayerSelection(r2, z)) {
         continue;
       }
 
-      int binIndex = GetBinIndex(r2, z, zBins);
+      int binIndex = Acts::detail::GetBinIndex(r2, z, zBins);
       if (binIndex < 0 || (unsigned int)binIndex >= nBins) {
         throw std::runtime_error("binIndex outside of bins covering");
       }
@@ -109,13 +110,13 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
       // Helix transform
       Scalar r2 = x * x + y * y;
 
-      if (!LayerSelection(r2, z)) {
+      if (!Acts::detail::LayerSelection(r2, z)) {
         continue;
       }
 
       Scalar phi = atan2(y, x);
 
-      int binIndex = GetBinIndexPhi(phi, phiBins);
+      int binIndex = Acts::detail::GetBinIndexPhi(phi, phiBins);
       if (binIndex < 0 || (unsigned int)binIndex >= nBins) {
         throw std::runtime_error("binIndex outside of bins covering");
       }
