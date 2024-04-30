@@ -48,9 +48,8 @@ struct Fixture {
                         {20, 0}, {22, 1}, {23, 1}, {24, 1}};
 
     auto tempDetector = DetectorConfig();
-    std::map<std::size_t, DetectorConfig> detectorMap = {{0, tempDetector},
-                                                         {1, tempDetector}};
-    config.detectorMap = detectorMap;
+    std::vector<DetectorConfig> detectorConfigs = {tempDetector, tempDetector};
+    config.detectorConfigs = detectorConfigs;
 
     config.minScore = 0;
     config.minScoreSharedTracks = 100;

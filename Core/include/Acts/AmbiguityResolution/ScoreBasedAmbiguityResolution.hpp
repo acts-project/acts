@@ -79,7 +79,7 @@ class ScoreBasedAmbiguityResolution {
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
-    std::map<std::size_t, DetectorConfig> detectorMap;
+    std::vector<DetectorConfig> detectorConfigs;
     /// minimum score for any track
     double minScore = 0;
     /// minimum score for shared tracks

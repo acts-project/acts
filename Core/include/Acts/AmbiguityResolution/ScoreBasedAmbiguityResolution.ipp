@@ -39,7 +39,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
   ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
-    int numberOfDetectors = m_cfg.detectorMap.size();
+    int numberOfDetectors = m_cfg.detectorConfigs.size();
     int numberOfTrackStates = std::distance(track.trackStatesReversed().begin(),
                                             track.trackStatesReversed().end());
     std::vector<measurementTuple> measurementTuples;
@@ -114,7 +114,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   int iTrack = 0;
 
-  ACTS_VERBOSE("Number of detectors: " << m_cfg.detectorMap.size());
+  ACTS_VERBOSE("Number of detectors: " << m_cfg.detectorConfigs.size());
 
   ACTS_INFO("Starting to score tracks");
 
@@ -176,10 +176,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       continue;
     }
     // Reject tracks which didn't pass the detector cuts.
-    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
+    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
-      auto detector_it = m_cfg.detectorMap.find(detectorId);
-      const auto& detector = detector_it->second;
+      const auto& detector = m_cfg.detectorConfigs.at(detectorId);
 
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
@@ -217,11 +216,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       // Adding the score for each detector.
       // detector score is determined by the number of hits/hole/outliers *
       // hit/hole/outlier scoreWeights in a detector.
-      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
+      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
            detectorId++) {
-        auto detector_it = m_cfg.detectorMap.find(detectorId);
-        const auto& detector = detector_it->second;
-
+        const auto& detector = m_cfg.detectorConfigs.at(detectorId);
         const auto& trackFeatures = trackFeaturesVector[detectorId];
 
         score += trackFeatures.nHits * detector.hitsScoreWeight;
@@ -253,10 +250,10 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                       << "  New score now: " << score);
 
-      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
+      for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
            detectorId++) {
-        auto detector_it = m_cfg.detectorMap.find(detectorId);
-        const auto& detector = detector_it->second;
+            
+        const auto& detector = m_cfg.detectorConfigs.at(detectorId);
 
         const auto& trackFeatures = trackFeaturesVector[detectorId];
 

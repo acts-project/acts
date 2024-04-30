@@ -95,9 +95,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       }
 
       auto detectorId = volume_it->second;
-      auto detector_it = m_cfg.detectorMap.find(detectorId);
-      auto detector = detector_it->second;
-
+      auto detector = m_cfg.detectorConfigs.at(detectorId);
       if (isoutliner) {
         ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
         trackStateTypes[index] = Outlier;
@@ -137,7 +135,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     // trackStateTypes and other conditions.
     // Good measurements are copied to the newMeasurementsPerTrack vector.
     for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
-     auto& measurementTuples = measurementsPerTrack[iTrack][i];
+      auto& measurementTuples = measurementsPerTrack[iTrack][i];
       measurement = std::get<0>(measurementTuples);
 
       if (trackStateTypes[i] == RejectedHit) {
@@ -181,10 +179,9 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     }
 
     // Check if the track has too many shared hits to be accepted.
-    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
+    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
-      auto detector_it = m_cfg.detectorMap.find(detectorId);
-      auto detector = detector_it->second;
+      auto detector = m_cfg.detectorConfigs.at(detectorId);
       if (trackFeaturesVector[detectorId].nSharedHits >
           detector.maxSharedHits) {
         TrkCouldBeAccepted = false;

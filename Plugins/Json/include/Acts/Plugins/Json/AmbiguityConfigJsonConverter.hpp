@@ -25,7 +25,7 @@ class AmbiguityConfigJsonConverter {
  public:
   std::pair<
       std::map<std::size_t, std::size_t>,
-      std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>>
+      std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>>
   fromJson(const std::string&) const;
 };
 

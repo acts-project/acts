@@ -31,7 +31,7 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
 
   auto configPair = Acts::AmbiguityConfigJsonConverter().fromJson(configFile);
   result.volumeMap = configPair.first;
-  result.detectorMap = configPair.second;
+  result.detectorConfigs = configPair.second;
   result.minScore = cfg.minScore;
   result.minScoreSharedTracks = cfg.minScoreSharedTracks;
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;

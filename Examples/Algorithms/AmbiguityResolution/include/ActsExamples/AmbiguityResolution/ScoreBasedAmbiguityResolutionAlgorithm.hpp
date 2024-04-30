@@ -35,8 +35,8 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     /// Output track collection.
     std::string outputTracks;
 
-    std::map<std::size_t, Acts::ScoreBasedAmbiguityResolution::DetectorConfig>
-        detectorMap;
+    std::vector<Acts::ScoreBasedAmbiguityResolution::DetectorConfig>
+        detectorConfigs;
     std::map<std::size_t, std::size_t> volumeMap;
 
     // minimum score for any track
@@ -45,7 +45,7 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     double minScoreSharedTracks = 0;
 
     // configuration file for the detector map
-    std::string configFile = "detectorMap.json";
+    std::string configFile = "detectorConfigs.json";
 
     // maximum number of shared tracks per measurement
     std::size_t maxSharedTracksPerMeasurement = 10;

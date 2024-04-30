@@ -16,7 +16,7 @@
 namespace Acts {
 
 std::pair<std::map<std::size_t, std::size_t>,
-          std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>>
+          std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>>
 AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
   std::ifstream file(configFile);
   if (!file.is_open()) {
@@ -30,8 +30,8 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
 
   file >> j;
 
-  std::map<std::size_t, ScoreBasedAmbiguityResolution::DetectorConfig>
-      detectorMap;
+  std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>
+      detectorConfigs;
   std::map<std::size_t, std::size_t> volumeMap;
 
   for (auto& [key, value] : j.items()) {
@@ -63,7 +63,7 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
       detectorConfig.factorHoles.push_back(factor);
     }
 
-    detectorMap[detectorId] = detectorConfig;
+    detectorConfigs.push_back(detectorConfig);
 
     std::vector<std::size_t> volumesIds = value["volumesIds"];
     for (auto volumeId : volumesIds) {
@@ -71,7 +71,7 @@ AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
     }
   }
 
-  return std::make_pair(volumeMap, detectorMap);
+  return std::make_pair(volumeMap, detectorConfigs);
 }
 
 }  // namespace Acts
