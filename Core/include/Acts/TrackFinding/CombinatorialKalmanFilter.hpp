@@ -681,13 +681,19 @@ class CombinatorialKalmanFilter {
             tipState.nHoles++;
           }
 
+          // Transport the covariance to a curvilinear surface
+          stepper.transportCovarianceToCurvilinear(state.stepping);
+
           // Transport & bind the state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface);
-          if (!res.ok()) {
-            ACTS_ERROR("Error in filter: " << res.error());
-            return res.error();
+          auto boundStateRes =
+              stepper.boundState(state.stepping, *surface, false);
+          if (!boundStateRes.ok()) {
+            return boundStateRes.error();
           }
-          const auto boundState = *res;
+          auto& boundState = *boundStateRes;
+          auto& [boundParams, jacobian, pathLength] = boundState;
+          boundParams.covariance() = state.stepping.cov;
+
           // Add a hole or material track state to the multitrajectory
           currentTip = addNonSourcelinkState(stateMask, boundState, result,
                                              isSensitive, prevTip);
@@ -953,8 +959,6 @@ class CombinatorialKalmanFilter {
       // Set the surface
       trackStateProxy.setReferenceSurface(
           boundParams.referenceSurface().getSharedPtr());
-      // Set the filtered parameter index to be the same with predicted
-      // parameter
 
       // Set the track state flags
       auto typeFlags = trackStateProxy.typeFlags();
@@ -966,6 +970,8 @@ class CombinatorialKalmanFilter {
         typeFlags.set(TrackStateFlag::HoleFlag);
       }
 
+      // Set the filtered parameter index to be the same with predicted
+      // parameter
       trackStateProxy.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);
 

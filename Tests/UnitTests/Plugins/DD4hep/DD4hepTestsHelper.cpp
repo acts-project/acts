@@ -18,16 +18,15 @@ void DD4hepTestsHelper::decodeBinning(
     dd4hep::rec::VariantParameters& variantParams, const xml_comp_t& xmlBinning,
     const std::string& bname, const std::vector<std::string>& bvals) {
   // Set the surface binninng parameter to true
-  variantParams.set<int>(std::string(bname + "_dim"), bvals.size());
+  variantParams.set<int>(bname + "_dim", bvals.size());
   for (const auto& bv : bvals) {
     // Gather the number of bins, 0 indicates variable binning
-    int nBins = Acts::getAttrValueOr<int>(xmlBinning, std::string("n" + bv), 0);
+    int nBins = Acts::getAttrValueOr<int>(xmlBinning, "n" + bv, 0);
     // Gather the bin expansion parameter, expansion of 0 is default
-    int nExpansion =
-        Acts::getAttrValueOr<int>(xmlBinning, std::string(bv + "expansion"), 0);
+    int nExpansion = Acts::getAttrValueOr<int>(xmlBinning, bv + "expansion", 0);
     // Auto-range detection
-    bool autoRange = Acts::getAttrValueOr<bool>(
-        xmlBinning, std::string(bv + "autorange"), false);
+    bool autoRange =
+        Acts::getAttrValueOr<bool>(xmlBinning, bv + "autorange", false);
     variantParams.set<bool>(bname + "_" + bv + "_autorange", autoRange);
     variantParams.set<int>(bname + "_" + bv + "_exp", nExpansion);
     // Equidistant binning detected
@@ -40,17 +39,17 @@ void DD4hepTestsHelper::decodeBinning(
       if (!autoRange) {
         variantParams.set<double>(
             bname + "_" + bv + "_min",
-            xmlBinning.attr<double>(std::string(bv + "min").c_str()));
+            xmlBinning.attr<double>((bv + "min").c_str()));
         variantParams.set<double>(
             bname + "_" + bv + "_max",
-            xmlBinning.attr<double>(std::string(bv + "max").c_str()));
+            xmlBinning.attr<double>((bv + "max").c_str()));
       }
     } else {
       // Variable binning detected
       variantParams.set<std::string>(bname + "_" + bv + "_type", "variable");
       // Get the number of bins explicitly
       auto boundaries =
-          xmlBinning.attr<std::string>(std::string(bv + "boundaries").c_str());
+          xmlBinning.attr<std::string>((bv + "boundaries").c_str());
       std::string del = ",";
       auto end = boundaries.find(del);
       int ib = 0;

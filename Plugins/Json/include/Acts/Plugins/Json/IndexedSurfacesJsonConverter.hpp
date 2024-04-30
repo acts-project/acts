@@ -65,7 +65,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
       jAccLink["type"] =
           DetrayJsonHelper::accelerationLink(indexedSurfaces.casts);
       jAccLink["index"] = std::numeric_limits<std::size_t>::max();
-      jIndexedSurfaces["acc_link"] = jAccLink;
+      jIndexedSurfaces["grid_link"] = jAccLink;
     }
   }
 }

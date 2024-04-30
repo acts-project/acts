@@ -141,7 +141,7 @@ class GeometryHierarchyMap {
   /// Construct a mask where all leading non-zero levels are set.
   static constexpr Identifier makeLeadingLevelsMask(GeometryIdentifier id) {
     // construct id from encoded value with all bits set
-    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value(0u));
+    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value{0u});
     // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
       // all levels are valid; keep all bits set.
@@ -169,7 +169,7 @@ class GeometryHierarchyMap {
           .value();
     }
     // no valid levels; all bits are zero.
-    return Identifier(0u);
+    return Identifier{0u};
   }
   /// Construct a mask where only the highest level is set.
   static constexpr Identifier makeHighestLevelMask() {
@@ -278,7 +278,7 @@ inline auto GeometryHierarchyMap<value_t>::find(GeometryIdentifier id) const
     // the global default entry.
     if (!equalWithinMask(id.value(), m_ids[i], makeHighestLevelMask())) {
       // check if a global default entry exists
-      if (m_ids.front() == Identifier(0u)) {
+      if (m_ids.front() == Identifier{0u}) {
         return begin();
       } else {
         return end();
