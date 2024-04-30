@@ -12,6 +12,11 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 
+/*
+ * Note: This file has been modified to meet the needs of the ACTS projects and
+ * differs from the original provided by Spotify AB.
+ */
+
 #pragma once
 
 #ifndef ANNOY_ANNOYLIB_H

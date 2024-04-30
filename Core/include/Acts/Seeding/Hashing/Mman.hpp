@@ -3,6 +3,11 @@
 //
 // Licensed under MIT
 
+/*
+ * Note: This file has been modified to meet the needs of the ACTS projects and
+ * differs from the original provided by Spotify AB.
+ */
+
 #pragma once
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
