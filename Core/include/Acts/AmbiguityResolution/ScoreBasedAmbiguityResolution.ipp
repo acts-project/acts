@@ -46,7 +46,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     measurementTuples.reserve(numberOfTrackStates);
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
-    for (auto ts : track.trackStatesReversed()) {
+    for (const auto& ts : track.trackStatesReversed()) {
       auto* referenceSurfacePtr = &ts.referenceSurface();
       if (referenceSurfacePtr == nullptr) {
         ACTS_ERROR("Track state has no reference surface");
@@ -181,7 +181,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       auto detector_it = m_cfg.detectorMap.find(detectorId);
       const auto& detector = detector_it->second;
 
-      auto trackFeatures = trackFeaturesVector[detectorId];
+      const auto& trackFeatures = trackFeaturesVector[detectorId];
 
       ACTS_DEBUG("---> Found summary information");
       ACTS_DEBUG("---> Detector ID: " << detectorId);
@@ -220,7 +220,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
-        auto detector = detector_it->second;
+        const auto& detector = detector_it->second;
 
         const auto& trackFeatures = trackFeaturesVector[detectorId];
 
@@ -256,7 +256,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
            detectorId++) {
         auto detector_it = m_cfg.detectorMap.find(detectorId);
-        auto detector = detector_it->second;
+        const auto& detector = detector_it->second;
 
         const auto& trackFeatures = trackFeaturesVector[detectorId];
 
