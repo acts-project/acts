@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-const Logger& ScoreBasedAmbiguityResolution::logger() const {
+inline const Logger& ScoreBasedAmbiguityResolution::logger() const {
   return *m_logger;
 }
 
