@@ -156,6 +156,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     dCollector.selector.selectSensitive = true;
     dCollector.selector.selectMaterial = true;
     // Counteract the overstepping
+    // TODO that should not be necessary
     dOptions.maxStepSize = 30_mm;
     dOptions.maxSteps = 10000;
 
