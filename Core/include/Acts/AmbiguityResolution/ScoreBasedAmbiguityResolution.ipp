@@ -258,7 +258,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
 
-        auto trackFeatures = trackFeaturesVector[detectorId];
+        const auto& trackFeatures = trackFeaturesVector[detectorId];
 
         // choosing a scaling factor based on the number of hits in a track per
         // detector.
