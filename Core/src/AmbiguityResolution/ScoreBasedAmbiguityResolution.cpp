@@ -82,7 +82,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
     // Loop over all measurements of the track and for each hit a
     // trackStateTypes is assigned.
-    for (auto measurementTuples : measurementsPerTrack[iTrack]) {
+    for (const auto& measurementTuples : measurementsPerTrack[iTrack]) {
       auto iMeasurement = std::get<0>(measurementTuples);
       auto iVolume = std::get<1>(measurementTuples);
       auto isoutliner = std::get<2>(measurementTuples);
