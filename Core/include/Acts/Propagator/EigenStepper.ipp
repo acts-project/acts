@@ -9,6 +9,9 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Utilities/QuickMath.hpp"
+
+#include <limits>
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
@@ -178,10 +181,24 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // For details about these values see ATL-SOFT-PUB-2009-001 for details
     constexpr double lower = 0.25;
     constexpr double upper = 4.0;
+    // This is given by the order of the Runge-Kutta method
+    constexpr double exponent = 0.25;
+
+    // Whether to use fast power function if available
+    constexpr bool tryUseFastPow{false};
 
     double x = state.options.stepTolerance / errorEstimate_;
-    // double std::sqrt is 3x faster than std::pow
-    x = std::sqrt(std::sqrt(x));
+
+    if constexpr (exponent == 0.25 && !tryUseFastPow) {
+      // This is 3x faster than std::pow
+      x = std::sqrt(std::sqrt(x));
+    } else if constexpr (std::numeric_limits<double>::is_iec559 &&
+                         tryUseFastPow) {
+      x = fastPow(x, exponent);
+    } else {
+      x = std::pow(x, exponent);
+    }
+
     return std::clamp(x, lower, upper);
   };
 
