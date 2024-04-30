@@ -103,10 +103,13 @@ int main(int argc, char* argv[]) {
 
   double totalPathLength = 0;
   std::size_t numSteps = 0;
+  std::size_t numStepTrials = 0;
   std::size_t numIters = 0;
   const auto propagationBenchResult = Acts::Test::microBenchmark(
       [&] {
-        auto r = propagator.propagate(pars, options).value();
+        auto state = propagator.makeState(pars, options);
+        auto tmp = propagator.propagate(state);
+        auto r = propagator.makeResult(state, tmp, options, true).value();
         if (totalPathLength == 0.) {
           ACTS_DEBUG("reached position "
                      << r.endParameters->position(tgContext).transpose()
@@ -114,6 +117,7 @@ int main(int argc, char* argv[]) {
         }
         totalPathLength += r.pathLength;
         numSteps += r.steps;
+        numStepTrials += state.stepping.nStepTrials;
         ++numIters;
         return r;
       },
@@ -123,6 +127,7 @@ int main(int argc, char* argv[]) {
   ACTS_INFO("average path length = " << totalPathLength / numIters / 1_mm
                                      << "mm");
   ACTS_INFO("average number of steps = " << 1.0 * numSteps / numIters);
+  ACTS_INFO("step efficiency = " << 1.0 * numSteps / numStepTrials);
 
   return 0;
 }
