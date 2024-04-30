@@ -70,7 +70,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       continue;
     }
 
-    auto trackFeaturesVector = trackFeaturesVectors[iTrack];
+    const auto& trackFeaturesVector = trackFeaturesVectors.at(iTrack);
 
     bool TrkCouldBeAccepted = true;
 
