@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/DetectorMaterialHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
@@ -101,26 +100,6 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(rhotag);
     ACTS_PYTHON_MEMBER(fileName);
     ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    mex.def("materialMapsFromJson", [](const std::string& fileName) {
-      // Read file into json
-      std::ifstream i(fileName);
-      nlohmann::json j;
-      i >> j;
-
-      MaterialMapJsonConverter::Config config{};
-      MaterialMapJsonConverter converter(config, Acts::Logging::INFO);
-      return converter.jsonToMaterialMaps(j);
-    });
-
-    mex.def("materialMapsFromRoot", [](const std::string& fileName) {
-      RootMaterialDecorator::Config config{};
-      config.fileName = fileName;
-      RootMaterialDecorator decorator(config, Acts::Logging::INFO);
-      return decorator.materialMaps();
-    });
   }
 
   {
@@ -350,15 +329,6 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(materialValidater);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using MaterialMaps =
-        Acts::Experimental::DetectorMaterialHelper::DetectorMaterialMaps;
-
-    mex.def("assignMaterialToDetector",
-            &Acts::Experimental::DetectorMaterialHelper::assignMaterial,
-            "detector"_a, "materialMaps"_a);
   }
 }
 

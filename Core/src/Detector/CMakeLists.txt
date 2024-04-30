@@ -14,7 +14,6 @@ target_sources(
     CuboidalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
-    DetectorMaterialHelper.cpp
     DetectorVolume.cpp
     DetectorVolumeBuilder.cpp
     IndexedRootVolumeFinderBuilder.cpp

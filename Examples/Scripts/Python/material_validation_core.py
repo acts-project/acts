@@ -58,7 +58,7 @@ def runMaterialValidation(s, ntracks, surfaces, outputFile, seed, loglevel):
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             inputMaterialTracks=materialValidationConfig.outputMaterialTracks,
-            filePath=outputFile + "_recorded.root",
+            filePath=outputFile + ".root",
             storeSurface=True,
             storeVolume=True,
         )
@@ -92,6 +92,10 @@ if "__main__" == __name__:
 
     args = p.parse_args()
 
+    decorators = None
+    if args.map != "":
+        decorators = acts.IMaterialDecorator.fromFile(args.map)
+
     if args.experimental:
         odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 
@@ -103,29 +107,15 @@ if "__main__" == __name__:
         dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
 
         cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
+        cOptions.materialDecorator = decorators
 
         # Context and options
         geoContext = acts.GeometryContext()
         [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
-        if args.map != "":
-            mapsFile = Path(args.map)
-            # Load material maps from json or cbor file
-            if mapsFile.suffix in (".json", ".cbor"):
-                materialMaps = acts.examples.materialMapsFromJson(args.map)
-                # Load material maps from root file
-                acts.examples.assignMaterialToDetector(detector, materialMaps)
-            elif mapsFile.suffix == ".root":
-                materialMaps = acts.examples.materialMapsFromRoot(args.map)
-                acts.examples.assignMaterialToDetector(detector, materialMaps)
-
         materialSurfaces = detector.extractMaterialSurfaces()
 
     else:
-        decorators = None
-        if args.map != "":
-            decorators = acts.IMaterialDecorator.fromFile(args.map)
-
         [detector, trackingGeometry, decorators] = getOpenDataDetector(decorators)
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
