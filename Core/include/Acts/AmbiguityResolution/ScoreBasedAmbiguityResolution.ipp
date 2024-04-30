@@ -179,7 +179,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorMap.size();
          detectorId++) {
       auto detector_it = m_cfg.detectorMap.find(detectorId);
-      auto detector = detector_it->second;
+      const auto& detector = detector_it->second;
 
       auto trackFeatures = trackFeaturesVector[detectorId];
 
