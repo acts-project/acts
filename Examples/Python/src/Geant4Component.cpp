@@ -109,9 +109,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                   cfg, getDefaultLogger("SensitiveSurfaceMapper", level));
             }));
 
-    auto c = py::class_<SensitiveSurfaceMapper::Config>(sm, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, SensitiveSurfaceMapper::Config);
+    auto c = py::class_<Config>(sm, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(materialMappings);
     ACTS_PYTHON_MEMBER(volumeMappings);
     ACTS_PYTHON_MEMBER(candidateSurfaces);
@@ -120,30 +119,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     sm.def(
         "create", [](const Config& cfg, Acts::Logging::Level level,
                      const std::shared_ptr<const TrackingGeometry> tGeometry) {
-          // Helper struct to find the sensitive surface candidates
-          struct SensitiveCandidates {
-            std::shared_ptr<const TrackingGeometry> trackingGeometry;
-
-            /// Find the sensitive surfaces for a given position
-            std::vector<const Acts::Surface*> operator()(
-                const Acts::GeometryContext& gctx,
-                const Acts::Vector3& position) const {
-              std::vector<const Acts::Surface*> surfaces;
-              auto layer = trackingGeometry->associatedLayer(gctx, position);
-
-              if (layer->surfaceArray() != nullptr) {
-                for (const auto& surface : layer->surfaceArray()->surfaces()) {
-                  if (surface->associatedDetectorElement() != nullptr) {
-                    surfaces.push_back(surface);
-                  }
-                }
-              }
-              return surfaces;
-            }
-          };
           // Set a new surface finder
           Config ccfg = cfg;
-          ccfg.candidateSurfaces = SensitiveCandidates{tGeometry};
+          ccfg.candidateSurfaces = ActsExamples::SensitiveCandidates{tGeometry};
           return std::make_shared<SensitiveSurfaceMapper>(
               ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
         });

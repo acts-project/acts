@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -24,6 +25,36 @@ class Surface;
 }
 
 namespace ActsExamples {
+
+// Helper struct to find the sensitive surface candidates
+struct SensitiveCandidates {
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+  /// Find the sensitive surfaces for a given position
+  ///
+  /// This fullfills the concept of a SensitiveCandidates
+  ///
+  /// @param gctx the geometry context
+  /// @param position the position to look for sensitive surfaces
+  ///
+  /// @return a vector of sensitive surfaces
+  std::vector<const Acts::Surface*> operator()(
+      const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
+    std::vector<const Acts::Surface*> surfaces;
+
+    if (trackingGeometry != nullptr) {
+      auto layer = trackingGeometry->associatedLayer(gctx, position);
+
+      if (layer->surfaceArray() != nullptr) {
+        for (const auto& surface : layer->surfaceArray()->surfaces()) {
+          if (surface->associatedDetectorElement() != nullptr) {
+            surfaces.push_back(surface);
+          }
+        }
+      }
+    }
+    return surfaces;
+  }
+};
 
 /// This Mapper takes a (non-const) Geant4 geometry and maps
 /// it such that name will be containing the mapping prefix
