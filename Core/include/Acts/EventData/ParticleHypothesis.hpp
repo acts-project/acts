@@ -36,23 +36,30 @@ class SinglyChargedParticleHypothesis
       : GenericParticleHypothesis(other) {}
 
   static SinglyChargedParticleHypothesis muon() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eMuon);
+    static const SinglyChargedParticleHypothesis cache(PdgParticle::eMuon);
+    return cache;
   }
   static SinglyChargedParticleHypothesis pion() {
-    return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus);
+    static const SinglyChargedParticleHypothesis cache(PdgParticle::ePionPlus);
+    return cache;
   }
   static SinglyChargedParticleHypothesis electron() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eElectron);
+    static const SinglyChargedParticleHypothesis cache(PdgParticle::eElectron);
+    return cache;
   }
   static SinglyChargedParticleHypothesis kaon() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eKaonPlus);
+    static const SinglyChargedParticleHypothesis cache(PdgParticle::eKaonPlus);
+    return cache;
   }
   static SinglyChargedParticleHypothesis proton() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eProton);
+    static const SinglyChargedParticleHypothesis cache(PdgParticle::eProton);
+    return cache;
   }
 
   static SinglyChargedParticleHypothesis chargedGeantino() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eInvalid, 0);
+    static const SinglyChargedParticleHypothesis cache(PdgParticle::eInvalid,
+                                                       0);
+    return cache;
   }
 };
 
@@ -72,14 +79,17 @@ class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
       : GenericParticleHypothesis(other) {}
 
   static NeutralParticleHypothesis photon() {
-    return NeutralParticleHypothesis(PdgParticle::eGamma);
+    static const NeutralParticleHypothesis cache(PdgParticle::eGamma);
+    return cache;
   }
   static NeutralParticleHypothesis pion0() {
-    return NeutralParticleHypothesis(PdgParticle::ePionZero);
+    static const NeutralParticleHypothesis cache(PdgParticle::ePionZero);
+    return cache;
   }
 
   static NeutralParticleHypothesis geantino() {
-    return NeutralParticleHypothesis(PdgParticle::eInvalid, 0);
+    static const NeutralParticleHypothesis cache(PdgParticle::eInvalid, 0);
+    return cache;
   }
 };
 
@@ -122,7 +132,8 @@ class NonNeutralChargedParticleHypothesis
   }
 
   static NonNeutralChargedParticleHypothesis chargedGeantino() {
-    return chargedGeantino(Acts::UnitConstants::e);
+    static const auto cache = chargedGeantino(Acts::UnitConstants::e);
+    return cache;
   }
   static NonNeutralChargedParticleHypothesis chargedGeantino(float absQ) {
     return NonNeutralChargedParticleHypothesis(PdgParticle::eInvalid, 0, absQ);
@@ -175,7 +186,8 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
     return NeutralParticleHypothesis::geantino();
   }
   static ParticleHypothesis chargedGeantino() {
-    return chargedGeantino(Acts::UnitConstants::e);
+    static const auto cache = chargedGeantino(Acts::UnitConstants::e);
+    return cache;
   }
   static ParticleHypothesis chargedGeantino(float absQ) {
     return ParticleHypothesis(PdgParticle::eInvalid, 0, absQ);

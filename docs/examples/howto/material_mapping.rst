@@ -49,7 +49,6 @@ Ideally the following options should be used in the python file:
       outputObj=False,
       outputCsv=False,
       outputJson=True,
-      outputRoot=False,
    ):
 
 For the following example we will be remapping the material of the ODD, we will thus get our detector via the following line:

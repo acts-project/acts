@@ -79,11 +79,8 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Getting previous track state");
     auto prev_ts = trajectory.getTrackState(entryIndex);
 
-    // ensure the track state has a smoothed component
-    prev_ts.addComponents(TrackStatePropMask::Smoothed);
-
-    prev_ts.smoothed() = prev_ts.filtered();
-    prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
+    prev_ts.shareFrom(TrackStatePropMask::Filtered,
+                      TrackStatePropMask::Smoothed);
 
     // make sure there is more than one track state
     if (!prev_ts.hasPrevious()) {
