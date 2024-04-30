@@ -229,15 +229,13 @@ void checkVolumes(
   for (auto [iv, v] : Acts::enumerate(volumes)) {
     // Check for nullptr
     if (v == nullptr) {
-      message += std::string("nullptr detector instead of volume " +
-                             std::to_string(iv));
+      message += "nullptr detector instead of volume " + std::to_string(iv);
       throw std::invalid_argument(message.c_str());
     }
     // Check for cylindrical volume type
     if (v->volumeBounds().type() != Acts::VolumeBounds::BoundsType::eCylinder) {
-      message +=
-          std::string("non-cylindrical volume bounds detected for volume " +
-                      std::to_string(iv));
+      message += "non-cylindrical volume bounds detected for volume " +
+                 std::to_string(iv);
       throw std::invalid_argument(message.c_str());
     }
   }
@@ -813,18 +811,22 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   // If needed, insert new cylinder
   if (volumes[0u]->portalPtrs().size() == 4u &&
       volumes[1u]->portalPtrs().size() == 8u) {
+    const auto* cylVolBounds =
+        dynamic_cast<const CylinderVolumeBounds*>(&volumes[0u]->volumeBounds());
+    const auto* ccylVolBounds = dynamic_cast<const CutoutCylinderVolumeBounds*>(
+        &volumes[1u]->volumeBounds());
+    if (cylVolBounds == nullptr || ccylVolBounds == nullptr) {
+      throw std::invalid_argument(
+          "Wrapping the detector volume requires a cylinder and a cutout "
+          "cylinder volume.");
+    }
     // We need a new cylinder spanning over the entire inner tube
-    ActsScalar hlZ =
-        volumes[0u]
-            ->volumeBounds()
-            .values()[Acts::CylinderVolumeBounds::BoundValues::eHalfLengthZ];
-    ActsScalar HlZ =
-        volumes[1u]->volumeBounds().values()
-            [Acts::CutoutCylinderVolumeBounds::BoundValues::eHalfLengthZ];
+    ActsScalar hlZ = cylVolBounds->get(
+        Acts::CylinderVolumeBounds::BoundValues::eHalfLengthZ);
+    ActsScalar HlZ = ccylVolBounds->get(
+        Acts::CutoutCylinderVolumeBounds::BoundValues::eHalfLengthZ);
     ActsScalar innerR =
-        volumes[0u]
-            ->volumeBounds()
-            .values()[Acts::CylinderVolumeBounds::BoundValues::eMinR];
+        cylVolBounds->get(CylinderVolumeBounds::BoundValues::eMinR);
     // Create the inner replacement
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
@@ -1140,7 +1142,14 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     // Loop over side volume and register the z boundaries
     for (auto& svs : sideVolumes) {
       for (auto& v : svs.second) {
-        ActsScalar hlZ = v->volumeBounds().values()[2u];
+        const auto* cylVolBounds =
+            dynamic_cast<const CylinderVolumeBounds*>(&v->volumeBounds());
+        if (cylVolBounds == nullptr) {
+          throw std::invalid_argument(
+              "CylindricalDetectorHelper: side volume must be a cylinder.");
+        }
+        ActsScalar hlZ =
+            cylVolBounds->get(CylinderVolumeBounds::BoundValues::eHalfLengthZ);
         zBoundaries.push_back(zBoundaries.back() + 2 * hlZ);
         innerVolumes.push_back(v);
       }

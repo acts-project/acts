@@ -16,9 +16,7 @@
 
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// A struct to access the center position
 ///
@@ -94,6 +92,4 @@ struct PolyhedronReferenceGenerator {
   }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

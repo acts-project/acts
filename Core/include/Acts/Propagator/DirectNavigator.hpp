@@ -186,11 +186,9 @@ class DirectNavigator {
   /// @tparam stepper_t The type of stepper used for the propagation
   ///
   /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    (void)stepper;
-
+  void initialize(propagator_state_t& state,
+                  const stepper_t& /*stepper*/) const {
     ACTS_VERBOSE(volInfo(state) << "initialize");
 
     // We set the current surface to the start surface

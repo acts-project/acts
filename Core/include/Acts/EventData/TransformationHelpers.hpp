@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +18,15 @@ namespace Acts {
 
 class Surface;
 
-namespace detail {
+/// Transform bound track parameters into equivalent free track parameters.
+///
+/// @param surface Surface onto which the input parameters are bound
+/// @param geoCtx Geometry context for the local-to-global transformation
+/// @param boundParams Bound track parameters vector
+/// @return Equivalent free trackparameters vector
+FreeVector transformBoundToFreeParameters(const Surface& surface,
+                                          const GeometryContext& geoCtx,
+                                          const BoundVector& boundParams);
 
 /// Convert free track parameters to bound track parameters.
 ///
@@ -78,5 +86,4 @@ BoundVector transformFreeToCurvilinearParameters(ActsScalar time,
                                                  ActsScalar theta,
                                                  ActsScalar qOverP);
 
-}  // namespace detail
 }  // namespace Acts

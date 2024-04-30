@@ -196,4 +196,4 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// binUtility for retrieving and filling the Array
   std::unique_ptr<const BinUtility> m_binUtility;
 };
-}  // end of namespace Acts
+}  // namespace Acts

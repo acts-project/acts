@@ -8,8 +8,7 @@
 
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
-namespace ActsAlignment {
-namespace detail {
+namespace ActsAlignment::detail {
 
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
                               AlignmentMask mask) {
@@ -33,5 +32,4 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
   }
 }
 
-}  // namespace detail
-}  // namespace ActsAlignment
+}  // namespace ActsAlignment::detail

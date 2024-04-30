@@ -11,8 +11,7 @@
 #include <system_error>
 #include <type_traits>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 enum class GlobalChiSquareFitterError {
   // ensure all values are non-zero
@@ -24,8 +23,7 @@ enum class GlobalChiSquareFitterError {
 std::error_code make_error_code(
     Acts::Experimental::GlobalChiSquareFitterError e);
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace std {
 // register with STL

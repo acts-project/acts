@@ -24,18 +24,14 @@ Volume::Volume(const Transform3& transform,
       m_transform(transform),
       m_itransform(m_transform.inverse()),
       m_center(m_transform.translation()),
-      m_volumeBounds(std::move(volbounds)),
-      m_orientedBoundingBox(m_volumeBounds->boundingBox(
-          nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
+      m_volumeBounds(std::move(volbounds)) {}
 
 Volume::Volume(const Volume& vol, const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * vol.m_transform),
       m_itransform(m_transform.inverse()),
       m_center(m_transform.translation()),
-      m_volumeBounds(vol.m_volumeBounds),
-      m_orientedBoundingBox(m_volumeBounds->boundingBox(
-          nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
+      m_volumeBounds(vol.m_volumeBounds) {}
 
 Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
                                 BinningValue bValue) const {
@@ -73,14 +69,23 @@ Volume::BoundingBox Volume::boundingBox(const Vector3& envelope) const {
   return m_volumeBounds->boundingBox(&m_transform, envelope, this);
 }
 
-const Volume::BoundingBox& Volume::orientedBoundingBox() const {
-  return m_orientedBoundingBox;
+Volume::BoundingBox Volume::orientedBoundingBox() const {
+  return m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm},
+                                     this);
 }
 
 void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
-  m_volumeBounds = std::move(volbounds);
-  m_orientedBoundingBox =
-      m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this);
+  update(std::move(volbounds));
+}
+
+void Volume::update(std::shared_ptr<const VolumeBounds> volbounds,
+                    std::optional<Transform3> transform) {
+  if (volbounds) {
+    m_volumeBounds = std::move(volbounds);
+  }
+  if (transform.has_value()) {
+    setTransform(*transform);
+  }
 }
 
 const Transform3& Volume::transform() const {
@@ -99,4 +104,22 @@ const VolumeBounds& Volume::volumeBounds() const {
   return *m_volumeBounds;
 }
 
+std::shared_ptr<const VolumeBounds> Volume::volumeBoundsPtr() const {
+  return m_volumeBounds;
+}
+
+void Volume::setTransform(const Transform3& transform) {
+  m_transform = transform;
+  m_itransform = m_transform.inverse();
+  m_center = m_transform.translation();
+}
+
+bool Volume::operator==(const Volume& other) const {
+  return (m_transform.matrix() == other.m_transform.matrix()) &&
+         (*m_volumeBounds == *other.m_volumeBounds);
+}
+
+bool Volume::operator!=(const Volume& other) const {
+  return !(*this == other);
+}
 }  // namespace Acts

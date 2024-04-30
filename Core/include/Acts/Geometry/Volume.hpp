@@ -16,6 +16,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <optional>
 
 namespace Acts {
 
@@ -23,13 +24,12 @@ class VolumeBounds;
 
 /// @class Volume
 ///
-/// It inhertis of GeometryObject for TDD identification
+/// It inherits from GeometryObject for geometry identification
 ///
-/// Base class for all volumes inside the tracking realm, it defines
-/// the interface for inherited Volume classes
-/// regarding the geometrical information.
-
-class Volume : public virtual GeometryObject {
+/// Base class for all volumes inside the tracking realm, it defines the
+/// interface for inherited Volume classes regarding the geometrical
+/// information.
+class Volume : public GeometryObject {
  public:
   using BoundingBox = AxisAlignedBoundingBox<Volume, ActsScalar, 3>;
 
@@ -37,8 +37,6 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  /// @note This will automatically build an oriented bounding box with an
-  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Transform3& transform,
          std::shared_ptr<const VolumeBounds> volbounds);
 
@@ -46,8 +44,6 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  /// @note This will automatically build an oriented bounding box with an
-  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
   Volume() = delete;
@@ -64,14 +60,26 @@ class Volume : public virtual GeometryObject {
   /// Returns the inverted transform of this volume.
   const Transform3& itransform() const;
 
+  void setTransform(const Transform3& transform);
+
   /// returns the center of the volume
   const Vector3& center() const;
 
-  /// returns the volumeBounds()
+  /// Returns const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
 
+  /// Returns shared pointer to the volume bounds
+  std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
+
   /// Set volume bounds and update volume bounding boxes implicitly
+  /// @param volbounds The volume bounds to be assigned
   void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
+
+  /// Set the volume bounds and optionally also update the volume transform
+  /// @param volbounds The volume bounds to be assigned
+  /// @param transform The transform to be assigned, can be optional
+  virtual void update(std::shared_ptr<const VolumeBounds> volbounds,
+                      std::optional<Transform3> transform = std::nullopt);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -79,8 +87,10 @@ class Volume : public virtual GeometryObject {
   BoundingBox boundingBox(const Vector3& envelope = {0, 0, 0}) const;
 
   /// Construct oriented bounding box for this shape
+  /// @note This will build an oriented bounding box with an
+  ///       envelope value of (0.05, 0.05, 0.05)mm
   /// @return Constructed oriented bounding box pointing to this volume
-  const BoundingBox& orientedBoundingBox() const;
+  BoundingBox orientedBoundingBox() const;
 
   /// Inside() method for checks
   ///
@@ -100,12 +110,14 @@ class Volume : public virtual GeometryObject {
   Vector3 binningPosition(const GeometryContext& gctx,
                           BinningValue bValue) const override;
 
+  bool operator==(const Volume& other) const;
+  bool operator!=(const Volume& other) const;
+
  protected:
   Transform3 m_transform;
   Transform3 m_itransform;
   Vector3 m_center;
   std::shared_ptr<const VolumeBounds> m_volumeBounds;
-  BoundingBox m_orientedBoundingBox;
 };
 
 /**Overload of << operator for std::ostream for debug output*/

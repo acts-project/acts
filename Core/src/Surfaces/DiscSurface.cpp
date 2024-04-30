@@ -9,8 +9,8 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
@@ -19,12 +19,10 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <utility>
@@ -130,7 +128,7 @@ Acts::Vector3 Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2& lposition) const {
   Vector3 loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1],
                      0.);
-  return Vector3(transform(gctx) * loc3Dframe);
+  return transform(gctx) * loc3Dframe;
 }
 
 Acts::Vector2 Acts::DiscSurface::globalToLocalCartesian(
@@ -211,32 +209,29 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 }
 
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
-    const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Transform from bound to free parameters
-  FreeVector freeParams =
-      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
-  // The global position
-  const Vector3 position = freeParams.segment<3>(eFreePos0);
-  // The direction
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
-
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
 
-  // special polar coordinates for the Disc
-  double lrad = boundParams[eBoundLoc0];
-  double lphi = boundParams[eBoundLoc1];
-  double lcphi = std::cos(lphi);
-  double lsphi = std::sin(lphi);
-  // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, position, direction);
+  // The measurement frame of the surface
+  RotationMatrix3 rframeT =
+      referenceFrame(gctx, position, direction).transpose();
+
+  // calculate the transformation to local coordinates
+  const Vector3 posLoc = transform(gctx).inverse() * position;
+  const double lr = perp(posLoc);
+  const double lphi = phi(posLoc);
+  const double lcphi = std::cos(lphi);
+  const double lsphi = std::sin(lphi);
+  // rotate into the polar coorindates
+  auto lx = rframeT.block<1, 3>(0, 0);
+  auto ly = rframeT.block<1, 3>(1, 0);
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - rotated from reference frame
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc0) =
-      lcphi * rframe.block<3, 1>(0, 0) + lsphi * rframe.block<3, 1>(0, 1);
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc0) = lcphi * lx + lsphi * ly;
   jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc1) =
-      lrad *
-      (lcphi * rframe.block<3, 1>(0, 1) - lsphi * rframe.block<3, 1>(0, 0));
+      lr * (lcphi * ly - lsphi * lx);
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
@@ -247,20 +242,21 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
 }
 
 Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  // The global position
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
+
   // calculate the transformation to local coordinates
-  const Vector3 pos_loc = transform(gctx).inverse() * position;
-  const double lr = perp(pos_loc);
-  const double lphi = phi(pos_loc);
+  const Vector3 posLoc = transform(gctx).inverse() * position;
+  const double lr = perp(posLoc);
+  const double lphi = phi(posLoc);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
   // rotate into the polar coorindates

@@ -59,6 +59,21 @@ struct GeometryIdentifierHookBinding : public Acts::GeometryIdentifierHook {
         .cast<Acts::GeometryIdentifier>();
   }
 };
+
+struct MaterialSurfaceSelector {
+  std::vector<const Acts::Surface*> surfaces = {};
+
+  /// @param surface is the test surface
+  void operator()(const Acts::Surface* surface) {
+    if (surface->surfaceMaterial() != nullptr) {
+      if (std::find(surfaces.begin(), surfaces.end(), surface) ==
+          surfaces.end()) {
+        surfaces.push_back(surface);
+      }
+    }
+  }
+};
+
 }  // namespace
 
 namespace Acts::Python {
@@ -126,6 +141,12 @@ void addGeometry(Context& ctx) {
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
              })
+        .def("extractMaterialSurfaces",
+             [](Acts::TrackingGeometry& self) {
+               MaterialSurfaceSelector selector;
+               self.visitSurfaces(selector, false);
+               return selector.surfaces;
+             })
         .def_property_readonly(
             "worldVolume",
             &Acts::TrackingGeometry::highestTrackingVolumeShared);
@@ -186,12 +207,21 @@ void addExperimentalGeometry(Context& ctx) {
 
   // Detector volume definition
   py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(m,
-                                                              "DetectorVolume");
+                                                              "DetectorVolume")
+      .def("surfaces", &DetectorVolume::surfaces)
+      .def("surfacePtrs", &DetectorVolume::surfacePtrs);
 
   // Detector definition
   py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector")
-      .def("number_volumes",
-           [](Detector& self) { return self.volumes().size(); });
+      .def("volumes", &Detector::volumes)
+      .def("volumePtrs", &Detector::volumePtrs)
+      .def("numberVolumes",
+           [](Detector& self) { return self.volumes().size(); })
+      .def("extractMaterialSurfaces", [](Detector& self) {
+        MaterialSurfaceSelector selector;
+        self.visitSurfaces(selector);
+        return selector.surfaces;
+      });
 
   // Portal definition
   py::class_<Portal, std::shared_ptr<Portal>>(m, "Portal");

@@ -1,43 +1,15 @@
 #!/usr/bin/env python3
 import sys
-
-import sys
-import os
-import yaml
-import pprint
-import time
-import datetime
-import warnings
-
 import optuna
 import logging
 import uproot
-
-import pathlib
 import matplotlib
-
-matplotlib.use("pdf")
-import matplotlib.pyplot as plt
-import random
 import subprocess
-import multiprocessing
-import numpy as np
 import json
-import array
-import sys
-import argparse
 import pandas as pd
-
-from typing import Optional, Union
 from pathlib import Path
 
-from optuna.visualization import plot_contour
-from optuna.visualization import plot_edf
-from optuna.visualization import plot_intermediate_values
-from optuna.visualization import plot_optimization_history
-from optuna.visualization import plot_parallel_coordinate
-from optuna.visualization import plot_param_importances
-from optuna.visualization import plot_slice
+matplotlib.use("pdf")
 
 srcDir = Path(__file__).resolve().parent
 
@@ -192,7 +164,7 @@ def main():
     # creating a new optuna study
     study = optuna.create_study(
         study_name=study_name,
-        storage="sqlite:///{}.db".format(study_name),
+        storage=storage_name,
         direction="maximize",
         load_if_exists=True,
     )

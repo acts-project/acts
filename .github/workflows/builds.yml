@@ -32,13 +32,13 @@ jobs:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -76,7 +76,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -95,7 +95,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
@@ -126,12 +126,12 @@ jobs:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: acts-linux-ubuntu
 
@@ -161,14 +161,14 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs time
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: acts-linux-ubuntu
 
@@ -195,7 +195,7 @@ jobs:
           && CI/physmon/phys_perf_mon.sh all physmon
           && cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: physmon
@@ -209,7 +209,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.0
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: physmon
           path: physmon
@@ -248,13 +248,13 @@ jobs:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -292,7 +292,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -342,7 +342,7 @@ jobs:
       PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
@@ -350,7 +350,7 @@ jobs:
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -381,7 +381,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -435,7 +435,7 @@ jobs:
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
@@ -453,7 +453,7 @@ jobs:
           && /usr/local/acts/bin/python3.10 -m pip install pyyaml jinja2
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -488,7 +488,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -499,7 +499,7 @@ jobs:
         run: cmake --build build --target integrationtests
       - name: Install
         run: cmake --build build --target install
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -516,42 +516,6 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
-  cuda:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v41
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v3
-        id: ccache-restore
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_CUDA=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
-      - name: Save ccache
-        uses: actions/cache/save@v3
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
   sycl:
     runs-on: ubuntu-latest
@@ -560,10 +524,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -591,7 +555,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache

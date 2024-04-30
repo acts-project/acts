@@ -37,9 +37,7 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 GeometryContext tgContext = GeometryContext();
 
@@ -250,6 +248,4 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
   }
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

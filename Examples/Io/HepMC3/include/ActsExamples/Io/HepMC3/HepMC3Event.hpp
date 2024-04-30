@@ -17,8 +17,7 @@
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 
-namespace ActsExamples {
-namespace HepMC3Event {
+namespace ActsExamples::HepMC3Event {
 
 ///
 /// Setter
@@ -138,5 +137,4 @@ std::vector<SimParticle> beams(const HepMC3::GenEvent& event);
 /// @return List of final state particles
 std::vector<SimParticle> finalState(const HepMC3::GenEvent& event);
 
-}  // namespace HepMC3Event
-}  // namespace ActsExamples
+}  // namespace ActsExamples::HepMC3Event

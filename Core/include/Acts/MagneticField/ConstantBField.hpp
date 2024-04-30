@@ -67,12 +67,8 @@ class ConstantBField final : public MagneticFieldProvider {
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
-  /// @param [in] position global 3D position
   /// @return Always true for constant magnetic field
-  bool isInside(const Vector3& position) const {
-    (void)position;
-    return true;
-  }
+  bool isInside(const Vector3& /*position*/) const { return true; }
 
   /// @brief update magnetic field vector
   ///

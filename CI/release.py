@@ -2,7 +2,6 @@
 import os
 import asyncio
 from typing import List, Optional, Tuple
-import re
 from pathlib import Path
 import sys
 import http
@@ -44,12 +43,6 @@ def get_repo():
     _, loc = origin.split(":", 1)
     repo, _ = loc.split(".", 1)
     return repo
-
-
-def get_current_version():
-    raw = git.describe().split("-")[0]
-    m = re.match(r"v(\d+\.\d+\.\d+)", raw)
-    return m.group(1)
 
 
 class Commit:
@@ -388,130 +381,6 @@ async def get_release(tag: str, repo: str, gh: GitHubAPI):
         else:
             raise e
     return existing_release
-
-
-@app.command()
-@make_sync
-async def pr_action(
-    fail: bool = False,
-    pr: int = None,
-    token: Optional[str] = typer.Option(None, envvar="GH_TOKEN"),
-    repo: Optional[str] = typer.Option(None, envvar="GH_REPO"),
-):
-    print("::group::Information")
-
-    context = os.environ.get("GITHUB_CONTEXT")
-
-    if context is not None:
-        context = json.loads(context)
-        repo = context["repository"]
-        token = context["token"]
-    else:
-        if token is None or repo is None:
-            raise ValueError("No context, need token and repo")
-        if pr is None:
-            raise ValueError("No context, need explicit PR to run on")
-
-    async with aiohttp.ClientSession(loop=asyncio.get_event_loop()) as session:
-        gh = GitHubAPI(session, __name__, oauth_token=token)
-
-        if pr is not None:
-            pr = await gh.getitem(f"repos/{repo}/pulls/{pr}")
-        else:
-            pr = context["event"]["pull_request"]
-
-        target_branch = pr["base"]["ref"]
-        print("Target branch:", target_branch)
-        sha = pr["head"]["sha"]
-        print("Source hash:", sha)
-
-        merge_commit_sha = await get_merge_commit_sha(
-            pr["number"],
-            repo,
-            gh,
-        )
-        print("Merge commit sha:", merge_commit_sha)
-
-        # Get current version from target branch
-        current_version = await get_release_branch_version(repo, target_branch, gh)
-        tag_hash = await get_tag_hash(f"v{current_version}", repo, gh)
-        print("current_version:", current_version, "[" + tag_hash[:8] + "]")
-
-        commits, unparsed_commits = await get_parsed_commit_range(
-            start=merge_commit_sha, end=tag_hash, repo=repo, gh=gh
-        )
-
-        bump = evaluate_version_bump(commits)
-        print("bump:", bump)
-        current_version_obj = Version
-        next_version = get_new_version(current_version, bump)
-        print("next version:", next_version)
-        next_tag = f"v{next_version}"
-
-        print("::endgroup::")
-
-        changes = generate_changelog(commits)
-        md = markdown_changelog(next_version, changes, header=False)
-
-        body = ""
-        title = f"Release: {current_version} -> {next_version}"
-
-        existing_release = await get_release(next_tag, repo, gh)
-        existing_tag = await get_tag(next_tag, repo, gh)
-
-        body += f"# `v{current_version}` -> `v{next_version}`\n"
-
-        exit_code = 0
-
-        if existing_release is not None or existing_tag is not None:
-            if current_version == next_version:
-                body += (
-                    "## :no_entry_sign: Merging this will not result in a new version (no `fix`, "
-                    "`feat` or breaking changes). I recommend **delaying** this PR until more changes accumulate.\n"
-                )
-                print("::warning::Merging this will not result in a new version")
-
-            else:
-                exit_code = 1
-                title = f":no_entry_sign: {title}"
-                if existing_release is not None:
-                    body += f"## :warning: **WARNING**: A release for '{next_tag}' already exists"
-                    body += f"[here]({existing_release['html_url']})** :warning:"
-                    print(f"::error::A release for tag '{next_tag}' already exists")
-                else:
-                    body += (
-                        f"## :warning: **WARNING**: A tag '{next_tag}' already exists"
-                    )
-                    print(f"::error::A tag '{next_tag}' already exists")
-
-                body += "\n"
-                body += ":no_entry_sign: I recommend to **NOT** merge this and double check the target branch!\n\n"
-
-        else:
-            body += f"## Merging this PR will create a new release `v{next_version}`\n"
-
-        if len(unparsed_commits) > 0:
-            body += "\n" * 3
-            body += "## :warning: This PR contains commits which are not parseable:"
-            for commit in unparsed_commits:
-                msg, _ = commit.message.split("\n", 1)
-                body += f"\n - {msg} {commit.sha})"
-            body += "\n **Make sure these commits do not contain changes which affect the bump version!**"
-
-        body += "\n\n"
-
-        body += "### Changelog"
-
-        body += md
-
-        print("::group::PR message")
-        print(body)
-        print("::endgroup::")
-
-        await gh.post(pr["url"], data={"body": body, "title": title})
-
-        if fail:
-            sys.exit(exit_code)
 
 
 if __name__ == "__main__":

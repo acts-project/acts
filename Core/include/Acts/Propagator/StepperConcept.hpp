@@ -21,8 +21,7 @@
 namespace Acts {
 class Surface;
 
-namespace Concepts {
-namespace Stepper {
+namespace Concepts::Stepper {
 
 template <typename T>
 using state_t = typename T::State;
@@ -211,8 +210,7 @@ constexpr bool MultiStepperStateConcept= require<
         };
 // clang-format on
 
-}  // namespace Stepper
-}  // namespace Concepts
+}  // namespace Concepts::Stepper
 
 template <typename stepper, typename state = typename stepper::State>
 constexpr bool StepperConcept =

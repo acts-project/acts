@@ -30,8 +30,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -140,15 +139,16 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   binAndTrackGrid = grid.addTrack(params4, mainGrid);
 
   // Check upper boundary
-  BOOST_CHECK_EQUAL(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 2),
-                    0.);
-  BOOST_CHECK_GT(mainGrid(mainGridSize - int((trkGridSize - 1) / 2) - 1), 0.);
+  BOOST_CHECK_EQUAL(
+      mainGrid(mainGridSize - static_cast<int>((trkGridSize - 1) / 2) - 2), 0.);
+  BOOST_CHECK_GT(
+      mainGrid(mainGridSize - static_cast<int>((trkGridSize - 1) / 2) - 1), 0.);
   BOOST_CHECK_GT(mainGrid(mainGridSize - 1), 0.);
 
   binAndTrackGrid = grid.addTrack(params5, mainGrid);
   // Check lower boundary
-  BOOST_CHECK_EQUAL(mainGrid(int((trkGridSize - 1) / 2) + 1), 0.);
-  BOOST_CHECK_GT(mainGrid(int((trkGridSize - 1) / 2)), 0.);
+  BOOST_CHECK_EQUAL(mainGrid(static_cast<int>((trkGridSize - 1) / 2) + 1), 0.);
+  BOOST_CHECK_GT(mainGrid(static_cast<int>((trkGridSize - 1) / 2)), 0.);
   BOOST_CHECK_GT(mainGrid(0), 0.);
 
   // Check if position of maximum is correct
@@ -309,5 +309,4 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   BOOST_CHECK_NE(width, 0.);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

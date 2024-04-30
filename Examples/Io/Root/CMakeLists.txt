@@ -9,6 +9,7 @@ add_library(
   src/RootParticleWriter.cpp
   src/RootParticleReader.cpp
   src/RootPropagationStepsWriter.cpp
+  src/RootSeedWriter.cpp
   src/RootSimHitWriter.cpp
   src/RootSimHitReader.cpp
   src/RootSpacepointWriter.cpp
@@ -18,6 +19,8 @@ add_library(
   src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
+  src/RootVertexReader.cpp
+  src/RootVertexWriter.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot

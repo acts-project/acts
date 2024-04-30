@@ -57,7 +57,8 @@ std::string Acts::GlueVolumesDescriptor::screenOutput() const {
     const std::vector<TrackingVolumePtr>& glueVolumesVector =
         glueVolumes(gFace)->arrayObjects();
     // loop over the TrackingVolumes
-    sl << "        -----> Processing Face: " << int(gFace) << " - has ";
+    sl << "        -----> Processing Face: " << static_cast<int>(gFace)
+       << " - has ";
     sl << glueVolumesVector.size()
        << " TrackingVolumes marked as 'GlueVolumes' " << std::endl;
     for (auto& glueVolume : glueVolumesVector) {

@@ -15,8 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @brief These functions perform the calculation of the Jacobians for the
 /// the covariance transport. This is a purely algebraic problem the
@@ -66,8 +65,6 @@ void boundToBoundTransportJacobian(const GeometryContext& geoContext,
                                    const FreeVector& freeToPathDerivatives,
                                    BoundMatrix& fullTransportJacobian);
 
-/// TODO this should be removed but Athena depends on it
-///
 /// @brief This function calculates the full transport jacobian from a bound
 ///        curvilinear representation to a new bound representation
 ///
@@ -213,5 +210,4 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
                            BoundToFreeMatrix& boundToFreeJacobian,
                            const Vector3& direction);
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

@@ -1,20 +1,22 @@
 limits:
-  "readability-inconsistent-declaration-parameter-name": 0
-  "readability-named-parameter": 0
-  "readability-container-size-empty": 0
-  "readability-braces-around-statements": 0
-  "readability-implicit-bool-cast": 0
-  "readability-implicit-bool-conversion": 0
-  "modernize-use-using": 0
-  "modernize-use-override": 0
-  "modernize-use-equals-default" : 0
-  "modernize-use-default-member-init": 0
-  "modernize-use-nullptr": 0
-  "performance-unnecessary-value-param": 0
-  "performance-move-const-arg": 0
-  "performance-for-range-copy": 0
-  "cppcoreguidelines-pro-type-member-init": 0
-  "cppcoreguidelines-init-variables": 0
   "clang-analyzer-optin.cplusplus.UninitializedObject": 0
   "clang-diagnostic-error": 0
+  "cppcoreguidelines-init-variables": 0
+  "cppcoreguidelines-pro-type-member-init": 0
+  "google-readability-casting": 0
+  "modernize-concat-nested-namespaces": 0
+  "modernize-use-equals-default": 0
+  "modernize-use-default-member-init": 0
+  "modernize-use-nullptr": 0
+  "modernize-use-override": 0
+  "modernize-use-using": 0
+  "performance-for-range-copy": 0
+  "performance-move-const-arg": 0
+  "performance-unnecessary-value-param": 0
+  "readability-braces-around-statements": 0
+  "readability-container-size-empty": 0
+  "readability-implicit-bool-cast": 0
+  "readability-implicit-bool-conversion": 0
+  "readability-inconsistent-declaration-parameter-name": 0
+  "readability-named-parameter": 0
   "readability-operators-representation": 0

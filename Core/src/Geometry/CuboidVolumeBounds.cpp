@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -26,22 +25,11 @@ CuboidVolumeBounds::CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
   buildSurfaceBounds();
 }
 
-CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
-    : VolumeBounds(),
-      m_values(bobo.m_values),
-      m_xyBounds(bobo.m_xyBounds),
-      m_yzBounds(bobo.m_yzBounds),
-      m_zxBounds(bobo.m_zxBounds) {}
-
-CuboidVolumeBounds& CuboidVolumeBounds::operator=(
-    const CuboidVolumeBounds& bobo) {
-  if (this != &bobo) {
-    m_values = bobo.m_values;
-    m_xyBounds = bobo.m_xyBounds;
-    m_yzBounds = bobo.m_yzBounds;
-    m_zxBounds = bobo.m_zxBounds;
-  }
-  return *this;
+CuboidVolumeBounds::CuboidVolumeBounds(
+    const std::array<ActsScalar, eSize>& values)
+    : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
 }
 
 std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
@@ -144,4 +132,24 @@ void CuboidVolumeBounds::checkConsistency() noexcept(false) {
         "CuboidVolumeBounds: invalid input, zero or negative.");
   }
 }
+
+void CuboidVolumeBounds::set(BoundValues bValue, ActsScalar value) {
+  set({{bValue, value}});
+}
+
+void CuboidVolumeBounds::set(
+    std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues) {
+  std::array<ActsScalar, eSize> previous = m_values;
+  for (const auto& [key, value] : keyValues) {
+    m_values[key] = value;
+  }
+  try {
+    checkConsistency();
+    buildSurfaceBounds();
+  } catch (std::invalid_argument& e) {
+    m_values = previous;
+    throw e;
+  }
+}
+
 }  // namespace Acts

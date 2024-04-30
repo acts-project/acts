@@ -21,8 +21,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct Cell1D {
   Cell1D(int colv) : col(colv) {}
@@ -129,5 +128,4 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
