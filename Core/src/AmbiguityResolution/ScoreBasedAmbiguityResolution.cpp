@@ -137,7 +137,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     // trackStateTypes and other conditions.
     // Good measurements are copied to the newMeasurementsPerTrack vector.
     for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
-      auto measurementTuples = measurementsPerTrack[iTrack][i];
+     auto& measurementTuples = measurementsPerTrack[iTrack][i];
       measurement = std::get<0>(measurementTuples);
 
       if (trackStateTypes[i] == RejectedHit) {
