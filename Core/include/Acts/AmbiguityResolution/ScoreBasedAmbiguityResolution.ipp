@@ -10,8 +10,6 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <unordered_map>
@@ -42,7 +40,10 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorMap.size();
+    int numberOfTrackStates = std::distance(track.trackStatesReversed().begin(),
+                                            track.trackStatesReversed().end());
     std::vector<measurementTuple> measurementTuples;
+    measurementTuples.reserve(numberOfTrackStates);
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (auto ts : track.trackStatesReversed()) {
