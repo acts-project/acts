@@ -55,9 +55,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  public:
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
-  using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
-                                             Acts::VectorMultiTrajectory>;
+  using TrackFinderOptions = Acts::CombinatorialKalmanFilterOptions<
+      IndexSourceLinkAccessor::Iterator,
+      TrackContainer::TrackStateBackendContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 

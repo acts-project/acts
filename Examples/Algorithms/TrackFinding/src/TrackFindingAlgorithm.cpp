@@ -313,17 +313,16 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementSelector measSel{
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  using Extensions =
-      Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>;
+  using Extensions = Acts::CombinatorialKalmanFilterExtensions<
+      typename TrackContainer::TrackStateBackendContainer>;
 
   BranchStopper branchStopper(m_cfg.trackSelectorCfg);
 
   Extensions extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
-  extensions.updater.connect<
-      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
-      &kfUpdater);
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateBackendContainer>>(&kfUpdater);
   extensions.measurementSelector.connect<&MeasurementSelector::select>(
       &measSel);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
@@ -343,13 +342,13 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  TrackFindingAlgorithm::TrackFinderOptions firstOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, firstPropOptions);
+  TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
+                                  ctx.calibContext, slAccessorDelegate,
+                                  extensions, firstPropOptions);
 
-  TrackFindingAlgorithm::TrackFinderOptions secondOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, secondPropOptions);
+  TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
+                                   ctx.calibContext, slAccessorDelegate,
+                                   extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
