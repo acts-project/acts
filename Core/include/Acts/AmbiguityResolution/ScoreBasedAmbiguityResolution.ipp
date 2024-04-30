@@ -222,7 +222,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
         auto detector_it = m_cfg.detectorMap.find(detectorId);
         auto detector = detector_it->second;
 
-        auto trackFeatures = trackFeaturesVector[detectorId];
+        const auto& trackFeatures = trackFeaturesVector[detectorId];
 
         score += trackFeatures.nHits * detector.hitsScoreWeight;
         score += trackFeatures.nHoles * detector.holesScoreWeight;
