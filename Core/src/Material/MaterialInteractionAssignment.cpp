@@ -21,6 +21,12 @@ Acts::MaterialInteractionAssignment::assign(
   // Return container: The unassigned materials
   std::vector<MaterialInteraction> unassignedMaterialInteractions;
 
+  // Check for empty intersection
+  if (intersectedSurfaces.empty()) {
+    unassignedMaterialInteractions = materialInteractions;
+    return {assignedMaterialInteractions, unassignedMaterialInteractions, {}};
+  }
+
   /// Simple matching of material interactions to surfaces - no pre/post
   /// matching
   // -----------------------------------------------------------------------------
