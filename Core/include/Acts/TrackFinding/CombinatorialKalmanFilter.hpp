@@ -684,13 +684,6 @@ class CombinatorialKalmanFilter {
         if (!result.activeTips.empty()) {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeTips.back().first);
-          for (auto& [index, tipState] : result.activeTips) {
-            ACTS_VERBOSE("Active tip: "
-                         << index << " with surface "
-                         << result.fittedStates->getTrackState(index)
-                                .referenceSurface()
-                                .geometryId());
-          }
           reset(state, stepper, navigator, result);
         } else {
           ACTS_VERBOSE("Stop Kalman filtering with "
@@ -699,9 +692,6 @@ class CombinatorialKalmanFilter {
           result.filtered = true;
         }
       }
-
-      // std::cout << "nBranchesOnSurface: " << surface->geometryId() << " "
-      //           << nBranchesOnSurface << std::endl;
 
       return Result<void>::success();
     }
@@ -1002,29 +992,37 @@ class CombinatorialKalmanFilter {
 
     void storeLastActiveTip(result_type& result) const {
       const auto& [currentTip, tipState] = result.activeTips.back();
+      // @TODO: Keep information on tip state around so we don't have to
+      //        recalculate it later
       ACTS_VERBOSE("Find track with entry index = "
                    << currentTip << " and there are nMeasurements = "
                    << tipState.nMeasurements
                    << ", nOutliers = " << tipState.nOutliers
                    << ", nHoles = " << tipState.nHoles << " on track");
       result.lastTrackIndices.emplace_back(currentTip);
-      // Set the lastMeasurementIndex to the last measurement
-      // to ignore the states after it in the rest of the algorithm
-      auto lastMeasurementIndex = currentTip;
-      auto lastMeasurementState =
-          result.fittedStates->getTrackState(lastMeasurementIndex);
-      bool isMeasurement = lastMeasurementState.typeFlags().test(
-          TrackStateFlag::MeasurementFlag);
-      while (!isMeasurement) {
-        lastMeasurementIndex = lastMeasurementState.previous();
-        lastMeasurementState =
-            result.fittedStates->getTrackState(lastMeasurementIndex);
-        isMeasurement = lastMeasurementState.typeFlags().test(
-            TrackStateFlag::MeasurementFlag);
+
+      std::optional<MultiTrajectoryTraits::IndexType>
+          lastMeasurementIndexCandidate;
+      result.fittedStates->visitBackwards(
+          currentTip, [&](const auto& trackState) {
+            bool isMeasurement =
+                trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
+            if (isMeasurement) {
+              lastMeasurementIndexCandidate = trackState.index();
+              return false;
+            }
+            return true;
+          });
+      if (lastMeasurementIndexCandidate.has_value()) {
+        ACTS_VERBOSE("Last measurement found on track with entry index = "
+                     << currentTip << " and measurement index = "
+                     << lastMeasurementIndexCandidate.value());
+        result.lastMeasurementIndices.emplace_back(
+            lastMeasurementIndexCandidate.value());
+      } else {
+        ACTS_VERBOSE(
+            "No measurement found on track with entry index = " << currentTip);
       }
-      result.lastMeasurementIndices.emplace_back(lastMeasurementIndex);
-      // @TODO: Keep information on tip state around so we don't have to
-      //        recalculate it later
     }
 
     CombinatorialKalmanFilterExtensions<traj_t> m_extensions;
