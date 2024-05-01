@@ -429,7 +429,6 @@ class CombinatorialKalmanFilter {
                        << result.lastTrackIndices.size() << " tracks");
           result.filtered = true;
         } else {
-          // remove the active tip and continue with the next
           storeLastActiveTip(result);
           // Remove the tip from list of active tips
           result.activeTips.erase(result.activeTips.end() - 1);
