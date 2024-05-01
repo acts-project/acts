@@ -398,52 +398,12 @@ class CombinatorialKalmanFilter {
       // - When navigation breaks and there is still active tip present after
       // recording&removing track tips on current surface
       if (navigator.navigationBreak(state.navigation) && !result.filtered) {
-        // Record the tips on current surface as trajectory entry indices
-        // (taking advantage of fact that those tips are consecutive in list of
-        // active tips) and remove those tips from active tips
         if (!result.activeTips.empty()) {
-          // The last active tip
-          const auto& lastActiveTip = result.activeTips.back().first;
-          // Get the index of previous state
-          auto iprevious =
-              result.fittedStates->getTrackState(lastActiveTip).previous();
-          // Find the track states which have the same previous state and remove
-          // them from active tips
-          while (!result.activeTips.empty()) {
-            const auto& [currentTip, tipState] = result.activeTips.back();
-            if (result.fittedStates->getTrackState(currentTip).previous() !=
-                iprevious) {
-              break;
-            }
-            // Record the tips if there are measurements on the track
-            if (tipState.nMeasurements > 0) {
-              ACTS_VERBOSE("Find track with entry index = "
-                           << currentTip << " and there are nMeasurements = "
-                           << tipState.nMeasurements
-                           << ", nOutliers = " << tipState.nOutliers
-                           << ", nHoles = " << tipState.nHoles << " on track");
-              result.lastTrackIndices.emplace_back(currentTip);
-              // Set the lastMeasurementIndex to the last measurement
-              // to ignore the states after it in the rest of the algorithm
-              auto lastMeasurementIndex = currentTip;
-              auto lastMeasurementState =
-                  result.fittedStates->getTrackState(lastMeasurementIndex);
-              bool isMeasurement = lastMeasurementState.typeFlags().test(
-                  TrackStateFlag::MeasurementFlag);
-              while (!isMeasurement) {
-                lastMeasurementIndex = lastMeasurementState.previous();
-                lastMeasurementState =
-                    result.fittedStates->getTrackState(lastMeasurementIndex);
-                isMeasurement = lastMeasurementState.typeFlags().test(
-                    TrackStateFlag::MeasurementFlag);
-              }
-              result.lastMeasurementIndices.emplace_back(lastMeasurementIndex);
-              // @TODO: Keep information on tip state around so we don't have to
-              //        recalculate it later
-            }
-            // Remove the tip from list of active tips
-            result.activeTips.erase(result.activeTips.end() - 1);
-          }
+          // Record the active tip as trajectory entry indices and remove it
+          // from the list
+          storeLastActiveTip(result);
+          // Remove the tip from list of active tips
+          result.activeTips.erase(result.activeTips.end() - 1);
         }
         // If no more active tip, done with filtering; Otherwise, reset
         // propagation state to track state at last tip of active tips
@@ -476,7 +436,8 @@ class CombinatorialKalmanFilter {
                        << result.lastTrackIndices.size() << " tracks");
           result.filtered = true;
         } else {
-          // remove the active tip and continue with the next
+          storeLastActiveTip(result);
+          // Remove the tip from list of active tips
           result.activeTips.erase(result.activeTips.end() - 1);
           reset(state, stepper, navigator, result);
         }
@@ -577,7 +538,7 @@ class CombinatorialKalmanFilter {
 
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
-        std::size_t prevTip = SIZE_MAX;
+        std::size_t prevTip = kTrackIndexInvalid;
         TipState prevTipState;
         if (!result.activeTips.empty()) {
           prevTip = result.activeTips.back().first;
@@ -645,7 +606,7 @@ class CombinatorialKalmanFilter {
         nBranchesOnSurface = 1;
 
         // Retrieve the previous tip and its state
-        std::size_t prevTip = SIZE_MAX;
+        std::size_t prevTip = kTrackIndexInvalid;
         TipState tipState;
         if (!result.activeTips.empty()) {
           prevTip = result.activeTips.back().first;
@@ -675,7 +636,6 @@ class CombinatorialKalmanFilter {
 
           // Increment of number of processed states
           tipState.nStates++;
-          std::size_t currentTip = SIZE_MAX;
           if (isSensitive) {
             // Increment of number of holes
             tipState.nHoles++;
@@ -695,8 +655,9 @@ class CombinatorialKalmanFilter {
           boundParams.covariance() = state.stepping.cov;
 
           // Add a hole or material track state to the multitrajectory
-          currentTip = addNonSourcelinkState(stateMask, boundState, result,
-                                             isSensitive, prevTip);
+          std::size_t currentTip = addNonSourcelinkState(
+              stateMask, boundState, result, isSensitive, prevTip);
+          result.activeTips.emplace_back(currentTip, tipState);
 
           auto nonSourcelinkState =
               result.fittedStates->getTrackState(currentTip);
@@ -709,8 +670,7 @@ class CombinatorialKalmanFilter {
 
           // Check the branch
           if (branchStopperResult == BranchStopperResult::Continue) {
-            // Remember the active tip and its state
-            result.activeTips.emplace_back(currentTip, tipState);
+            // Remembered the active tip and its state
           } else {
             // No branch on this surface
             nBranchesOnSurface = 0;
@@ -718,6 +678,9 @@ class CombinatorialKalmanFilter {
             if (branchStopperResult == BranchStopperResult::StopAndKeep) {
               result.lastMeasurementIndices.emplace_back(currentTip);
             }
+
+            // Remove the tip from list of active tips
+            result.activeTips.erase(result.activeTips.end() - 1);
           }
         }
 
@@ -1037,6 +1000,41 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
                                                         << " at update stage: "
                                                         << updateStage);
+      }
+    }
+
+    void storeLastActiveTip(result_type& result) const {
+      const auto& [currentTip, tipState] = result.activeTips.back();
+      // @TODO: Keep information on tip state around so we don't have to
+      //        recalculate it later
+      ACTS_VERBOSE("Find track with entry index = "
+                   << currentTip << " and there are nMeasurements = "
+                   << tipState.nMeasurements
+                   << ", nOutliers = " << tipState.nOutliers
+                   << ", nHoles = " << tipState.nHoles << " on track");
+      result.lastTrackIndices.emplace_back(currentTip);
+
+      std::optional<MultiTrajectoryTraits::IndexType>
+          lastMeasurementIndexCandidate;
+      result.fittedStates->visitBackwards(
+          currentTip, [&](const auto& trackState) {
+            bool isMeasurement =
+                trackState.typeFlags().test(TrackStateFlag::MeasurementFlag);
+            if (isMeasurement) {
+              lastMeasurementIndexCandidate = trackState.index();
+              return false;
+            }
+            return true;
+          });
+      if (lastMeasurementIndexCandidate.has_value()) {
+        ACTS_VERBOSE("Last measurement found on track with entry index = "
+                     << currentTip << " and measurement index = "
+                     << lastMeasurementIndexCandidate.value());
+        result.lastMeasurementIndices.emplace_back(
+            lastMeasurementIndexCandidate.value());
+      } else {
+        ACTS_VERBOSE(
+            "No measurement found on track with entry index = " << currentTip);
       }
     }
 
