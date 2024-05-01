@@ -15,6 +15,7 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
+    CkfConfig,
     TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -111,10 +112,14 @@ addCKFTracks(
     field,
     trackSelectorConfig=(
         # fmt: off
-        TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxSharedHits=2),
-        TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxSharedHits=2),
-        TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxOutliers=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxOutliers=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxOutliers=2, maxSharedHits=2),
         # fmt: on
+    ),
+    ckfConfig=CkfConfig(
+        seedDeduplication=True,
+        stayOnSeed=True,
     ),
     outputDirRoot=outputDir,
 )
@@ -132,7 +137,7 @@ addAmbiguityResolution(
 addVertexFitting(
     s,
     field,
-    vertexFinder=VertexFinder.Iterative,
+    vertexFinder=VertexFinder.AMVF,
     outputDirRoot=outputDir,
 )
 
