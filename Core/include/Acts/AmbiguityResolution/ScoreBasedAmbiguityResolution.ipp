@@ -46,8 +46,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (const auto& ts : track.trackStatesReversed()) {
-      auto* referenceSurfacePtr = &ts.referenceSurface();
-      if (referenceSurfacePtr == nullptr) {
+      if (!ts.hasReferenceSurface()) {
         ACTS_ERROR("Track state has no reference surface");
         continue;
       }
