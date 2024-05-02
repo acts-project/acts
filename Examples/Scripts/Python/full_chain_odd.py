@@ -97,8 +97,8 @@ args = vars(parser.parse_args())
 outputDir = args["output"]
 ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
-ambiguity_MLSolver = args["SolverType"] == "ML"
-ScoreBased_ambiguity_resolution = args["SolverType"] == "ScoreBased"
+ambi_ML = args["ambi_solver"] == "ML"
+ambi_scoring = args["ambi_solver"] == "scoring"
 ambi_config = args["ambi_config"]
 seedFilter_ML = args["MLSeedFilter"]
 geoDir = getOpenDataDetectorDirectory()
