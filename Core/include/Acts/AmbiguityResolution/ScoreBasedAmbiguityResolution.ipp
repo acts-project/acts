@@ -26,8 +26,8 @@ template <typename track_container_t, typename traj_t,
 std::vector<std::vector<ScoreBasedAmbiguityResolution::MeasurementInfo>>
 ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    source_link_hash_t&& sourceLinkHash,
-    source_link_equality_t&& sourceLinkEquality,
+    source_link_hash_t sourceLinkHash,
+    source_link_equality_t sourceLinkEquality,
     std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const {
   auto MeasurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,

@@ -152,8 +152,8 @@ class ScoreBasedAmbiguityResolution {
             typename source_link_equality_t>
   std::vector<std::vector<MeasurementInfo>> computeInitialState(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      source_link_hash_t&& sourceLinkHash,
-      source_link_equality_t&& sourceLinkEquality,
+      source_link_hash_t sourceLinkHash,
+      source_link_equality_t sourceLinkEquality,
       std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const;
 
   /// Compute the score of each track.
