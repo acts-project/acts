@@ -255,7 +255,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
         // choosing a scaling factor based on the number of hits in a track per
         // detector.
-        std::size_t iHits = trackFeatures.nHits;
+        std::size_t nHits = trackFeatures.nHits;
         if (detector.factorHits.size() < iHits) {
           ACTS_WARNING("Detector " << detectorId
                                    << " has not enough factorhits in the "
