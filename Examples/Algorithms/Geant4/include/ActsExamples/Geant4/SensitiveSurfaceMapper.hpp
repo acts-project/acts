@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -67,10 +69,11 @@ struct SensitiveCandidates {
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
 class SensitiveSurfaceMapper {
  public:
+  /// This prefix is used to indicate a sensitive volume that is matched
+  constexpr static std::string_view mappingPrefix = "ActsSensitive#";
+
   using SensitiveCandidates = std::function<std::vector<const Acts::Surface*>(
       const Acts::GeometryContext&, const Acts::Vector3&)>;
-
-  constexpr static std::string_view mappingPrefix = "ActsGeoID#";
 
   /// Configuration struct for the surface mapper
   struct Config {
@@ -82,6 +85,15 @@ class SensitiveSurfaceMapper {
 
     /// The sensitive surfaces that are being mapped to
     SensitiveCandidates candidateSurfaces;
+  };
+
+  /// State object that coutns the assignments and makes
+  /// a replica save copy association map
+  struct State {
+    /// The map of G4 physical volumes to the mapped surfaces (can be many as
+    /// there can be replicas)
+    std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>
+        g4VolumeToSurfaces;
   };
 
   /// Constructor with:
@@ -98,14 +110,13 @@ class SensitiveSurfaceMapper {
   /// hierarchy and applies name remapping to the Physical volumes
   /// of the Geant4 geometry.
   ///
+  /// @param state is the state object (for caching)
   /// @param gctx the geometry context
   /// @param g4PhysicalVolume the current physical volume in process
   /// @param motherPosition the absolute position of the mother
-  /// @param sCounter  a counter of how many volumes have been remapped
-  void remapSensitiveNames(const Acts::GeometryContext& gctx,
+  void remapSensitiveNames(State& state, const Acts::GeometryContext& gctx,
                            G4VPhysicalVolume* g4PhysicalVolume,
-                           const Acts::Transform3& motherTransform,
-                           int& sCounter) const;
+                           const Acts::Transform3& motherTransform) const;
 
  protected:
   /// Configuration object

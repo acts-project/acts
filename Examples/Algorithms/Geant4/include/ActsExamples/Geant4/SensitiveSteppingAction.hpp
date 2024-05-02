@@ -16,7 +16,12 @@
 
 #include <G4UserSteppingAction.hh>
 
+class G4VPhysicalVolume;
 class G4Step;
+
+namespace Acts {
+class Surface;
+}
 
 namespace ActsExamples {
 
@@ -52,6 +57,15 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// @param step is the Geant4 step of the particle
   void UserSteppingAction(const G4Step* step) override;
 
+  /// Set the multimap that correlates G4VPhysicalVolumes to Acts::Surfaces
+  ///
+  /// @param surfaceMapping the multimap of physical volumes to surfaces
+  void assignSurfaceMapping(
+      const std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>&
+          surfaceMapping) {
+    m_surfaceMapping = surfaceMapping;
+  }
+
  protected:
   Config m_cfg;
 
@@ -64,6 +78,9 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
 
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>
+      m_surfaceMapping;
 };
 
 }  // namespace ActsExamples
