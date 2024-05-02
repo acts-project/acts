@@ -65,7 +65,6 @@ void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
-void addScoreBasedAmbiguityResolution(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
