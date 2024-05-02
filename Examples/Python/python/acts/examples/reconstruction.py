@@ -1298,9 +1298,11 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
-        inputSeeds="estimatedseeds"
-        if ckfConfig.seedDeduplication or ckfConfig.stayOnSeed
-        else "",
+        inputSeeds=(
+            "estimatedseeds"
+            if ckfConfig.seedDeduplication or ckfConfig.stayOnSeed
+            else ""
+        ),
         outputTracks="ckf_tracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()

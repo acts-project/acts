@@ -23,7 +23,7 @@ inline const Logger& ScoreBasedAmbiguityResolution::logger() const {
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, typename source_link_hash_t,
           typename source_link_equality_t>
-std::vector<std::vector<ScoreBasedAmbiguityResolution::measurementTuple>>
+std::vector<std::vector<ScoreBasedAmbiguityResolution::MeasurementInfo>>
 ScoreBasedAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
     source_link_hash_t&& sourceLinkHash,
@@ -34,15 +34,15 @@ ScoreBasedAmbiguityResolution::computeInitialState(
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
-  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
+  std::vector<std::vector<MeasurementInfo>> measurementsPerTrack;
   measurementsPerTrack.reserve(tracks.size());
   ACTS_VERBOSE("Starting to compute initial state");
 
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorConfigs.size();
     int numberOfTrackStates = track.nTrackStates();
-    std::vector<measurementTuple> measurementTuples;
-    measurementTuples.reserve(numberOfTrackStates);
+    std::vector<MeasurementInfo> measurements;
+    measurements.reserve(numberOfTrackStates);
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (const auto& ts : track.trackStatesReversed()) {
@@ -73,8 +73,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
         bool isoutliner = false;
 
-        measurementTuples.push_back(
-            std::make_tuple(emplace.first->second, iVolume, isoutliner));
+        measurements.push_back({emplace.first->second, detectorId, isoutliner});
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
         Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
         ACTS_DEBUG("Track state type is OutlierFlag");
@@ -86,14 +85,13 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
         bool isoutliner = true;
 
-        measurementTuples.push_back(
-            std::make_tuple(emplace.first->second, iVolume, isoutliner));
+        measurements.push_back({emplace.first->second, detectorId, isoutliner});
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
         ACTS_DEBUG("Track state type is HoleFlag");
         trackFeaturesVector[detectorId].nHoles++;
       }
     }
-    measurementsPerTrack.push_back(std::move(measurementTuples));
+    measurementsPerTrack.push_back(std::move(measurements));
     trackFeaturesVectors.push_back(std::move(trackFeaturesVector));
   }
 
@@ -320,7 +318,7 @@ template <typename track_container_t, typename traj_t,
           template <typename> class holder_t, bool ReadOnly>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
+    const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
     const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
         optionalCuts) const {

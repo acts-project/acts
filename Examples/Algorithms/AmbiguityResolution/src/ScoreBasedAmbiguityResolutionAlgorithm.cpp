@@ -103,7 +103,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);  // Read input data
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
-  std::vector<std::vector<std::tuple<std::size_t, std::size_t, bool>>>
+  std::vector<std::vector<Acts::ScoreBasedAmbiguityResolution::MeasurementInfo>>
       measurementsPerTracks;
 
   std::vector<std::vector<Acts::ScoreBasedAmbiguityResolution::TrackFeatures>>

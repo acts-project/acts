@@ -36,7 +36,6 @@ namespace Acts {
 /// data preparations
 class ScoreBasedAmbiguityResolution {
  public:
-  using measurementTuple = std::tuple<std::size_t, std::size_t, bool>;
   /// @brief Detector configuration struct : contains the configuration for each detector
   ///
   /// The configuration can be saved in a json file and loaded from there.
@@ -78,6 +77,14 @@ class ScoreBasedAmbiguityResolution {
     std::size_t nOutliers = 0;
     std::size_t nSharedHits = 0;
   };
+
+  /// @brief MeasurementInfo : contains the measurement ID and the detector ID
+  struct MeasurementInfo {
+    std::size_t iMeasurement;
+    std::size_t detectorId;
+    bool isOutlier;
+  };
+
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
@@ -143,7 +150,7 @@ class ScoreBasedAmbiguityResolution {
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, typename source_link_hash_t,
             typename source_link_equality_t>
-  std::vector<std::vector<measurementTuple>> computeInitialState(
+  std::vector<std::vector<MeasurementInfo>> computeInitialState(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality,
@@ -174,7 +181,7 @@ class ScoreBasedAmbiguityResolution {
   std::vector<bool> getCleanedOutTracks(
       const std::vector<double>& trackScore,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
+      const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack)
       const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
@@ -189,7 +196,7 @@ class ScoreBasedAmbiguityResolution {
             template <typename> class holder_t, bool ReadOnly>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      const std::vector<std::vector<measurementTuple>>& measurementsPerTrack,
+      const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
           optionalCuts = {}) const;

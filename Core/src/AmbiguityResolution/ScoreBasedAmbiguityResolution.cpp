@@ -16,7 +16,7 @@
 std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     const std::vector<double>& trackScore,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-    const std::vector<std::vector<measurementTuple>>& measurementsPerTrack)
+    const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack)
     const {
   std::vector<bool> cleanTracks(measurementsPerTrack.size(), false);
 
@@ -40,8 +40,8 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     if (trackScore[iTrack] <= 0) {
       continue;
     }
-    for (auto measurementTuples : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = std::get<0>(measurementTuples);
+    for (auto measurementObjects : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurementObjects.iMeasurement;
       tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
@@ -82,19 +82,11 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
     // Loop over all measurements of the track and for each hit a
     // trackStateTypes is assigned.
-    for (const auto& measurementTuples : measurementsPerTrack[iTrack]) {
-      auto iMeasurement = std::get<0>(measurementTuples);
-      auto iVolume = std::get<1>(measurementTuples);
-      auto isoutliner = std::get<2>(measurementTuples);
+    for (const auto& measurementObjects : measurementsPerTrack[iTrack]) {
+      auto iMeasurement = measurementObjects.iMeasurement;
+      auto isoutliner = measurementObjects.isOutlier;
+      auto detectorId = measurementObjects.detectorId;
 
-      auto volume_it = m_cfg.volumeMap.find(iVolume);
-
-      if (volume_it == m_cfg.volumeMap.end()) {
-        index++;
-        continue;
-      }
-
-      auto detectorId = volume_it->second;
       auto detector = m_cfg.detectorConfigs.at(detectorId);
       if (isoutliner) {
         ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
@@ -135,8 +127,8 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     // trackStateTypes and other conditions.
     // Good measurements are copied to the newMeasurementsPerTrack vector.
     for (std::size_t i = 0; i < trackStateTypes.size(); i++) {
-      auto& measurementTuples = measurementsPerTrack[iTrack][i];
-      measurement = std::get<0>(measurementTuples);
+      auto& measurementObjects = measurementsPerTrack[iTrack][i];
+      measurement = measurementObjects.iMeasurement;
 
       if (trackStateTypes[i] == RejectedHit) {
         ACTS_DEBUG("Dropping rejected hit");

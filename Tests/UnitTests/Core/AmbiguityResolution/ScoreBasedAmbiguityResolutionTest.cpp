@@ -30,7 +30,7 @@ using Acts::MultiTrajectoryTraits::IndexType;
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
-using measurementTuple = ScoreBasedAmbiguityResolution::measurementTuple;
+using MeasurementInfo = ScoreBasedAmbiguityResolution::MeasurementInfo;
 
 // Test fixture for ScoreBasedAmbiguityResolution
 struct Fixture {
@@ -66,7 +66,8 @@ struct Fixture {
 };
 
 // Helper function to create a sample input for getCleanedOutTracks
-std::vector<std::vector<measurementTuple>> createSampleInput() {
+std::vector<std::vector<MeasurementInfo>> createSampleInput() {
+  Fixture fixture;
   std::vector<std::pair<std::size_t, std::vector<std::size_t>>> trackVolumes = {
       {0, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
       {1, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10}},
@@ -74,14 +75,14 @@ std::vector<std::vector<measurementTuple>> createSampleInput() {
       {3, {13, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8}},
       {4, {19, 18, 18, 18, 10, 10, 10, 10, 10, 10, 10, 10, 10}}};
 
-  std::vector<std::vector<measurementTuple>> measurementsPerTrack;
+  std::vector<std::vector<MeasurementInfo>> measurementsPerTrack;
   // Add sample measurements for each track
 
   for (const auto& trackVolume : trackVolumes) {
-    std::vector<measurementTuple> measurements;
+    std::vector<MeasurementInfo> measurements;
     for (std::size_t i = 0; i < trackVolume.second.size(); ++i) {
-      measurements.push_back(
-          std::make_tuple(i + 2, trackVolume.second[i], false));
+      std::size_t detectorID = fixture.config.volumeMap[trackVolume.second[i]];
+      measurements.push_back({i + 2, detectorID, false});
     }
     measurementsPerTrack.push_back(measurements);
   }
@@ -95,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(GetCleanedOutTracksTest, Fixture) {
   ScoreBasedAmbiguityResolution tester(fixture.config);
 
   // Create sample input
-  std::vector<std::vector<measurementTuple>> measurementsPerTrack =
+  std::vector<std::vector<MeasurementInfo>> measurementsPerTrack =
       createSampleInput();
 
   std::vector<double> TrackSore;
