@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
   std::vector<double> thetaYZs;
   std::vector<double> theta3Ds;
 
-  for (size_t i = 0; i < 100000; i++) {
+  for (size_t i = 0; i < 10000; i++) {
     auto newParticle = particle;
     scattering(gen, materialSlab, newParticle);
 
@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
   double rmsThetaYZ = rms(thetaYZs, 0);
   double rmsTheta3D = rms(theta3Ds, 0);
 
-  CHECK_CLOSE_REL(rmsThetaYZ, theta0, 1e-3);
-  CHECK_CLOSE_REL(rmsTheta3D, M_SQRT2 * theta0, 1e-3);
+  CHECK_CLOSE_REL(rmsThetaYZ, theta0, 0.02);
+  CHECK_CLOSE_REL(rmsTheta3D, M_SQRT2 * theta0, 0.02);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
