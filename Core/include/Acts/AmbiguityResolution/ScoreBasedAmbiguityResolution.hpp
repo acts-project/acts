@@ -170,6 +170,21 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
           optionalCuts = {}) const;
 
+  /// Compute the score of each track based on the ambiguity function.
+  ///
+  /// @param tracks is the input track container
+  /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
+  /// @param optionalCuts is the user defined optional cuts to be applied.
+  /// @return a vector of scores for each track
+  template <typename track_container_t, typename traj_t,
+            template <typename> class holder_t, bool ReadOnly>
+  std::vector<double> ambiguityScore(
+      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
+      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
+      const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
+          optionalCuts = {}) const;
+
+
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
   ///
