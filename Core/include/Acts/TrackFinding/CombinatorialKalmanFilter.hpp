@@ -67,17 +67,18 @@ struct CombinatorialKalmanFilterTipState {
   std::size_t nHoles = 0;
 };
 
+enum class CombinatorialKalmanFilterBranchStopperResult {
+  Continue,
+  StopAndDrop,
+  StopAndKeep,
+};
+
 /// Extension struct which holds the delegates to customize the CKF behavior
 template <typename traj_t>
 struct CombinatorialKalmanFilterExtensions {
   using candidate_container_t =
       typename std::vector<typename traj_t::TrackStateProxy>;
-
-  enum class BranchStopperResult {
-    Continue,
-    StopAndDrop,
-    StopAndKeep,
-  };
+  using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
   using Calibrator = typename KalmanFitterExtensions<traj_t>::Calibrator;
   using Updater = typename KalmanFitterExtensions<traj_t>::Updater;
@@ -663,8 +664,7 @@ class CombinatorialKalmanFilter {
               result.fittedStates->getTrackState(currentTip);
 
           using BranchStopperResult =
-              typename CombinatorialKalmanFilterExtensions<
-                  traj_t>::BranchStopperResult;
+              CombinatorialKalmanFilterBranchStopperResult;
           BranchStopperResult branchStopperResult =
               m_extensions.branchStopper(tipState, nonSourcelinkState);
 

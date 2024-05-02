@@ -179,8 +179,8 @@ class BranchStopper {
   using Config =
       std::optional<std::variant<Acts::TrackSelector::Config,
                                  Acts::TrackSelector::EtaBinnedConfig>>;
-  using BranchStopperResult = Acts::CombinatorialKalmanFilterExtensions<
-      Acts::VectorMultiTrajectory>::BranchStopperResult;
+  using BranchStopperResult =
+      Acts::CombinatorialKalmanFilterBranchStopperResult;
 
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
