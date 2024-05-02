@@ -17,9 +17,6 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <iterator>
-#include <map>
-
 namespace {
 
 Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
