@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
@@ -28,6 +29,7 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
+#include <G4VTouchable.hh>
 
 class G4PrimaryParticle;
 
@@ -97,6 +99,7 @@ ActsExamples::SensitiveSteppingAction::SensitiveSteppingAction(
 void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     const G4Step* step) {
   // Unit conversions G4->::ACTS
+  static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
 
   // The particle after the step
   G4Track* track = step->GetTrack();
@@ -125,19 +128,53 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   }
 
   // Get the physical volume & check if it has the sensitive string name
-  std::string_view volumeName = track->GetVolume()->GetName();
+  const G4VPhysicalVolume* volume = track->GetVolume();
+  std::string volumeName = volume->GetName();
 
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
       std::string_view::npos) {
     return;
   }
 
-  // Cast out the GeometryIdentifier
-  volumeName = volumeName.substr(SensitiveSurfaceMapper::mappingPrefix.size(),
-                                 std::string_view::npos);
-  char* end = nullptr;
-  const Acts::GeometryIdentifier geoId(
-      std::strtoul(volumeName.data(), &end, 10));
+  // Get PreStepPoint and PostStepPoint
+  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
+  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
+
+  // The G4Touchable for the matching
+  const G4VTouchable* touchable = track->GetTouchable();
+
+  Acts::GeometryIdentifier geoId{};
+
+  // Find the range of candidate surfaces for the current position in the
+  // mapping multimap
+  auto [bsf, esf] = m_surfaceMapping.equal_range(volume);
+  std::size_t nSurfaces = std::distance(bsf, esf);
+
+  ACTS_VERBOSE("Found " << nSurfaces << " candidate surfaces for volume "
+                        << volumeName);
+
+  if (nSurfaces == 0) {
+    ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
+    return;
+  } else if (nSurfaces == 1u) {
+    geoId = bsf->second->geometryId();
+    ACTS_VERBOSE("Unique assignment successful -> to surface " << geoId);
+  } else {
+    // Find the closest surface to the current position
+    Acts::GeometryContext gctx;
+    for (; bsf != esf; ++bsf) {
+      const Acts::Surface* surface = bsf->second;
+      const G4ThreeVector& translation = touchable->GetTranslation();
+      Acts::Vector3 g4VolumePosition(convertLength * translation.x(),
+                                     convertLength * translation.y(),
+                                     convertLength * translation.z());
+      if (surface->center(gctx).isApprox(g4VolumePosition)) {
+        geoId = surface->geometryId();
+        break;
+      }
+    }
+    ACTS_VERBOSE("Replica assignment successful -> to surface " << geoId);
+  }
 
   // This is not the case if we have a particle-ID collision
   if (eventStore().trackIdMapping.find(track->GetTrackID()) ==
@@ -148,10 +185,6 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   const auto particleId = eventStore().trackIdMapping.at(track->GetTrackID());
 
   ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
-
-  // Get PreStepPoint and PostStepPoint
-  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
-  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
   // Set particle hit count to zero, so we have this entry in the map later
   if (eventStore().particleHitCount.find(particleId) ==
