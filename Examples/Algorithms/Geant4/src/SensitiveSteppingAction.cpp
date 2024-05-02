@@ -164,7 +164,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     Acts::GeometryContext gctx;
     for (; bsf != esf; ++bsf) {
       Acts::Surface* surface = bsf->second;
-      auto translation = touchable->GetTranslation();
+      const G4ThreeVector& translation = touchable->GetTranslation();
       Acts::Vector3 g4VolumePosition(convertLength * translation.x(),
                                      convertLength * translation.y(),
                                      convertLength * translation.z());
