@@ -676,7 +676,7 @@ class CombinatorialKalmanFilter {
             nBranchesOnSurface = 0;
 
             if (branchStopperResult == BranchStopperResult::StopAndKeep) {
-              result.lastMeasurementIndices.emplace_back(currentTip);
+              storeLastActiveTip(result);
             }
 
             // Remove the tip from list of active tips
