@@ -118,9 +118,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
   // Loop over all the tracks in the container
   for (const auto& track : tracks) {
-    const auto& trackFeaturesVector =
-        trackFeaturesVectors[iTrack];  // get the trackFeatures map for the
-                                       // track
+    // get the trackFeatures map for the track
+    const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
