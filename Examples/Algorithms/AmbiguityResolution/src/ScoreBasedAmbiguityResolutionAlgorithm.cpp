@@ -53,7 +53,7 @@ bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
          b.get<ActsExamples::IndexSourceLink>().index();
 }
 
-bool DoubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
+bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
                                               Acts::ConstVectorMultiTrajectory,
                                               std::shared_ptr, true>& track) {
   bool doubleFlag = false;
