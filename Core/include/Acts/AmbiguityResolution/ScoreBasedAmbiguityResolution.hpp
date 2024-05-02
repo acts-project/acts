@@ -126,6 +126,7 @@ class ScoreBasedAmbiguityResolution {
     /// applied only if useAmbiguityFunction is true
     std::vector<OptionalScoreModifier> scores = {};
   };
+
   ScoreBasedAmbiguityResolution(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
