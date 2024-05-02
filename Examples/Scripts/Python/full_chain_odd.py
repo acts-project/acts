@@ -80,7 +80,7 @@ parser.add_argument(
     default="greedy",
 )
 parser.add_argument(
-    "--ambi_config",
+    "--ambi-config",
     help="Set the configuration file for the Score Based ambiguity resolution",
     type=pathlib.Path,
     default=pathlib.Path.cwd() / "ambi_config.json",
