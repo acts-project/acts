@@ -128,7 +128,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   }
 
   // Get the physical volume & check if it has the sensitive string name
-  auto volume = track->GetVolume();
+  const G4VPhysicalVolume* volume = track->GetVolume();
   std::string volumeName = volume->GetName();
 
   if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
