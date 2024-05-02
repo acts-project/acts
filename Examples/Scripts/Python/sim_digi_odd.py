@@ -65,9 +65,9 @@ parser.add_argument(
 parser.add_argument(
     "--gun-pt-range",
     nargs="+",
-    help="Pt range of the particle gun (MeV)",
+    help="Pt range of the particle gun (GeV)",
     type=float,
-    default=[150.0, None],
+    default=[0.1 * u.GeV, 100 * u.GeV],
 )
 parser.add_argument(
     "--rnd-seed",
@@ -132,11 +132,8 @@ if args.edm4hep:
         config=ParticleSelectorConfig(
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
-            eta=(args.gun_eta_range[0], args.gun_eta_range[1]),
-            pt=(
-                args.gun_pt_range[0] * u.MeV,
-                args.gun_pt_range[1] * u.MeV if args.gun_pt_range[1] else None,
-            ),
+            eta=(-3.0, 3.0),
+            pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
         inputParticles="particles",
@@ -146,8 +143,12 @@ else:
     if not args.ttbar:
         addParticleGun(
             s,
-            MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-            EtaConfig(-3.0, 3.0),
+            MomentumConfig(
+                args.gun_pt_range[0] * u.GeV,
+                args.gun_pt_range[1] * u.GeV,
+                transverse=True,
+            ),
+            EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
