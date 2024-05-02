@@ -17,7 +17,7 @@ namespace Acts {
 
 std::pair<std::map<std::size_t, std::size_t>,
           std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>>
-AmbiguityConfigJsonConverter::fromJson(const std::string& configFile) const {
+from_json(const std::string& configFile) {
   std::ifstream file(configFile);
   if (!file.is_open()) {
     std::cerr << "Error opening file: " << configFile << std::endl;

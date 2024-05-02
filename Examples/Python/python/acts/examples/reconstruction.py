@@ -1755,7 +1755,7 @@ def addScoreBasedAmbiguityResolution(
     algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=tracks,
-        configFile=AmbiVolumeFile,
+        configFile=ambiVolumeFile,
         outputTracks="ambiTracksScoreBased",
         **acts.examples.defaultKWArgs(
             minScore=config.minScore,

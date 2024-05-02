@@ -296,7 +296,7 @@ addCKFTracks(
     # outputDirCsv=outputDir,
 )
 
-if ambiguity_MLSolver:
+if ambi_ML:
     addAmbiguityResolutionML(
         s,
         AmbiguityResolutionMLConfig(
@@ -308,7 +308,7 @@ if ambiguity_MLSolver:
         + "/MLAmbiguityResolution/duplicateClassifier.onnx",
     )
 
-elif ScoreBased_ambiguity_resolution:
+elif ambi_scoring:
     addScoreBasedAmbiguityResolution(
         s,
         ScoreBasedAmbiguityResolutionConfig(
@@ -325,7 +325,7 @@ elif ScoreBased_ambiguity_resolution:
             useAmbiguityFunction=False,
         ),
         outputDirRoot=outputDir,
-        AmbiVolumeFile=ambi_config,
+        ambiVolumeFile=ambi_config,
         writeCovMat=True,
         # outputDirCsv=outputDir,
     )

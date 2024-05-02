@@ -26,7 +26,7 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
 
   std::cout << "Volume File is " << configFile << std::endl;
 
-  auto configPair = Acts::AmbiguityConfigJsonConverter().fromJson(configFile);
+  auto configPair = Acts::from_json(configFile);
   result.volumeMap = configPair.first;
   result.detectorConfigs = configPair.second;
   result.minScore = cfg.minScore;
