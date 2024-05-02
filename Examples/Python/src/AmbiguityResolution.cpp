@@ -29,9 +29,6 @@ void addAmbiguityResolution(Context& ctx) {
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
-}
-void addScoreBasedAmbiguityResolution(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm, mex,
