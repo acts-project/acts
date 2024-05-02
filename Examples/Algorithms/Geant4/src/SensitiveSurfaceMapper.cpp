@@ -92,8 +92,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
                                              << " at position "
                                              << g4RelPosition.transpose());
       // Check if the prefix is not yet assigned
-      std::string prefixName = std::string(mappingPrefix);
-      if (volumeName.find(prefixName) == std::string::npos) {
+      if (volumeName.find(mappingPrefix) == std::string::npos) {
         // Set the new name
         std::string mappedName = prefixName + volumeName;
         g4PhysicalVolume->SetName(mappedName);
