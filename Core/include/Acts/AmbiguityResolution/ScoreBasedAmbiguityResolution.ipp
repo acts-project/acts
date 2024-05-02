@@ -29,7 +29,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
     source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality,
     std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const {
-  auto measurementIndexMap =
+  auto MeasurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
