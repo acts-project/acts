@@ -63,7 +63,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   void assignSurfaceMapping(
       const std::multimap<const G4VPhysicalVolume*, const Acts::Surface*>&
           surfaceMapping) {
-    m_surfaceMapping = std::move(surfaceMapping);
+    m_surfaceMapping = surfaceMapping;
   }
 
  protected:
