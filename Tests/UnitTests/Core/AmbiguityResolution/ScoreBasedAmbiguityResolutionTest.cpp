@@ -27,9 +27,7 @@
 
 using Acts::MultiTrajectoryTraits::IndexType;
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(ScoreBasedAmbiguityResolutionTest)
 using measurementTuple = ScoreBasedAmbiguityResolution::measurementTuple;
