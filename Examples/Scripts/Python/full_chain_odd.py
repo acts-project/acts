@@ -73,11 +73,11 @@ parser.add_argument(
     default=200,
 )
 parser.add_argument(
-    "--SolverType",
+    "--ambi-solver",
     help="Set which ambiguity solver to use, default is the classical one",
     type=str,
-    choices=["ML", "ScoreBased", "classical"],
-    default="classical",
+    choices=["greedy", "scoring", "ML"],
+    default="greedy",
 )
 parser.add_argument(
     "--ambi_config",
