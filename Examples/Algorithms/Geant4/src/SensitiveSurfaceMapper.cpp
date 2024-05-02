@@ -94,7 +94,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
       // Check if the prefix is not yet assigned
       if (volumeName.find(mappingPrefix) == std::string::npos) {
         // Set the new name
-        std::string mappedName = std::string(prefixName) + volumeName;
+        std::string mappedName = std::string(mappingPrefix) + volumeName;
         g4PhysicalVolume->SetName(mappedName);
       }
       // Insert into the multi-map

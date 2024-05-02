@@ -163,7 +163,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     // Find the closest surface to the current position
     Acts::GeometryContext gctx;
     for (; bsf != esf; ++bsf) {
-      Acts::Surface* surface = bsf->second;
+      const Acts::Surface* surface = bsf->second;
       const G4ThreeVector& translation = touchable->GetTranslation();
       Acts::Vector3 g4VolumePosition(convertLength * translation.x(),
                                      convertLength * translation.y(),
