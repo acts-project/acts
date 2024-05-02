@@ -393,10 +393,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// times to detector volumes.
   ///
   /// @param material Material description associated to this volumw
-  void assignVolumeMaterial(std::shared_ptr<IVolumeMaterial> material);
-
-  /// Non-const access to the voume material (for scaling, e.g.)
-  std::shared_ptr<IVolumeMaterial> volumeMaterialPtr();
+  void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
 
   /// Const access to the volume amterial
   const IVolumeMaterial* volumeMaterial() const;
@@ -472,7 +469,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   SurfaceCandidatesUpdater m_surfaceCandidatesUpdater;
 
   /// Volume material (optional)
-  std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
+  std::shared_ptr<const IVolumeMaterial> m_volumeMaterial = nullptr;
 
   /// GeometryIdentifier of this volume
   GeometryIdentifier m_geometryId{0};
