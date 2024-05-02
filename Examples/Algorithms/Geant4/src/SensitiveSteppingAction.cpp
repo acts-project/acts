@@ -151,7 +151,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   std::size_t nSurfaces = std::distance(bsf, esf);
 
   ACTS_VERBOSE("Found " << nSurfaces << " candidate surfaces for volume "
-                        << volume->GetName());
+                        << volumeName);
 
   if (nSurfaces == 0) {
     ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
