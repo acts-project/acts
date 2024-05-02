@@ -126,7 +126,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTrackFinding(ctx);
   addVertexing(ctx);
   addAmbiguityResolution(ctx);
-  addScoreBasedAmbiguityResolution(ctx);
 
   addDigitization(ctx);
   addPythia8(ctx);
