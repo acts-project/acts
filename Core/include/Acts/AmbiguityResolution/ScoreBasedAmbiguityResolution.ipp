@@ -40,8 +40,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorConfigs.size();
-    int numberOfTrackStates = std::distance(track.trackStatesReversed().begin(),
-                                            track.trackStatesReversed().end());
+    int numberOfTrackStates = track.nTrackStates();
     std::vector<measurementTuple> measurementTuples;
     measurementTuples.reserve(numberOfTrackStates);
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
