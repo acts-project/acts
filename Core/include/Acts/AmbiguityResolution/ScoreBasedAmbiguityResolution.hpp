@@ -13,12 +13,12 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <map>
-#include <string>
-#include <vector>
-#include <tuple>
 #include <cstddef>
+#include <map>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
@@ -145,8 +145,8 @@ class ScoreBasedAmbiguityResolution {
             typename source_link_equality_t>
   std::vector<std::vector<measurementTuple>> computeInitialState(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      source_link_hash_t sourceLinkHash,
-      source_link_equality_t sourceLinkEquality,
+      source_link_hash_t&& sourceLinkHash,
+      source_link_equality_t&& sourceLinkEquality,
       std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const;
 
   /// Compute the score of each track.

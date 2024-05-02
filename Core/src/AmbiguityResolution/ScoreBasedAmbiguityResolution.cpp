@@ -169,7 +169,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
     // Check if the track has enough hits to be accepted.
     if (newMeasurementsPerTrack.size() < 3) {
-      TrkCouldBeAccepted = false;
+      trkCouldBeAccepted = false;
       ACTS_DEBUG(std::endl
                  << "Track " << iTrack
                  << " could not be accepted - not enough hits");
@@ -184,12 +184,12 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       auto detector = m_cfg.detectorConfigs.at(detectorId);
       if (trackFeaturesVector[detectorId].nSharedHits >
           detector.maxSharedHits) {
-        TrkCouldBeAccepted = false;
+        trkCouldBeAccepted = false;
         break;
       }
     }
 
-    if (TrkCouldBeAccepted) {
+    if (trkCouldBeAccepted) {
       cleanTracks[iTrack] = true;
       newMeasurements.push_back(newMeasurementsPerTrack);
       ACTS_VERBOSE("Track " << iTrack << " is accepted");

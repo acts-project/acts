@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -52,11 +53,11 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     // maximum number of shared hit per track
     std::size_t maxShared = 5;
 
-    double pTMin = 0;
-    double pTMax = 1e9;
+    double pTMin = 0 * Acts::UnitConstants::GeV;
+    double pTMax = 1e5 * Acts::UnitConstants::GeV;
 
-    double phiMin = -M_PI;
-    double phiMax = M_PI;
+    double phiMin = -M_PI * Acts::UnitConstants::rad;
+    double phiMax = M_PI * Acts::UnitConstants::rad;
 
     double etaMin = -5;
     double etaMax = 5;

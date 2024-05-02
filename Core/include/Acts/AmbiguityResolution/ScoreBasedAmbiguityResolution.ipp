@@ -68,8 +68,8 @@ ScoreBasedAmbiguityResolution::computeInitialState(
         trackFeaturesVector[detectorId].nHits++;
 
         // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
+        auto emplace = MeasurementIndexMap.try_emplace(
+            sourceLink, MeasurementIndexMap.size());
 
         bool isoutliner = false;
 
@@ -81,8 +81,8 @@ ScoreBasedAmbiguityResolution::computeInitialState(
         trackFeaturesVector[detectorId].nOutliers++;
 
         // assign a new measurement index if the source link was not seen yet
-        auto emplace = measurementIndexMap.try_emplace(
-            sourceLink, measurementIndexMap.size());
+        auto emplace = MeasurementIndexMap.try_emplace(
+            sourceLink, MeasurementIndexMap.size());
 
         bool isoutliner = true;
 
@@ -256,19 +256,19 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
         // choosing a scaling factor based on the number of hits in a track per
         // detector.
         std::size_t nHits = trackFeatures.nHits;
-        if (detector.factorHits.size() < iHits) {
+        if (detector.factorHits.size() < nHits) {
           ACTS_WARNING("Detector " << detectorId
                                    << " has not enough factorhits in the "
                                       "detector.factorHits vector");
           continue;
         }
-        if (iHits > detector.maxHits) {
-          score = score * (detector.maxHits - iHits + 1);  // hits are good !
-          iHits = detector.maxHits;
+        if (nHits > detector.maxHits) {
+          score = score * (detector.maxHits - nHits + 1);  // hits are good !
+          nHits = detector.maxHits;
         }
-        score = score * detector.factorHits[iHits];
-        ACTS_DEBUG("Modifier for " << iHits
-                                   << " hits: " << detector.factorHits[iHits]
+        score = score * detector.factorHits[nHits];
+        ACTS_DEBUG("Modifier for " << nHits
+                                   << " hits: " << detector.factorHits[nHits]
                                    << "  New score now: " << score);
 
         // choosing a scaling factor based on the number of holes in a track per
