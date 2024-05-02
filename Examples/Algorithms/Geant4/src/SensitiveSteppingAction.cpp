@@ -154,7 +154,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
                         << volume->GetName());
 
   if (nSurfaces == 0) {
-    ACTS_ERROR("No candidate surfaces found for volume " << volume->GetName());
+    ACTS_ERROR("No candidate surfaces found for volume " << volumeName);
     return;
   } else if (nSurfaces == 1u) {
     geoId = bsf->second->geometryId();
