@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
   std::vector<double> thetaYZs;
   std::vector<double> theta3Ds;
 
-  for (size_t i = 0; i < 10000; i++) {
+  for (std::size_t i = 0; i < 10000; i++) {
     auto newParticle = particle;
     scattering(gen, materialSlab, newParticle);
 
