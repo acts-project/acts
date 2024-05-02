@@ -24,8 +24,10 @@ ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
 void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
-    const Acts::GeometryContext& gctx, G4VPhysicalVolume* g4PhysicalVolume,
-    const Acts::Transform3& motherTransform, int& sCounter) const {
+    State& state, const Acts::GeometryContext& gctx,
+    G4VPhysicalVolume* g4PhysicalVolume,
+    const Acts::Transform3& motherTransform) const {
+  // Make sure the unit conversion is correct
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   auto g4LogicalVolume = g4PhysicalVolume->GetLogicalVolume();
@@ -53,8 +55,8 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   if (G4int nDaughters = g4LogicalVolume->GetNoDaughters(); nDaughters > 0) {
     // Step down to all daughters
     for (G4int id = 0; id < nDaughters; ++id) {
-      remapSensitiveNames(gctx, g4LogicalVolume->GetDaughter(id), transform,
-                          sCounter);
+      remapSensitiveNames(state, gctx, g4LogicalVolume->GetDaughter(id),
+                          transform);
     }
     return;
   }
@@ -86,15 +88,17 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
 
     // A mapped surface was found, a new name will be set that G4PhysVolume
     if (mappedSurface != nullptr) {
-      ++sCounter;
-      std::string mappedVolumeName(SensitiveSurfaceMapper::mappingPrefix);
-      mappedVolumeName += std::to_string(mappedSurface->geometryId().value());
       ACTS_VERBOSE("Found matching surface " << mappedSurface->geometryId()
                                              << " at position "
                                              << g4RelPosition.transpose());
-      ACTS_VERBOSE("Remap: " << g4PhysicalVolume->GetName() << " -> "
-                             << mappedVolumeName);
-      g4PhysicalVolume->SetName(mappedVolumeName.c_str());
+      // Check if the prefix is not yet assigned
+      if (volumeName.find(mappingPrefix) == std::string::npos) {
+        // Set the new name
+        std::string mappedName = std::string(mappingPrefix) + volumeName;
+        g4PhysicalVolume->SetName(mappedName);
+      }
+      // Insert into the multi-map
+      state.g4VolumeToSurfaces.insert({g4PhysicalVolume, mappedSurface});
     } else {
       ACTS_VERBOSE("No mapping found for '"
                    << volumeName << "' with material '" << volumeMaterialName
