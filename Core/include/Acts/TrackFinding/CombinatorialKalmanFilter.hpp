@@ -516,7 +516,7 @@ class CombinatorialKalmanFilter {
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
       materialInteractor(navigator.currentSurface(state.navigation), state,
-                         stepper, navigator, MaterialUpdateStage::FullUpdate);
+                         stepper, navigator, MaterialUpdateStage::PostUpdate);
 
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
@@ -628,6 +628,7 @@ class CombinatorialKalmanFilter {
                              << " of track state with tip = "
                              << result.activeTips.back().first);
         }
+
         // Update state and stepper with post material effects
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PostUpdate);
@@ -677,6 +678,10 @@ class CombinatorialKalmanFilter {
           // Transport the covariance to a curvilinear surface
           stepper.transportCovarianceToCurvilinear(state.stepping);
 
+          // Update state and stepper with pre material effects
+          materialInteractor(surface, state, stepper, navigator,
+                             MaterialUpdateStage::PreUpdate);
+
           // Transport & bind the state to the current surface
           auto boundStateRes =
               stepper.boundState(state.stepping, *surface, false);
@@ -702,11 +707,11 @@ class CombinatorialKalmanFilter {
             // No branch on this surface
             nBranchesOnSurface = 0;
           }
-        }
 
-        // Update state and stepper with material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::FullUpdate);
+          // Update state and stepper with post material effects
+          materialInteractor(surface, state, stepper, navigator,
+                             MaterialUpdateStage::PostUpdate);
+        }
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
