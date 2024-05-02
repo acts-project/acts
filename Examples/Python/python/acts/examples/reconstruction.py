@@ -1743,7 +1743,7 @@ def addScoreBasedAmbiguityResolution(
     tracks: str = "tracks",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    AmbiVolumeFile: Optional[Union[Path, str]] = None,
+    ambiVolumeFile: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
