@@ -72,7 +72,7 @@ std::vector<bool> Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
 
     const auto& trackFeaturesVector = trackFeaturesVectors.at(iTrack);
 
-    bool TrkCouldBeAccepted = true;
+    bool trkCouldBeAccepted = true;
 
     // For tracks with shared hits, we need to check and remove bad hits
 
