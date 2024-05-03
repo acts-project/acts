@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include "Acts/Seeding/Hashing/Annoylib.hpp"
 #include "Acts/Seeding/Hashing/HashingTrainingConfig.hpp"
-#include "Acts/Seeding/Hashing/Kissrandom.hpp"
+
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
 
 namespace Acts {
 
@@ -21,7 +22,7 @@ using AnnoyModel =
 template <typename SpacePointContainer>
 class HashingTrainingAlgorithm {
  public:
-  HashingTrainingAlgorithm(const HashingTrainingConfig &cfg);
+  explicit HashingTrainingAlgorithm(const HashingTrainingConfig &cfg);
 
   /**
    * @brief Destroy the object.

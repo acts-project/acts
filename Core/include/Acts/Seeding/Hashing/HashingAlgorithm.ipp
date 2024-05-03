@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/Hashing/HashingAnnoy.hpp"
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
+#include <memory>
 #include <vector>
 
 namespace Acts {
@@ -23,40 +25,66 @@ HashingAlgorithm<external_spacepoint_t, SpacePointContainer>::HashingAlgorithm(
 
 // function to create the buckets of spacepoints.
 template <typename external_spacepoint_t, typename SpacePointContainer>
+template <typename collection_t>
 void HashingAlgorithm<external_spacepoint_t, SpacePointContainer>::execute(
     SpacePointContainer& spacePoints, AnnoyModel* annoyModel,
-    GenericBackInserter<SpacePointContainer> outIt) const {
+    collection_t& outputCollection) const {
+  // Define a map to store the buckets of spacepoints a set is used to exclude
+  // duplicates
   using map_t = std::map<unsigned int, std::set<external_spacepoint_t>>;
 
+  // Get the number of space points
   const std::size_t nSpacePoints = spacePoints.size();
 
+  // Get the bucket size, zBins, and phiBins from the configuration
   const unsigned int bucketSize = m_cfg.bucketSize;
   const unsigned int zBins = m_cfg.zBins;
   const unsigned int phiBins = m_cfg.phiBins;
 
-  HashingAnnoy<external_spacepoint_t, SpacePointContainer>*
-      AnnoyHashingInstance =
-          new HashingAnnoy<external_spacepoint_t, SpacePointContainer>();
-  AnnoyHashingInstance->ComputeSpacePointsBuckets(annoyModel, spacePoints,
-                                                  bucketSize, zBins, phiBins);
+  // Get the layer selection from the configuration
+  const double layerRMin = m_cfg.layerRMin;
+  const double layerRMax = m_cfg.layerRMax;
+  const double layerZMin = m_cfg.layerZMin;
+  const double layerZMax = m_cfg.layerZMax;
 
+  // Create an instance of the HashingAnnoy class
+  auto AnnoyHashingInstance = std::make_unique<
+      HashingAnnoy<external_spacepoint_t, SpacePointContainer>>();
+
+  // Compute the buckets of spacepoints using the Annoy model
+  AnnoyHashingInstance->ComputeSpacePointsBuckets(
+      annoyModel, spacePoints, bucketSize, zBins, phiBins, layerRMin, layerRMax,
+      layerZMin, layerZMax);
+
+  // Get the map of buckets and the number of buckets
   map_t bucketsSPMap = AnnoyHashingInstance->m_bucketsSPMap;
-  unsigned int nBuckets = (unsigned int)bucketsSPMap.size();
+  auto nBuckets = static_cast<unsigned int>(bucketsSPMap.size());
 
+  // Check if the number of buckets is greater than the number of space points
   if (nBuckets > nSpacePoints) {
     throw std::runtime_error("More buckets than the number of Space Points");
   }
+
+  // Convert the map to a SpacePointContainer of SpacePointContainers
   for (unsigned int bucketIdx = 0; bucketIdx < nBuckets; bucketIdx++) {
+    // Find the bucket in the map
     typename map_t::iterator iterator = bucketsSPMap.find(bucketIdx);
     if (iterator == bucketsSPMap.end()) {
       throw std::runtime_error("Not every bucket have been found");
     }
+
+    // Get the set of spacepoints in the bucket
     std::set<external_spacepoint_t> bucketSet = iterator->second;
+
+    // Convert the set to a SpacePointContainer
     SpacePointContainer bucket;
     for (external_spacepoint_t spacePoint : bucketSet) {
       bucket.push_back(spacePoint);
     }
-    outIt = SpacePointContainer{bucket};
+
+    // Add the bucket container to the output collection
+    Acts::detail::pushBackOrInsertAtEnd(outputCollection,
+                                        SpacePointContainer{bucket});
   }
 }
 

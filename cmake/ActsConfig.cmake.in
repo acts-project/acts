@@ -58,6 +58,9 @@ endif()
 if(@ACTS_USE_SYSTEM_EIGEN3@)
   find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
 endif()
+
+find_dependency(Annoy @ANNOY_VERSION@ CONFIG EXACT)
+
 if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
