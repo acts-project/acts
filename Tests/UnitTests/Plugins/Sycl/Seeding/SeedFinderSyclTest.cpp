@@ -348,7 +348,7 @@ auto main(int argc, char** argv) -> int {
       std::cout << std::setw(numWidth) << std::to_string(nSeed_cpu);
       std::cout << std::setw(numWidth) << std::to_string(nSeed_sycl);
       std::cout << std::setw(textWidth)
-                << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
+                << std::to_string(static_cast<float>(nMatch) / nSeed_cpu * 100);
       std::cout << std::endl;
     }
 

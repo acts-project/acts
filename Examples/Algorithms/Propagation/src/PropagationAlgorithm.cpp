@@ -107,12 +107,14 @@ std::optional<Acts::BoundSquareMatrix> PropagationAlgorithm::generateCovariance(
     Acts::BoundSquareMatrix newCov(m_cfg.correlations);
     // Then we draw errors according to the error values
     Acts::BoundVector covs_smeared = m_cfg.covariances;
-    for (std::size_t k = 0; k < std::size_t(covs_smeared.size()); ++k) {
+    for (std::size_t k = 0; k < static_cast<std::size_t>(covs_smeared.size());
+         ++k) {
       covs_smeared[k] *= gauss(rnd);
     }
     // and apply a double loop
-    for (std::size_t i = 0; i < std::size_t(newCov.rows()); ++i) {
-      for (std::size_t j = 0; j < std::size_t(newCov.cols()); ++j) {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(newCov.rows()); ++i) {
+      for (std::size_t j = 0; j < static_cast<std::size_t>(newCov.cols());
+           ++j) {
         (newCov)(i, j) *= covs_smeared[i];
         (newCov)(i, j) *= covs_smeared[j];
       }

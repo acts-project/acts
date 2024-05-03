@@ -163,7 +163,7 @@ bool Acts::Extent::constrains(BinningValue bValue) const {
   if (bValue == binValues) {
     return (m_constrains.count() > 0);
   }
-  return m_constrains.test(std::size_t(bValue));
+  return m_constrains.test(static_cast<std::size_t>(bValue));
 }
 
 bool Acts::Extent::operator==(const Extent& e) const {

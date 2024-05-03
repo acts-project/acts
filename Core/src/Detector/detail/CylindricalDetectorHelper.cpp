@@ -229,15 +229,13 @@ void checkVolumes(
   for (auto [iv, v] : Acts::enumerate(volumes)) {
     // Check for nullptr
     if (v == nullptr) {
-      message += std::string("nullptr detector instead of volume " +
-                             std::to_string(iv));
+      message += "nullptr detector instead of volume " + std::to_string(iv);
       throw std::invalid_argument(message.c_str());
     }
     // Check for cylindrical volume type
     if (v->volumeBounds().type() != Acts::VolumeBounds::BoundsType::eCylinder) {
-      message +=
-          std::string("non-cylindrical volume bounds detected for volume " +
-                      std::to_string(iv));
+      message += "non-cylindrical volume bounds detected for volume " +
+                 std::to_string(iv);
       throw std::invalid_argument(message.c_str());
     }
   }

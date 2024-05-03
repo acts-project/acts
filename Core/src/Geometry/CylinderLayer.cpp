@@ -74,7 +74,7 @@ void Acts::CylinderLayer::buildApproachDescriptor() {
 
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Surface>> aSurfaces;
-    if (bSurfaces.size() > std::size_t(tubeInnerCover)) {
+    if (bSurfaces.size() > static_cast<std::size_t>(tubeInnerCover)) {
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover).surface);
     }
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover).surface);

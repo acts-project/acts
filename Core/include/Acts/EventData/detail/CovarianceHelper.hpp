@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 #include <type_traits>
 
 namespace Acts::detail {
+
 /// @brief check and correct covariance matrix
 ///
 /// @tparam CovMatrix_t The type of covariance matrix
@@ -26,7 +27,7 @@ namespace Acts::detail {
 ///
 /// @return The (corrected) covariance is semi-positivedefinite or not
 template <typename CovMatrix_t, signed int NumIter = 1>
-struct covariance_helper {
+struct CovarianceHelper {
   /// check if the covariance is semi-positive and correction is attempted
   static bool validate(CovMatrix_t& covariance) {
     if (covariance.hasNaN()) {

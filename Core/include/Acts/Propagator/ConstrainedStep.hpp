@@ -51,10 +51,6 @@ class ConstrainedStep {
   /// from user     - this is user given for what reason ever
   enum Type : int { actor = 0, aborter = 1, user = 2 };
 
-  /// Number of iterations needed by the stepsize finder
-  /// (e.g. Runge-Kutta) of the stepper.
-  std::size_t nStepTrials = std::numeric_limits<std::size_t>::max();
-
   constexpr ConstrainedStep() = default;
 
   /// constructor from Scalar

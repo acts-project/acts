@@ -112,9 +112,8 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
 
   std::array<Acts::Transform3, 2u> transforms = {
       Acts::Transform3::Identity(),
-      Acts::Transform3(Acts::Transform3::Identity())
-          .prerotate(
-              Acts::AngleAxis3(0.34, Acts::Vector3(1., 1., 1.).normalized()))};
+      Acts::Transform3{Acts::Transform3::Identity()}.prerotate(
+          Acts::AngleAxis3(0.34, Acts::Vector3(1., 1., 1.).normalized()))};
 
   // Try with arbitrary rotations
   for (auto [it, t] : Acts::enumerate(transforms)) {

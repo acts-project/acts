@@ -145,7 +145,7 @@ class Particle {
   Particle &correctEnergy(Scalar delta) {
     const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
     if (newEnergy <= m_mass) {
-      m_absMomentum = Scalar(0);
+      m_absMomentum = Scalar{0};
     } else {
       m_absMomentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
     }
@@ -212,7 +212,7 @@ class Particle {
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr bool isAlive() const { return Scalar(0) < m_absMomentum; }
+  constexpr bool isAlive() const { return Scalar{0} < m_absMomentum; }
 
   constexpr bool isSecondary() const {
     return particleId().vertexSecondary() != 0 ||
@@ -313,17 +313,17 @@ class Particle {
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
-  Scalar m_charge = Scalar(0);
-  Scalar m_mass = Scalar(0);
+  Scalar m_charge = Scalar{0};
+  Scalar m_mass = Scalar{0};
   // kinematics, i.e. things that change over the particle lifetime.
   Vector3 m_direction = Vector3::UnitZ();
-  Scalar m_absMomentum = Scalar(0);
+  Scalar m_absMomentum = Scalar{0};
   Vector4 m_position4 = Vector4::Zero();
   /// proper time in the particle rest frame
-  Scalar m_properTime = Scalar(0);
+  Scalar m_properTime = Scalar{0};
   // accumulated material
-  Scalar m_pathInX0 = Scalar(0);
-  Scalar m_pathInL0 = Scalar(0);
+  Scalar m_pathInX0 = Scalar{0};
+  Scalar m_pathInL0 = Scalar{0};
   /// number of hits
   std::uint32_t m_numberOfHits = 0;
   /// reference surface
