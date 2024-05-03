@@ -85,7 +85,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
 
         bool isOutliner = true;
 
-        measurements.push_back({emplace.first->second, detectorId, isoutliner});
+        measurements.push_back({emplace.first->second, detectorId, isOutliner});
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
         ACTS_DEBUG("Track state type is HoleFlag");
         trackFeaturesVector[detectorId].nHoles++;
