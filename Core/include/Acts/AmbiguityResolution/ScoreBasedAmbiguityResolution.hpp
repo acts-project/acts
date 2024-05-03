@@ -85,7 +85,6 @@ class ScoreBasedAmbiguityResolution {
     bool isOutlier = false;
   };
 
-
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
@@ -183,7 +182,6 @@ class ScoreBasedAmbiguityResolution {
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const OptionalCuts<track_container_t, traj_t, holder_t, ReadOnly>&
           optionalCuts = {}) const;
-
 
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
