@@ -30,7 +30,7 @@ using Generator = std::ranlux48;
 
 BOOST_AUTO_TEST_SUITE(FatrasPhotonConversion)
 
-BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, lambda,
+BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, theta,
                      seed) {
   using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
@@ -39,7 +39,7 @@ BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, lambda,
 
   /// Produce not a photon
   ActsFatras::Particle particle =
-      Dataset::makeParticle(Acts::PdgParticle::eElectron, phi, lambda, 1_GeV);
+      Dataset::makeParticle(Acts::PdgParticle::eElectron, phi, theta, 1_GeV);
   ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
@@ -64,7 +64,7 @@ BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, lambda,
 }
 
 BOOST_DATA_TEST_CASE(DeadPhoton, Dataset::parametersPhotonConversion, phi,
-                     lambda, seed) {
+                     theta, seed) {
   using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
@@ -72,7 +72,7 @@ BOOST_DATA_TEST_CASE(DeadPhoton, Dataset::parametersPhotonConversion, phi,
 
   /// Produce a dead photon
   ActsFatras::Particle particle =
-      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 0);
+      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, theta, 0);
   ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
@@ -96,7 +96,7 @@ BOOST_DATA_TEST_CASE(DeadPhoton, Dataset::parametersPhotonConversion, phi,
 }
 
 BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion,
-                     phi, lambda, seed) {
+                     phi, theta, seed) {
   using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
@@ -104,7 +104,7 @@ BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion,
 
   /// Produce a low momentum photon
   ActsFatras::Particle particle =
-      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 1_keV);
+      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, theta, 1_keV);
   ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
@@ -128,7 +128,7 @@ BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion,
 }
 
 BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion,
-                     phi, lambda, seed) {
+                     phi, theta, seed) {
   using Scalar = ActsFatras::PhotonConversion::Scalar;
   using namespace Acts::UnitLiterals;
 
@@ -136,7 +136,7 @@ BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion,
 
   /// Produce a high momentum photon
   ActsFatras::Particle particle =
-      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, lambda, 1_GeV);
+      Dataset::makeParticle(Acts::PdgParticle::eGamma, phi, theta, 1_GeV);
   ActsFatras::Particle particleInit = particle;
 
   ActsFatras::PhotonConversion pc;
