@@ -26,8 +26,6 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
     std::string configFile) {
   Acts::ScoreBasedAmbiguityResolution::Config result;
 
-  ACTS_DEBUG("Volume File is " << configFile);
-
   Acts::ConfigPair configPair;
   nlohmann::json json_file;
   std::ifstream file(configFile);
