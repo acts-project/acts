@@ -80,9 +80,9 @@ class ScoreBasedAmbiguityResolution {
 
   /// @brief MeasurementInfo : contains the measurement ID and the detector ID
   struct MeasurementInfo {
-    std::size_t iMeasurement;
-    std::size_t detectorId;
-    bool isOutlier;
+    std::size_t iMeasurement = 0;
+    std::size_t detectorId = 0;
+    bool isOutlier = false;
   };
 
 
