@@ -24,7 +24,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsCore
-  PUBLIC Boost::boost Eigen3::Eigen)
+  PUBLIC Boost::boost Eigen3::Eigen Annoy::Annoy)
 
 
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)

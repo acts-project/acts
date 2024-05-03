@@ -9,9 +9,10 @@
 #pragma once
 
 #include "Acts/Seeding/ContainerPolicy.hpp"
-#include "Acts/Seeding/Hashing/Annoylib.hpp"
 #include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Seeding/Hashing/Kissrandom.hpp"
+
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
 
 namespace Acts {
 

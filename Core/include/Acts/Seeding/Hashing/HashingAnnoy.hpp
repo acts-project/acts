@@ -8,11 +8,13 @@
 
 #pragma once
 
-#include "Acts/Seeding/Hashing/Annoylib.hpp"
-#include "Acts/Seeding/Hashing/Kissrandom.hpp"
+// #include "Acts/Seeding/Hashing/Annoylib.hpp"
 
 #include <map>
 #include <set>
+
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
 
 namespace Acts {
 
