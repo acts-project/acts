@@ -8,11 +8,13 @@
 
 #pragma once
 
-#include "Acts/Seeding/Hashing/Annoylib.hpp"
-#include "Acts/Seeding/Hashing/Kissrandom.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <map>
 #include <set>
+
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
 
 namespace Acts {
 
@@ -24,8 +26,11 @@ class HashingAnnoy {
           unsigned int, double, Annoy::AngularEuclidean, Annoy::Kiss32Random,
           Annoy::AnnoyIndexSingleThreadedBuildPolicy>* annoyModel,
       const SpacePointContainer& spacePoints, const unsigned int bucketSize,
-      const unsigned int zBins, const unsigned int phiBins);
+      const unsigned int zBins, const unsigned int phiBins,
+      const double layerRMin, const double layerRMax, const double layerZMin,
+      const double layerZMax);
   std::map<unsigned int, std::set<external_spacepoint_t>> m_bucketsSPMap;
 };
 }  // namespace Acts
+
 #include "Acts/Seeding/Hashing/HashingAnnoy.ipp"

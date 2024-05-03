@@ -32,7 +32,7 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
   const unsigned int AnnoySeed = m_cfg.AnnoySeed;
   const std::int32_t f = m_cfg.f;
 
-  AnnoyModel annoyModel = AnnoyModel(f);
+  auto annoyModel = AnnoyModel(f);
 
   using Scalar = Acts::ActsScalar;
 
@@ -47,18 +47,18 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
     // Helix transform
     Scalar phi = atan2(y, x);
 
-    double* vec = (double*)malloc(f * sizeof(double));
-    vec[0] = (double)phi;
+    std::vector<double> vec(f);
+    vec[0] = phi;
     if (f >= 2) {
       Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
       Scalar r2 = x * x + y * y;
       Scalar rho = sqrt(r2 + z * z);
       Scalar theta = acos(z / rho);
       Scalar eta = -log(tan(0.5 * theta));
-      vec[1] = (double)eta;
+      vec[1] = eta;
     }
 
-    annoyModel.add_item(spacePointIndex, vec);
+    annoyModel.add_item(spacePointIndex, vec.data());
     spacePointIndex++;
   }
 

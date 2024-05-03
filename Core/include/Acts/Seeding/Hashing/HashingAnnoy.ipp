@@ -12,26 +12,6 @@
 #include <map>
 #include <set>
 #include <vector>
-namespace Acts::detail {
-bool LayerSelection(double r2, double z) {
-  bool isInside = (r2 > 25 * 25 && r2 < 40 * 40) && (z > -550 && z < 550);
-  return isInside;
-}
-
-int GetBinIndex(double, double z, unsigned int zBins) {
-  using Scalar = Acts::ActsScalar;
-  Scalar binSize = 1100.0 / zBins;
-  int binIndex = (int)((z - (-550) + 0.5 * binSize) / binSize);
-  return binIndex;
-}
-
-int GetBinIndexPhi(double phi, unsigned int phiBins) {
-  using Scalar = Acts::ActsScalar;
-  Scalar binSize = 2 * M_PI / phiBins;
-  int binIndex = (int)((phi + M_PI) / binSize);
-  return binIndex;
-}
-}  // namespace Acts::detail
 
 namespace Acts {
 template <typename external_spacepoint_t, typename SpacePointContainer>
@@ -41,7 +21,9 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
             unsigned int, double, Annoy::AngularEuclidean, Annoy::Kiss32Random,
             Annoy::AnnoyIndexSingleThreadedBuildPolicy>* annoyModel,
         const SpacePointContainer& spacePoints, const unsigned int bucketSize,
-        const unsigned int zBins, const unsigned int phiBins) {
+        const unsigned int zBins, const unsigned int phiBins,
+        const double layerRMin, const double layerRMax, const double layerZMin,
+        const double layerZMax) {
   using Scalar = Acts::ActsScalar;
 
   static thread_local std::vector<std::set<external_spacepoint_t>>
@@ -65,75 +47,70 @@ void HashingAnnoy<external_spacepoint_t, SpacePointContainer>::
     bucketsSetSPMap.push_back(bucket);
   }
 
-  if (zBins > 0) {
-    // Loop over spacePoints
-    for (unsigned int spacePointIndex = 0; spacePointIndex < spacePoints.size();
-         spacePointIndex++) {
-      external_spacepoint_t spacePoint = spacePoints[spacePointIndex];
-      Scalar x = spacePoint->x() / Acts::UnitConstants::mm;
-      Scalar y = spacePoint->y() / Acts::UnitConstants::mm;
-      Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
+  // Function to check if a spacePoint is inside the layer
+  auto LayerSelection = [&layerRMin, &layerRMax, &layerZMin, &layerZMax](
+                            double r2, double z) {
+    bool isInside =
+        (r2 >= layerRMin * layerRMin && r2 <= layerRMax * layerRMax) &&
+        (z >= layerZMin && z <= layerZMax);
+    return isInside;
+  };
 
-      // Helix transform
-      Scalar r2 = x * x + y * y;
+  // Functions to get the bin index
+  auto GetBinIndexZ = [&zBins, &layerZMin, &layerZMax](Scalar z) {
+    Scalar binSize = (layerZMax - layerZMin) / zBins;
+    auto binIndex = static_cast<int>((z - layerZMin + 0.5 * binSize) / binSize);
+    return binIndex;
+  };
 
-      if (!Acts::detail::LayerSelection(r2, z)) {
-        continue;
-      }
+  auto GetBinIndexPhi = [&phiBins](Scalar phi) {
+    Scalar binSize = 2 * M_PI / phiBins;
+    auto binIndex = static_cast<int>((phi + M_PI) / binSize);
+    return binIndex;
+  };
 
-      int binIndex = Acts::detail::GetBinIndex(r2, z, zBins);
-      if (binIndex < 0 || (unsigned int)binIndex >= nBins) {
-        throw std::runtime_error("binIndex outside of bins covering");
-      }
-
-      static thread_local std::vector<unsigned int> bucketIds;
-      bucketIds.clear();
-
-      /// Get the bucketSize closest spacePoints
-      annoyModel->get_nns_by_item(spacePointIndex, bucketSize, -1, &bucketIds,
-                                  nullptr);
-
-      for (const unsigned int& bucketSpacePointIndex : bucketIds) {
-        bucketsSetSPMap[(unsigned int)binIndex].insert(
-            spacePoints.at(bucketSpacePointIndex));
-      }
+  // Function pointers to a unified bin index function for z and phi
+  auto GetBinIndex = [&zBins, &phiBins, &GetBinIndexZ, &GetBinIndexPhi](
+                         Scalar z, Scalar phi) -> int {
+    if (zBins > 0) {
+      return GetBinIndexZ(z);
+    } else if (phiBins > 0) {
+      return GetBinIndexPhi(phi);
+    } else {
+      throw std::runtime_error("No bins defined");
     }
-  } else if (phiBins > 0) {
-    // Loop over spacePoints
-    for (unsigned int spacePointIndex = 0; spacePointIndex < spacePoints.size();
-         spacePointIndex++) {
-      external_spacepoint_t spacePoint = spacePoints[spacePointIndex];
-      Scalar x = spacePoint->x() / Acts::UnitConstants::mm;
-      Scalar y = spacePoint->y() / Acts::UnitConstants::mm;
-      Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
+  };
 
-      // Helix transform
-      Scalar r2 = x * x + y * y;
+  // Loop over spacePoints
+  for (unsigned int spacePointIndex = 0; spacePointIndex < spacePoints.size();
+       spacePointIndex++) {
+    external_spacepoint_t spacePoint = spacePoints[spacePointIndex];
+    Scalar x = spacePoint->x() / Acts::UnitConstants::mm;
+    Scalar y = spacePoint->y() / Acts::UnitConstants::mm;
+    Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
 
-      if (!Acts::detail::LayerSelection(r2, z)) {
-        continue;
-      }
-
-      Scalar phi = atan2(y, x);
-
-      int binIndex = Acts::detail::GetBinIndexPhi(phi, phiBins);
-      if (binIndex < 0 || (unsigned int)binIndex >= nBins) {
-        throw std::runtime_error("binIndex outside of bins covering");
-      }
-
-      std::vector<unsigned int> bucketIds;
-
-      /// Get the bucketSize closest spacePoints
-      annoyModel->get_nns_by_item(spacePointIndex, bucketSize, -1, &bucketIds,
-                                  nullptr);
-
-      for (const unsigned int& bucketSpacePointIndex : bucketIds) {
-        bucketsSetSPMap[(unsigned int)binIndex].insert(
-            spacePoints.at(bucketSpacePointIndex));
-      }
+    // Helix transform
+    if (Scalar r2 = x * x + y * y; !LayerSelection(r2, z)) {
+      continue;
     }
-  } else {
-    throw std::runtime_error("No bins defined");
+
+    Scalar phi = atan2(y, x);
+
+    int binIndex = GetBinIndex(z, phi);
+    if (binIndex < 0 || static_cast<unsigned int>(binIndex) >= nBins) {
+      throw std::runtime_error("binIndex outside of bins covering");
+    }
+
+    std::vector<unsigned int> bucketIds;
+
+    /// Get the bucketSize closest spacePoints
+    annoyModel->get_nns_by_item(spacePointIndex, bucketSize, -1, &bucketIds,
+                                nullptr);
+
+    for (const unsigned int& bucketSpacePointIndex : bucketIds) {
+      bucketsSetSPMap[static_cast<unsigned int>(binIndex)].insert(
+          spacePoints.at(bucketSpacePointIndex));
+    }
   }
 
   unsigned int n_buckets = 0;

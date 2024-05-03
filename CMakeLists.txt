@@ -210,6 +210,7 @@ set(_acts_traccc_version 0.13.0)
 set(_acts_covfie_version 0.10.0)
 set(_acts_vecmem_version 1.4.0)
 set(_acts_algebraplugins_version 0.22.0)
+set(_acts_annoy_version 1.17.3)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -259,6 +260,8 @@ if (ACTS_USE_SYSTEM_DFELIBS)
 else()
   add_subdirectory(thirdparty/dfelibs)
 endif()
+
+add_subdirectory(thirdparty/Annoy)
 
 find_package(Filesystem REQUIRED)
 

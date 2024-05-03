@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Seeding/ContainerPolicy.hpp"
-#include "Acts/Seeding/Hashing/Annoylib.hpp"
 #include "Acts/Seeding/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Seeding/Hashing/Kissrandom.hpp"
+
+#include <annoy/annoylib.h>
+#include <annoy/kissrandom.h>
 
 namespace Acts {
 
@@ -23,7 +23,7 @@ using AnnoyModel =
 template <typename external_spacepoint_t, typename SpacePointContainer>
 class HashingAlgorithm {
  public:
-  HashingAlgorithm(const HashingAlgorithmConfig& cfg);
+  explicit HashingAlgorithm(const HashingAlgorithmConfig& cfg);
 
   /**
    * @brief Destroy the object.
@@ -37,8 +37,9 @@ class HashingAlgorithm {
       const HashingAlgorithm<external_spacepoint_t, SpacePointContainer>&) =
       default;
 
+  template <typename collection_t>
   void execute(SpacePointContainer& spacePoints, AnnoyModel* annoyModel,
-               GenericBackInserter<SpacePointContainer> outIt) const;
+               collection_t& outputCollection) const;
 
   /// Get readonly access to the config parameters
   const Acts::HashingAlgorithmConfig& config() const { return m_cfg; }
