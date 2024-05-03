@@ -83,7 +83,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
         auto emplace = MeasurementIndexMap.try_emplace(
             sourceLink, MeasurementIndexMap.size());
 
-        bool isoutliner = true;
+        bool isOutliner = true;
 
         measurements.push_back({emplace.first->second, detectorId, isoutliner});
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
