@@ -17,6 +17,8 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <fstream>
+
 namespace {
 
 Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
@@ -24,7 +26,7 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
     std::string configFile) {
   Acts::ScoreBasedAmbiguityResolution::Config result;
 
-  std::cout << "Volume File is " << configFile << std::endl;
+  ACTS_DEBUG("Volume File is " << configFile);
 
   Acts::ConfigPair configPair;
   nlohmann::json json_file;

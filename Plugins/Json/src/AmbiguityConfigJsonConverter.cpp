@@ -11,8 +11,6 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
-#include <fstream>
-
 namespace Acts {
 
 void from_json(const nlohmann::json& j, ConfigPair& p) {
