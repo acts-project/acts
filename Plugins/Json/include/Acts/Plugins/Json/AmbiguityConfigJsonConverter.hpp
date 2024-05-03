@@ -14,11 +14,10 @@
 namespace Acts {
 
 using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
-
+using ConfigPair =
+    std::pair<std::map<std::size_t, std::size_t>, std::vector<DetectorConfig>>;
 /// This function is used to convert the ScoreBasedAmbiguityResolutionCongig
 /// from JSON to C++
-std::pair<std::map<std::size_t, std::size_t>,
-          std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>>
-from_json(const std::string&);
+void from_json(const nlohmann::json&, ConfigPair&);
 
 }  // namespace Acts

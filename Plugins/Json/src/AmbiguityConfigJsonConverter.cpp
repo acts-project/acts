@@ -15,21 +15,7 @@
 
 namespace Acts {
 
-std::pair<std::map<std::size_t, std::size_t>,
-          std::vector<ScoreBasedAmbiguityResolution::DetectorConfig>>
-from_json(const std::string& configFile) {
-  std::ifstream file(configFile);
-  if (!file.is_open()) {
-    std::cerr << "Error opening file: " << configFile << std::endl;
-    return {};
-  }
-
-  std::cout << "Reading configuration file: " << configFile << std::endl;
-
-  nlohmann::json j;
-
-  file >> j;
-
+void from_json(const nlohmann::json& j, ConfigPair& p) {
   std::vector<ScoreBasedAmbiguityResolution::DetectorConfig> detectorConfigs;
   std::map<std::size_t, std::size_t> volumeMap;
 
@@ -69,8 +55,7 @@ from_json(const std::string& configFile) {
       volumeMap[volumeId] = detectorId;
     }
   }
-
-  return std::make_pair(volumeMap, detectorConfigs);
+  p = std::make_pair(volumeMap, detectorConfigs);
 }
 
 }  // namespace Acts
