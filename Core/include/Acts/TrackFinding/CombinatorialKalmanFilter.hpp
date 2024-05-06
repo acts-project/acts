@@ -33,7 +33,6 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
-#include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
