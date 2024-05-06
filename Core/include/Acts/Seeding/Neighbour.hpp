@@ -70,13 +70,33 @@ Neighbour<grid_t>::Neighbour(const grid_t& grid, std::size_t idx,
   else if (collection.back()->radius() < lowerBound) {
     itr = collection.end();
   }
-  /// Cannot decide a priori. We need to find the first element suche that it's
+  /// Cannot decide a priori. We need to find the first element such that it's
   /// radius is > lower bound. We use a binary search in this case
   else {
-    itr = std::lower_bound(collection.begin(), collection.end(), lowerBound,
-                           [](const auto& sp, const float target) -> bool {
-                             return sp->radius() < target;
-                           });
+    // custom binary search which was observed to be faster than
+    // `std::lower_bound` see https://github.com/acts-project/acts/pull/3095
+    std::size_t start = 0ul;
+    std::size_t stop = collection.size() - 1;
+    while (start <= stop) {
+      std::size_t mid = (start + stop) / 2;
+      if (collection[mid]->radius() == lowerBound) {
+        itr = collection.begin() + mid;
+        return;
+      } else if (collection[mid]->radius() > lowerBound) {
+        if (mid > 0 && collection[mid - 1]->radius() < lowerBound) {
+          itr = collection.begin() + mid;
+          return;
+        }
+        stop = mid - 1;
+      } else {
+        if (mid + 1 < collection.size() &&
+            collection[mid + 1]->radius() > lowerBound) {
+          itr = collection.begin() + mid + 1;
+          return;
+        }
+        start = mid + 1;
+      }
+    }  // while loop
   }
 }
 

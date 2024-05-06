@@ -42,8 +42,7 @@ using namespace Acts::detail::Test;
 Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 const auto gx2fLogger = Acts::getDefaultLogger("Gx2f", logLevel);
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
@@ -803,6 +802,116 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
 
   ACTS_INFO("*** Test: NotEnoughMeasurements -- Finish");
 }
+
+BOOST_AUTO_TEST_CASE(FindHoles) {
+  ACTS_INFO("*** Test: FindHoles -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  //  const std::size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 8;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() [before] = " << sourceLinks.size());
+
+  // We remove the first measurement in the list. This does not create a hole.
+  sourceLinks.erase(std::next(sourceLinks.begin(), 0));
+  ACTS_VERBOSE(
+      "sourceLinks.size() [after first erase] = " << sourceLinks.size());
+
+  // We remove the last measurement in the list. This does not create a hole.
+  sourceLinks.pop_back();
+  ACTS_VERBOSE("sourceLinks.size() [after pop] = " << sourceLinks.size());
+
+  // We remove the second to last measurement in the list. This effectivly
+  // creates a hole on that surface.
+  const std::size_t indexHole = sourceLinks.size() - 2;
+  ACTS_VERBOSE("Remove measurement " << indexHole);
+  sourceLinks.erase(std::next(sourceLinks.begin(), indexHole));
+  ACTS_VERBOSE("sourceLinks.size() [after second-to-last erase]= "
+               << sourceLinks.size());
+
+  // We removed 3 measurements
+  //  const std::size_t nMeasurements = nSurfaces - 2;
+  const std::size_t nMeasurements = nSurfaces - 3;
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 20, true, 1e-5);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  const auto& track = *res;
+
+  // -1, because the index starts at 0
+  // -2, because the first and the last surface are not part of the track
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1 - 2);
+  BOOST_CHECK(track.hasReferenceSurface());
+
+  // Track quantities
+  CHECK_CLOSE_ABS(track.chi2(), 6.5, 2.);
+  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 1u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nMeasurements);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 4.7e-28, 2e0);
+
+  ACTS_INFO("*** Test: FindHoles -- Finish");
+}
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

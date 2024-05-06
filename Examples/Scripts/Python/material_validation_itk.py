@@ -6,9 +6,6 @@ from pathlib import Path
 from acts.examples import Sequencer, RootMaterialTrackWriter
 
 import acts
-from acts import (
-    UnitConstants as u,
-)
 
 
 def runMaterialValidation(
@@ -53,7 +50,7 @@ def runMaterialValidation(
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            collection=alg.config.propagationMaterialCollection,
+            inputMaterialTracks=alg.config.propagationMaterialCollection,
             filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,

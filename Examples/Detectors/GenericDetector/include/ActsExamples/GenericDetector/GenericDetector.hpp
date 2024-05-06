@@ -24,11 +24,9 @@ namespace ActsExamples {
 class IContextDecorator;
 }  // namespace ActsExamples
 
-namespace ActsExamples {
-namespace Generic {
+namespace ActsExamples::Generic {
 class GenericDetectorElement;
-}
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Generic
 
 struct GenericDetector {
   using DetectorElement = ActsExamples::Generic::GenericDetectorElement;

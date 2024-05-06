@@ -11,9 +11,7 @@
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 namespace hana = boost::hana;
 
 /**
@@ -105,6 +103,4 @@ constexpr bool has_action_type_v =
  */
 template <typename T>
 using action_type_t = typename action_type_extractor::extractor_impl<T>;
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

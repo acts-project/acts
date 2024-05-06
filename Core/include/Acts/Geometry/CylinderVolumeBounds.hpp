@@ -12,15 +12,12 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
-#include <iomanip>
+#include <initializer_list>
 #include <iosfwd>
 #include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -96,36 +93,24 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
   CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax, ActsScalar halfz,
                        ActsScalar halfphi = M_PI, ActsScalar avgphi = 0.,
-                       ActsScalar bevelMinZ = 0.,
-                       ActsScalar bevelMaxZ = 0.) noexcept(false)
-      : m_values({rmin, rmax, halfz, halfphi, avgphi, bevelMinZ, bevelMaxZ}) {
-    checkConsistency();
-    buildSurfaceBounds();
-  }
+                       ActsScalar bevelMinZ = 0., ActsScalar bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  CylinderVolumeBounds(const std::array<ActsScalar, eSize>& values) noexcept(
-      false)
-      : m_values(values) {
-    checkConsistency();
-    buildSurfaceBounds();
-  }
+  CylinderVolumeBounds(const std::array<ActsScalar, eSize>& values);
 
   /// Constructor - extruded from cylinder bounds and thickness
   ///
   /// @param cBounds the cylinder bounds
   /// @param thickness of the extrusion
-  CylinderVolumeBounds(const CylinderBounds& cBounds,
-                       ActsScalar thickness) noexcept(false);
+  CylinderVolumeBounds(const CylinderBounds& cBounds, ActsScalar thickness);
 
   /// Constructor - extruded from radial bounds and thickness
   ///
   /// @param rBounds the Radial bounds
   /// @param thickness
-  CylinderVolumeBounds(const RadialBounds& rBounds,
-                       ActsScalar thickness) noexcept(false);
+  CylinderVolumeBounds(const RadialBounds& rBounds, ActsScalar thickness);
 
   /// Copy Constructor
   ///
@@ -161,7 +146,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
+  std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const override;
 
   /// Construct bounding box for this shape
@@ -199,9 +184,19 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param bValue the class nested enum for the array access
   ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
 
+  /// Set a bound value
+  /// @param bValue the bound value identifier
+  /// @param value the value to be set
+  void set(BoundValues bValue, ActsScalar value);
+
+  /// Set a range of bound values
+  /// @param keyValues the initializer list of key value pairs
+  void set(std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues);
+
  private:
   /// The internal version of the bounds can be float/ActsScalar
   std::array<ActsScalar, eSize> m_values{};
+
   /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
   /// Bounds of the inner CylinderBounds
@@ -213,7 +208,7 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
-  void checkConsistency() noexcept(false);
+  void checkConsistency();
 
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();

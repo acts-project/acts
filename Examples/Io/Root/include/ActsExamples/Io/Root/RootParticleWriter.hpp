@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -95,7 +94,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_vx;
   std::vector<float> m_vy;
   std::vector<float> m_vz;
-  // Production time in ns.
   std::vector<float> m_vt;
   /// Total momentum in GeV
   std::vector<float> m_p;
@@ -130,6 +128,8 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_pathInL0;
   /// Number of hits.
   std::vector<std::int32_t> m_numberOfHits;
+  /// Particle outcome
+  std::vector<std::uint32_t> m_outcome;
 };
 
 }  // namespace ActsExamples

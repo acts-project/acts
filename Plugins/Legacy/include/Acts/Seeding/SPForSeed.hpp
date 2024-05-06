@@ -28,8 +28,7 @@
 //    if(de->isBarrel()) {m_covz = 8.*f22; m_covr = .1;}
 //    else               {m_covr = 8.*f22; m_covz = .1;}
 
-namespace Acts {
-namespace Legacy {
+namespace Acts::Legacy {
 
 template <typename SpacePoint>
 class SPForSeed {
@@ -247,5 +246,4 @@ inline void SPForSeed<SpacePoint>::setQuality(float q) {
   }
 }
 
-}  // namespace Legacy
-}  // namespace Acts
+}  // namespace Acts::Legacy

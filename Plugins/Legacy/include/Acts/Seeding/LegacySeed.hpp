@@ -13,8 +13,7 @@
 #pragma once
 #include <list>
 
-namespace Acts {
-namespace Legacy {
+namespace Acts::Legacy {
 
 template <typename SpacePoint>
 class Seed {
@@ -110,5 +109,4 @@ Seed<SpacePoint>::~Seed() = default;
 
 /// @endcond
 
-}  // namespace Legacy
-}  // namespace Acts
+}  // namespace Acts::Legacy

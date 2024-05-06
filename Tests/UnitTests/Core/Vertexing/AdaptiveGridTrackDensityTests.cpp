@@ -27,8 +27,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -603,7 +602,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Add track 1 to 1D grid (overlaps with track 0!)
   auto secondTrackDensityMap1D = grid1D.addTrack(params1, mainDensityMap1D);
   std::uint32_t nNonOverlappingBins1D =
-      (std::uint32_t)(std::abs(z0Trk1 - z0Trk2) / binExtent);
+      static_cast<std::uint32_t>(std::abs(z0Trk1 - z0Trk2) / binExtent);
   BOOST_CHECK_EQUAL(spatialTrkGridSize + nNonOverlappingBins1D,
                     mainDensityMap1D.size());
   double fourthDensitySum1D = densitySum(mainDensityMap1D);
@@ -649,5 +648,4 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   CHECK_CLOSE_ABS(0., sixthDensitySum2D, 1e-4);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -12,8 +12,7 @@
 
 #include <utility>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 namespace {
 
@@ -94,5 +93,4 @@ struct action_list_impl<> {
                      const navigator_t& /*navigator*/, Args&&... /*args*/) {}
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

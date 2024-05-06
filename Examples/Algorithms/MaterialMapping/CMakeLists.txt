@@ -1,6 +1,9 @@
 add_library(
   ActsExamplesMaterialMapping SHARED
+  src/CoreMaterialMapping.cpp
+  src/MaterialValidation.cpp
   src/MaterialMapping.cpp)
+
 target_include_directories(
   ActsExamplesMaterialMapping
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

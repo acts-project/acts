@@ -292,8 +292,8 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialVarInflation,
-      particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSimgaQoverPCoefficients,
+      initialVarInflation, noTimeVarInflation, particleHypothesis);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
@@ -325,12 +325,17 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
+    ACTS_PYTHON_MEMBER(inputSeeds);
     ACTS_PYTHON_MEMBER(outputTracks);
+    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
-    ACTS_PYTHON_MEMBER(backward);
     ACTS_PYTHON_MEMBER(maxSteps);
+    ACTS_PYTHON_MEMBER(twoWay);
+    ACTS_PYTHON_MEMBER(seedDeduplication);
+    ACTS_PYTHON_MEMBER(stayOnSeed);
     ACTS_PYTHON_STRUCT_END();
   }
 

@@ -12,8 +12,7 @@
 
 #include <array>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(AuctioneerTest_VoidAuctioneer) {
   // Build arbitrary vector
@@ -50,5 +49,4 @@ BOOST_AUTO_TEST_CASE(AuctioneerTest_HighestValidAuctioneer) {
   BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
                                 resultFva.begin(), resultFva.end());
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

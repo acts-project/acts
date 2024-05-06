@@ -18,8 +18,7 @@
 
 #include <stdexcept>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 
@@ -141,5 +140,4 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

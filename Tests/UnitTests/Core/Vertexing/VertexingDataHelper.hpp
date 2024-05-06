@@ -17,8 +17,7 @@
 #include <iterator>
 #include <regex>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 using Covariance = BoundSquareMatrix;
@@ -147,5 +146,4 @@ readTracksAndVertexCSV(const std::string& toolString,
   return std::make_tuple(beamspotConstraint, vertices, tracks);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

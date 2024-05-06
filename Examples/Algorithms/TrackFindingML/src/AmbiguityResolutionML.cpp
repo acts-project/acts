@@ -62,7 +62,7 @@ ActsExamples::AmbiguityResolutionML::prepareOutputTrack(
   solvedTracks.ensureDynamicColumns(tracks);
 
   for (auto&& iTrack : goodTracks) {
-    auto destProxy = solvedTracks.getTrack(solvedTracks.addTrack());
+    auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
     destProxy.copyFrom(srcProxy, false);
     destProxy.tipIndex() = srcProxy.tipIndex();

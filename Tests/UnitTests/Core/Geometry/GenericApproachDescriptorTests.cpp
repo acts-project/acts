@@ -30,10 +30,7 @@
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 
-namespace Acts {
-
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
 
 // Build a default context for testing
 GeometryContext tgContext = GeometryContext();
@@ -118,7 +115,4 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

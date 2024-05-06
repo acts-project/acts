@@ -18,9 +18,7 @@
 
 #include "edm4hep/TrackState.h"
 
-namespace Acts {
-namespace EDM4hepUtil {
-namespace detail {
+namespace Acts::EDM4hepUtil::detail {
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
@@ -184,6 +182,4 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   return {params.surface, targetPars, cov, params.particleHypothesis};
 }
 
-}  // namespace detail
-}  // namespace EDM4hepUtil
-}  // namespace Acts
+}  // namespace Acts::EDM4hepUtil::detail

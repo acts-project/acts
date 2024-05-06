@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/Volume.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 
 #include <ostream>
 #include <utility>
@@ -48,5 +49,26 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
                << time / Acts::UnitConstants::ns << "ns and isSecondary "
                << isSecondary);
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
+  }
+
+  // store the outcome of the particle
+  auto trackIt = eventStore().trackIdMapping.find(track->GetTrackID());
+  // check if we have a particle assigned to track
+  if (trackIt != eventStore().trackIdMapping.end()) {
+    // set the outcome of the particle
+    const ActsFatras::Barcode particleId = trackIt->second;
+    if (outOfVolume) {
+      eventStore().particleOutcome[particleId] =
+          ActsFatras::ParticleOutcome::KilledVolumeExit;
+    } else if (outOfTime) {
+      eventStore().particleOutcome[particleId] =
+          ActsFatras::ParticleOutcome::KilledTime;
+    } else if (invalidSecondary) {
+      eventStore().particleOutcome[particleId] =
+          ActsFatras::ParticleOutcome::KilledSecondaryParticle;
+    } else if (track->GetTrackStatus() == fStopAndKill) {
+      eventStore().particleOutcome[particleId] =
+          ActsFatras::ParticleOutcome::KilledInteraction;
+    }
   }
 }

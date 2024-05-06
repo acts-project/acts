@@ -38,8 +38,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
@@ -266,5 +265,4 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   testJacobianToGlobal(atStraw);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

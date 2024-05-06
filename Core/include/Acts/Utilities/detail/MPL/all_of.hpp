@@ -9,9 +9,7 @@
 #pragma once
 #include <type_traits>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 namespace {
 // clang-format off
@@ -28,6 +26,4 @@ namespace {
 
 template <bool... values>
 constexpr bool all_of_v = all_of<values...>::value;
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

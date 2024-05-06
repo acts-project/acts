@@ -8,30 +8,35 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
-#include <cstdint>
 #include <mutex>
 #include <string>
 #include <vector>
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
+
+enum class RecoVertexClassification {
+  Unknown = 0,
+  Clean,
+  Merged,
+  Split,
+};
 
 /// @class VertexPerformanceWriter
 ///
@@ -43,22 +48,19 @@ struct AlgorithmContext;
 class VertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex>> {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
-    /// All input truth particle collection.
-    std::string inputAllTruthParticles;
-    /// Selected input truth particle collection.
-    std::string inputSelectedTruthParticles;
-    /// Tracks object from track finidng.
-    std::string inputTracks;
-    /// Optional. Truth particles associated to tracks. Using 1:1 matching if
-    /// given.
-    std::string inputAssociatedTruthParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
+    /// Tracks object from track finidng.
+    std::string inputTracks;
+    /// Input truth vertex collection.
+    std::string inputTruthVertices;
+    /// All input truth particle collection.
+    std::string inputParticles;
+    /// All input selected truth particle collection.
+    std::string inputSelectedParticles;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
@@ -67,16 +69,21 @@ class VertexPerformanceWriter final
     std::string treeName = "vertextree";
     /// File access mode.
     std::string fileMode = "RECREATE";
-    /// Minimum fraction of tracks matched between truth
-    /// and reco vertices to be matched for resolution plots.
-    double minTrackVtxMatchFraction = 0.5;
-    /// Minimum fraction of hits associated to particle to consider
+
+    /// Minimum fraction of track weight matched between truth
+    /// and reco vertices to consider as truth matched.
+    double vertexMatchThreshold = 0.7;
+    /// Minimum fraction of hits associated to particle to consider track
     /// as truth matched.
-    double truthMatchProbMin = 0.5;
+    double trackMatchThreshold = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
-    /// minimum track weight for track to be considered as part of the fit
+    /// Minimum track weight for track to be considered as part of the fit
     double minTrkWeight = 0.1;
+    /// Spatial window for vertex density calculation.
+    /// @note This is a Z-window
+    /// @note This is a half-window around the reconstructed vertex
+    double vertexDensityWindow = 1 * Acts::UnitConstants::mm;
   };
 
   /// Constructor
@@ -108,9 +115,28 @@ class VertexPerformanceWriter final
   /// The event number
   std::uint32_t m_eventNr{0};
 
-  // Truth vertex ID
-  std::vector<int> m_vertexPrimary;
-  std::vector<int> m_vertexSecondary;
+  /// Number of reconstructed vertices
+  int m_nRecoVtx = -1;
+  /// Number of true vertices
+  int m_nTrueVtx = -1;
+  /// Number of merged vertices
+  int m_nMergedVtx = -1;
+  /// Number of split vertices
+  int m_nSplitVtx = -1;
+  /// Number of vertices in detector acceptance
+  int m_nVtxDetAcceptance = -1;
+  /// Max. number of reconstructable vertices (detector acceptance + tracking
+  /// efficiency)
+  int m_nVtxReconstructable = -1;
+
+  /// Number of tracks associated with the reconstructed vertex
+  std::vector<int> m_nTracksOnRecoVertex;
+
+  /// Sum of the track weights associated with the reconstructed vertex
+  std::vector<double> m_recoVertexTrackWeights;
+
+  // Sum pT^2 of all tracks associated with the vertex
+  std::vector<double> m_sumPt2;
 
   // Reconstructed 4D vertex position
   std::vector<double> m_recoX;
@@ -137,6 +163,26 @@ class VertexPerformanceWriter final
   std::vector<double> m_seedZ;
   std::vector<double> m_seedT;
 
+  // Truth vertex ID
+  std::vector<int> m_vertexPrimary;
+  std::vector<int> m_vertexSecondary;
+
+  /// Number of tracks associated with the truth vertex
+  std::vector<int> m_nTracksOnTruthVertex;
+
+  /// Truth-based primary vertex density for the reconstructed vertex
+  std::vector<double> m_truthPrimaryVertexDensity;
+
+  /// Sum of the track weights associated with the truth vertex
+  std::vector<double> m_truthVertexTrackWeights;
+  /// Fraction of track weight matched between truth and reco vertices
+  std::vector<double> m_truthVertexMatchRatio;
+  /// Fraction of incorrectly assigned track weight to the reco vertex
+  std::vector<double> m_recoVertexContamination;
+
+  /// Classification of the reconstructed vertex see RecoVertexClassification
+  std::vector<int> m_recoVertexClassification;
+
   // True 4D vertex position
   std::vector<double> m_truthX;
   std::vector<double> m_truthY;
@@ -158,25 +204,6 @@ class VertexPerformanceWriter final
   std::vector<double> m_pullY;
   std::vector<double> m_pullZ;
   std::vector<double> m_pullT;
-
-  // Sum pT^2 of all tracks associated with the vertex
-  std::vector<double> m_sumPt2;
-
-  // Number of tracks associated with truth/reconstructed vertex
-  std::vector<int> m_nTracksOnTruthVertex;
-  std::vector<int> m_nTracksOnRecoVertex;
-
-  std::vector<double> m_trackVtxMatchFraction;
-
-  /// Number of reconstructed vertices
-  int m_nRecoVtx = -1;
-  /// Number of true vertices
-  int m_nTrueVtx = -1;
-  /// Number of vertices in detector acceptance
-  int m_nVtxDetAcceptance = -1;
-  /// Max. number of reconstructable vertices (detector acceptance + tracking
-  /// efficiency)
-  int m_nVtxReconstructable = -1;
 
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner
@@ -229,15 +256,14 @@ class VertexPerformanceWriter final
   std::vector<std::vector<double>> m_pullThetaFitted;
   std::vector<std::vector<double>> m_pullQOverPFitted;
 
-  ReadDataHandle<SimParticleContainer> m_inputAllTruthParticles{
-      this, "InputAllTruthParticles"};
-  ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
-      this, "InputSelectedTruthParticles"};
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-  ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
-      this, "InputAssociatedTruthParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<SimVertexContainer> m_inputTruthVertices{this,
+                                                          "InputTruthVertices"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<SimParticleContainer> m_inputSelectedParticles{
+      this, "InputSelectedParticles"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
 };
 
 }  // namespace ActsExamples

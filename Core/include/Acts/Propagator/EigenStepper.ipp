@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Utilities/QuickMath.hpp"
+
+#include <limits>
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
@@ -29,17 +32,19 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundSquareMatrix& cov,
                                           const Surface& surface,
                                           const double stepSize) const {
+  FreeVector freeParams =
+      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
+
   // Update the stepping state
-  update(state,
-         detail::transformBoundToFreeParameters(surface, state.geoContext,
-                                                boundParams),
-         boundParams, cov, surface);
+  state.pars = freeParams;
+  state.cov = cov;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  state.jacToGlobal =
-      surface.boundToFreeJacobian(state.geoContext, boundParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
@@ -58,6 +63,43 @@ auto Acts::EigenStepper<E, A>::boundState(
 }
 
 template <typename E, typename A>
+template <typename propagator_state_t, typename navigator_t>
+bool Acts::EigenStepper<E, A>::prepareCurvilinearState(
+    propagator_state_t& prop_state, const navigator_t& navigator) const {
+  // test whether the accumulated path has still its initial value.
+  if (prop_state.stepping.pathAccumulated == 0.) {
+    // if no step was executed the path length derivates have not been
+    // computed but are needed to compute the curvilinear covariance. The
+    // derivates are given by k1 for a zero step width.
+    if (prop_state.stepping.extension.validExtensionForStep(prop_state, *this,
+                                                            navigator)) {
+      // First Runge-Kutta point (at current position)
+      auto& sd = prop_state.stepping.stepData;
+      auto pos = position(prop_state.stepping);
+      auto fieldRes = getField(prop_state.stepping, pos);
+      if (fieldRes.ok()) {
+        sd.B_first = *fieldRes;
+        if (prop_state.stepping.extension.k1(prop_state, *this, navigator,
+                                             sd.k1, sd.B_first, sd.kQoP)) {
+          // dr/ds :
+          prop_state.stepping.derivative.template head<3>() =
+              prop_state.stepping.pars.template segment<3>(eFreeDir0);
+          // d (dr/ds) / ds :
+          prop_state.stepping.derivative.template segment<3>(4) = sd.k1;
+          // to set dt/ds :
+          prop_state.stepping.extension.finalize(
+              prop_state, *this, navigator,
+              prop_state.stepping.pathAccumulated);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
                                                 bool transportCov) const
     -> CurvilinearState {
@@ -70,13 +112,14 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state,
                                       const FreeVector& freeParams,
-                                      const BoundVector& boundParams,
+                                      const BoundVector& /*boundParams*/,
                                       const Covariance& covariance,
                                       const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
-  state.jacToGlobal =
-      surface.boundToFreeJacobian(state.geoContext, boundParams);
+  state.jacToGlobal = surface.boundToFreeJacobian(
+      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      freeParams.template segment<3>(eFreeDir0));
 }
 
 template <typename E, typename A>
@@ -111,11 +154,10 @@ template <typename E, typename A>
 template <typename propagator_state_t, typename navigator_t>
 Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state, const navigator_t& navigator) const {
-  using namespace UnitLiterals;
-
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
-  double error_estimate = 0.;
+
+  double errorEstimate = 0.;
   double h2 = 0, half_h = 0;
 
   auto pos = position(state.stepping);
@@ -133,6 +175,31 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                                    sd.kQoP)) {
     return 0.;
   }
+
+  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
+    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    constexpr double lower = 0.25;
+    constexpr double upper = 4.0;
+    // This is given by the order of the Runge-Kutta method
+    constexpr double exponent = 0.25;
+
+    // Whether to use fast power function if available
+    constexpr bool tryUseFastPow{false};
+
+    double x = state.options.stepTolerance / errorEstimate_;
+
+    if constexpr (exponent == 0.25 && !tryUseFastPow) {
+      // This is 3x faster than std::pow
+      x = std::sqrt(std::sqrt(x));
+    } else if constexpr (std::numeric_limits<double>::is_iec559 &&
+                         tryUseFastPow) {
+      x = fastPow(x, exponent);
+    } else {
+      x = std::pow(x, exponent);
+    }
+
+    return std::clamp(x, lower, upper);
+  };
 
   // The following functor starts to perform a Runge-Kutta step of a certain
   // size, going up to the point where it can return an estimate of the local
@@ -179,12 +246,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
 
     // Compute and check the local integration error estimate
-    error_estimate =
+    errorEstimate =
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
-    error_estimate = std::max(error_estimate, 1e-20);
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
-    return success(error_estimate <= state.options.stepTolerance);
+    return success(errorEstimate <= state.options.stepTolerance);
   };
 
   const double initialH =
@@ -194,6 +262,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
+    nStepTrials++;
     auto res = tryRungeKuttaStep(h);
     if (!res.ok()) {
       return res.error();
@@ -202,12 +271,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    const double stepSizeScaling =
-        std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
-                                     state.options.stepTolerance /
-                                     std::abs(2. * error_estimate))))),
-                 4.0f);
-    h *= stepSizeScaling;
+    h *= calcStepSizeScaling(2 * errorEstimate);
 
     // If step size becomes too small the particle remains at the initial
     // place
@@ -222,7 +286,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
-    nStepTrials++;
   }
 
   // When doing error propagation, update the associated Jacobian matrix
@@ -282,19 +345,18 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
+
   state.stepping.pathAccumulated += h;
-  const double stepSizeScaling = std::min(
-      std::max(0.25f,
-               std::sqrt(std::sqrt(static_cast<float>(
-                   state.options.stepTolerance / std::abs(error_estimate))))),
-      4.0f);
+  ++state.stepping.nSteps;
+  state.stepping.nStepTrials += nStepTrials;
+
+  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
   const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
   const double initialStepLength = std::abs(initialH);
   if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
     state.stepping.stepSize.setAccuracy(nextAccuracy);
   }
-  state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;
 }

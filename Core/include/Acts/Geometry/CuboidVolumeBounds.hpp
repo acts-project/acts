@@ -69,22 +69,17 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values iw the bound values
-  CuboidVolumeBounds(const std::array<ActsScalar, eSize>& values) noexcept(
-      false)
-      : m_values(values) {
-    checkConsistency();
-    buildSurfaceBounds();
-  }
+  CuboidVolumeBounds(const std::array<ActsScalar, eSize>& values);
 
   /// Copy Constructor
   ///
   /// @param bobo is the source volume bounds to be copied
-  CuboidVolumeBounds(const CuboidVolumeBounds& bobo);
+  CuboidVolumeBounds(const CuboidVolumeBounds& bobo) = default;
 
   /// Assignment operator
   ///
   /// @param bobo is the source volume bounds to be assigned
-  CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo);
+  CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo) = default;
 
   ~CuboidVolumeBounds() override = default;
 
@@ -112,7 +107,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
+  std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const override;
 
   /// Construct bounding box for this shape
@@ -142,6 +137,15 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
   ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
+
+  /// Set a bound value
+  /// @param bValue the bound value identifier
+  /// @param value the value to be set
+  void set(BoundValues bValue, ActsScalar value);
+
+  /// Set a range of bound values
+  /// @param keyValues the initializer list of key value pairs
+  void set(std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues);
 
   /// Output Method for std::ostream
   ///

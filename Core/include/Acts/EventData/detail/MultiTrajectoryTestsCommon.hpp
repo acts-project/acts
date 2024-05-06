@@ -254,6 +254,69 @@ class MultiTrajectoryTestsCommon {
     alwaysPresent(ts);
   }
 
+  void testAddTrackStateComponents() {
+    using PM = TrackStatePropMask;
+
+    trajectory_t t = m_factory.create();
+
+    auto ts = t.makeTrackState(PM::None);
+    BOOST_CHECK(!ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::None);
+    BOOST_CHECK(!ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Predicted);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Filtered);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Smoothed);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(!ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Calibrated);
+    ts.allocateCalibrated(5);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK(!ts.hasJacobian());
+
+    ts.addComponents(PM::Jacobian);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK(ts.hasJacobian());
+
+    ts.addComponents(PM::All);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK(ts.hasJacobian());
+  }
+
   void testTrackStateProxyCrossTalk(std::default_random_engine& rng) {
     TestTrackState pc(rng, 2u);
 
@@ -1076,12 +1139,12 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(ts1.template component<T>(col), value);
     };
 
-    test("uint32_t", uint32_t(1));
-    test("uint64_t", uint64_t(2));
-    test("int32_t", int32_t(-3));
-    test("int64_t", int64_t(-4));
-    test("float", float(8.9));
-    test("double", double(656.2));
+    test("uint32_t", std::uint32_t{1});
+    test("uint64_t", std::uint64_t{2});
+    test("int32_t", std::int32_t{-3});
+    test("int64_t", std::int64_t{-4});
+    test("float", float{8.9});
+    test("double", double{656.2});
 
     trajectory_t traj = m_factory.create();
     traj.template addColumn<int>("extra_column");
