@@ -769,10 +769,14 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
         // The actual material
         nlohmann::json jMaterialParams;
         if (slab.thickness() > 0.) {
-          jMaterialParams["params"] = std::vector<ActsScalar>{
-              material.X0(),          material.L0(),          material.Ar(),
-              material.Z(),           material.massDensity(), 0,
-              material.molarDensity()};
+          jMaterialParams["params"] =
+              std::vector<ActsScalar>{material.X0(),
+                                      material.L0(),
+                                      material.Ar(),
+                                      material.Z(),
+                                      material.massDensity(),
+                                      material.molarDensity(),
+                                      0.};
 
         } else {
           jMaterialParams["params"] =
