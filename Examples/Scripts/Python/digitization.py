@@ -4,8 +4,7 @@ from typing import Optional
 
 import acts
 import acts.examples
-from acts.examples.odd import getOpenDataDetector
-from common import getOpenDataDetectorDirectory
+
 
 u = acts.UnitConstants
 
@@ -25,7 +24,6 @@ def runDigitization(
         addParticleGun,
         EtaConfig,
         PhiConfig,
-        MomentumConfig,
         ParticleConfig,
         addFatras,
         addDigitization,
@@ -39,9 +37,8 @@ def runDigitization(
     if particlesInput is None:
         addParticleGun(
             s,
-            MomentumConfig(0.25 * u.GeV, 100.0 * u.GeV, transverse=True),
-            EtaConfig(-3.2, 3.2),
-            ParticleConfig(1000, acts.PdgParticle.eMuon, True),
+            EtaConfig(-2.0, 2.0),
+            ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
@@ -78,21 +75,14 @@ def runDigitization(
 
 
 if "__main__" == __name__:
+    detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
 
-    geoDir = getOpenDataDetectorDirectory()
-
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        geoDir
+    digiConfigFile = (
+        Path(__file__).resolve().parent.parent.parent.parent
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
     )
-
-    #digiConfigFile = geoDir / "config/odd-digi-smearing-config.json"
-    #digiConfigFile = geoDir / "config/odd-digi-geometric-config.json"
-    #digiConfigFile = geoDir / "config/odd-digi-geometric-new-config.json"
- 
-    digiConfigFile = Path.cwd() / "odd-digi-geometric-config.json"
-
     assert digiConfigFile.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runDigitization(trackingGeometry, field, digiConfigFile=digiConfigFile, outputDir=Path.cwd()).run()
+    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
