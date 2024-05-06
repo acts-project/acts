@@ -21,6 +21,7 @@
 #include "Detray.hpp"
 
 #include <vecmem/memory/memory_resource.hpp>
+#include <vecmem/memory/host_memory_resource.hpp>
 
 #include <fstream>
 #include <initializer_list>
@@ -61,7 +62,7 @@ namespace Acts::Python {
         auto [m, mex] = ctx.get("main", "examples");
 
         {
-            py::class_<detector<default_metadata>>(m, "detray_detector");
+            py::class_<detector<default_metadata>, std::shared_ptr<detector<default_metadata>>>(m, "detray_detector");
                 //.def(py::init<detector<default_metadata>&&>(), py::arg("detector"), py::return_value_policy::move);
                 //.def(py::init<vecmem::memory_resource &>(),py::arg("resource"), py::return_value_policy::move)//, py::return_value_policy::move
         }
@@ -70,22 +71,31 @@ namespace Acts::Python {
             mex.def("DetrayPrinter", &detray::detray_detector_print);
         }
 
+        //detray from json function-> give good json and get detector from that
+            //check if my detector building(det payload) is wrong or not
+            //what consistency check is catching/missing
+        
         {
             mex.def("DetrayConverter",
                     [](const Acts::GeometryContext& gctx,
                     const Acts::Experimental::Detector& acts_detector,
-                    const std::string& name) -> detector_t {//detector_t
+                    const std::string& name) -> auto {//detector_t
                         
-                        //detector_t d_detray = detray_tree_converter(acts_detector, gctx);   
+                        //auto d_detray = std::make_shared<detector_t>(detray_from_json());
+                        vecmem::host_memory_resource host_mr;
+                        //auto d_detray = detray_from_json(host_mr);
+                        
+                        auto d_detray = detray_tree_converter(acts_detector, gctx, host_mr);   
                         //bool res = detray_tree_converter(acts_detector, gctx);
                         
-                        detector_t d_detray(std::move(detray_tree_converter(acts_detector, gctx)));
-
-                        return std::move(d_detray);
+                        //auto d_detray = std::make_shared<detector_t>(detray_tree_converter(acts_detector, gctx));
+                        //detector_t d_detray(std::move(detray_tree_converter(acts_detector, gctx)));
+                        //auto d_detray = std::make_shared<detector_t>(detray_tree_converter(acts_detector, gctx));
+                        return true;
                         //return std::move(detray_tree_converter(acts_detector, gctx));
                         //return detray_tree_converter(acts_detector, gctx);
                         //return true;
-                    }, py::return_value_policy::move);//, py::return_value_policy::move
+                    });//, py::return_value_policy::move
         }
     }
 }

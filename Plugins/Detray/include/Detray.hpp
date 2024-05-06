@@ -22,7 +22,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-// detray
+// detray geometry
 #include "detray/builders/detector_builder.hpp"
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
@@ -39,8 +39,13 @@
 
 // surface grid
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 
+// checks - prints
 #include "detray/utils/consistency_checker.hpp"
+#include "detray/io/frontend/detector_reader.hpp"
+#include "detray/navigation/volume_graph.hpp"
+
 
 // System include(s)
 #include <fstream>
@@ -93,7 +98,7 @@ int findVolume(
 
 namespace detray{
 
-    
+    // detray geometry writer function, debug purposes 
     void detray_detector_print(const detector_t& det){
 
         std::ofstream outputFile("data_try.json");
@@ -104,9 +109,9 @@ namespace detray{
         return;
     }
     
-    /// @return the transform_payload of the surface/volume
+    /// @return the transform_payload(translation, rotation) of each surface/volume
     static io::transform_payload detray_converter_transf(
-        const Transform3& t, const Transform3JsonConverter::Options& options = Transform3JsonConverter::Options()){
+        const Transform3& t, const Transform3JsonConverter::Options& options){
         //nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t, const Transform3JsonConverter::Options& options)
 
         io::transform_payload p_acts;
@@ -134,7 +139,9 @@ namespace detray{
         return p_acts;
     }
 
-    /// @return the mask_payload of the surface
+
+
+    /// @return the mask_payload of the surface @param bounds, @param portal
     static io::mask_payload detray_converter_mask(
         const Acts::SurfaceBounds& bounds, bool portal){
         //Acts::SurfaceBoundsJsonConverter::toJsonDetray
@@ -399,6 +406,9 @@ namespace detray{
         return vol_pd;
     }
     
+    
+    //GRID related functions
+
     static io::detector_grids_payload<std::size_t, io::accel_id> detray_converter_grid(
     const Acts::Experimental::Detector& detector){
     
@@ -410,7 +420,7 @@ namespace detray{
             //Call an equivalent of IndexedSurfacesJsonConverter::toJson
                 //check if it is null
 
-            
+                
 
             // Patch axes for cylindrical grid surfaces, axes are swapped
             // at this point
@@ -423,7 +433,7 @@ namespace detray{
             // Complete the grid json for detray usage
             // jSurfacesDelegate["acc_link"] =
             }
-
+        
 
         return grid_pd;
     }
@@ -465,25 +475,18 @@ namespace detray{
         ///TO DO : much body missing
         return grid_pd;
     }
-
+    
     //TO DO 
     //nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false, bool checkSwap = false) {
     template <typename index_grid>
-    io::grid_payload<std::size_t, io::accel_id> convertImpl(const index_grid& indexGrid, bool checkSwap = false) {
+    io::grid_payload<std::size_t, io::accel_id> convertImpl(const index_grid& indexGrid) {
         
-        nlohmann::json jIndexedGrid;
-
-        // Axis swapping (detray version)
-        bool swapAxes = checkSwap;
-
         //TO DO: casts implementation (if needed for detray)
-
-        io::grid_payload<std::size_t, io::accel_id> grid_pd = grid_converter(indexGrid.grid, swapAxes);
-        grid_pd.transform = detray_converter_transf(indexGrid.transform);
+        io::grid_payload<std::size_t, io::accel_id> grid_pd = grid_converter(indexGrid.grid, true);
 
         return grid_pd;
     }
-    
+
     /// @return the geo_header_payload from @param detector object of ACTS
     static io::geo_header_payload detray_converter_head(
         const Acts::Experimental::Detector& detector){
@@ -504,7 +507,8 @@ namespace detray{
     /// @brief visit all ACTS detector information, depth-first hierarchically and construct the corresponding payloads and detray detector 
     /// @return detray detector from @param detector and @param gctx of ACTS  (depth-first hierarchical traversal)
     detector_t detray_tree_converter(
-        const Acts::Experimental::Detector& detector, const Acts::GeometryContext& gctx){
+        const Acts::Experimental::Detector& detector,
+        const Acts::GeometryContext& gctx, vecmem::memory_resource& mr){
         
         detray::io::detector_payload dp;
         std::cout<<"-----tree converter-------"<<std::endl;
@@ -512,20 +516,11 @@ namespace detray{
             dp.volumes.push_back(detray_converter_vol(*volume, detector.volumes(), gctx));
             std::cout<<std::endl;
         }
-        std::cout<<"first material has value: ";
-        std::cout<<(dp.volumes.front().surfaces.front().material.has_value());
-        std::cout<<"\nfirst barcode has value: ";
-        std::cout<<(dp.volumes.front().surfaces.front().barcode.has_value());
         typename detector_t::name_map names{};
-        vecmem::host_memory_resource host_mr;
         detector_builder<default_metadata> det_builder{};
 
         detray::io::geometry_reader::convert<detector_t>(det_builder, names, dp);
-        std::cout<<"\nfinal material has value: ";
-        std::cout<<(dp.volumes.front().surfaces.front().material.has_value());
-        std::cout<<"\nfinal barcode has value: ";
-        std::cout<<(dp.volumes.front().surfaces.front().barcode.has_value())<<std::endl;
-        detector_t detrayDet(det_builder.build(host_mr));
+        detector_t detrayDet(det_builder.build(mr));
         //io::json_writer<detector_t, io::geometry_writer> geo_writer;
         //auto file_name = geo_writer.write(detrayDet, names, std::ios::out | std::ios::binary | std::ios::trunc);
 
@@ -535,11 +530,9 @@ namespace detray{
         
         //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
         
-        //return detrayDet;
         return std::move(detrayDet);
         //return true;
     }
-
 
 }
 
