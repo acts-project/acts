@@ -889,13 +889,13 @@ class CombinatorialKalmanFilter {
           tipState.nMeasurements++;
         }
 
+        // Put tipstate back into active tips to continue with it
+        result.activeTips.emplace_back(currentTip, tipState);
+
         using BranchStopperResult =
             CombinatorialKalmanFilterBranchStopperResult;
         BranchStopperResult branchStopperResult =
             m_extensions.branchStopper(tipState, trackState);
-
-        // Put tipstate back into active tips to continue with it
-        result.activeTips.emplace_back(currentTip, tipState);
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
