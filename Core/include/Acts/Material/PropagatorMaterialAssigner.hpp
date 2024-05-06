@@ -64,7 +64,7 @@ struct InteractionVolumeCollector {
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_type& result,
-                  const Logger& /*unused*/) const {
+                  const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
 

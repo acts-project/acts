@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstdint>
@@ -33,7 +34,7 @@ const auto particlePdg = data::make(std::vector<Acts::PdgParticle>{
 
 // kinematic particle parameters
 const auto momentumPhi = data::xrange(0_degree, 360_degree, 60_degree);
-const auto momentumLambda = data::xrange(-45_degree, 45_degree, 15_degree);
+const auto momentumTheta = data::xrange(-45_degree, 45_degree, 15_degree);
 const auto momentumAbs = data::xrange(500_MeV, 10_GeV, 500_MeV);
 
 // seeds for the random number generator
@@ -42,18 +43,17 @@ const auto rngSeed =
 
 // combined parameter set
 const auto parameters =
-    particlePdg * momentumPhi * momentumLambda * momentumAbs ^ rngSeed;
+    particlePdg * momentumPhi * momentumTheta * momentumAbs ^ rngSeed;
 
-const auto parametersPhotonConversion = momentumPhi * momentumLambda ^ rngSeed;
+const auto parametersPhotonConversion = momentumPhi * momentumTheta ^ rngSeed;
 
 // utility function to build a particle from the dataset parameters
 inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double phi,
-                                         double lambda, double p) {
+                                         double theta, double p) {
   const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);
   return ActsFatras::Particle(id, pdg)
       .setPosition4(0, 0, 0, 0)
-      .setDirection(std::cos(lambda) * std::cos(phi),
-                    std::cos(lambda) * std::sin(phi), std::sin(lambda))
+      .setDirection(Acts::makeDirectionFromPhiTheta(phi, theta))
       .setAbsoluteMomentum(p);
 }
 

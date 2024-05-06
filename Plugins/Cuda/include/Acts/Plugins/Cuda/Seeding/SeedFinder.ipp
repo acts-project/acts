@@ -151,9 +151,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   //  Algorithm 1. Doublet Search (DS)
   //------------------------------------
 
-  CudaScalar<int> nSpMcomp_cuda(new int(0));
-  CudaScalar<int> nSpBcompPerSpMMax_cuda(new int(0));
-  CudaScalar<int> nSpTcompPerSpMMax_cuda(new int(0));
+  CudaScalar<int> nSpMcomp_cuda(new int{0});
+  CudaScalar<int> nSpBcompPerSpMMax_cuda(new int{0});
+  CudaScalar<int> nSpTcompPerSpMMax_cuda(new int{0});
   CudaVector<int> nSpBcompPerSpM_cuda(nSpM);
   nSpBcompPerSpM_cuda.zeros();
   CudaVector<int> nSpTcompPerSpM_cuda(nSpM);

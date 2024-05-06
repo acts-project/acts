@@ -120,7 +120,7 @@ struct PlyElement {
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testPlyString(const std::string& tString,
-                                                     bool triMesh = false) {
+                                                     bool /*triMesh*/ = false) {
   std::vector<std::string> errorStrings;
   const std::string w = "[ Invalid ply : ";
 
@@ -200,7 +200,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
         boost::split(lineSplit, line, boost::is_any_of(" "));
         if (elements[cElement].properties == -1) {
           int nprops = std::stoi(lineSplit[0]);
-          if (nprops != (int(lineSplit.size()) - 1)) {
+          if (nprops != (static_cast<int>(lineSplit.size()) - 1)) {
             errorStrings.push_back(w + line + std::string(" ] List expected ") +
                                    std::to_string(nprops) +
                                    std::string(" properties, while found ") +
@@ -208,7 +208,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
                                    std::string("."));
           }
         } else if (lineSplit.size() !=
-                   std::size_t(elements[cElement].properties)) {
+                   static_cast<std::size_t>(elements[cElement].properties)) {
           errorStrings.push_back(
               w + line + std::string(" ] Element expected ") +
               std::to_string(elements[cElement].properties) +
@@ -218,8 +218,6 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
       }
     }
   }
-
-  (void)triMesh;
 
   return errorStrings;
 }
