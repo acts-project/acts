@@ -180,9 +180,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   nlohmann::json jMaterialHeader;
   jMaterialHeader["common"] = jCommonHeader;
 
-  std::size_t inputMaterialCount = 0;
-  std::size_t inputMaterialPushed = 0;
-
   nlohmann::json jMaterialGrids;
   std::size_t nGrids = 0;
   for (const auto [iv, volume] : enumerate(volumes)) {
@@ -196,7 +193,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     for (const auto [is, surface] : enumerate(volume->surfaces())) {
       const ISurfaceMaterial* surfaceMaterial = surface->surfaceMaterial();
       if (surfaceMaterial != nullptr) {
-        ++inputMaterialCount;
         nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
             *surfaceMaterial, *surface, is, gridLinks);
         if (!jSurfaceMaterial.empty()) {
