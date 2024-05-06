@@ -402,7 +402,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
         cfg = self.Config()
         if len(args) == 1 and isinstance(args[0], self.Config):
             cfg = args[0]
-            args = args[1:]
         if "config" in kwargs:
             cfg = kwargs.pop("config")
 

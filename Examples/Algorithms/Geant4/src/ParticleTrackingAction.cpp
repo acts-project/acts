@@ -131,7 +131,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   }
 
   // Now create the Particle
-  ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle(pdg),
+  ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle{pdg},
                                       charge, mass);
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);

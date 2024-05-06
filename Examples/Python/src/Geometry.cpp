@@ -207,10 +207,14 @@ void addExperimentalGeometry(Context& ctx) {
 
   // Detector volume definition
   py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(m,
-                                                              "DetectorVolume");
+                                                              "DetectorVolume")
+      .def("surfaces", &DetectorVolume::surfaces)
+      .def("surfacePtrs", &DetectorVolume::surfacePtrs);
 
   // Detector definition
   py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector")
+      .def("volumes", &Detector::volumes)
+      .def("volumePtrs", &Detector::volumePtrs)
       .def("numberVolumes",
            [](Detector& self) { return self.volumes().size(); })
       .def("extractMaterialSurfaces", [](Detector& self) {
@@ -546,6 +550,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(builder);
     ACTS_PYTHON_MEMBER(geoIdGenerator);
+    ACTS_PYTHON_MEMBER(materialDecorator);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }

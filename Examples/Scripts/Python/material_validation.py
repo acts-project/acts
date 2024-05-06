@@ -4,20 +4,17 @@ import os
 import argparse
 
 import acts
-from acts import (
-    UnitConstants as u,
-)
 from acts.examples import Sequencer, RootMaterialTrackWriter
 from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialValidation(
+    nevents,
+    ntracks,
     trackingGeometry,
     decorators,
     field,
     outputDir,
-    nevents=1000,
-    ntracks=1000,
     outputName="propagation-material",
     s=None,
 ):
@@ -86,11 +83,11 @@ if "__main__" == __name__:
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * acts.UnitConstants.T))
 
     runMaterialValidation(
+        args.events,
+        args.tracks,
         trackingGeometry,
         decorators,
         field,
-        nevents=args.events,
-        ntracks=args.tracks,
         outputDir=os.getcwd(),
         outputName=args.output,
     ).run()

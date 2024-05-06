@@ -74,8 +74,18 @@ Volume::BoundingBox Volume::orientedBoundingBox() const {
                                      this);
 }
 
-void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
-  m_volumeBounds = std::move(volbounds);
+void Volume::assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds) {
+  update(std::move(volbounds));
+}
+
+void Volume::update(std::shared_ptr<const VolumeBounds> volbounds,
+                    std::optional<Transform3> transform) {
+  if (volbounds) {
+    m_volumeBounds = std::move(volbounds);
+  }
+  if (transform.has_value()) {
+    setTransform(*transform);
+  }
 }
 
 const Transform3& Volume::transform() const {
@@ -94,4 +104,22 @@ const VolumeBounds& Volume::volumeBounds() const {
   return *m_volumeBounds;
 }
 
+std::shared_ptr<const VolumeBounds> Volume::volumeBoundsPtr() const {
+  return m_volumeBounds;
+}
+
+void Volume::setTransform(const Transform3& transform) {
+  m_transform = transform;
+  m_itransform = m_transform.inverse();
+  m_center = m_transform.translation();
+}
+
+bool Volume::operator==(const Volume& other) const {
+  return (m_transform.matrix() == other.m_transform.matrix()) &&
+         (*m_volumeBounds == *other.m_volumeBounds);
+}
+
+bool Volume::operator!=(const Volume& other) const {
+  return !(*this == other);
+}
 }  // namespace Acts
