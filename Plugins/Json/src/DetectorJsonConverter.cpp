@@ -16,6 +16,7 @@
 #include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
+#include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -172,8 +173,45 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   jFile["surface_grids"] = jSurfaceGrids;
 
   // (3) material section
-  nlohmann::json jMaterial;
+  jCommonHeader["tag"] = "material_maps";
 
+  nlohmann::json jMaterial;
+  nlohmann::json jMaterialData;
+  nlohmann::json jMaterialHeader;
+  jMaterialHeader["common"] = jCommonHeader;
+
+  nlohmann::json jMaterialGrids;
+  std::size_t nGrids = 0;
+  for (const auto [iv, volume] : enumerate(volumes)) {
+    // Grids per volume
+    nlohmann::json jMaterialVolumeGrids;
+    jMaterialVolumeGrids["volume_link"] = iv;
+    std::map<std::size_t, std::size_t> gridLinks;
+    // Add the data to the grid
+    /// Create the material json
+    nlohmann::json jMaterialVolumeGridsData;
+    for (const auto [is, surface] : enumerate(volume->surfaces())) {
+      const ISurfaceMaterial* surfaceMaterial = surface->surfaceMaterial();
+      if (surfaceMaterial != nullptr) {
+        nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
+            *surfaceMaterial, *surface, is, gridLinks);
+        if (!jSurfaceMaterial.empty()) {
+          ++nGrids;
+          jMaterialVolumeGridsData.push_back(jSurfaceMaterial);
+        }
+      }
+    }
+    if (!jMaterialVolumeGridsData.empty()) {
+      jMaterialVolumeGrids["grid_data"] = {jMaterialVolumeGridsData};
+      jMaterialGrids.push_back(jMaterialVolumeGrids);
+    }
+  }
+
+  jMaterialData["grids"] = jMaterialGrids;
+  // Fill the header
+  jMaterialHeader["grid_count"] = nGrids;
+  jMaterial["header"] = jMaterialHeader;
+  jMaterial["data"] = jMaterialData;
   jFile["material"] = jMaterial;
 
   return jFile;
