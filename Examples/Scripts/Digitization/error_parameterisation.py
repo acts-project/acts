@@ -25,7 +25,6 @@ def run_error_parametriation(
     view_colors=["deepskyblue", "gold"],
     view_rms_range=5,
 ):
-
     # Create a figure directory
     output_dir.mkdir(parents=True, exist_ok=True)
     output_html_dir = output_dir / "html"
@@ -47,7 +46,6 @@ def run_error_parametriation(
 
     # loop over the volumes
     for iv, v_id_n in enumerate(volumes):
-
         v_id, v_name = v_id_n
 
         logging.info(f"Processing volume {v_name} with ID: {v_id}")
@@ -283,12 +281,11 @@ Generated: {date}<br>
 
 # Main function
 if "__main__" == __name__:
-
     # Parse the command line arguments
     p = argparse.ArgumentParser(description="Hit parameterisation")
     p.add_argument("--root")
-    p.add_argument("--json_in")
-    p.add_argument("--json_out")
+    p.add_argument("--json-in")
+    p.add_argument("--json-out")
     args = p.parse_args()
 
     # Open the root file
