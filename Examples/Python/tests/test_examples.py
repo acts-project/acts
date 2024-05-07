@@ -1221,7 +1221,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         subprocess.check_call(
-            [sys.executable, str(script), "-n1", "--MLSolver"],
+            [sys.executable, str(script), "-n1", "--ambi-solver", "ML"],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,
