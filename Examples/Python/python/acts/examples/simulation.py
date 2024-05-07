@@ -782,7 +782,7 @@ def addDigitization(
     ----------
     s: Sequencer
         the sequencer module to which we add the Digitization steps (returned from addDigitization)
-    recoGeometry : tracking geometry or detector 
+    recoGeometry : tracking geometry or detector
     field : magnetic field
     digiConfigFile : Path|str, path
         Configuration (.json) file for digitization or smearing description
