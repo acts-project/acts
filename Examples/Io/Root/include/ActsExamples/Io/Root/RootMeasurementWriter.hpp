@@ -27,6 +27,7 @@
 #include "ActsFatras/Digitization/Channelizer.hpp"
 
 #include <array>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -71,8 +72,9 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string fileMode = "RECREATE";  ///< file access mode
     /// The indices for this digitization configurations
     Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>> boundIndices;
-    /// Tracking geometry required to access local-to-global transforms.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// Map of the geometry identifier to the surface
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier;
   };
 
   struct DigitizationTree {

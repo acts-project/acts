@@ -12,7 +12,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -26,6 +25,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -35,7 +35,6 @@
 
 namespace Acts {
 class GeometryIdentifier;
-class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -145,8 +144,9 @@ class DigitizationConfig {
   std::string outputMeasurementParticlesMap = "measurement_particles_map";
   /// Output collection to map measured hits to simulated hits.
   std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
-  /// Tracking geometry required to access global-to-local transforms.
-  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+  /// Map of surface by identifier to allow local - to global
+  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface *>
+      surfaceByIdentifier;
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   /// Do we merge hits or not
