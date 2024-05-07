@@ -166,7 +166,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
-        trackingGeometry=trk_geo,
+        surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
     )
     config.addBoundIndicesFromDigiConfig(digiAlg.config)
     s.addWriter(RootMeasurementWriter(level=acts.logging.INFO, config=config))
