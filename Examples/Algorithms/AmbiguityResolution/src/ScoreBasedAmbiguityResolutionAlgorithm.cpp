@@ -23,7 +23,7 @@ namespace {
 
 Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
     const ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::Config& cfg,
-    std::string configFile) {
+    const std::string& configFile) {
   Acts::ScoreBasedAmbiguityResolution::Config result;
 
   Acts::ConfigPair configPair;
@@ -71,7 +71,7 @@ bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
   int counter = 0;
   for (const auto& ts : track.trackStatesReversed()) {
     auto iTypeFlags = ts.typeFlags();
-    if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag))
+    if (!(iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)))
       doubleFlag = false;
 
     if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {

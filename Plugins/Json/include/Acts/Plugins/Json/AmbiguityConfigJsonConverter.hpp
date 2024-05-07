@@ -18,6 +18,6 @@ using ConfigPair =
     std::pair<std::map<std::size_t, std::size_t>, std::vector<DetectorConfig>>;
 /// This function is used to convert the ScoreBasedAmbiguityResolutionCongig
 /// from JSON to C++
-void from_json(const nlohmann::json&, ConfigPair&);
+void from_json(const nlohmann::json& j, ConfigPair& p);
 
 }  // namespace Acts
