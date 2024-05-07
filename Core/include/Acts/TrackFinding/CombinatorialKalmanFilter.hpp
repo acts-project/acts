@@ -890,9 +890,26 @@ class CombinatorialKalmanFilter {
 
         // Put tipstate back into active tips to continue with it
         result.activeTips.emplace_back(currentTip, tipState);
-        // Record the number of branches on surface
-        nBranchesOnSurface++;
+
+        using BranchStopperResult =
+            CombinatorialKalmanFilterBranchStopperResult;
+        BranchStopperResult branchStopperResult =
+            m_extensions.branchStopper(tipState, trackState);
+
+        // Check if need to stop this branch
+        if (branchStopperResult == BranchStopperResult::Continue) {
+          // Record the number of branches on surface
+          nBranchesOnSurface++;
+        } else {
+          if (branchStopperResult == BranchStopperResult::StopAndKeep) {
+            storeLastActiveTip(result);
+          }
+
+          // Remove the tip from list of active tips
+          result.activeTips.erase(result.activeTips.end() - 1);
+        }
       }
+
       return Result<void>::success();
     }
 
