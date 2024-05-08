@@ -10,9 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Digitization/DigitizationModule.hpp"
-#include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -21,7 +18,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -116,23 +112,6 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   if (surface.associatedDetectorElement() != nullptr) {
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
-
-    const auto* detElement =
-        dynamic_cast<const Acts::IdentifiedDetectorElement*>(
-            surface.associatedDetectorElement());
-
-    if (detElement != nullptr && detElement->digitizationModule()) {
-      auto dModule = detElement->digitizationModule();
-      // dynamic_cast to CartesianSegmentation
-      const auto* cSegmentation =
-          dynamic_cast<const Acts::CartesianSegmentation*>(
-              &(dModule->segmentation()));
-      if (cSegmentation != nullptr) {
-        auto pitch = cSegmentation->pitch();
-        data.pitch_u = pitch.first / Acts::UnitConstants::mm;
-        data.pitch_v = pitch.second / Acts::UnitConstants::mm;
-      }
-    }
   }
 }
 
