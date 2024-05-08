@@ -245,6 +245,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events
     assert all(f.stat().st_size > 200 for f in out.iterdir())
 
+
 @pytest.mark.parametrize(
     "writer",
     [
