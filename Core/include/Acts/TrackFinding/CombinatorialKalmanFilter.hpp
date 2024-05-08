@@ -346,6 +346,8 @@ class CombinatorialKalmanFilter {
 
       if (!result.filtered &&
           targetReached(state, stepper, navigator, logger())) {
+        ACTS_VERBOSE("Reached target surface");
+
         // Bind the parameter to the target surface
         auto res = stepper.boundState(state.stepping, *targetReached.surface);
         if (!res.ok()) {
@@ -599,7 +601,7 @@ class CombinatorialKalmanFilter {
         nBranchesOnSurface = 1;
 
         // Retrieve the previous tip and its state
-        const auto& currentBranch = result.activeBranches.back();
+        auto& currentBranch = result.activeBranches.back();
         std::size_t prevTip = currentBranch.tipIndex();
         TipState& tipState = tipStateAccessor(currentBranch);
 
@@ -649,7 +651,7 @@ class CombinatorialKalmanFilter {
               stateMask, boundState, result, isSensitive, prevTip);
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
-          result.activeBranches.back().tipIndex() = currentTip;
+          currentBranch.tipIndex() = currentTip;
 
           using BranchStopperResult =
               CombinatorialKalmanFilterBranchStopperResult;
