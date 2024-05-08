@@ -47,9 +47,8 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     throw std::ios_base::failure("Could not open '" + pathSimHit +
                                  "' to write");
   }
-  // Initialize the vertex counter
-  unsigned int vCounter = 0;
 
+  // Only hit plotting
   if (!m_cfg.drawConnections) {
     // Write data from internal immplementation
     for (const auto& simHit : simHits) {
