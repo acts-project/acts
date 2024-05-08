@@ -50,6 +50,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesIoJson
   ActsExamplesIoPerformance
   ActsExamplesGenerators
+  ActsExamplesPrinters
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
   ActsExamplesVertexing

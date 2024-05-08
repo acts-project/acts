@@ -11,6 +11,8 @@
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
+#include "ActsExamples/Printers/ParticlesPrinter.hpp"
+#include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
@@ -38,6 +40,12 @@ void addExampleAlgorithms(Context& ctx) {
       magneticField, pMin, emScattering, emEnergyLossIonisation,
       emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
       generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
+                                "ParticlesPrinter", inputParticles);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
+                                "TrackParametersPrinter", inputTrackParameters);
 
   {
     using Alg = ActsExamples::TrackSelectorAlgorithm;
