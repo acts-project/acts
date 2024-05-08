@@ -37,16 +37,6 @@ Acts::Experimental::DetectorBuilder::construct(
 
   auto [volumes, portals, roots] = m_cfg.builder->construct(gctx);
 
-  // Decorate the volumes with material - Surface material only at this moment
-  if (m_cfg.materialDecorator != nullptr) {
-    ACTS_DEBUG("Decorating the detector with material");
-    std::for_each(volumes.begin(), volumes.end(), [&](auto& v) {
-      for (auto& sf : v->surfacePtrs()) {
-        m_cfg.materialDecorator->decorate(*sf);
-      }
-    });
-  }
-
   // Assign the geometry ids to the detector - if configured
   if (m_cfg.geoIdGenerator != nullptr) {
     ACTS_DEBUG("Assigning geometry ids to the detector");
@@ -54,6 +44,16 @@ Acts::Experimental::DetectorBuilder::construct(
     std::for_each(roots.volumes.begin(), roots.volumes.end(), [&](auto& v) {
       ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+    });
+  }
+
+  // Decorate the volumes with material - Surface material only at this moment
+  if (m_cfg.materialDecorator != nullptr) {
+    ACTS_DEBUG("Decorating the detector with material");
+    std::for_each(volumes.begin(), volumes.end(), [&](auto& v) {
+      for (auto& sf : v->surfacePtrs()) {
+        m_cfg.materialDecorator->decorate(*sf);
+      }
     });
   }
 
