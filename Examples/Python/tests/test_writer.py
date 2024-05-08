@@ -293,7 +293,6 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
     [
         CsvParticleWriter,
         CsvMeasurementWriter,
-        CsvPlanarClusterWriter,
         CsvSimHitWriter,
         CsvTrackWriter,
         CsvTrackingGeometryWriter,
