@@ -241,7 +241,7 @@ else:
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=args["ttbar_pu"],
+            npileup=args.ttbar_pu,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
