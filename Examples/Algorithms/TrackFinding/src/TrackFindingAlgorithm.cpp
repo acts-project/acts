@@ -364,7 +364,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   tracks.addColumn<unsigned int>("trackGroup");
+  tracks.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
   tracksTemp.addColumn<unsigned int>("trackGroup");
+  tracksTemp.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;

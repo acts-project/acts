@@ -1034,6 +1034,7 @@ class CombinatorialKalmanFilter {
 
       if (lastMeasurement.has_value()) {
         currentBranch.tipIndex() = lastMeasurement->index();
+        result.collectedTracks.push_back(currentBranch);
         ACTS_VERBOSE("Last measurement found on track with entry index = "
                      << currentTip << " and measurement index = "
                      << lastMeasurement->index());

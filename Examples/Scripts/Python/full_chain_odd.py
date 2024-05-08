@@ -118,7 +118,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args["events"],
     skip=args["skip"],
-    numThreads=1,
+    numThreads=1 if g4_simulation else -1,
     outputDir=str(outputDir),
 )
 
@@ -167,7 +167,7 @@ else:
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
@@ -295,7 +295,6 @@ addCKFTracks(
     outputDirRoot=outputDir,
     writeCovMat=True,
     # outputDirCsv=outputDir,
-    logLevel=acts.logging.VERBOSE,
 )
 
 if ambi_ML:
