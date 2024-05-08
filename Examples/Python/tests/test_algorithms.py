@@ -24,7 +24,6 @@ from acts.examples import (
     TrackParametersPrinter,
     PropagationAlgorithm,
     DigitizationAlgorithm,
-    PlanarSteppingAlgorithm,
 )
 
 
@@ -57,7 +56,6 @@ from helpers import geant4Enabled, hepmc3Enabled
         TrackParametersPrinter,
         PropagationAlgorithm,
         # GeantinoRecording,
-        PlanarSteppingAlgorithm,
         # EventRecording,
     ],
 )

@@ -26,7 +26,6 @@ target_link_libraries(
   PRIVATE
     ActsCore
     ActsFatras
-    ActsPluginIdentification
     ActsPluginJson
     ActsPluginLegacy
     ActsPluginTGeo)
