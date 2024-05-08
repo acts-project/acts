@@ -871,9 +871,12 @@ class CombinatorialKalmanFilter {
           tipState.nMeasurements++;
         }
 
-        auto newBranch = result.tracks->makeTrack();
+        auto newBranch = result.activeBranches.back();
+        if (it != begin) {
+          newBranch = result.tracks->makeTrack();
+          result.activeBranches.push_back(newBranch);
+        }
         newBranch.tipIndex() = currentTip;
-        result.activeBranches.push_back(newBranch);
 
         using BranchStopperResult =
             CombinatorialKalmanFilterBranchStopperResult;
