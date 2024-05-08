@@ -847,17 +847,19 @@ class MultiTrajectoryTestsCommon {
   }
 
   void testTrackStateCopyDynamicColumns() {
+    using namespace HashedStringLiteral;
+
     // mutable source
     trajectory_t mtj = m_factory.create();
-    mtj.template addColumn<uint64_t>("counter");
-    mtj.template addColumn<uint8_t>("odd");
+    mtj.template addColumn<uint64_t>("counter"_hash);
+    mtj.template addColumn<uint8_t>("odd"_hash);
 
     trajectory_t mtj2 = m_factory.create();
     // doesn't have the dynamic column
 
     trajectory_t mtj3 = m_factory.create();
-    mtj3.template addColumn<uint64_t>("counter");
-    mtj3.template addColumn<uint8_t>("odd");
+    mtj3.template addColumn<uint64_t>("counter"_hash);
+    mtj3.template addColumn<uint8_t>("odd"_hash);
 
     for (MultiTrajectoryTraits::IndexType i = 0; i < 10; i++) {
       auto ts =
@@ -888,8 +890,8 @@ class MultiTrajectoryTestsCommon {
     BOOST_REQUIRE_EQUAL(cmtj.size(), before);
 
     VectorMultiTrajectory mtj5;
-    mtj5.addColumn<uint64_t>("counter");
-    mtj5.addColumn<uint8_t>("odd");
+    mtj5.addColumn<uint64_t>("counter"_hash);
+    mtj5.addColumn<uint8_t>("odd"_hash);
 
     for (std::size_t i = 0; i < 10; i++) {
       auto ts4 = cmtj.getTrackState(i);  // const source!
@@ -1114,11 +1116,11 @@ class MultiTrajectoryTestsCommon {
 
       trajectory_t traj = m_factory.create();
       BOOST_CHECK(!traj.hasColumn(h));
-      traj.template addColumn<T>(col);
+      traj.template addColumn<T>(h);
       BOOST_CHECK(traj.hasColumn(h));
 
       BOOST_CHECK(!traj.hasColumn(h2));
-      traj.template addColumn<T>(col2);
+      traj.template addColumn<T>(h2);
       BOOST_CHECK(traj.hasColumn(h2));
 
       auto ts1 = traj.getTrackState(traj.addTrackState());
@@ -1147,8 +1149,8 @@ class MultiTrajectoryTestsCommon {
     test("double", double{656.2});
 
     trajectory_t traj = m_factory.create();
-    traj.template addColumn<int>("extra_column");
-    traj.template addColumn<float>("another_column");
+    traj.template addColumn<int>("extra_column"_hash);
+    traj.template addColumn<float>("another_column"_hash);
 
     auto ts1 = traj.getTrackState(traj.addTrackState());
     auto ts2 = traj.getTrackState(
@@ -1179,7 +1181,7 @@ class MultiTrajectoryTestsCommon {
       std::vector<std::string> columns = {"one", "two", "three", "four"};
       for (const auto& c : columns) {
         BOOST_CHECK(!mt.hasColumn(fn(c)));
-        mt.template addColumn<int>(c);
+        mt.template addColumn<int>(fn(c));
         BOOST_CHECK(mt.hasColumn(fn(c)));
       }
       for (const auto& c : columns) {
