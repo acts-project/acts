@@ -21,7 +21,6 @@
 namespace Acts {
 
 /// Forward declaration of Digitization module is enough
-class DigitizationModule;
 class ISurfaceMaterial;
 
 /// @class DD4hepDetectorElement
