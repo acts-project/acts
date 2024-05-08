@@ -18,7 +18,8 @@ add_library(
   src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp
   src/VolumeBoundsJsonConverter.cpp
-  src/VolumeJsonConverter.cpp)
+  src/VolumeJsonConverter.cpp
+  src/AmbiguityConfigJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
   PUBLIC
