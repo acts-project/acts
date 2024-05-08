@@ -17,7 +17,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"

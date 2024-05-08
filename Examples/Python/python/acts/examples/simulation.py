@@ -616,7 +616,7 @@ __geant4Handle = None
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
-    trackingGeometry: acts.TrackingGeometry,
+    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     g4DetectorConstructionFactory: Optional[Any] = None,
@@ -667,7 +667,7 @@ def addGeant4(
         if given, secondary particles are removed from simulation
     """
 
-    from acts.examples.geant4 import Geant4Simulation
+    from acts.examples.geant4 import Geant4Simulation, SensitiveSurfaceMapper
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -692,6 +692,13 @@ def addGeant4(
 
     global __geant4Handle
 
+    smmConfig = SensitiveSurfaceMapper.Config()
+    smmConfig.volumeMappings = volumeMappings
+    smmConfig.materialMappings = materialMappings
+    sensitiveMapper = SensitiveSurfaceMapper.create(
+        smmConfig, acts.logging.INFO, trackingGeometry
+    )
+
     # Simulation
     alg = Geant4Simulation(
         level=customLogLevel(),
@@ -702,7 +709,7 @@ def addGeant4(
         outputParticlesInitial=outputParticlesInitial,
         outputParticlesFinal=outputParticlesFinal,
         outputSimHits=outputSimHits,
-        trackingGeometry=trackingGeometry,
+        sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
         physicsList=physicsList,
         volumeMappings=volumeMappings,

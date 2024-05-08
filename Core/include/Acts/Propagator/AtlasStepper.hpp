@@ -265,6 +265,12 @@ class AtlasStepper {
     // accummulated path length cache
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     // Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
@@ -1169,6 +1175,8 @@ class AtlasStepper {
 
     std::size_t nStepTrials = 0;
     while (h != 0.) {
+      nStepTrials++;
+
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
@@ -1254,7 +1262,6 @@ class AtlasStepper {
         // neutralize the sign of h again
         state.stepping.stepSize.setAccuracy(h * state.options.direction);
         //        dltm = 0.;
-        nStepTrials++;
         continue;
       }
 
@@ -1384,13 +1391,13 @@ class AtlasStepper {
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
 
-      state.stepping.pathAccumulated += h;
-      state.stepping.stepSize.nStepTrials = nStepTrials;
-      return h;
+      break;
     }
 
-    // that exit path should actually not happen
     state.stepping.pathAccumulated += h;
+    ++state.stepping.nSteps;
+    state.stepping.nStepTrials += nStepTrials;
+
     return h;
   }
 

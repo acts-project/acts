@@ -20,7 +20,10 @@
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+
+class ISurfaceMaterial;
 class IVolumeMaterial;
+class BinUtility;
 
 using volumeMaterialPointer = const Acts::IVolumeMaterial*;
 using surfaceMaterialPointer = const Acts::ISurfaceMaterial*;
@@ -52,5 +55,35 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::MappingType,
                                   "PostMapping"},
                                  {Acts::MappingType::Sensor, "Sensor"},
                              })
+
+namespace MaterialJsonConverter {
+
+/// @brief Convert a surface material to json - detray format
+///
+/// @param surfaceMaterial is the surface material to be converted
+/// @param surface is the surface the material is attached to
+/// @param surfaceIndex is the index of the surface
+/// @param gridLink [in, out] is the grid index in the volume
+///
+/// @note the surface is needed to shift the z boundaries for concentric cylinders
+///
+/// @return a json object representing the surface material in detray format
+nlohmann::json toJsonDetray(const ISurfaceMaterial& material,
+                            const Acts::Surface& surface,
+                            std::size_t surfaceIndex,
+                            std::map<std::size_t, std::size_t>& gridLink);
+
+/// @brief Convert a bin utility to json - detray format
+///
+/// @param binUtility is the bin utility to be converted
+/// @param surface is the surface the material is attached to
+///
+/// @note the surface is needed to shift the z boundaries for concentric cylinders
+///
+/// @return a json object representing the bin utility in detray format
+nlohmann::json toJsonDetray(const Acts::BinUtility& binUtility,
+                            const Acts::Surface& surface);
+
+}  // namespace MaterialJsonConverter
 
 }  // namespace Acts
