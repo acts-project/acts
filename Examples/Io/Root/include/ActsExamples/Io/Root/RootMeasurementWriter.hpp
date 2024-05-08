@@ -27,7 +27,7 @@
 #include "ActsFatras/Digitization/Channelizer.hpp"
 
 #include <array>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <string>
