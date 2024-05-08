@@ -23,6 +23,7 @@
 #include <any>
 #include <cstddef>
 #include <iterator>
+#include <string_view>
 
 namespace Acts {
 
@@ -227,15 +228,7 @@ class TrackContainer {
   /// @note Only available if the track container is not read-only
   /// @param key the name of the column to be added
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr void addColumn(const std::string& key) {
-    m_container->template addColumn_impl<T>(hashString(key));
-  }
-
-  /// Add a dymanic column to the track container
-  /// @note Only available if the track container is not read-only
-  /// @param key the name of the column to be added
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr void addColumn(HashedString key) {
+  constexpr void addColumn(std::string_view key) {
     m_container->template addColumn_impl<T>(key);
   }
 

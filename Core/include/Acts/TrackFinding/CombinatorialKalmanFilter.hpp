@@ -44,6 +44,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 
@@ -280,9 +281,10 @@ class CombinatorialKalmanFilter {
 
   const Logger& logger() const { return *m_logger; }
 
+  static constexpr std::string_view tipStateColumn = "CkfTipState";
   static constexpr ProxyAccessor<CombinatorialKalmanFilterTipState>
       tipStateAccessor = ProxyAccessor<CombinatorialKalmanFilterTipState>(
-          hashString("CkfTipState"));
+          hashString(tipStateColumn));
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
@@ -1161,7 +1163,7 @@ class CombinatorialKalmanFilter {
 
     if (!trackContainer.hasColumn(tipStateAccessor.key)) {
       trackContainer.template addColumn<CombinatorialKalmanFilterTipState>(
-          tipStateAccessor.key);
+          tipStateColumn);
     }
 
     auto rootBranch = trackContainer.makeTrack();

@@ -26,16 +26,16 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
   TrackContainer tc{vtc, mtj};
   tc.addColumn<std::size_t>("counter");
   tc.addColumn<bool>("odd");
-  mtj.addColumn<std::size_t>("ts_counter"_hash);
-  mtj.addColumn<bool>("ts_odd"_hash);
+  mtj.addColumn<std::size_t>("ts_counter");
+  mtj.addColumn<bool>("ts_odd");
 
   TrackContainer tc2{VectorTrackContainer{}, VectorMultiTrajectory{}};
   // doesn't have the dynamic column
 
   VectorTrackContainer vtc3{};
   VectorMultiTrajectory mtj3{};
-  mtj3.addColumn<std::size_t>("ts_counter"_hash);
-  mtj3.addColumn<bool>("ts_odd"_hash);
+  mtj3.addColumn<std::size_t>("ts_counter");
+  mtj3.addColumn<bool>("ts_odd");
 
   TrackContainer tc3{vtc3, mtj3};
 
@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
 
   VectorTrackContainer vtc5{};
   VectorMultiTrajectory mtj5{};
-  mtj5.addColumn<std::size_t>("ts_counter"_hash);
-  mtj5.addColumn<bool>("ts_odd"_hash);
+  mtj5.addColumn<std::size_t>("ts_counter");
+  mtj5.addColumn<bool>("ts_odd");
 
   TrackContainer tc5{vtc5, mtj5};
   tc5.addColumn<std::size_t>("counter");

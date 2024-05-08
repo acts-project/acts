@@ -387,7 +387,7 @@ class MultiTrajectory {
   ///       compatibility with backends.
   /// @note Only available if the MultiTrajectory is not read-only
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void addColumn(HashedString key) {
+  void addColumn(std::string_view key) {
     self().template addColumn_impl<T>(key);
   }
 

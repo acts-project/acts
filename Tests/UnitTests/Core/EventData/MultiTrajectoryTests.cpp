@@ -253,8 +253,8 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
 
 BOOST_AUTO_TEST_CASE(Accessors) {
   VectorMultiTrajectory mtj;
-  mtj.addColumn<unsigned int>("ndof"_hash);
-  mtj.addColumn<double>("super_chi2"_hash);
+  mtj.addColumn<unsigned int>("ndof");
+  mtj.addColumn<double>("super_chi2");
 
   auto ts = mtj.makeTrackState();
 
