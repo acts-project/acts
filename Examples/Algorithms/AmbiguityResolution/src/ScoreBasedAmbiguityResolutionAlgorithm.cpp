@@ -36,7 +36,7 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
   file >> json_file;
   file.close();
 
-  from_json(json_file, configPair);
+  Acts::from_json(json_file, configPair);
 
   result.volumeMap = configPair.first;
   result.detectorConfigs = configPair.second;
@@ -90,6 +90,7 @@ bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
     return false;
   }
 }
+
 }  // namespace
 
 ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
