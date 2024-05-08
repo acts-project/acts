@@ -8,7 +8,6 @@ find_package(
   COMPONENTS
     Core
     Fatras
-    PluginIdentification
     PluginJson
     PluginLegacy
     PluginTGeo)
