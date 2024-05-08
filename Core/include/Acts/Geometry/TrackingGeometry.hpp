@@ -162,7 +162,7 @@ class TrackingGeometry {
 
   /// Access to the GeometryIdentifier - Surface association map
   const std::unordered_map<GeometryIdentifier, const Surface*>&
-  geoIdSurfaceMap();
+  geoIdSurfaceMap() const;
 
  private:
   // the known world
