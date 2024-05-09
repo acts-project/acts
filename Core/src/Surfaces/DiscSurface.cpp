@@ -128,7 +128,7 @@ Acts::Vector3 Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2& lposition) const {
   Vector3 loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1],
                      0.);
-  return Vector3(transform(gctx) * loc3Dframe);
+  return transform(gctx) * loc3Dframe;
 }
 
 Acts::Vector2 Acts::DiscSurface::globalToLocalCartesian(

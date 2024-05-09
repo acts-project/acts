@@ -1134,12 +1134,12 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(ts1.template component<T>(col), value);
     };
 
-    test("uint32_t", uint32_t(1));
-    test("uint64_t", uint64_t(2));
-    test("int32_t", int32_t(-3));
-    test("int64_t", int64_t(-4));
-    test("float", float(8.9));
-    test("double", double(656.2));
+    test("uint32_t", std::uint32_t{1});
+    test("uint64_t", std::uint64_t{2});
+    test("int32_t", std::int32_t{-3});
+    test("int64_t", std::int64_t{-4});
+    test("float", float{8.9});
+    test("double", double{656.2});
 
     trajectory_t traj = m_factory.create();
     traj.template addColumn<int>("extra_column");

@@ -49,7 +49,8 @@ std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
     // Translate each pixel
     int iMat = cell.bin[0] - offset0;
     int jMat = cell.bin[1] - offset1;
-    if (iMat >= 0 && iMat < (int)size0 && jMat >= 0 && jMat < (int)size1) {
+    if (iMat >= 0 && iMat < static_cast<int>(size0) && jMat >= 0 &&
+        jMat < static_cast<int>(size1)) {
       typename Array::Index index = iMat * size0 + jMat;
       if (index < arr.size()) {
         arr(index) = cell.activation;

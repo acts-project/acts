@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -22,6 +23,7 @@
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
@@ -673,4 +675,144 @@ void Acts::from_json(const nlohmann::json& j, volumeMaterialPointer& material) {
                                                     bUtility);
     return;
   }
+}
+
+nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
+    const Acts::ISurfaceMaterial& surfaceMaterial, const Acts::Surface& surface,
+    std::size_t surfaceIndex, std::map<std::size_t, std::size_t>& gridLink) {
+  nlohmann::json jSurfaceMaterial;
+
+  // Binned material conversion
+  if (auto binnedMaterial =
+          dynamic_cast<const BinnedSurfaceMaterial*>(&surfaceMaterial);
+      binnedMaterial != nullptr) {
+    // BinUtility modifications
+    bool swapped = false;
+    // Get the bin utility (make a copy as we may modify it)
+    // Detray expects 2-dimensional grid, currently supported are
+    // x-y, r-phi, phi-z
+    BinUtility bUtility = binnedMaterial->binUtility();
+    // Turn the bin value into a 2D grid
+    if (bUtility.dimensions() == 1u) {
+      if (bUtility.binningData()[0u].binvalue == binR) {
+        // Turn to R-Phi
+        bUtility += BinUtility(1u, -M_PI, M_PI, closed, binR);
+      } else if (bUtility.binningData()[0u].binvalue == binZ) {
+        // Turn to Phi-Z - swap needed
+        BinUtility nbUtility(1u, -M_PI, M_PI, closed, binPhi);
+        nbUtility += bUtility;
+        bUtility = std::move(nbUtility);
+        swapped = true;
+      } else {
+        std::runtime_error("Unsupported binning for Detray");
+      }
+    } else if (bUtility.dimensions() == 2u &&
+               bUtility.binningData()[0u].binvalue == binZ &&
+               bUtility.binningData()[1u].binvalue == binPhi) {
+      BinUtility nbUtility(bUtility.binningData()[1u]);
+      nbUtility += bUtility.binningData()[0u];
+      bUtility = std::move(nbUtility);
+      swapped = true;
+    }
+
+    BinningValue bVal0 = bUtility.binningData()[0u].binvalue;
+    BinningValue bVal1 = bUtility.binningData()[1u].binvalue;
+
+    // Translate into grid index type
+    int gridIndexType = 0;
+    if (bVal0 == binR && bVal1 == binPhi) {
+      gridIndexType = 0;
+    } else if (bVal0 == binPhi && bVal1 == binZ) {
+      gridIndexType = 3;
+    } else if (bVal0 == binX && bVal1 == binY) {
+      gridIndexType = 2;
+    } else {
+      std::runtime_error("Unsupported binning for Detray");
+    }
+    // Convert the axes
+    nlohmann::json jAxes = toJsonDetray(bUtility, surface);
+    // Create  a grid index, i.e. type, index tuple
+    nlohmann::json jGridLink;
+    jGridLink["type"] = gridIndexType;
+    std::size_t gridIndex = 0;
+    if (gridLink.find(gridIndexType) != gridLink.end()) {
+      std::size_t& fGridIndex = gridLink[gridIndex];
+      gridIndex = fGridIndex;
+      fGridIndex++;
+    } else {
+      gridLink[gridIndexType] = 1;
+    }
+    jGridLink["index"] = gridIndex;
+
+    // The grid data
+    jSurfaceMaterial["axes"] = jAxes;
+    jSurfaceMaterial["grid_link"] = jGridLink;
+    jSurfaceMaterial["owner_link"] = surfaceIndex;
+
+    // The bins to be filled
+    nlohmann::json jBins;
+    auto materialMatrix = binnedMaterial->fullMaterial();
+    for (std::size_t ib1 = 0; ib1 < materialMatrix.size(); ++ib1) {
+      for (std::size_t ib0 = 0; ib0 < materialMatrix[0u].size(); ++ib0) {
+        nlohmann::json jBin;
+        // Look up the material slab
+        MaterialSlab slab = materialMatrix[ib1][ib0];
+        // Translate into a local bin
+        std::size_t lb0 = swapped ? ib1 : ib0;
+        std::size_t lb1 = swapped ? ib0 : ib1;
+        jBin["loc_index"] = std::array<std::size_t, 2u>{lb0, lb1};
+
+        const Material& material = slab.material();
+        // The content
+        nlohmann::json jContent;
+        jContent["thickness"] = slab.thickness();
+        // The actual material
+        nlohmann::json jMaterialParams;
+        if (slab.thickness() > 0.) {
+          jMaterialParams["params"] =
+              std::vector<ActsScalar>{material.X0(),
+                                      material.L0(),
+                                      material.Ar(),
+                                      material.Z(),
+                                      material.massDensity(),
+                                      material.molarDensity(),
+                                      0.};
+
+        } else {
+          jMaterialParams["params"] =
+              std::vector<ActsScalar>{0., 0., 0., 0., 0., 0., 0.};
+        }
+        jContent["material"] = jMaterialParams;
+        jContent["type"] = 6;
+        jContent["surface_idx"] = surfaceIndex;
+
+        nlohmann::json jContentVector;
+        jContentVector.push_back(jContent);
+        jBin["content"] = jContentVector;
+        jBins.push_back(jBin);
+      }
+    }
+    jSurfaceMaterial["bins"] = jBins;
+  }
+  return jSurfaceMaterial;
+}
+
+nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
+    const Acts::BinUtility& binUtility, const Surface& surface) {
+  nlohmann::json jAxes;
+  for (const auto [ib, bData] : enumerate(binUtility.binningData())) {
+    nlohmann::json jAxis;
+    jAxis["bounds"] = bData.option == closed ? 2 : 1;
+    jAxis["binning"] = 0u;
+    jAxis["label"] = ib;
+    jAxis["bins"] = bData.bins();
+    ActsScalar offset = 0;
+    if (bData.binvalue == binZ) {
+      offset = surface.center(Acts::GeometryContext{}).z();
+    }
+    jAxis["edges"] =
+        std::array<ActsScalar, 2>{bData.min + offset, bData.max + offset};
+    jAxes.push_back(jAxis);
+  }
+  return jAxes;
 }

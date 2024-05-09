@@ -118,7 +118,7 @@ std::bitset<3> readMask(const std::filesystem::path& path) {
     throw std::runtime_error("Unable to read mask");
   }
 
-  return std::bitset<3>(std::string(*tstr));
+  return std::bitset<3>(std::string{*tstr});
 }
 
 }  // namespace detail
