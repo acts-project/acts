@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -222,9 +222,6 @@ struct CombinatorialKalmanFilterResult {
   /// Track state candidates buffer
   std::vector<typename track_container_t::TrackStateProxy> trackStateCandidates;
 
-  /// Indicator if filtering has been done
-  bool filtered = false;
-
   /// Indicator if track finding has been done
   bool finished = false;
 
@@ -344,34 +341,10 @@ class CombinatorialKalmanFilter {
                                     true, logger());
       }
 
-      if (!result.filtered &&
-          targetReached(state, stepper, navigator, logger())) {
-        ACTS_VERBOSE("Reached target surface");
-
-        // Bind the parameter to the target surface
-        auto res = stepper.boundState(state.stepping, *targetReached.surface);
-        if (!res.ok()) {
-          ACTS_ERROR("Error while acquiring bound state for target surface: "
-                     << res.error() << " " << res.error().message());
-          result.lastError = res.error();
-        } else {
-          auto& [boundParams, jacobian, pathLength] = *res;
-          auto& currentBranch = result.activeBranches.back();
-          // Assign the fitted parameters
-          currentBranch.parameters() = boundParams.parameters();
-          currentBranch.covariance() = *boundParams.covariance();
-          currentBranch.setReferenceSurface(
-              boundParams.referenceSurface().getSharedPtr());
-        }
-
-        navigator.navigationBreak(state.navigation, true);
-        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      }
-
       // Update:
       // - Waiting for a current surface
-      auto surface = navigator.currentSurface(state.navigation);
-      if (surface != nullptr && !result.filtered) {
+      if (auto surface = navigator.currentSurface(state.navigation);
+          surface != nullptr) {
         // There are three scenarios:
         // 1) The surface is in the measurement map
         // -> Select source links
@@ -394,10 +367,40 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      // Reset propagation state:
-      // - When navigation breaks and there is still active tip present after
-      // recording&removing track tips on current surface
-      if (navigator.navigationBreak(state.navigation) && !result.filtered) {
+      bool isEndOfWorldReached =
+          endOfWorldReached(state, stepper, navigator, logger());
+      bool isPathLimitReached =
+          result.pathLimitReached(state, stepper, navigator, logger());
+      bool isTargetReached = targetReached(state, stepper, navigator, logger());
+      if (isEndOfWorldReached || isPathLimitReached || isTargetReached) {
+        if (isEndOfWorldReached) {
+          ACTS_VERBOSE("End of world reached");
+        }
+        if (isPathLimitReached) {
+          ACTS_VERBOSE("Path limit reached");
+        }
+        if (isTargetReached) {
+          ACTS_VERBOSE("Target surface reached");
+
+          // Bind the parameter to the target surface
+          auto res = stepper.boundState(state.stepping, *targetReached.surface);
+          if (!res.ok()) {
+            ACTS_ERROR("Error while acquiring bound state for target surface: "
+                       << res.error() << " " << res.error().message());
+            result.lastError = res.error();
+          } else {
+            auto& [boundParams, jacobian, pathLength] = *res;
+            auto& currentBranch = result.activeBranches.back();
+            // Assign the fitted parameters
+            currentBranch.parameters() = boundParams.parameters();
+            currentBranch.covariance() = *boundParams.covariance();
+            currentBranch.setReferenceSurface(
+                boundParams.referenceSurface().getSharedPtr());
+          }
+
+          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+        }
+
         if (!result.activeBranches.empty()) {
           // Record the active tip as trajectory entry indices and remove it
           // from the list
@@ -410,45 +413,13 @@ class CombinatorialKalmanFilter {
         if (result.activeBranches.empty()) {
           ACTS_VERBOSE("Kalman filtering finds "
                        << result.collectedTracks.size() << " tracks");
-          result.filtered = true;
+          result.finished = true;
         } else {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeBranches.back().tipIndex());
           reset(state, stepper, navigator, result);
         }
       }
-
-      bool isEndOfWorldReached =
-          endOfWorldReached(state, stepper, navigator, logger());
-      bool isPathLimitReached =
-          result.pathLimitReached(state, stepper, navigator, logger());
-      if (isEndOfWorldReached || isPathLimitReached) {
-        if (isEndOfWorldReached) {
-          ACTS_VERBOSE("End of world reached");
-        }
-        if (isPathLimitReached) {
-          ACTS_VERBOSE("Path limit reached");
-        }
-
-        if (result.activeBranches.size() <= 1) {
-          // this was the last track - we are done
-          ACTS_VERBOSE("Kalman filtering finds "
-                       << result.collectedTracks.size() << " tracks");
-          result.filtered = true;
-        } else {
-          storeLastActiveBranch(result);
-          // Remove the tip from list of active tips
-          result.activeBranches.pop_back();
-          reset(state, stepper, navigator, result);
-        }
-      }
-
-      // Post-processing after filtering phase
-      if (result.filtered) {
-        ACTS_VERBOSE("Finish CKF filtering");
-        // Remember that track finding is done
-        result.finished = true;
-      }  // if filtering is done
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: reset propagation
@@ -694,7 +665,7 @@ class CombinatorialKalmanFilter {
         } else {
           ACTS_VERBOSE("Stop Kalman filtering with "
                        << result.collectedTracks.size() << " found tracks");
-          result.filtered = true;
+          result.finished = true;
         }
       }
 
