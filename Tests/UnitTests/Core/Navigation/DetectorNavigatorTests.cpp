@@ -69,13 +69,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<>;
   using AbortList = Acts::AbortList<>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  auto options = PropagatorOptions(geoContext, mfContext);
 
-  auto stepper = Acts::StraightLineStepper();
+  auto stepper = Stepper();
 
   Acts::Vector4 pos(-2, 0, 0, 0);
   auto start = Acts::CurvilinearTrackParameters(
@@ -87,16 +90,14 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   //
   // Run without anything present
   {
-    Acts::Experimental::DetectorNavigator::Config navCfg;
+    Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
     navCfg.resolveMaterial = false;
     navCfg.resolvePassive = false;
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    auto navigator = Navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    auto propagator = Propagator(stepper, navigator);
 
     BOOST_CHECK_THROW(propagator.makeState(start, options),
                       std::invalid_argument);
@@ -264,24 +265,26 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "cubicDetector", detectorVolumes, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<StateRecorder>;
   using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  Acts::Experimental::DetectorNavigator::Config navCfg;
+  Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Acts::StraightLineStepper();
+  auto stepper = Stepper();
 
-  auto navigator = Acts::Experimental::DetectorNavigator(
-      navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                     Acts::Logging::Level::VERBOSE));
+  auto navigator =
+      Navigator(navCfg, Acts::getDefaultLogger("DetectorNavigator",
+                                               Acts::Logging::Level::VERBOSE));
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  auto options = PropagatorOptions(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                     Acts::Experimental::DetectorNavigator>(
+  auto propagator = Propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
@@ -417,24 +420,26 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<StateRecorder>;
   using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  Acts::Experimental::DetectorNavigator::Config navCfg;
+  Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Acts::StraightLineStepper();
+  auto stepper = Stepper();
 
-  auto navigator = Acts::Experimental::DetectorNavigator(
-      navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                     Acts::Logging::Level::VERBOSE));
+  auto navigator =
+      Navigator(navCfg, Acts::getDefaultLogger("DetectorNavigator",
+                                               Acts::Logging::Level::VERBOSE));
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  auto options = PropagatorOptions(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                     Acts::Experimental::DetectorNavigator>(
+  auto propagator = Propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
@@ -529,24 +534,26 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
+  using Stepper = Acts::StraightLineStepper;
+  using Navigator = Acts::Experimental::DetectorNavigator;
+  using Propagator = Acts::Propagator<Stepper, Navigator>;
   using ActionList = Acts::ActionList<StateRecorder>;
   using AbortList = Acts::AbortList<Acts::EndOfWorldReached>;
+  using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  Acts::Experimental::DetectorNavigator::Config navCfg;
+  Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Acts::StraightLineStepper();
+  auto stepper = Stepper();
 
-  auto navigator = Acts::Experimental::DetectorNavigator(
-      navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                     Acts::Logging::Level::VERBOSE));
+  auto navigator =
+      Navigator(navCfg, Acts::getDefaultLogger("DetectorNavigator",
+                                               Acts::Logging::Level::VERBOSE));
 
-  auto options =
-      Acts::PropagatorOptions<ActionList, AbortList>(geoContext, mfContext);
+  auto options = PropagatorOptions(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                     Acts::Experimental::DetectorNavigator>(
+  auto propagator = Propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 

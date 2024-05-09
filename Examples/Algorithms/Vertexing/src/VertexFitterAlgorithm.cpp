@@ -43,7 +43,7 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
+  using PropagatorOptions = Propagator::Options<>;
   using Linearizer = Acts::HelicalTrackLinearizer;
   using VertexFitter = Acts::FullBilloirVertexFitter;
   using VertexFitterOptions = Acts::VertexingOptions;

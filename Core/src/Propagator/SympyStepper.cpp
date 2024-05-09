@@ -20,8 +20,8 @@
 namespace Acts {
 
 SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-                           double overstepLimit)
-    : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
+                           double /*overstepLimit*/)
+    : m_bField(std::move(bField)) {}
 
 SympyStepper::State SympyStepper::makeState(
     std::reference_wrapper<const GeometryContext> gctx,

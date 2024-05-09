@@ -22,6 +22,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -51,6 +52,14 @@ class StraightLineStepper {
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = NullBField;
+
+  struct Config {};
+
+  struct Options : public StepperPlainOptions {
+    void setPlainOptions(const StepperPlainOptions& options) {
+      static_cast<StepperPlainOptions&>(*this) = options;
+    }
+  };
 
   /// State for track parameter propagation
   ///
@@ -133,10 +142,6 @@ class StraightLineStepper {
     // Cache the geometry context of this propagation
     std::reference_wrapper<const GeometryContext> geoContext;
   };
-
-  /// Always use the same propagation state type, independently of the initial
-  /// track parameter type and of the target surface
-  using state_type = State;
 
   StraightLineStepper() = default;
 
