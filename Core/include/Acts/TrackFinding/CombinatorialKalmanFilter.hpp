@@ -192,6 +192,37 @@ struct CombinatorialKalmanFilterOptions {
   ///       certain surface
   const Surface* targetSurface = nullptr;
 
+  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+
+  /// Delegate definition to create track states for selected measurements
+  /// @note expected to iterator over the given sourcelink range,
+  ///       select measurements, and create track states for
+  ///       which new tips are to be created.
+  ///
+  /// @param geoContext The current geometry context
+  /// @param calibrationContext pointer to the current calibration context
+  /// @param surface the surface at which new track states are to be created
+  /// @param boundState the current bound state of the trajectory
+  /// @param slBegin Begin iterator for sourcelinks
+  /// @param slEnd End iterator for sourcelinks
+  /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
+  /// @param trajectory the trajectory to which the new states are to be added
+  /// @param trackStateCandidates list to be filled with the new states
+  /// @param isOutlier flag to be set to true of the states are outliers
+  /// @param logger a logger for messages
+  using TrackStateCandidateCreator = Delegate<Result<std::pair<
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>(
+      const GeometryContext& geoContext,
+      const CalibrationContext& calibrationContext, const Surface& surface,
+      const BoundState& boundState, source_link_iterator_t slBegin,
+      source_link_iterator_t slEnd, std::size_t prevTip, traj_t& trajectory,
+      std::vector<typename traj_t::TrackStateProxy>& trackStateCandidates,
+      bool& isOutlier, const Logger& logger)>;
+
+  /// The delegate to create new track states.
+  TrackStateCandidateCreator trackStateCandidateCreator;
+
   /// Whether to consider multiple scattering.
   bool multipleScattering = true;
 
@@ -278,6 +309,8 @@ class CombinatorialKalmanFilter {
  private:
   using KalmanNavigator = typename propagator_t::Navigator;
 
+  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+
   /// The propagator for the transport and material update
   propagator_t m_propagator;
 
@@ -286,6 +319,91 @@ class CombinatorialKalmanFilter {
   std::shared_ptr<const Logger> m_updaterLogger;
 
   const Logger& logger() const { return *m_logger; }
+
+  struct DefaultTrackStateCreator {
+    typename CombinatorialKalmanFilterExtensions<traj_t>::Calibrator calibrator;
+    typename CombinatorialKalmanFilterExtensions<traj_t>::MeasurementSelector
+        measurementSelector;
+    /// Create and fill track states for all source links
+    ///
+    /// @param gctx The current geometry context
+    /// @param result Reference to the result struct of the actor
+    /// @param boundState Bound state from the propagation on this surface
+    /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
+    /// @param slBegin Begin iterator for sourcelinks
+    /// @param slEnd End iterator for sourcelinks
+    template <typename source_link_iterator_t>
+    Result<std::pair<
+        typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+        typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+    createSourceLinkTrackStates(
+        const GeometryContext& gctx,
+        const CalibrationContext& calibrationContext,
+        [[maybe_unused]] const Surface& surface, const BoundState& boundState,
+        source_link_iterator_t slBegin, source_link_iterator_t slEnd,
+        std::size_t prevTip, traj_t& trajectory,
+        std::vector<typename traj_t::TrackStateProxy>& trackStateCandidates,
+        bool& isOutlier, const Logger& logger) const {
+      const auto& [boundParams, jacobian, pathLength] = boundState;
+
+      trackStateCandidates.clear();
+      if constexpr (std::is_same_v<
+                        typename std::iterator_traits<
+                            source_link_iterator_t>::iterator_category,
+                        std::random_access_iterator_tag>) {
+        trackStateCandidates.reserve(std::distance(slBegin, slEnd));
+      }
+
+      trajectory.clear();
+
+      using PM = TrackStatePropMask;
+
+      // Calibrate all the source links on the surface since the selection has
+      // to be done based on calibrated measurement
+      for (auto it = slBegin; it != slEnd; ++it) {
+        // get the source link
+        const auto sourceLink = *it;
+
+        // prepare the track state
+        PM mask = PM::Predicted | PM::Jacobian | PM::Calibrated;
+
+        if (it != slBegin) {
+          // not the first TrackState, only need uncalibrated and calibrated
+          mask = PM::Calibrated;
+        }
+
+        ACTS_VERBOSE("Create temp track state with mask: " << mask);
+        // CAREFUL! This trackstate has a previous index that is not in this
+        // MultiTrajectory Visiting brackwards from this track state will
+        // fail!
+        auto ts = trajectory.makeTrackState(mask, prevTip);
+
+        if (it == slBegin) {
+          // only set these for first
+          ts.predicted() = boundParams.parameters();
+          if (boundParams.covariance()) {
+            ts.predictedCovariance() = *boundParams.covariance();
+          }
+          ts.jacobian() = jacobian;
+        } else {
+          // subsequent track states can reuse
+          auto& first = trackStateCandidates.front();
+          ts.shareFrom(first, PM::Predicted);
+          ts.shareFrom(first, PM::Jacobian);
+        }
+
+        ts.pathLength() = pathLength;
+
+        ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
+
+        // now calibrate the track state
+        calibrator(gctx, calibrationContext, sourceLink, ts);
+
+        trackStateCandidates.push_back(ts);
+      }
+      return measurementSelector(trackStateCandidates, isOutlier, logger);
+    }
+  };
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
@@ -521,16 +639,14 @@ class CombinatorialKalmanFilter {
 
         // Create trackstates for all source links (will be filtered later)
         // Results are stored in result => no return value
-        createSourceLinkTrackStates(state.geoContext, result, boundState,
-                                    prevTip, slBegin, slEnd);
+        using TrackStateRangeResult = Result<std::pair<
+            typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+            typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
 
-        // Invoke the measurement selector to select compatible measurements
-        // with the predicted track parameter.
-        // It can modify the trackStateCandidates vector, and will return a pair
-        // of iterators marking the range of accepted measurements (track
-        // states)
         bool isOutlier = false;
-        auto selectorResult = m_extensions.measurementSelector(
+        TrackStateRangeResult selectorResult = trackStateCandidateCreator(
+            state.geoContext, *calibrationContextPtr, *surface, boundState,
+            slBegin, slEnd, prevTip, *result.stateBuffer,
             result.trackStateCandidates, isOutlier, logger());
 
         if (!selectorResult.ok()) {
@@ -686,80 +802,6 @@ class CombinatorialKalmanFilter {
       }
 
       return Result<void>::success();
-    }
-
-    /// Create and fill track states for all source links
-    ///
-    /// @param gctx The current geometry context
-    /// @param result Reference to the result struct of the actor
-    /// @param boundState Bound state from the propagation on this surface
-    /// @param prevTip Index pointing at previous trajectory state (i.e. tip)
-    /// @param slBegin Begin iterator for sourcelinks
-    /// @param slEnd End iterator for sourcelinks
-    template <typename source_link_iterator_t>
-    void createSourceLinkTrackStates(const Acts::GeometryContext& gctx,
-                                     result_type& result,
-                                     const BoundState& boundState,
-                                     std::size_t prevTip,
-                                     source_link_iterator_t slBegin,
-                                     source_link_iterator_t slEnd) const {
-      const auto& [boundParams, jacobian, pathLength] = boundState;
-
-      result.trackStateCandidates.clear();
-      if constexpr (std::is_same_v<
-                        typename std::iterator_traits<
-                            source_link_iterator_t>::iterator_category,
-                        std::random_access_iterator_tag>) {
-        result.trackStateCandidates.reserve(std::distance(slBegin, slEnd));
-      }
-
-      result.stateBuffer->clear();
-
-      using PM = TrackStatePropMask;
-
-      // Calibrate all the source links on the surface since the selection has
-      // to be done based on calibrated measurement
-      for (auto it = slBegin; it != slEnd; ++it) {
-        // get the source link
-        const auto sourceLink = *it;
-
-        // prepare the track state
-        PM mask = PM::Predicted | PM::Jacobian | PM::Calibrated;
-
-        if (it != slBegin) {
-          // not the first TrackState, only need uncalibrated and calibrated
-          mask = PM::Calibrated;
-        }
-
-        ACTS_VERBOSE("Create temp track state with mask: " << mask);
-        // CAREFUL! This trackstate has a previous index that is not in this
-        // MultiTrajectory Visiting brackwards from this track state will
-        // fail!
-        auto ts = result.stateBuffer->makeTrackState(mask, prevTip);
-
-        if (it == slBegin) {
-          // only set these for first
-          ts.predicted() = boundParams.parameters();
-          if (boundParams.covariance()) {
-            ts.predictedCovariance() = *boundParams.covariance();
-          }
-          ts.jacobian() = jacobian;
-        } else {
-          // subsequent track states can reuse
-          auto& first = result.trackStateCandidates.front();
-          ts.shareFrom(first, PM::Predicted);
-          ts.shareFrom(first, PM::Jacobian);
-        }
-
-        ts.pathLength() = pathLength;
-
-        ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
-
-        // now calibrate the track state
-        m_extensions.calibrator(gctx, *calibrationContextPtr, sourceLink, ts);
-
-        result.trackStateCandidates.push_back(ts);
-      }
     }
 
     /// Handle the list of selected track states
@@ -1036,6 +1078,20 @@ class CombinatorialKalmanFilter {
     /// The source link accessor
     source_link_accessor_t m_sourcelinkAccessor;
 
+    using source_link_iterator_t =
+        decltype(std::declval<decltype(m_sourcelinkAccessor(
+                     *static_cast<const Surface*>(nullptr)))>()
+                     .first);
+
+    using TrackStateCandidateCreator =
+        typename CombinatorialKalmanFilterOptions<
+            source_link_iterator_t, traj_t>::TrackStateCandidateCreator;
+
+    /// the stateCandidator to be used
+    /// @note will be set to a default trackStateCandidateCreator or the one
+    //        provided via the extension
+    TrackStateCandidateCreator trackStateCandidateCreator;
+
     /// End of world aborter
     EndOfWorldReached endOfWorldReached;
 
@@ -1143,6 +1199,19 @@ class CombinatorialKalmanFilter {
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
     combKalmanActor.m_extensions = tfOptions.extensions;
+    combKalmanActor.trackStateCandidateCreator =
+        tfOptions.trackStateCandidateCreator;
+    DefaultTrackStateCreator defaultTrackStateCreator;
+    // connect a default state candidate creator if no state candidate creator
+    // was provided via the extension
+    if (!combKalmanActor.trackStateCandidateCreator.connected()) {
+      defaultTrackStateCreator.calibrator = tfOptions.extensions.calibrator;
+      defaultTrackStateCreator.measurementSelector =
+          tfOptions.extensions.measurementSelector;
+      combKalmanActor.trackStateCandidateCreator.template connect<
+          &DefaultTrackStateCreator::template createSourceLinkTrackStates<
+              source_link_iterator_t>>(&defaultTrackStateCreator);
+    }
 
     auto propState =
         m_propagator.template makeState(initialParameters, propOptions);
