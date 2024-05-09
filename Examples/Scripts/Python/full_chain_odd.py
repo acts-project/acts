@@ -80,14 +80,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "--gun-eta-range",
-    nargs="+",
+    nargs=2,
     help="Eta range of the particle gun",
     type=float,
     default=[-3.0, 3.0],
 )
 parser.add_argument(
     "--gun-pt-range",
-    nargs="+",
+    nargs=2,
     help="Pt range of the particle gun (GeV)",
     type=float,
     default=[1.0 * u.GeV, 10.0 * u.GeV],
@@ -123,14 +123,12 @@ parser.add_argument(
     default=True,
     action=argparse.BooleanOptionalAction,
 )
-
 parser.add_argument(
     "--output-root",
     help="Switch root output on/off",
     default=True,
     action=argparse.BooleanOptionalAction,
 )
-
 parser.add_argument(
     "--output-csv",
     help="Switch csv output on/off",
