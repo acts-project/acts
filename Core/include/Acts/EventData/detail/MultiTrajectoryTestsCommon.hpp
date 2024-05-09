@@ -847,8 +847,6 @@ class MultiTrajectoryTestsCommon {
   }
 
   void testTrackStateCopyDynamicColumns() {
-    using namespace HashedStringLiteral;
-
     // mutable source
     trajectory_t mtj = m_factory.create();
     mtj.template addColumn<uint64_t>("counter");
