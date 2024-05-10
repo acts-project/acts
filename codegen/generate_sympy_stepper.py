@@ -65,7 +65,7 @@ def rk4_short_math():
     new_time = name_expr("new_time", t + h * dtds.name)
 
     path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
-    path_derivatives.expr[0:3, 0] = new_d.name.as_explicit()
+    path_derivatives.expr[0:3, 0] = new_d_norm.name.as_explicit()
     path_derivatives.expr[3, 0] = dtds.name
     path_derivatives.expr[4:7, 0] = k4.name.as_explicit()
 
@@ -157,7 +157,7 @@ def rk4_full_math():
     new_time = name_expr("new_time", t + h * dtds.expr)
 
     path_derivatives = name_expr("path_derivatives", sym.zeros(8, 1))
-    path_derivatives.expr[0:3, 0] = new_d.expr.as_explicit()
+    path_derivatives.expr[0:3, 0] = new_d_norm.expr.as_explicit()
     path_derivatives.expr[3, 0] = dtds.expr
     path_derivatives.expr[4:7, 0] = k4.expr.as_explicit()
 

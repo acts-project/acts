@@ -185,9 +185,6 @@ Result<double> SympyStepper::stepImpl(
     nStepTrials++;
   }
 
-  // TODO move into rk4
-  (state.pars.template segment<3>(eFreeDir0)).normalize();
-
   state.pathAccumulated += h;
   ++state.nSteps;
   state.nStepTrials += nStepTrials;
