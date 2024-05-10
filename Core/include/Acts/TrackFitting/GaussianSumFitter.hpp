@@ -103,7 +103,7 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<NavigationBreakAborter>;
       using PropagatorOptions =
           typename propagator_t::template Options<Actors, Aborters>;
@@ -112,8 +112,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.actionList.template get<DirectNavigator::Initializer>()
-          .navSurfaces = sSequence;
+      propOptions.navigation.surfaces = sSequence;
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -122,7 +121,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<>;
       using PropagatorOptions =
           typename propagator_t::template Options<Actors, Aborters>;
@@ -135,8 +134,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.actionList.template get<DirectNavigator::Initializer>()
-          .navSurfaces = std::move(backwardSequence);
+      propOptions.navigation.surfaces = backwardSequence;
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 

@@ -141,17 +141,14 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     }
 
     // Action list for direct navigator with its initializer
-    using DirectActionList = ActionList<DirectNavigator::Initializer,
-                                        MaterialInteractor, SurfaceCollector<>>;
+    using DirectActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
 
     // Direct options definition
     using DirectOptions =
         typename dpropagator_t::template Options<DirectActionList, AbortList<>>;
     DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
-    auto& dInitializer =
-        dOptions.actionList.template get<DirectNavigator::Initializer>();
-    dInitializer.navSurfaces = surfaceSequence;
+    dOptions.navigation.surfaces = surfaceSequence;
     // Surface collector configuration
     auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;
