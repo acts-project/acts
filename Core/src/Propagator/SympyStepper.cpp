@@ -83,12 +83,12 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
 }
 
 void SympyStepper::update(State& state, const Vector3& uposition,
-                          const Vector3& udirection, double qop,
+                          const Vector3& udirection, double qOverP,
                           double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = qop;
+  state.pars[eFreeQOverP] = qOverP;
 }
 
 void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
@@ -163,11 +163,7 @@ Result<double> SympyStepper::stepImpl(
       break;
     }
 
-    // double std::sqrt is 3x faster than std::pow
-    const double stepSizeScaling = std::clamp(
-        std::sqrt(std::sqrt(stepTolerance / std::abs(2. * errorEstimate))),
-        0.25, 4.0);
-    h *= stepSizeScaling;
+    h *= calcStepSizeScaling(2 * errorEstimate);
 
     // If step size becomes too small the particle remains at the initial
     // place
