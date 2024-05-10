@@ -4,7 +4,7 @@ set -e # abort on error
 
 # get script directory
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-REPO_DIR=$( dirname $SCRIPT_DIR )
+REPO_DIR="$SCRIPT_DIR/.."
 
 mkdir -p $REPO_DIR/Core/src/Propagator/codegen
 mkdir -p $REPO_DIR/Core/src/Propagator/detail/codegen
