@@ -11,9 +11,9 @@ mkdir -p $REPO_DIR/Core/src/Propagator/detail/codegen
 
 # run code generation
 export PYTHONPATH=$REPO_DIR/codegen:$PYTHONPATH
-python $REPO_DIR/codegen/generate_sympy_stepper.py > $REPO_DIR/Core/src/Propagator/codegen/sympy_stepper_math.hpp
-python $REPO_DIR/codegen/generate_sympy_jac.py > $REPO_DIR/Core/src/Propagator/detail/codegen/sympy_jac_math.hpp
-python $REPO_DIR/codegen/generate_sympy_cov.py > $REPO_DIR/Core/src/Propagator/detail/codegen/sympy_cov_math.hpp
+python3 $REPO_DIR/codegen/generate_sympy_stepper.py > $REPO_DIR/Core/src/Propagator/codegen/sympy_stepper_math.hpp
+python3 $REPO_DIR/codegen/generate_sympy_jac.py > $REPO_DIR/Core/src/Propagator/detail/codegen/sympy_jac_math.hpp
+python3 $REPO_DIR/codegen/generate_sympy_cov.py > $REPO_DIR/Core/src/Propagator/detail/codegen/sympy_cov_math.hpp
 
 if ! [ -z $CI ] || ! [ -z $GITHUB_ACTIONS ]; then
   mkdir changed

@@ -171,7 +171,7 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: >
-          pip install -r codegen/requirements.txt
+          pip3 install -r codegen/requirements.txt
       - name: Check
         run: >
           CI/check_codegen
