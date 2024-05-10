@@ -196,7 +196,7 @@ def my_step_function_print(name_exprs, run_cse=True):
 
     lines = []
 
-    head = "template <typename T, typename GetB> bool rk4(const T* p, const T* d, const T t, const T h, const T lambda, const T m, const T p_abs, GetB getB, T* new_p, T* new_d, T* new_time, T* path_derivatives, T* J) {"
+    head = "template <typename T, typename GetB> bool rk4(const T* p, const T* d, const T t, const T h, const T lambda, const T m, const T p_abs, GetB getB, T* err, T* new_p, T* new_d, T* new_time, T* path_derivatives, T* J) {"
     lines.append(head)
 
     lines.append("  const auto B1 = getB(p);")
@@ -206,8 +206,6 @@ def my_step_function_print(name_exprs, run_cse=True):
             return "T p2[3];"
         if str(var) == "p3":
             return "T p3[3];"
-        if str(var) == "err":
-            return "T err;"
         if str(var) == "new_J":
             return "T new_J[64];"
         return None
@@ -218,7 +216,7 @@ def my_step_function_print(name_exprs, run_cse=True):
         if str(var) == "p3":
             return "const auto B3 = getB(p3);"
         if str(var) == "err":
-            return "if (err > 1e-4) {\n  return false;\n}"
+            return "if (*err > 1e-4) {\n  return false;\n}"
         if str(var) == "new_time":
             return "if (J == nullptr) {\n  return true;\n}"
         if str(var) == "new_J":
@@ -233,7 +231,6 @@ def my_step_function_print(name_exprs, run_cse=True):
         pre_expr_hook=pre_expr_hook,
         post_expr_hook=post_expr_hook,
     )
-    code = code.replace("*err", "err")
     lines.extend([f"  {l}" for l in code.split("\n")])
 
     lines.append("  return true;")
@@ -267,7 +264,8 @@ code = my_step_function_print(
     run_cse=True,
 )
 
-print("""// This file is part of the Acts project.
+print(
+    """// This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
 //
@@ -281,5 +279,6 @@ print("""// This file is part of the Acts project.
 #pragma once
             
 #include <cmath>
-""")
+"""
+)
 print(code)

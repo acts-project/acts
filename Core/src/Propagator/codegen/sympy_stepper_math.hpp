@@ -15,8 +15,8 @@
 
 template <typename T, typename GetB>
 bool rk4(const T* p, const T* d, const T t, const T h, const T lambda,
-         const T m, const T p_abs, GetB getB, T* new_p, T* new_d, T* new_time,
-         T* path_derivatives, T* J) {
+         const T m, const T p_abs, GetB getB, T* err, T* new_p, T* new_d,
+         T* new_time, T* path_derivatives, T* J) {
   const auto B1 = getB(p);
   const auto x13 = std::pow(h, 2);
   const auto h_2 = (1.0 / 2.0) * h;
@@ -89,11 +89,10 @@ bool rk4(const T* p, const T* d, const T t, const T h, const T lambda,
   k4[0] = d[1] * lB3[2] - d[2] * lB3[1] - hlB3[1] * k3[2] + hlB3[2] * k3[1];
   k4[1] = -d[0] * lB3[2] + d[2] * lB3[0] + hlB3[0] * k3[2] - hlB3[2] * k3[0];
   k4[2] = d[0] * lB3[1] - d[1] * lB3[0] - hlB3[0] * k3[1] + hlB3[1] * k3[0];
-  T err;
-  err = x13 * std::fabs(k1[0] - k2[0] - k3[0] + k4[0]) +
-        x13 * std::fabs(k1[1] - k2[1] - k3[1] + k4[1]) +
-        x13 * std::fabs(k1[2] - k2[2] - k3[2] + k4[2]);
-  if (err > 1e-4) {
+  *err = x13 * std::fabs(k1[0] - k2[0] - k3[0] + k4[0]) +
+         x13 * std::fabs(k1[1] - k2[1] - k3[1] + k4[1]) +
+         x13 * std::fabs(k1[2] - k2[2] - k3[2] + k4[2]);
+  if (*err > 1e-4) {
     return false;
   }
   const auto x14 = (1.0 / 3.0) * h2_2;

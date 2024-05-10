@@ -11,6 +11,7 @@ from sympy.printing.cxx import CXX17CodePrinter
 
 NamedExpr = namedtuple("NamedExpr", ["name", "expr"])
 
+
 def name_expr(name, expr):
     if hasattr(expr, "shape"):
         s = sym.MatrixSymbol(name, *expr.shape)
@@ -18,8 +19,12 @@ def name_expr(name, expr):
         s = Symbol(name)
     return NamedExpr(s, expr)
 
+
 def find_by_name(name_exprs, name):
-    return next((name_expr for name_expr in name_exprs if str(name_expr[0]) == name), None)
+    return next(
+        (name_expr for name_expr in name_exprs if str(name_expr[0]) == name), None
+    )
+
 
 class MyCXXCodePrinter(CXX17CodePrinter):
     def _traverse_matrix_indices(self, mat):
@@ -29,16 +34,20 @@ class MyCXXCodePrinter(CXX17CodePrinter):
     def _print_MatrixElement(self, expr):
         from sympy.printing.precedence import PRECEDENCE
 
-        return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
-            strict=True), expr.i + expr.j*expr.parent.shape[0])
+        return "{}[{}]".format(
+            self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True),
+            expr.i + expr.j * expr.parent.shape[0],
+        )
+
 
 cxx_printer = MyCXXCodePrinter()
+
 
 def inflate_expr(name_expr):
     name, expr = name_expr
 
     result = []
-    references= []
+    references = []
 
     if hasattr(expr, "shape"):
         for indices in np.ndindex(expr.shape):
@@ -50,14 +59,16 @@ def inflate_expr(name_expr):
 
     return result, references
 
+
 def inflate_exprs(name_exprs):
     result = []
-    references= []
+    references = []
     for name_expr in name_exprs:
         res, refs = inflate_expr(name_expr)
         result.extend(res)
         references.extend(refs)
     return result, references
+
 
 def deflate_exprs(name_exprs, references):
     result = []
@@ -85,12 +96,14 @@ def deflate_exprs(name_exprs, references):
 
     return another_result
 
+
 def my_subs(expr, sub_name_exprs):
     sub_name_exprs, _ = inflate_exprs(sub_name_exprs)
 
     result = expr
-    result = result.subs([(e,n) for n, e in sub_name_exprs])
+    result = result.subs([(e, n) for n, e in sub_name_exprs])
     return result
+
 
 def build_dependency_graph(name_exprs):
     graph = {}
@@ -98,12 +111,14 @@ def build_dependency_graph(name_exprs):
         graph[name] = expr.free_symbols
     return graph
 
+
 def build_influence_graph(name_exprs):
     graph = {}
     for name, expr in name_exprs:
         for s in expr.free_symbols:
             graph.setdefault(s, set()).add(name)
     return graph
+
 
 def order_exprs_by_input(name_exprs):
     all_expr_names = set().union(name for name, _ in name_exprs)
@@ -127,10 +142,11 @@ def order_exprs_by_input(name_exprs):
     result = sorted(result, key=lambda n_e: order[n_e[0]])
     return result
 
+
 def order_exprs_by_output(name_exprs, outputs):
     name_expr_by_name = {name_expr[0]: name_expr for name_expr in name_exprs}
 
-    def get_inputs(output): 
+    def get_inputs(output):
         name_expr = name_expr_by_name.get(output, None)
         if name_expr is None:
             return set()
@@ -143,12 +159,17 @@ def order_exprs_by_output(name_exprs, outputs):
 
     for output in outputs:
         inputs = get_inputs(output) - done
-        result.extend(order_exprs_by_input([name_exprs for name_exprs in name_exprs if name_exprs[0] in inputs]))
+        result.extend(
+            order_exprs_by_input(
+                [name_exprs for name_exprs in name_exprs if name_exprs[0] in inputs]
+            )
+        )
         result.append(name_expr_by_name[output])
         done.update(inputs)
         done.add(output)
 
     return result
+
 
 def my_cse(name_exprs, inflate_deflate=True):
     sub_symbols = numbered_symbols()
@@ -171,7 +192,10 @@ def my_cse(name_exprs, inflate_deflate=True):
 
     return name_exprs
 
-def my_expression_print(printer, name_exprs, outputs, run_cse=True, pre_expr_hook=None, post_expr_hook=None):
+
+def my_expression_print(
+    printer, name_exprs, outputs, run_cse=True, pre_expr_hook=None, post_expr_hook=None
+):
     def print_assign(var, expr):
         code = printer.doprint(Assignment(var, expr))
         return code
@@ -208,17 +232,21 @@ def my_expression_print(printer, name_exprs, outputs, run_cse=True, pre_expr_hoo
 
     return "\n".join(lines)
 
+
 def my_function_print(printer, name, inputs, name_exprs, outputs, run_cse=True):
     def input_param(input):
         if isinstance(input, MatrixSymbol):
             return f"const T* {input.name}"
         return f"const T {input.name}"
+
     def output_param(name):
         return f"T* {name}"
 
     lines = []
 
-    params = [input_param(input) for input in inputs] + [output_param(output) for output in outputs]
+    params = [input_param(input) for input in inputs] + [
+        output_param(output) for output in outputs
+    ]
     head = f"template<typename T> void {name}({", ".join(params)}) {{"
 
     lines.append(head)

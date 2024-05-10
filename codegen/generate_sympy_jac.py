@@ -114,7 +114,8 @@ def my_full_transport_jacobian_curvilinear_function_print(name_exprs, run_cse=Tr
     return "\n".join(lines)
 
 
-print("""// This file is part of the Acts project.
+print(
+    """// This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
 //
@@ -128,7 +129,8 @@ print("""// This file is part of the Acts project.
 #pragma once
 
 #include <cmath>
-""")
+"""
+)
 
 all_name_exprs = full_transport_jacobian_generic()
 code = my_full_transport_jacobian_generic_function_print(

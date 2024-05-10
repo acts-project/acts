@@ -45,7 +45,8 @@ def my_covariance_transport_generic_function_print(name_exprs, run_cse=True):
     return "\n".join(lines)
 
 
-print("""// This file is part of the Acts project.
+print(
+    """// This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
 //
@@ -59,7 +60,8 @@ print("""// This file is part of the Acts project.
 #pragma once
 
 #include <cmath>
-""")
+"""
+)
 
 all_name_exprs = covariance_transport_generic()
 code = my_covariance_transport_generic_function_print(
