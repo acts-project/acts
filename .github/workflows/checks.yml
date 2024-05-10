@@ -163,7 +163,6 @@ jobs:
 
   codegen:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format14:v41
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -171,7 +170,7 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: >
-          pip3 install -r codegen/requirements.txt
+          pip install -r codegen/requirements.txt
       - name: Check
         run: >
           CI/check_codegen
