@@ -10,7 +10,7 @@ from helpers import (
 )
 
 import acts
-from acts import PlanarModuleStepper, UnitConstants as u
+from acts import UnitConstants as u
 from acts.examples import (
     RootParticleWriter,
     RootParticleReader,
@@ -22,9 +22,6 @@ from acts.examples import (
     CsvMeasurementReader,
     CsvSimHitWriter,
     CsvSimHitReader,
-    CsvPlanarClusterWriter,
-    CsvPlanarClusterReader,
-    PlanarSteppingAlgorithm,
     Sequencer,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
@@ -268,71 +265,6 @@ def test_csv_simhits_reader(tmp_path, fatras, conf_const):
     s.run()
 
     assert alg.events_seen == 10
-
-
-@pytest.mark.csv
-def test_csv_clusters_reader(tmp_path, fatras, conf_const, trk_geo, rng):
-    s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
-    evGen, simAlg, _ = fatras(s)
-    s = Sequencer(numThreads=1, events=10)
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.WARNING,
-        inputSimHits=simAlg.config.outputSimHits,
-        outputClusters="clusters",
-        outputSourceLinks="sourcelinks",
-        outputDigiSourceLinks="digiSourceLink",
-        outputMeasurements="measurements",
-        outputMeasurementParticlesMap="meas_ptcl_map",
-        outputMeasurementSimHitsMap="meas_sh_map",
-        trackingGeometry=trk_geo,
-        randomNumbers=rng,
-        planarModuleStepper=PlanarModuleStepper(),
-    )
-    s.addAlgorithm(digiAlg)
-
-    out = tmp_path / "csv"
-    out.mkdir()
-
-    s.addWriter(
-        CsvPlanarClusterWriter(
-            level=acts.logging.WARNING,
-            outputDir=str(out),
-            inputSimHits=simAlg.config.outputSimHits,
-            inputClusters=digiAlg.config.outputClusters,
-            trackingGeometry=trk_geo,
-        )
-    )
-
-    s.run()
-
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        conf_const(
-            CsvPlanarClusterReader,
-            level=acts.logging.WARNING,
-            outputClusters="clusters",
-            inputDir=str(out),
-            outputHitIds="hits",
-            outputMeasurementParticlesMap="meas_ptcl_map",
-            outputSimHits="simhits",
-            trackingGeometry=trk_geo,
-        )
-    )
-
-    algs = [
-        AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("clusters", "simhits", "meas_ptcl_map")
-    ]
-    for alg in algs:
-        s.addAlgorithm(alg)
-
-    s.run()
-
-    for alg in algs:
-        assert alg.events_seen == 10
 
 
 def generate_input_test_edm4hep_simhit_reader(input, output):
