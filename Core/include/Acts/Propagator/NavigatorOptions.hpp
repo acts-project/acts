@@ -10,6 +10,11 @@
 
 namespace Acts {
 
-struct NavigatorPlainOptions {};
+class Surface;
+
+struct NavigatorPlainOptions {
+  const Surface *startSurface{};
+  const Surface *targetSurface{};
+};
 
 }  // namespace Acts

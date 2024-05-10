@@ -38,6 +38,12 @@ class DirectNavigator {
 
   struct Config {};
 
+  struct Options : public NavigatorPlainOptions {
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// @brief Nested Actor struct, called Initializer
   ///
   /// This is needed for the initialization of the surface sequence.
@@ -76,10 +82,10 @@ class DirectNavigator {
         // In case the start surface is in the list of nav surfaces
         // we need to correct the iterator to point to the next surface
         // in the vector
-        if (state.navigation.startSurface) {
+        if (state.navigation.options.startSurface) {
           auto surfaceIter = std::find(state.navigation.navSurfaces.begin(),
                                        state.navigation.navSurfaces.end(),
-                                       state.navigation.startSurface);
+                                       state.navigation.options.startSurface);
           // if current surface in the list, point to the next surface
           if (surfaceIter != state.navigation.navSurfaces.end()) {
             state.navigation.navSurfaceIter = ++surfaceIter;
@@ -97,28 +103,16 @@ class DirectNavigator {
   /// propagation/extrapolation step and keep thread-local navigation
   /// information
   struct State {
+    Options options;
+
     /// Externally provided surfaces - expected to be ordered along the path
     SurfaceSequence navSurfaces = {};
 
     /// Iterator the next surface
     SurfaceIter navSurfaceIter = navSurfaces.begin();
 
-    /// Navigation state - external interface: the start surface
-    const Surface* startSurface = nullptr;
     /// Navigation state - external interface: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state - external interface: the target surface
-    const Surface* targetSurface = nullptr;
-    /// Navigation state - starting layer
-    const Layer* startLayer = nullptr;
-    /// Navigation state - target layer
-    const Layer* targetLayer = nullptr;
-    /// Navigation state: the start volume
-    const TrackingVolume* startVolume = nullptr;
-    /// Navigation state: the current volume
-    const TrackingVolume* currentVolume = nullptr;
-    /// Navigation state: the target volume
-    const TrackingVolume* targetVolume = nullptr;
 
     /// Navigation state - external interface: target is reached
     bool targetReached = false;
@@ -126,52 +120,39 @@ class DirectNavigator {
     bool navigationBreak = false;
   };
 
-  struct Options : public NavigatorPlainOptions {
-    void setPlainOptions(const NavigatorPlainOptions& options) {
-      static_cast<NavigatorPlainOptions&>(*this) = options;
-    }
-  };
-
   DirectNavigator(std::unique_ptr<const Logger> _logger =
                       getDefaultLogger("DirectNavigator", Logging::INFO))
       : m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    State state;
+    state.options = options;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
 
-  const TrackingVolume* currentVolume(const State& state) const {
-    return state.currentVolume;
+  const TrackingVolume* currentVolume(const State& /*state*/) const {
+    return nullptr;
   }
 
-  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
-    if (state.currentVolume == nullptr) {
-      return nullptr;
-    }
-    return state.currentVolume->volumeMaterial();
+  const IVolumeMaterial* currentVolumeMaterial(const State& /*state*/) const {
+    return nullptr;
   }
 
   const Surface* startSurface(const State& state) const {
-    return state.startSurface;
+    return state.options.startSurface;
   }
 
   const Surface* targetSurface(const State& state) const {
-    return state.targetSurface;
+    return state.options.targetSurface;
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
-  bool endOfWorldReached(State& state) const {
-    return state.currentVolume == nullptr;
-  }
+  bool endOfWorldReached(State& /*state*/) const { return false; }
 
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
@@ -198,13 +179,12 @@ class DirectNavigator {
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state,
                   const stepper_t& /*stepper*/) const {
-    ACTS_VERBOSE(volInfo(state) << "initialize");
+    ACTS_VERBOSE("initialize");
 
     // We set the current surface to the start surface
-    state.navigation.currentSurface = state.navigation.startSurface;
+    state.navigation.currentSurface = state.navigation.options.startSurface;
     if (state.navigation.currentSurface) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Current surface set to start surface "
+      ACTS_VERBOSE("Current surface set to start surface "
                    << state.navigation.currentSurface->geometryId());
     }
   }
@@ -218,7 +198,7 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void preStep(propagator_state_t& state, const stepper_t& stepper) const {
-    ACTS_VERBOSE(volInfo(state) << "pre step");
+    ACTS_VERBOSE("pre step");
 
     // Navigator target always resets the current surface
     state.navigation.currentSurface = nullptr;
@@ -257,7 +237,7 @@ class DirectNavigator {
       // Set the navigation break
       state.navigation.navigationBreak = true;
       // If no externally provided target is given, the target is reached
-      if (state.navigation.targetSurface == nullptr) {
+      if (state.navigation.options.targetSurface == nullptr) {
         state.navigation.targetReached = true;
         // Announce it then
         ACTS_VERBOSE("No target Surface, job done.");
@@ -274,7 +254,7 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void postStep(propagator_state_t& state, const stepper_t& stepper) const {
-    ACTS_VERBOSE(volInfo(state) << "post step");
+    ACTS_VERBOSE("post step");
 
     // Navigator post step always resets the current surface
     state.navigation.currentSurface = nullptr;
@@ -320,14 +300,6 @@ class DirectNavigator {
   }
 
  private:
-  template <typename propagator_state_t>
-  std::string volInfo(const propagator_state_t& state) const {
-    return (state.navigation.currentVolume != nullptr
-                ? state.navigation.currentVolume->volumeName()
-                : "No Volume") +
-           " | ";
-  }
-
   ObjectIntersection<Surface> chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
