@@ -4,8 +4,6 @@ import sympy as sym
 from sympy import Symbol, Matrix, ImmutableMatrix, MatrixSymbol
 from sympy.codegen.ast import Assignment
 
-from pathlib import Path
-
 from sympy_common import (
     NamedExpr,
     name_expr,
@@ -269,11 +267,7 @@ code = my_step_function_print(
     run_cse=True,
 )
 
-parent = Path(__file__).resolve().parent
-
-with open(parent / "sympy_stepper_math.hpp", "w") as f:
-    f.write(
-        """// This file is part of the Acts project.
+print("""// This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
 //
@@ -287,9 +281,5 @@ with open(parent / "sympy_stepper_math.hpp", "w") as f:
 #pragma once
             
 #include <cmath>
-
-"""
-    )
-    f.write(code)
-
-    f.write("\n")
+""")
+print(code)

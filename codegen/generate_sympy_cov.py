@@ -5,8 +5,6 @@ from sympy import MatrixSymbol
 
 from sympy_common import name_expr, find_by_name, cxx_printer, my_expression_print
 
-from pathlib import Path
-
 
 C = MatrixSymbol("C", 6, 6).as_explicit().as_mutable()
 for indices in np.ndindex(C.shape):
@@ -47,11 +45,7 @@ def my_covariance_transport_generic_function_print(name_exprs, run_cse=True):
     return "\n".join(lines)
 
 
-parent = Path(__file__).resolve().parent
-
-with open(parent / "sympy_covariance_engine_math.hpp", "w") as f:
-    f.write(
-        """// This file is part of the Acts project.
+print("""// This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
 //
@@ -65,15 +59,11 @@ with open(parent / "sympy_covariance_engine_math.hpp", "w") as f:
 #pragma once
 
 #include <cmath>
+""")
 
-"""
-    )
-
-    all_name_exprs = covariance_transport_generic()
-    code = my_covariance_transport_generic_function_print(
-        all_name_exprs,
-        run_cse=True,
-    )
-    f.write(code)
-
-    f.write("\n")
+all_name_exprs = covariance_transport_generic()
+code = my_covariance_transport_generic_function_print(
+    all_name_exprs,
+    run_cse=True,
+)
+print(code)

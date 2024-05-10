@@ -3,8 +3,6 @@ from sympy import MatrixSymbol
 
 from sympy_common import name_expr, find_by_name, cxx_printer, my_expression_print
 
-from pathlib import Path
-
 
 step_path_derivatives = (
     MatrixSymbol("step_path_derivatives", 8, 1).as_explicit().as_mutable()
@@ -116,11 +114,7 @@ def my_full_transport_jacobian_curvilinear_function_print(name_exprs, run_cse=Tr
     return "\n".join(lines)
 
 
-parent = Path(__file__).resolve().parent
-
-with open(parent / "sympy_jacobian_engine_math.hpp", "w") as f:
-    f.write(
-        """// This file is part of the Acts project.
+print("""// This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
 //
@@ -134,24 +128,19 @@ with open(parent / "sympy_jacobian_engine_math.hpp", "w") as f:
 #pragma once
 
 #include <cmath>
+""")
 
-"""
-    )
+all_name_exprs = full_transport_jacobian_generic()
+code = my_full_transport_jacobian_generic_function_print(
+    all_name_exprs,
+    run_cse=True,
+)
+print(code)
+print()
 
-    all_name_exprs = full_transport_jacobian_generic()
-    code = my_full_transport_jacobian_generic_function_print(
-        all_name_exprs,
-        run_cse=True,
-    )
-    f.write(code)
-
-    f.write("\n\n")
-
-    all_name_exprs = full_transport_jacobian_curvilinear(MatrixSymbol("dir", 3, 1))
-    code = my_full_transport_jacobian_curvilinear_function_print(
-        all_name_exprs,
-        run_cse=True,
-    )
-    f.write(code)
-
-    f.write("\n")
+all_name_exprs = full_transport_jacobian_curvilinear(MatrixSymbol("dir", 3, 1))
+code = my_full_transport_jacobian_curvilinear_function_print(
+    all_name_exprs,
+    run_cse=True,
+)
+print(code)
