@@ -296,7 +296,7 @@ class VariableSizeSubspace {
   /// @tparam scalar_t Scalar type for the projection matrix
   template <typename scalar_t>
   auto projector() const -> ProjectionMatrix<scalar_t> {
-    ProjectionMatrix<scalar_t> proj;
+    ProjectionMatrix<scalar_t> proj(m_size, kFullSize);
     proj.setZero();
     for (auto i = 0u; i < m_size; ++i) {
       proj(i, m_axes[i]) = 1;
@@ -309,7 +309,7 @@ class VariableSizeSubspace {
   /// @tparam scalar_t Scalar type of the generated expansion matrix
   template <typename scalar_t>
   auto expander() const -> ExpansionMatrix<scalar_t> {
-    ExpansionMatrix<scalar_t> expn;
+    ExpansionMatrix<scalar_t> expn(kFullSize, m_size);
     expn.setZero();
     for (auto i = 0u; i < m_size; ++i) {
       expn(m_axes[i], i) = 1;
