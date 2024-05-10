@@ -1142,6 +1142,8 @@ class CombinatorialKalmanFilter {
         typename track_container_t::TrackStateBackendContainer>();
 
     if (!trackContainer.hasColumn(tipStateAccessor.key)) {
+      ACTS_ERROR(
+          "Track container does not have the tip state column \"CkfTipState\"");
       trackContainer.template addColumn<CombinatorialKalmanFilterTipState>(
           tipStateColumn);
     }
