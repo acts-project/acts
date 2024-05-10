@@ -188,7 +188,8 @@ class BranchStopper {
 
   BranchStopperResult operator()(
       const Acts::CombinatorialKalmanFilterTipState& tipState,
-      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
+      TrackContainer::TrackProxy /*track*/,
+      TrackContainer::TrackStateProxy trackState) const {
     if (!m_config.has_value()) {
       return BranchStopperResult::Continue;
     }
@@ -301,8 +302,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementSelector measSel{
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  using Extensions = Acts::CombinatorialKalmanFilterExtensions<
-      typename TrackContainer::TrackStateBackendContainer>;
+  using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
   BranchStopper branchStopper(m_cfg.trackSelectorCfg);
 

@@ -75,10 +75,12 @@ enum class CombinatorialKalmanFilterBranchStopperResult {
 };
 
 /// Extension struct which holds the delegates to customize the CKF behavior
-template <typename traj_t>
+template <typename track_container_t>
 struct CombinatorialKalmanFilterExtensions {
+  using traj_t = typename track_container_t::TrackStateBackendContainer;
   using candidate_container_t =
-      typename std::vector<typename traj_t::TrackStateProxy>;
+      typename std::vector<typename track_container_t::TrackStateProxy>;
+
   using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
   using Calibrator = typename KalmanFitterExtensions<traj_t>::Calibrator;
@@ -87,9 +89,10 @@ struct CombinatorialKalmanFilterExtensions {
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
           candidate_container_t& trackStates, bool&, const Logger&)>;
-  using BranchStopper =
-      Delegate<BranchStopperResult(const CombinatorialKalmanFilterTipState&,
-                                   typename traj_t::TrackStateProxy&)>;
+  using BranchStopper = Delegate<BranchStopperResult(
+      const CombinatorialKalmanFilterTipState&,
+      typename track_container_t::TrackProxy,
+      typename track_container_t::TrackStateProxy)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows to
   /// calibrate measurements using track information, this could be e.g. sagging
@@ -110,11 +113,14 @@ struct CombinatorialKalmanFilterExtensions {
  private:
   /// Default measurement selector which will return all measurements
   /// @param candidates Measurement track state candidates
-  static Result<std::pair<
-      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
-      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+  static Result<
+      std::pair<typename std::vector<
+                    typename track_container_t::TrackStateProxy>::iterator,
+                typename std::vector<
+                    typename track_container_t::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
-      typename std::vector<typename traj_t::TrackStateProxy>& candidates,
+      typename std::vector<typename track_container_t::TrackStateProxy>&
+          candidates,
       bool& /*isOutlier*/, const Logger& /*logger*/) {
     return std::pair{candidates.begin(), candidates.end()};
   };
@@ -123,7 +129,8 @@ struct CombinatorialKalmanFilterExtensions {
   /// @return false
   static BranchStopperResult voidBranchStopper(
       const CombinatorialKalmanFilterTipState& /*tipState*/,
-      typename traj_t::TrackStateProxy& /*trackState*/) {
+      typename track_container_t::TrackProxy /*track*/,
+      typename track_container_t::TrackStateProxy /*trackState*/) {
     return BranchStopperResult::Continue;
   }
 };
@@ -137,9 +144,9 @@ using SourceLinkAccessorDelegate =
 
 /// Combined options for the combinatorial Kalman filter.
 ///
+/// @tparam track_container_t Type of the track container
 /// @tparam source_link_iterator_t Type of the source link iterator
-/// @tparam traj_t Type of the trajectory
-template <typename source_link_iterator_t, typename traj_t>
+template <typename track_container_t, typename source_link_iterator_t>
 struct CombinatorialKalmanFilterOptions {
   using SourceLinkIterator = source_link_iterator_t;
   using SourceLinkAccessor = SourceLinkAccessorDelegate<source_link_iterator_t>;
@@ -158,7 +165,7 @@ struct CombinatorialKalmanFilterOptions {
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
       SourceLinkAccessor accessor_,
-      CombinatorialKalmanFilterExtensions<traj_t> extensions_,
+      CombinatorialKalmanFilterExtensions<track_container_t> extensions_,
       const PropagatorPlainOptions& pOptions, bool mScattering = true,
       bool eLoss = true)
       : geoContext(gctx),
@@ -184,7 +191,7 @@ struct CombinatorialKalmanFilterOptions {
   SourceLinkAccessor sourcelinkAccessor;
 
   /// The filter extensions
-  CombinatorialKalmanFilterExtensions<traj_t> extensions;
+  CombinatorialKalmanFilterExtensions<track_container_t> extensions;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -572,7 +579,7 @@ class CombinatorialKalmanFilter {
         nBranchesOnSurface = 1;
 
         // Retrieve the previous tip and its state
-        auto& currentBranch = result.activeBranches.back();
+        auto currentBranch = result.activeBranches.back();
         std::size_t prevTip = currentBranch.tipIndex();
         TipState& tipState = tipStateAccessor(currentBranch);
 
@@ -626,8 +633,8 @@ class CombinatorialKalmanFilter {
 
           using BranchStopperResult =
               CombinatorialKalmanFilterBranchStopperResult;
-          BranchStopperResult branchStopperResult =
-              m_extensions.branchStopper(tipState, nonSourcelinkState);
+          BranchStopperResult branchStopperResult = m_extensions.branchStopper(
+              tipState, currentBranch, nonSourcelinkState);
 
           // Check the branch
           if (branchStopperResult == BranchStopperResult::Continue) {
@@ -854,7 +861,7 @@ class CombinatorialKalmanFilter {
         using BranchStopperResult =
             CombinatorialKalmanFilterBranchStopperResult;
         BranchStopperResult branchStopperResult =
-            m_extensions.branchStopper(tipState, trackState);
+            m_extensions.branchStopper(tipState, newBranch, trackState);
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
@@ -1017,9 +1024,7 @@ class CombinatorialKalmanFilter {
       }
     }
 
-    CombinatorialKalmanFilterExtensions<
-        typename track_container_t::TrackStateBackendContainer>
-        m_extensions;
+    CombinatorialKalmanFilterExtensions<track_container_t> m_extensions;
 
     /// The source link accessor
     source_link_accessor_t m_sourcelinkAccessor;
@@ -1086,12 +1091,10 @@ class CombinatorialKalmanFilter {
   /// parameters
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters>
-  auto findTracks(
-      const start_parameters_t& initialParameters,
-      const CombinatorialKalmanFilterOptions<
-          source_link_iterator_t,
-          typename track_container_t::TrackStateBackendContainer>& tfOptions,
-      track_container_t& trackContainer) const
+  auto findTracks(const start_parameters_t& initialParameters,
+                  const CombinatorialKalmanFilterOptions<
+                      track_container_t, source_link_iterator_t>& tfOptions,
+                  track_container_t& trackContainer) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     using TrackContainer = typename std::decay_t<decltype(trackContainer)>;

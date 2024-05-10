@@ -169,8 +169,8 @@ struct Fixture {
       std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
-      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor::Iterator,
-                                             TrackStateBackendContainer>;
+      Acts::CombinatorialKalmanFilterOptions<TrackContainer,
+                                             TestSourceLinkAccessor::Iterator>;
 
   KalmanUpdater kfUpdater;
   KalmanSmoother kfSmoother;
@@ -199,10 +199,9 @@ struct Fixture {
 
   Acts::MeasurementSelector measSel{measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<TrackStateBackendContainer>
-  getExtensions() const {
-    Acts::CombinatorialKalmanFilterExtensions<TrackStateBackendContainer>
-        extensions;
+  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> getExtensions()
+      const {
+    Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
     extensions.calibrator.template connect<
         &testSourceLinkCalibrator<TrackStateBackendContainer>>();
     extensions.updater.template connect<
