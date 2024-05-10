@@ -56,10 +56,10 @@ def rk4_short_math():
     )
 
     new_p = name_expr("new_p", p + h * d + h**2 / 6 * (k1.name + k2.name + k3.name))
-    new_d = name_expr(
-        "new_d", d + h / 6 * (k1.name + 2 * (k2.name + k3.name) + k4.name)
+    new_d_notnorm = name_expr(
+        "new_d_notnorm", d + h / 6 * (k1.name + 2 * (k2.name + k3.name) + k4.name)
     )
-    new_d_norm = name_expr("new_d", new_d.expr / new_d.expr.as_explicit().norm())
+    new_d_norm = name_expr("new_d", new_d_notnorm.expr / new_d_notnorm.expr.as_explicit().norm())
 
     dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
     new_time = name_expr("new_time", t + h * dtds.name)
@@ -94,11 +94,11 @@ def rk4_short_math():
     )
     dGdTL = name_expr(
         "dGdTL",
-        new_d.expr.as_explicit().jacobian([d, l])
-        + new_d.expr.as_explicit().jacobian(k1.name) * dk1dTL.expr
-        + new_d.expr.as_explicit().jacobian(k2.name) * dk2dTL.name.as_explicit()
-        + new_d.expr.as_explicit().jacobian(k3.name) * dk3dTL.name.as_explicit()
-        + new_d.expr.as_explicit().jacobian(k4.name) * dk4dTL.name.as_explicit(),
+        new_d_notnorm.expr.as_explicit().jacobian([d, l])
+        + new_d_notnorm.expr.as_explicit().jacobian(k1.name) * dk1dTL.expr
+        + new_d_notnorm.expr.as_explicit().jacobian(k2.name) * dk2dTL.name.as_explicit()
+        + new_d_notnorm.expr.as_explicit().jacobian(k3.name) * dk3dTL.name.as_explicit()
+        + new_d_notnorm.expr.as_explicit().jacobian(k4.name) * dk4dTL.name.as_explicit(),
     )
 
     D = sym.eye(8)
@@ -122,6 +122,7 @@ def rk4_short_math():
         k4,
         err,
         new_p,
+        new_d_notnorm,
         new_d_norm,
         dtds,
         new_time,
@@ -148,10 +149,10 @@ def rk4_full_math():
     err = name_expr("err", h**2 * (k1.expr - k2.expr - k3.expr + k4.expr).norm(1))
 
     new_p = name_expr("new_p", p + h * d + h**2 / 6 * (k1.expr + k2.expr + k3.expr))
-    new_d = name_expr(
-        "new_d", d + h / 6 * (k1.expr + 2 * (k2.expr + k3.expr) + k4.expr)
+    new_d_notnorm = name_expr(
+        "new_d_notnorm", d + h / 6 * (k1.expr + 2 * (k2.expr + k3.expr) + k4.expr)
     )
-    new_d_norm = name_expr("new_d", new_d.expr / new_d.expr.as_explicit().norm())
+    new_d_norm = name_expr("new_d", new_d_notnorm.expr / new_d_notnorm.expr.as_explicit().norm())
 
     dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
     new_time = name_expr("new_time", t + h * dtds.expr)
@@ -164,7 +165,7 @@ def rk4_full_math():
     # get the full jacobian step by step with intermediate expressions
     D = sym.eye(8)
     D[0:3, :] = new_p.expr.as_explicit().jacobian([p, t, d, l])
-    D[4:7, :] = new_d.expr.as_explicit().jacobian([p, t, d, l])
+    D[4:7, :] = new_d_notnorm.expr.as_explicit().jacobian([p, t, d, l])
     D[3, 7] = h * m**2 * l / dtds.expr
 
     J = MatrixSymbol("J", 8, 8).as_explicit().as_mutable()
