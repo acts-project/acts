@@ -39,6 +39,20 @@ class MyCXXCodePrinter(CXX17CodePrinter):
             expr.i + expr.j * expr.parent.shape[0],
         )
 
+    def _print_Pow(self, expr):
+        from sympy.core.numbers import equal_valued, Float
+        from sympy.codegen.ast import real
+
+        suffix = self._get_func_suffix(real)
+        if equal_valued(expr.exp, -0.5):
+            return "%s/%ssqrt%s(%s)" % (
+                self._print_Float(Float(1.0)),
+                self._ns,
+                suffix,
+                self._print(expr.base),
+            )
+        return super()._print_Pow(expr)
+
 
 cxx_printer = MyCXXCodePrinter()
 

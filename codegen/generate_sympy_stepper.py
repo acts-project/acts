@@ -15,10 +15,10 @@ from sympy_common import (
 
 
 # lambda for q/p
-l = Symbol("lambda")
+l = Symbol("lambda", real=True)
 
 # h for step length
-h = Symbol("h")
+h = Symbol("h", real=True)
 
 # p for position
 p = MatrixSymbol("p", 3, 1)
@@ -27,13 +27,13 @@ p = MatrixSymbol("p", 3, 1)
 d = MatrixSymbol("d", 3, 1)
 
 # time
-t = Symbol("t")
+t = Symbol("t", real=True)
 
 # mass
-m = Symbol("m")
+m = Symbol("m", real=True)
 
 # absolute momentum
-p_abs = Symbol("p_abs")
+p_abs = Symbol("p_abs", real=True, positive=True)
 
 # magnetic field
 B1 = MatrixSymbol("B1", 3, 1)
@@ -59,7 +59,9 @@ def rk4_short_math():
     new_d_notnorm = name_expr(
         "new_d_notnorm", d + h / 6 * (k1.name + 2 * (k2.name + k3.name) + k4.name)
     )
-    new_d_norm = name_expr("new_d", new_d_notnorm.expr / new_d_notnorm.expr.as_explicit().norm())
+    new_d_norm = name_expr(
+        "new_d", new_d_notnorm.name / new_d_notnorm.name.as_explicit().norm()
+    )
 
     dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
     new_time = name_expr("new_time", t + h * dtds.name)
@@ -98,7 +100,8 @@ def rk4_short_math():
         + new_d_notnorm.expr.as_explicit().jacobian(k1.name) * dk1dTL.expr
         + new_d_notnorm.expr.as_explicit().jacobian(k2.name) * dk2dTL.name.as_explicit()
         + new_d_notnorm.expr.as_explicit().jacobian(k3.name) * dk3dTL.name.as_explicit()
-        + new_d_notnorm.expr.as_explicit().jacobian(k4.name) * dk4dTL.name.as_explicit(),
+        + new_d_notnorm.expr.as_explicit().jacobian(k4.name)
+        * dk4dTL.name.as_explicit(),
     )
 
     D = sym.eye(8)
@@ -152,7 +155,9 @@ def rk4_full_math():
     new_d_notnorm = name_expr(
         "new_d_notnorm", d + h / 6 * (k1.expr + 2 * (k2.expr + k3.expr) + k4.expr)
     )
-    new_d_norm = name_expr("new_d", new_d_notnorm.expr / new_d_notnorm.expr.as_explicit().norm())
+    new_d_norm = name_expr(
+        "new_d", new_d_notnorm.expr / new_d_notnorm.expr.as_explicit().norm()
+    )
 
     dtds = name_expr("dtds", sym.sqrt(1 + m**2 / p_abs**2))
     new_time = name_expr("new_time", t + h * dtds.expr)

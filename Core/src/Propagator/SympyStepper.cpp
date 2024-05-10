@@ -151,6 +151,7 @@ Result<double> SympyStepper::stepImpl(
   double errorEstimate = 0.;
 
   while (true) {
+    nStepTrials++;
     bool ok =
         rk4(pos.data(), dir.data(), t, h, qop, m, p_abs, getB, &errorEstimate,
             state.pars.template segment<3>(eFreePos0).data(),
@@ -178,7 +179,6 @@ Result<double> SympyStepper::stepImpl(
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
-    nStepTrials++;
   }
 
   state.pathAccumulated += h;
