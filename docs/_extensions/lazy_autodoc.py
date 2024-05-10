@@ -71,6 +71,7 @@ def run() -> None:
         "Acts::FreeSquareMatrix",
         "Acts::FreeToPathMatrix",
         "Acts::HashedString",
+        "Acts::Measurement",
     }
 
     role_instances["struct"] |= {
@@ -115,7 +116,6 @@ def run() -> None:
         "Acts::Logging::TimedOutputDecorator",
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
-        "Acts::Measurement",
         "Acts::SourceLink",
     }
 

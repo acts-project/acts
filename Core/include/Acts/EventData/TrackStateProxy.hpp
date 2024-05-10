@@ -789,7 +789,7 @@ class TrackStateProxy {
 
   /// Set the calibrated measurement of this track state from a measurement
   /// object. This is a convenience function to set the calibrated measurement
-  /// from the @c Acts::Measurement object. In general, you should implement this
+  /// from the @ref Acts::Measurement object. In general, you should implement this
   /// functionality specifically for an (experiment-specific) uncalibrated
   /// measurement EDM.
   ///
