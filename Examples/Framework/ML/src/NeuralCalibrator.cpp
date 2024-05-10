@@ -164,5 +164,5 @@ void ActsExamples::NeuralCalibrator::calibrate(
       output[iVar0];
   measurementCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) =
       output[iVar0 + 1];
-  trackState.setCalibrated(measCopy);
+  trackState.setCalibrated(measurementCopy);
 }
