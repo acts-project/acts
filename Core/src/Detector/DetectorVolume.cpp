@@ -144,13 +144,8 @@ Acts::Experimental::DetectorVolume::surfaceCandidatesUpdater() const {
 }
 
 void Acts::Experimental::DetectorVolume::assignVolumeMaterial(
-    std::shared_ptr<IVolumeMaterial> material) {
+    std::shared_ptr<const IVolumeMaterial> material) {
   m_volumeMaterial = std::move(material);
-}
-
-std::shared_ptr<Acts::IVolumeMaterial>
-Acts::Experimental::DetectorVolume::volumeMaterialPtr() {
-  return m_volumeMaterial;
 }
 
 const Acts::IVolumeMaterial*

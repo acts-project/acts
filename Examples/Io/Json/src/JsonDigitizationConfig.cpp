@@ -146,6 +146,18 @@ void ActsExamples::from_json(const nlohmann::json& j,
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
+  if (j.find("variances") != j.end()) {
+    std::cout << "READING variance map!" << std::endl;
+
+    /// Read the variances from the json file
+    auto jvariances = j["variances"];
+    for (const auto& jvar : jvariances) {
+      auto idx =
+          static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
+      auto vars = jvar["rms"].get<std::vector<Acts::ActsScalar>>();
+      gdc.varianceMap[idx] = vars;
+    }
+  }
   from_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 
