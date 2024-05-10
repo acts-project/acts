@@ -170,7 +170,6 @@ if "__main__" == __name__:
         [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
         materialSurfaces = detector.extractMaterialSurfaces()
-        print("Extracted number of material surfaces: ", len(materialSurfaces))
 
     else:
         matDeco = None
@@ -180,7 +179,6 @@ if "__main__" == __name__:
         [detector, trackingGeometry, decorators] = getOpenDataDetector(matDeco)
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
-        print("Extracted number of material surfaces: ", len(materialSurfaces))
 
     runMaterialMapping(
         materialSurfaces, args.input, args.output, args.map, acts.logging.INFO

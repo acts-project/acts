@@ -10,11 +10,16 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
+#include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/PropagatorMaterialAssigner.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
+#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -22,6 +27,7 @@
 #include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
+#include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
 
 #include <array>
 #include <map>
@@ -48,6 +54,15 @@ using namespace ActsExamples;
 namespace Acts::Python {
 void addMaterial(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
+
+  {
+    py::class_<Acts::ISurfaceMaterial, std::shared_ptr<ISurfaceMaterial>>(
+        m, "ISurfaceMaterial");
+
+    py::class_<Acts::IVolumeMaterial, std::shared_ptr<IVolumeMaterial>>(
+        m, "IVolumeMaterial");
+  }
+
   {
     py::class_<Acts::IMaterialDecorator,
                std::shared_ptr<Acts::IMaterialDecorator>>(m,
@@ -271,6 +286,48 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(unmappedMaterialTracks);
     ACTS_PYTHON_MEMBER(materialMapper);
     ACTS_PYTHON_MEMBER(materiaMaplWriters);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    auto mvc =
+        py::class_<MaterialValidater, std::shared_ptr<MaterialValidater>>(
+            m, "MaterialValidater")
+            .def(py::init([](const MaterialValidater::Config& config,
+                             Acts::Logging::Level level) {
+                   return std::make_shared<MaterialValidater>(
+                       config, getDefaultLogger("MaterialValidater", level));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def("recordMaterial", &MaterialValidater::recordMaterial);
+
+    auto c =
+        py::class_<MaterialValidater::Config>(mvc, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialValidater::Config);
+    ACTS_PYTHON_MEMBER(materialAssigner);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    auto mv = py::class_<MaterialValidation, IAlgorithm,
+                         std::shared_ptr<MaterialValidation>>(
+                  mex, "MaterialValidation")
+                  .def(py::init<const MaterialValidation::Config&,
+                                Acts::Logging::Level>(),
+                       py::arg("config"), py::arg("level"))
+                  .def("execute", &MaterialValidation::execute)
+                  .def_property_readonly("config", &MaterialValidation::config);
+
+    auto c =
+        py::class_<MaterialValidation::Config>(mv, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialValidation::Config);
+    ACTS_PYTHON_MEMBER(ntracks);
+    ACTS_PYTHON_MEMBER(startPosition);
+    ACTS_PYTHON_MEMBER(phiRange);
+    ACTS_PYTHON_MEMBER(etaRange);
+    ACTS_PYTHON_MEMBER(randomNumberSvc);
+    ACTS_PYTHON_MEMBER(materialValidater);
+    ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
   }
 }
