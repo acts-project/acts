@@ -98,7 +98,7 @@ int findVolume(
 
 namespace detray{
 
-    // detray geometry writer function, debug purposes 
+    /// detray geometry writer function, debug purposes 
     void detray_detector_print(const detector_t& det){
 
         std::ofstream outputFile("data_try.json");
@@ -110,6 +110,8 @@ namespace detray{
     }
     
     /// @return the transform_payload(translation, rotation) of each surface/volume
+    /// @param Transform3 acts object, Transform3JsonConverter::Options
+    /// @brief convert the acts transform to detray transform payload
     static io::transform_payload detray_converter_transf(
         const Transform3& t, const Transform3JsonConverter::Options& options){
         //nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t, const Transform3JsonConverter::Options& options)
@@ -139,9 +141,8 @@ namespace detray{
         return p_acts;
     }
 
-
-
     /// @return the mask_payload of the surface @param bounds, @param portal
+    /// @brief convert the acts bounds to detray mask payload
     static io::mask_payload detray_converter_mask(
         const Acts::SurfaceBounds& bounds, bool portal){
         //Acts::SurfaceBoundsJsonConverter::toJsonDetray
@@ -152,7 +153,7 @@ namespace detray{
         mask_pd.boundaries = static_cast<std::vector<real_io>>(boundaries); //conversion sos??
 
         ///home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/common/geometry_reader.hpp
-        //sos use inline single_link_payload convert(const std::size_t idx) 
+        //TO DO: use inline single_link_payload convert(const std::size_t idx) 
         detray::io::single_link_payload lnk;
         mask_pd.volume_link = lnk;
 
@@ -160,6 +161,7 @@ namespace detray{
     }
 
     /// @return the surface_payload for portals and volumes by @param Surface acts object
+    /// @brief convert the acts surface to detray surface payload
     static io::surface_payload detray_converter_surf(
         const Surface& surface, const Acts::GeometryContext& gctx, const SurfaceJsonConverter::Options& options){
         //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/core/include/detray/geometry/detail/surface_descriptor.hpp
@@ -179,10 +181,12 @@ namespace detray{
     }
 
     /// construct and @return vector of portals and volumes 
+    /// @param gctx, portal, ip, volume, orientedSurfaces, detectorVolumes, option
+    /// @brief convert the acts portal to detray surface
     static std::vector<io::surface_payload> detray_portals(
         const GeometryContext& gctx, const Experimental::Portal& portal,
         std::size_t ip, const Experimental::DetectorVolume& volume,
-        const OrientedSurfaces& orientedSurfaces,
+        const std::vector<Acts::OrientedSurface>& orientedSurfaces,
         const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
         const Acts::PortalJsonConverter::Options& option){
         //acts/Plugins/Json/src/PortalJsonConverter.cpp
@@ -361,8 +365,9 @@ namespace detray{
 
         return portals;
     }
-
-    /// @return the volume_payload for portals and volumes by @param Surface acts object
+    
+    /// @return the volume_payload for portals and volumes from acts @param volume, detectorVolumes, gctx
+    /// @brief convert the acts volume to detray volume payload
     static io::volume_payload detray_converter_vol(
         const Acts::Experimental::DetectorVolume& volume, 
         const std::vector<const Experimental::DetectorVolume*>& detectorVolumes, 
@@ -407,7 +412,7 @@ namespace detray{
     }
     
     
-    //GRID related functions
+    /// GRID related functions
 
     static io::detector_grids_payload<std::size_t, io::accel_id> detray_converter_grid(
     const Acts::Experimental::Detector& detector){
@@ -419,8 +424,6 @@ namespace detray{
 
             //Call an equivalent of IndexedSurfacesJsonConverter::toJson
                 //check if it is null
-
-                
 
             // Patch axes for cylindrical grid surfaces, axes are swapped
             // at this point
@@ -476,7 +479,6 @@ namespace detray{
         return grid_pd;
     }
     
-    //TO DO 
     //nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false, bool checkSwap = false) {
     template <typename index_grid>
     io::grid_payload<std::size_t, io::accel_id> convertImpl(const index_grid& indexGrid) {
@@ -495,7 +497,7 @@ namespace detray{
         detray::io::common_header_payload header_data_pd;
         
 
-        //SOS use inline common_header_payload convert(const std::string_view det_name, const std::string_view tag)
+        //TO DO use inline common_header_payload convert(const std::string_view det_name, const std::string_view tag)
         header_data_pd.version = io::detail::get_detray_version();
         header_data_pd.detector = detector.name();
         header_data_pd.tag = "geometry"; 
@@ -504,7 +506,7 @@ namespace detray{
         return header_pd;
     }
 
-    /// @brief visit all ACTS detector information, depth-first hierarchically and construct the corresponding payloads and detray detector 
+    /// @brief visit all ACTS detector information, depth-first hierarchically, construct the corresponding payloads and convert to detray detector 
     /// @return detray detector from @param detector and @param gctx of ACTS  (depth-first hierarchical traversal)
     detector_t detray_tree_converter(
         const Acts::Experimental::Detector& detector,
@@ -521,9 +523,7 @@ namespace detray{
 
         detray::io::geometry_reader::convert<detector_t>(det_builder, names, dp);
         detector_t detrayDet(det_builder.build(mr));
-        //io::json_writer<detector_t, io::geometry_writer> geo_writer;
-        //auto file_name = geo_writer.write(detrayDet, names, std::ios::out | std::ios::binary | std::ios::trunc);
-
+       
         detray_detector_print(detrayDet);
 
         detray::detail::check_consistency(detrayDet); 
@@ -531,14 +531,6 @@ namespace detray{
         //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
         
         return std::move(detrayDet);
-        //return true;
     }
 
 }
-
-
-//NOTES
-//inline single_link_payload convert(const std::size_t idx) {
-//use basic_converter.hpp
-//check sos
-//raw string assignment(type, )
