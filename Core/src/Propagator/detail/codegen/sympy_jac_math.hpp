@@ -43,42 +43,18 @@ void boundToBoundTransportJacobianImpl(const T* J_fb, const T* J_t,
   const auto x57 = step_path_derivatives[3] * surface_path_derivatives[4];
   const auto x58 = step_path_derivatives[3] * surface_path_derivatives[5];
   const auto x59 = step_path_derivatives[3] * surface_path_derivatives[6];
-  const auto x9 = x0 * surface_path_derivatives[4] +
-                  x1 * surface_path_derivatives[4] +
-                  x4 * surface_path_derivatives[4];
-  const auto x10 = x0 * surface_path_derivatives[5] +
-                   x1 * surface_path_derivatives[5] +
-                   x4 * surface_path_derivatives[5];
-  const auto x11 = x0 * surface_path_derivatives[6] +
-                   x1 * surface_path_derivatives[6] +
-                   x4 * surface_path_derivatives[6];
-  const auto x21 = x15 * surface_path_derivatives[4] +
-                   x16 * surface_path_derivatives[4] +
-                   x18 * surface_path_derivatives[4];
-  const auto x22 = x15 * surface_path_derivatives[5] +
-                   x16 * surface_path_derivatives[5] +
-                   x18 * surface_path_derivatives[5];
-  const auto x23 = x15 * surface_path_derivatives[6] +
-                   x16 * surface_path_derivatives[6] +
-                   x18 * surface_path_derivatives[6];
-  const auto x30 = x27 * surface_path_derivatives[0] +
-                   x28 * surface_path_derivatives[0] +
-                   x29 * surface_path_derivatives[0];
-  const auto x31 = x27 * surface_path_derivatives[1] +
-                   x28 * surface_path_derivatives[1] +
-                   x29 * surface_path_derivatives[1];
-  const auto x32 = x27 * surface_path_derivatives[2] +
-                   x28 * surface_path_derivatives[2] +
-                   x29 * surface_path_derivatives[2];
-  const auto x45 = x42 * surface_path_derivatives[0] +
-                   x43 * surface_path_derivatives[0] +
-                   x44 * surface_path_derivatives[0];
-  const auto x46 = x42 * surface_path_derivatives[1] +
-                   x43 * surface_path_derivatives[1] +
-                   x44 * surface_path_derivatives[1];
-  const auto x47 = x42 * surface_path_derivatives[2] +
-                   x43 * surface_path_derivatives[2] +
-                   x44 * surface_path_derivatives[2];
+  const auto x9 = (x0 + x1 + x4) * surface_path_derivatives[4];
+  const auto x10 = (x0 + x1 + x4) * surface_path_derivatives[5];
+  const auto x11 = (x0 + x1 + x4) * surface_path_derivatives[6];
+  const auto x21 = (x15 + x16 + x18) * surface_path_derivatives[4];
+  const auto x22 = (x15 + x16 + x18) * surface_path_derivatives[5];
+  const auto x23 = (x15 + x16 + x18) * surface_path_derivatives[6];
+  const auto x30 = (x27 + x28 + x29) * surface_path_derivatives[0];
+  const auto x31 = (x27 + x28 + x29) * surface_path_derivatives[1];
+  const auto x32 = (x27 + x28 + x29) * surface_path_derivatives[2];
+  const auto x45 = (x42 + x43 + x44) * surface_path_derivatives[0];
+  const auto x46 = (x42 + x43 + x44) * surface_path_derivatives[1];
+  const auto x47 = (x42 + x43 + x44) * surface_path_derivatives[2];
   const auto x3 = x0 * surface_path_derivatives[0] +
                   x1 * surface_path_derivatives[0] + x2 * J_fb[0];
   const auto x6 = x1 * surface_path_derivatives[1] +
@@ -209,12 +185,12 @@ void boundToCurvilinearTransportJacobianImpl(const T* J_fb, const T* J_t,
   const auto x39 = dir[0] * step_path_derivatives[3];
   const auto x40 = dir[1] * step_path_derivatives[3];
   const auto x41 = dir[2] * step_path_derivatives[3];
-  const auto x24 = -x21 * dir[0] - x22 * dir[0] - x23 * dir[0];
-  const auto x25 = -x21 * dir[1] - x22 * dir[1] - x23 * dir[1];
-  const auto x26 = -x21 * dir[2] - x22 * dir[2] - x23 * dir[2];
-  const auto x33 = -x30 * dir[0] - x31 * dir[0] - x32 * dir[0];
-  const auto x34 = -x30 * dir[1] - x31 * dir[1] - x32 * dir[1];
-  const auto x35 = -x30 * dir[2] - x31 * dir[2] - x32 * dir[2];
+  const auto x24 = (-x21 - x22 - x23) * dir[0];
+  const auto x25 = (-x21 - x22 - x23) * dir[1];
+  const auto x26 = (-x21 - x22 - x23) * dir[2];
+  const auto x33 = (-x30 - x31 - x32) * dir[0];
+  const auto x34 = (-x30 - x31 - x32) * dir[1];
+  const auto x35 = (-x30 - x31 - x32) * dir[2];
   const auto x42 = -x39 * J_t[32] - x40 * J_t[33] - x41 * J_t[34];
   const auto x43 = -x39 * J_t[40] - x40 * J_t[41] - x41 * J_t[42];
   const auto x44 = -x39 * J_t[48] - x40 * J_t[49] - x41 * J_t[50];

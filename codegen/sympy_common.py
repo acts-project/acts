@@ -114,8 +114,9 @@ def deflate_exprs(name_exprs, references):
 def my_subs(expr, sub_name_exprs):
     sub_name_exprs, _ = inflate_exprs(sub_name_exprs)
 
-    result = expr
+    result = expr.expand()
     result = result.subs([(e, n) for n, e in sub_name_exprs])
+    result = sym.simplify(result)
     return result
 
 
@@ -185,7 +186,7 @@ def order_exprs_by_output(name_exprs, outputs):
     return result
 
 
-def my_cse(name_exprs, inflate_deflate=True):
+def my_cse(name_exprs, inflate_deflate=True, simplify=True):
     sub_symbols = numbered_symbols()
 
     if inflate_deflate:
@@ -195,6 +196,10 @@ def my_cse(name_exprs, inflate_deflate=True):
     exprs = [x[1] for x in name_exprs]
 
     sub_exprs, simp_exprs = sym.cse(exprs, symbols=sub_symbols)
+
+    if simplify:
+        sub_exprs = [(n, sym.simplify(e)) for n, e in sub_exprs]
+        simp_exprs = [sym.simplify(e) for e in simp_exprs]
 
     simp_name_exprs = list(zip(names, simp_exprs))
     if inflate_deflate:
@@ -210,10 +215,6 @@ def my_cse(name_exprs, inflate_deflate=True):
 def my_expression_print(
     printer, name_exprs, outputs, run_cse=True, pre_expr_hook=None, post_expr_hook=None
 ):
-    def print_assign(var, expr):
-        code = printer.doprint(Assignment(var, expr))
-        return code
-
     if run_cse:
         name_exprs = my_cse(name_exprs, inflate_deflate=True)
     name_exprs = order_exprs_by_output(name_exprs, outputs)
