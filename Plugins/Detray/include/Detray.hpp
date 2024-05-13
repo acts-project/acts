@@ -1,5 +1,13 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+#pragma once
 // Project include(s)
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -155,7 +163,7 @@ namespace detray{
         mask_pd.shape = static_cast<io::mask_payload::mask_shape>(shape);
         mask_pd.boundaries = static_cast<std::vector<real_io>>(boundaries); //conversion sos??
 
-        ///home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/common/geometry_reader.hpp
+        //acts/_deps/detray-src/io/include/detray/io/common/geometry_reader.hpp
         //TO DO: use inline single_link_payload convert(const std::size_t idx) 
         detray::io::single_link_payload lnk;
         mask_pd.volume_link = lnk;
@@ -167,7 +175,7 @@ namespace detray{
     /// @brief convert the acts surface to detray surface payload and populate the payload
     static io::surface_payload detray_converter_surf(
         const Surface& surface, const Acts::GeometryContext& gctx, const SurfaceJsonConverter::Options& options){
-        //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/core/include/detray/geometry/detail/surface_descriptor.hpp
+        ///acts/_deps/detray-src/core/include/detray/geometry/detail/surface_descriptor.hpp
         using material_link_payload = io::typed_link_payload<io::material_id>;
 
         detray::io::surface_payload surf_pd;
@@ -535,9 +543,10 @@ namespace detray{
         outputFile << out_json << std::endl;
         detray::detail::check_consistency(detrayDet); 
         
-        //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
+        ///acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
         
         return std::move(detrayDet);
     }
 
 }
+
