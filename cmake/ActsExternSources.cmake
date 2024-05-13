@@ -42,6 +42,7 @@ set( ACTS_THRUST_SOURCE
    "GIT_REPOSITORY;https://github.com/NVIDIA/thrust.git;GIT_TAG;v2.1.0" CACHE STRING "Source to take thrust from")
 mark_as_advanced( ACTS_THRUST_SOURCE )
 
+string(REPLACE "." "_" _acts_boost_recommended_version_ ${_acts_boost_recommended_version})
 set( ACTS_BOOST_SOURCE
    "URL;https://boostorg.jfrog.io/artifactory/main/release/${_acts_boost_recommended_version}/source/boost_${_acts_boost_recommended_version_}.tar.gz" CACHE STRING "Source to take boost from")
 mark_as_advanced( ACTS_BOOST_SOURCE )
