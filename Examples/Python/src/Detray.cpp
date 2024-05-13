@@ -54,7 +54,6 @@ using namespace detray::io::detail;
 using detector_t = detector<default_metadata>;
 
 
-//example pybind lamda function
 namespace Acts::Python {
 
     void addDetray(Context& ctx) {
