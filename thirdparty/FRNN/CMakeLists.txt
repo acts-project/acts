@@ -12,7 +12,7 @@ include(FetchContent)
 message(STATUS "Building FRNN as part of the ACTS project")
 
 # Declare where to get frnncontent from
-FetchContent_Declare( frnncontent ${ACTS_FRNNCONTENT_SOURCE} )
+FetchContent_Declare( frnncontent ${ACTS_FRNN_SOURCE} )
 
 # FRNN does not provide a CMakeLists.txt, so we use a custom one. Because of this,
 # we have to implement the populate step manually
