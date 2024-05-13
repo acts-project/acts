@@ -588,19 +588,6 @@ def addSimWriters(
             )
         )
 
-    if outputDirObj is not None:
-        outputDirObj = Path(outputDirObj)
-        if not outputDirObj.exists():
-            outputDirObj.mkdir()
-        s.addWriter(
-            acts.examples.ObjSimHitWriter(
-                level=customLogLevel(),
-                inputSimHits=simHits,
-                outputDir=str(outputDirObj),
-                outputStem="hits",
-            )
-        )
-
 
 def getG4DetectorConstructionFactory(
     detector: Any,

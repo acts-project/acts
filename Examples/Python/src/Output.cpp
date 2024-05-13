@@ -26,7 +26,6 @@
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjPropagationStepsWriter.hpp"
-#include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
@@ -109,10 +108,6 @@ void addOutput(Context& ctx) {
       ActsExamples::ObjPropagationStepsWriter<Acts::detail::Step>, mex,
       "ObjPropagationStepsWriter", collection, outputDir, outputScalor,
       outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjSimHitWriter, mex,
-                             "ObjSimHitWriter", inputSimHits, outputDir,
-                             outputStem, outputPrecision, drawConnections);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());

@@ -135,12 +135,6 @@ parser.add_argument(
     default=True,
     action=argparse.BooleanOptionalAction,
 )
-parser.add_argument(
-    "--output-obj",
-    help="Switch obj output on/off",
-    default=True,
-    action=argparse.BooleanOptionalAction,
-)
 
 args = parser.parse_args()
 
@@ -278,7 +272,6 @@ else:
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
-            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
             killVolume=trackingGeometry.worldVolume,
             killAfterTime=25 * u.ns,
@@ -302,7 +295,6 @@ else:
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
-            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
         )
 
