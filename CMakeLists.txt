@@ -217,12 +217,12 @@ set(_acts_traccc_version origin/main)
 set(_acts_thrust_version 2.1.0)
 set(_acts_dfelibs_version 20211029)
 
-# Include the sources for the external dependencies.
-include(ActsExternSources)
-
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
 set(_acts_boost_recommended_version 1.78.0)
+
+# Include the sources for the external dependencies.
+include(ActsExternSources)
 
 # required packages
 if (ACTS_SETUP_BOOST)
