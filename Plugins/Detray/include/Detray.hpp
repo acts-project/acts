@@ -98,6 +98,9 @@ int findVolume(
 
 namespace detray{
 
+    /// These functions perform the conversion of the ACTS detector to the detray detector. 
+    /// The payloads are created and populated by traversing the initial ACTS detector object.
+
     /// detray geometry writer function, debug purposes 
     void detray_detector_print(const detector_t& det){
 
@@ -161,7 +164,7 @@ namespace detray{
     }
 
     /// @return the surface_payload for portals and volumes by @param Surface acts object
-    /// @brief convert the acts surface to detray surface payload
+    /// @brief convert the acts surface to detray surface payload and populate the payload
     static io::surface_payload detray_converter_surf(
         const Surface& surface, const Acts::GeometryContext& gctx, const SurfaceJsonConverter::Options& options){
         //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/core/include/detray/geometry/detail/surface_descriptor.hpp
@@ -182,7 +185,7 @@ namespace detray{
 
     /// construct and @return vector of portals and volumes 
     /// @param gctx, portal, ip, volume, orientedSurfaces, detectorVolumes, option
-    /// @brief convert the acts portal to detray surface
+    /// @brief convert the acts portal to detray surface payload and populate the payload
     static std::vector<io::surface_payload> detray_portals(
         const GeometryContext& gctx, const Experimental::Portal& portal,
         std::size_t ip, const Experimental::DetectorVolume& volume,
@@ -367,7 +370,7 @@ namespace detray{
     }
     
     /// @return the volume_payload for portals and volumes from acts @param volume, detectorVolumes, gctx
-    /// @brief convert the acts volume to detray volume payload
+    /// @brief convert the acts volume to detray volume payload and populate the payload
     static io::volume_payload detray_converter_vol(
         const Acts::Experimental::DetectorVolume& volume, 
         const std::vector<const Experimental::DetectorVolume*>& detectorVolumes, 
@@ -412,8 +415,7 @@ namespace detray{
     }
     
     
-    /// GRID related functions
-
+    /// GRID related functions -- in progress
     static io::detector_grids_payload<std::size_t, io::accel_id> detray_converter_grid(
     const Acts::Experimental::Detector& detector){
     
@@ -506,8 +508,8 @@ namespace detray{
         return header_pd;
     }
 
-    /// @brief visit all ACTS detector information, depth-first hierarchically, construct the corresponding payloads and convert to detray detector 
-    /// @return detray detector from @param detector and @param gctx of ACTS  (depth-first hierarchical traversal)
+    /// @brief visit all ACTS detector information, depth-first hierarchically, populate the corresponding payloads and convert to detray detector 
+    /// @return detray detector from @param detector and @param gctx of ACTS 
     detector_t detray_tree_converter(
         const Acts::Experimental::Detector& detector,
         const Acts::GeometryContext& gctx, vecmem::memory_resource& mr){
@@ -523,9 +525,14 @@ namespace detray{
 
         detray::io::geometry_reader::convert<detector_t>(det_builder, names, dp);
         detector_t detrayDet(det_builder.build(mr));
-       
-        detray_detector_print(detrayDet);
+ 
 
+        // temporarily print out for verification purposes
+        std::ofstream outputFile("detector_data.json");
+        nlohmann::ordered_json out_json;
+
+        out_json["data"] = detray::io::geometry_writer::convert(detrayDet, names);
+        outputFile << out_json << std::endl;
         detray::detail::check_consistency(detrayDet); 
         
         //home/exochell/docker_dir/ACTS_ODD_D/buildD/acts/_deps/detray-src/io/include/detray/io/frontend/detector_reader.hpp
