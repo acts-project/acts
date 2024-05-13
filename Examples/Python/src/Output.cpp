@@ -25,8 +25,6 @@
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
-#include "ActsExamples/Io/Plugins/ObjPropagationStepsWriter.hpp"
-#include "ActsExamples/Io/Plugins/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
@@ -46,6 +44,8 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
+#include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
+#include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 
 #include <array>
 #include <memory>
