@@ -616,7 +616,7 @@ __geant4Handle = None
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
-    recoGeometry: Union[acts.TrackingGeometry, acts.Detector],
+    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     g4DetectorConstructionFactory: Optional[Any] = None,
@@ -645,7 +645,7 @@ def addGeant4(
     ----------
     s: Sequencer
         the sequencer module to which we add the Geant4 steps (returned from addGeant4)
-    recoGeometry : tracking geometry or detector
+    trackingGeometry : tracking geometry or detector
     field : magnetic field
     rnd : RandomNumbers, None
         random number generator
@@ -696,7 +696,7 @@ def addGeant4(
     smmConfig.volumeMappings = volumeMappings
     smmConfig.materialMappings = materialMappings
     sensitiveMapper = SensitiveSurfaceMapper.create(
-        smmConfig, acts.logging.INFO, recoGeometry
+        smmConfig, acts.logging.INFO, trackingGeometry
     )
 
     # Simulation
@@ -766,7 +766,7 @@ def addGeant4(
 
 def addDigitization(
     s: acts.examples.Sequencer,
-    recoGeometry: Union[acts.TrackingGeometry, acts.Detector],
+    trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     digiConfigFile: Union[Path, str],
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -782,7 +782,7 @@ def addDigitization(
     ----------
     s: Sequencer
         the sequencer module to which we add the Digitization steps (returned from addDigitization)
-    recoGeometry : tracking geometry or detector
+    trackingGeometry : tracking geometry or detector
     field : magnetic field
     digiConfigFile : Path|str, path
         Configuration (.json) file for digitization or smearing description
@@ -804,7 +804,7 @@ def addDigitization(
         acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
-        surfaceByIdentifier=recoGeometry.geoIdSurfaceMap(),
+        surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         randomNumbers=rnd,
         inputSimHits="simhits",
         outputSourceLinks="sourcelinks",
@@ -832,7 +832,7 @@ def addDigitization(
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
-            surfaceByIdentifier=recoGeometry.geoIdSurfaceMap(),
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
         rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
         s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
