@@ -265,7 +265,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(filePath);
     ACTS_PYTHON_MEMBER(fileMode);
     ACTS_PYTHON_MEMBER(boundIndices);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_STRUCT_END();
   }
 

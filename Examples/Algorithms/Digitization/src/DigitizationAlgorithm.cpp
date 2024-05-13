@@ -57,8 +57,8 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
   }
-  if (!m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+  if (m_cfg.surfaceByIdentifier.empty()) {
+    throw std::invalid_argument("Missing Surface-GeometryID association map");
   }
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
@@ -162,16 +162,17 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const auto& moduleSimHits = simHitsGroup.second;
 
-    const Acts::Surface* surfacePtr =
-        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
 
-    if (surfacePtr == nullptr) {
+    if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
       // this is either an invalid geometry id or a misconfigured smearer
       // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId
                                            << " for configured smearer");
       return ProcessCode::ABORT;
     }
+
+    const Acts::Surface* surfacePtr = surfaceItr->second;
 
     auto digitizerItr = m_digitizers.find(moduleGeoId);
     if (digitizerItr == m_digitizers.end()) {
