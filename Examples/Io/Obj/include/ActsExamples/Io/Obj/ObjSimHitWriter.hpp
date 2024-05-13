@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -16,6 +17,8 @@
 #include <cstdint>
 #include <mutex>
 #include <string>
+
+using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -44,6 +47,12 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
     /// Draw line connections between hits
     bool drawConnections = true;
+    /// Momentum threshold for hits
+    Acts::ActsScalar momentumThreshold = 0.05_GeV;
+    /// Momentum threshold for trajectories
+    Acts::ActsScalar momentumThresholdTraj = 0.05_GeV;
+    /// Number of points to interpolate between hits
+    unsigned int nInterpolatedPoints = 10;
   };
 
   /// Construct the particle writer.
