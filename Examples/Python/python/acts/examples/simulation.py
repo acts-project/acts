@@ -422,7 +422,6 @@ def addFatras(
     outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -447,8 +446,6 @@ def addFatras(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    outputDirObj : Path|str, path, None
-        the output folder for the Obj output, None triggers no output
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -520,7 +517,6 @@ def addFatras(
         particlesFinal,
         outputDirCsv,
         outputDirRoot,
-        outputDirObj,
         logLevel,
     )
 
@@ -534,7 +530,6 @@ def addSimWriters(
     particlesFinal="particles_final",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -637,7 +632,6 @@ def addGeant4(
     keepParticlesWithoutHits=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
@@ -665,8 +659,6 @@ def addGeant4(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    outputDirObj : Path|str, path, None
-        the output folder for the Obj output, None triggers no output
     killVolume: acts.Volume, None
         if given, particles are killed when going outside this volume.
     killAfterTime: float
@@ -766,7 +758,6 @@ def addGeant4(
         particlesFinal,
         outputDirCsv,
         outputDirRoot,
-        outputDirObj,
         logLevel=logLevel,
     )
 
