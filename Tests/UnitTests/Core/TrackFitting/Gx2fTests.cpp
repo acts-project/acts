@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   const Acts::ActsVector<2> scatterOffset = {100_mm, 100_mm};
   const std::size_t indexMaterialSurface = 3;
-  for(std::size_t iMeas = indexMaterialSurface; iMeas < nSurfaces; iMeas++) {
+  for (std::size_t iMeas = indexMaterialSurface; iMeas < nSurfaces; iMeas++) {
     // This only works, because our detector is evenly spaced
     const std::size_t offsetFactor = iMeas - indexMaterialSurface;
 
