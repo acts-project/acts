@@ -41,7 +41,6 @@ components:
 -   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
--   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
 -   [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
 -   [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
 -   [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
@@ -279,7 +278,6 @@ components.
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_SETUP_VECMEM                   | Explicitly set up vecmem for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
