@@ -5,7 +5,6 @@ add_library(
   src/RootMaterialWriter.cpp
   src/RootMaterialTrackReader.cpp
   src/RootMaterialTrackWriter.cpp
-  src/RootPlanarClusterWriter.cpp
   src/RootParticleWriter.cpp
   src/RootParticleReader.cpp
   src/RootPropagationStepsWriter.cpp
@@ -28,7 +27,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginIdentification ActsExamplesDigitization
+    ActsCore ActsExamplesDigitization
     ActsExamplesFramework ActsExamplesPropagation
     ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads

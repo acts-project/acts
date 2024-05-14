@@ -12,6 +12,7 @@ pybind11_add_module(ActsPythonBindings
   src/Framework.cpp
   src/Base.cpp
   src/Detector.cpp
+  src/Digitization.cpp
   src/Material.cpp
   src/Geometry.cpp
   src/ExampleAlgorithms.cpp
@@ -49,11 +50,11 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesIoJson
   ActsExamplesIoPerformance
   ActsExamplesGenerators
+  ActsExamplesPrinters
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
   ActsExamplesVertexing
   ActsExamplesFatras
-  ActsExamplesPrinters
   ActsExamplesDetectorTelescope
   ActsExamplesUtilities
   ActsExamplesAmbiguityResolution
@@ -101,13 +102,6 @@ if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   target_sources(ActsPythonBindings PRIVATE src/Pythia8.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_IDENTIFICATION)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesDigitization)
-  target_sources(ActsPythonBindings PRIVATE src/Digitization.cpp)
-else()
-  target_sources(ActsPythonBindings PRIVATE src/DigitizationStub.cpp)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)

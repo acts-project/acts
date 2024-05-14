@@ -160,6 +160,10 @@ class TrackingGeometry {
   /// @retval pointer to the found surface otherwise.
   const Surface* findSurface(GeometryIdentifier id) const;
 
+  /// Access to the GeometryIdentifier - Surface association map
+  const std::unordered_map<GeometryIdentifier, const Surface*>&
+  geoIdSurfaceMap() const;
+
  private:
   // the known world
   TrackingVolumePtr m_world;

@@ -11,7 +11,6 @@
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
-#include "ActsExamples/Printers/HitsPrinter.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -44,11 +43,6 @@ void addExampleAlgorithms(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
                                 "ParticlesPrinter", inputParticles);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::HitsPrinter, mex, "HitsPrinter", inputClusters,
-      inputMeasurementParticlesMap, inputHitIds, selectIndexStart,
-      selectIndexLength, selectVolume, selectLayer, selectModule);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
                                 "TrackParametersPrinter", inputTrackParameters);
