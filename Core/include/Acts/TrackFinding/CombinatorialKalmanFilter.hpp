@@ -859,6 +859,7 @@ class CombinatorialKalmanFilter {
           result.activeBranches.push_back(newBranch);
         }
         newBranch.tipIndex() = currentTip;
+        tipStateAccessor(newBranch) = tipState;
 
         using BranchStopperResult =
             CombinatorialKalmanFilterBranchStopperResult;
