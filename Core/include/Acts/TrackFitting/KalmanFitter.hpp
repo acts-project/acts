@@ -365,18 +365,6 @@ class KalmanFitter {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (!isDirectNavigator) {
-        if (result.processedStates == 0) {
-          for (auto measurementIt = inputMeasurements->begin();
-               measurementIt != inputMeasurements->end(); measurementIt++) {
-            navigator.insertExternalSurface(state.navigation,
-                                            measurementIt->first);
-          }
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -1132,6 +1120,12 @@ class KalmanFitter {
 
     // Set the trivial propagator options
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+
+    // Add the measurement surface as external surface to navigator.
+    // We will try to hit those surface by ignoring boundary checks.
+    for (const auto& measurement : inputMeasurements) {
+      propagatorOptions.navigation.insertExternalSurface(measurement.first);
+    }
 
     // Catch the actor and set the measurements
     auto& kalmanActor =
