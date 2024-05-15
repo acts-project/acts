@@ -31,6 +31,7 @@
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -383,6 +384,7 @@ class MultiTrajectory {
 
   /// Add a column to the @c MultiTrajectory
   /// @tparam T Type of the column values to add
+  /// @param key the name of the column to be added
   /// @note This takes a string argument rather than a hashed string to maintain
   ///       compatibility with backends.
   /// @note Only available if the MultiTrajectory is not read-only
