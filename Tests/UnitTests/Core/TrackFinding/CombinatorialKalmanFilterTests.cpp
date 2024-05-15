@@ -319,6 +319,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   TrackContainer tc{Acts::VectorTrackContainer{},
                     Acts::VectorMultiTrajectory{}};
+  tc.addColumn<Acts::CombinatorialKalmanFilterTipState>(
+      Acts::s_combinatorialKalmanFilterTipStateColumn);
 
   // run the CKF for all initial track states
   for (std::size_t trackId = 0u; trackId < f.startParameters.size();
@@ -376,6 +378,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
 
   TrackContainer tc{Acts::VectorTrackContainer{},
                     Acts::VectorMultiTrajectory{}};
+  tc.addColumn<Acts::CombinatorialKalmanFilterTipState>(
+      Acts::s_combinatorialKalmanFilterTipStateColumn);
 
   // run the CKF for all initial track states
   for (std::size_t trackId = 0u; trackId < f.startParameters.size();

@@ -68,6 +68,9 @@ struct CombinatorialKalmanFilterTipState {
   std::size_t nHoles = 0;
 };
 
+static constexpr std::string_view s_combinatorialKalmanFilterTipStateColumn =
+    "CkfTipState";
+
 enum class CombinatorialKalmanFilterBranchStopperResult {
   Continue,
   StopAndDrop,
@@ -285,10 +288,9 @@ class CombinatorialKalmanFilter {
 
   const Logger& logger() const { return *m_logger; }
 
-  static constexpr std::string_view tipStateColumn = "CkfTipState";
   static constexpr ProxyAccessor<CombinatorialKalmanFilterTipState>
       tipStateAccessor = ProxyAccessor<CombinatorialKalmanFilterTipState>(
-          hashString(tipStateColumn));
+          hashString(s_combinatorialKalmanFilterTipStateColumn));
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
@@ -1145,7 +1147,7 @@ class CombinatorialKalmanFilter {
       ACTS_ERROR(
           "Track container does not have the tip state column \"CkfTipState\"");
       trackContainer.template addColumn<CombinatorialKalmanFilterTipState>(
-          tipStateColumn);
+          s_combinatorialKalmanFilterTipStateColumn);
     }
 
     auto rootBranch = trackContainer.makeTrack();
