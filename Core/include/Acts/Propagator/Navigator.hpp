@@ -838,7 +838,7 @@ class Navigator {
       NavigationOptions<Surface> navOpts;
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
-      navOpts.nearLimit = stepper.overstepLimit(state.stepping);
+      navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.forceIntersectBoundaries =
@@ -1044,11 +1044,7 @@ class Navigator {
         navOpts.externalSurfaces.push_back(itSurface->second);
       }
     }
-    // No overstepping on start layer, otherwise ask the stepper
-    navOpts.nearLimit = (currentLayer == state.navigation.startLayer)
-                            ? state.options.surfaceTolerance
-                            : stepper.overstepLimit(state.stepping);
-    // Check the limit
+    navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
@@ -1113,7 +1109,7 @@ class Navigator {
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
     navOpts.startObject = startLayer;
-    navOpts.nearLimit = stepper.overstepLimit(state.stepping);
+    navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     // Request the compatible layers
