@@ -478,6 +478,7 @@ class Navigator {
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
             state.options.direction * stepper.direction(state.stepping));
+        state.navigation.currentLayer = nullptr;
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           ACTS_VERBOSE(
@@ -1020,16 +1021,12 @@ class Navigator {
     const Layer* currentLayer = state.navigation.currentLayer;
     assert(currentLayer != nullptr && "Current layer is not set.");
     const Surface* layerSurface = &currentLayer->surfaceRepresentation();
-    // are we on the start layer
-    const Surface* startSurface = (currentLayer == state.navigation.startLayer)
-                                      ? state.navigation.startSurface
-                                      : layerSurface;
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
-    navOpts.startObject = startSurface;
+    navOpts.startObject = state.navigation.currentSurface;
     navOpts.endObject = state.navigation.targetSurface;
 
     std::vector<GeometryIdentifier> externalSurfaces;
@@ -1097,18 +1094,13 @@ class Navigator {
                      const stepper_t& stepper) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible layers.");
 
-    // Check if we are in the start volume
-    auto startLayer =
-        (state.navigation.currentVolume == state.navigation.startVolume)
-            ? state.navigation.startLayer
-            : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
     NavigationOptions<Layer> navOpts;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;
-    navOpts.startObject = startLayer;
+    navOpts.startObject = state.navigation.currentLayer;
     navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
@@ -1134,17 +1126,13 @@ class Navigator {
       // Set the index to the first
       state.navigation.navLayerIndex = 0;
       // Setting the step size towards first
-      if (state.navigation.startLayer &&
-          state.navigation.navLayer().second != state.navigation.startLayer) {
-        ACTS_VERBOSE(volInfo(state) << "Target at layer.");
-        // The stepper updates the step size ( single / multi component)
-        stepper.updateStepSize(state.stepping,
-                               state.navigation.navLayer().first,
-                               state.options.direction, true);
-        ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
-                                    << stepper.outputStepSize(state.stepping));
-        return true;
-      }
+      ACTS_VERBOSE(volInfo(state) << "Target at layer.");
+      // The stepper updates the step size ( single / multi component)
+      stepper.updateStepSize(state.stepping, state.navigation.navLayer().first,
+                             state.options.direction, true);
+      ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
+                                  << stepper.outputStepSize(state.stepping));
+      return true;
     }
 
     // Set the index to the end of the list
