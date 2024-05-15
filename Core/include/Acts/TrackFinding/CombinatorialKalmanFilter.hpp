@@ -94,8 +94,8 @@ struct CombinatorialKalmanFilterExtensions {
           candidate_container_t& trackStates, bool&, const Logger&)>;
   using BranchStopper = Delegate<BranchStopperResult(
       const CombinatorialKalmanFilterTipState&,
-      typename track_container_t::TrackProxy,
-      typename track_container_t::TrackStateProxy)>;
+      const typename track_container_t::TrackProxy&,
+      const typename track_container_t::TrackStateProxy&)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows to
   /// calibrate measurements using track information, this could be e.g. sagging
@@ -132,8 +132,8 @@ struct CombinatorialKalmanFilterExtensions {
   /// @return false
   static BranchStopperResult voidBranchStopper(
       const CombinatorialKalmanFilterTipState& /*tipState*/,
-      typename track_container_t::TrackProxy /*track*/,
-      typename track_container_t::TrackStateProxy /*trackState*/) {
+      const typename track_container_t::TrackProxy& /*track*/,
+      const typename track_container_t::TrackStateProxy& /*trackState*/) {
     return BranchStopperResult::Continue;
   }
 };
@@ -1196,7 +1196,7 @@ class CombinatorialKalmanFilter {
                  << initialParameters.parameters());
     }
 
-    for (auto track : combKalmanResult.collectedTracks) {
+    for (const auto& track : combKalmanResult.collectedTracks) {
       calculateTrackQuantities(track);
     }
 

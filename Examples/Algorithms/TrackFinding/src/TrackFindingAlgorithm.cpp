@@ -188,8 +188,8 @@ class BranchStopper {
 
   BranchStopperResult operator()(
       const Acts::CombinatorialKalmanFilterTipState& tipState,
-      TrackContainer::TrackProxy /*track*/,
-      TrackContainer::TrackStateProxy trackState) const {
+      const TrackContainer::TrackProxy& /*track*/,
+      const TrackContainer::TrackStateProxy& trackState) const {
     if (!m_config.has_value()) {
       return BranchStopperResult::Continue;
     }
