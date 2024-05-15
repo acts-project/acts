@@ -1011,7 +1011,6 @@ class Navigator {
   ///
   /// @param [in,out] state is the propagation state object
   /// @param [in] stepper Stepper in use
-  /// @param [in] cLayer is the already assigned current layer, e.g. start layer
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
