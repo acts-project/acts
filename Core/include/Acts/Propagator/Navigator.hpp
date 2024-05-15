@@ -191,6 +191,8 @@ class Navigator {
 
   State makeState(const Surface* startSurface,
                   const Surface* targetSurface) const {
+    assert(startSurface != nullptr && "Start surface must be set");
+
     State result;
     result.startSurface = startSurface;
     result.targetSurface = targetSurface;
@@ -1016,12 +1018,14 @@ class Navigator {
   bool resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
                        const Layer* cLayer = nullptr) const {
     // get the layer and layer surface
-    auto layerSurface = cLayer ? state.navigation.startSurface
-                               : state.navigation.navLayer().first.object();
-    auto navLayer = cLayer ? cLayer : state.navigation.navLayer().second;
+    const Layer* navLayer =
+        cLayer ? cLayer : state.navigation.navLayer().second;
+    assert(navLayer != nullptr && "Current layer is not set.");
+    const Surface* layerSurface = &navLayer->surfaceRepresentation();
     // are we on the start layer
-    bool onStart = (navLayer == state.navigation.startLayer);
-    auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
+    const Surface* startSurface = (navLayer == state.navigation.startLayer)
+                                      ? state.navigation.startSurface
+                                      : layerSurface;
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
