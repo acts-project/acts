@@ -154,10 +154,12 @@ class Navigator {
     const Layer* startLayer = nullptr;
     /// Navigation state: the start surface
     const Surface* startSurface = nullptr;
-    /// Navigation state - external state: the current surface
-    const Surface* currentSurface = nullptr;
     /// Navigation state: the current volume
     const TrackingVolume* currentVolume = nullptr;
+    /// Navigation state: the current layer
+    const Layer* currentLayer = nullptr;
+    /// Navigation state - external state: the current surface
+    const Surface* currentSurface = nullptr;
     /// Navigation state: the target volume
     const TrackingVolume* targetVolume = nullptr;
     /// Navigation state: the target layer
@@ -291,8 +293,6 @@ class Navigator {
           state.navigation.startSurface->associatedLayer();
       state.navigation.startVolume =
           state.navigation.startLayer->trackingVolume();
-      // Set the start volume as current volume
-      state.navigation.currentVolume = state.navigation.startVolume;
     } else if (state.navigation.startVolume) {
       ACTS_VERBOSE(
           volInfo(state)
@@ -300,8 +300,6 @@ class Navigator {
       state.navigation.startLayer =
           state.navigation.startVolume->associatedLayer(
               state.geoContext, stepper.position(state.stepping));
-      // Set the start volume as current volume
-      state.navigation.currentVolume = state.navigation.startVolume;
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Slow start initialization through search.");
@@ -319,12 +317,14 @@ class Navigator {
               ? state.navigation.startVolume->associatedLayer(
                     state.geoContext, stepper.position(state.stepping))
               : nullptr;
-      // Set the start volume as current volume
-      state.navigation.currentVolume = state.navigation.startVolume;
       if (state.navigation.startVolume) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       }
     }
+    // Set the start volume as current volume
+    state.navigation.currentVolume = state.navigation.startVolume;
+    // Set the start layer as current layer
+    state.navigation.currentLayer = state.navigation.startLayer;
   }
 
   /// @brief Navigator pre step call
@@ -445,6 +445,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Post step: in layer handling.");
       if (state.navigation.currentSurface != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "On layer: update layer information.");
+        state.navigation.currentLayer = state.navigation.navLayer().second;
         if (resolveSurfaces(state, stepper)) {
           // Set the navigation stage back to surface handling
           state.navigation.navigationStage = Stage::surfaceTarget;
@@ -473,7 +474,7 @@ class Navigator {
         state.navigation.lastHierarchySurfaceReached = false;
         // Update volume information
         // get the attached volume information
-        auto boundary = state.navigation.navBoundary().second;
+        const BoundarySurface* boundary = state.navigation.navBoundary().second;
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
             state.options.direction * stepper.direction(state.stepping));
@@ -600,8 +601,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
       // We provide the layer to the resolve surface method in this case
       state.navigation.startLayerResolved = true;
-      bool startResolved =
-          resolveSurfaces(state, stepper, state.navigation.startLayer);
+      bool startResolved = resolveSurfaces(state, stepper);
       if (!startResolved &&
           state.navigation.startLayer == state.navigation.targetLayer) {
         ACTS_VERBOSE(volInfo(state)
@@ -1015,15 +1015,14 @@ class Navigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
-                       const Layer* cLayer = nullptr) const {
+  bool resolveSurfaces(propagator_state_t& state,
+                       const stepper_t& stepper) const {
     // get the layer and layer surface
-    const Layer* navLayer =
-        cLayer ? cLayer : state.navigation.navLayer().second;
-    assert(navLayer != nullptr && "Current layer is not set.");
-    const Surface* layerSurface = &navLayer->surfaceRepresentation();
+    const Layer* currentLayer = state.navigation.currentLayer;
+    assert(currentLayer != nullptr && "Current layer is not set.");
+    const Surface* layerSurface = &currentLayer->surfaceRepresentation();
     // are we on the start layer
-    const Surface* startSurface = (navLayer == state.navigation.startLayer)
+    const Surface* startSurface = (currentLayer == state.navigation.startLayer)
                                       ? state.navigation.startSurface
                                       : layerSurface;
     // Use navigation parameters and NavigationOptions
@@ -1047,7 +1046,7 @@ class Navigator {
       }
     }
     // No overstepping on start layer, otherwise ask the stepper
-    navOpts.nearLimit = (cLayer != nullptr)
+    navOpts.nearLimit = (currentLayer == state.navigation.startLayer)
                             ? state.options.surfaceTolerance
                             : stepper.overstepLimit(state.stepping);
     // Check the limit
@@ -1055,7 +1054,7 @@ class Navigator {
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
     // get the surfaces
-    state.navigation.navSurfaces = navLayer->compatibleSurfaces(
+    state.navigation.navSurfaces = currentLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping), navOpts);
     // the number of layer candidates
