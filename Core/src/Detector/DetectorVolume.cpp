@@ -288,13 +288,13 @@ bool Acts::Experimental::DetectorVolume::checkContainment(
 void Acts::Experimental::DetectorVolume::closePortals() {
   for (auto& p : m_portals.internal) {
     // Create a null link
-    for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdaters())) {
+    for (auto [ivu, vu] : enumerate(p->portalNavigation())) {
       if (!vu.connected()) {
         auto eowDir = Direction::fromIndex(ivu);
         auto eow = std::make_unique<const EndOfWorld>();
         Acts::Experimental::ExternalNavigationDelegate eowLink;
         eowLink.connect<&EndOfWorld::update>(std::move(eow));
-        p->assignExternalNavigationDelegate(eowDir, std::move(eowLink), {});
+        p->assignPortalNavigation(eowDir, std::move(eowLink), {});
       }
     }
   }

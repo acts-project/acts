@@ -29,8 +29,7 @@ void Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       .connect<&Acts::Experimental::SingleDetectorVolumeNavigation::update>(
           std::move(volumeLinkImpl));
   // Update the volume link and the store
-  portal.assignExternalNavigationDelegate(direction, std::move(volumeLink),
-                                          {volume});
+  portal.assignPortalNavigation(direction, std::move(volumeLink), {volume});
 }
 
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
@@ -47,8 +46,7 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
   ExternalNavigationDelegate dVolumeUpdater;
   dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
       std::move(volumes1D));
-  portal.assignExternalNavigationDelegate(direction, std::move(dVolumeUpdater),
-                                          volumes);
+  portal.assignPortalNavigation(direction, std::move(dVolumeUpdater), volumes);
 }
 
 void Acts::Experimental::detail::PortalHelper::
@@ -69,8 +67,7 @@ void Acts::Experimental::detail::PortalHelper::
     ExternalNavigationDelegate dVolumeUpdater;
     dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
         std::move(volumes1D));
-    p->assignExternalNavigationDelegate(dir, std::move(dVolumeUpdater),
-                                        volumes);
+    p->assignPortalNavigation(dir, std::move(dVolumeUpdater), volumes);
   }
 }
 

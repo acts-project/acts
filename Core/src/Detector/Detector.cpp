@@ -21,10 +21,10 @@
 
 Acts::Experimental::Detector::Detector(
     std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    ExternalNavigationDelegate detectorVolumeUpdater)
+    ExternalNavigationDelegate detectorVolumeFinder)
     : m_name(std::move(name)),
       m_rootVolumes(std::move(rootVolumes)),
-      m_externalNavigation(std::move(detectorVolumeUpdater)) {
+      m_externalNavigation(std::move(detectorVolumeFinder)) {
   if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
@@ -128,10 +128,10 @@ Acts::Experimental::Detector::Detector(
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::makeShared(
     std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    ExternalNavigationDelegate detectorVolumeUpdater) {
+    ExternalNavigationDelegate detectorVolumeFinder) {
   return std::shared_ptr<Detector>(
       new Detector(std::move(name), std::move(rootVolumes),
-                   std::move(detectorVolumeUpdater)));
+                   std::move(detectorVolumeFinder)));
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&

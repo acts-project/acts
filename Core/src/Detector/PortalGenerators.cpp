@@ -41,8 +41,8 @@ Acts::Experimental::generatePortals(
     singleLink.connect<&SingleDetectorVolumeNavigation::update>(
         std::move(singleLinkImpl));
     // Update the volume link and the store
-    portal->assignExternalNavigationDelegate(oSurface.direction,
-                                             std::move(singleLink), {dVolume});
+    portal->assignPortalNavigation(oSurface.direction, std::move(singleLink),
+                                   {dVolume});
     // Portal is prepared
     portals.push_back(std::move(portal));
   }
@@ -76,7 +76,7 @@ Acts::Experimental::generatePortalsUpdateInternals(
       ExternalNavigationDelegate motherLink;
       motherLink.connect<&SingleDetectorVolumeNavigation::update>(
           std::move(motherLinkImpl));
-      pPtr->assignExternalNavigationDelegate(std::move(motherLink), {dVolume});
+      pPtr->assignPortalNavigation(std::move(motherLink), {dVolume});
     }
   }
   // Return from the standard generator

@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   ExternalNavigationDelegate linkToA;
   linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignExternalNavigationDelegate(Acts::Direction::Positive,
-                                            std::move(linkToA), {volumeA});
+  portalA->assignPortalNavigation(Acts::Direction::Positive, std::move(linkToA),
+                                  {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
   BOOST_CHECK(attachedDetectorVolumes[0u].empty());
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   ExternalNavigationDelegate linkToB;
   auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignExternalNavigationDelegate(Acts::Direction::Negative,
-                                            std::move(linkToB), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative, std::move(linkToB),
+                                  {volumeB});
 
   // Reverse: positive volume nullptr, negative volume volumeB
   nState.direction = Acts::Vector3(0., 0., 1.);
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   ExternalNavigationDelegate linkToA;
   auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignExternalNavigationDelegate(Acts::Direction::Positive,
-                                            std::move(linkToA), {volumeA});
+  portalA->assignPortalNavigation(Acts::Direction::Positive, std::move(linkToA),
+                                  {volumeA});
 
   auto surfaceB = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Transform3::Identity(), rectangle);
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   ExternalNavigationDelegate linkToB;
   auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignExternalNavigationDelegate(Acts::Direction::Negative,
-                                            std::move(linkToB), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative, std::move(linkToB),
+                                  {volumeB});
 
   // Portal A fuses with B
   // - has material and keeps it
@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   ExternalNavigationDelegate linkToB2;
   auto linkToB2Impl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB2.connect<&LinkToVolumeImpl::link>(std::move(linkToB2Impl));
-  portalB->assignExternalNavigationDelegate(Acts::Direction::Negative,
-                                            std::move(linkToB2), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative,
+                                  std::move(linkToB2), {volumeB});
 
   // Portal B fuses with A
   // - A has material, portal B gets it from A
@@ -238,8 +238,8 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   // This fails because A has accumulated volumes on both sides through fusing
   BOOST_CHECK_THROW(Portal::fuse(portalB, portalA), std::invalid_argument);
   // Remove Negative volume on A
-  portalA->assignExternalNavigationDelegate(Acts::Direction::Negative,
-                                            ExternalNavigationDelegate{}, {});
+  portalA->assignPortalNavigation(Acts::Direction::Negative,
+                                  ExternalNavigationDelegate{}, {});
 
   portalB = Portal::fuse(portalB, portalA);
   BOOST_CHECK_EQUAL(portalB->surface().surfaceMaterial(), materialA.get());
@@ -249,16 +249,16 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   ExternalNavigationDelegate linkToA2;
   auto linkToA2Impl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   linkToA2.connect<&LinkToVolumeImpl::link>(std::move(linkToA2Impl));
-  portalA->assignExternalNavigationDelegate(Acts::Direction::Positive,
-                                            std::move(linkToA2), {volumeA});
+  portalA->assignPortalNavigation(Acts::Direction::Positive,
+                                  std::move(linkToA2), {volumeA});
 
   surfaceB->assignSurfaceMaterial(materialB);
   portalB = std::make_shared<Portal>(surfaceB);
   ExternalNavigationDelegate linkToB3;
   auto linkToB3Impl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB3.connect<&LinkToVolumeImpl::link>(std::move(linkToB3Impl));
-  portalB->assignExternalNavigationDelegate(Acts::Direction::Negative,
-                                            std::move(linkToB3), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative,
+                                  std::move(linkToB3), {volumeB});
 
   // Portal A fuses with B - both have material, throw exception
   BOOST_CHECK_THROW(Portal::fuse(portalA, portalB), std::runtime_error);

@@ -138,7 +138,7 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
   rDir = surface.normal(gctx, rPos);
 
   // Now convert the link objects
-  const auto& updators = portal.detectorVolumeUpdaters();
+  const auto& updators = portal.portalNavigation();
 
   int sign = -1;
   for (const auto& dvu : updators) {

@@ -58,7 +58,7 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
   jPortal["surface"] = SurfaceJsonConverter::toJson(gctx, portal.surface(),
                                                     options.surfaceOptions);
   // And the portal specific information
-  const auto& volumeLinks = portal.detectorVolumeUpdaters();
+  const auto& volumeLinks = portal.portalNavigation();
   nlohmann::json jLinks;
   for (const auto& vLink : volumeLinks) {
     nlohmann::json jLink = toJson(vLink, detectorVolumes);
@@ -78,7 +78,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   // The overall return object
   std::vector<nlohmann::json> jPortals = {};
   const RegularSurface& surface = portal.surface();
-  const auto& volumeLinks = portal.detectorVolumeUpdaters();
+  const auto& volumeLinks = portal.portalNavigation();
 
   // First assumption for outside link (along direction)
   std::size_t outside = 1u;
