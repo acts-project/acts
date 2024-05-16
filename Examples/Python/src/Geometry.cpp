@@ -40,6 +40,7 @@
 
 #include <array>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <pybind11/pybind11.h>
@@ -71,6 +72,14 @@ struct MaterialSurfaceSelector {
         surfaces.push_back(surface);
       }
     }
+  }
+};
+
+struct IdentifierSurfacesCollector {
+  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*> surfaces;
+  /// @param surface is the test surface
+  void operator()(const Acts::Surface* surface) {
+    surfaces[surface->geometryId()] = surface;
   }
 };
 
@@ -141,6 +150,7 @@ void addGeometry(Context& ctx) {
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
              })
+        .def("geoIdSurfaceMap", &Acts::TrackingGeometry::geoIdSurfaceMap)
         .def("extractMaterialSurfaces",
              [](Acts::TrackingGeometry& self) {
                MaterialSurfaceSelector selector;
@@ -217,10 +227,16 @@ void addExperimentalGeometry(Context& ctx) {
       .def("volumePtrs", &Detector::volumePtrs)
       .def("numberVolumes",
            [](Detector& self) { return self.volumes().size(); })
-      .def("extractMaterialSurfaces", [](Detector& self) {
-        MaterialSurfaceSelector selector;
-        self.visitSurfaces(selector);
-        return selector.surfaces;
+      .def("extractMaterialSurfaces",
+           [](Detector& self) {
+             MaterialSurfaceSelector selector;
+             self.visitSurfaces(selector);
+             return selector.surfaces;
+           })
+      .def("geoIdSurfaceMap", [](Detector& self) {
+        IdentifierSurfacesCollector collector;
+        self.visitSurfaces(collector);
+        return collector.surfaces;
       });
 
   // Portal definition
@@ -550,6 +566,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(builder);
     ACTS_PYTHON_MEMBER(geoIdGenerator);
+    ACTS_PYTHON_MEMBER(materialDecorator);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }

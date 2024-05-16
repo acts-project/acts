@@ -41,11 +41,6 @@ namespace ActsFatras {
 class Barcode;
 }  // namespace ActsFatras
 
-namespace Acts {
-class Surface;
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
 struct AlgorithmContext;
 

@@ -124,6 +124,12 @@ class EigenStepper {
     /// Accummulated path length state
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 

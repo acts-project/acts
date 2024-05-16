@@ -115,6 +115,12 @@ class StraightLineStepper {
     /// accummulated path length state
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     /// adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
@@ -431,8 +437,11 @@ class StraightLineStepper {
       state.stepping.jacTransport = D * state.stepping.jacTransport;
       state.stepping.derivative.template head<3>() = dir;
     }
+
     // state the path length
     state.stepping.pathAccumulated += h;
+    ++state.stepping.nSteps;
+    ++state.stepping.nStepTrials;
 
     // return h
     return h;
