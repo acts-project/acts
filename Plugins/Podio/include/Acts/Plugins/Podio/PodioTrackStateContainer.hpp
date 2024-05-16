@@ -289,14 +289,14 @@ class ConstPodioTrackStateContainer final
   ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType index) const {
     return ConstTrackStateProxy::Calibrated<measdim>{
-        m_collection->at(index).getData().calibrated.data()};
+        m_collection->at(index).getData().measurement.data()};
   }
 
   template <std::size_t measdim>
   ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType index) const {
     return ConstTrackStateProxy::CalibratedCovariance<measdim>{
-        m_collection->at(index).getData().calibratedCovariance.data()};
+        m_collection->at(index).getData().measurementCovariance.data()};
   }
 
   IndexType size_impl() const { return m_collection->size(); }
@@ -395,27 +395,27 @@ class MutablePodioTrackStateContainer final
   ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType index) const {
     return ConstTrackStateProxy::Calibrated<measdim>{
-        m_collection->at(index).getData().calibrated.data()};
+        m_collection->at(index).getData().measurement.data()};
   }
 
   template <std::size_t measdim>
   TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType index) {
     return TrackStateProxy::Calibrated<measdim>{
-        m_collection->at(index).data().calibrated.data()};
+        m_collection->at(index).data().measurement.data()};
   }
 
   template <std::size_t measdim>
   ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType index) const {
     return ConstTrackStateProxy::CalibratedCovariance<measdim>{
-        m_collection->at(index).getData().calibratedCovariance.data()};
+        m_collection->at(index).getData().measurementCovariance.data()};
   }
 
   template <std::size_t measdim>
   TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType index) {
     return TrackStateProxy::CalibratedCovariance<measdim>{
-        m_collection->at(index).data().calibratedCovariance.data()};
+        m_collection->at(index).data().measurementCovariance.data()};
   }
 
   IndexType size_impl() const { return m_collection->size(); }
