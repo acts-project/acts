@@ -278,7 +278,7 @@ print(
 //       Do not modify it manually.
 
 #pragma once
-            
+
 #include <cmath>
 """
 )
