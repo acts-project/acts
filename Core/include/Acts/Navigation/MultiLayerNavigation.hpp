@@ -20,7 +20,7 @@
 namespace Acts::Experimental {
 
 template <typename grid_t, typename path_generator>
-class MultiLayerNavigationDelegatesImpl : public IInternalNavigationDelegate {
+class MultiLayerNavigation : public IInternalNavigation {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -41,12 +41,12 @@ class MultiLayerNavigationDelegatesImpl : public IInternalNavigationDelegate {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
-  MultiLayerNavigationDelegatesImpl(
-      grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
-      const Transform3& itr = Transform3::Identity())
+  MultiLayerNavigation(grid_type igrid,
+                       const std::array<BinningValue, grid_type::DIM>& icasts,
+                       const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
-  MultiLayerNavigationDelegatesImpl() = delete;
+  MultiLayerNavigation() = delete;
 
   /// Update the navigation state
   /// @param gctx is the geometry context

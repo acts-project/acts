@@ -12,7 +12,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"

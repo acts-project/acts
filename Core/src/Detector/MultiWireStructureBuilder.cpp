@@ -20,7 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -68,7 +68,8 @@ class MultiWireInternalStructureBuilder
     // Create the indexed surfaces
     auto internalSurfaces = m_cfg.iSurfaces;
     Acts::Experimental::detail::IndexedSurfacesGenerator<
-        decltype(internalSurfaces), Acts::Experimental::MultiLayerSurfacesImpl>
+        decltype(internalSurfaces),
+        Acts::Experimental::MultiLayerSurfacesNavigation>
         isg{internalSurfaces,
             {},
             {m_cfg.binning[0u].binValue, m_cfg.binning[1u].binValue},

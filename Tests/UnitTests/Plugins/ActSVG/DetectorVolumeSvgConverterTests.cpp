@@ -15,7 +15,7 @@
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"

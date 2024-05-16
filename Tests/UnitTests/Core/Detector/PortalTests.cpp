@@ -18,7 +18,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -34,7 +34,7 @@
 namespace Acts::Experimental {
 
 /// a simple link to volume struct
-class LinkToVolumeImpl : public IExternalNavigationDelegate {
+class LinkToVolumeImpl : public IExternalNavigation {
  public:
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
 

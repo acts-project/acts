@@ -47,8 +47,8 @@ A struct {struct}`Acts::Experimental::NavigationState` holds the current navigat
 Several navigation delegates built upon the {class}`Acts::Delegate` template class are defined and can be adapted and specialized for dedicated detector layouts.
 These delegates are called:
 
-- `Acts::Experimental::IInternalNavigationDelegate` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
-- `Acts::Experimental::IExternalNavigationDelegate` which allows to find a volume by global position (and is usually only needed at initialization of the navigation) and which is attached to a {class}`Acts::Experimental::Portal` to switch volumes when traversing a portal
+- `Acts::Experimental::IInternalNavigation` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
+- `Acts::Experimental::IExternalNavigation` which allows to find a volume by global position (and is usually only needed at initialization of the navigation) and which is attached to a {class}`Acts::Experimental::Portal` to switch volumes when traversing a portal
 
 ## Detailed Description
 

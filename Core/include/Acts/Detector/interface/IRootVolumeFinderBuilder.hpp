@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 
 #include <memory>
 #include <vector>

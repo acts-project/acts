@@ -77,7 +77,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =
-      IndexedUpdaterImpl<IExternalNavigationDelegate, GridType,
+      IndexedUpdaterImpl<IExternalNavigation, GridType,
                          IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
 
   auto indexedDetectorVolumeImpl =

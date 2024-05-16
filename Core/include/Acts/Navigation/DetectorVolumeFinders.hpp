@@ -22,12 +22,12 @@
 
 namespace Acts::Experimental {
 
-struct NoopFinder : public IExternalNavigationDelegate {
+struct NoopFinder : public IExternalNavigation {
   inline void update(const GeometryContext& /*gctx*/,
                      NavigationState& /*nState*/) const {}
 };
 
-struct RootVolumeFinder : public IExternalNavigationDelegate {
+struct RootVolumeFinder : public IExternalNavigation {
   inline void update(const GeometryContext& gctx,
                      NavigationState& nState) const {
     if (nState.currentDetector == nullptr) {
@@ -47,7 +47,7 @@ struct RootVolumeFinder : public IExternalNavigationDelegate {
   }
 };
 
-struct TrialAndErrorVolumeFinder : public IExternalNavigationDelegate {
+struct TrialAndErrorVolumeFinder : public IExternalNavigation {
   inline void update(const GeometryContext& gctx,
                      NavigationState& nState) const {
     if (nState.currentVolume == nullptr) {
@@ -116,7 +116,7 @@ struct IndexedDetectorVolumeExtractor {
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
 using IndexedDetectorVolumesImpl =
-    IndexedUpdaterImpl<IExternalNavigationDelegate, grid_type,
+    IndexedUpdaterImpl<IExternalNavigation, grid_type,
                        IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
 
 }  // namespace Acts::Experimental

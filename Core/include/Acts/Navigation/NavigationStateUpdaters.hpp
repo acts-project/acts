@@ -173,9 +173,8 @@ class IndexedUpdaterImpl : public delegate_type {
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
 
-    // If the delegate type is of type IInternalNavigationDelegate
-    if constexpr (std::is_base_of_v<IInternalNavigationDelegate,
-                                    delegate_type>) {
+    // If the delegate type is of type IInternalNavigation
+    if constexpr (std::is_base_of_v<IInternalNavigation, delegate_type>) {
       // Update the candidates
       updateCandidates(gctx, nState);
     }

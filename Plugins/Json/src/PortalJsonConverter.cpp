@@ -11,7 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
@@ -108,7 +108,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   const auto* instance = outsideLink.instance();
   // Single link cast
   auto singleLink =
-      dynamic_cast<const Acts::Experimental::SingleDetectorVolumeImpl*>(
+      dynamic_cast<const Acts::Experimental::SingleDetectorVolumeNavigation*>(
           instance);
 
   auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
@@ -127,7 +127,8 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   } else {
     // Multi link detected - 1D
     auto multiLink1D =
-        dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);
+        dynamic_cast<const Experimental::BoundVolumesGrid1Navigation*>(
+            instance);
     if (multiLink1D != nullptr) {
       // Resolve the multi link 1D
       auto boundaries =
@@ -261,7 +262,8 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
     const auto instance = updator.instance();
     // Single link cast
     auto singleLink =
-        dynamic_cast<const Experimental::SingleDetectorVolumeImpl*>(instance);
+        dynamic_cast<const Experimental::SingleDetectorVolumeNavigation*>(
+            instance);
     // Single link detected
     if (singleLink != nullptr) {
       auto vIndex = findVolume(singleLink->object(), detectorVolumes);
@@ -273,7 +275,8 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
     }
     // Multi link detected - 1D
     auto multiLink1D =
-        dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);
+        dynamic_cast<const Experimental::BoundVolumesGrid1Navigation*>(
+            instance);
     if (multiLink1D != nullptr) {
       nlohmann::json jMultiLink;
       const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;

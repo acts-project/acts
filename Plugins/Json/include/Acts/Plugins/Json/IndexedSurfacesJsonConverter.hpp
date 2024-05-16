@@ -11,7 +11,7 @@
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
@@ -48,9 +48,9 @@ void convert(nlohmann::json& jIndexedSurfaces,
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
-      GridType, Experimental::IndexedSurfacesImpl>;
-  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsNavigation<
+      GridType, Experimental::IndexedSurfacesNavigation>;
+  using SubDelegateType = Experimental::IndexedSurfacesNavigation<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();

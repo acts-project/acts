@@ -10,7 +10,7 @@
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -35,7 +35,7 @@ void convert(nlohmann::json& jIndexedVolumes,
   using GridType = typename instance_type::template grid_type<std::size_t>;
   // Defining a Delegate type
   using DelegateType = Experimental::IndexedUpdaterImpl<
-      Experimental::IExternalNavigationDelegate, GridType,
+      Experimental::IExternalNavigation, GridType,
       Experimental::IndexedDetectorVolumeExtractor,
       Experimental::DetectorVolumeFiller>;
   // Get the instance

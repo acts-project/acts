@@ -14,7 +14,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -291,9 +291,9 @@ void Acts::Experimental::DetectorVolume::closePortals() {
     for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdaters())) {
       if (!vu.connected()) {
         auto eowDir = Direction::fromIndex(ivu);
-        auto eow = std::make_unique<const EndOfWorldImpl>();
+        auto eow = std::make_unique<const EndOfWorld>();
         Acts::Experimental::ExternalNavigationDelegate eowLink;
-        eowLink.connect<&EndOfWorldImpl::update>(std::move(eow));
+        eowLink.connect<&EndOfWorld::update>(std::move(eow));
         p->assignExternalNavigationDelegate(eowDir, std::move(eowLink), {});
       }
     }

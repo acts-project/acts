@@ -10,7 +10,7 @@
 
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
 #include <memory>

@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 
 #include <map>
 #include <memory>

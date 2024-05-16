@@ -25,7 +25,7 @@ class DetectorVolume;
 /// @brief  The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
-struct EndOfWorldImpl : public IExternalNavigationDelegate {
+struct EndOfWorld : public IExternalNavigation {
   /// @brief a null volume link - explicitly
   ///
   /// @note the method parameters are ignored
@@ -35,9 +35,8 @@ struct EndOfWorldImpl : public IExternalNavigationDelegate {
   }
 };
 
-using SingleDetectorVolumeImpl =
-    SingleObjectImpl<IExternalNavigationDelegate, DetectorVolume,
-                     DetectorVolumeFiller>;
+using SingleDetectorVolumeNavigation =
+    SingleObjectImpl<IExternalNavigation, DetectorVolume, DetectorVolumeFiller>;
 
 using SingleIndex = std::size_t;
 
@@ -72,9 +71,9 @@ struct DetectorVolumesCollection {
 /// 1-dimensional grid, e.g. a z-spaced array, or an r-spaced array
 /// of volumes.
 ///
-struct BoundVolumesGrid1Impl : public IExternalNavigationDelegate {
+struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   using IndexedUpdater =
-      IndexedUpdaterImpl<IExternalNavigationDelegate, VariableBoundIndexGrid1,
+      IndexedUpdaterImpl<IExternalNavigation, VariableBoundIndexGrid1,
                          DetectorVolumesCollection, DetectorVolumeFiller>;
   // The indexed updator
   IndexedUpdater indexedUpdater;
@@ -85,7 +84,7 @@ struct BoundVolumesGrid1Impl : public IExternalNavigationDelegate {
   /// @param bValue the binning value
   /// @param cVolumes the contained volumes
   /// @param bTransform is the optional transform
-  BoundVolumesGrid1Impl(
+  BoundVolumesGrid1Navigation(
       const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
@@ -105,7 +104,7 @@ struct BoundVolumesGrid1Impl : public IExternalNavigationDelegate {
     }
   }
   // Deleted default constructor
-  BoundVolumesGrid1Impl() = delete;
+  BoundVolumesGrid1Navigation() = delete;
 
   /// @brief This updator relies on an 1D single index grid
   ///

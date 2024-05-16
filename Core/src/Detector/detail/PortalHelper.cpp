@@ -10,7 +10,7 @@
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/PortalNavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -22,12 +22,12 @@ void Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
     Portal& portal, const std::shared_ptr<DetectorVolume>& volume,
     const Direction& direction) {
   // Create a shared link instance & delegate
-  auto volumeLinkImpl =
-      std::make_unique<const Acts::Experimental::SingleDetectorVolumeImpl>(
-          volume.get());
+  auto volumeLinkImpl = std::make_unique<
+      const Acts::Experimental::SingleDetectorVolumeNavigation>(volume.get());
   Acts::Experimental::ExternalNavigationDelegate volumeLink;
-  volumeLink.connect<&Acts::Experimental::SingleDetectorVolumeImpl::update>(
-      std::move(volumeLinkImpl));
+  volumeLink
+      .connect<&Acts::Experimental::SingleDetectorVolumeNavigation::update>(
+          std::move(volumeLinkImpl));
   // Update the volume link and the store
   portal.assignExternalNavigationDelegate(direction, std::move(volumeLink),
                                           {volume});
@@ -41,11 +41,12 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
   // Check if the boundaries need a transform
   const auto pTransform = portal.surface().transform(gctx);
   // Creating a link to the mother
-  auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
+  auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
       boundaries, binning, unpack_shared_const_vector(volumes),
       pTransform.inverse());
   ExternalNavigationDelegate dVolumeUpdater;
-  dVolumeUpdater.connect<&BoundVolumesGrid1Impl::update>(std::move(volumes1D));
+  dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
+      std::move(volumes1D));
   portal.assignExternalNavigationDelegate(direction, std::move(dVolumeUpdater),
                                           volumes);
 }
@@ -63,10 +64,10 @@ void Acts::Experimental::detail::PortalHelper::
     // Check if the boundaries need a transform
     const auto pTransform = p->surface().transform(gctx);
     // Creating a link to the mother
-    auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
+    auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
         boundaries, binning, cVolumes, pTransform.inverse());
     ExternalNavigationDelegate dVolumeUpdater;
-    dVolumeUpdater.connect<&BoundVolumesGrid1Impl::update>(
+    dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
         std::move(volumes1D));
     p->assignExternalNavigationDelegate(dir, std::move(dVolumeUpdater),
                                         volumes);

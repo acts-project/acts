@@ -94,7 +94,7 @@ Acts::Experimental::InternalNavigationDelegate createUpdater(
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
-      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesNavigation>
       isg{std::move(lSurfaces),
           std::move(assignToAll),
           {binning.binValue},
@@ -137,7 +137,7 @@ Acts::Experimental::InternalNavigationDelegate createUpdater(
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
-      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesNavigation>
       isg{lSurfaces,
           assignToAll,
           {aBinning.binValue, bBinning.binValue},

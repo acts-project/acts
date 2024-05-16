@@ -12,7 +12,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
@@ -193,9 +193,9 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
-      GridType, Experimental::IndexedSurfacesImpl>;
-  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsNavigation<
+      GridType, Experimental::IndexedSurfacesNavigation>;
+  using SubDelegateType = Experimental::IndexedSurfacesNavigation<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();

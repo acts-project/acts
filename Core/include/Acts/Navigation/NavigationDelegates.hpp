@@ -20,9 +20,9 @@ namespace Experimental {
 
 /// Base class for navigation delegates that handle internal
 /// volume navigation updates
-class IInternalNavigationDelegate {
+class IInternalNavigation {
  public:
-  virtual ~IInternalNavigationDelegate() = default;
+  virtual ~IInternalNavigation() = default;
 };
 
 /// Declare an updator for the local navigation, i.e. the
@@ -41,13 +41,13 @@ class IInternalNavigationDelegate {
 /// Memory  managed navigation state updator
 using InternalNavigationDelegate =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   IInternalNavigationDelegate>;
+                   IInternalNavigation>;
 
 /// Base class for external navigation delegates that handle external
 /// volume navigation updates
-class IExternalNavigationDelegate {
+class IExternalNavigation {
  public:
-  virtual ~IExternalNavigationDelegate() = default;
+  virtual ~IExternalNavigation() = default;
 };
 
 /// Declare a Detctor Volume finding or switching delegate
@@ -58,7 +58,7 @@ class IExternalNavigationDelegate {
 /// @return the new DetectorVolume into which one changes at this switch
 using ExternalNavigationDelegate =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   IExternalNavigationDelegate>;
+                   IExternalNavigation>;
 
 }  // namespace Experimental
 }  // namespace Acts

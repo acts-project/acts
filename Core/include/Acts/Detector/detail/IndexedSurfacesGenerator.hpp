@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
@@ -81,11 +81,11 @@ struct IndexedSurfacesGenerator {
     filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
     // The portal delegate
-    AllPortalsImpl allPortals;
+    AllPortalsNavigation allPortals;
 
     // The chained delegate: indexed surfaces and all portals
     using DelegateType =
-        IndexedSurfacesAllPortalsImpl<decltype(grid), indexed_updator>;
+        IndexedSurfacesAllPortalsNavigation<decltype(grid), indexed_updator>;
     auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
         std::tie(allPortals, indexedSurfaces));
 

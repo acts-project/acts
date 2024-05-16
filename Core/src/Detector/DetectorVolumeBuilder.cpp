@@ -15,7 +15,7 @@
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/InternalNavigationDelegates.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <iterator>
