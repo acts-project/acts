@@ -286,17 +286,17 @@ class ConstPodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
+  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType index) const {
-    return ConstTrackStateProxy::Measurement<measdim>{
-        m_collection->at(index).getData().measurement.data()};
+    return ConstTrackStateProxy::Calibrated<measdim>{
+        m_collection->at(index).getData().calibrated.data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType index) const {
-    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
-        m_collection->at(index).getData().measurementCovariance.data()};
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
+    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+        m_collection->at(index).getData().calibratedCovariance.data()};
   }
 
   IndexType size_impl() const { return m_collection->size(); }
@@ -392,30 +392,30 @@ class MutablePodioTrackStateContainer final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
+  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType index) const {
-    return ConstTrackStateProxy::Measurement<measdim>{
-        m_collection->at(index).getData().measurement.data()};
+    return ConstTrackStateProxy::Calibrated<measdim>{
+        m_collection->at(index).getData().calibrated.data()};
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::Measurement<measdim> measurement_impl(IndexType index) {
-    return TrackStateProxy::Measurement<measdim>{
-        m_collection->at(index).data().measurement.data()};
+  TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType index) {
+    return TrackStateProxy::Calibrated<measdim>{
+        m_collection->at(index).data().calibrated.data()};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType index) const {
-    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
-        m_collection->at(index).getData().measurementCovariance.data()};
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
+    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
+        m_collection->at(index).getData().calibratedCovariance.data()};
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
+  TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType index) {
-    return TrackStateProxy::MeasurementCovariance<measdim>{
-        m_collection->at(index).data().measurementCovariance.data()};
+    return TrackStateProxy::CalibratedCovariance<measdim>{
+        m_collection->at(index).data().calibratedCovariance.data()};
   }
 
   IndexType size_impl() const { return m_collection->size(); }
