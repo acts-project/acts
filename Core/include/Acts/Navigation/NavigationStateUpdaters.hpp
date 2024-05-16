@@ -66,7 +66,7 @@ inline void updateCandidates(const GeometryContext& gctx,
 /// @tparam object_type the type of the object to be filled
 /// @tparam filler_type is the helper to fill the object into nState
 template <typename object_type, typename filler_type>
-class SingleObjectImpl : public INavigationDelegate {
+class SingleObjectImpl : public IInternalNavigationDelegate {
  public:
   /// Convenience constructor
   /// @param so the single object
@@ -94,7 +94,7 @@ class SingleObjectImpl : public INavigationDelegate {
 /// @tparam extractor_type the helper to extract the objects from
 /// @tparam filler_type is the helper to fill the object into nState
 template <typename extractor_type, typename filler_type>
-class StaticUpdaterImpl : public INavigationDelegate {
+class StaticUpdaterImpl : public IInternalNavigationDelegate {
  public:
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -120,8 +120,9 @@ class StaticUpdaterImpl : public INavigationDelegate {
 /// @tparam grid_t is the type of the grid
 /// @tparam extractor_type is the helper to extract the object
 /// @tparam filler_type is the helper to fill the object into the nState
-template <typename grid_t, typename extractor_type, typename filler_type>
-class IndexedUpdaterImpl : public INavigationDelegate {
+template <typename delegate_type, typename grid_t, typename extractor_type,
+          typename filler_type>
+class IndexedUpdaterImpl : public delegate_type {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -173,8 +174,8 @@ class IndexedUpdaterImpl : public INavigationDelegate {
 /// payload extractor, these have to be provided by a tuple
 ///
 /// @tparam updators_t the updators that will be called in sequence
-template <typename... updators_t>
-class ChainedUpdaterImpl : public INavigationDelegate {
+template <typename delegate_type, typename... updators_t>
+class ChainedUpdaterImpl : public delegate_type {
  public:
   /// The stored updators
   std::tuple<updators_t...> updators;

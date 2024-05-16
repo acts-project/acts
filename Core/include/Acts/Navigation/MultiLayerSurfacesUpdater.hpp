@@ -20,7 +20,7 @@
 namespace Acts::Experimental {
 
 template <typename grid_t, typename path_generator>
-class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
+class MultiLayerSurfacesUpdaterImpl : public IInternalNavigationDelegate {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;

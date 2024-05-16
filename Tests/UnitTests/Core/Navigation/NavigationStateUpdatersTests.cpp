@@ -237,10 +237,9 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
 
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
-  auto allPortalsAllSurfaces =
-      Acts::Experimental::ChainedUpdaterImpl<AllPortalsProvider,
-                                             AllSurfacesProvider>(
-          std::tie(allPortals, allSurfaces));
+  auto allPortalsAllSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+      Acts::Experimental::IInternalNavigationDelegate, AllPortalsProvider,
+      AllSurfacesProvider>(std::tie(allPortals, allSurfaces));
 
   allPortalsAllSurfaces.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
@@ -259,14 +258,14 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
   AllPortalsProvider allPortals;
   Acts::MultiGrid1D grid;
   using Grid1DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
-      decltype(grid), Acts::Experimental::IndexedSurfacesExtractor,
+      Acts::Experimental::IInternalNavigationDelegate, decltype(grid),
+      Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::binR});
 
-  auto allPortalsGrid1DSurfaces =
-      Acts::Experimental::ChainedUpdaterImpl<AllPortalsProvider,
-                                             Grid1DSurfacesProvider>(
-          std::tie(allPortals, grid1DSurfaces));
+  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+      Acts::Experimental::IInternalNavigationDelegate, AllPortalsProvider,
+      Grid1DSurfacesProvider>(std::tie(allPortals, grid1DSurfaces));
 
   allPortalsGrid1DSurfaces.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 4u);
@@ -285,15 +284,15 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
   AllPortalsProvider allPortals;
   Acts::MultiGrid2D grid;
   using Grid2DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
-      decltype(grid), Acts::Experimental::IndexedSurfacesExtractor,
+      Acts::Experimental::IInternalNavigationDelegate, decltype(grid),
+      Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid2DSurfaces =
       Grid2DSurfacesProvider(std::move(grid), {Acts::binR, Acts::binZ});
 
-  auto allPortalsGrid2DSurfaces =
-      Acts::Experimental::ChainedUpdaterImpl<AllPortalsProvider,
-                                             Grid2DSurfacesProvider>(
-          std::tie(allPortals, grid2DSurfaces));
+  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+      Acts::Experimental::IInternalNavigationDelegate, AllPortalsProvider,
+      Grid2DSurfacesProvider>(std::tie(allPortals, grid2DSurfaces));
 
   allPortalsGrid2DSurfaces.update(tContext, nState);
   BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 3u);

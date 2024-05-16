@@ -18,13 +18,11 @@ class Surface;
 
 namespace Experimental {
 
-/// Base class for navigation delegates
-/// This allows to define a common Owning delegate
-/// schema, which in turn allows for accessing the holder
-/// of the delegate implementation for e.g. I/O or display
-class INavigationDelegate {
+/// Base class for navigation delegates that handle internal
+/// volume navigation updates
+class IInternalNavigationDelegate {
  public:
-  virtual ~INavigationDelegate() = default;
+  virtual ~IInternalNavigationDelegate() = default;
 };
 
 /// Declare an updator for the local navigation, i.e. the
@@ -43,7 +41,14 @@ class INavigationDelegate {
 /// Memory  managed navigation state updator
 using SurfaceCandidatesUpdater =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   INavigationDelegate>;
+                   IInternalNavigationDelegate>;
+
+/// Base class for external navigation delegates that handle external
+/// volume navigation updates
+class IExternalNavigationDelegate {
+ public:
+  virtual ~IExternalNavigationDelegate() = default;
+};
 
 /// Declare a Detctor Volume finding or switching delegate
 ///
@@ -53,7 +58,7 @@ using SurfaceCandidatesUpdater =
 /// @return the new DetectorVolume into which one changes at this switch
 using DetectorVolumeUpdater =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   INavigationDelegate>;
+                   IExternalNavigationDelegate>;
 
 }  // namespace Experimental
 }  // namespace Acts

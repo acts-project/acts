@@ -34,7 +34,7 @@
 namespace Acts::Experimental {
 
 /// a simple link to volume struct
-class LinkToVolumeImpl : public INavigationDelegate {
+class LinkToVolumeImpl : public IExternalNavigationDelegate {
  public:
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
 

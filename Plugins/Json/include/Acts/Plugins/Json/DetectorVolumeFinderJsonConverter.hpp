@@ -10,6 +10,7 @@
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -34,8 +35,9 @@ void convert(nlohmann::json& jIndexedVolumes,
   using GridType = typename instance_type::template grid_type<std::size_t>;
   // Defining a Delegate type
   using DelegateType = Experimental::IndexedUpdaterImpl<
-      GridType, Acts::Experimental::IndexedDetectorVolumeExtractor,
-      Acts::Experimental::DetectorVolumeFiller>;
+      Experimental::IExternalNavigationDelegate, GridType,
+      Experimental::IndexedDetectorVolumeExtractor,
+      Experimental::DetectorVolumeFiller>;
   // Get the instance
   const auto* instance = delegate.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);

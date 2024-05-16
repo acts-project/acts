@@ -10,6 +10,7 @@
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -39,7 +40,8 @@ struct IndexedVolumesGenerator {
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
     using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
-        grid_type, Acts::Experimental::IndexedDetectorVolumeExtractor,
+        Acts::Experimental::IExternalNavigationDelegate, grid_type,
+        Acts::Experimental::IndexedDetectorVolumeExtractor,
         Acts::Experimental::DetectorVolumeFiller>;
 
     auto indexedDetectorVolumeImpl =
@@ -56,7 +58,7 @@ struct IndexedVolumesGenerator {
 
 }  // namespace
 
-Acts::Experimental::SurfaceCandidatesUpdater
+Acts::Experimental::DetectorVolumeUpdater
 Acts::DetectorVolumeFinderJsonConverter::fromJson(
     const nlohmann::json& jVolumeFinder) {
   // The return object

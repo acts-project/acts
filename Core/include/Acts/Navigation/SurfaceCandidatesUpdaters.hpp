@@ -24,7 +24,7 @@
 
 namespace Acts::Experimental {
 
-struct AllPortalsImpl : public INavigationDelegate {
+struct AllPortalsImpl : public IInternalNavigationDelegate {
   /// A ordered portal provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -56,7 +56,7 @@ struct AllPortalsImpl : public INavigationDelegate {
   }
 };
 
-struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
+struct AllPortalsAndSurfacesImpl : public IInternalNavigationDelegate {
   /// An ordered list of portals and surfaces provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -118,7 +118,7 @@ inline static SurfaceCandidatesUpdater tryAllPortalsAndSurfaces() {
 /// checking, this could be e.g. support surfaces for layer structures,
 /// e.g.
 ///
-struct AdditionalSurfacesImpl : public INavigationDelegate {
+struct AdditionalSurfacesImpl : public IInternalNavigationDelegate {
   /// The volumes held by this collection
   std::vector<const Surface*> surfaces = {};
 
@@ -138,7 +138,8 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
 /// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
 using IndexedSurfacesImpl =
-    IndexedUpdaterImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
+    IndexedUpdaterImpl<IInternalNavigationDelegate, grid_type,
+                       IndexedSurfacesExtractor, SurfacesFiller>;
 
 /// @brief  An indexed multi layer surface implementation access
 ///
@@ -152,6 +153,7 @@ using MultiLayerSurfacesImpl =
 ///@tparam inexed_updator is the updator for the indexed surfaces
 template <typename grid_type, template <typename> class indexed_updator>
 using IndexedSurfacesAllPortalsImpl =
-    ChainedUpdaterImpl<AllPortalsImpl, indexed_updator<grid_type>>;
+    ChainedUpdaterImpl<IInternalNavigationDelegate, AllPortalsImpl,
+                       indexed_updator<grid_type>>;
 
 }  // namespace Acts::Experimental
