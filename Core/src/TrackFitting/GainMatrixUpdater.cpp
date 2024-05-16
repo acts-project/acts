@@ -33,9 +33,9 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     using ParametersVector = ActsVector<kMeasurementSize>;
     using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
-    typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
+    typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
         trackState.calibrated};
-    typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+    typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
         calibratedCovariance{trackState.calibratedCovariance};
 
     ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);

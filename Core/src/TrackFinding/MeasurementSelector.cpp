@@ -39,10 +39,10 @@ double MeasurementSelector::calculateChi2(
        &predictedCovariance, &projector](auto N) -> double {
         constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
-        typename TrackStateTraits<kMeasurementSize, true>::Measurement
+        typename TrackStateTraits<kMeasurementSize, true>::Calibrated
             calibrated{fullCalibrated};
 
-        typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+        typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
             calibratedCovariance{fullCalibratedCovariance};
 
         using ParametersVector = ActsVector<kMeasurementSize>;

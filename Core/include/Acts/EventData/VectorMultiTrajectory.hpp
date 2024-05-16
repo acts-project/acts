@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -393,30 +393,30 @@ class VectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::Measurement<measdim> measurement_impl(IndexType istate) {
+  TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType istate) {
     IndexType offset = m_measOffset[istate];
-    return TrackStateProxy::Measurement<measdim>{&m_meas[offset]};
+    return TrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
+  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
+  TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType istate) {
     IndexType offset = m_measCovOffset[istate];
-    return TrackStateProxy::MeasurementCovariance<measdim>{&m_measCov[offset]};
+    return TrackStateProxy::CalibratedCovariance<measdim>{&m_measCov[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType istate) const {
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
+    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -438,9 +438,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
@@ -547,17 +545,17 @@ class ConstVectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
+  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType istate) const {
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
+    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -565,9 +563,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
