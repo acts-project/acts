@@ -20,7 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigationDelegates.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -63,7 +63,7 @@ class MultiWireInternalStructureBuilder
       ACTS_DEBUG(m_cfg.auxiliary);
     }
 
-    Acts::Experimental::DetectorVolumeUpdater internalVolumeUpdater =
+    Acts::Experimental::ExternalNavigationDelegate internalVolumeUpdater =
         Acts::Experimental::tryNoVolumes();
     // Create the indexed surfaces
     auto internalSurfaces = m_cfg.iSurfaces;

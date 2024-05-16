@@ -55,7 +55,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::
   }
 }
 
-Acts::Experimental::DetectorVolumeUpdater
+Acts::Experimental::ExternalNavigationDelegate
 Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes) const {
@@ -85,7 +85,7 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
                                                          casts);
 
   // Return the root volume finder
-  DetectorVolumeUpdater rootVolumeFinder;
+  ExternalNavigationDelegate rootVolumeFinder;
   rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumeImpl));
   return rootVolumeFinder;

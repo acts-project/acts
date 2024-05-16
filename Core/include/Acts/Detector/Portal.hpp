@@ -51,7 +51,8 @@ class Portal {
   Portal(std::shared_ptr<RegularSurface> surface);
 
   /// The volume links forward/backward with respect to the surface normal
-  using DetectorVolumeUpdaters = std::array<DetectorVolumeUpdater, 2u>;
+  using ExternalNavigationDelegates =
+      std::array<ExternalNavigationDelegate, 2u>;
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
@@ -128,8 +129,8 @@ class Portal {
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdater(
-      Direction dir, DetectorVolumeUpdater dVolumeUpdater,
+  void assignExternalNavigationDelegate(
+      Direction dir, ExternalNavigationDelegate dVolumeUpdater,
       std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
@@ -139,12 +140,13 @@ class Portal {
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdater(DetectorVolumeUpdater dVolumeUpdater,
-                                   std::vector<std::shared_ptr<DetectorVolume>>
-                                       attachedVolumes) noexcept(false);
+  void assignExternalNavigationDelegate(
+      ExternalNavigationDelegate dVolumeUpdater,
+      std::vector<std::shared_ptr<DetectorVolume>>
+          attachedVolumes) noexcept(false);
 
   // Access to the portal targets: opposite/along normal vector
-  const DetectorVolumeUpdaters& detectorVolumeUpdaters() const;
+  const ExternalNavigationDelegates& detectorVolumeUpdaters() const;
 
   // Access to the attached volumes - non-const access
   AttachedDetectorVolumes& attachedDetectorVolumes();
@@ -154,8 +156,8 @@ class Portal {
   std::shared_ptr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  DetectorVolumeUpdaters m_volumeUpdaters = {DetectorVolumeUpdater{},
-                                             DetectorVolumeUpdater{}};
+  ExternalNavigationDelegates m_volumeUpdaters = {ExternalNavigationDelegate{},
+                                                  ExternalNavigationDelegate{}};
 
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;

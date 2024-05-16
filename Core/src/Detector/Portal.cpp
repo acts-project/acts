@@ -33,7 +33,8 @@ Acts::RegularSurface& Portal::surface() {
   return *m_surface.get();
 }
 
-const Portal::DetectorVolumeUpdaters& Portal::detectorVolumeUpdaters() const {
+const Portal::ExternalNavigationDelegates& Portal::detectorVolumeUpdaters()
+    const {
   return m_volumeUpdaters;
 }
 
@@ -120,16 +121,16 @@ std::shared_ptr<Portal> Portal::fuse(std::shared_ptr<Portal>& aPortal,
   return fused;
 }
 
-void Portal::assignDetectorVolumeUpdater(
-    Direction dir, DetectorVolumeUpdater dVolumeUpdater,
+void Portal::assignExternalNavigationDelegate(
+    Direction dir, ExternalNavigationDelegate dVolumeUpdater,
     std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes) {
   auto idx = dir.index();
   m_volumeUpdaters[idx] = std::move(dVolumeUpdater);
   m_attachedVolumes[idx] = std::move(attachedVolumes);
 }
 
-void Portal::assignDetectorVolumeUpdater(
-    DetectorVolumeUpdater dVolumeUpdater,
+void Portal::assignExternalNavigationDelegate(
+    ExternalNavigationDelegate dVolumeUpdater,
     std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes) {
   // Check and throw exceptions
   if (!m_volumeUpdaters[0u].connected() && !m_volumeUpdaters[1u].connected()) {

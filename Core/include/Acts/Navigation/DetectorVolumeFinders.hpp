@@ -39,7 +39,7 @@ struct RootVolumeFinder : public IExternalNavigationDelegate {
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
         nState.currentVolume = v;
-        v->detectorVolumeUpdater()(gctx, nState);
+        v->externalNavigation()(gctx, nState);
         return;
       }
     }
@@ -59,7 +59,7 @@ struct TrialAndErrorVolumeFinder : public IExternalNavigationDelegate {
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
         nState.currentVolume = v;
-        v->detectorVolumeUpdater()(gctx, nState);
+        v->externalNavigation()(gctx, nState);
         return;
       }
     }
@@ -67,24 +67,24 @@ struct TrialAndErrorVolumeFinder : public IExternalNavigationDelegate {
 };
 
 /// Generate a delegate to try the root volumes
-inline static DetectorVolumeUpdater tryRootVolumes() {
-  DetectorVolumeUpdater vFinder;
+inline static ExternalNavigationDelegate tryRootVolumes() {
+  ExternalNavigationDelegate vFinder;
   vFinder.connect<&RootVolumeFinder::update>(
       std::make_unique<const RootVolumeFinder>());
   return vFinder;
 }
 
 /// Generate a delegate to try all sub volumes
-inline static DetectorVolumeUpdater tryAllSubVolumes() {
-  DetectorVolumeUpdater vFinder;
+inline static ExternalNavigationDelegate tryAllSubVolumes() {
+  ExternalNavigationDelegate vFinder;
   vFinder.connect<&TrialAndErrorVolumeFinder::update>(
       std::make_unique<const TrialAndErrorVolumeFinder>());
   return vFinder;
 }
 
 /// Generate a delegate to try no volume
-inline static DetectorVolumeUpdater tryNoVolumes() {
-  DetectorVolumeUpdater vFinder;
+inline static ExternalNavigationDelegate tryNoVolumes() {
+  ExternalNavigationDelegate vFinder;
   vFinder.connect<&NoopFinder::update>(std::make_unique<const NoopFinder>());
   return vFinder;
 }

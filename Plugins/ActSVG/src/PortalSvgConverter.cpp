@@ -9,7 +9,7 @@
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
 
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigationDelegates.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 
 namespace {
@@ -148,7 +148,7 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
         dynamic_cast<const Experimental::SingleDetectorVolumeImpl*>(instance);
     if (singleLink != nullptr) {
       pPortal._volume_links.push_back(makeProtoLink(
-          portalOptions, rPos, Vector3(sign * rDir), singleLink->dVolume));
+          portalOptions, rPos, Vector3(sign * rDir), singleLink->object()));
     }
     auto multiLink =
         dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);

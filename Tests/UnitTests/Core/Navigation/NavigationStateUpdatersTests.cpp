@@ -164,14 +164,17 @@ class MultiGrid2D {
 }  // namespace Acts
 
 using SingleVolumeUpdater = Acts::Experimental::SingleObjectImpl<
+    Acts::Experimental::IExternalNavigationDelegate,
     Acts::Experimental::DetectorVolume,
     Acts::Experimental::DetectorVolumeFiller>;
 
 using AllSurfacesProvider = Acts::Experimental::StaticUpdaterImpl<
+    Acts::Experimental::IInternalNavigationDelegate,
     Acts::Experimental::AllSurfacesExtractor,
     Acts::Experimental::SurfacesFiller>;
 
 using AllPortalsProvider = Acts::Experimental::StaticUpdaterImpl<
+    Acts::Experimental::IInternalNavigationDelegate,
     Acts::Experimental::AllPortalsExtractor, Acts::Experimental::PortalsFiller>;
 
 auto surfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
@@ -185,7 +188,7 @@ auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
-BOOST_AUTO_TEST_CASE(SingleDetectorVolumeUpdater) {
+BOOST_AUTO_TEST_CASE(SingleExternalNavigationDelegate) {
   Acts::Experimental::NavigationState nState;
 
   // Create a single object and a single object updator

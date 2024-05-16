@@ -35,33 +35,9 @@ struct EndOfWorldImpl : public IExternalNavigationDelegate {
   }
 };
 
-/// @brief Single volume updator, it sets the current navigation
-/// volume to the volume in question
-///
-struct SingleDetectorVolumeImpl : public IExternalNavigationDelegate {
-  const DetectorVolume* dVolume = nullptr;
-
-  /// @brief Allowed constructor
-  /// @param sVolume the volume to which it points
-  SingleDetectorVolumeImpl(const DetectorVolume* sVolume) noexcept(false)
-      : dVolume(sVolume) {
-    if (sVolume == nullptr) {
-      throw std::invalid_argument(
-          "DetectorVolumeUpdaters: nullptr provided, use EndOfWorld instead.");
-    }
-  }
-
-  SingleDetectorVolumeImpl() = delete;
-
-  /// @brief a null volume link - explicitly
-  ///
-  /// @note the method parameters are ignored
-  ///
-  inline void update(const GeometryContext& /*ignored*/,
-                     NavigationState& nState) const {
-    nState.currentVolume = dVolume;
-  }
-};
+using SingleDetectorVolumeImpl =
+    SingleObjectImpl<IExternalNavigationDelegate, DetectorVolume,
+                     DetectorVolumeFiller>;
 
 using SingleIndex = std::size_t;
 
@@ -120,7 +96,8 @@ struct BoundVolumesGrid1Impl : public IExternalNavigationDelegate {
 
     if (gBoundaries.size() != cVolumes.size() + 1u) {
       throw std::invalid_argument(
-          "DetectorVolumeUpdaters: mismatching boundaries and volume numbers");
+          "ExternalNavigationDelegates: mismatching boundaries and volume "
+          "numbers");
     }
     // Initialize the grid entries
     for (std::size_t ib = 1u; ib < gBoundaries.size(); ++ib) {

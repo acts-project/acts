@@ -63,14 +63,18 @@ inline void updateCandidates(const GeometryContext& gctx,
 }
 
 /// @brief  This sets a single object, e.g. single surface or single volume
+/// into the navigation state
+///
+/// @tparam delegate_type the delegate type to be used (internal or external)
 /// @tparam object_type the type of the object to be filled
 /// @tparam filler_type is the helper to fill the object into nState
-template <typename object_type, typename filler_type>
-class SingleObjectImpl : public IInternalNavigationDelegate {
+///
+template <typename delegate_type, typename object_type, typename filler_type>
+class SingleObjectImpl : public delegate_type {
  public:
   /// Convenience constructor
   /// @param so the single object
-  SingleObjectImpl(const object_type* so) : object(so) {}
+  SingleObjectImpl(const object_type* so) : m_object(so) {}
 
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -80,21 +84,25 @@ class SingleObjectImpl : public IInternalNavigationDelegate {
   /// @note this is attaching objects without intersecting nor checking
   void update([[maybe_unused]] const GeometryContext& gctx,
               NavigationState& nState) const {
-    filler_type::fill(nState, object);
+    filler_type::fill(nState, m_object);
   }
+
+  /// Const Access to the object
+  const object_type* object() const { return m_object; }
 
  private:
   // The object to be filled in
-  const object_type* object = nullptr;
+  const object_type* m_object = nullptr;
 };
 
 /// @brief This uses state less extractor and fillers to manipulate
 /// the navigation state
 ///
+/// @tparam delegate_type the delegate type to be used (internal or external)
 /// @tparam extractor_type the helper to extract the objects from
 /// @tparam filler_type is the helper to fill the object into nState
-template <typename extractor_type, typename filler_type>
-class StaticUpdaterImpl : public IInternalNavigationDelegate {
+template <typename delegate_type, typename extractor_type, typename filler_type>
+class StaticUpdaterImpl : public delegate_type {
  public:
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -165,7 +173,12 @@ class IndexedUpdaterImpl : public delegate_type {
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
 
-    updateCandidates(gctx, nState);
+    // If the delegate type is of type IInternalNavigationDelegate
+    if constexpr (std::is_base_of_v<IInternalNavigationDelegate,
+                                    delegate_type>) {
+      // Update the candidates
+      updateCandidates(gctx, nState);
+    }
   }
 };
 

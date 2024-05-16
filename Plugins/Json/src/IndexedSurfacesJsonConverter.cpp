@@ -33,9 +33,9 @@ struct IndexedSurfacesGenerator {
   /// @param bv the bin value array
   /// @param transform the transform for the indexed surfaces inmplementaiton
   ///
-  /// @return a connected SurfaceCandidatesUpdater object
+  /// @return a connected InternalNavigationDelegate object
   template <typename grid_type>
-  Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
+  Acts::Experimental::InternalNavigationDelegate createUpdater(
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
@@ -52,7 +52,7 @@ struct IndexedSurfacesGenerator {
         std::tie(allPortals, indexedSurfaces));
 
     // Create the delegate and connect it
-    Acts::Experimental::SurfaceCandidatesUpdater nStateUpdater;
+    Acts::Experimental::InternalNavigationDelegate nStateUpdater;
     nStateUpdater.connect<&DelegateType::update>(
         std::move(indexedSurfacesAllPortals));
 
@@ -62,13 +62,13 @@ struct IndexedSurfacesGenerator {
 
 }  // namespace
 
-Acts::Experimental::SurfaceCandidatesUpdater
+Acts::Experimental::InternalNavigationDelegate
 Acts::IndexedSurfacesJsonConverter::fromJson(
     const nlohmann::json& jSurfaceNavigation) {
   if (!jSurfaceNavigation.is_null()) {
     // The return object
     auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
-        Experimental::SurfaceCandidatesUpdater, IndexedSurfacesGenerator>(
+        Experimental::InternalNavigationDelegate, IndexedSurfacesGenerator>(
         jSurfaceNavigation, "IndexedSurfaces");
     if (sfCandidates.connected()) {
       return sfCandidates;

@@ -39,7 +39,7 @@ class IInternalNavigationDelegate {
 ///
 /// @note it relies on the detector volume to be set to the state
 /// Memory  managed navigation state updator
-using SurfaceCandidatesUpdater =
+using InternalNavigationDelegate =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
                    IInternalNavigationDelegate>;
 
@@ -56,7 +56,7 @@ class IExternalNavigationDelegate {
 /// @param nState [in, out] is the navigation state to be updated
 ///
 /// @return the new DetectorVolume into which one changes at this switch
-using DetectorVolumeUpdater =
+using ExternalNavigationDelegate =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
                    IExternalNavigationDelegate>;
 

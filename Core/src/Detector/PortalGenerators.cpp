@@ -11,8 +11,8 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigationDelegates.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <iterator>
@@ -37,12 +37,12 @@ Acts::Experimental::generatePortals(
     // Create a shared link instance & delegate
     auto singleLinkImpl =
         std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-    DetectorVolumeUpdater singleLink;
+    ExternalNavigationDelegate singleLink;
     singleLink.connect<&SingleDetectorVolumeImpl::update>(
         std::move(singleLinkImpl));
     // Update the volume link and the store
-    portal->assignDetectorVolumeUpdater(oSurface.direction,
-                                        std::move(singleLink), {dVolume});
+    portal->assignExternalNavigationDelegate(oSurface.direction,
+                                             std::move(singleLink), {dVolume});
     // Portal is prepared
     portals.push_back(std::move(portal));
   }
@@ -73,10 +73,10 @@ Acts::Experimental::generatePortalsUpdateInternals(
       // Creating a link to the mother
       auto motherLinkImpl =
           std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-      DetectorVolumeUpdater motherLink;
+      ExternalNavigationDelegate motherLink;
       motherLink.connect<&SingleDetectorVolumeImpl::update>(
           std::move(motherLinkImpl));
-      pPtr->assignDetectorVolumeUpdater(std::move(motherLink), {dVolume});
+      pPtr->assignExternalNavigationDelegate(std::move(motherLink), {dVolume});
     }
   }
   // Return from the standard generator

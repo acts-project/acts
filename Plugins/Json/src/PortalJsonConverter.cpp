@@ -11,7 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigationDelegates.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
@@ -119,7 +119,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
   // in order to make sure the size is adjusted
   if (singleLink != nullptr) {
     // Single link can be written out
-    std::size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
+    std::size_t vLink = findVolume(singleLink->object(), detectorVolumes);
     auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *surfaceAdjusted,
                                                       surfaceOptions);
     DetrayJsonHelper::addVolumeLink(jPortal["mask"], vLink);
@@ -254,7 +254,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
 }
 
 nlohmann::json Acts::PortalJsonConverter::toJson(
-    const Experimental::DetectorVolumeUpdater& updator,
+    const Experimental::ExternalNavigationDelegate& updator,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes) {
   nlohmann::json jLink;
   if (updator.connected()) {
@@ -264,7 +264,7 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
         dynamic_cast<const Experimental::SingleDetectorVolumeImpl*>(instance);
     // Single link detected
     if (singleLink != nullptr) {
-      auto vIndex = findVolume(singleLink->dVolume, detectorVolumes);
+      auto vIndex = findVolume(singleLink->object(), detectorVolumes);
       if (vIndex < 0) {
         throw std::runtime_error(
             "PortalJsonConverter: volume not found in the list of volumes.");
@@ -315,7 +315,7 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
   for (auto [ivl, vl] : enumerate(jLinks)) {
     if (vl.contains("single")) {
       const auto vIndex = vl["single"].get<unsigned int>();
-      Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
+      Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
           *portal, detectorVolumes[vIndex], normalDirs[ivl]);
     } else if (vl.contains("multi_1D")) {
       // Resolve the multi link 1D

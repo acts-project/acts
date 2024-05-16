@@ -13,7 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/MultiLayerSurfacesUpdater.hpp"
+#include "Acts/Navigation/MultiLayerNavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
@@ -94,9 +94,9 @@ struct AllPortalsAndSurfacesImpl : public IInternalNavigationDelegate {
 /// Generate a provider for all portals
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdater tryAllPortals() {
+inline static InternalNavigationDelegate tryAllPortals() {
   auto ap = std::make_unique<const AllPortalsImpl>();
-  SurfaceCandidatesUpdater nStateUpdater;
+  InternalNavigationDelegate nStateUpdater;
   nStateUpdater.connect<&AllPortalsImpl::update>(std::move(ap));
   return nStateUpdater;
 }
@@ -107,9 +107,9 @@ inline static SurfaceCandidatesUpdater tryAllPortals() {
 /// setup with many surfaces
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdater tryAllPortalsAndSurfaces() {
+inline static InternalNavigationDelegate tryAllPortalsAndSurfaces() {
   auto aps = std::make_unique<const AllPortalsAndSurfacesImpl>();
-  SurfaceCandidatesUpdater nStateUpdater;
+  InternalNavigationDelegate nStateUpdater;
   nStateUpdater.connect<&AllPortalsAndSurfacesImpl::update>(std::move(aps));
   return nStateUpdater;
 }
@@ -146,7 +146,7 @@ using IndexedSurfacesImpl =
 /// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
 using MultiLayerSurfacesImpl =
-    MultiLayerSurfacesUpdaterImpl<grid_type, PathGridSurfacesGenerator>;
+    MultiLayerNavigationDelegatesImpl<grid_type, PathGridSurfacesGenerator>;
 
 /// @brief An indexed surface implementation with portal access
 ///
