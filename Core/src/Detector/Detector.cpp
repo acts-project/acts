@@ -24,11 +24,11 @@ Acts::Experimental::Detector::Detector(
     ExternalNavigationDelegate detectorVolumeFinder)
     : m_name(std::move(name)),
       m_rootVolumes(std::move(rootVolumes)),
-      m_externalNavigation(std::move(detectorVolumeFinder)) {
+      m_volumeFinder(std::move(detectorVolumeFinder)) {
   if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
-  if (!m_externalNavigation.connected()) {
+  if (!m_volumeFinder.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
@@ -156,12 +156,12 @@ Acts::Experimental::Detector::volumes() const {
 
 void Acts::Experimental::Detector::updateDetectorVolumeFinder(
     ExternalNavigationDelegate detectorVolumeUpdater) {
-  m_externalNavigation = std::move(detectorVolumeUpdater);
+  m_volumeFinder = std::move(detectorVolumeUpdater);
 }
 
 const Acts::Experimental::ExternalNavigationDelegate&
 Acts::Experimental::Detector::detectorVolumeFinder() const {
-  return m_externalNavigation;
+  return m_volumeFinder;
 }
 
 const std::string& Acts::Experimental::Detector::name() const {
@@ -180,7 +180,7 @@ Acts::Experimental::Detector::getSharedPtr() const {
 
 void Acts::Experimental::Detector::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
-  m_externalNavigation(gctx, nState);
+  m_volumeFinder(gctx, nState);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -189,7 +189,7 @@ Acts::Experimental::Detector::findDetectorVolume(
   NavigationState nState;
   nState.currentDetector = this;
   nState.position = position;
-  m_externalNavigation(gctx, nState);
+  m_volumeFinder(gctx, nState);
   return nState.currentVolume;
 }
 

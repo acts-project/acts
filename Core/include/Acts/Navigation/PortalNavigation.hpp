@@ -37,7 +37,8 @@ struct EndOfWorld : public IExternalNavigation {
 
 /// Navigation to a connected single detector volumed
 using SingleDetectorVolumeNavigation =
-    SingleObjectImpl<IExternalNavigation, DetectorVolume, DetectorVolumeFiller>;
+    SingleObjectNavigation<IExternalNavigation, DetectorVolume,
+                           DetectorVolumeFiller>;
 
 using SingleIndex = std::size_t;
 

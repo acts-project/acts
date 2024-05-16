@@ -163,16 +163,16 @@ class MultiGrid2D {
 };
 }  // namespace Acts
 
-using SingleVolumeUpdater = Acts::Experimental::SingleObjectImpl<
+using SingleVolumeUpdater = Acts::Experimental::SingleObjectNavigation<
     Acts::Experimental::IExternalNavigation, Acts::Experimental::DetectorVolume,
     Acts::Experimental::DetectorVolumeFiller>;
 
-using AllSurfacesProvider = Acts::Experimental::StaticUpdaterImpl<
+using AllSurfacesProvider = Acts::Experimental::StaticAccessNavigation<
     Acts::Experimental::IInternalNavigation,
     Acts::Experimental::AllSurfacesExtractor,
     Acts::Experimental::SurfacesFiller>;
 
-using AllPortalsProvider = Acts::Experimental::StaticUpdaterImpl<
+using AllPortalsProvider = Acts::Experimental::StaticAccessNavigation<
     Acts::Experimental::IInternalNavigation,
     Acts::Experimental::AllPortalsExtractor, Acts::Experimental::PortalsFiller>;
 

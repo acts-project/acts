@@ -213,9 +213,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Update the volume finder
   ///
-  /// @param externalNavigationDelegate the new volume finder
+  /// @param detectorVolumeFinder the new volume finder
   void updateDetectorVolumeFinder(
-      ExternalNavigationDelegate detectorVolumeUpdater);
+      ExternalNavigationDelegate detectorVolumeFinder);
 
   /// Const access to the volume finder
   const ExternalNavigationDelegate& detectorVolumeFinder() const;
@@ -234,7 +234,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// A volume finder delegate
-  ExternalNavigationDelegate m_externalNavigation;
+  ExternalNavigationDelegate m_volumeFinder;
 
   /// Name/index map to find volumes by name and detect duplicates
   std::unordered_map<std::string, std::size_t> m_volumeNameIndex;
