@@ -527,12 +527,26 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                   (*std::next(secondTrackCopy.trackStatesReversed().begin()))
                       .index();
 
-              trackCandidate.parameters() = secondTrackCopy.parameters();
-              trackCandidate.covariance() = secondTrackCopy.covariance();
-              trackCandidate.setReferenceSurface(
-                  secondTrackCopy.referenceSurface().getSharedPtr());
-
               Acts::calculateTrackQuantities(trackCandidate);
+
+              // TODO This extrapolation should not be necessary
+              // TODO The CKF is targeting this surface and should communicate
+              //      the resulting parameters
+              // TODO Removing this requires changes in the core CKF
+              //      implementation
+              auto secondExtrapolationResult =
+                  Acts::extrapolateTrackToReferenceSurface(
+                      trackCandidate, *pSurface, extrapolator,
+                      extrapolationOptions, m_cfg.extrapolationStrategy,
+                      logger());
+              if (!secondExtrapolationResult.ok()) {
+                m_nFailedExtrapolation++;
+                ACTS_ERROR("Second extrapolation for seed "
+                           << iSeed << " and track " << secondTrack.index()
+                           << " failed with error "
+                           << secondExtrapolationResult.error());
+                continue;
+              }
 
               addTrack(trackCandidate);
 
