@@ -169,8 +169,8 @@ struct Fixture {
       std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
-      Acts::CombinatorialKalmanFilterOptions<TrackContainer,
-                                             TestSourceLinkAccessor::Iterator>;
+      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor::Iterator,
+                                             TrackContainer>;
 
   KalmanUpdater kfUpdater;
   KalmanSmoother kfSmoother;
@@ -288,12 +288,10 @@ struct Fixture {
   }
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
+    // leave the accessor empty, this will have to be set before running the CKF
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx,
-        Acts::SourceLinkAccessorDelegate<
-            TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
-                                                  // this will have to be set
-                                                  // before running the CKF
+        Acts::SourceLinkAccessorDelegate<TestSourceLinkAccessor::Iterator>{},
         getExtensions(), Acts::PropagatorPlainOptions());
   }
 };

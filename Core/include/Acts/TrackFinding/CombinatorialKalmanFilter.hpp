@@ -147,9 +147,9 @@ using SourceLinkAccessorDelegate =
 
 /// Combined options for the combinatorial Kalman filter.
 ///
-/// @tparam track_container_t Type of the track container
 /// @tparam source_link_iterator_t Type of the source link iterator
-template <typename track_container_t, typename source_link_iterator_t>
+/// @tparam track_container_t Type of the track container
+template <typename source_link_iterator_t, typename track_container_t>
 struct CombinatorialKalmanFilterOptions {
   using SourceLinkIterator = source_link_iterator_t;
   using SourceLinkAccessor = SourceLinkAccessorDelegate<source_link_iterator_t>;
@@ -1096,7 +1096,7 @@ class CombinatorialKalmanFilter {
             typename parameters_t = BoundTrackParameters>
   auto findTracks(const start_parameters_t& initialParameters,
                   const CombinatorialKalmanFilterOptions<
-                      track_container_t, source_link_iterator_t>& tfOptions,
+                      source_link_iterator_t, track_container_t>& tfOptions,
                   track_container_t& trackContainer) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
