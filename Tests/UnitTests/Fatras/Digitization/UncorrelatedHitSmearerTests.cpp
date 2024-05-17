@@ -323,8 +323,6 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
       123567,
       Acts::Surface::makeShared<Acts::StrawSurface>(
           Acts::Transform3(Acts::Translation3(0., 0., 0.)), radius, halfZ));
-  std::cout << "here??" << std::endl;
-  std::cin.ignore();
 
   // Get the smearing configuration from the json object
   auto digiConfig =
