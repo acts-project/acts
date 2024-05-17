@@ -377,10 +377,7 @@ class CombinatorialKalmanFilter {
           result.pathLimitReached(state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached(state, stepper, navigator, logger());
-      const bool isNavigationBreak =
-          navigator.navigationBreak(state.navigation);
-      if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
-          isNavigationBreak) {
+      if (isEndOfWorldReached || isPathLimitReached || isTargetReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
         } else if (isPathLimitReached) {
@@ -403,10 +400,6 @@ class CombinatorialKalmanFilter {
           }
 
           stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-        } else if (isNavigationBreak) {
-          ACTS_WARNING(
-              "Navigation break issued - stopping. This is likely a navigation "
-              "error");
         }
 
         if (!result.activeTips.empty()) {
