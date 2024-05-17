@@ -296,7 +296,6 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
 }
 
 BOOST_AUTO_TEST_CASE(GaussianSmearing) {
-
   nlohmann::json djson = nlohmann::json::parse(R"(
     {
     "acts-geometry-hierarchy-map" : {
@@ -324,13 +323,15 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
       123567,
       Acts::Surface::makeShared<Acts::StrawSurface>(
           Acts::Transform3(Acts::Translation3(0., 0., 0.)), radius, halfZ));
-  std::cout<<"here??"<<std::endl;
+  std::cout << "here??" << std::endl;
   std::cin.ignore();
 
   // Get the smearing configuration from the json object
-  auto digiConfig = ActsExamples::DigiConfigConverter("digitization-configuration").fromJson(djson);
+  auto digiConfig =
+      ActsExamples::DigiConfigConverter("digitization-configuration")
+          .fromJson(djson);
   ActsFatras::BoundParametersSmearer<ActsExamples::RandomEngine, 1u> s;
-  std::cout<<digiConfig.size()<<std::endl;
+  std::cout << digiConfig.size() << std::endl;
   for (auto& el : digiConfig) {
     for (auto& smearing : el.smearingDigiConfig) {
       std::fill(std::begin(s.indices), std::end(s.indices),
