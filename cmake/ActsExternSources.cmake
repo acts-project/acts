@@ -38,10 +38,6 @@ set( ACTS_NLOHMANNJSON_SOURCE
    "URL;https://github.com/nlohmann/json/archive/refs/tags/v3.10.5.tar.gz;URL_HASH;SHA1=8969f5ad1a422e01f040ff48dcae9c0e6ad0811d" CACHE STRING "Source to take nlohmann_json from")
 mark_as_advanced( ACTS_NLOHMANN_JSON_SOURCE )
 
-set( ACTS_THRUST_SOURCE
-   "GIT_REPOSITORY;https://github.com/NVIDIA/thrust.git;GIT_TAG;v2.1.0" CACHE STRING "Source to take thrust from")
-mark_as_advanced( ACTS_THRUST_SOURCE )
-
 string(REPLACE "." "_" _acts_boost_recommended_version_ ${_acts_boost_recommended_version})
 set( ACTS_BOOST_SOURCE
    "URL;https://boostorg.jfrog.io/artifactory/main/release/${_acts_boost_recommended_version}/source/boost_${_acts_boost_recommended_version_}.tar.gz" CACHE STRING "Source to take boost from")
