@@ -371,12 +371,14 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      bool isEndOfWorldReached =
+      const bool isEndOfWorldReached =
           endOfWorldReached(state, stepper, navigator, logger());
-      bool isPathLimitReached =
+      const bool isPathLimitReached =
           result.pathLimitReached(state, stepper, navigator, logger());
-      bool isTargetReached = targetReached(state, stepper, navigator, logger());
-      bool isNavigationBreak = navigator.navigationBreak(state.navigation);
+      const bool isTargetReached =
+          targetReached(state, stepper, navigator, logger());
+      const bool isNavigationBreak =
+          navigator.navigationBreak(state.navigation);
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
           isNavigationBreak) {
         if (isEndOfWorldReached) {
