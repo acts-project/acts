@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/detail/covariance_helper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -29,6 +28,10 @@ namespace Acts {
 /// linearization.
 class GainMatrixSmoother {
  public:
+  /// Whether to check the covariance matrices if they are semi-positive and if
+  /// not attempt to correct them.
+  bool doCovCheckAndAttemptFix = false;
+
   /// Run the Kalman smoothing for one trajectory.
   ///
   /// @param[in,out] trajectory The trajectory to be smoothed
