@@ -95,7 +95,7 @@ struct Fixture {
         gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
             3)),
         pid(ActsFatras::Barcode().setVertexPrimary(12).setParticle(23)),
-        surface(surf) {
+        surface(std::move(surf)) {
     using namespace Acts::UnitLiterals;
     using Acts::VectorHelpers::makeVector4;
 
@@ -186,9 +186,6 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
   // smearing does not do anything
   {
     s.smearFunctions.fill(SterileSmearer{});
-    std::cout << f.hit.fourPosition().x() << std::endl;
-    std::cout << f.hit.fourPosition().y() << std::endl;
-    std::cout << f.hit.fourPosition().z() << std::endl;
     auto ret = s(f.rng, f.hit, *f.surface, f.geoCtx);
     BOOST_CHECK(ret.ok());
     auto [par, cov] = ret.value();
@@ -299,19 +296,42 @@ BOOST_AUTO_TEST_CASE(FreeAll) {
 }
 
 BOOST_AUTO_TEST_CASE(GaussianSmearing) {
+
+  nlohmann::json djson = nlohmann::json::parse(R"(
+    {
+    "acts-geometry-hierarchy-map" : {
+    "format-version" : 0,
+    "value-identifier" : "digitization-configuration"
+    },
+    
+  "entries"
+      : [
+        {
+           "volume" : 1,
+           "value" : {
+            "smearing" : [
+              {"index" : 0, "mean" : 0.0, "stddev" : 0.05, "type" : "Gauss", "forcePositiveValues" : true}
+             
+             
+            ]
+          }
+        }
+      ]
+})");
   double radius = 5.;
   double halfZ = 8.;
   Fixture<ActsExamples::RandomEngine> f(
       123567,
       Acts::Surface::makeShared<Acts::StrawSurface>(
           Acts::Transform3(Acts::Translation3(0., 0., 0.)), radius, halfZ));
+  std::cout<<"here??"<<std::endl;
+  std::cin.ignore();
 
-  // Get the smearing configuration from the json file
-  auto inputConfig = ActsExamples::readDigiConfigFromJson(
-      "../../acts/Examples/Algorithms/Digitization/share/"
-      "smearing-config-drift-circle.json");
+  // Get the smearing configuration from the json object
+  auto digiConfig = ActsExamples::DigiConfigConverter("digitization-configuration").fromJson(djson);
   ActsFatras::BoundParametersSmearer<ActsExamples::RandomEngine, 1u> s;
-  for (auto& el : inputConfig) {
+  std::cout<<digiConfig.size()<<std::endl;
+  for (auto& el : digiConfig) {
     for (auto& smearing : el.smearingDigiConfig) {
       std::fill(std::begin(s.indices), std::end(s.indices),
                 static_cast<Acts::BoundIndices>(smearing.index));
