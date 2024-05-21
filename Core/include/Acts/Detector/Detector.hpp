@@ -40,21 +40,21 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @param name the detecor name
   /// @param rootVolumes the volumes contained by this detector
-  /// @param detectorVolumeUpdater is a Delegate to find the associated volume
+  /// @param detectorVolumeFinder is a Delegate to find the associated volume
   ///
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
   Detector(std::string name,
            std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-           DetectorVolumeUpdater detectorVolumeUpdater) noexcept(false);
+           ExternalNavigationDelegate detectorVolumeFinder) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
   static std::shared_ptr<Detector> makeShared(
       std::string name,
       std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-      DetectorVolumeUpdater detectorVolumeUpdater);
+      ExternalNavigationDelegate detectorVolumeFinder);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -213,11 +213,12 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Update the volume finder
   ///
-  /// @param detectorVolumeUpdater the new volume finder
-  void updateDetectorVolumeFinder(DetectorVolumeUpdater detectorVolumeUpdater);
+  /// @param detectorVolumeFinder the new volume finder
+  void updateDetectorVolumeFinder(
+      ExternalNavigationDelegate detectorVolumeFinder);
 
   /// Const access to the volume finder
-  const DetectorVolumeUpdater& detectorVolumeFinder() const;
+  const ExternalNavigationDelegate& detectorVolumeFinder() const;
 
   /// Return the name of the detector
   const std::string& name() const;
@@ -233,7 +234,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// A volume finder delegate
-  DetectorVolumeUpdater m_detectorVolumeUpdater;
+  ExternalNavigationDelegate m_volumeFinder;
 
   /// Name/index map to find volumes by name and detect duplicates
   std::unordered_map<std::string, std::size_t> m_volumeNameIndex;
