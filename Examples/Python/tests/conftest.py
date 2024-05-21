@@ -349,7 +349,7 @@ def fatras(ptcl_gun, trk_geo, rng):
                     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
                 )
             ),
-            trackingGeometry=trk_geo,
+            surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
             randomNumbers=rng,
             inputSimHits=simAlg.config.outputSimHits,
         )

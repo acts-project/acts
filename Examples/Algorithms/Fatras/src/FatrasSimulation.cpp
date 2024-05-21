@@ -122,12 +122,18 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
                     Acts::Logging::Level lvl)
       : simulation(
             ChargedSimulation(
-                ChargedPropagator(ChargedStepper(cfg.magneticField),
-                                  Acts::Navigator{{cfg.trackingGeometry}}),
+                ChargedPropagator(
+                    ChargedStepper(cfg.magneticField),
+                    Acts::Navigator({cfg.trackingGeometry},
+                                    Acts::getDefaultLogger("SimNav", lvl)),
+                    Acts::getDefaultLogger("SimProp", lvl)),
                 Acts::getDefaultLogger("Simulation", lvl)),
             NeutralSimulation(
-                NeutralPropagator(NeutralStepper(),
-                                  Acts::Navigator{{cfg.trackingGeometry}}),
+                NeutralPropagator(
+                    NeutralStepper(),
+                    Acts::Navigator({cfg.trackingGeometry},
+                                    Acts::getDefaultLogger("SimNav", lvl)),
+                    Acts::getDefaultLogger("SimProp", lvl)),
                 Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
