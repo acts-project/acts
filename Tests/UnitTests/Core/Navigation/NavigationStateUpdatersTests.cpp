@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
 
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
-  auto allPortalsAllSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsAllSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       AllSurfacesProvider>(std::tie(allPortals, allSurfaces));
 
@@ -259,13 +259,13 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid1D grid;
-  using Grid1DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
+  using Grid1DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::binR});
 
-  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       Grid1DSurfacesProvider>(std::tie(allPortals, grid1DSurfaces));
 
@@ -285,14 +285,14 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid2D grid;
-  using Grid2DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
+  using Grid2DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid2DSurfaces =
       Grid2DSurfacesProvider(std::move(grid), {Acts::binR, Acts::binZ});
 
-  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       Grid2DSurfacesProvider>(std::tie(allPortals, grid2DSurfaces));
 
