@@ -11,8 +11,8 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <iterator>
@@ -36,13 +36,13 @@ Acts::Experimental::generatePortals(
     auto portal = std::make_shared<Portal>(oSurface.surface);
     // Create a shared link instance & delegate
     auto singleLinkImpl =
-        std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-    DetectorVolumeUpdater singleLink;
-    singleLink.connect<&SingleDetectorVolumeImpl::update>(
+        std::make_unique<const SingleDetectorVolumeNavigation>(dVolume.get());
+    ExternalNavigationDelegate singleLink;
+    singleLink.connect<&SingleDetectorVolumeNavigation::update>(
         std::move(singleLinkImpl));
     // Update the volume link and the store
-    portal->assignDetectorVolumeUpdater(oSurface.direction,
-                                        std::move(singleLink), {dVolume});
+    portal->assignPortalNavigation(oSurface.direction, std::move(singleLink),
+                                   {dVolume});
     // Portal is prepared
     portals.push_back(std::move(portal));
   }
@@ -72,11 +72,11 @@ Acts::Experimental::generatePortalsUpdateInternals(
     for (auto& pPtr : vPtr->portalPtrs()) {
       // Creating a link to the mother
       auto motherLinkImpl =
-          std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-      DetectorVolumeUpdater motherLink;
-      motherLink.connect<&SingleDetectorVolumeImpl::update>(
+          std::make_unique<const SingleDetectorVolumeNavigation>(dVolume.get());
+      ExternalNavigationDelegate motherLink;
+      motherLink.connect<&SingleDetectorVolumeNavigation::update>(
           std::move(motherLinkImpl));
-      pPtr->assignDetectorVolumeUpdater(std::move(motherLink), {dVolume});
+      pPtr->assignPortalNavigation(std::move(motherLink), {dVolume});
     }
   }
   // Return from the standard generator

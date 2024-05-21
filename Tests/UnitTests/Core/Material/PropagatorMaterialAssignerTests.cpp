@@ -27,7 +27,7 @@
 #include "Acts/Material/PropagatorMaterialAssigner.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
