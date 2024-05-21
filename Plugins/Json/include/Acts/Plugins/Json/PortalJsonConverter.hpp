@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -74,7 +74,7 @@ std::vector<nlohmann::json> toJsonDetray(
 ///
 /// @return a json object
 nlohmann::json toJson(
-    const Experimental::DetectorVolumeUpdater& updator,
+    const Experimental::ExternalNavigationDelegate& updator,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes);
 
 /// @brief convert from json format
