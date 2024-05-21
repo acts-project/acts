@@ -47,8 +47,8 @@ A struct {struct}`Acts::Experimental::NavigationState` holds the current navigat
 Several navigation delegates built upon the {class}`Acts::Delegate` template class are defined and can be adapted and specialized for dedicated detector layouts.
 These delegates are called:
 
-- `Acts::Experimental::SurfaceCandidatesDelegate` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
-- `Acts::Experimental::DetectorVolumeFinder` which allows to find a volume by global position (and is usually only needed at initialization of the navigation) and which is attached to a {class}`Acts::Experimental::Portal` to switch volumes when traversing a portal
+- `Acts::Experimental::IInternalNavigation` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
+- `Acts::Experimental::IExternalNavigation` which allows to find a volume by global position (and is usually only needed at initialization of the navigation) and which is attached to a {class}`Acts::Experimental::Portal` to switch volumes when traversing a portal
 
 ## Detailed Description
 
@@ -70,14 +70,14 @@ Illustration of a shared direct portal between two volumes, the arrows indicate 
 Illustration of a shared extended portal between several volumes, the arrows indicate the direction of attachment.
 :::
 
-The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::DetectorVolumeUpdater` delegate.
+The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable `Acts::Experimental::ExternalNavigationDelegate` delegate.
 
 ### The Detector volume object
 
 A detector volume has to contain:
 
 - a list of bounding portal objects (that can be shared with other volumes)
-- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdater` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
+- a navigation state updator as a `Acts::Experimental::InternalNavigationDelegate` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
 - a unique name string
 
 :::{note}

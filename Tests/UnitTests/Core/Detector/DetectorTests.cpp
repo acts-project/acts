@@ -22,9 +22,9 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   BOOST_CHECK_EQUAL(findNull, nullptr);
 
   // Misconfigured - unkonnected finder
-  Acts::Experimental::DetectorVolumeUpdater unconnected;
+  Acts::Experimental::ExternalNavigationDelegate unconnected;
   BOOST_CHECK_THROW(
       Acts::Experimental::Detector::makeShared("Det012_unconnected", volumes012,
                                                std::move(unconnected)),
