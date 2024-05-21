@@ -20,11 +20,11 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
@@ -340,8 +340,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
 
-  Acts::Propagator<Acts::SympyStepper, Acts::Navigator> extrapolator(
-      Acts::SympyStepper(m_cfg.magneticField),
+  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+      Acts::EigenStepper<>(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
