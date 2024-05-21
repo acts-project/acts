@@ -74,7 +74,11 @@ class SingleObjectNavigation : public navigation_type {
  public:
   /// Convenience constructor
   /// @param so the single object
-  SingleObjectNavigation(const object_type* so) : m_object(so) {}
+  SingleObjectNavigation(const object_type* so) : m_object(so) {
+    if (so == nullptr) {
+      throw std::invalid_argument("SingleObjectNavigation: object is nullptr");
+    }
+  }
 
   /// @brief updates the navigation state with a single object that is filled in
   ///
