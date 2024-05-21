@@ -376,19 +376,18 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      bool isEndOfWorldReached =
+      const bool isEndOfWorldReached =
           endOfWorldReached(state, stepper, navigator, logger());
-      bool isPathLimitReached =
+      const bool isPathLimitReached =
           result.pathLimitReached(state, stepper, navigator, logger());
-      bool isTargetReached = targetReached(state, stepper, navigator, logger());
+      const bool isTargetReached =
+          targetReached(state, stepper, navigator, logger());
       if (isEndOfWorldReached || isPathLimitReached || isTargetReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
-        }
-        if (isPathLimitReached) {
+        } else if (isPathLimitReached) {
           ACTS_VERBOSE("Path limit reached");
-        }
-        if (isTargetReached) {
+        } else if (isTargetReached) {
           ACTS_VERBOSE("Target surface reached");
 
           // Bind the parameter to the target surface

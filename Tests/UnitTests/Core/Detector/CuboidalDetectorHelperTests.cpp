@@ -14,7 +14,7 @@
 #include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
