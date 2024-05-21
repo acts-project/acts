@@ -13,7 +13,7 @@
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
