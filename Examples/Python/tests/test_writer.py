@@ -163,7 +163,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
-        trackingGeometry=trk_geo,
+        surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
     )
     config.addBoundIndicesFromDigiConfig(digiAlg.config)
     s.addWriter(RootMeasurementWriter(level=acts.logging.INFO, config=config))
@@ -280,8 +280,8 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
     for k, _ in inspect.getmembers(config):
         if k.startswith("input"):
             kw[k] = "collection"
-        if k == "trackingGeometry":
-            kw[k] = trk_geo
+        if k == "surfaceByIdentifier":
+            kw[k] = trk_geo.geoIdSurfaceMap()
 
     assert conf_const(writer, **kw)
 

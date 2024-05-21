@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -45,8 +44,8 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 
-  if (!m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+  if (m_cfg.surfaceByIdentifier.empty()) {
+    throw std::invalid_argument("Missing Surface-GeoID association map");
   }
   // Setup ROOT File
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());

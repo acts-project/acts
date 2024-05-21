@@ -20,7 +20,7 @@
 namespace Acts::Experimental {
 
 template <typename grid_t, typename path_generator>
-class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
+class MultiLayerNavigation : public IInternalNavigation {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -41,13 +41,16 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
-  MultiLayerSurfacesUpdaterImpl(
-      grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
-      const Transform3& itr = Transform3::Identity())
+  MultiLayerNavigation(grid_type igrid,
+                       const std::array<BinningValue, grid_type::DIM>& icasts,
+                       const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
-  MultiLayerSurfacesUpdaterImpl() = delete;
+  MultiLayerNavigation() = delete;
 
+  /// Update the navigation state
+  /// @param gctx is the geometry context
+  /// @param nState is the navigation state
   void update(const GeometryContext& gctx, NavigationState& nState) const {
     // get the local position and direction
     auto lposition = transform * nState.position;
@@ -118,6 +121,8 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   }
 };
 
+/// A path generator that generates a straight path along a direction
+/// in the grid
 struct PathGridSurfacesGenerator {
   std::vector<Vector3> operator()(Vector3 startPosition,
                                   const Vector3& direction, ActsScalar stepSize,
