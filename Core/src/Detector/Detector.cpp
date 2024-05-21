@@ -155,8 +155,8 @@ Acts::Experimental::Detector::volumes() const {
 }
 
 void Acts::Experimental::Detector::updateDetectorVolumeFinder(
-    ExternalNavigationDelegate detectorVolumeUpdater) {
-  m_volumeFinder = std::move(detectorVolumeUpdater);
+    ExternalNavigationDelegate detectorVolumeFinder) {
+  m_volumeFinder = std::move(detectorVolumeFinder);
 }
 
 const Acts::Experimental::ExternalNavigationDelegate&
