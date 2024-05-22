@@ -188,11 +188,9 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
   // we need to rotate the locpo
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
 
-  // covariance is given in STRIP SYSTEM in PC
-  // we need to convert the covariance to the MODULE SYSTEM in PC
-  // via jacobian.
-  // The following transforms into STRIP XY, does the shift into MODULE XY,
-  // and then transforms into MODULE PC
+  // covariance is given in STRIP SYSTEM in PC we need to convert the covariance
+  // to the MODULE SYSTEM in PC via jacobian. The following transforms into
+  // STRIP XY, does the shift into MODULE XY, and then transforms into MODULE PC
   double dphi = get(eAveragePhi);
   double phi_strip = locpo_rotated[eBoundLoc1];
   double r_strip = locpo_rotated[eBoundLoc0];
@@ -249,10 +247,12 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
   //     [          A                                 A                    ]
   //
   // where
-  //        2                                          2 2
-  // A = O_x  + 2*O_x*rStrip*cos(dPhi - phiStrip) + O_y  -
-  // 2*O_y*rStrip*sin(dPhi - phiStrip) + rStrip B = cos(dPhi - phiStrip) C =
-  // -sin(dPhi - phiStrip)
+  //        2                                          2
+  // A = O_x  + 2*O_x*rStrip*cos(dPhi - phiStrip) + O_y
+  //                                                 2
+  //     - 2*O_y*rStrip*sin(dPhi - phiStrip) + rStrip
+  // B = cos(dPhi - phiStrip)
+  // C = -sin(dPhi - phiStrip)
 
   double cosDPhiPhiStrip = std::cos(dphi - phi_strip);
   double sinDPhiPhiStrip = std::sin(dphi - phi_strip);
@@ -307,9 +307,8 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
       locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
   Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
 
-  // now check edges in MODULE PC (inner and outer circle)
-  // assuming Mahalanobis distances are of same unit if covariance
-  // is correctly transformed
+  // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
+  // distances are of same unit if covariance is correctly transformed
   currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
                                     locpoModulePC, weightModulePC);
   currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
@@ -324,9 +323,8 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
     minDist = currentDist;
   }
 
-  // compare resulting Mahalanobis distance to configured
-  // "number of sigmas"
-  // we square it b/c we never took the square root of the distance
+  // compare resulting Mahalanobis distance to configured "number of sigmas" we
+  // square it b/c we never took the square root of the distance
   return minDist < bcheck.tolerance()[0] * bcheck.tolerance()[0];
 }
 
