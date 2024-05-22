@@ -8,9 +8,6 @@ target_include_directories(
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_include_directories(
-      ActsPluginGeoModel
-      SYSTEM PUBLIC)    
 target_link_libraries(
     ActsPluginGeoModel
   PUBLIC ActsCore GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
