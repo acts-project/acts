@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -69,6 +69,7 @@ void addAmbiguityResolution(Context& ctx);
 // Plugins
 void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
+void addGeoModel(Context& ctx);
 void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
@@ -130,6 +131,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addDigitization(ctx);
   addPythia8(ctx);
   addJson(ctx);
+  addGeoModel(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addObj(ctx);

@@ -17,6 +17,7 @@ set( GEOMODEL_VERSION "${_acts_geomodel_version}")
 
 set( GEOMODEL_SETUP_JSON OFF CACHE BOOL "Skip setting up json completely" )
 
+set ( GEOMODEL_BUILD_GEOMODELG4 "${ACTS_BUILD_PLUGIN_GEANT4}" CACHE BOOL "Build the Geant4 plugin" )
 
 # Declare where to get VecMem from.
 set( ACTS_GEOMODEL_GIT_REPOSITORY "https://gitlab.cern.ch/GeoModelDev/GeoModel"
