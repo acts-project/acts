@@ -16,7 +16,6 @@ from acts.examples import (
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
-import acts.examples.geant4.geomodel
 from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
@@ -115,6 +114,8 @@ def main():
             acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
         )
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
+        import acts.examples.geant4.geomodel
+
         geoModelTree = acts.geomodel.readFromDb(args.input)
         detectorConstructionFactory = (
             acts.examples.geant4.geomodel.GeoModelDetectorConstructionFactory(
