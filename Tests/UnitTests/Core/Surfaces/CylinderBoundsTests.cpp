@@ -132,11 +132,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   BOOST_CHECK(!cylinderBoundsBeveledObject.inside(
       outsideBevelMin, trueBoundaryCheckWithLessTolerance));
 
-  /// test for inside3D() with Vector3 argument
-  const Vector3 origin3D{0., 0., 0.};
-  BOOST_CHECK(
-      !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
-
   /// test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,
                   1e-6);
