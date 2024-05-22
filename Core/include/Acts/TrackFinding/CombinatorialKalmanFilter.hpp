@@ -391,7 +391,7 @@ class CombinatorialKalmanFilter {
             ACTS_ERROR("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
             result.lastError = res.error();
-          } else {
+          } else if (!result.activeTips.empty()) {
             const auto& fittedState = *res;
             std::size_t currentTip = result.activeTips.back().first;
             // Assign the fitted parameters
