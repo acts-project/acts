@@ -22,6 +22,7 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
+    SeedingAlgorithm,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -260,6 +261,7 @@ addSeeding(
         else TruthSeedRanges()
     ),
     geoSelectionConfigFile=oddSeedingSel,
+    seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
     outputDirRoot=outputDir,
     # outputDirCsv=outputDir,
 )
@@ -289,9 +291,11 @@ addCKFTracks(
         maxOutliers=2,
     ),
     CkfConfig(
-        seedDeduplication=True,
-        stayOnSeed=True,
+        seedDeduplication=False,
+        stayOnSeed=False,
     ),
+    twoWay=True,
+    reverseSearch=True,
     outputDirRoot=outputDir,
     writeCovMat=True,
     # outputDirCsv=outputDir,
