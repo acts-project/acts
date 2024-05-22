@@ -79,7 +79,8 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 /// @param geoCtx
 /// @param nSurfaces Number of surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
-    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5) {
+    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5,
+    const std::vector<std::size_t>& indexSurfaceWithMaterial = {}) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -98,7 +99,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (unsigned int surfPos = 1; surfPos <= nSurfaces; surfPos++) {
+  for (std::size_t surfPos = 1; surfPos <= nSurfaces; surfPos++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
     cfg.position = {surfPos * UnitConstants::m, 0., 0.};
@@ -112,9 +113,14 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
     cfg.rBounds = std::make_shared<const RectangleBounds>(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
-    // Material of the surfaces
-    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
-    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+    // Add material only for selected surfaces
+    if (std::find(indexSurfaceWithMaterial.begin(),
+                  indexSurfaceWithMaterial.end(),
+                  surfPos) != indexSurfaceWithMaterial.end()) {
+      // Material of the surfaces
+      MaterialSlab matProp(makeSilicon(), 5_mm);
+      cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+    }
 
     // Thickness of the detector element
     cfg.thickness = 1_um;
@@ -921,8 +927,10 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 7;
+  const std::vector<std::size_t> indexSurfaceWithMaterial = {4};
   Detector detector;
-  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+  detector.geometry =
+      makeToyDetector(geoCtx, nSurfaces, indexSurfaceWithMaterial);
 
   ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
