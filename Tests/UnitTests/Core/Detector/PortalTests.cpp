@@ -18,9 +18,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -34,7 +34,7 @@
 namespace Acts::Experimental {
 
 /// a simple link to volume struct
-class LinkToVolumeImpl : public INavigationDelegate {
+class LinkToVolumeImpl : public IExternalNavigation {
  public:
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
 
@@ -86,10 +86,10 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
 
   // Create a links to volumes
   auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
-  DetectorVolumeUpdater linkToA;
+  ExternalNavigationDelegate linkToA;
   linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                       std::move(linkToA), {volumeA});
+  portalA->assignPortalNavigation(Acts::Direction::Positive, std::move(linkToA),
+                                  {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
   BOOST_CHECK(attachedDetectorVolumes[0u].empty());
@@ -108,11 +108,11 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK_EQUAL(nState.currentVolume, nullptr);
 
   auto portalB = std::make_shared<Portal>(surface);
-  DetectorVolumeUpdater linkToB;
+  ExternalNavigationDelegate linkToB;
   auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
-                                       std::move(linkToB), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative, std::move(linkToB),
+                                  {volumeB});
 
   // Reverse: positive volume nullptr, negative volume volumeB
   nState.direction = Acts::Vector3(0., 0., 1.);
@@ -203,20 +203,20 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   surfaceA->assignSurfaceMaterial(materialA);
   auto portalA = std::make_shared<Portal>(surfaceA);
 
-  DetectorVolumeUpdater linkToA;
+  ExternalNavigationDelegate linkToA;
   auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                       std::move(linkToA), {volumeA});
+  portalA->assignPortalNavigation(Acts::Direction::Positive, std::move(linkToA),
+                                  {volumeA});
 
   auto surfaceB = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Transform3::Identity(), rectangle);
   auto portalB = std::make_shared<Portal>(surfaceB);
-  DetectorVolumeUpdater linkToB;
+  ExternalNavigationDelegate linkToB;
   auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
-                                       std::move(linkToB), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative, std::move(linkToB),
+                                  {volumeB});
 
   // Portal A fuses with B
   // - has material and keeps it
@@ -225,11 +225,11 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
 
   // Remake portal B
   portalB = std::make_shared<Portal>(surfaceB);
-  DetectorVolumeUpdater linkToB2;
+  ExternalNavigationDelegate linkToB2;
   auto linkToB2Impl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB2.connect<&LinkToVolumeImpl::link>(std::move(linkToB2Impl));
-  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
-                                       std::move(linkToB2), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative,
+                                  std::move(linkToB2), {volumeB});
 
   // Portal B fuses with A
   // - A has material, portal B gets it from A
@@ -238,27 +238,27 @@ BOOST_AUTO_TEST_CASE(PortalMaterialTest) {
   // This fails because A has accumulated volumes on both sides through fusing
   BOOST_CHECK_THROW(Portal::fuse(portalB, portalA), std::invalid_argument);
   // Remove Negative volume on A
-  portalA->assignDetectorVolumeUpdater(Acts::Direction::Negative,
-                                       DetectorVolumeUpdater{}, {});
+  portalA->assignPortalNavigation(Acts::Direction::Negative,
+                                  ExternalNavigationDelegate{}, {});
 
   portalB = Portal::fuse(portalB, portalA);
   BOOST_CHECK_EQUAL(portalB->surface().surfaceMaterial(), materialA.get());
 
   // Remake portal A and B, this time both with material
   portalA = std::make_shared<Portal>(surfaceA);
-  DetectorVolumeUpdater linkToA2;
+  ExternalNavigationDelegate linkToA2;
   auto linkToA2Impl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   linkToA2.connect<&LinkToVolumeImpl::link>(std::move(linkToA2Impl));
-  portalA->assignDetectorVolumeUpdater(Acts::Direction::Positive,
-                                       std::move(linkToA2), {volumeA});
+  portalA->assignPortalNavigation(Acts::Direction::Positive,
+                                  std::move(linkToA2), {volumeA});
 
   surfaceB->assignSurfaceMaterial(materialB);
   portalB = std::make_shared<Portal>(surfaceB);
-  DetectorVolumeUpdater linkToB3;
+  ExternalNavigationDelegate linkToB3;
   auto linkToB3Impl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB3.connect<&LinkToVolumeImpl::link>(std::move(linkToB3Impl));
-  portalB->assignDetectorVolumeUpdater(Acts::Direction::Negative,
-                                       std::move(linkToB3), {volumeB});
+  portalB->assignPortalNavigation(Acts::Direction::Negative,
+                                  std::move(linkToB3), {volumeB});
 
   // Portal A fuses with B - both have material, throw exception
   BOOST_CHECK_THROW(Portal::fuse(portalA, portalB), std::runtime_error);
