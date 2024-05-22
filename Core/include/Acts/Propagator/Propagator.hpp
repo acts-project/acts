@@ -60,7 +60,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   std::optional<BoundMatrix> transportJacobian = std::nullopt;
 
   /// Number of propagation steps that were carried out
-  unsigned int steps = 0;
+  std::size_t steps = 0;
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
@@ -340,7 +340,7 @@ class Propagator final
     std::reference_wrapper<const GeometryContext> geoContext;
 
     /// Number of propagation steps that were carried out
-    unsigned int steps = 0;
+    std::size_t steps = 0;
 
     /// Signed distance over which the parameters were propagated
     double pathLength = 0.;
