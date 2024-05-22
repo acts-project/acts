@@ -204,7 +204,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 outputProtoVertices="amvf_gridseeder_protovertices",
                 outputVertices="amvf_gridseeder_fittedVertices",
                 seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
-                useTime=True,
+                useTime=False,
                 vertexFinder=VertexFinder.AMVF,
                 outputDirRoot=tp / "amvf_gridseeder",
             )
