@@ -116,7 +116,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool twoWay = true;
     /// Whether to run the finding in seed parameter direction or reverse
     /// direction
-    bool reverseSearch = true;
+    bool reverseSearch = false;
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;

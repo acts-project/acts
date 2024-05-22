@@ -143,6 +143,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 seedDeduplication=False if truthSmearedSeeded else True,
                 stayOnSeed=False if truthSmearedSeeded else True,
             ),
+            reverseSearch=False if truthSmearedSeeded else True,
             outputDirRoot=tp,
         )
 
