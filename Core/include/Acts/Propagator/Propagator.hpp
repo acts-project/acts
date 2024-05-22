@@ -60,7 +60,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   std::optional<BoundMatrix> transportJacobian = std::nullopt;
 
   /// Number of propagation steps that were carried out
-  std::size_t steps = 0;
+  unsigned int steps = 0;
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
@@ -340,7 +340,7 @@ class Propagator final
     std::reference_wrapper<const GeometryContext> geoContext;
 
     /// Number of propagation steps that were carried out
-    std::size_t steps = 0;
+    unsigned int steps = 0;
 
     /// Signed distance over which the parameters were propagated
     double pathLength = 0.;
@@ -467,6 +467,20 @@ class Propagator final
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start,
+                 const propagator_options_t& options) const;
+
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start, const Surface& target,
+                 const propagator_options_t& options) const;
+
+  template <typename propagator_state_t>
+  void initialize(propagator_state_t& state) const;
+
   /// @brief Propagate track parameters
   ///
   /// This function performs the propagation of the track parameters according
@@ -483,17 +497,6 @@ class Propagator final
   /// @return Propagation result
   template <typename propagator_state_t>
   Result<void> propagate(propagator_state_t& state) const;
-
-  template <typename parameters_t, typename propagator_options_t,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start,
-                 const propagator_options_t& options) const;
-
-  template <typename parameters_t, typename propagator_options_t,
-            typename target_aborter_t = SurfaceReached,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start, const Surface& target,
-                 const propagator_options_t& options) const;
 
   template <typename propagator_state_t, typename propagator_options_t>
   Result<

@@ -37,6 +37,7 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
+  /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
@@ -181,6 +182,27 @@ struct EndOfWorldReached {
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
     return endOfWorld;
+  }
+};
+
+struct AnySurfaceReached {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const Logger& logger) const {
+    (void)stepper;
+    (void)logger;
+
+    const Surface* startSurface = navigator.startSurface(state.navigation);
+    const Surface* targetSurface = navigator.targetSurface(state.navigation);
+    const Surface* currentSurface = navigator.currentSurface(state.navigation);
+
+    if (currentSurface != nullptr && currentSurface != startSurface &&
+        currentSurface != targetSurface) {
+      return true;
+    }
+
+    return false;
   }
 };
 

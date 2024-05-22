@@ -17,6 +17,13 @@
 
 template <typename S, typename N>
 template <typename propagator_state_t>
+void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
+  // Navigator initialize state call
+  m_navigator.initialize(state, m_stepper);
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     -> Result<void> {
   // Pre-stepping call to the navigator and action list
@@ -24,8 +31,6 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
   state.stage = PropagatorStage::prePropagation;
 
-  // Navigator initialize state call
-  m_navigator.initialize(state, m_stepper);
   // Pre-Stepping call to the action list
   state.options.actionList(state, m_stepper, m_navigator, logger());
   // assume negative outcome, only set to true later if we actually have
@@ -111,6 +116,8 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
 
   auto state = makeState(start, options);
 
+  initialize(state);
+
   // Perform the actual propagation
   auto propagationResult = propagate(state);
 
@@ -132,6 +139,8 @@ auto Acts::Propagator<S, N>::propagate(
 
   auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
                          path_aborter_t>(start, target, options);
+
+  initialize(state);
 
   // Perform the actual propagation
   auto propagationResult = propagate(state);
@@ -258,10 +267,6 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
   moveStateToResult(state, result);
 
   if (makeCurvilinear) {
-    if (!m_stepper.prepareCurvilinearState(state, m_navigator)) {
-      // information to compute curvilinearState is incomplete.
-      return propagationResult.error();
-    }
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
     // Fill the end parameters
