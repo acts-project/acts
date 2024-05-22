@@ -39,6 +39,11 @@ G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
     m_g4World =
         new G4PVPlacement(nullptr, G4ThreeVector(), g4WorldLog,
                           m_geoModelTree.worldVolumeName, nullptr, false, 0);
+
+    // Create regions
+    for (const auto& regionCreator : m_regionCreators) {
+      regionCreator->Construct();
+    }
   }
   return m_g4World;
 }
