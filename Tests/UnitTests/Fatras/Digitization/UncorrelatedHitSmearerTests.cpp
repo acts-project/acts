@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
       ActsExamples::DigiConfigConverter("digitization-configuration")
           .fromJson(djson);
   ActsFatras::BoundParametersSmearer<ActsExamples::RandomEngine, 1u> s;
-  std::cout << digiConfig.size() << std::endl;
+
   for (auto& el : digiConfig) {
     for (auto& smearing : el.smearingDigiConfig) {
       std::fill(std::begin(s.indices), std::end(s.indices),
