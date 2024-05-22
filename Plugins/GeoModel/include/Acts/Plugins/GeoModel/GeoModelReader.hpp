@@ -8,8 +8,6 @@
 
 #pragma once
 
-class GeoVPhysVol;
-
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
 #include <string>
