@@ -1000,6 +1000,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
   BOOST_CHECK(track.hasReferenceSurface());
 
+  // TODO Add material handling to the gx2f, to pass the 6 commented tests
   // Track quantities
   //  CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
   BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
