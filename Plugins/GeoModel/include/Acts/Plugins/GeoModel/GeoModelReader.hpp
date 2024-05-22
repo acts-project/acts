@@ -14,9 +14,7 @@ class GeoVPhysVol;
 
 #include <string>
 
-namespace Acts {
-
-namespace GeoModelReader {
+namespace Acts::GeoModelReader {
 
 /// @brief Read the GeoModel from the database
 ///
@@ -25,6 +23,4 @@ namespace GeoModelReader {
 /// @return world/top volume of the GeoModel tree in memory
 GeoModelTree readFromDb(const std::string& dbPath);
 
-}  // namespace GeoModelReader
-
-}  // namespace Acts
+}  // namespace Acts::GeoModelReader
