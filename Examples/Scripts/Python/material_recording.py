@@ -12,6 +12,7 @@ from acts.examples import (
     EventGenerator,
     RandomNumbers,
 )
+
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
@@ -96,21 +97,30 @@ def main():
         "-t", "--tracks", type=int, default=100, help="Particle tracks per event"
     )
     p.add_argument(
-        "-i", "--input", type=str, default="", help="GDML input file (optional)"
+        "-i", "--input", type=str, default="", help="input (GDML/SQL) file (optional)"
     )
 
     args = p.parse_args()
 
     detectorConstructionFactory = None
-    if args.input != "":
-        detectorConstructionFactory = (
-            acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
-        )
-    else:
+    if args.input == "":
         detector, trackingGeometry, decorators = getOpenDataDetector()
 
         detectorConstructionFactory = (
             acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+        )
+    elif args.input.endswith(".gdml"):
+        detectorConstructionFactory = (
+            acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
+        )
+    elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
+        import acts.examples.geant4.geomodel
+
+        geoModelTree = acts.geomodel.readFromDb(args.input)
+        detectorConstructionFactory = (
+            acts.examples.geant4.geomodel.GeoModelDetectorConstructionFactory(
+                geoModelTree
+            )
         )
 
     runMaterialRecording(
