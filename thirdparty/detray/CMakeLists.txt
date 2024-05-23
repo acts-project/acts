@@ -1,0 +1,59 @@
+# This file is part of the Acts project.
+#
+# Copyright (C) 2021 CERN for the benefit of the Acts project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# CMake include(s).
+cmake_minimum_required( VERSION 3.11 )
+include( FetchContent )
+
+# Tell the user what's happening.
+message( STATUS "Building Detray as part of the Acts project" )
+
+set( DETRAY_VERSION "v${_acts_detray_version}")
+
+# Declare where to get Detray from.
+FetchContent_Declare( Detray ${ACTS_DETRAY_SOURCE} )
+
+# Options used in the build of Detray.
+set( DETRAY_CUSTOM_SCALARTYPE "float" CACHE STRING
+   "Scalar type to use in the Detray code" )
+
+set( DETRAY_BUILD_TESTING OFF CACHE BOOL
+   "Turn off the build of the Detray unit tests" )
+set( DETRAY_BUILD_TUTORIALS OFF CACHE BOOL
+   "Turn off the build of the Detray tutorials" )
+set( DETRAY_EIGEN_PLUGIN ON CACHE BOOL
+   "Turn on the build of the Detray Eigen code" )
+set( DETRAY_VC_PLUGIN ON CACHE BOOL
+   "Turn on the build of the Detray Vc code" )
+
+set( DETRAY_SETUP_VECMEM OFF CACHE BOOL
+   "Do not set up VecMem as part of Detray" )
+set( DETRAY_SETUP_ALGEBRA_PLUGINS OFF CACHE BOOL
+   "Do not set up Algebra Plugins as part of Detray" )
+set( DETRAY_SETUP_GOOGLETEST OFF CACHE BOOL
+   "Do not set up GoogleTest as part of Detray" )
+set( DETRAY_SETUP_BENCHMARK OFF CACHE BOOL
+   "Do not set up Google Benchmark as part of Detray" )
+set( DETRAY_SETUP_THRUST ON CACHE BOOL
+   "Set up Thrust as part of Detray" )
+set( DETRAY_SETUP_COVFIE OFF CACHE BOOL
+   "Do not set up covfie as part of Detray" )
+set( DETRAY_SETUP_NLOHMANN OFF CACHE BOOL
+   "Do not set up Nlohmann as part of Detray" )
+set( DETRAY_SETUP_ACTSVG OFF CACHE BOOL
+   "Do not set up Actsvg as part of Detray" )
+set( DETRAY_SETUP_DFELIBS OFF CACHE BOOL
+   "Do not set up Dfelibs as part of Detray" )
+#set( DETRAY_VC_PLUGIN OFF CACHE BOOL
+#   "Do not build Vc based math plugin" )
+#set( DETRAY_SVG_DISPLAY ON CACHE BOOL
+#    "Build the ActSVG display module" )
+
+
+#Now set up its build.
+FetchContent_MakeAvailable(Detray)

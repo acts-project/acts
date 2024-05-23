@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   BOOST_CHECK_EQUAL(volumes.front()->surfaces().size(),
                     nSurfacesX * nSurfacesY);
   BOOST_CHECK(volumes.front()->volumes().empty());
-  BOOST_CHECK(volumes.front()->surfaceCandidatesUpdater().connected());
+  BOOST_CHECK(volumes.front()->internalNavigation().connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

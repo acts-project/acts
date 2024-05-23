@@ -11,8 +11,8 @@
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
@@ -43,14 +43,14 @@ namespace IndexedSurfacesJsonConverter {
 /// @param refInstance is a reference instance of potential type casting
 template <typename instance_type>
 void convert(nlohmann::json& jIndexedSurfaces,
-             const Experimental::SurfaceCandidatesUpdater& delegate,
+             const Experimental::InternalNavigationDelegate& delegate,
              bool detray, [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
-      GridType, Experimental::IndexedSurfacesImpl>;
-  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsNavigation<
+      GridType, Experimental::IndexedSurfacesNavigation>;
+  using SubDelegateType = Experimental::IndexedSurfacesNavigation<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();
@@ -77,7 +77,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
 /// @param detray if the detray json format is written
 template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
-                   const Experimental::SurfaceCandidatesUpdater& delegate,
+                   const Experimental::InternalNavigationDelegate& delegate,
                    bool detray, TypeList<Args...> /*unused*/) {
   (convert(jIndexedSurfaces, delegate, detray, Args{}), ...);
 }
@@ -92,7 +92,7 @@ void unrollConvert(nlohmann::json& jIndexedSurfaces,
 ///
 /// @return a json object representing the surface updator
 static inline nlohmann::json toJson(
-    const Experimental::SurfaceCandidatesUpdater& delegate,
+    const Experimental::InternalNavigationDelegate& delegate,
     bool detray = false) {
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedSurfaces;
@@ -110,7 +110,7 @@ static inline nlohmann::json toJson(
 /// @param jSurfaceNavigation the json file to read from
 ///
 /// @return the surface navigation delegate
-Experimental::SurfaceCandidatesUpdater fromJson(
+Experimental::InternalNavigationDelegate fromJson(
     const nlohmann::json& jSurfaceNavigation);
 
 }  // namespace IndexedSurfacesJsonConverter
