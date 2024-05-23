@@ -361,7 +361,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
@@ -464,7 +465,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 2e-28, 1e0);
 
   // Convergence
@@ -559,7 +561,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-4, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-35, 4e0);
 
   // Convergence
@@ -654,7 +657,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
@@ -912,7 +916,8 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 4.7e-28, 2e0);
 
   ACTS_INFO("*** Test: FindHoles -- Finish");
