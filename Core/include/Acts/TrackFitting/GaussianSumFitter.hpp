@@ -293,6 +293,7 @@ struct GaussianSumFitter {
       auto& r = state.template get<typename GsfActor::result_type>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
+      m_propagator.initialize(state);
       auto propagationResult = m_propagator.propagate(state);
 
       return m_propagator.makeResult(std::move(state), propagationResult,
@@ -370,6 +371,7 @@ struct GaussianSumFitter {
       r.measurementStates++;
       r.processedStates++;
 
+      m_propagator.initialize(state);
       auto propagationResult = m_propagator.propagate(state);
 
       return m_propagator.makeResult(std::move(state), propagationResult,
