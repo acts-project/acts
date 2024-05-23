@@ -80,7 +80,7 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 /// @param nSurfaces Number of surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
     const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5,
-    const std::vector<std::size_t>& indexSurfaceWithMaterial = {}) {
+    const std::set<std::size_t>& surfaceIndexWithMaterial = {}) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -114,9 +114,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
     // Add material only for selected surfaces
-    if (std::find(indexSurfaceWithMaterial.begin(),
-                  indexSurfaceWithMaterial.end(),
-                  surfPos) != indexSurfaceWithMaterial.end()) {
+    if (surfaceIndexWithMaterial.count(surfPos)) {
       // Material of the surfaces
       MaterialSlab matProp(makeSilicon(), 5_mm);
       cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
@@ -927,10 +925,10 @@ BOOST_AUTO_TEST_CASE(Material) {
 
   ACTS_DEBUG("Create the detector");
   const std::size_t nSurfaces = 7;
-  const std::vector<std::size_t> indexSurfaceWithMaterial = {4};
+  const std::set<std::size_t> surfaceIndexWithMaterial = {4};
   Detector detector;
   detector.geometry =
-      makeToyDetector(geoCtx, nSurfaces, indexSurfaceWithMaterial);
+      makeToyDetector(geoCtx, nSurfaces, surfaceIndexWithMaterial);
 
   ACTS_DEBUG("Set the start parameters for measurement creation and fit");
   const auto parametersMeasurements = makeParameters();
