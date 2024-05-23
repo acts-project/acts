@@ -1261,7 +1261,8 @@ class KalmanFitter {
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template propagate(propagatorState);
+    m_propagator.initialize(propagatorState);
+    auto result = m_propagator.propagate(propagatorState);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error());
