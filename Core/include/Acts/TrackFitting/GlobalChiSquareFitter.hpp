@@ -774,6 +774,7 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainer.clear();
 
+      m_propagator.initialize(propagatorState);
       auto propagationResult = m_propagator.template propagate(propagatorState);
 
       auto result = m_propagator.template makeResult(std::move(propagatorState),
@@ -943,6 +944,7 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainer.clear();
 
+      m_propagator.initialize(propagatorState);
       m_propagator.template propagate(propagatorState);
     }
 
