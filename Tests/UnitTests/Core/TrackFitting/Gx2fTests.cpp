@@ -114,7 +114,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
     // Add material only for selected surfaces
-    if (surfaceIndexWithMaterial.count(surfPos)) {
+    if (surfaceIndexWithMaterial.count(surfPos) != 0) {
       // Material of the surfaces
       MaterialSlab matProp(makeSilicon(), 5_mm);
       cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   //  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   //  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 42_ns, 1e-6);
   //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
