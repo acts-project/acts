@@ -19,8 +19,8 @@ class GeoFullPhysVol;
 
 namespace Acts {
 
-class ISurfaceMaterial;
-class Surface;
+class CylinderBounds;
+class LineBounds;
 class PlanarBounds;
 
 /// @class GeoModelDetectorElement
@@ -35,21 +35,38 @@ class GeoModelDetectorElement : public DetectorElementBase {
   // Deleted default constructor
   GeoModelDetectorElement() = delete;
 
-  /// @brief Factory to create a planar detector element with connected surfcace
+  /// @brief Factory to create a planar detector element with connected surface
+  ///
+  /// @tparam SurfaceType the surface type
+  /// @tparam BoundsType the bounds type
   ///
   /// @param geoPhysVol reprsenting the physical volume
-  /// @param pBounds the planar bounds
+  /// @param bounds the bounds class
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
-  /// @return
-  static std::shared_ptr<GeoModelDetectorElement> createPlanarElement(
+  ///
+  /// @return a shared pointer to an instance of the detector element
+  template <typename SurfaceType, typename BoundsType>
+  static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
       const GeoFullPhysVol& geoPhysVol,
-      const std::shared_ptr<PlanarBounds> pBounds,
-      const Transform3& sfTransform, ActsScalar thickness);
+      const std::shared_ptr<BoundsType> bounds, const Transform3& sfTransform,
+      ActsScalar thickness) {
+    // First create the detector element with a nullptr
+    auto detElement = std::make_shared<GeoModelDetectorElement>(
+        geoPhysVol, nullptr, sfTransform, thickness);
+    auto surface = Surface::makeShared<SurfaceType>(bounds, *detElement.get());
+    detElement->attachSurface(surface);
+    return detElement;
+  }
 
-  /// Constructor
+  /// Constructor with arguments
+  ///
+  /// @param geoPhysVol reprsenting the physical volume
+  /// @param surface the representing surface
+  /// @param sfTransform the surface transform
+  /// @param thickness the thickness of the detector element
   GeoModelDetectorElement(const GeoFullPhysVol& geoPhysVol,
-                          const std::shared_ptr<PlanarBounds> pBounds,
+                          std::shared_ptr<Surface> surface,
                           const Transform3& sfTransform, ActsScalar thickness);
 
   /// Return local to global transform associated with this detector element
@@ -70,6 +87,13 @@ class GeoModelDetectorElement : public DetectorElementBase {
   const GeoFullPhysVol& physicalVolume() const;
 
  private:
+  /// Attach a surface
+  ///
+  /// @param surface The surface to attach
+  void attachSurface(std::shared_ptr<Surface> surface) {
+    m_surface = std::move(surface);
+  }
+
   /// The GeoModel full physical volume
   const GeoFullPhysVol* m_geoPhysVol{nullptr};
   /// The surface

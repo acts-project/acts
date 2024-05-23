@@ -1,0 +1,4 @@
+set(unittest_extra_libraries ActsPluginGeoModel)
+
+add_unittest(GeoModelDetectorElement GeoModelDetectorElementTests.cpp)
+add_unittest(GeoModelSurfaceConverter GeoModelSurfaceConverterTests.cpp)

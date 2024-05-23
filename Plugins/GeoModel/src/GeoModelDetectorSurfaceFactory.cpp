@@ -12,8 +12,6 @@
 #include "Acts/Plugins/GeoModel/GeoModelSurfaceConverter.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
-using namespace Acts::detail;
-
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
     std::unique_ptr<const Logger> mlogger)
     : m_logger(std::move(mlogger)) {}
