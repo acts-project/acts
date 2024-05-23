@@ -1015,7 +1015,8 @@ BOOST_AUTO_TEST_CASE(Material) {
   //  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   //  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 42_ns, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
