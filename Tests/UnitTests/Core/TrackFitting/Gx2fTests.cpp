@@ -98,7 +98,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (unsigned int surfPos = 1; surfPos <= nSurfaces; surfPos++) {
+  for (std::size_t surfPos = 1; surfPos <= nSurfaces; surfPos++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
     cfg.position = {surfPos * UnitConstants::m, 0., 0.};
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   // Track quantities
   CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
-  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 
   // Track quantities
   CHECK_CLOSE_ABS(track.chi2(), 7.5, 1.5);
-  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   // Track quantities
   CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
-  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
