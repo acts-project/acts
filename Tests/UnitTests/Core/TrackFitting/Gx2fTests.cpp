@@ -79,7 +79,8 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 /// @param geoCtx
 /// @param nSurfaces Number of surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
-    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5) {
+    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5,
+    const std::set<std::size_t>& surfaceIndexWithMaterial = {}) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -112,9 +113,12 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
     cfg.rBounds = std::make_shared<const RectangleBounds>(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
-    // Material of the surfaces
-    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
-    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+    // Add material only for selected surfaces
+    if (surfaceIndexWithMaterial.count(surfPos) != 0) {
+      // Material of the surfaces
+      MaterialSlab matProp(makeSilicon(), 5_mm);
+      cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+    }
 
     // Thickness of the detector element
     cfg.thickness = 1_um;
@@ -917,6 +921,117 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 4.7e-28, 2e0);
 
   ACTS_INFO("*** Test: FindHoles -- Finish");
+}
+
+BOOST_AUTO_TEST_CASE(Material) {
+  ACTS_INFO("*** Test: Material -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 7;
+  const std::set<std::size_t> surfaceIndexWithMaterial = {4};
+  Detector detector;
+  detector.geometry =
+      makeToyDetector(geoCtx, nSurfaces, surfaceIndexWithMaterial);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+
+  const Acts::ActsVector<2> scatterOffset = {100_mm, 100_mm};
+  const std::size_t indexMaterialSurface = 3;
+  for (std::size_t iMeas = indexMaterialSurface; iMeas < nSurfaces; iMeas++) {
+    // This only works, because our detector is evenly spaced
+    const std::size_t offsetFactor = iMeas - indexMaterialSurface;
+
+    auto& sl = measurements.sourceLinks[iMeas];
+    sl.parameters[0] += scatterOffset[0] * offsetFactor;
+    sl.parameters[1] += scatterOffset[1] * offsetFactor;
+  }
+
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 5, true, 0);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  const auto& track = *res;
+
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+
+  // TODO Add material handling to the gx2f, to pass the 6 commented tests
+  // Track quantities
+  //  CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
+  //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+
+  // Convergence
+  BOOST_CHECK_EQUAL(
+      (track.template component<
+          std::size_t,
+          hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
+      5);
+
+  ACTS_INFO("*** Test: Material -- Finish");
 }
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Acts::Test
