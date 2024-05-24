@@ -804,7 +804,7 @@ class Navigator {
       return false;
     }
 
-    if (state.navigation.currentVolume != nullptr) {
+    if (state.navigation.currentVolume == nullptr) {
       ACTS_VERBOSE(volInfo(state)
                    << "No sufficient information to resolve boundary, "
                       "stopping navigation.");
