@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -19,8 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -31,7 +28,6 @@ namespace Acts {
 /// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
 ///
-/// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
 struct NavigationOptions {
@@ -46,9 +42,9 @@ struct NavigationOptions {
   /// always look for passive
   bool resolvePassive = false;
 
-  /// object to check against: at start
+  /// Hint for start object
   const object_t* startObject = nullptr;
-  /// object to check against: at end
+  /// Hint for end object
   const object_t* endObject = nullptr;
 
   /// External surface identifier for which the boundary check is ignored
@@ -856,7 +852,13 @@ class Navigator {
               state.geoContext, stepper.position(state.stepping),
               state.options.direction * stepper.direction(state.stepping),
               navOpts, logger());
-      // The number of boundary candidates
+      std::sort(state.navigation.navBoundaries.begin(),
+                state.navigation.navBoundaries.end(),
+                [](const auto& a, const auto& b) {
+                  return SurfaceIntersection::pathLengthOrder(a.first, b.first);
+                });
+
+      // Print boundary information
       if (logger().doPrint(Logging::VERBOSE)) {
         std::ostringstream os;
         os << state.navigation.navBoundaries.size();
@@ -866,6 +868,7 @@ class Navigator {
         }
         logger().log(Logging::VERBOSE, os.str());
       }
+
       // Set the begin index
       state.navigation.navBoundaryIndex = 0;
       if (!state.navigation.navBoundaries.empty()) {
@@ -1049,18 +1052,23 @@ class Navigator {
     state.navigation.navSurfaces = currentLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping), navOpts);
-    // the number of layer candidates
-    if (!state.navigation.navSurfaces.empty()) {
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream os;
-        os << state.navigation.navSurfaces.size();
-        os << " surface candidates found at path(s): ";
-        for (auto& sfc : state.navigation.navSurfaces) {
-          os << sfc.pathLength() << "  ";
-        }
-        logger().log(Logging::VERBOSE, os.str());
-      }
+    std::sort(state.navigation.navSurfaces.begin(),
+              state.navigation.navSurfaces.end(),
+              SurfaceIntersection::pathLengthOrder);
 
+    // Print surface information
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream os;
+      os << state.navigation.navSurfaces.size();
+      os << " surface candidates found at path(s): ";
+      for (auto& sfc : state.navigation.navSurfaces) {
+        os << sfc.pathLength() << "  ";
+      }
+      logger().log(Logging::VERBOSE, os.str());
+    }
+
+    // Surface candidates have been found
+    if (!state.navigation.navSurfaces.empty()) {
       // set the index
       state.navigation.navSurfaceIndex = 0;
       // The stepper updates the step size ( single / multi component)
@@ -1070,6 +1078,7 @@ class Navigator {
                                   << stepper.outputStepSize(state.stepping));
       return true;
     }
+
     state.navigation.navSurfaceIndex = state.navigation.navSurfaces.size();
     ACTS_VERBOSE(volInfo(state) << "No surface candidates found.");
     return false;
@@ -1104,25 +1113,32 @@ class Navigator {
     navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
+
     // Request the compatible layers
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
             state.geoContext, stepper.position(state.stepping),
             state.options.direction * stepper.direction(state.stepping),
             navOpts);
+    std::sort(state.navigation.navLayers.begin(),
+              state.navigation.navLayers.end(),
+              [](const auto& a, const auto& b) {
+                return SurfaceIntersection::pathLengthOrder(a.first, b.first);
+              });
+
+    // Print layer information
+    if (logger().doPrint(Logging::VERBOSE)) {
+      std::ostringstream os;
+      os << state.navigation.navLayers.size();
+      os << " layer candidates found at path(s): ";
+      for (auto& lc : state.navigation.navLayers) {
+        os << lc.first.pathLength() << "  ";
+      }
+      logger().log(Logging::VERBOSE, os.str());
+    }
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
-      // Screen output where they are
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream os;
-        os << state.navigation.navLayers.size();
-        os << " layer candidates found at path(s): ";
-        for (auto& lc : state.navigation.navLayers) {
-          os << lc.first.pathLength() << "  ";
-        }
-        logger().log(Logging::VERBOSE, os.str());
-      }
       // Set the index to the first
       state.navigation.navLayerIndex = 0;
       // Setting the step size towards first
