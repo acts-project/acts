@@ -317,7 +317,7 @@ class CombinatorialKalmanFilter {
     bool energyLoss = true;
 
     /// Calibration context for the finding run
-    const CalibrationContext* calibrationContext{nullptr};
+    const CalibrationContext* calibrationContextPtr{nullptr};
 
     /// @brief CombinatorialKalmanFilter actor operation
     ///
@@ -784,7 +784,7 @@ class CombinatorialKalmanFilter {
         ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
 
         // now calibrate the track state
-        m_extensions.calibrator(gctx, calibrationContext, sourceLink, ts);
+        m_extensions.calibrator(gctx, *calibrationContextPtr, sourceLink, ts);
 
         result.trackStateCandidates.push_back(ts);
       }
@@ -1166,7 +1166,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
-    combKalmanActor.calibrationContext = &tfOptions.calibrationContext.get();
+    combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
