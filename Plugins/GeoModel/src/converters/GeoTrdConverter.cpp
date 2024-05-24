@@ -76,7 +76,6 @@ Acts::GeoTrdConverter::toSurface(const GeoFullPhysVol& geoFPV,
   // Create the surface transform
   Transform3 transform = Transform3::Identity();
   transform.translation() = unitLength * absTransform.translation();
-  auto rotation = absTransform.rotation();
 
   // GeoTrd is defined that halfZ needs to map onto surface halfY
   // Create the surface
@@ -110,18 +109,20 @@ Acts::GeoTrdConverter::toSurface(const GeoFullPhysVol& geoFPV,
   }
 
   // Adjust the rotation matrix
-  RotationMatrix3 trotation = transform.rotation();
+  RotationMatrix3 trotation = absTransform.rotation();
+
   if (diffX > diffY) {
     // Rotation is x, z, y ... acyclic, hence the sign change
-    trotation.col(1) = swapZ * transform.rotation().col(2);
-    trotation.col(2) = -swapZ * transform.rotation().col(1);
+    trotation.col(1) = swapZ * absTransform.rotation().col(2);
+    trotation.col(2) = -swapZ * absTransform.rotation().col(1);
   } else {
     // Rotation is y, z, x ... cyclic, hence no sign change
-    trotation.col(0) = transform.rotation().col(1);
-    trotation.col(1) = swapZ * transform.rotation().col(2);
-    trotation.col(2) = swapZ * transform.rotation().col(0);
+    trotation.col(0) = absTransform.rotation().col(1);
+    trotation.col(1) = swapZ * absTransform.rotation().col(2);
+    trotation.col(2) = swapZ * absTransform.rotation().col(0);
   }
   transform.linear() = trotation;
+
   auto trapezoidBounds =
       std::make_shared<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
   if (!sensitive) {

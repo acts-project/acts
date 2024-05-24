@@ -2,12 +2,18 @@ import acts
 import argparse
 from acts import logging, GeometryContext
 from acts import geomodel as gm
+from acts import examples 
 
 def main():
 
     p = argparse.ArgumentParser()
+
     p.add_argument(
         "-i", "--input", type=str, default="", help="Input SQL file"
+    )
+
+    p.add_argument(
+        "-q", "--queries", type=str, nargs="+", default= "GeoModelXML", help="List of Queries for Published full phys volumes"
     )
 
     p.add_argument(
@@ -23,13 +29,23 @@ def main():
 
     # Read the geometry model from the database
     gmTree = acts.geomodel.readFromDb(args.input)
-    gmFactory = gm.GeoModelDetectorSurfaceFactory(logging.VERBOSE)
+
+    gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
+    gmFactoryConfig.shapeConverters = [ gm.GeoBoxConverter(), gm.GeoTrdConverter(), gm.GeoIntersectionAnnulusConverter() ]
+    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)
     # The options
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
-    gmFactoryOptions.queries = [ "GeoModelXML" ]
+    gmFactoryOptions.queries = args.queries
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
     gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+
+    # Output the surface to an OBJ file
+    segments = 720
+    if args.output_obj:
+        ssurfaces = [ ss[1] for ss in gmFactoryCache.sensitiveSurfaces ]
+        acts.examples.writeSurfacesObj(ssurfaces, gContext, [75, 220, 100], segments, "geomodel.obj")
+
     return
 
 if "__main__" == __name__:

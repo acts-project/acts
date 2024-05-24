@@ -33,6 +33,12 @@ class GeoModelDetectorSurfaceFactory {
   /// added as an "always try, i.e. assignToAll=true" surface
   using GeoModelPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
 
+  // Configuration struct for the Detector surface factory
+  struct Config {
+    /// The shape conveters to be use
+    std::vector<std::shared_ptr<const IGeoShapeConverter>> shapeConverters = {};
+  };
+
   /// Nested cache that records the conversion status
   struct Cache {
     /// The created detector elements and their surfaces
@@ -48,8 +54,10 @@ class GeoModelDetectorSurfaceFactory {
 
   /// The GeoModel detector element factory
   ///
+  /// @param cfg the configuration struct
   /// @param mlogger a screen output logger
   GeoModelDetectorSurfaceFactory(
+      const Config& cfg,
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "GeoModelDetectorSurfaceFactory", Acts::Logging::INFO));
 
@@ -65,6 +73,9 @@ class GeoModelDetectorSurfaceFactory {
                  const GeoModelTree& geoModelTree, const Options& options);
 
  private:
+  /// The configuration struct
+  Config m_cfg;
+
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 

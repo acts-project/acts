@@ -9,15 +9,14 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelSurfaceConverter.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
-    std::unique_ptr<const Logger> mlogger)
-    : m_logger(std::move(mlogger)) {}
+    const Config& cfg, std::unique_ptr<const Logger> mlogger)
+    : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
 void Acts::GeoModelDetectorSurfaceFactory::construct(
-    Cache& cache, const GeometryContext& gctx, const GeoModelTree& geoModelTree,
+    Cache& cache, const GeometryContext&, const GeoModelTree& geoModelTree,
     const Options& options) {
   if (geoModelTree.geoReader == nullptr) {
     throw std::invalid_argument("GeoModelTree has no GeoModelReader");
@@ -30,12 +29,13 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
             q);
 
     for (auto& [name, fpv] : qFPV) {
-      // Convert the full physical volume to a sensitive surface
-      auto sensitive =
-          GeoModelSurfaceConverter::convertToSensitiveSurface(*fpv);
-      if (std::get<0>(sensitive) != nullptr) {
-        // Add the surface to the cache
-        cache.sensitiveSurfaces.push_back(sensitive);
+      // Convert using the list of converters
+      for (const auto& converter : m_cfg.shapeConverters) {
+        auto converted = converter->toSensitiveSurface(*fpv);
+        if (converted.ok()) {
+          // Add the element and surface to the cache
+          cache.sensitiveSurfaces.push_back(converted.value());
+        }
       }
     }
     ACTS_VERBOSE("Found " << qFPV.size()
