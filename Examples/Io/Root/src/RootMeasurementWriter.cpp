@@ -119,12 +119,11 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
     Acts::GeometryIdentifier geoId =
         meas.sourceLink().template get<IndexSourceLink>().geometryId();
     // find the corresponding surface
-    const Acts::Surface* surfacePtr =
-        m_cfg.trackingGeometry->findSurface(geoId);
-    if (surfacePtr == nullptr) {
+    auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
+    if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
       continue;
     }
-    const Acts::Surface& surface = *surfacePtr;
+    const Acts::Surface& surface = *(surfaceItr->second);
     // find the corresponding output tree
     auto dTreeItr = m_outputTrees.find(geoId);
     if (dTreeItr == m_outputTrees.end()) {
