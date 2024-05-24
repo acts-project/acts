@@ -63,7 +63,7 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==6.0
+          pip3 install gcovr==7.2
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
       - name: Upload coverage
