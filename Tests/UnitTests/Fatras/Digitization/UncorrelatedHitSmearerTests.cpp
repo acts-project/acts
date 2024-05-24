@@ -332,9 +332,6 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
 
   for (auto& el : digiConfig) {
     for (auto& smearing : el.smearingDigiConfig) {
-      // check if the forcePositiveValues is parsed successfully
-      BOOST_CHECK(smearing.forcePositiveValues);
-
       std::fill(std::begin(s.indices), std::end(s.indices),
                 static_cast<Acts::BoundIndices>(smearing.index));
       std::fill(std::begin(s.smearFunctions), std::end(s.smearFunctions),
@@ -352,7 +349,11 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
     BOOST_TEST_INFO("Comparing smeared measurement "
                     << i << " originating from bound parameter "
                     << s.indices[i]);
-    CHECK_CLOSE_REL(par[i], f.boundParams[s.indices[i]], 0.15);
+    double ref = f.boundParams[s.indices[i]];
+    if (s.forcePositive[i]) {
+      ref = std::abs(ref);
+    }
+    CHECK_CLOSE_REL(par[i], ref, 0.15);
   }
 }
 
