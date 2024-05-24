@@ -1150,4 +1150,5 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
     }
   }
 }
+
 }  // namespace Acts::Test
