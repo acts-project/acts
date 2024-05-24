@@ -67,7 +67,7 @@ jobs:
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v3
         with:
           files: ./build/coverage/cov.xml
 
