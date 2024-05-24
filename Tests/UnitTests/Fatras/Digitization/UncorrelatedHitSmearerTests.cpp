@@ -332,6 +332,8 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
 
   for (auto& el : digiConfig) {
     for (auto& smearing : el.smearingDigiConfig) {
+      //check if the forcePositiveValue parameter is successfully parsed
+      BOOST_CHECK(smearing.forcePositiveValues);
       std::fill(std::begin(s.indices), std::end(s.indices),
                 static_cast<Acts::BoundIndices>(smearing.index));
       std::fill(std::begin(s.smearFunctions), std::end(s.smearFunctions),
