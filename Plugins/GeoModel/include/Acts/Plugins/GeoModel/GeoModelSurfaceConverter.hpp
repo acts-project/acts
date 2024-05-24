@@ -8,10 +8,14 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <functional>
+
 class GeoFullPhysVol;
+class GeoShape;
 
 namespace Acts {
 /// Collect the sensitive surface & detector element
@@ -21,10 +25,14 @@ using GeoModelSensitiveSurface =
 
 namespace GeoModelSurfaceConverter {
 
-// Options struct for the conversion
+/// Options struct for the conversion
 struct Options {
   Surface::SurfaceType cylinderTargetType = Surface::SurfaceType::Cylinder;
 };
+
+/// Shape converter definition
+using ShapeConverter = std::function<GeoModelSensitiveSurface(
+    const GeoShape&, const Transform3&, const Options& opt)>;
 
 /// @brief conversion to sensitive surface
 ///

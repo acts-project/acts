@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -28,11 +29,6 @@ class Surface;
 /// returned.
 class GeoModelDetectorSurfaceFactory {
  public:
-  /// Collect the sensitive surface & detector element
-  using GeoModelSensitiveSurface =
-      std::tuple<std::shared_ptr<GeoModelDetectorElement>,
-                 std::shared_ptr<Surface>>;
-
   /// Collect the passive surfaces, bool whether it should be
   /// added as an "always try, i.e. assignToAll=true" surface
   using GeoModelPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;

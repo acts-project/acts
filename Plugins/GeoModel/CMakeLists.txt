@@ -2,10 +2,15 @@ include(FetchContent)
 
 add_library(
   ActsPluginGeoModel SHARED
+  src/GeoModelConversionError.cpp
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp
-  src/GeoModelSurfaceConverter.cpp)
+  src/GeoModelSurfaceConverter.cpp
+  src/converters/GeoBoxConverter.cpp
+  src/converters/GeoTrdConverter.cpp
+  src/converters/GeoTubeConverter.cpp
+  src/converters/GeoIntersectionAnnulusConverter.cpp)
 target_include_directories(
     ActsPluginGeoModel
   PUBLIC

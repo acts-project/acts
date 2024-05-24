@@ -55,37 +55,6 @@ Acts::GeoModelSurfaceConverter::convertToSensitiveSurface(
       // (1) Try if its a box shape
       auto geoBox = dynamic_cast<const GeoBox*>(geoShape);
       if (geoBox != nullptr) {
-        std::vector<ActsScalar> halfLengths = {geoBox->getXHalfLength(),
-                                               geoBox->getYHalfLength(),
-                                               geoBox->getZHalfLength()};
-        // Create the surface
-        auto minElement =
-            std::min_element(halfLengths.begin(), halfLengths.end());
-        auto zIndex = std::distance(halfLengths.begin(), minElement);
-        std::size_t yIndex = zIndex > 0u ? zIndex - 1u : 2u;
-        std::size_t xIndex = yIndex > 0u ? yIndex - 1u : 2u;
-
-        Vector3 colX = rotation.col(xIndex);
-        Vector3 colY = rotation.col(yIndex);
-        Vector3 colZ = rotation.col(zIndex);
-        rotation.col(0) = colX;
-        rotation.col(1) = colY;
-        rotation.col(2) = colZ;
-        surfaceTransform.linear() = rotation;
-
-        // Create the surface bounds
-        ActsScalar halfX = unitLength * halfLengths[xIndex];
-        ActsScalar halfY = unitLength * halfLengths[yIndex];
-        auto rectangleBounds =
-            std::make_shared<Acts::RectangleBounds>(halfX, halfY);
-        // Create the element and the surface
-        auto detectorElement =
-            GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-                geoPhysVol, rectangleBounds, surfaceTransform,
-                2 * unitLength * halfLengths[zIndex]);
-
-        auto surface = detectorElement->surface().getSharedPtr();
-        return std::make_tuple(detectorElement, surface);
       }
 
       // (2) Try if it is trapezoid of type GeoTrap
