@@ -155,10 +155,6 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;
     dCollector.selector.selectMaterial = true;
-    // Counteract the overstepping
-    // TODO that should not be necessary
-    dOptions.maxStepSize = 30_mm;
-    dOptions.maxSteps = 10000;
 
     // Now redo the propagation with the direct propagator
     const auto& ddResult =
