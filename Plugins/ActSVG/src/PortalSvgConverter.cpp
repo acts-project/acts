@@ -9,7 +9,7 @@
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
 
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 
 namespace {
@@ -49,7 +49,7 @@ Acts::Svg::ProtoLink makeProtoLink(
 /// @return it will return the proto links
 std::vector<Acts::Svg::ProtoLink> convertMultiLink(
     const Acts::GeometryContext& gctx,
-    const Acts::Experimental::BoundVolumesGrid1Impl& multiLink,
+    const Acts::Experimental::BoundVolumesGrid1Navigation& multiLink,
     const Acts::Surface& surface, const Acts::Vector3& refPosition,
     const Acts::Svg::PortalConverter::Options& portalOptions,
     int sign) noexcept(false) {
@@ -138,20 +138,22 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
   rDir = surface.normal(gctx, rPos);
 
   // Now convert the link objects
-  const auto& updators = portal.detectorVolumeUpdaters();
+  const auto& updators = portal.portalNavigation();
 
   int sign = -1;
   for (const auto& dvu : updators) {
     // Get the instance and start the casting
     const auto* instance = dvu.instance();
     auto singleLink =
-        dynamic_cast<const Experimental::SingleDetectorVolumeImpl*>(instance);
+        dynamic_cast<const Experimental::SingleDetectorVolumeNavigation*>(
+            instance);
     if (singleLink != nullptr) {
       pPortal._volume_links.push_back(makeProtoLink(
-          portalOptions, rPos, Vector3(sign * rDir), singleLink->dVolume));
+          portalOptions, rPos, Vector3(sign * rDir), singleLink->object()));
     }
     auto multiLink =
-        dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);
+        dynamic_cast<const Experimental::BoundVolumesGrid1Navigation*>(
+            instance);
     if (multiLink != nullptr) {
       auto pLinks = convertMultiLink(gctx, *multiLink, surface, rPos,
                                      portalOptions, sign);

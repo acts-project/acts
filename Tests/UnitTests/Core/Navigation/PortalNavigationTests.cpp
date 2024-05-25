@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <memory>
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 // NavigaitonState according to some given information.
 //
 BOOST_AUTO_TEST_CASE(UnconnectedUpdate) {
-  Acts::Experimental::DetectorVolumeUpdater ucUpdater;
+  Acts::Experimental::ExternalNavigationDelegate ucUpdater;
   BOOST_CHECK(!ucUpdater.connected());
 }
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(EndOfWorldUpdate) {
   nState.currentVolume = volumeA.get();
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
 
-  Acts::Experimental::EndOfWorldImpl eow;
+  Acts::Experimental::EndOfWorld eow;
   eow.update(tContext, nState);
 
   BOOST_CHECK_EQUAL(nState.currentVolume, nullptr);
@@ -60,12 +60,12 @@ BOOST_AUTO_TEST_CASE(SingleVolumeUpdate) {
   nState.currentVolume = volumeA.get();
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeA.get());
 
-  Acts::Experimental::SingleDetectorVolumeImpl svu(volumeB.get());
+  Acts::Experimental::SingleDetectorVolumeNavigation svu(volumeB.get());
   svu.update(tContext, nState);
 
   BOOST_CHECK_EQUAL(nState.currentVolume, volumeB.get());
 
-  BOOST_CHECK_THROW(Acts::Experimental::SingleDetectorVolumeImpl(nullptr),
+  BOOST_CHECK_THROW(Acts::Experimental::SingleDetectorVolumeNavigation(nullptr),
                     std::invalid_argument);
 }
 
@@ -75,7 +75,8 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
 
   std::vector<const Acts::Experimental::DetectorVolume*> volumes = {
       volumeA.get(), volumeB.get(), volumeC.get(), volumeD.get()};
-  Acts::Experimental::BoundVolumesGrid1Impl bvg(zArray, Acts::binZ, volumes);
+  Acts::Experimental::BoundVolumesGrid1Navigation bvg(zArray, Acts::binZ,
+                                                      volumes);
   // Reset the navigation state
   nState.currentVolume = nullptr;
 
@@ -92,8 +93,8 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
   Acts::Transform3 shift300 = Acts::Transform3::Identity();
   shift300.pretranslate(Acts::Vector3(0, 0, 300));
 
-  Acts::Experimental::BoundVolumesGrid1Impl bvgs(zArray, Acts::binZ, volumes,
-                                                 shift300.inverse());
+  Acts::Experimental::BoundVolumesGrid1Navigation bvgs(
+      zArray, Acts::binZ, volumes, shift300.inverse());
 
   // 150 (-300) -> transforms to -150, hence it yields A
   nState.position = Acts::Vector3(0., 0., 150.);

@@ -411,7 +411,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   }
 
   // Attach the new volume multi links
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
 
   // Exchange the portals of the volumes
   ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
@@ -616,7 +616,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   }
 
   // Attach the new volume multi links
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
 
   // Exchange the portals of the volumes
   ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
@@ -746,7 +746,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   }
 
   // Attach the new volume multi links
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
   // Exchange the portals of the volumes
   ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
   for (auto& iv : volumes) {
@@ -835,7 +835,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {
         volumes[1u], volumes[0u], volumes[1u]};
     // Attach the new volume multi links
-    PortalHelper::attachDetectorVolumeUpdaters(gctx, zVolumes, pReplacements);
+    PortalHelper::attachExternalNavigationDelegates(gctx, zVolumes,
+                                                    pReplacements);
     auto& [p, i, dir, boundaries, binning] = pReplacements[0u];
     // Update the portals
     volumes[1u]->updatePortal(p, 6u);
