@@ -150,8 +150,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   BOOST_CHECK_EQUAL(sls.time(slsState), time);
 
-  //~ BOOST_CHECK_EQUAL(sls.overstepLimit(slsState), tolerance);
-
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
