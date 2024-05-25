@@ -215,7 +215,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   }
 
   // Attach the new volume updaters
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
 
   // Return proto container
   DetectorComponent::PortalContainer dShell;

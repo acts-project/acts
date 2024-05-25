@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -45,8 +44,8 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 
-  if (!m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+  if (m_cfg.surfaceByIdentifier.empty()) {
+    throw std::invalid_argument("Missing Surface-GeoID association map");
   }
   // Setup ROOT File
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
@@ -122,12 +121,11 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           Acts::GeometryIdentifier geoId =
               m.sourceLink().template get<IndexSourceLink>().geometryId();
           // find the corresponding surface
-          const Acts::Surface* surfacePtr =
-              m_cfg.trackingGeometry->findSurface(geoId);
-          if (!surfacePtr) {
+          auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
+          if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
             return;
           }
-          const Acts::Surface& surface = *surfacePtr;
+          const Acts::Surface& surface = *(surfaceItr->second);
           // find the corresponding output tree
           auto dTreeItr = m_outputTrees.find(geoId);
           if (dTreeItr == m_outputTrees.end()) {

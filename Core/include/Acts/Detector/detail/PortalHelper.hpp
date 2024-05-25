@@ -44,9 +44,9 @@ namespace detail::PortalHelper {
 /// @param volume is the volume that is attached to the portal
 /// @param direction is the direction to which it is attached
 ///
-void attachDetectorVolumeUpdater(Portal& portal,
-                                 const std::shared_ptr<DetectorVolume>& volume,
-                                 const Direction& direction);
+void attachExternalNavigationDelegate(
+    Portal& portal, const std::shared_ptr<DetectorVolume>& volume,
+    const Direction& direction);
 
 /// @brief Create and attach the multi link updator, the portal will get
 /// a volume updator attached, that points to the different sub volumes
@@ -73,7 +73,7 @@ void attachDetectorVolumesUpdater(
 /// @param volumes are the volumes that are pointed to
 /// @param pReplacements are the portal replacements that are newly connected
 ///
-void attachDetectorVolumeUpdaters(
+void attachExternalNavigationDelegates(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements);

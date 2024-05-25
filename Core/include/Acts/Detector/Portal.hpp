@@ -50,9 +50,6 @@ class Portal {
   /// @param surface is the representing surface
   Portal(std::shared_ptr<RegularSurface> surface);
 
-  /// The volume links forward/backward with respect to the surface normal
-  using DetectorVolumeUpdaters = std::array<DetectorVolumeUpdater, 2u>;
-
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
   using AttachedDetectorVolumes =
@@ -124,27 +121,27 @@ class Portal {
   /// Update the volume link
   ///
   /// @param dir the direction of the link
-  /// @param dVolumeUpdater is the mangaged volume updator delegate
+  /// @param portalNavigation is the navigation delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdater(
-      Direction dir, DetectorVolumeUpdater dVolumeUpdater,
+  void assignPortalNavigation(
+      Direction dir, ExternalNavigationDelegate portalNavigation,
       std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
   /// one remaining link to be set, throws an exception if that's not the case
   ///
-  /// @param dVolumeUpdater is the mangaged volume updator delegate
+  /// @param portalNavigation is the navigation delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdater(DetectorVolumeUpdater dVolumeUpdater,
-                                   std::vector<std::shared_ptr<DetectorVolume>>
-                                       attachedVolumes) noexcept(false);
+  void assignPortalNavigation(ExternalNavigationDelegate portalNavigation,
+                              std::vector<std::shared_ptr<DetectorVolume>>
+                                  attachedVolumes) noexcept(false);
 
   // Access to the portal targets: opposite/along normal vector
-  const DetectorVolumeUpdaters& detectorVolumeUpdaters() const;
+  const std::array<ExternalNavigationDelegate, 2u>& portalNavigation() const;
 
   // Access to the attached volumes - non-const access
   AttachedDetectorVolumes& attachedDetectorVolumes();
@@ -154,8 +151,8 @@ class Portal {
   std::shared_ptr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  DetectorVolumeUpdaters m_volumeUpdaters = {DetectorVolumeUpdater{},
-                                             DetectorVolumeUpdater{}};
+  std::array<ExternalNavigationDelegate, 2u> m_portalNavigation = {
+      ExternalNavigationDelegate{}, ExternalNavigationDelegate{}};
 
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;

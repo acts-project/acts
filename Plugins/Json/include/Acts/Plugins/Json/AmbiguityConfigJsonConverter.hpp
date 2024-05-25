@@ -9,7 +9,12 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
+
+#include <map>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 

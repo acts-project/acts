@@ -12,7 +12,6 @@
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMuonSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
@@ -64,11 +63,6 @@ void addInput(Context& ctx) {
       ActsExamples::CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,
       outputMeasurements, outputMeasurementSimHitsMap, outputSourceLinks,
       outputClusters, outputMeasurementParticlesMap, inputSimHits);
-
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvPlanarClusterReader, mex,
-                             "CsvPlanarClusterReader", inputDir, outputClusters,
-                             outputHitIds, outputMeasurementParticlesMap,
-                             outputSimHits, trackingGeometry);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvSimHitReader, mex,
                              "CsvSimHitReader", inputDir, inputStem,

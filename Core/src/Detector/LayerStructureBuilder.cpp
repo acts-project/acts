@@ -84,17 +84,17 @@ void adaptBinningRange(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
 ///
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType>
-Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
+Acts::Experimental::InternalNavigationDelegate createUpdater(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
     std::vector<std::size_t> assignToAll,
     const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::SurfaceCandidatesUpdater sfCandidates;
+  Acts::Experimental::InternalNavigationDelegate sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
-      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesNavigation>
       isg{std::move(lSurfaces),
           std::move(assignToAll),
           {binning.binValue},
@@ -126,18 +126,18 @@ Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType,
           Acts::detail::AxisBoundaryType bType>
-Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
+Acts::Experimental::InternalNavigationDelegate createUpdater(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<std::size_t>& assignToAll,
     const Acts::Experimental::ProtoBinning& aBinning,
     const Acts::Experimental::ProtoBinning& bBinning) {
   // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::SurfaceCandidatesUpdater sfCandidates;
+  Acts::Experimental::InternalNavigationDelegate sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
-      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesNavigation>
       isg{lSurfaces,
           assignToAll,
           {aBinning.binValue, bBinning.binValue},
@@ -193,7 +193,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     const Acts::GeometryContext& gctx) const {
   // Trivialities first: internal volumes
   std::vector<std::shared_ptr<DetectorVolume>> internalVolumes = {};
-  DetectorVolumeUpdater internalVolumeUpdater = tryNoVolumes();
+  ExternalNavigationDelegate internalVolumeUpdater = tryNoVolumes();
 
   // Print the auxiliary information
   if (!m_cfg.auxiliary.empty()) {
@@ -201,7 +201,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   // Retrieve the layer surfaces
-  SurfaceCandidatesUpdater internalCandidatesUpdater =
+  InternalNavigationDelegate internalCandidatesUpdater =
       tryAllPortalsAndSurfaces();
   auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
