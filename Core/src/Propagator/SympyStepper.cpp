@@ -164,7 +164,8 @@ Result<double> SympyStepper::stepImpl(
       break;
     }
 
-    h *= calcStepSizeScaling(2 * errorEstimate);
+    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+    h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
     // place
