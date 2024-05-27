@@ -15,8 +15,8 @@
 
 template <typename T, typename GetB>
 bool rk4(const T* p, const T* d, const T t, const T h, const T lambda,
-         const T m, const T p_abs, GetB getB, T* err, T* new_p, T* new_d,
-         T* new_time, T* path_derivatives, T* J) {
+         const T m, const T p_abs, GetB getB, T* err, const T errTol, T* new_p,
+         T* new_d, T* new_time, T* path_derivatives, T* J) {
   const auto B1 = getB(p);
   const auto x5 = std::pow(h, 2);
   const auto x0 = B1[1] * d[2];
@@ -79,7 +79,7 @@ bool rk4(const T* p, const T* d, const T t, const T h, const T lambda,
   *err =
       x5 * (std::fabs(-x29 + k2[0] + k3[0]) + std::fabs(-x30 + k2[1] + k3[1]) +
             std::fabs(-x31 + k2[2] + k3[2]));
-  if (*err > 1e-4) {
+  if (*err > errTol) {
     return false;
   }
   const auto x32 = (1.0 / 6.0) * x5;
