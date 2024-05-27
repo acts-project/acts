@@ -121,7 +121,7 @@ Result<double> SympyStepper::stepImpl(
   };
 
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
-    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double lower = 0.25;
     constexpr double upper = 4.0;
     // This is given by the order of the Runge-Kutta method
@@ -152,9 +152,11 @@ Result<double> SympyStepper::stepImpl(
 
   while (true) {
     nStepTrials++;
+
+    // For details about the factor 4 see ATL-SOFT-PUB-2009-001
     bool ok =
         rk4(pos.data(), dir.data(), t, h, qop, m, p_abs, getB, &errorEstimate,
-            state.pars.template segment<3>(eFreePos0).data(),
+            4 * stepTolerance, state.pars.template segment<3>(eFreePos0).data(),
             state.pars.template segment<3>(eFreeDir0).data(),
             state.pars.template segment<1>(eFreeTime).data(),
             state.derivative.data(),
@@ -164,7 +166,8 @@ Result<double> SympyStepper::stepImpl(
       break;
     }
 
-    h *= calcStepSizeScaling(2 * errorEstimate);
+    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+    h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
     // place
