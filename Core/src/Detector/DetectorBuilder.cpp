@@ -51,8 +51,13 @@ Acts::Experimental::DetectorBuilder::construct(
   if (m_cfg.materialDecorator != nullptr) {
     ACTS_DEBUG("Decorating the detector with material");
     std::for_each(volumes.begin(), volumes.end(), [&](auto& v) {
+      // Assign to surfaces
       for (auto& sf : v->surfacePtrs()) {
         m_cfg.materialDecorator->decorate(*sf);
+      }
+      // Assign to portals
+      for (auto& p : v->portalPtrs()) {
+        m_cfg.materialDecorator->decorate(p->surface());
       }
     });
   }
