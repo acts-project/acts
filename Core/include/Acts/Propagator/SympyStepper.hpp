@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,65 +14,48 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
-
-#include <algorithm>
-#include <cmath>
-#include <functional>
-#include <limits>
-#include <string>
-#include <tuple>
 
 namespace Acts {
 
-/// @brief straight line stepper based on Surface intersection
-///
-/// The straight line stepper is a simple navigation stepper
-/// to be used to navigate through the tracking geometry. It can be
-/// used for simple material mapping, navigation validation
-class StraightLineStepper {
+class SympyStepper {
  public:
+  /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
-  using BField = NullBField;
 
-  /// State for track parameter propagation
+  /// @brief State for track parameter propagation
   ///
+  /// It contains the stepping information and is provided thread local
+  /// by the propagator
   struct State {
     State() = delete;
 
     /// Constructor from the initial bound track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
+    /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& /*mctx*/,
+                   MagneticFieldProvider::Cache fieldCacheIn,
                    const BoundTrackParameters& par,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
+                   double ssize = std::numeric_limits<double>::max())
         : particleHypothesis(par.particleHypothesis()),
           stepSize(ssize),
-          tolerance(stolerance),
+          fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       Vector3 position = par.position(gctx);
       Vector3 direction = par.direction();
@@ -80,6 +63,8 @@ class StraightLineStepper {
       pars.template segment<3>(eFreeDir0) = direction;
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
+      // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
@@ -90,29 +75,30 @@ class StraightLineStepper {
       }
     }
 
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
-
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
-    /// Boolean to indicate if you need covariance transport
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
-    /// accummulated path length state
+    /// The full jacobian of the transport entire transport
+    Jacobian jacobian = Jacobian::Identity();
+
+    /// Jacobian from local to the global frame
+    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+
+    /// Pure transport jacobian part from runge kutta integration
+    FreeMatrix jacTransport = FreeMatrix::Identity();
+
+    /// The propagation derivative
+    FreeVector derivative = FreeVector::Zero();
+
+    /// Accummulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -121,49 +107,61 @@ class StraightLineStepper {
     /// Totoal number of attempted steps
     std::size_t nStepTrials = 0;
 
-    /// adaptive step size of the runge-kutta integration
+    /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
-    // Previous step size for overstep estimation (ignored for SL stepper)
+    /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
 
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
+    /// This caches the current magnetic field cell and stays
+    /// (and interpolates) within it as long as this is valid.
+    /// See step() code for details.
+    MagneticFieldProvider::Cache fieldCache;
 
-    // Cache the geometry context of this propagation
+    /// The geometry context
     std::reference_wrapper<const GeometryContext> geoContext;
+
+    /// @brief Storage of magnetic field and the sub steps during a RKN4 step
+    struct {
+      /// Magnetic field evaulations
+      Vector3 B_first, B_middle, B_last;
+      /// k_i of the RKN4 algorithm
+      Vector3 k1, k2, k3, k4;
+      /// k_i elements of the momenta
+      std::array<double, 4> kQoP{};
+    } stepData;
   };
 
-  /// Always use the same propagation state type, independently of the initial
-  /// track parameter type and of the target surface
-  using state_type = State;
-
-  StraightLineStepper() = default;
+  /// Constructor requires knowledge of the detector's magnetic field
+  SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
+               double overstepLimit = 100 * UnitConstants::um);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const BoundTrackParameters& par,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, mctx, par, ssize, stolerance};
-  }
+                  double ssize = std::numeric_limits<double>::max()) const;
 
   /// @brief Resets the state
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reset @c State will be on this surface
+  /// @param [in] surface The reference surface of the bound parameters
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams,
       const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
-  /// Get the field for the stepping, this gives back a zero field
-  Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
+  /// Get the field for the stepping, it checks first if the access is still
+  /// within the Cell, and updates the cell if necessary.
+  ///
+  /// @param [in,out] state is the propagation state associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
-    return Result<Vector3>::success({0., 0., 0.});
+    return m_bField->getField(pos, state.fieldCache);
   }
 
   /// Global particle position accessor
@@ -220,10 +218,8 @@ class StraightLineStepper {
 
   /// Update surface status
   ///
-  /// This method intersects the provided surface and update the navigation
-  /// step estimation accordingly (hence it changes the state). It also
-  /// returns the status of the intersection to trigger onSurface in case
-  /// the surface is reached.
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
@@ -231,20 +227,22 @@ class StraightLineStepper {
   /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
-  /// @param [in] logger A logger instance
+  /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryCheck& bcheck,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
-    return detail::updateSingleSurfaceStatus<StraightLineStepper>(
+    return detail::updateSingleSurfaceStatus<SympyStepper>(
         *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
   ///
-  /// It checks the status to the reference surface & updates
-  /// the step size accordingly
+  /// This method intersects the provided surface and update the navigation
+  /// step estimation accordingly (hence it changes the state). It also
+  /// returns the status of the intersection to trigger onSurface in case
+  /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
@@ -252,8 +250,7 @@ class StraightLineStepper {
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction /*direction*/, bool release = true) const {
-    detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
-                                                      release);
+    detail::updateSingleStepSize<SympyStepper>(state, oIntersection, release);
   }
 
   /// Update step size - explicitly with a double
@@ -263,8 +260,7 @@ class StraightLineStepper {
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype = ConstrainedStep::actor,
-                      bool release = true) const {
+                      ConstrainedStep::Type stype, bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -279,7 +275,7 @@ class StraightLineStepper {
 
   /// Release the Step size
   ///
-  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param state [in,out] The stepping state (thread-local cache)
   /// @param [in] stype The step size type to be released
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     state.stepSize.release(stype);
@@ -292,10 +288,18 @@ class StraightLineStepper {
     return state.stepSize.toString();
   }
 
+  /// Overstep limit
+  double overstepLimit(const State& /*state*/) const {
+    // A dynamic overstep limit could sit here
+    return -m_overstepLimit;
+  }
+
   /// Create and return the bound state at the current position
   ///
-  /// @brief It does not check if the transported state is at the surface, this
-  /// needs to be guaranteed by the propagator
+  /// @brief This transports (if necessary) the covariance
+  /// to the surface and creates a bound state. It does not check
+  /// if the transported state is at the surface, this needs to
+  /// be guaranteed by the propagator
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
@@ -323,27 +327,13 @@ class StraightLineStepper {
   bool prepareCurvilinearState(
       [[maybe_unused]] propagator_state_t& prop_state,
       [[maybe_unused]] const navigator_t& navigator) const {
-    // test whether the accumulated path has still its initial value.
-    if (prop_state.stepping.pathAccumulated == 0.) {
-      // dr/ds :
-      prop_state.stepping.derivative.template head<3>() =
-          direction(prop_state.stepping);
-      // dt / ds
-      prop_state.stepping.derivative(eFreeTime) =
-          std::hypot(1., prop_state.stepping.particleHypothesis.mass() /
-                             absoluteMomentum(prop_state.stepping));
-      // d (dr/ds) / ds : == 0
-      prop_state.stepping.derivative.template segment<3>(4) =
-          Acts::Vector3::Zero().transpose();
-      // d qop / ds  == 0
-      prop_state.stepping.derivative(eFreeQOverP) = 0.;
-    }
     return true;
   }
 
   /// Create and return a curvilinear state at the current position
   ///
-  /// @brief This creates a curvilinear state.
+  /// @brief This transports (if necessary) the covariance
+  /// to the current position and creates a curvilinear state.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
   /// @param [in] transportCov Flag steering covariance transport
@@ -360,7 +350,7 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
-  /// @param [in] covariance Covariance that will be written into @p state
+  /// @param [in] covariance The covariance that will be written into @p state
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
@@ -371,85 +361,68 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
-  /// @param [in] qop the updated qop value
+  /// @param [in] qOverP the updated qOverP value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double qop, double time) const;
+              double qOverP, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
+  /// or direction of the state
   ///
   /// @param [in,out] state State of the stepper
   void transportCovarianceToCurvilinear(State& state) const;
 
   /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
+  /// to a new curvilinear frame at current position,
+  /// or direction of the state
   ///
-  /// @tparam surface_t the surface type - ignored here
+  /// @tparam surface_t the Surface type
   ///
-  /// @param [in,out] state The stepper state
-  /// @param [in] surface is the surface to which the covariance is
-  ///        forwarded to
-  /// @note no check is done if the position is actually on the surface
+  /// @param [in,out] state State of the stepper
+  /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
-  ///
+  /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
 
-  /// Perform a straight line propagation step
+  /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param [in,out] state is the propagation state associated with the track
-  /// parameters that are being propagated.
-  ///                The state contains the desired step size,
-  ///                it can be negative during backwards track propagation,
-  ///                and since we're using an adaptive algorithm, it can
-  ///                be modified by the stepper class during propagation.
-  ///
-  /// @return the step size taken
+  /// @param [in,out] state the propagation state
+  /// @param [in] navigator the navigator of the propagation
+  /// @note The state contains the desired step size.  It can be negative during
+  ///       backwards track propagation, and since we're using an adaptive
+  ///       algorithm, it can be modified by the stepper class during
+  ///       propagation.
   template <typename propagator_state_t, typename navigator_t>
   Result<double> step(propagator_state_t& state,
-                      const navigator_t& /*navigator*/) const {
-    // use the adjusted step size
-    const auto h = state.stepping.stepSize.value() * state.options.direction;
-    const auto m = state.stepping.particleHypothesis.mass();
-    const auto p = absoluteMomentum(state.stepping);
-    // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1., m / p);
-    // Update the track parameters according to the equations of motion
-    Vector3 dir = direction(state.stepping);
-    state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
-    state.stepping.pars[eFreeTime] += h * dtds;
-    // Propagate the jacobian
-    if (state.stepping.covTransport) {
-      // The step transport matrix in global coordinates
-      FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
-      // Extend the calculation by the time propagation
-      // Evaluate dt/dlambda
-      D(3, 7) = h * m * m * state.stepping.pars[eFreeQOverP] / dtds;
-      // Set the derivative factor the time
-      state.stepping.derivative(3) = dtds;
-      // Update jacobian and derivative
-      state.stepping.jacTransport = D * state.stepping.jacTransport;
-      state.stepping.derivative.template head<3>() = dir;
-    }
+                      const navigator_t& navigator) const;
 
-    // state the path length
-    state.stepping.pathAccumulated += h;
-    ++state.stepping.nSteps;
-    ++state.stepping.nStepTrials;
+  /// Method that reset the Jacobian to the Identity for when no bound state are
+  /// available
+  ///
+  /// @param [in,out] state State of the stepper
+  void setIdentityJacobian(State& state) const;
 
-    // return h
-    return h;
-  }
+ protected:
+  /// Magnetic field inside of the detector
+  std::shared_ptr<const MagneticFieldProvider> m_bField;
+
+  /// Overstep limit
+  double m_overstepLimit;
+
+ private:
+  Result<double> stepImpl(State& state, Direction stepDirection,
+                          double stepTolerance, double stepSizeCutOff,
+                          std::size_t maxRungeKuttaStepTrials) const;
 };
 
 template <typename navigator_t>
-struct SupportsBoundParameters<StraightLineStepper, navigator_t>
+struct SupportsBoundParameters<SympyStepper, navigator_t>
     : public std::true_type {};
 
 }  // namespace Acts
+
+#include "Acts/Propagator/SympyStepper.ipp"

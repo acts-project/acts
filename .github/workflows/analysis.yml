@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -71,6 +71,7 @@ jobs:
         with:
           files: ./build/coverage/cov.xml
           disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }} # required
 
   build_performance:
     runs-on: ubuntu-latest

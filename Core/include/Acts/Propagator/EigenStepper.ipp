@@ -15,8 +15,9 @@
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
-    std::shared_ptr<const MagneticFieldProvider> bField, double overstepLimit)
-    : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
+    std::shared_ptr<const MagneticFieldProvider> bField,
+    double /*overstepLimit*/)
+    : m_bField(std::move(bField)) {}
 
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::makeState(
@@ -157,8 +158,9 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
 
-  double errorEstimate = 0.;
-  double h2 = 0, half_h = 0;
+  double errorEstimate = 0;
+  double h2 = 0;
+  double half_h = 0;
 
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
@@ -177,7 +179,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
-    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double lower = 0.25;
     constexpr double upper = 4.0;
     // This is given by the order of the Runge-Kutta method
@@ -199,6 +201,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
 
     return std::clamp(x, lower, upper);
+  };
+
+  const auto isErrorTolerable = [&](const double errorEstimate_) {
+    // For details about these values see ATL-SOFT-PUB-2009-001
+    constexpr double marginFactor = 4.0;
+
+    return errorEstimate_ <= marginFactor * state.options.stepTolerance;
   };
 
   // The following functor starts to perform a Runge-Kutta step of a certain
@@ -252,7 +261,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // Protect against division by zero
     errorEstimate = std::max(1e-20, errorEstimate);
 
-    return success(errorEstimate <= state.options.stepTolerance);
+    return success(isErrorTolerable(errorEstimate));
   };
 
   const double initialH =
@@ -271,7 +280,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    h *= calcStepSizeScaling(2 * errorEstimate);
+    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+    h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
     // place
@@ -290,6 +300,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
+    // using the direction before updated below
+
     // The step transport matrix in global coordinates
     FreeMatrix D;
     if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
@@ -341,6 +353,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   (state.stepping.pars.template segment<3>(eFreeDir0)).normalize();
 
   if (state.stepping.covTransport) {
+    // using the updated direction
     state.stepping.derivative.template head<3>() =
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
