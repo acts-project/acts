@@ -162,7 +162,11 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
+  /// @param bField The magnetic field provider
+  /// @param overstepLimit The limit for the overstep check
+  /// @note `overstepLimit` will be removed in a future release
+  explicit EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
+                        double overstepLimit = 100 * UnitConstants::um);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
