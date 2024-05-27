@@ -179,7 +179,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
-    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double lower = 0.25;
     constexpr double upper = 4.0;
     // This is given by the order of the Runge-Kutta method
@@ -204,7 +204,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   };
 
   const auto isErrorTolerable = [&](const double errorEstimate_) {
-    // For details about these values see ATL-SOFT-PUB-2009-001 for details
+    // For details about these values see ATL-SOFT-PUB-2009-001
     constexpr double marginFactor = 4.0;
 
     return errorEstimate_ <= marginFactor * state.options.stepTolerance;
