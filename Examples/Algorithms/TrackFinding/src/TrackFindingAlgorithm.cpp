@@ -527,8 +527,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               Acts::calculateTrackQuantities(trackCandidate);
 
               if (m_cfg.reverseSearch) {
-                trackCandidate.reverseTrackStates(true);
-
                 auto secondSmoothingResult =
                     Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
                 if (!secondSmoothingResult.ok()) {
@@ -539,6 +537,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                              << secondSmoothingResult.error());
                   continue;
                 }
+
+                trackCandidate.reverseTrackStates(true);
               }
 
               // TODO This extrapolation should not be necessary
