@@ -78,7 +78,7 @@ bool referenceTiming = false;
 bool oversteppingTest = false;
 double oversteppingMaxStepSize = 1_mm;
 
-/// The actual test nethod that runs the test
+/// The actual test method that runs the test
 /// can be used with several propagator types
 ///
 /// @tparam rpropagator_t is the reference propagator type
