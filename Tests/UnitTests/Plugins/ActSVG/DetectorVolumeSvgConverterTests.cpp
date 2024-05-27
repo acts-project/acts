@@ -15,8 +15,8 @@
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -159,8 +159,9 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
 
   Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
   shapeConfig.boundValues = {10, 100, 10., M_PI, 0.};
-  shapeConfig.transform = Acts::Transform3(Acts::Transform3::Identity())
-                              .pretranslate(Acts::Vector3(0., 0., -800.));
+  shapeConfig.transform =
+      Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
+          Acts::Vector3(0., 0., -800.));
   shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto shapeBuilder =

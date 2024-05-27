@@ -306,7 +306,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
 
-  if (bcheck && !isOnSurface(gctx, solution1, direction, bcheck)) {
+  if (bcheck.isEnabled() && !isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
   }
 
@@ -315,7 +315,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  if (bcheck && !isOnSurface(gctx, solution2, direction, bcheck)) {
+  if (bcheck.isEnabled() && !isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
 
@@ -331,11 +331,10 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
 }
 
 Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global position
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation

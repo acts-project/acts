@@ -36,12 +36,9 @@
 #include <type_traits>
 #include <utility>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
@@ -268,5 +265,4 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   testJacobianToGlobal(atStraw);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

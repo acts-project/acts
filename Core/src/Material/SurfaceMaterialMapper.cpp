@@ -138,7 +138,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
     auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
 
     // Get the bin utility: try proxy material first
-    const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
+    const BinUtility* bu = (psm != nullptr) ? (&psm->binning()) : nullptr;
     if (bu != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
@@ -425,9 +425,14 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   for (auto tmapBin : touchedMapBins) {
     std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
     if (m_cfg.computeVariance) {
-      tmapBin.first->trackVariance(
-          trackBins, touchedMaterialBin[tmapBin.first]->materialSlab(
-                         trackBins[0][0], trackBins[0][1]));
+      // This only makes sense for the binned material
+      auto binnedMaterial = dynamic_cast<const BinnedSurfaceMaterial*>(
+          touchedMaterialBin[tmapBin.first].get());
+      if (binnedMaterial != nullptr) {
+        tmapBin.first->trackVariance(
+            trackBins,
+            binnedMaterial->fullMaterial()[trackBins[0][1]][trackBins[0][0]]);
+      }
     }
     tmapBin.first->trackAverage(trackBins);
   }
@@ -498,11 +503,15 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
   for (auto tmapBin : touchedMapBins) {
     std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
     if (m_cfg.computeVariance) {
-      tmapBin.first->trackVariance(
-          trackBins,
-          touchedMaterialBin[tmapBin.first]->materialSlab(trackBins[0][0],
-                                                          trackBins[0][1]),
-          true);
+      // This only makes sense for the binned material
+      auto binnedMaterial = dynamic_cast<const BinnedSurfaceMaterial*>(
+          touchedMaterialBin[tmapBin.first].get());
+      if (binnedMaterial != nullptr) {
+        tmapBin.first->trackVariance(
+            trackBins,
+            binnedMaterial->fullMaterial()[trackBins[0][1]][trackBins[0][0]],
+            true);
+      }
     }
     // No need to do an extra pass for untouched surfaces they would have been
     // added to the material interaction in the initial mapping

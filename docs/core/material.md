@@ -16,5 +16,5 @@ Link to instructions how to run the material mapping in the examples
 Improve material mapping technical description
 :::
 
-![](figures/material/MaterialAssignment.jpeg)
-![](figures/material/MaterialAveraging.jpeg)
+![](figures/material/MaterialAssignment.jpg)
+![](figures/material/MaterialAveraging.jpg)

@@ -67,8 +67,7 @@ def runTruthTrackingGsf(
             acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection="particles_input",
-                orderedEvents=False,
+                outputParticles="particles_input",
             )
         )
 
@@ -125,8 +124,8 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
+            inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDir / "trackstates_gsf.root"),
         )
@@ -137,8 +136,9 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_gsf.root"),
+            writeGsfSpecific=True,
         )
     )
 
@@ -147,7 +147,7 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gsf.root"),
         )
     )

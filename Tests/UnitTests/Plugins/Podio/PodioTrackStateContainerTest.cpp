@@ -15,11 +15,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
@@ -34,7 +35,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);
@@ -97,10 +98,6 @@ struct Factory {
   using trajectory_t = MutablePodioTrackStateContainer;
   using const_trajectory_t = ConstPodioTrackStateContainer;
 
-  // list used to have stable addresses, irrelevant for testing
-  std::list<ActsPodioEdm::TrackStateCollection> m_collections;
-  std::list<ActsPodioEdm::BoundParametersCollection> m_params;
-  std::list<ActsPodioEdm::JacobianCollection> m_jacs;
   MapHelper m_helper;
 
   MutablePodioTrackStateContainer create() { return {m_helper}; }
@@ -136,6 +133,11 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   ct.testAddTrackStateWithBitMask();
 }
 
+BOOST_AUTO_TEST_CASE(AddTrackStateComponents) {
+  CommonTests ct;
+  ct.testAddTrackStateComponents();
+}
+
 // assert expected "cross-talk" between trackstate proxies
 BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   CommonTests ct;
@@ -166,6 +168,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   CommonTests ct;
   ct.testTrackStateProxyCopy(rng);
+}
+
+BOOST_AUTO_TEST_CASE(TrackStateCopyDynamicColumns) {
+  CommonTests ct;
+  ct.testTrackStateCopyDynamicColumns();
 }
 
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
@@ -203,8 +210,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   MapHelper helper;
 
-  // auto tmp_path = std::filesystem::temp_directory_path();
-  auto tmp_path = std::filesystem::current_path();
+  auto tmp_path = std::filesystem::temp_directory_path();
   auto outfile = tmp_path / "trackstates.root";
 
   BoundVector tv1;
@@ -240,14 +246,13 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK(c.hasColumn("float_column"_hash));
 
   {
-    auto t1 = c.getTrackState(c.addTrackState(TrackStatePropMask::Predicted));
+    auto t1 = c.makeTrackState(TrackStatePropMask::Predicted);
     t1.predicted() = tv1;
     t1.predictedCovariance() = cov1;
 
     t1.setReferenceSurface(free);
 
-    auto t2 =
-        c.getTrackState(c.addTrackState(TrackStatePropMask::All, t1.index()));
+    auto t2 = c.makeTrackState(TrackStatePropMask::All, t1.index());
     t2.predicted() = tv2;
     t2.predictedCovariance() = cov2;
 
@@ -259,7 +264,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
     t2.jacobian() = cov2;
 
-    auto t3 = c.getTrackState(c.addTrackState());
+    auto t3 = c.makeTrackState();
     t3.setReferenceSurface(reg);
 
     t1.component<int32_t, "int_column"_hash>() = -11;

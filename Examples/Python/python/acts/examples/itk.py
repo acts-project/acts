@@ -31,7 +31,6 @@ def buildITkGeometry(
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
 ):
-
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
@@ -380,7 +379,6 @@ def itkSeedingAlgConfig(
 
     # variables that change for pixel and strip SPs:
     if inputSpacePointsType is InputSpacePointsType.PixelSpacePoints:
-        outputSeeds = "PixelSeeds"
         allowSeparateRMax = False
         rMaxGridConfig = 320 * u.mm
         rMaxSeedFinderConfig = rMaxGridConfig
@@ -432,12 +430,10 @@ def itkSeedingAlgConfig(
         ]
         deltaRMiddleMinSPRange = 10 * u.mm
         deltaRMiddleMaxSPRange = 10 * u.mm
-        seedConfirmationFilter = True
         impactWeightFactor = 100
         compatSeedLimit = 3
         numSeedIncrement = 100
         seedWeightIncrement = 0
-        useDetailedDoubleMeasurementInfo = False
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
@@ -445,12 +441,9 @@ def itkSeedingAlgConfig(
         if highOccupancyConfig == True:
             rMaxGridConfig = 250 * u.mm
             deltaRMax = 200 * u.mm
-            zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
-            # variables that are only used for highOccupancyConfig configuration:
-            skipZMiddleBinSearch = 2
+            zBinsCustomLooping = [2, 10, 3, 9, 6, 4, 8, 5, 7]
 
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
-        outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
         rMaxSeedFinderConfig = 1200.0 * u.mm
@@ -490,12 +483,10 @@ def itkSeedingAlgConfig(
         ]
         deltaRMiddleMinSPRange = 30 * u.mm
         deltaRMiddleMaxSPRange = 150 * u.mm
-        seedConfirmationFilter = False
         impactWeightFactor = 1
         compatSeedLimit = 4
         numSeedIncrement = 1
         seedWeightIncrement = 10100
-        useDetailedDoubleMeasurementInfo = True
         maxSeedsPerSpMConf = 100
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
@@ -518,8 +509,6 @@ def itkSeedingAlgConfig(
             [40.0, 80.0],
         ]
         useVariableMiddleSPRange = False
-    else:
-        skipZMiddleBinSearch = 0
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
@@ -535,7 +524,6 @@ def itkSeedingAlgConfig(
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
         zBinsCustomLooping=zBinsCustomLooping,
-        skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,

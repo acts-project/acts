@@ -9,33 +9,56 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/Volume.hpp"
-#include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Ray.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
+using namespace Acts::UnitLiterals;
 
 BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(TrackingVolumeTests)
 
-#define NBOXES 10
-#define NTESTS 20
-#include "BVHDataTestCase.hpp"
+std::size_t countVolumes(const TrackingVolume& tv) {
+  std::size_t count = 0;
+  tv.visitVolumes([&count](const auto&) { ++count; });
+  return count;
+}
+
+BOOST_AUTO_TEST_CASE(TrackigVolumeChildren) {
+  auto cylBounds =
+      std::make_shared<Acts::CylinderVolumeBounds>(10_mm, 20_mm, 100_mm);
+
+  TrackingVolume tv{Transform3::Identity(), cylBounds};
+
+  BOOST_CHECK(tv.volumes().empty());
+  BOOST_CHECK_EQUAL(countVolumes(tv), 1);
+
+  auto& child1 = tv.addVolume(
+      std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds));
+
+  BOOST_CHECK_EQUAL(tv.volumes().size(), 1);
+
+  auto it = tv.volumes().begin();
+  static_assert(std::is_same_v<decltype(*it), TrackingVolume&>);
+
+  const auto& tvConst = tv;
+  auto cit = tvConst.volumes().begin();
+  static_assert(std::is_same_v<decltype(*cit), const TrackingVolume&>);
+
+  BOOST_CHECK_EQUAL(&*it, &child1);
+
+  BOOST_CHECK_EQUAL(countVolumes(tv), 2);
+
+  tv.addVolume(
+      std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds));
+
+  BOOST_CHECK_EQUAL(countVolumes(tv), 3);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace Acts::Test

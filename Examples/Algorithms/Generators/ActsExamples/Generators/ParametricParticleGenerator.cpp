@@ -11,15 +11,18 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <random>
 #include <utility>
 
-ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
-    const Config& cfg)
+namespace ActsExamples {
+
+ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     : m_cfg(cfg),
       m_charge(cfg.charge.value_or(Acts::findCharge(m_cfg.pdg).value_or(0))),
       m_mass(cfg.mass.value_or(Acts::findMass(m_cfg.pdg).value_or(0))),
@@ -35,9 +38,9 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
       m_etaMin(-std::log(std::tan(0.5 * m_cfg.thetaMin))),
       m_etaMax(-std::log(std::tan(0.5 * m_cfg.thetaMax))) {}
 
-ActsExamples::SimParticleContainer
-ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
-  using UniformIndex = std::uniform_int_distribution<unsigned int>;
+std::pair<SimVertexContainer, SimParticleContainer>
+ParametricParticleGenerator::operator()(RandomEngine& rng) {
+  using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
   // choose between particle/anti-particle if requested
@@ -57,13 +60,18 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
   UniformReal etaDist(m_etaMin, m_etaMax);
   UniformReal pDist(m_cfg.pMin, m_cfg.pMax);
 
-  SimParticleContainer particles;
-  particles.reserve(m_cfg.numParticles);
+  SimVertexContainer::sequence_type vertices;
+  SimParticleContainer::sequence_type particles;
+
+  // create the primary vertex
+  auto& primaryVertex =
+      vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
     // all particles are treated as originating from the same primary vertex
-    const auto pid = ActsFatras::Barcode(0u).setParticle(ip);
+    const auto pid = SimBarcode(0u).setParticle(ip);
+    primaryVertex.outgoing.insert(pid);
 
     // draw parameters
     const unsigned int type = particleTypeChoice(rng);
@@ -99,5 +107,10 @@ ActsExamples::ParametricParticleGenerator::operator()(RandomEngine& rng) {
     particles.insert(particles.end(), std::move(particle));
   }
 
-  return particles;
+  std::pair<SimVertexContainer, SimParticleContainer> out;
+  out.first.insert(vertices.begin(), vertices.end());
+  out.second.insert(particles.begin(), particles.end());
+  return out;
 }
+
+}  // namespace ActsExamples

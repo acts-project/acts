@@ -44,11 +44,9 @@ class Surface;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -76,12 +74,11 @@ DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
 const int ntests = 1000;
 const int skip = 0;
-bool debugMode = false;
 bool referenceTiming = false;
 bool oversteppingTest = false;
 double oversteppingMaxStepSize = 1_mm;
 
-/// The actual test nethod that runs the test
+/// The actual test method that runs the test
 /// can be used with several propagator types
 ///
 /// @tparam rpropagator_t is the reference propagator type
@@ -96,7 +93,7 @@ double oversteppingMaxStepSize = 1_mm;
 /// @param index is the run index from the test
 template <typename rpropagator_t, typename dpropagator_t>
 void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
-             double phi, double theta, int charge, double time, int index) {
+             double phi, double theta, int charge, int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
@@ -105,9 +102,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
   // Define start parameters from ranom input
   double p = pT / sin(theta);
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta,
-                                   dcharge / p, std::nullopt,
-                                   ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, dcharge / p,
+                                   std::nullopt, ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 
@@ -183,26 +179,24 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     test_direct_navigator,
-    bdata::random((bdata::seed = 20,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.15_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.15_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 24,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT, phi, theta, charge, index) {
   // Run the test
-  runTest(rpropagator, dpropagator, pT, phi, theta, charge, time, index);
+  runTest(rpropagator, dpropagator, pT, phi, theta, charge, index);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

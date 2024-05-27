@@ -21,6 +21,8 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -29,6 +31,7 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <random>
 
 #include <edm4hep/TrackCollection.h>
@@ -36,6 +39,31 @@
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 BOOST_AUTO_TEST_SUITE(EDM4hepParameterConversion)
+
+BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
+  BoundVector par;
+  par << 1_mm, 5_mm, 0.1, M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+
+  BoundMatrix cov;
+  cov.setIdentity();
+
+  double Bz = 2_T;
+
+  double tanLambda = std::tan(M_PI_2 - par[Acts::eBoundTheta]);
+  double omega =
+      par[Acts::eBoundQOverP] / std::sin(par[Acts::eBoundTheta]) * Bz;
+
+  auto J1 = EDM4hepUtil::detail::jacobianToEdm4hep(par[eBoundTheta],
+                                                   par[eBoundQOverP], Bz);
+
+  BoundMatrix cov2 = J1 * cov * J1.transpose();
+
+  auto J2 = EDM4hepUtil::detail::jacobianFromEdm4hep(tanLambda, omega, Bz);
+
+  BoundMatrix cov3 = J2 * cov2 * J2.transpose();
+
+  CHECK_CLOSE_ABS(cov, cov3, 1e-9);
+}
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   auto refSurface = Surface::makeShared<PerigeeSurface>(Vector3{50, 30, 20});
@@ -81,17 +109,17 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
-  auto refSurface = Surface::makeShared<PlaneSurface>(
+  auto planeSurface = Surface::makeShared<PlaneSurface>(
       Vector3{50, 30, 20}, Vector3{1, 1, 0.3}.normalized());
 
   BoundVector par;
-  par << 1_mm, 5_mm, M_PI / 4., M_PI_2, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, M_PI / 4., M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
 
   BoundMatrix cov;
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  BoundTrackParameters boundPar{refSurface, par, cov,
+  BoundTrackParameters planePar{planeSurface, par, cov,
                                 ParticleHypothesis::pion()};
 
   double Bz = 2_T;
@@ -99,7 +127,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   Acts::GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
-      EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
+      EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, planePar);
 
   BOOST_CHECK(converted.covariance.has_value());
   BOOST_CHECK(converted.surface);
@@ -108,8 +136,16 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BOOST_CHECK_EQUAL(converted.values.template head<2>(), (Vector2{0, 0}));
   CHECK_CLOSE_ABS(converted.values[2], par[2], 1e-6);
 
-  BOOST_CHECK((converted.covariance.value().template topLeftCorner<4, 4>())
-                  .isApprox(ActsSquareMatrix<4>::Identity()));
+  BOOST_CHECK_EQUAL(converted.covariance.value()(0, 0), 1);
+
+  BOOST_CHECK_LT(converted.covariance.value()(1, 1), 1.2);
+  BOOST_CHECK_GT(converted.covariance.value()(1, 1), 1);
+
+  CHECK_CLOSE_ABS(converted.covariance.value()(2, 2), 1, 1e-6);
+
+  BOOST_CHECK_GT(converted.covariance.value()(3, 3), 1);
+  BOOST_CHECK_LT(converted.covariance.value()(3, 3), 1.2);
+
   BOOST_CHECK_GT(converted.covariance.value()(4, 4), 0);
   BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
@@ -117,11 +153,24 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BoundTrackParameters roundtripPar =
       EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
-  BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),
-                    (Vector2{0, 0}));
-  BOOST_CHECK(roundtripPar.parameters().tail<4>().isApprox(par.tail<4>()));
-  BOOST_CHECK(roundtripPar.covariance().value().isApprox(
-      boundPar.covariance().value()));
+  BOOST_CHECK_NE(dynamic_cast<const Acts::PerigeeSurface*>(
+                     &roundtripPar.referenceSurface()),
+                 nullptr);
+
+  BOOST_CHECK((converted.covariance.value().topLeftCorner<3, 3>().isApprox(
+      roundtripPar.covariance().value().topLeftCorner<3, 3>())));
+  CHECK_CLOSE_ABS(roundtripPar.covariance().value()(3, 3), 1, 1e-6);
+  CHECK_CLOSE_ABS(roundtripPar.covariance().value()(4, 4), 1, 1e-6);
+  BOOST_CHECK_EQUAL(roundtripPar.covariance().value()(5, 5), 25_ns);
+
+  auto roundtripPlaneBoundParams =
+      Acts::detail::boundToBoundConversion(gctx, roundtripPar, *planeSurface)
+          .value();
+
+  BOOST_CHECK(roundtripPlaneBoundParams.parameters().isApprox(par));
+
+  CHECK_CLOSE_COVARIANCE(roundtripPlaneBoundParams.covariance().value(),
+                         planePar.covariance().value(), 1e-3);
 }
 
 BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
@@ -224,8 +273,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   std::normal_distribution<double> gauss(0., 1.);
   std::uniform_real_distribution<double> f(-1, 1);
   std::uniform_real_distribution<double> r(0, 1);
-  std::uniform_int_distribution<unsigned int> nTracks(2, 20);
-  std::uniform_int_distribution<unsigned int> nTs(1, 20);
+  std::uniform_int_distribution<std::uint32_t> nTracks(2, 20);
+  std::uniform_int_distribution<std::uint32_t> nTs(1, 20);
   std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
   std::uniform_real_distribution<double> etaDist(-4, 4);
   std::uniform_real_distribution<double> ptDist(1_MeV, 10_GeV);
@@ -251,9 +300,9 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     return {par, cov};
   };
 
-  std::size_t numT = nTracks(rng);
-  for (std::size_t t = 0; t < numT; t++) {
-    auto track = tracks.getTrack(tracks.addTrack());
+  std::uint32_t numT = nTracks(rng);
+  for (std::uint32_t t = 0; t < numT; t++) {
+    auto track = tracks.makeTrack();
     {
       auto [par, cov] = genParams();
       track.parameters() = par;
@@ -262,8 +311,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     track.setReferenceSurface(
         Acts::Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
 
-    std::size_t numTs = nTs(rng);
-    for (std::size_t i = 0; i < numTs; i++) {
+    std::uint32_t numTs = nTs(rng);
+    for (std::uint32_t i = 0; i < numTs; i++) {
       auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
       double crit = r(rng);
       if (crit < 0.1) {
@@ -322,8 +371,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
                             std::make_shared<Acts::VectorMultiTrajectory>());
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
-    EDM4hepUtil::readTrack(
-        edm4hepTrack, readTracks.getTrack(readTracks.addTrack()), Bz, *logger);
+    EDM4hepUtil::readTrack(edm4hepTrack, readTracks.makeTrack(), Bz, *logger);
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());
@@ -365,7 +413,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
                            readTs.smoothedCovariance(), 1e-5, 1e-6);
       Vector3 newCenter = readTs.referenceSurface().center(
           gctx);  // new center is a perigee, but should be on the other
-                  // surface
+      // surface
       BOOST_CHECK(origTs.referenceSurface().isOnSurface(gctx, newCenter,
                                                         Vector3::Zero()));
 

@@ -15,23 +15,24 @@ ActsExamples::AmbiguityResolutionML::AmbiguityResolutionML(
     std::string name, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm(name, lvl) {}
 
-std::multimap<int, std::pair<int, std::vector<int>>>
+std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
 ActsExamples::AmbiguityResolutionML::mapTrackHits(
     const ActsExamples::ConstTrackContainer& tracks,
     int nMeasurementsMin) const {
-  std::multimap<int, std::pair<int, std::vector<int>>> trackMap;
+  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>> trackMap;
   // Loop over all the trajectories in the events
   for (const auto& track : tracks) {
-    std::vector<int> hits;
+    std::vector<std::size_t> hits;
     int nbMeasurements = 0;
     // Store the hits id for the trajectory and compute the number of
     // measurement
     tracks.trackStateContainer().visitBackwards(
         track.tipIndex(), [&](const auto& state) {
           if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-            int indexHit = state.getUncalibratedSourceLink()
-                               .template get<ActsExamples::IndexSourceLink>()
-                               .index();
+            std::size_t indexHit =
+                state.getUncalibratedSourceLink()
+                    .template get<ActsExamples::IndexSourceLink>()
+                    .index();
             hits.emplace_back(indexHit);
             ++nbMeasurements;
           }
@@ -47,7 +48,7 @@ ActsExamples::AmbiguityResolutionML::mapTrackHits(
 ActsExamples::ConstTrackContainer
 ActsExamples::AmbiguityResolutionML::prepareOutputTrack(
     const ActsExamples::ConstTrackContainer& tracks,
-    std::vector<int>& goodTracks) const {
+    std::vector<std::size_t>& goodTracks) const {
   std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
       tracks.trackStateContainerHolder();
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
@@ -61,7 +62,7 @@ ActsExamples::AmbiguityResolutionML::prepareOutputTrack(
   solvedTracks.ensureDynamicColumns(tracks);
 
   for (auto&& iTrack : goodTracks) {
-    auto destProxy = solvedTracks.getTrack(solvedTracks.addTrack());
+    auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
     destProxy.copyFrom(srcProxy, false);
     destProxy.tipIndex() = srcProxy.tipIndex();

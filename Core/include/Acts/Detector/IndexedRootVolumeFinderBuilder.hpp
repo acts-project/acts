@@ -10,15 +10,13 @@
 
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 
@@ -36,7 +34,7 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
   /// @param rootVolumes the root volumes to be used for the finder
   ///
   /// @return a shared detector object
-  DetectorVolumeUpdator construct(
+  ExternalNavigationDelegate construct(
       const GeometryContext& gctx,
       const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes)
       const final;
@@ -45,5 +43,4 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
   std::vector<Acts::BinningValue> m_casts;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

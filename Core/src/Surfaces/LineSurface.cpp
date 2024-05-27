@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
@@ -18,6 +17,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
@@ -180,7 +180,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck && m_bounds) {
+  if (bcheck.isEnabled() && m_bounds) {
     // At closest approach: check inside R or and inside Z
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);
@@ -196,36 +196,22 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 }
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
-    const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Transform from bound to free parameters
-  FreeVector freeParams =
-      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
-  // The global position
-  Vector3 position = freeParams.segment<3>(eFreePos0);
-  // The direction
-  Vector3 direction = freeParams.segment<3>(eFreeDir0);
-  // Get the sines and cosines directly
-  double cosTheta = std::cos(boundParams[eBoundTheta]);
-  double sinTheta = std::sin(boundParams[eBoundTheta]);
-  double cosPhi = std::cos(boundParams[eBoundPhi]);
-  double sinPhi = std::sin(boundParams[eBoundPhi]);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
 
-  // Initialize the jacobian from local to global
-  BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+  Vector2 local = *globalToLocal(gctx, position, direction,
+                                 std::numeric_limits<double>::max());
 
-  // the local error components - given by the reference frame
-  jacToGlobal.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
-  // the time component
-  jacToGlobal(eFreeTime, eBoundTime) = 1;
-  // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
-  jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+  // For the derivative of global position with bound angles, refer the
+  // following white paper:
+  // https://acts.readthedocs.io/en/latest/white_papers/line-surface-jacobian.html
+
+  BoundToFreeMatrix jacToGlobal =
+      Surface::boundToFreeJacobian(gctx, position, direction);
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
@@ -240,20 +226,17 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   dDThetaY -=
       rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) =
-      dDPhiY * boundParams[eBoundLoc0] * ipdn;
-  jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) =
-      dDThetaY * boundParams[eBoundLoc0] * ipdn;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) = dDPhiY * local.x() * ipdn;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) = dDThetaY * local.x() * ipdn;
 
   return jacToGlobal;
 }
 
 Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global posiiton
-  Vector3 position = parameters.segment<3>(eFreePos0);
-  // The direction
-  Vector3 direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
@@ -279,11 +262,10 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
 }
 
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global posiiton
-  Vector3 position = parameters.segment<3>(eFreePos0);
-  // The direction
-  Vector3 direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis

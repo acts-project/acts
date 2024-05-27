@@ -10,20 +10,18 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
 #include <array>
 #include <memory>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// @brief  A templated indexed grid generator.
 ///
-/// This Generator creates a SurfaceCandidatesUpdator delegate
+/// This Generator creates a InternalNavigationDelegate delegate
 /// which can then be used in the DetectorVolume class for updating
 /// given surface candidates based on an index grid.
 ///
@@ -58,9 +56,9 @@ struct IndexedSurfacesGenerator {
   /// @param aGenerator the axis generator
   /// @param rGenerator the reference generataor
   ///
-  /// @return a SurfaceCandidateUpdator delegate
+  /// @return an InternalNavigationDelegate
   template <typename axis_generator, typename reference_generator>
-  SurfaceCandidatesUpdator operator()(
+  InternalNavigationDelegate operator()(
       const GeometryContext& gctx, const axis_generator& aGenerator,
       const reference_generator& rGenerator) const {
     ACTS_DEBUG("Indexing " << surfaces.size() << " surface, "
@@ -83,19 +81,19 @@ struct IndexedSurfacesGenerator {
     filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
     // The portal delegate
-    AllPortalsImpl allPortals;
+    AllPortalsNavigation allPortals;
 
     // The chained delegate: indexed surfaces and all portals
     using DelegateType =
-        IndexedSurfacesAllPortalsImpl<decltype(grid), indexed_updator>;
+        IndexedSurfacesAllPortalsNavigation<decltype(grid), indexed_updator>;
     auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
         std::tie(allPortals, indexedSurfaces));
 
     // Create the delegate and connect it
-    SurfaceCandidatesUpdator nStateUpdator;
-    nStateUpdator.connect<&DelegateType::update>(
+    InternalNavigationDelegate nStateUpdater;
+    nStateUpdater.connect<&DelegateType::update>(
         std::move(indexedSurfacesAllPortals));
-    return nStateUpdator;
+    return nStateUpdater;
   }
 
   /// Access to the logger
@@ -104,6 +102,4 @@ struct IndexedSurfacesGenerator {
   const Logger& logger() const { return *oLogger; }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

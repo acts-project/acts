@@ -38,15 +38,9 @@
 
 #include <boost/format.hpp>
 
-using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -281,6 +275,4 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

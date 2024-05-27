@@ -20,7 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -59,6 +59,10 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
     for (auto [ip, p] : Acts::enumerate(dVolume->portalPtrs())) {
       portalContainer[ip] = p;
     }
+
+    Acts::GeometryIdentifier geoID;
+    geoID.setVolume(1);
+    dVolume->assignGeometryId(geoID);
 
     return Acts::Experimental::DetectorComponent{
         {dVolume},

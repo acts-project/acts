@@ -165,7 +165,6 @@ STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Fatras/include \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Geant4/include \
-                         ../Plugins/Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/TGeo/include \
@@ -775,10 +774,10 @@ WARN_LOGFILE           =
 
 INPUT                  = ../Core/include \
                          ../Fatras/include \
-                         ../Plugins/Autodiff/include \
                          ../Plugins/DD4hep/include \
+                         ../Plugins/EDM4hep/include \
+                         ../Plugins/Podio/include \
                          ../Plugins/Geant4/include \
-                         ../Plugins/Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/Onnx/include \

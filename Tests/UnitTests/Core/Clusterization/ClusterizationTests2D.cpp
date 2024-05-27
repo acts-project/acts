@@ -24,8 +24,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Rectangle = std::array<int, 4>;
 
@@ -65,8 +64,8 @@ std::vector<Rectangle> segment(int x0, int y0, int x1, int y1, RNG& rng) {
     return {{x0, y0, x1, y1}};
   }
 
-  int x_ = std::uniform_int_distribution(xmin, xmax)(rng);
-  int y_ = std::uniform_int_distribution(ymin, ymax)(rng);
+  int x_ = std::uniform_int_distribution<std::int32_t>(xmin, xmax)(rng);
+  int y_ = std::uniform_int_distribution<std::int32_t>(ymin, ymax)(rng);
 
   if (splitx && !splity) {
     return concat({segment(x0, y0, x_, y1, rng), segment(x_, y0, x1, y1, rng)});
@@ -188,8 +187,8 @@ Cluster2D gencluster(int x0, int y0, int x1, int y1, RNG& rng,
   int y0_ = y0 + 1;
   int y1_ = y1 - 1;
 
-  int x = std::uniform_int_distribution(x0_, x1_)(rng);
-  int y = std::uniform_int_distribution(y0_, y1_)(rng);
+  int x = std::uniform_int_distribution<std::int32_t>(x0_, x1_)(rng);
+  int y = std::uniform_int_distribution<std::int32_t>(y0_, y1_)(rng);
 
   std::vector<Cell2D> cells = {Cell2D(x, y)};
   genclusterw(x, y, x0_, y0_, x1_, y1_, cells, rng, startp, decayp);
@@ -248,5 +247,4 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

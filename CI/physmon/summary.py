@@ -3,11 +3,10 @@
 
 import argparse
 import re
-import functools
 import os
 import csv
 
-HERALD_URL = "https://herald.dokku.paulgessinger.com/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
+HERALD_URL = "https://acts-herald.app.cern.ch/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
 IS_CI = "GITHUB_ACTIONS" in os.environ
 
 

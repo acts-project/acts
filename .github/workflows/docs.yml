@@ -8,7 +8,7 @@ on:
       - 'release/**'
       - 'develop/**'
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -16,14 +16,14 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     env:
-        DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
-        DOXYGEN_VERSION: 1.9.4
+      DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
+      DOXYGEN_VERSION: 1.9.8
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache doxygen
         id: cache-doxygen
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /usr/local/bin/doxygen
           key: doxygen_${{ env.DOXYGEN_VERSION }}
@@ -50,10 +50,12 @@ jobs:
           --keep-going
           -t run_doxygen
           -t lazy_autodoc
+          -t white_papers
           -b linkcheck
           . _build/html/
 
-      - uses: actions/upload-artifact@v3
+          
+      - uses: actions/upload-artifact@v4
         with:
           name: acts-docs
           path: docs/_build/html/

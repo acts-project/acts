@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import tempfile
 from pathlib import Path
 import shutil
@@ -22,6 +23,7 @@ from acts.examples.reconstruction import (
     SeedFinderOptionsArg,
     SeedingAlgorithm,
     TruthEstimatedSeedingAlgorithmConfigArg,
+    CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -112,6 +114,15 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             else SeedingAlgorithm.Default
             if label == "seeded"
             else SeedingAlgorithm.Orthogonal,
+            initialSigmas=[
+                1 * u.mm,
+                1 * u.mm,
+                1 * u.degree,
+                1 * u.degree,
+                0.1 / u.GeV,
+                1 * u.ns,
+            ],
+            initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
@@ -125,6 +136,12 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
+                maxHoles=2,
+                maxOutliers=2,
+            ),
+            CkfConfig(
+                seedDeduplication=False if truthSmearedSeeded else True,
+                stayOnSeed=False if truthSmearedSeeded else True,
             ),
             outputDirRoot=tp,
         )
@@ -132,7 +149,11 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         if label in ["seeded", "orthogonal"]:
             addAmbiguityResolution(
                 s,
-                AmbiguityResolutionConfig(maximumSharedHits=3),
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=3,
+                    maximumIterations=10000,
+                    nMeasurementsMin=6,
+                ),
                 outputDirRoot=tp,
             )
 
@@ -144,13 +165,17 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             )
         )
 
+        # Choosing a seeder only has an effect on VertexFinder.AMVF. For
+        # VertexFinder.IVF we always use acts.VertexSeedFinder.GaussianSeeder
+        # (Python binding is not implemented).
+        # Setting useTime also only has an effect on VertexFinder.AMVF due to
+        # the same reason.
         addVertexFitting(
             s,
             setup.field,
             trackParameters="trackParameters",
             outputProtoVertices="ivf_protovertices",
             outputVertices="ivf_fittedVertices",
-            seeder=acts.VertexSeedFinder.GaussianSeeder,
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp / "ivf",
         )
@@ -162,12 +187,14 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             outputProtoVertices="amvf_protovertices",
             outputVertices="amvf_fittedVertices",
             seeder=acts.VertexSeedFinder.GaussianSeeder,
+            useTime=False,  # Time seeding not implemented for the Gaussian seeder
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
 
         # Use the adaptive grid vertex seeder in combination with the AMVF
-        # To avoid having too many physmon cases, we only do this for the label "seeded"
+        # To avoid having too many physmon cases, we only do this for the label
+        # "seeded"
         if label == "seeded":
             addVertexFitting(
                 s,
@@ -176,6 +203,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 outputProtoVertices="amvf_gridseeder_protovertices",
                 outputVertices="amvf_gridseeder_fittedVertices",
                 seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+                useTime=True,
                 vertexFinder=VertexFinder.AMVF,
                 outputDirRoot=tp / "amvf_gridseeder",
             )

@@ -15,6 +15,7 @@ from ambiguity_solver_network import prepareDataSet, DuplicateClassifier, Normal
 avg_mean = [0, 0, 0, 0, 0, 0, 0, 0]
 avg_sdv = [0, 0, 0, 0, 0, 0, 0, 0]
 events = 0
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
@@ -23,7 +24,6 @@ def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
     @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each events 
     """
-    globalindex = 0
     data = pd.DataFrame()
     for f in CKS_files:
         datafile = pd.read_csv(f)
@@ -151,6 +151,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         if Optimiser:
             Optimiser.zero_grad()
         input = torch.tensor(b_data[1], dtype=torch.float32)
+        input = input.to(device)
         prediction = duplicateClassifier(input)
         # loop over all the track in the batch
         for index, pred, truth in zip(b_data[0], prediction, b_data[2]):
@@ -187,7 +188,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
         nb_part += 1
         # Normalise the loss to the batch size
         batch_loss = batch_loss / len(b_data[0])
-        loss += batch_loss
+        loss += batch_loss.item()
         # Perform the gradient descend if an optimiser was specified
         if Optimiser:
             batch_loss.backward()
@@ -221,14 +222,14 @@ def train(
     val_batch = int(len(batch) * (1 - validation))
     # Loop over all the epoch
     for epoch in range(epochs):
-        print("Epoch : ", epoch, " / ", epochs)
+        print("Epoch: ", epoch, " / ", epochs)
         loss = 0.0
         nb_part = 0.0
         nb_good_match = 0.0
 
         # Loop over all the network over the training batch
         nb_part, nb_good_match, loss = scoringBatch(batch[:val_batch], Optimiser=opt)
-        print("Loss/train : ", loss, " Eff/train : ", nb_good_match / nb_part)
+        print("Loss/train: ", loss, " Eff/train: ", nb_good_match / nb_part)
         writer.add_scalar("Loss/train", loss, epoch)
         writer.add_scalar("Eff/train", nb_good_match / nb_part, epoch)
 
@@ -237,7 +238,7 @@ def train(
             nb_part, nb_good_match, loss = scoringBatch(batch[val_batch:])
             writer.add_scalar("Loss/val", loss, epoch)
             writer.add_scalar("Eff/val", nb_good_match / nb_part, epoch)
-            print("Loss/val : ", loss, " Eff/val : ", nb_good_match / nb_part)
+            print("Loss/val: ", loss, " Eff/val: ", nb_good_match / nb_part)
 
     writer.close()
     return duplicateClassifier
@@ -262,6 +263,7 @@ layers_dim = [10, 15, 10]
 duplicateClassifier = nn.Sequential(
     Normalise(avg_mean, avg_sdv), DuplicateClassifier(input_dim, layers_dim)
 )
+duplicateClassifier = duplicateClassifier.to(device)
 
 # Train the model and save it
 input = data.index, x_train, y_train
@@ -271,7 +273,7 @@ input_test = torch.tensor(x_train, dtype=torch.float32)
 torch.save(duplicateClassifier, "duplicateClassifier.pt")
 torch.onnx.export(
     duplicateClassifier,
-    input_test,
+    input_test[0:1],
     "duplicateClassifier.onnx",
     input_names=["x"],
     output_names=["y"],
@@ -292,6 +294,7 @@ x_test, y_test = prepareTrainingData(test)
 output_predict = []
 
 x_test = torch.tensor(x_test, dtype=torch.float32)
+x_test = x_test.to(device)
 for x in x_test:
     output_predict.append(duplicateClassifier(x))
 
@@ -326,6 +329,6 @@ nb_part += 1
 if max_match == 1:
     nb_good_match += 1
 
-print("nb particles : ", nb_part)
-print("nb good match : ", nb_good_match)
+print("nb particles: ", nb_part)
+print("nb good match: ", nb_good_match)
 print("Efficiency: ", 100 * nb_good_match / nb_part, " %")

@@ -14,8 +14,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -265,6 +265,12 @@ class AtlasStepper {
     // accummulated path length cache
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     // Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
@@ -313,10 +319,10 @@ class AtlasStepper {
       const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
-    update(state,
-           detail::transformBoundToFreeParameters(surface, state.geoContext,
-                                                  boundParams),
-           boundParams, cov, surface);
+    update(
+        state,
+        transformBoundToFreeParameters(surface, state.geoContext, boundParams),
+        boundParams, cov, surface);
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
 
@@ -375,10 +381,7 @@ class AtlasStepper {
   }
 
   /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    (void)state;
+  double overstepLimit(const State& /*state*/) const {
     return -m_overstepLimit;
   }
 
@@ -422,15 +425,14 @@ class AtlasStepper {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] stepSize The step size value
   /// @param [in] stype The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -446,8 +448,9 @@ class AtlasStepper {
   /// Release the Step size
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
+    state.stepSize.release(stype);
   }
 
   /// Output the Step Size - single component
@@ -508,6 +511,21 @@ class AtlasStepper {
 
     return BoundState(std::move(*parameters), jacobian.transpose(),
                       state.pathAccumulated);
+  }
+
+  /// @brief If necessary fill additional members needed for curvilinearState
+  ///
+  /// Compute path length derivatives in case they have not been computed
+  /// yet, which is the case if no step has been executed yet.
+  ///
+  /// @param [in, out] prop_state State that will be presented as @c BoundState
+  /// @param [in] navigator the navigator of the propagation
+  /// @return true if nothing is missing after this call, false otherwise.
+  template <typename propagator_state_t, typename navigator_t>
+  bool prepareCurvilinearState(
+      [[maybe_unused]] propagator_state_t& prop_state,
+      [[maybe_unused]] const navigator_t& navigator) const {
+    return true;
   }
 
   /// Create and return a curvilinear state at the current position
@@ -762,7 +780,7 @@ class AtlasStepper {
     P[45] *= p;
     P[46] *= p;
 
-    double An = std::hypot(P[4], P[5]);
+    double An = std::sqrt(P[4] * P[4] + P[5] * P[5]);
     double Ax[3];
     if (An != 0.) {
       Ax[0] = -P[5] / An;
@@ -1157,6 +1175,8 @@ class AtlasStepper {
 
     std::size_t nStepTrials = 0;
     while (h != 0.) {
+      nStepTrials++;
+
       // PS2 is h/(2*momentum) in EigenStepper
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
@@ -1242,7 +1262,6 @@ class AtlasStepper {
         // neutralize the sign of h again
         state.stepping.stepSize.setAccuracy(h * state.options.direction);
         //        dltm = 0.;
-        nStepTrials++;
         continue;
       }
 
@@ -1271,17 +1290,17 @@ class AtlasStepper {
       sA[2] = C6 * Sl;
 
       double mass = particleHypothesis(state.stepping).mass();
+      double momentum = absoluteMomentum(state.stepping);
 
       // Evaluate the time propagation
-      double dtds = std::hypot(1, mass / absoluteMomentum(state.stepping));
+      double dtds = std::sqrt(1 + mass * mass / (momentum * momentum));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl = h * mass * mass * charge(state.stepping) /
-                      (absoluteMomentum(state.stepping) * dtds);
+        double dtdl = h * mass * mass * qOverP(state.stepping) / dtds;
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation
@@ -1372,13 +1391,13 @@ class AtlasStepper {
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
 
-      state.stepping.pathAccumulated += h;
-      state.stepping.stepSize.nStepTrials = nStepTrials;
-      return h;
+      break;
     }
 
-    // that exit path should actually not happen
     state.stepping.pathAccumulated += h;
+    ++state.stepping.nSteps;
+    state.stepping.nStepTrials += nStepTrials;
+
     return h;
   }
 

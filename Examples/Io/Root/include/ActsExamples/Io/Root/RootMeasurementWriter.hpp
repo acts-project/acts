@@ -71,8 +71,9 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string fileMode = "RECREATE";  ///< file access mode
     /// The indices for this digitization configurations
     Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>> boundIndices;
-    /// Tracking geometry required to access local-to-global transforms.
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// Map of the geometry identifier to the surface
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier;
   };
 
   struct DigitizationTree {
@@ -123,10 +124,9 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       tree->Branch("layer_id", &layerID);
       tree->Branch("surface_id", &surfaceID);
       tree->Branch("measurement_type", &measType);
-      for (unsigned int ib = 0; ib < int(Acts::eBoundSize); ++ib) {
-        if (ib != int(Acts::eBoundQOverP)) {
-          tree->Branch(std::string("true_" + bNames[ib]).c_str(),
-                       &trueBound[ib]);
+      for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
+        if (ib != Acts::eBoundQOverP) {
+          tree->Branch(("true_" + bNames[ib]).c_str(), &trueBound[ib]);
         }
       }
       tree->Branch("true_x", &trueGx);
@@ -162,8 +162,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     ///
     /// @param i the bound index in question
     void setupBoundRecBranch(Acts::BoundIndices i) {
-      tree->Branch(std::string("rec_" + bNames[i]).c_str(), &recBound[i]);
-      tree->Branch(std::string("var_" + bNames[i]).c_str(), &varBound[i]);
+      tree->Branch(("rec_" + bNames[i]).c_str(), &recBound[i]);
+      tree->Branch(("var_" + bNames[i]).c_str(), &varBound[i]);
     }
 
     /// Setup the cluster related branch
@@ -178,9 +178,8 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       chId[1] = new std::vector<int>;
       for (const auto& ib : bIndices) {
         if (static_cast<unsigned int>(ib) < 2) {
-          tree->Branch(std::string("channel_" + bNames[ib]).c_str(), &chId[ib]);
-          tree->Branch(std::string("clus_size_" + bNames[ib]).c_str(),
-                       &cSize[ib]);
+          tree->Branch(("channel_" + bNames[ib]).c_str(), &chId[ib]);
+          tree->Branch(("clus_size_" + bNames[ib]).c_str(), &cSize[ib]);
         }
       }
     }

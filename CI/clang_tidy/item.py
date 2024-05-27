@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
@@ -25,5 +24,5 @@ class Item(pydantic.BaseModel):
         )
 
 
-class ItemCollection(pydantic.BaseModel):
-    __root__: List[Item]
+class ItemCollection(pydantic.RootModel[List[Item]]):
+    pass

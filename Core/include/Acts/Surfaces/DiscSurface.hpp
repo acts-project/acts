@@ -18,7 +18,9 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -232,21 +234,25 @@ class DiscSurface : public RegularSurface {
   /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from local to global
-  BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const final;
+  BoundToFreeMatrix boundToFreeJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from global to local
-  FreeToBoundMatrix freeToBoundJacobian(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -328,4 +334,7 @@ class DiscSurface : public RegularSurface {
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
-}  // end of namespace Acts
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, DiscSurface);
+
+}  // namespace Acts

@@ -58,6 +58,7 @@ with tempfile.TemporaryDirectory() as temp:
                 ]
             ],
             outputParticles="particles_input",
+            outputVertices="vertices_input",
             randomNumbers=rnd,
         )
     )
@@ -99,10 +100,8 @@ with tempfile.TemporaryDirectory() as temp:
     del s
 
     for file, name in [
-        (tp / "fatras" / "particles_initial.root", "particles_initial_fatras.root"),
-        (tp / "fatras" / "particles_final.root", "particles_final_fatras.root"),
-        (tp / "geant4" / "particles_initial.root", "particles_initial_geant4.root"),
-        (tp / "geant4" / "particles_final.root", "particles_final_geant4.root"),
+        (tp / "fatras" / "particles_simulation.root", "particles_fatras.root"),
+        (tp / "geant4" / "particles_simulation.root", "particles_geant4.root"),
     ]:
         assert file.exists(), "file not found"
         shutil.copy(file, setup.outdir / name)

@@ -32,13 +32,13 @@ jobs:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -63,7 +63,6 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
@@ -77,7 +76,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -96,7 +95,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
@@ -127,24 +126,17 @@ jobs:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: acts-linux-ubuntu
 
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
-
-      - name: Examples
-        shell: bash
-        run: >
-          export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && ./CI/run_examples.sh
 
       - name: Python level tests
         shell: bash
@@ -154,12 +146,7 @@ jobs:
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: >
           /usr/local/bin/geant4-config --install-datasets
-          && source /usr/local/bin/thisroot.sh
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && source /usr/local/bin/geant4.sh
-          && source build/python/setup.sh
-          && export PYTHONPATH=/usr/local/python:$PYTHONPATH
-          && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && source build/this_acts_withdeps.sh
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pip3 install pytest-md-report
           && pytest -rFsv -k "not exatrkx" -v
@@ -174,14 +161,14 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get update && apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs time
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: acts-linux-ubuntu
 
@@ -200,20 +187,15 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.6.3 spyral-cli==1.1.1 matplotlib
+          && pip3 install histcmp==0.6.5 spyral-cli==1.1.1 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
-          && source /usr/local/bin/thisroot.sh
-          && source /usr/local/bin/thisdd4hep_only.sh
-          && source /usr/local/bin/geant4.sh
-          && source build/python/setup.sh
-          && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && source build/this_acts_withdeps.sh
           && echo "::endgroup::"
-          && export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
           && CI/physmon/phys_perf_mon.sh all physmon
           && cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: physmon
@@ -227,7 +209,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.0
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: physmon
           path: physmon
@@ -266,13 +248,13 @@ jobs:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -310,7 +292,7 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -360,7 +342,7 @@ jobs:
       PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
@@ -368,7 +350,7 @@ jobs:
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -399,7 +381,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -422,13 +404,12 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
-          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
-        run: ${SETUP} && cmake --build build
+        run: ${SETUP} && ${PRELOAD} && cmake --build build
       - name: Install Examples
         run: ${SETUP} && cmake --build build --target install
       - name: Run Examples
@@ -450,26 +431,29 @@ jobs:
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-11
+    runs-on: macos-13
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
+
+      - name: Print architecture
+        run: uname -p
 
       - name: Install dependencies
         run: >
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.67dd08d.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.80e4e05.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
-          && python3 -m pip install pyyaml jinja2
+          && /usr/local/acts/bin/python3.10 -m pip install pyyaml jinja2
 
       - name: Restore ccache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
@@ -486,7 +470,8 @@ jobs:
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DPython_EXECUTABLE=$(command -v python3)
+          -DPython_EXECUTABLE=/usr/local/acts/bin/python3.10
+          -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
@@ -503,7 +488,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Save ccache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -514,7 +499,7 @@ jobs:
         run: cmake --build build --target integrationtests
       - name: Install
         run: cmake --build build --target install
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -530,84 +515,4 @@ jobs:
         run: cmake --build build-downstream
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
-
-  cuda:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v41
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v3
-        id: ccache-restore
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_CUDA=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
-      - name: Save ccache
-        uses: actions/cache/save@v3
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-
-  sycl:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v41
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v3
-        id: ccache-restore
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          source /opt/intel/oneapi/setvars.sh
-          && ccache -z
-          && cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2022.0.2/linux/bin-llvm/clang++
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_SETUP_VECMEM=ON
-          -DACTS_BUILD_PLUGIN_SYCL=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: >
-          source /opt/intel/oneapi/setvars.sh
-          && cmake --build build
-      - name: ccache stats
-        run: ccache -s
-      - name: Save ccache
-        uses: actions/cache/save@v3
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+        

@@ -24,7 +24,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -34,7 +34,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
@@ -64,6 +63,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 static const auto electron = ParticleHypothesis::electron();

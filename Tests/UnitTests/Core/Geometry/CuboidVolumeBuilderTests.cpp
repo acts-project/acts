@@ -35,30 +35,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
-
-struct StepVolumeCollector {
-  ///
-  /// @brief Data container for result analysis
-  ///
-  struct this_result {
-    // Position of the propagator after each step
-    std::vector<Vector3> position;
-    // Volume of the propagator after each step
-    std::vector<TrackingVolume const*> volume;
-  };
-
-  using result_type = this_result;
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result) const {
-    result.position.push_back(stepper.position(state.stepping));
-    result.volume.push_back(navigator.currentVolume(state.navigation));
-  }
-};
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Construct builder
@@ -258,5 +235,4 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
       volumeConfig2.name);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

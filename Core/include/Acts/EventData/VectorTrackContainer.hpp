@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
@@ -76,8 +77,6 @@ class VectorTrackContainerBase {
         return &instance.m_tipIndex[itrack];
       case "stemIndex"_hash:
         return &instance.m_stemIndex[itrack];
-      case "particleHypothesis"_hash:
-        return &instance.m_particleHypothesis[itrack];
       case "params"_hash:
         return &instance.m_params[itrack];
       case "cov"_hash:
@@ -110,7 +109,6 @@ class VectorTrackContainerBase {
 
   bool checkConsistency() const {
     std::size_t size = m_tipIndex.size();
-    (void)size;
 
     bool result = true;
     result = result && m_tipIndex.size() == size;
@@ -158,10 +156,19 @@ class VectorTrackContainerBase {
     return m_referenceSurfaces[itrack].get();
   }
 
+  ParticleHypothesis particleHypothesis_impl(IndexType itrack) const {
+    return m_particleHypothesis[itrack];
+  }
+
   std::size_t size_impl() const {
     assert(checkConsistency());
     return m_tipIndex.size();
   }
+
+  detail::DynamicKeyRange<detail::DynamicColumnBase> dynamicKeys_impl() const {
+    return {m_dynamic.begin(), m_dynamic.end()};
+  }
+
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
@@ -180,6 +187,7 @@ class VectorTrackContainerBase {
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 }  // namespace detail_vtc
@@ -216,9 +224,9 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void removeTrack_impl(IndexType itrack);
 
   template <typename T>
-  constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert(
-        {hashString(key), std::make_unique<detail::DynamicColumn<T>>()});
+  constexpr void addColumn_impl(std::string_view key) {
+    Acts::HashedString hashedKey = hashString(key);
+    m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
   Parameters parameters(IndexType itrack) {
@@ -237,9 +245,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     return ConstCovariance{m_cov[itrack].data()};
   }
 
-  void copyDynamicFrom_impl(IndexType dstIdx,
-                            const VectorTrackContainerBase& src,
-                            IndexType srcIdx);
+  void copyDynamicFrom_impl(IndexType dstIdx, HashedString key,
+                            const std::any& srcPtr);
 
   void ensureDynamicColumns_impl(
       const detail_vtc::VectorTrackContainerBase& other);

@@ -17,6 +17,8 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <array>
 #include <map>
@@ -41,16 +43,12 @@ struct NavigationState;
 /// The surface can carry material to allow mapping onto
 /// portal positions if required.
 ///
-class Portal : public std::enable_shared_from_this<Portal> {
- protected:
+class Portal {
+ public:
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
   Portal(std::shared_ptr<RegularSurface> surface);
-
- public:
-  /// The volume links forward/backward with respect to the surface normal
-  using DetectorVolumeUpdators = std::array<DetectorVolumeUpdator, 2u>;
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
@@ -60,40 +58,33 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Declare the DetectorVolume friend for portal setting
   friend class DetectorVolume;
 
-  /// Factory for producing memory managed instances of Portal.
-  static std::shared_ptr<Portal> makeShared(
-      std::shared_ptr<RegularSurface> surface);
-
-  /// Retrieve a @c std::shared_ptr for this surface (non-const version)
-  ///
-  /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
-  ///       exception), in C++17 it is defined as that exception.
-  /// @note Only call this if you need shared ownership of this object.
-  ///
-  /// @return The shared pointer
-  std::shared_ptr<Portal> getSharedPtr();
-
-  /// Retrieve a @c std::shared_ptr for this surface (const version)
-  ///
-  /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior, but most likely implemented as a @c bad_weak_ptr
-  ///       exception, in C++17 it is defined as that exception.
-  /// @note Only call this if you need shared ownership of this object.
-  ///
-  /// @return The shared pointer
-  std::shared_ptr<const Portal> getSharedPtr() const;
-
   Portal() = delete;
-  virtual ~Portal() = default;
 
   /// Const access to the surface representation
   const RegularSurface& surface() const;
 
   /// Non-const access to the surface reference
   RegularSurface& surface();
+
+  /// @brief Visit all reachable surfaces of the detector
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called with the represented surface
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  void visitSurface(visitor_t&& visitor) const {
+    visitor(m_surface.get());
+  }
+
+  /// @brief Visit all reachable surfaces of the detector - non-const
+  ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
+  /// @param visitor will be called with the represented surface
+  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  void visitMutableSurface(visitor_t&& visitor) {
+    visitor(m_surface.get());
+  }
 
   /// Update the current volume
   ///
@@ -110,39 +101,47 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
   /// Fuse with another portal, this one is kept
   ///
-  /// @param other is the portal that will be fused
+  /// @param aPortal is the first portal to fuse
+  /// @param bPortal is the second portal to fuse
   ///
-  /// @note this will move the portal links from the other
-  /// into this volume, it will throw an exception if the
+  /// @note this will combine the portal links from the both
+  /// portals into a new one, it will throw an exception if the
   /// portals are not fusable
   ///
-  /// @note that other will be overwritten to point to this
-  void fuse(std::shared_ptr<Portal>& other) noexcept(false);
+  /// @note if one portal carries material, it will be kept,
+  /// however, if both portals carry material, an exception
+  /// will be thrown and the portals are not fusable
+  ///
+  /// @note Both input portals become invalid, in that their update
+  /// delegates and attached volumes are reset
+  static std::shared_ptr<Portal> fuse(
+      std::shared_ptr<Portal>& aPortal,
+      std::shared_ptr<Portal>& bPortal) noexcept(false);
 
   /// Update the volume link
   ///
   /// @param dir the direction of the link
-  /// @param dVolumeUpdator is the mangaged volume updator delegate
+  /// @param portalNavigation is the navigation delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdator(
-      Direction dir, DetectorVolumeUpdator dVolumeUpdator,
+  void assignPortalNavigation(
+      Direction dir, ExternalNavigationDelegate portalNavigation,
       std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
   /// one remaining link to be set, throws an exception if that's not the case
   ///
-  /// @param dVolumeUpdator is the mangaged volume updator delegate
+  /// @param portalNavigation is the navigation delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdator(DetectorVolumeUpdator dVolumeUpdator,
-                                   std::vector<std::shared_ptr<DetectorVolume>>
-                                       attachedVolumes) noexcept(false);
+  void assignPortalNavigation(ExternalNavigationDelegate portalNavigation,
+                              std::vector<std::shared_ptr<DetectorVolume>>
+                                  attachedVolumes) noexcept(false);
 
   // Access to the portal targets: opposite/along normal vector
-  const DetectorVolumeUpdators& detectorVolumeUpdators() const;
+  const std::array<ExternalNavigationDelegate, 2u>& portalNavigation() const;
 
   // Access to the attached volumes - non-const access
   AttachedDetectorVolumes& attachedDetectorVolumes();
@@ -152,8 +151,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
   std::shared_ptr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  DetectorVolumeUpdators m_volumeUpdators = {unconnectedUpdator(),
-                                             unconnectedUpdator()};
+  std::array<ExternalNavigationDelegate, 2u> m_portalNavigation = {
+      ExternalNavigationDelegate{}, ExternalNavigationDelegate{}};
 
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;

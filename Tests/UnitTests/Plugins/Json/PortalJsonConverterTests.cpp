@@ -22,11 +22,9 @@
 
 #include <nlohmann/json.hpp>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 Acts::GeometryContext tContext;
 
@@ -38,7 +36,8 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
-  auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  auto portal =
+      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
 
   BOOST_CHECK_NE(portal, nullptr);
 
@@ -70,12 +69,13 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
-  auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  auto portal =
+      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       *portal, forwardVolume, Acts::Direction::Forward);
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       *portal, backwardVolume, Acts::Direction::Backward);
 
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
@@ -115,14 +115,15 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
-  auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  auto portal =
+      std::make_shared<Acts::Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
 
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       *portal, backwardVolume, Acts::Direction::Backward);
 
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
+  Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
       tContext, *portal, {forwardVolumeA, forwardVolumeB, forwardVolumeC},
       Acts::Direction::Forward, {-100, 10, 20, 200}, Acts::binX);
 

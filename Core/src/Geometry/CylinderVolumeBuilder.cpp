@@ -58,7 +58,7 @@ void Acts::CylinderVolumeBuilder::setLogger(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, TrackingVolumePtr existingVolume,
-    VolumeBoundsPtr externalBounds) const {
+    std::shared_ptr<const VolumeBounds> externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
   if (existingVolume) {
     ACTS_DEBUG("- will wrap/enclose : " << existingVolume->volumeName());
@@ -319,7 +319,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         // The inter volume radii
         ACTS_VERBOSE("Checking ring radius consistency");
         std::vector<double> interRadii = {};
-        for (int ir = 1; ir < int(innerRadii.size()); ++ir) {
+        for (std::size_t ir = 1; ir < innerRadii.size(); ++ir) {
           // Check whether inner/outer radii are consistent
           ACTS_VERBOSE(
               "or #" << ir - 1 << " < ir #" << ir << ": " << outerRadii[ir - 1]

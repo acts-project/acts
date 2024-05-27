@@ -662,7 +662,7 @@ class MultiEigenStepperLoop
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction direction, bool release = true) const {
-    const Surface& surface = *oIntersection.representation();
+    const Surface& surface = *oIntersection.object();
 
     for (auto& component : state.components) {
       auto intersection = surface.intersect(
@@ -675,17 +675,16 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Set Step size - explicitly with a double
+  /// Update step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor,
-                   bool release = true) const {
+  void updateStepSize(State& state, double stepSize,
+                      ConstrainedStep::Type stype, bool release = true) const {
     for (auto& component : state.components) {
-      SingleStepper::setStepSize(component.state, stepSize, stype, release);
+      SingleStepper::updateStepSize(component.state, stepSize, stype, release);
     }
   }
 
@@ -708,9 +707,10 @@ class MultiEigenStepperLoop
   /// Release the step-size for all components
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
+  /// @param [in] stype The step size type to be released
+  void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
-      SingleStepper::releaseStepSize(component.state);
+      SingleStepper::releaseStepSize(component.state, stype);
     }
   }
 
@@ -724,14 +724,6 @@ class MultiEigenStepperLoop
     }
 
     return ss.str();
-  }
-
-  /// Overstep limit
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    // A dynamic overstep limit could sit here
-    return SingleStepper::overstepLimit(state.components.front().state);
   }
 
   /// Create and return the bound state at the current position
@@ -758,6 +750,21 @@ class MultiEigenStepperLoop
       State& state, const Surface& surface, bool transportCov = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
+
+  /// @brief If necessary fill additional members needed for curvilinearState
+  ///
+  /// Compute path length derivatives in case they have not been computed
+  /// yet, which is the case if no step has been executed yet.
+  ///
+  /// @param [in, out] prop_state State that will be presented as @c BoundState
+  /// @param [in] navigator the navigator of the propagation
+  /// @return true if nothing is missing after this call, false otherwise.
+  template <typename propagator_state_t, typename navigator_t>
+  bool prepareCurvilinearState(
+      [[maybe_unused]] propagator_state_t& prop_state,
+      [[maybe_unused]] const navigator_t& navigator) const {
+    return true;
+  }
 
   /// Create and return a curvilinear state at the current position
   ///

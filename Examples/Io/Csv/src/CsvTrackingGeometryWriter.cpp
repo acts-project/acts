@@ -10,18 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Digitization/DigitizationModule.hpp"
-#include "Acts/Digitization/Segmentation.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -116,23 +112,6 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   if (surface.associatedDetectorElement() != nullptr) {
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
-
-    const auto* detElement =
-        dynamic_cast<const Acts::IdentifiedDetectorElement*>(
-            surface.associatedDetectorElement());
-
-    if (detElement != nullptr && detElement->digitizationModule()) {
-      auto dModule = detElement->digitizationModule();
-      // dynamic_cast to CartesianSegmentation
-      const auto* cSegmentation =
-          dynamic_cast<const Acts::CartesianSegmentation*>(
-              &(dModule->segmentation()));
-      if (cSegmentation != nullptr) {
-        auto pitch = cSegmentation->pitch();
-        data.pitch_u = pitch.first / Acts::UnitConstants::mm;
-        data.pitch_v = pitch.second / Acts::UnitConstants::mm;
-      }
-    }
   }
 }
 
@@ -335,13 +314,13 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
             if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
               auto loc0Values = axes[0]->getBinEdges();
               sfGrid.nbins_loc0 = loc0Values.size() - 1;
-              sfGrid.type_loc0 = int(binning[0]);
+              sfGrid.type_loc0 = static_cast<int>(binning[0]);
               sfGrid.min_loc0 = loc0Values[0];
               sfGrid.max_loc0 = loc0Values[loc0Values.size() - 1];
 
               auto loc1Values = axes[1]->getBinEdges();
               sfGrid.nbins_loc1 = loc1Values.size() - 1;
-              sfGrid.type_loc1 = int(binning[1]);
+              sfGrid.type_loc1 = static_cast<int>(binning[1]);
               sfGrid.min_loc1 = loc1Values[0];
               sfGrid.max_loc1 = loc1Values[loc1Values.size() - 1];
             }

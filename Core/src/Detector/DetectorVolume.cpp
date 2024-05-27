@@ -13,8 +13,8 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -31,39 +31,38 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     std::shared_ptr<VolumeBounds> bounds,
     std::vector<std::shared_ptr<Surface>> surfaces,
     std::vector<std::shared_ptr<DetectorVolume>> volumes,
-    DetectorVolumeUpdator detectorVolumeUpdator,
-    SurfaceCandidatesUpdator surfaceCandidateUpdator)
+    ExternalNavigationDelegate externalNavigation,
+    InternalNavigationDelegate internalNavigation)
     : m_name(std::move(name)),
       m_transform(transform),
       m_bounds(std::move(bounds)),
       m_surfaces(std::move(surfaces)),
       m_volumes(std::move(volumes)),
-      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)),
-      m_surfaceCandidatesUpdator(std::move(surfaceCandidateUpdator)),
+      m_externalNavigation(std::move(externalNavigation)),
+      m_internalNavigation(std::move(internalNavigation)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
-  if (!m_detectorVolumeUpdator.connected()) {
+  if (!m_externalNavigation.connected()) {
     throw std::invalid_argument(
-        "DetectorVolume: navigation state updator delegate is not connected.");
+        "DetectorVolume: external navigation delegate is not connected.");
   }
-  if (!m_surfaceCandidatesUpdator.connected()) {
+  if (!m_internalNavigation.connected()) {
     throw std::invalid_argument(
-        "DetectorVolume: navigation state updator delegate is not connected.");
+        "DetectorVolume: internal navigaiton delegate is not connected.");
   }
 
   [[maybe_unused]] const auto& gctx_ref = gctx;
-  assert(checkContainment(gctx) && "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, std::string name, const Transform3& transform,
     std::shared_ptr<VolumeBounds> bounds,
-    SurfaceCandidatesUpdator surfaceCandidateUpdator)
+    InternalNavigationDelegate internalNavigation)
     : DetectorVolume(gctx, std::move(name), transform, std::move(bounds), {},
-                     {}, tryNoVolumes(), std::move(surfaceCandidateUpdator)) {}
+                     {}, tryNoVolumes(), std::move(internalNavigation)) {}
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::Experimental::DetectorVolume::makeShared(
@@ -71,22 +70,22 @@ Acts::Experimental::DetectorVolume::makeShared(
     std::shared_ptr<VolumeBounds> bounds,
     std::vector<std::shared_ptr<Surface>> surfaces,
     std::vector<std::shared_ptr<DetectorVolume>> volumes,
-    DetectorVolumeUpdator detectorVolumeUpdator,
-    SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+    ExternalNavigationDelegate externalNavigation,
+    InternalNavigationDelegate internalNavigation) {
   return std::shared_ptr<DetectorVolume>(new DetectorVolume(
       gctx, std::move(name), transform, std::move(bounds), std::move(surfaces),
-      std::move(volumes), std::move(detectorVolumeUpdator),
-      std::move(surfaceCandidateUpdator)));
+      std::move(volumes), std::move(externalNavigation),
+      std::move(internalNavigation)));
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::Experimental::DetectorVolume::makeShared(
     const GeometryContext& gctx, std::string name, const Transform3& transform,
     std::shared_ptr<VolumeBounds> bounds,
-    SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+    InternalNavigationDelegate internalNavigation) {
   return std::shared_ptr<DetectorVolume>(
       new DetectorVolume(gctx, std::move(name), transform, std::move(bounds),
-                         std::move(surfaceCandidateUpdator)));
+                         std::move(internalNavigation)));
 }
 
 const Acts::Transform3& Acts::Experimental::DetectorVolume::transform(
@@ -134,24 +133,19 @@ Acts::Experimental::DetectorVolume::volumes() const {
   return m_volumes.external;
 }
 
-const Acts::Experimental::DetectorVolumeUpdator&
-Acts::Experimental::DetectorVolume::detectorVolumeUpdator() const {
-  return m_detectorVolumeUpdator;
+const Acts::Experimental::ExternalNavigationDelegate&
+Acts::Experimental::DetectorVolume::externalNavigation() const {
+  return m_externalNavigation;
 }
 
-const Acts::Experimental::SurfaceCandidatesUpdator&
-Acts::Experimental::DetectorVolume::surfaceCandidatesUpdator() const {
-  return m_surfaceCandidatesUpdator;
+const Acts::Experimental::InternalNavigationDelegate&
+Acts::Experimental::DetectorVolume::internalNavigation() const {
+  return m_internalNavigation;
 }
 
 void Acts::Experimental::DetectorVolume::assignVolumeMaterial(
-    std::shared_ptr<IVolumeMaterial> material) {
+    std::shared_ptr<const IVolumeMaterial> material) {
   m_volumeMaterial = std::move(material);
-}
-
-std::shared_ptr<Acts::IVolumeMaterial>
-Acts::Experimental::DetectorVolume::volumeMaterialPtr() {
-  return m_volumeMaterial;
 }
 
 const Acts::IVolumeMaterial*
@@ -239,15 +233,15 @@ bool Acts::Experimental::DetectorVolume::exclusivelyInside(
 void Acts::Experimental::DetectorVolume::updateNavigationState(
     const GeometryContext& gctx, NavigationState& nState) const {
   nState.currentVolume = this;
-  m_surfaceCandidatesUpdator(gctx, nState);
-  nState.surfaceCandidate = nState.surfaceCandidates.begin();
+  m_internalNavigation(gctx, nState);
+  nState.surfaceCandidateIndex = 0;
 }
 
-void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
-    SurfaceCandidatesUpdator surfaceCandidateUpdator,
+void Acts::Experimental::DetectorVolume::assignInternalNavigation(
+    InternalNavigationDelegate internalNavigation,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes) {
-  m_surfaceCandidatesUpdator = std::move(surfaceCandidateUpdator);
+  m_internalNavigation = std::move(internalNavigation);
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 }
@@ -264,20 +258,27 @@ Acts::Extent Acts::Experimental::DetectorVolume::extent(
 
 bool Acts::Experimental::DetectorVolume::checkContainment(
     const GeometryContext& gctx, std::size_t nseg) const {
+  // We don't have a logging instance here
+  // so can't throw a warning for shapes that are
+  // using the bounding box
+  auto binningValues = volumeBounds().canonicalBinning();
+
   // Create the volume extent
   auto volumeExtent = extent(gctx, nseg);
   // Check surfaces
-  for (const auto* s : surfaces()) {
-    auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
-    if (!volumeExtent.contains(sExtent)) {
-      return false;
+  for (auto b : binningValues) {
+    for (const auto* s : surfaces()) {
+      auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
+      if (!volumeExtent.contains(sExtent, b)) {
+        return false;
+      }
     }
-  }
-  // Check volumes
-  for (const auto* v : volumes()) {
-    auto vExtent = v->extent(gctx, nseg);
-    if (!volumeExtent.contains(vExtent)) {
-      return false;
+    // Check volumes
+    for (const auto* v : volumes()) {
+      auto vExtent = v->extent(gctx, nseg);
+      if (!volumeExtent.contains(vExtent, b)) {
+        return false;
+      }
     }
   }
   // All contained
@@ -287,13 +288,13 @@ bool Acts::Experimental::DetectorVolume::checkContainment(
 void Acts::Experimental::DetectorVolume::closePortals() {
   for (auto& p : m_portals.internal) {
     // Create a null link
-    for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdators())) {
+    for (auto [ivu, vu] : enumerate(p->portalNavigation())) {
       if (!vu.connected()) {
         auto eowDir = Direction::fromIndex(ivu);
-        auto eow = std::make_unique<const EndOfWorldImpl>();
-        Acts::Experimental::DetectorVolumeUpdator eowLink;
-        eowLink.connect<&EndOfWorldImpl::update>(std::move(eow));
-        p->assignDetectorVolumeUpdator(eowDir, std::move(eowLink), {});
+        auto eow = std::make_unique<const EndOfWorld>();
+        Acts::Experimental::ExternalNavigationDelegate eowLink;
+        eowLink.connect<&EndOfWorld::update>(std::move(eow));
+        p->assignPortalNavigation(eowDir, std::move(eowLink), {});
       }
     }
   }

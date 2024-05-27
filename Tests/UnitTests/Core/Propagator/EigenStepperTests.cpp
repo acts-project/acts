@@ -17,7 +17,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -72,12 +72,10 @@ class ISurfaceMaterial;
 class Logger;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -267,11 +265,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.setStepSize(esState, -1337.);
+  es.updateStepSize(esState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
-  es.releaseStepSize(esState);
+  es.releaseStepSize(esState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
@@ -343,7 +341,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
                                  charge2 / absMom2, cov2,
                                  ParticleHypothesis::pion());
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
   double stepSize2 = -2. * stepSize;
@@ -363,9 +361,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     copy.stepSize = state.stepSize;
     copy.previousStepSize = state.previousStepSize;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            state.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        state.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = state.geoContext;
     copy.extension = state.extension;
@@ -504,19 +502,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
-  freeParams = detail::transformBoundToFreeParameters(
-      bp.referenceSurface(), tgContext, bp.parameters());
-  freeParams.segment<3>(eFreePos0) *= 2;
-  freeParams[eFreeTime] *= 2;
-  freeParams[eFreeQOverP] *= -0.5;
+  freeParams = transformBoundToFreeParameters(bp.referenceSurface(), tgContext,
+                                              bp.parameters());
 
   es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
             *plane);
-  CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(es.position(esState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
-  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
-  CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  CHECK_CLOSE_OR_SMALL(es.time(esState), time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
@@ -686,9 +681,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviMat(
-      {material, true, true, true},
-      Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+  Navigator naviMat({material, true, true, true});
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -924,7 +917,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
       propOptsDef(tgContext, mfContext);
-  abortList.get<EndOfWorld>().maxX = 1_m;
+  abortList.get<EndOfWorld>().maxX = 3_m;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 1000;
   propOptsDef.maxStepSize = 1.5_m;
@@ -935,8 +928,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       propDef(esDef, naviDet);
 
   // Launch and collect results
-  const auto& resultDef =
-      propDef.propagate(sbtp, *(surs[0]), propOptsDef).value();
+  const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
   const StepCollector::this_result& stepResultDef =
       resultDef.get<typename StepCollector::result_type>();
 
@@ -970,41 +962,40 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  CurvilinearTrackParameters sbtpPiecewise(
-      makeVector4(endParams.first, 0), endParams.second,
-      1_e / endParams.second.norm(), std::nullopt, ParticleHypothesis::pion());
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
       propOptsDense(tgContext, mfContext);
-  abortList.get<EndOfWorld>().maxX = 2_m;
+  abortList.get<EndOfWorld>().maxX = 3_m;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
   propOptsDense.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  EigenStepper<StepperExtensionList<DenseEnvironmentExtension>> esDense(bField);
-  Propagator<EigenStepper<StepperExtensionList<DenseEnvironmentExtension>>,
+  EigenStepper<
+      StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+      esDense(bField);
+  Propagator<EigenStepper<StepperExtensionList<DefaultExtension,
+                                               DenseEnvironmentExtension>>,
              Navigator>
       propDense(esDense, naviDet);
 
   // Launch and collect results
-  const auto& resultDense =
-      propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense).value();
+  const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultDense =
       resultDense.get<typename StepCollector::result_type>();
 
   // Check the exit situation of the second volume
   for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
-    if (2_m - stepResultDense.position[i].x() < 1e-4) {
+    if (1_m - stepResultDense.position[i].x() < 1e-4) {
       endParams = std::make_pair(stepResultDense.position[i],
                                  stepResultDense.momentum[i]);
       break;
     }
   }
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-    if (2_m - stepResult.position[i].x() < 1e-4) {
+    if (1_m - stepResult.position[i].x() < 1e-4) {
       endParamsControl =
           std::make_pair(stepResult.position[i], stepResult.momentum[i]);
       break;
@@ -1159,5 +1150,5 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
     }
   }
 }
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

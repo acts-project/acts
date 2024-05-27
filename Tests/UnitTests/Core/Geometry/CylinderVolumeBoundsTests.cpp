@@ -16,7 +16,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
@@ -26,16 +25,12 @@
 #include <cmath>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
 namespace Acts {
-
 namespace Test {
-
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
@@ -151,12 +146,30 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
 }
 
 /// Unit test for testing the orientedSurfaces() function
-BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
-                     bdata::random(-M_PI, M_PI) ^ bdata::random(-M_PI, M_PI) ^
-                         bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
-                         bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
-                         bdata::xrange(100),
-                     alpha, beta, gamma, posX, posY, posZ, index) {
+BOOST_DATA_TEST_CASE(
+    CylinderVolumeBoundsOrientedSurfaces,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::xrange(100),
+    alpha, beta, gamma, posX, posY, posZ, index) {
   (void)index;
 
   // Create a test context
@@ -187,18 +200,18 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
 
   // check if difference is halfZ - sign and direction independent
   CHECK_CLOSE_REL(
-      (pos - boundarySurfaces.at(0).first->center(tgContext)).norm(),
+      (pos - boundarySurfaces.at(0).surface->center(tgContext)).norm(),
       cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   CHECK_CLOSE_REL(
-      (pos - boundarySurfaces.at(1).first->center(tgContext)).norm(),
+      (pos - boundarySurfaces.at(1).surface->center(tgContext)).norm(),
       cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   // transform to local
   double posDiscPosZ =
-      (transform.inverse() * boundarySurfaces.at(1).first->center(tgContext))
+      (transform.inverse() * boundarySurfaces.at(1).surface->center(tgContext))
           .z();
   double centerPosZ = (transform.inverse() * pos).z();
   double negDiscPosZ =
-      (transform.inverse() * boundarySurfaces.at(0).first->center(tgContext))
+      (transform.inverse() * boundarySurfaces.at(0).surface->center(tgContext))
           .z();
   // check if center of disc boundaries lies in the middle in z
   BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
@@ -215,18 +228,20 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   // positive disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transform.rotation().col(2).dot(boundarySurfaces.at(1).first->normal(
+      transform.rotation().col(2).dot(boundarySurfaces.at(1).surface->normal(
           tgContext, Acts::Vector2(0., 0.))),
       1., 1e-12);
   // negative disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transform.rotation().col(2).dot(boundarySurfaces.at(0).first->normal(
+      transform.rotation().col(2).dot(boundarySurfaces.at(0).surface->normal(
           tgContext, Acts::Vector2(0., 0.))),
       1., 1e-12);
   // test in r
-  CHECK_CLOSE_REL(boundarySurfaces.at(3).first->center(tgContext), pos, 1e-12);
-  CHECK_CLOSE_REL(boundarySurfaces.at(2).first->center(tgContext), pos, 1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(3).surface->center(tgContext), pos,
+                  1e-12);
+  CHECK_CLOSE_REL(boundarySurfaces.at(2).surface->center(tgContext), pos,
+                  1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
@@ -291,27 +306,106 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
   Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : cvbOrientedSurfaces) {
-    auto onSurface = os.first->binningPosition(geoCtx, binR);
+    auto onSurface = os.surface->binningPosition(geoCtx, binR);
     auto locPos =
-        os.first->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
-    auto osNormal = os.first->normal(geoCtx, locPos);
+        os.surface->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
+    auto osNormal = os.surface->normal(geoCtx, locPos);
     // Check if you step inside the volume with the oriented normal
-    Vector3 insideCvb = onSurface + os.second * osNormal;
-    Vector3 outsideCvb = onSurface - os.second * osNormal;
+    Vector3 insideCvb = onSurface + os.direction * osNormal;
+    Vector3 outsideCvb = onSurface - os.direction * osNormal;
 
     BOOST_CHECK(cvb.inside(insideCvb));
     BOOST_CHECK(!cvb.inside(outsideCvb));
 
     // Test the orientation of the boundary surfaces
-    auto rot = os.first->transform(geoCtx).rotation();
+    auto rot = os.surface->transform(geoCtx).rotation();
     BOOST_CHECK(rot.col(0).isApprox(xaxis));
     BOOST_CHECK(rot.col(1).isApprox(yaxis));
     BOOST_CHECK(rot.col(2).isApprox(zaxis));
   }
 }
 
+BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
+  CylinderVolumeBounds cyl(100, 300, 200);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eMinR, 400),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMinR), 100);
+
+  cyl.set(CylinderVolumeBounds::eMinR, 200);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMinR), 200);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eMaxR, 50),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMaxR), 300);
+
+  cyl.set(CylinderVolumeBounds::eMaxR, 250);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMaxR), 250);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eHalfLengthZ, -200),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 200);
+
+  cyl.set(CylinderVolumeBounds::eHalfLengthZ, 250);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 250);
+
+  cyl.set(CylinderVolumeBounds::eHalfLengthZ, 150);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 150);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eHalfPhiSector, -M_PI),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI);
+
+  BOOST_CHECK_THROW(cyl.set(CylinderVolumeBounds::eHalfPhiSector, 1.5 * M_PI),
+                    std::invalid_argument);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI);
+
+  cyl.set(CylinderVolumeBounds::eHalfPhiSector, M_PI / 2);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI / 2);
+
+  for (auto bValue :
+       {CylinderVolumeBounds::eAveragePhi, CylinderVolumeBounds::eBevelMaxZ,
+        CylinderVolumeBounds::eBevelMinZ}) {
+    BOOST_CHECK_THROW(cyl.set(bValue, -1.5 * M_PI), std::invalid_argument);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), 0);
+
+    BOOST_CHECK_THROW(cyl.set(bValue, 1.5 * M_PI), std::invalid_argument);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), 0);
+
+    cyl.set(bValue, 0.5 * M_PI);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), 0.5 * M_PI);
+    cyl.set(bValue, -0.5 * M_PI);
+    BOOST_CHECK_EQUAL(cyl.get(bValue), -0.5 * M_PI);
+  }
+
+  cyl = CylinderVolumeBounds(100, 300, 200);
+  auto previous = cyl.values();
+
+  BOOST_CHECK_THROW(cyl.set({
+                        {CylinderVolumeBounds::eMinR, 50},
+                        {CylinderVolumeBounds::eMaxR, 200},
+                        {CylinderVolumeBounds::eHalfLengthZ, -1},
+                    }),
+                    std::logic_error);
+  auto act = cyl.values();
+  BOOST_CHECK_EQUAL_COLLECTIONS(previous.begin(), previous.end(), act.begin(),
+                                act.end());
+
+  cyl.set({
+      {CylinderVolumeBounds::eMinR, 50},
+      {CylinderVolumeBounds::eMaxR, 200},
+      {CylinderVolumeBounds::eHalfLengthZ, 150},
+  });
+
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMinR), 50);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eMaxR), 200);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfLengthZ), 150);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eHalfPhiSector), M_PI);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eAveragePhi), 0);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eBevelMinZ), 0);
+  BOOST_CHECK_EQUAL(cyl.get(CylinderVolumeBounds::eBevelMaxZ), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

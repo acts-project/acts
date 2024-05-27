@@ -16,20 +16,18 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Detector.h>
 #include <DD4hep/Fields.h>
 #include <boost/program_options.hpp>
 
-namespace ActsExamples {
-namespace DD4hep {
-
-DD4hepDetector::DD4hepDetector() = default;
+namespace ActsExamples::DD4hep {
 
 DD4hepDetector::DD4hepDetector(
     std::shared_ptr<DD4hepGeometryService> _geometryService)
     : geometryService(std::move(_geometryService)) {}
-
-DD4hepDetector::~DD4hepDetector() = default;
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
@@ -51,11 +49,36 @@ auto DD4hepDetector::finalize(
       std::move(dd4tGeometry), std::move(dd4ContextDecorators));
 }
 
+auto DD4hepDetector::finalize(
+    const Acts::GeometryContext& gctx,
+    const Acts::Experimental::DD4hepDetectorStructure::Options& options)
+    -> std::tuple<DetectorPtr, ContextDecorators,
+                  Acts::DD4hepDetectorElement::Store> {
+  if (geometryService == nullptr) {
+    throw std::runtime_error{
+        "No DD4hep geometry service configured, can not build "
+        "TrackingGeometry."};
+  }
+
+  auto world = geometryService->geometry();
+  // Build the detector structure
+  Acts::Experimental::DD4hepDetectorStructure dd4hepStructure(
+      Acts::getDefaultLogger("DD4hepDetectorStructure", options.logLevel));
+
+  /// @return a detector and the detector store
+  auto [detector, detectorElements] =
+      dd4hepStructure.construct(gctx, world, options);
+
+  // Prepare the return objects
+  ContextDecorators contextDecorators = {};
+
+  return {detector, contextDecorators, detectorElements};
+}
+
 std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
   const auto& detector = geometryService->detector();
 
   return std::make_shared<Acts::DD4hepFieldAdapter>(detector.field());
 }
 
-}  // namespace DD4hep
-}  // namespace ActsExamples
+}  // namespace ActsExamples::DD4hep

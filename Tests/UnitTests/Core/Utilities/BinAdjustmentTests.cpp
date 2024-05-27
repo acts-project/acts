@@ -21,10 +21,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Test {
-
-namespace tt = boost::test_tools;
+namespace Acts::Test {
 
 // Test Radial
 BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
@@ -37,8 +34,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 50);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 75);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float(-M_PI));
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float(M_PI));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float{-M_PI});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float{M_PI});
 }
 
 // Test Cylinder
@@ -50,8 +47,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, float(-M_PI / 4));
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, float(M_PI / 4));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, float{-M_PI / 4});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, float{M_PI / 4});
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -50);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 50);
 }
@@ -86,5 +83,4 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Trapezoid) {
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 30);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

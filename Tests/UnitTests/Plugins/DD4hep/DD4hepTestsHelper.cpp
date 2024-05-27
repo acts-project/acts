@@ -8,8 +8,72 @@
 
 #include "DD4hepTestsHelper.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <DD4hep/DD4hepUnits.h>
+
+void DD4hepTestsHelper::decodeBinning(
+    dd4hep::rec::VariantParameters& variantParams, const xml_comp_t& xmlBinning,
+    const std::string& bname, const std::vector<std::string>& bvals) {
+  // Set the surface binninng parameter to true
+  variantParams.set<int>(bname + "_dim", bvals.size());
+  for (const auto& bv : bvals) {
+    // Gather the number of bins, 0 indicates variable binning
+    int nBins = Acts::getAttrValueOr<int>(xmlBinning, "n" + bv, 0);
+    // Gather the bin expansion parameter, expansion of 0 is default
+    int nExpansion = Acts::getAttrValueOr<int>(xmlBinning, bv + "expansion", 0);
+    // Auto-range detection
+    bool autoRange =
+        Acts::getAttrValueOr<bool>(xmlBinning, bv + "autorange", false);
+    variantParams.set<bool>(bname + "_" + bv + "_autorange", autoRange);
+    variantParams.set<int>(bname + "_" + bv + "_exp", nExpansion);
+    // Equidistant binning detected
+    if (nBins > 0) {
+      // Set the type identification
+      variantParams.set<std::string>(bname + "_" + bv + "_type", "equidistant");
+      // Set the number of bins
+      variantParams.set<int>(bname + "_" + bv + "_n", nBins);
+      // Set min/max parameter
+      if (!autoRange) {
+        variantParams.set<double>(
+            bname + "_" + bv + "_min",
+            xmlBinning.attr<double>((bv + "min").c_str()));
+        variantParams.set<double>(
+            bname + "_" + bv + "_max",
+            xmlBinning.attr<double>((bv + "max").c_str()));
+      }
+    } else {
+      // Variable binning detected
+      variantParams.set<std::string>(bname + "_" + bv + "_type", "variable");
+      // Get the number of bins explicitly
+      auto boundaries =
+          xmlBinning.attr<std::string>((bv + "boundaries").c_str());
+      std::string del = ",";
+      auto end = boundaries.find(del);
+      int ib = 0;
+      // Unit conversion
+      double unitScalar = 1.;
+      if (bv != "phi") {
+        unitScalar = Acts::UnitConstants::mm / dd4hep::millimeter;
+      }
+      // Split and convert
+      while (end != std::string::npos) {
+        double bR = unitScalar * dd4hep::_toFloat(boundaries.substr(0, end));
+        variantParams.set<double>(
+            bname + "_" + bv + "_b" + std::to_string(ib++), bR);
+        boundaries.erase(boundaries.begin(), boundaries.begin() + end + 1);
+        end = boundaries.find(del);
+      }
+      double bR = unitScalar * std::stod(boundaries.substr(0, end));
+      variantParams.set<double>(bname + "_" + bv + "_b" + std::to_string(ib),
+                                bR);
+      // The number of bins are needed to unpack the data
+      variantParams.set<int>(bname + "_" + bv + "_n", ib);
+    }
+  }
+}
 
 dd4hep::Transform3D DD4hepTestsHelper::createTransform(
     const xml_comp_t& x_det_comp) {

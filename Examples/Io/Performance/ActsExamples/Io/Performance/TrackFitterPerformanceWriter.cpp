@@ -13,6 +13,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -30,6 +31,7 @@
 #include <TFile.h>
 
 using Acts::VectorHelpers::eta;
+using Acts::VectorHelpers::phi;
 
 ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     ActsExamples::TrackFitterPerformanceWriter::Config config,
@@ -43,15 +45,15 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (m_cfg.inputMeasurementParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
+  if (m_cfg.inputTrackParticleMatching.empty()) {
+    throw std::invalid_argument("Missing input track particles matching");
   }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -98,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
-  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;
@@ -119,14 +121,19 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     Acts::BoundTrackParameters fittedParameters =
         track.createParametersAtReference();
 
-    // Get the majority truth particle for this trajectory
-    identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
-    if (particleHitCounts.empty()) {
-      ACTS_WARNING("No truth particle associated with this trajectory.");
+    // Get the truth-matched particle
+    auto imatched = trackParticleMatching.find(track.index());
+    if (imatched == trackParticleMatching.end()) {
+      ACTS_DEBUG("No truth particle associated with this track, index = "
+                 << track.index() << " tip index = " << track.tipIndex());
       continue;
     }
-    // Find the truth particle for the majority barcode
-    const auto ip = particles.find(particleHitCounts.front().particleId);
+
+    // Get the barcode of the majority truth particle
+    SimBarcode majorityParticleId = imatched->second.particle.value();
+
+    // Find the truth particle via the barcode
+    auto ip = particles.find(majorityParticleId);
     if (ip == particles.end()) {
       ACTS_WARNING("Majority particle not found in the particles collection.");
       continue;
@@ -154,7 +161,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     if (it != reconParticleIds.end()) {
       isReconstructed = true;
     }
-    m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
+    // Loop over all the other truth particle and find the distance to the
+    // closest one
+    double minDeltaR = -1;
+    for (const auto& closeParticle : particles) {
+      if (closeParticle.particleId() == particle.particleId()) {
+        continue;
+      }
+      double p_phi = phi(particle.direction());
+      double p_eta = eta(particle.direction());
+      double c_phi = phi(closeParticle.direction());
+      double c_eta = eta(closeParticle.direction());
+      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      if (minDeltaR == -1 || distance < minDeltaR) {
+        minDeltaR = distance;
+      }
+    }
+    m_effPlotTool.fill(m_effPlotCache, particle, minDeltaR, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;

@@ -17,7 +17,9 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -57,6 +59,8 @@ class PlaneSurface : public RegularSurface {
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
+  /// @deprecated Use `CurvilinearSurface` instead
+  ///
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
   ///
@@ -232,4 +236,6 @@ class PlaneSurface : public RegularSurface {
  private:
 };
 
-}  // end of namespace Acts
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
+
+}  // namespace Acts

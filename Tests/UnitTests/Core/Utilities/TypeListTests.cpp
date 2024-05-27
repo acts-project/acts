@@ -14,9 +14,6 @@
 #include <type_traits>
 #include <typeinfo>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_CASE(TypeListCreation) {

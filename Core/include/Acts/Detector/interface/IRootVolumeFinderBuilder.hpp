@@ -9,14 +9,12 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 
@@ -32,11 +30,10 @@ class IRootVolumeFinderBuilder {
   /// @param rootVolumes the root volumes to be used for the search
   ///
   /// @return a shared detector object
-  virtual DetectorVolumeUpdator construct(
+  virtual ExternalNavigationDelegate construct(
       const GeometryContext& gctx,
       const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes)
       const = 0;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

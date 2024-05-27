@@ -44,8 +44,6 @@
 #include <tuple>
 #include <vector>
 
-namespace utf = boost::unit_test;
-
 namespace Acts {
 class AssertionFailureException;
 
@@ -53,8 +51,6 @@ namespace Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-// using boost::test_tools::output_test_stream;
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -227,14 +223,10 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Vector3 globalPosition{1, 2, 4};
   Vector3 momentum{-1, 1, 1};
   Vector3 direction = momentum.normalized();
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      line.alignmentToPathDerivative(tgContext, parameters);
+      line.alignmentToPathDerivative(tgContext, globalPosition, direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   const double value = std::sqrt(3) / 2;
@@ -362,7 +354,5 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

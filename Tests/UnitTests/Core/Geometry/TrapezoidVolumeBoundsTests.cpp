@@ -23,10 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace tt = boost::test_tools;
-
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Volumes)
 
@@ -63,15 +60,15 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
   auto geoCtx = GeometryContext();
 
   for (auto& os : tvbOrientedSurfaces) {
-    auto osCenter = os.first->center(geoCtx);
+    auto osCenter = os.surface->center(geoCtx);
     const auto* pSurface =
-        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+        dynamic_cast<const Acts::PlaneSurface*>(os.surface.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
                           "The surface is not a plane surface");
     auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
-    Vector3 insideTvb = osCenter + os.second * osNormal;
-    Vector3 outsideTvb = osCenter - os.second * osNormal;
+    Vector3 insideTvb = osCenter + os.direction * osNormal;
+    Vector3 outsideTvb = osCenter - os.direction * osNormal;
     BOOST_CHECK(tvb.inside(insideTvb));
     BOOST_CHECK(!tvb.inside(outsideTvb));
   }
@@ -82,32 +79,30 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY =
-      tvbOrientedSurfaces[negativeFaceXY].first->transform(geoCtx).rotation();
+      tvbOrientedSurfaces[negativeFaceXY].surface->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
 
   auto pFaceXY =
-      tvbOrientedSurfaces[positiveFaceXY].first->transform(geoCtx).rotation();
+      tvbOrientedSurfaces[positiveFaceXY].surface->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
 
   auto nFaceZX =
-      tvbOrientedSurfaces[negativeFaceZX].first->transform(geoCtx).rotation();
+      tvbOrientedSurfaces[negativeFaceZX].surface->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(nFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(nFaceZX.col(2).isApprox(yaxis));
 
   auto pFaceZX =
-      tvbOrientedSurfaces[positiveFaceZX].first->transform(geoCtx).rotation();
+      tvbOrientedSurfaces[positiveFaceZX].surface->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(pFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(pFaceZX.col(2).isApprox(yaxis));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

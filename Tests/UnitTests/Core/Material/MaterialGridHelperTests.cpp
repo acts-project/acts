@@ -26,11 +26,8 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
-
-using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3>>;
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
@@ -414,5 +411,4 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.parameters());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

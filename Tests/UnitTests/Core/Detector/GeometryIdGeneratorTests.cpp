@@ -16,7 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -76,6 +76,55 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
   return {gap0Volume, layer0Volume, gap1Volume};
 }
 }  // namespace
+
+/// @brief  Test struct to increment the layer id by one
+struct GeoIdIncrementer : public IGeometryIdGenerator {
+  struct Cache {};
+
+  /// @brief Interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
+  IGeometryIdGenerator::GeoIdCache generateCache() const final {
+    // Unfold the tuple and add the attachers
+    return Cache{};
+  }
+
+  /// @brief Method for assigning a geometry id to a detector volume
+  ///
+  /// @param cache is the cache object for e.g. object counting
+  /// @param dVolume the detector volume to assign the geometry id to
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
+                        DetectorVolume& dVolume) const final {
+    auto vgid = dVolume.geometryId();
+    vgid.setVolume(vgid.volume() + 1);
+    dVolume.assignGeometryId(vgid);
+  }
+
+  /// @brief Method for assigning a geometry id to a portal
+  ///
+  /// @param cache is the cache object for e.g. object counting
+  /// @param portal the portal to assign the geometry id to
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
+                        Portal& portal) const final {
+    auto pgid = portal.surface().geometryId();
+    pgid.setBoundary(pgid.boundary() + 1);
+    portal.surface().assignGeometryId(pgid);
+  }
+
+  /// @brief Method for assigning a geometry id to a surface
+  ///
+  /// @param cache is the cache object for e.g. object counting
+  /// @param surface the surface to assign the geometry id to
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
+                        Surface& surface) const final {
+    auto sgid = surface.geometryId();
+    if (sgid.sensitive() != 0u) {
+      sgid.setSensitive(sgid.sensitive() + 1);
+    } else {
+      sgid.setPassive(sgid.passive() + 1);
+    }
+    surface.assignGeometryId(sgid);
+  }
+};
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
@@ -171,6 +220,41 @@ BOOST_AUTO_TEST_CASE(ContainerGeoIdGenerator) {
   BOOST_CHECK_EQUAL(volumes[1]->geometryId().volume(), 15);
   BOOST_CHECK_EQUAL(volumes[1]->geometryId().layer(), 2);
   BOOST_CHECK_EQUAL(volumes[2]->geometryId().volume(), 15);
+  BOOST_CHECK_EQUAL(volumes[2]->geometryId().layer(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(ChainedGeoIdGenerator) {
+  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
+
+  auto volumes = createVolumes(detectorStore);
+
+  GeometryIdGenerator::Config cfg;
+
+  cfg.containerMode = true;
+  cfg.containerId = 15;
+  auto cgenerator = std::make_shared<GeometryIdGenerator>(
+      cfg, getDefaultLogger("ContainerIdGenerator", Logging::VERBOSE));
+
+  auto igenerator = std::make_shared<GeoIdIncrementer>();
+
+  std::tuple<std::shared_ptr<const GeometryIdGenerator>,
+             std::shared_ptr<const GeoIdIncrementer>>
+      geoGenerators = {cgenerator, igenerator};
+
+  ChainedGeometryIdGenerator<std::shared_ptr<const GeometryIdGenerator>,
+                             std::shared_ptr<const GeoIdIncrementer>>
+      generator(std::move(geoGenerators));
+
+  auto cache = generator.generateCache();
+  for (auto& volume : volumes) {
+    generator.assignGeometryId(cache, *volume);
+  }
+
+  BOOST_CHECK_EQUAL(volumes[0]->geometryId().volume(), 16);
+  BOOST_CHECK_EQUAL(volumes[0]->geometryId().layer(), 1);
+  BOOST_CHECK_EQUAL(volumes[1]->geometryId().volume(), 16);
+  BOOST_CHECK_EQUAL(volumes[1]->geometryId().layer(), 2);
+  BOOST_CHECK_EQUAL(volumes[2]->geometryId().volume(), 16);
   BOOST_CHECK_EQUAL(volumes[2]->geometryId().layer(), 3);
 }
 

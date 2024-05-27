@@ -25,12 +25,9 @@ namespace Acts {
 class PlanarBounds;
 }  // namespace Acts
 
-using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -133,6 +130,4 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

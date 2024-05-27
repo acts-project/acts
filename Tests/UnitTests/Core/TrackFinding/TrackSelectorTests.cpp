@@ -9,6 +9,14 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 
 #include <limits>
@@ -23,7 +31,11 @@ struct MockTrack {
   double m_loc0;
   double m_loc1;
   double m_time;
-  double m_nMeasurements;
+  std::size_t m_nMeasurements;
+  std::size_t m_nHoles;
+  std::size_t m_nOutliers;
+  std::size_t m_nSharedHits;
+  float m_chi2;
 
   bool hasReferenceSurface() const { return true; }
   double theta() const { return m_theta; }
@@ -32,7 +44,37 @@ struct MockTrack {
   double loc0() const { return m_loc0; }
   double loc1() const { return m_loc1; }
   double time() const { return m_time; }
-  double nMeasurements() const { return m_nMeasurements; }
+  std::size_t nMeasurements() const { return m_nMeasurements; }
+  std::size_t nHoles() const { return m_nHoles; }
+  std::size_t nOutliers() const { return m_nOutliers; }
+  std::size_t nSharedHits() const { return m_nSharedHits; }
+  float chi2() const { return m_chi2; }
+
+  // To comply with concept, not actually used
+ private:
+  struct MockTrackState {
+    const Surface& referenceSurface() const {
+      static const auto srf =
+          Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+      return *srf;
+    }
+
+    ConstTrackStateType typeFlags() const {
+      static const ConstTrackStateType::raw_type raw{0};
+      return {raw};
+    }
+  };
+
+  struct TrackStateRange {
+    auto begin() const { return m_trackStates.begin(); }
+    auto end() const { return m_trackStates.end(); }
+
+   private:
+    std::vector<MockTrackState> m_trackStates;
+  };
+
+ public:
+  TrackStateRange trackStatesReversed() const { return {}; }
 };
 
 double thetaFromEta(double eta) {
@@ -55,7 +97,11 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
   baseTrack.m_loc0 = 0.5;
   baseTrack.m_loc1 = 0.5;
   baseTrack.m_time = 0.5;
-  baseTrack.m_nMeasurements = 0.5;
+  baseTrack.m_nMeasurements = 1;
+  baseTrack.m_nHoles = 0;
+  baseTrack.m_nOutliers = 0;
+  baseTrack.m_nSharedHits = 0;
+  baseTrack.m_chi2 = 0.0;
 
   {
     TrackSelector selector{cfgBase};
@@ -257,6 +303,62 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
     track.m_nMeasurements = {0};
     BOOST_CHECK(!selector.isValidTrack(track));
   }
+
+  {
+    BOOST_TEST_INFO_SCOPE("nHoles max");
+    auto cfg = cfgBase;
+    cfg.cutSets.at(0).maxHoles = {3};
+    TrackSelector selector{cfg};
+    MockTrack track = baseTrack;
+    track.m_nHoles = {2};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nHoles = {3};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nHoles = {4};
+    BOOST_CHECK(!selector.isValidTrack(track));
+  }
+
+  {
+    BOOST_TEST_INFO_SCOPE("nOutliers max");
+    auto cfg = cfgBase;
+    cfg.cutSets.at(0).maxOutliers = {3};
+    TrackSelector selector{cfg};
+    MockTrack track = baseTrack;
+    track.m_nOutliers = {2};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nOutliers = {3};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nOutliers = {4};
+    BOOST_CHECK(!selector.isValidTrack(track));
+  }
+
+  {
+    BOOST_TEST_INFO_SCOPE("nSharedHits max");
+    auto cfg = cfgBase;
+    cfg.cutSets.at(0).maxSharedHits = {3};
+    TrackSelector selector{cfg};
+    MockTrack track = baseTrack;
+    track.m_nSharedHits = {2};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nSharedHits = {3};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_nSharedHits = {4};
+    BOOST_CHECK(!selector.isValidTrack(track));
+  }
+
+  {
+    BOOST_TEST_INFO_SCOPE("nSharedHits max");
+    auto cfg = cfgBase;
+    cfg.cutSets.at(0).maxChi2 = {3};
+    TrackSelector selector{cfg};
+    MockTrack track = baseTrack;
+    track.m_chi2 = {2};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_chi2 = {3};
+    BOOST_CHECK(selector.isValidTrack(track));
+    track.m_chi2 = {4};
+    BOOST_CHECK(!selector.isValidTrack(track));
+  }
 }
 
 BOOST_AUTO_TEST_CASE(TestSingleBinEtaCutByBinEdge) {
@@ -291,7 +393,11 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
   baseTrack.m_loc0 = 0.5;
   baseTrack.m_loc1 = 0.5;
   baseTrack.m_time = 0.5;
-  baseTrack.m_nMeasurements = 0.5;
+  baseTrack.m_nMeasurements = 1;
+  baseTrack.m_nHoles = 0;
+  baseTrack.m_nOutliers = 0;
+  baseTrack.m_nSharedHits = 0;
+  baseTrack.m_chi2 = 0.0;
 
   using Config = TrackSelector::Config;
 
@@ -497,6 +603,143 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
     BOOST_CHECK_EQUAL(cfg.getCuts(3.5).loc0Min, -3.0);
     BOOST_CHECK_EQUAL(cfg.getCuts(3.5).loc0Max, 3.0);
   }
+}
+
+BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
+  auto makeSurface = [](GeometryIdentifier id) {
+    auto srf =
+        Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ());
+
+    srf->assignGeometryId(id);
+    return srf;
+  };
+
+  auto addTrackState = [](auto& track, const auto& surface,
+                          TrackStateFlag flag) {
+    auto ts = track.appendTrackState();
+    ts.setReferenceSurface(surface);
+    ts.typeFlags().set(flag);
+    return ts;
+  };
+
+  auto addMeasurement = [&](auto& track, const auto& surface) {
+    return addTrackState(track, surface, TrackStateFlag::MeasurementFlag);
+  };
+
+  auto addMaterial = [&](auto& track, const auto& surface) {
+    return addTrackState(track, surface, TrackStateFlag::MaterialFlag);
+  };
+
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+
+  auto makeTrack = [&]() {
+    auto track = tc.makeTrack();
+
+    using namespace Acts::UnitLiterals;
+    track.parameters() << 0, 0, M_PI / 2, M_PI / 2, 1 / 1_GeV, 0;
+    auto perigee = Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+    track.setReferenceSurface(perigee);
+    return track;
+  };
+
+  auto vol7_lay3_sen2 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(3).setSensitive(2));
+  auto vol7_lay4 = makeSurface(GeometryIdentifier{}.setVolume(7).setLayer(4));
+  auto vol7_lay3_sen8 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(3).setSensitive(8));
+  auto vol7_lay5_sen11 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(5).setSensitive(11));
+  auto vol7_lay5_sen12 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(5).setSensitive(12));
+  auto vol7_lay6_sen3 = makeSurface(
+      GeometryIdentifier{}.setVolume(7).setLayer(6).setSensitive(3));
+
+  auto vol8_lay8_sen1 = makeSurface(
+      GeometryIdentifier{}.setVolume(8).setLayer(8).setSensitive(1));
+  auto vol8_lay8_sen2 = makeSurface(
+      GeometryIdentifier{}.setVolume(8).setLayer(8).setSensitive(2));
+  auto vol8_lay9_sen1 = makeSurface(
+      GeometryIdentifier{}.setVolume(8).setLayer(9).setSensitive(1));
+
+  TrackSelector::Config cfgVol7;
+  cfgVol7.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(7)}, 3);
+  TrackSelector selectorVol7{cfgVol7};
+
+  auto trackVol7 = makeTrack();
+
+  BOOST_CHECK(!selectorVol7.isValidTrack(trackVol7));
+
+  // 1 hit in vol7
+  addMeasurement(trackVol7, vol7_lay3_sen2);
+  addMaterial(trackVol7, vol7_lay4);
+
+  BOOST_CHECK(!selectorVol7.isValidTrack(trackVol7));
+  addMeasurement(trackVol7, vol7_lay5_sen11);
+  BOOST_CHECK(!selectorVol7.isValidTrack(trackVol7));
+
+  // Now we should have enough hits
+  addMeasurement(trackVol7, vol7_lay6_sen3);
+  BOOST_CHECK(selectorVol7.isValidTrack(trackVol7));
+
+  TrackSelector::Config cfgVol8;
+  cfgVol8.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(8)}, 2);
+  TrackSelector selectorVol8{cfgVol8};
+
+  // Previous trackVol7 has no measurements in volume 8
+  BOOST_CHECK(!selectorVol8.isValidTrack(trackVol7));
+
+  auto trackVol8 = makeTrack();
+  BOOST_CHECK(!selectorVol8.isValidTrack(trackVol8));
+
+  addMeasurement(trackVol8, vol8_lay8_sen1);
+  BOOST_CHECK(!selectorVol8.isValidTrack(trackVol8));
+  addMeasurement(trackVol8, vol8_lay8_sen2);
+  BOOST_CHECK(selectorVol8.isValidTrack(trackVol8));
+  addMeasurement(trackVol8, vol8_lay9_sen1);
+  BOOST_CHECK(selectorVol8.isValidTrack(trackVol8));
+
+  TrackSelector::Config cfgVol7Lay5;
+  cfgVol7Lay5.measurementCounter.addCounter(
+      {GeometryIdentifier{}.setVolume(7).setLayer(5)}, 2);
+  TrackSelector selectorVol7Lay5{cfgVol7Lay5};
+
+  // Only one hit on volume 7 layer 5
+  BOOST_CHECK(!selectorVol7Lay5.isValidTrack(trackVol7));
+  addMeasurement(trackVol7, vol7_lay5_sen12);
+  BOOST_CHECK(selectorVol7Lay5.isValidTrack(trackVol7));
+
+  // Check requirement on volume 7 OR 8
+  TrackSelector::Config cfgVol7Or8;
+  cfgVol7Or8.measurementCounter.addCounter(
+      {GeometryIdentifier{}.setVolume(7), GeometryIdentifier{}.setVolume(8)},
+      4);
+  TrackSelector selectorVol7Or8{cfgVol7Or8};
+
+  // threshold is 4
+  // this track has enough hits in volume 7 only
+  BOOST_CHECK(selectorVol7Or8.isValidTrack(trackVol7));
+  // this track does not have enough hits in volume 8 only
+  BOOST_CHECK(!selectorVol7Or8.isValidTrack(trackVol8));
+
+  // add 1 hit in volume 7 to push it over the threshold
+  addMeasurement(trackVol8, vol7_lay3_sen8);
+  // now it passes
+  BOOST_CHECK(selectorVol7Or8.isValidTrack(trackVol8));
+
+  TrackSelector::Config cfgVol7And8;
+  cfgVol7And8.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(7)},
+                                            4);
+  cfgVol7And8.measurementCounter.addCounter({GeometryIdentifier{}.setVolume(8)},
+                                            2);
+  TrackSelector selectorVol7And8{cfgVol7And8};
+
+  // this track has enough hits in vol 7 but not enough in vol 8
+  BOOST_CHECK(!selectorVol7And8.isValidTrack(trackVol7));
+
+  addMeasurement(trackVol7, vol8_lay8_sen1);
+  addMeasurement(trackVol7, vol8_lay8_sen2);
+
+  BOOST_CHECK(selectorVol7And8.isValidTrack(trackVol7));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

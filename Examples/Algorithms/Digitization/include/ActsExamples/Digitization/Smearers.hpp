@@ -21,8 +21,7 @@
 #include <tuple>
 #include <utility>
 
-namespace ActsExamples {
-namespace Digitization {
+namespace ActsExamples::Digitization {
 
 /// Exact smearing of a single parameter.
 ///
@@ -160,7 +159,7 @@ struct Uniform {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];
-      std::uniform_real_distribution<> dist{0., 1.};
+      std::uniform_real_distribution<double> dist{0., 1.};
       double svalue = lower + (higher - lower) * dist(rnd);
       return std::pair{svalue, (higher - lower) / std::sqrt(12.)};
     }
@@ -205,5 +204,4 @@ struct Digital {
   }
 };
 
-}  // namespace Digitization
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Digitization

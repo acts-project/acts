@@ -3,6 +3,9 @@
 # the common libraries which are linked to every unittest can be
 # extended by setting the `unittest_extra_libraries` variables before
 # calling the macro.
+
+add_custom_target(unit_tests)
+
 macro(add_unittest _name _source)
   # automatically prefix the target name
   set(_target "ActsUnitTest${_name}")
@@ -25,6 +28,7 @@ macro(add_unittest _name _source)
       ${unittest_extra_libraries})
   # register as unittest executable
   add_test(NAME ${_name} COMMAND ${_target})
+  add_dependencies(unit_tests ${_target})
 endmacro()
 
 # This function adds a non compile test. To this end it

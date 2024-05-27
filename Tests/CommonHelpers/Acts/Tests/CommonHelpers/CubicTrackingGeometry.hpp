@@ -13,8 +13,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -33,8 +31,7 @@
 #include <functional>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct CubicTrackingGeometry {
   /// Default constructor for the Cubic tracking geometry
@@ -126,8 +123,7 @@ struct CubicTrackingGeometry {
     Transform3 trafoVol1(Transform3::Identity());
     trafoVol1.translation() = Vector3(-1.5_m, 0., 0.);
 
-    auto boundsVol =
-        std::make_shared<const CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
+    auto boundsVol = std::make_shared<CuboidVolumeBounds>(1.5_m, 0.5_m, 0.5_m);
 
     LayerArrayCreator::Config lacConfig;
     LayerArrayCreator layArrCreator(
@@ -140,9 +136,9 @@ struct CubicTrackingGeometry {
         geoContext, layVec, -2_m - 1._mm, -1._m + 1._mm, BinningType::arbitrary,
         BinningValue::binX));
 
-    auto trackVolume1 =
-        TrackingVolume::create(trafoVol1, boundsVol, nullptr,
-                               std::move(layArr1), nullptr, {}, "Volume 1");
+    auto trackVolume1 = std::make_shared<TrackingVolume>(
+        trafoVol1, boundsVol, nullptr, std::move(layArr1), nullptr,
+        MutableTrackingVolumeVector{}, "Volume 1");
 
     // Build volume for surfaces with positive x-values
     Transform3 trafoVol2(Transform3::Identity());
@@ -156,9 +152,9 @@ struct CubicTrackingGeometry {
         layArrCreator.layerArray(geoContext, layVec, 1._m - 2._mm, 2._m + 2._mm,
                                  BinningType::arbitrary, BinningValue::binX));
 
-    auto trackVolume2 =
-        TrackingVolume::create(trafoVol2, boundsVol, nullptr,
-                               std::move(layArr2), nullptr, {}, "Volume 2");
+    auto trackVolume2 = std::make_shared<TrackingVolume>(
+        trafoVol2, boundsVol, nullptr, std::move(layArr2), nullptr,
+        MutableTrackingVolumeVector{}, "Volume 2");
 
     // Glue volumes
     trackVolume2->glueTrackingVolume(
@@ -173,8 +169,7 @@ struct CubicTrackingGeometry {
     Transform3 trafoWorld(Transform3::Identity());
     trafoWorld.translation() = Vector3(0., 0., 0.);
 
-    auto worldVol =
-        std::make_shared<const CuboidVolumeBounds>(3._m, 0.5_m, 0.5_m);
+    auto worldVolBds = std::make_shared<CuboidVolumeBounds>(3._m, 0.5_m, 0.5_m);
 
     std::vector<std::pair<TrackingVolumePtr, Vector3>> tapVec;
 
@@ -189,12 +184,12 @@ struct CubicTrackingGeometry {
     std::shared_ptr<const TrackingVolumeArray> trVolArr(
         new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
-    MutableTrackingVolumePtr mtvpWorld(
-        TrackingVolume::create(trafoWorld, worldVol, trVolArr, "World"));
+    MutableTrackingVolumePtr mtvpWorld(std::make_shared<TrackingVolume>(
+        trafoWorld, worldVolBds, nullptr, nullptr, trVolArr,
+        MutableTrackingVolumeVector{}, "World"));
 
     // Build and return tracking geometry
-    return std::shared_ptr<TrackingGeometry>(
-        new Acts::TrackingGeometry(mtvpWorld));
+    return std::make_shared<TrackingGeometry>(mtvpWorld);
   }
 
   RotationMatrix3 rotation = RotationMatrix3::Identity();
@@ -205,5 +200,4 @@ struct CubicTrackingGeometry {
 
   std::reference_wrapper<const GeometryContext> geoContext;
 };
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

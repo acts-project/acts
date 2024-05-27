@@ -29,7 +29,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <array>
@@ -45,21 +44,10 @@
 
 #include <boost/format.hpp>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-#define CHECK_ROTATION_ANGLE(t, a, tolerance)               \
-  {                                                         \
-    Vector3 v = (*t) * Vector3(1, 0, 0);                    \
-    CHECK_CLOSE_ABS(VectorHelpers::phi(v), (a), tolerance); \
-  }
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -470,6 +458,4 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

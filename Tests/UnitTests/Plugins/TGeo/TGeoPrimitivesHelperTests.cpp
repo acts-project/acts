@@ -14,12 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// @brief Unit test checking the match probability
 BOOST_AUTO_TEST_CASE(TGeoPrimitivesHelper_match) {
@@ -31,5 +26,4 @@ BOOST_AUTO_TEST_CASE(TGeoPrimitivesHelper_match) {
   BOOST_CHECK(TGeoPrimitivesHelper::match(candidates, "BeamPipe"));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -6,17 +6,19 @@ add_library(
   src/CsvMeasurementWriter.cpp
   src/CsvParticleReader.cpp
   src/CsvParticleWriter.cpp
-  src/CsvPlanarClusterReader.cpp
-  src/CsvPlanarClusterWriter.cpp
   src/CsvSimHitReader.cpp
   src/CsvSimHitWriter.cpp
   src/CsvSpacePointReader.cpp
   src/CsvTrackingGeometryWriter.cpp
   src/CsvTrackParameterReader.cpp
   src/CsvTrackParameterWriter.cpp
+  src/CsvSeedWriter.cpp 
   src/CsvTrackWriter.cpp 
+  src/CsvDriftCircleReader.cpp 
+  src/CsvMuonSimHitReader.cpp 
   src/CsvProtoTrackWriter.cpp
   src/CsvSpacePointWriter.cpp
+  src/CsvExaTrkXGraphWriter.cpp
   src/CsvBFieldWriter.cpp)
 target_include_directories(
   ActsExamplesIoCsv
@@ -24,7 +26,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoCsv
   PRIVATE
-    ActsCore ActsPluginIdentification
+    ActsCore
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads)
 acts_target_link_libraries_system(

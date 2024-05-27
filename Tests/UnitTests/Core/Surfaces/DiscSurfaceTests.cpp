@@ -38,14 +38,10 @@
 #include <string>
 #include <utility>
 
-namespace utf = boost::unit_test;
-namespace tt = boost::test_tools;
-
 namespace Acts {
 class AssertionFailureException;
 
 namespace Test {
-// using boost::test_tools::output_test_stream;
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
@@ -287,14 +283,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Vector3 globalPosition{0, 4, 2};
   Vector3 momentum{0, 0, 1};
   Vector3 direction = momentum.normalized();
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      discSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
+      discSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
+                                                   direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 0, 0, 1, 3, 0, 0;

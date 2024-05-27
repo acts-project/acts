@@ -10,6 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -21,8 +22,7 @@
 #include <cmath>
 #include <limits>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Fatras simulation actor for the Acts propagator.
 ///
@@ -148,8 +148,8 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
-      stepper.setStepSize(state.stepping, stepSize,
-                          Acts::ConstrainedStep::user);
+      stepper.updateStepSize(state.stepping, stepSize,
+                             Acts::ConstrainedStep::user);
     }
 
     // arm the point-like interaction limits in the first step
@@ -158,7 +158,7 @@ struct SimulationActor {
     }
 
     // If we are on target, everything should have been done
-    if (navigator.targetReached(state.navigation)) {
+    if (state.stage == Acts::PropagatorStage::postPropagation) {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
@@ -197,15 +197,17 @@ struct SimulationActor {
         }
       }
     }
-    const Particle &after = result.particle;
+    Particle &after = result.particle;
 
     // store results of this interaction step, including potential hits
     if (selectHitSurface(surface)) {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
+          Hit::Scalar{0.5} * (before.fourPosition() + after.fourPosition()),
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
+
+      after.setNumberOfHits(result.hits.size());
     }
 
     if (after.absoluteMomentum() == 0.0) {
@@ -311,8 +313,10 @@ struct SimulationActor {
     //   material. simulation is limited to the continuous processes.
     //
     // `clamp` ensures a valid range in all cases.
-    const float fracX0 = std::clamp(float(x0Dist / slabX0), 0.0f, 1.0f);
-    const float fracL0 = std::clamp(float(l0Dist / slabL0), 0.0f, 1.0f);
+    const float fracX0 =
+        std::clamp(static_cast<float>(x0Dist / slabX0), 0.0f, 1.0f);
+    const float fracL0 =
+        std::clamp(static_cast<float>(l0Dist / slabL0), 0.0f, 1.0f);
     // fraction of the material where the first point-like interaction occurs
     const float frac = std::min(fracX0, fracL0);
 
@@ -350,5 +354,4 @@ struct SimulationActor {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

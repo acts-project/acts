@@ -10,8 +10,7 @@
 
 #include <cmath>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Wrap a periodic value back into the nominal range.
 template <typename T>
@@ -50,13 +49,13 @@ inline T difference_periodic(T lhs, T rhs, T range) {
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 template <typename T>
 inline T radian_pos(T x) {
-  return wrap_periodic<T>(x, T(0), T(2 * M_PI));
+  return wrap_periodic<T>(x, T{0}, T{2 * M_PI});
 }
 
 /// Calculate the equivalent angle in the [-pi, pi) range.
 template <typename T>
 inline T radian_sym(T x) {
-  return wrap_periodic<T>(x, T(-M_PI), T(2 * M_PI));
+  return wrap_periodic<T>(x, T{-M_PI}, T{2 * M_PI});
 }
 
 /// Ensure both phi and theta direction angles are within the allowed range.
@@ -91,5 +90,4 @@ inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
   return {radian_sym(phi), theta};
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

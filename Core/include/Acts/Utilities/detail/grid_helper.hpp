@@ -19,9 +19,7 @@
 
 #include <boost/container/small_vector.hpp>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 template <typename T>
 constexpr T ipow(T num, unsigned int pow) {
@@ -803,8 +801,8 @@ struct grid_helper {
   static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
       const std::array<std::size_t, sizeof...(Axes)>& localIndices,
       std::size_t size, const std::tuple<Axes...>& axes) {
-    return neighborHoodIndices(localIndices, std::make_pair(int(-size), size),
-                               axes);
+    return neighborHoodIndices(
+        localIndices, std::make_pair(static_cast<int>(-size), size), axes);
   }
 
   /// @brief get global bin indices for bins in specified neighborhood
@@ -887,6 +885,4 @@ struct grid_helper {
   }
 };
 
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

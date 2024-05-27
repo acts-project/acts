@@ -8,11 +8,18 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <numeric>
 #include <ostream>
 #include <vector>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -23,6 +30,26 @@ class TrackSelector {
   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
+  struct MeasurementCounter {
+    // Combination of a geometry hierarchy map and a minimum hit count
+    using CounterElement =
+        std::pair<GeometryHierarchyMap<unsigned int>, unsigned int>;
+
+    boost::container::small_vector<CounterElement, 4> counters;
+
+    template <typename track_proxy_t>
+    bool isValidTrack(const track_proxy_t& track) const;
+
+    void addCounter(const std::vector<GeometryIdentifier>& identifiers,
+                    unsigned int threshold) {
+      std::vector<GeometryHierarchyMap<unsigned int>::InputElement> elements;
+      for (const auto& id : identifiers) {
+        elements.emplace_back(id, 0);
+      }
+      counters.emplace_back(std::move(elements), threshold);
+    }
+  };
+
   /// Configuration of a set of cuts for a single eta bin
   /// Default construction yields a set of cuts that accepts everything.
   struct Config {
@@ -46,6 +73,13 @@ class TrackSelector {
     double ptMax = inf;
 
     std::size_t minMeasurements = 0;
+    std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
+    std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
+    std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
+    double maxChi2 = inf;
+
+    // Defaults to: no cut
+    MeasurementCounter measurementCounter;
 
     // Helper factory functions to produce a populated config object more
     // conveniently
@@ -132,7 +166,8 @@ class TrackSelector {
 
     /// Auto-converting constructor from a single cut configuration.
     /// Results in a single absolute eta bin from 0 to infinity.
-    EtaBinnedConfig(Config cutSet) : cutSets{cutSet}, absEtaEdges{{0, inf}} {}
+    EtaBinnedConfig(Config cutSet)
+        : cutSets{std::move(cutSet)}, absEtaEdges{{0, inf}} {}
 
     /// Add a new eta bin with the given upper bound.
     /// @param etaMax Upper bound of the new eta bin
@@ -152,6 +187,11 @@ class TrackSelector {
     /// @return Reference to the output stream
     friend std::ostream& operator<<(std::ostream& os,
                                     const EtaBinnedConfig& cfg);
+
+    /// Check if the configuration has a bin for a given eta
+    /// @param eta Eta value
+    /// @return True if the configuration has a bin for the given eta
+    bool hasCuts(double eta) const;
 
     /// Get the index of the eta bin for a given eta
     /// @param eta Eta value
@@ -269,6 +309,10 @@ inline std::ostream& operator<<(std::ostream& os,
   print("eta", cuts.etaMin, cuts.etaMax);
   print("absEta", cuts.absEtaMin, cuts.absEtaMax);
   print("pt", cuts.ptMin, cuts.ptMax);
+  print("nHoles", 0, cuts.maxHoles);
+  print("nOutliers", 0, cuts.maxOutliers);
+  print("nSharedHits", 0, cuts.maxSharedHits);
+  print("chi2", 0.0, cuts.maxChi2);
   os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
 
   return os;
@@ -298,8 +342,12 @@ inline TrackSelector::EtaBinnedConfig& TrackSelector::EtaBinnedConfig::addCuts(
   return addCuts(inf, callback);
 }
 
+inline bool TrackSelector::EtaBinnedConfig::hasCuts(double eta) const {
+  return std::abs(eta) < absEtaEdges.back();
+}
+
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
-  if (std::abs(eta) >= absEtaEdges.back()) {
+  if (!hasCuts(eta)) {
     throw std::invalid_argument{"Eta is outside the abs eta bin edges"};
   }
 
@@ -333,7 +381,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
     if (!isValidTrack(track)) {
       continue;
     }
-    auto destProxy = outputTracks.getTrack(outputTracks.addTrack());
+    auto destProxy = outputTracks.makeTrack();
     destProxy.copyFrom(track, false);
     destProxy.tipIndex() = track.tipIndex();
   }
@@ -342,6 +390,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
 template <typename track_proxy_t>
 bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   auto checkMin = [](auto x, auto min) { return min <= x; };
+  auto checkMax = [](auto x, auto max) { return x <= max; };
   auto within = [](double x, double min, double max) {
     return (min <= x) && (x < max);
   };
@@ -382,7 +431,12 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
          within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
          within(track.time(), cuts.timeMin, cuts.timeMax) &&
-         checkMin(track.nMeasurements(), cuts.minMeasurements);
+         checkMin(track.nMeasurements(), cuts.minMeasurements) &&
+         checkMax(track.nHoles(), cuts.maxHoles) &&
+         checkMax(track.nOutliers(), cuts.maxOutliers) &&
+         checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
+         checkMax(track.chi2(), cuts.maxChi2) &&
+         cuts.measurementCounter.isValidTrack(track);
 }
 
 inline TrackSelector::TrackSelector(
@@ -420,4 +474,43 @@ inline TrackSelector::TrackSelector(
 inline TrackSelector::TrackSelector(const Config& config)
     : TrackSelector{EtaBinnedConfig{config}} {}
 
+template <typename track_proxy_t>
+bool TrackSelector::MeasurementCounter::isValidTrack(
+    const track_proxy_t& track) const {
+  // No hit cuts, accept everything
+  if (counters.empty()) {
+    return true;
+  }
+
+  boost::container::small_vector<unsigned int, 4> counterValues;
+  counterValues.resize(counters.size(), 0);
+
+  for (const auto& ts : track.trackStatesReversed()) {
+    if (!ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      continue;
+    }
+
+    const auto geoId = ts.referenceSurface().geometryId();
+
+    for (std::size_t i = 0; i < counters.size(); i++) {
+      const auto& [counterMap, threshold] = counters[i];
+      const auto it = counterMap.find(geoId);
+      if (it == counterMap.end()) {
+        continue;
+      }
+
+      counterValues[i]++;
+    }
+  }
+
+  for (std::size_t i = 0; i < counters.size(); i++) {
+    const auto& [counterMap, threshold] = counters[i];
+    const unsigned int value = counterValues[i];
+    if (value < threshold) {
+      return false;
+    }
+  }
+
+  return true;
+}
 }  // namespace Acts

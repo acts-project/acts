@@ -18,7 +18,9 @@
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -217,11 +219,13 @@ class ConeSurface : public RegularSurface {
   /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -277,5 +281,7 @@ class ConeSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, ConeSurface);
 
 }  // namespace Acts

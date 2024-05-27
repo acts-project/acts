@@ -26,8 +26,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -58,10 +59,8 @@ using MagneticField = Acts::ConstantBField;
 using StraightPropagator = Acts::Propagator<StraightLineStepper>;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper>;
-using Estimator =
-    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-using StraightLineEstimator =
-    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, StraightPropagator>;
+using Estimator = Acts::ImpactPointEstimator;
+using StraightLineEstimator = Acts::ImpactPointEstimator;
 
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
@@ -98,7 +97,7 @@ Estimator makeEstimator(double bZ) {
   Stepper stepper(field);
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(
-                            std::move(stepper), detail::VoidNavigator(),
+                            std::move(stepper), VoidNavigator(),
                             getDefaultLogger("Prop", Logging::Level::WARNING)));
   return Estimator(cfg);
 }
@@ -127,9 +126,9 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 }
 
 // random value between 0 and 1
-std::uniform_real_distribution<> uniformDist(0.0, 1.0);
+std::uniform_real_distribution<double> uniformDist(0.0, 1.0);
 // random sign
-std::uniform_real_distribution<> signDist(-1, 1);
+std::uniform_real_distribution<double> signDist(-1, 1);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
@@ -149,7 +148,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   par[eBoundQOverP] = particleHypothesis.qOverP(p, q);
 
   Estimator ipEstimator = makeEstimator(2_T);
-  Estimator::State state(magFieldCache());
+  Estimator::State state{magFieldCache()};
   // reference position and corresponding perigee surface
   Vector3 refPosition(0., 0., 0.);
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
@@ -188,8 +187,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   // check that we get sensible compatibility scores
   // this is a chi2-like value and should always be positive
   auto compatibility =
-      ipEstimator
-          .getVertexCompatibility<3>(geoContext, &trackAtIP3d, refPosition)
+      ipEstimator.getVertexCompatibility(geoContext, &trackAtIP3d, refPosition)
           .value();
   BOOST_CHECK_GT(compatibility, 0);
 }
@@ -205,7 +203,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   auto propagator = std::make_shared<Propagator>(std::move(stepper));
   Estimator::Config cfg(field, propagator);
   Estimator ipEstimator(cfg);
-  Estimator::State ipState(magFieldCache());
+  Estimator::State ipState{magFieldCache()};
 
   // Set up quantities for B = 0
   auto zeroField = std::make_shared<MagneticField>(Vector3(0, 0, 0));
@@ -214,11 +212,11 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
       std::make_shared<StraightPropagator>(straightLineStepper);
   StraightLineEstimator::Config zeroFieldCfg(zeroField, straightLinePropagator);
   StraightLineEstimator zeroFieldIPEstimator(zeroFieldCfg);
-  StraightLineEstimator::State zeroFieldIPState(magFieldCache());
+  StraightLineEstimator::State zeroFieldIPState{magFieldCache()};
 
   // Vertex position and vertex object
   Vector4 vtxPos(vx0, vy0, vz0, vt0);
-  Vertex<BoundTrackParameters> vtx(vtxPos, makeVertexCovariance(), {});
+  Vertex vtx(vtxPos, makeVertexCovariance(), {});
 
   // Perigee surface at vertex position
   auto vtxPerigeeSurface =
@@ -393,14 +391,14 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // Calculate the 4D vertex compatibilities of the three tracks
   double compatibilityClose =
-      ipEstimator.getVertexCompatibility<4>(geoContext, &paramsClose, vtxPos)
+      ipEstimator.getVertexCompatibility(geoContext, &paramsClose, vtxPos)
           .value();
   double compatibilityCloseLargerCov =
       ipEstimator
-          .getVertexCompatibility<4>(geoContext, &paramsCloseLargerCov, vtxPos)
+          .getVertexCompatibility(geoContext, &paramsCloseLargerCov, vtxPos)
           .value();
   double compatibilityFar =
-      ipEstimator.getVertexCompatibility<4>(geoContext, &paramsFar, vtxPos)
+      ipEstimator.getVertexCompatibility(geoContext, &paramsFar, vtxPos)
           .value();
 
   // The track who is closer in time must have a better (i.e., smaller)
@@ -419,7 +417,7 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 //
 BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   Estimator ipEstimator = makeEstimator(1.9971546939_T);
-  Estimator::State state(magFieldCache());
+  Estimator::State state{magFieldCache()};
 
   // Use same values as in Athena unit test
   Vector4 pos1(2_mm, 1_mm, -10_mm, 0_ns);
@@ -466,7 +464,7 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   trk_par[eBoundQOverP] = 1_e / 10_GeV;
 
   Vector4 ip_pos{0., 0., 0., 0.};
-  Vertex<BoundTrackParameters> ip_vtx(ip_pos, makeVertexCovariance(), {});
+  Vertex ip_vtx(ip_pos, makeVertexCovariance(), {});
 
   // Form the bound track parameters at the ip
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(ip_pos.head<3>());
@@ -516,7 +514,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   vtxPos[eTime] = vt0;
 
   Estimator ipEstimator = makeEstimator(1_T);
-  Estimator::State state(magFieldCache());
+  Estimator::State state{magFieldCache()};
 
   // reference position and corresponding perigee surface
   Vector3 refPosition(0., 0., 0.);
@@ -525,7 +523,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   BoundTrackParameters track(perigeeSurface, par,
                              makeBoundParametersCovariance(),
                              ParticleHypothesis::pionLike(std::abs(q)));
-  Vertex<BoundTrackParameters> myConstraint(vtxPos, makeVertexCovariance(), {});
+  Vertex myConstraint(vtxPos, makeVertexCovariance(), {});
 
   // check that computed impact parameters are meaningful
   ImpactParametersAndSigma output =

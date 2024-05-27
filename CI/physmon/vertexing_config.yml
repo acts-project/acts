@@ -1,24 +1,38 @@
 histograms:
-  "resX|resY|resZ":
+  "nRecoVtx|nTrueVtx|nVtx.*":
+    nbins: 51
+    min: 25
+    max: 75
+
+  "nTracks.*":
+    nbins: 21
+    min: 0
+    max: 20
+
+  "truthVertexMatchRatio":
+    nbins: 100
+    min: 0.0
+    max: 1.01
+
+  "resX|resY|resZ|resSeedZ":
     nbins: 100
     min: -0.1
     max: 0.1
 
-  "resT":
+  "resT|resSeedT":
     nbins: 100
     min: -50
     max: 50
 
   "trk_res.*":
     nbins: 100
-    min: -0.1
-    max: 0.1
+    min: -0.02
+    max: 0.02
 
   "pull.*":
     nbins: 50
     min: -6
     max: 6
-
 
   "trk_pull.*":
     nbins: 50
@@ -35,22 +49,17 @@ histograms:
     min: 0.0
     max: 100.0
 
-  "^n.*$":
-    nbins: 250
-    min: 0
-    max: 251
-
-  "truthX|truthY|recoX|recoY":
+  "truthX|truthY|recoX|recoY|seedX|seedY":
     nbins: 100
     min: -0.06
     max: 0.06
 
-  "truthZ|recoZ":
+  "truthZ|recoZ|seedZ":
     nbins: 100
     min: -200
     max: 200
 
-  "truthT|recoT":
+  "truthT|recoT|seedT":
     nbins: 100
     min: -2000
     max: 2000
@@ -72,22 +81,35 @@ histograms:
 
   "trk_momOverlap|trk_momOverlapFitted":
     nbins: 100
-    min: 0.99
+    min: 0.999
     max: 1
+  
+  "trk_weight":
+    nbins: 100
+    min: -0.01
+    max: 1.01
+  
+  "sumPt2":
+    nbins: 100
+    min: 0
+    max: 700
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
     name: "recoOverTrue"
     nbins: 50
-    min: 0.0
-    max: 1.0
+    min: 0.8
+    max: 1.2
   - expression: df["nRecoVtx"] / df["nVtxDetectorAcceptance"]
     name: "recoOverAcc"
     nbins: 50
-    min: 0.0
-    max: 1.0
+    min: 0.8
+    max: 1.2
   - expression: df["nRecoVtx"] / df["nVtxReconstructable"]
     name: "recoOverRecble"
     nbins: 50
-    min: 0.0
-    max: 1.0
+    min: 0.8
+    max: 1.2
+
+exclude:
+  - event_nr

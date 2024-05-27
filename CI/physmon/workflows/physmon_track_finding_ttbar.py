@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import tempfile
 from pathlib import Path
 import shutil
@@ -12,11 +13,10 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
-    ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
+    CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -102,13 +102,23 @@ with tempfile.TemporaryDirectory() as temp:
             pt=(500 * u.MeV, None),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
+            maxHoles=2,
+            maxOutliers=2,
+        ),
+        CkfConfig(
+            seedDeduplication=True,
+            stayOnSeed=True,
         ),
         outputDirRoot=tp,
     )
 
     addAmbiguityResolution(
         s,
-        AmbiguityResolutionConfig(maximumSharedHits=3),
+        AmbiguityResolutionConfig(
+            maximumSharedHits=3,
+            maximumIterations=100000,
+            nMeasurementsMin=6,
+        ),
         outputDirRoot=tp,
     )
 
@@ -140,6 +150,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputProtoVertices="amvf_gridseeder_protovertices",
         outputVertices="amvf_gridseeder_fittedVertices",
         seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+        useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gridseeder",
     )

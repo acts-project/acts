@@ -13,17 +13,18 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/GenerateParameters.hpp"
+#include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -45,7 +46,8 @@ using namespace Acts::UnitLiterals;
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using namespace Acts::Test;
+using namespace Acts::detail::Test;
+
 using MultiTrajectoryTraits::IndexType;
 namespace bd = boost::unit_test::data;
 
@@ -205,6 +207,21 @@ BOOST_AUTO_TEST_CASE(BuildSharedPtr) {
   BOOST_CHECK_EQUAL(vtc.get(), &copy.container());
 }
 
+BOOST_AUTO_TEST_CASE(BuildConvenience) {
+  VectorMultiTrajectory mtj{};
+  VectorTrackContainer vtc{};
+  TrackContainer tc{vtc, mtj};
+
+  BOOST_CHECK_EQUAL(tc.size(), 0);
+  auto track1 = tc.makeTrack();
+  BOOST_CHECK_EQUAL(tc.size(), 1);
+  auto track2 = tc.makeTrack();
+  BOOST_CHECK_EQUAL(tc.size(), 2);
+
+  BOOST_CHECK_EQUAL(track1.index(), 0);
+  BOOST_CHECK_EQUAL(track2.index(), 1);
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   factory_t factory;
 
@@ -244,8 +261,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.setReferenceSurface(surface);
   BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
 
-  TrackAccessor<unsigned int> accNMeasuements("nMeasurements");
-  ConstTrackAccessor<unsigned int> caccNMeasuements("nMeasurements");
+  ProxyAccessor<unsigned int> accNMeasuements("nMeasurements");
+  ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");
 
   t.nMeasurements() = 42;
   BOOST_CHECK_EQUAL(t2.nMeasurements(), 42);
@@ -287,14 +304,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   auto mkts = [&](auto prev) {
     if constexpr (std::is_same_v<decltype(prev), IndexType>) {
-      auto ts =
-          traj.getTrackState(traj.addTrackState(TrackStatePropMask::All, prev));
+      auto ts = traj.makeTrackState(TrackStatePropMask::All, prev);
       TestTrackState pc(rng, 2u);
       fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
     } else {
-      auto ts = traj.getTrackState(
-          traj.addTrackState(TrackStatePropMask::All, prev.index()));
+      auto ts = traj.makeTrackState(TrackStatePropMask::All, prev.index());
       TestTrackState pc(rng, 2u);
       fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
@@ -307,7 +322,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   auto ts4 = mkts(ts3);
   auto ts5 = mkts(ts4);
 
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
   t.tipIndex() = ts5.index();
 
   std::vector<IndexType> act;
@@ -328,7 +343,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
 
-  auto tNone = tc.getTrack(tc.addTrack());
+  auto tNone = tc.makeTrack();
   BOOST_CHECK_EQUAL(tNone.nTrackStates(), 0);
 
   auto tsRange = tNone.trackStatesReversed();
@@ -347,7 +362,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackIterator, factory_t, holder_types) {
   auto& tc = factory.trackContainer();
 
   for (unsigned int i = 0; i < 10; i++) {
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     t.tipIndex() = i;
   }
   BOOST_CHECK_EQUAL(tc.size(), 10);
@@ -368,7 +383,7 @@ BOOST_AUTO_TEST_CASE(IteratorConcept) {
   TrackContainer tc{vtc, mtj};
 
   for (unsigned int i = 0; i < 10; i++) {
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     t.tipIndex() = i;
   }
   BOOST_CHECK_EQUAL(tc.size(), 10);
@@ -430,7 +445,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     TrackContainer tc{vtc, mtj};
 
     for (unsigned int i = 0; i < 10; i++) {
-      auto t = tc.getTrack(tc.addTrack());
+      auto t = tc.makeTrack();
       t.tipIndex() = i;
     }
 
@@ -470,11 +485,11 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   TrackContainer mutTc{mutVtc, mutMtj};
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
-  auto t = mutTc.getTrack(mutTc.addTrack());
+  auto t = mutTc.makeTrack();
   t.appendTrackState();
   t.appendTrackState();
   t.appendTrackState();
-  t = mutTc.getTrack(mutTc.addTrack());
+  t = mutTc.makeTrack();
   t.appendTrackState();
 
   BOOST_CHECK_EQUAL(mutTc.size(), 2);
@@ -532,7 +547,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(DynamicColumns, factory_t, holder_types) {
   tc.template addColumn<float>("col_a");
   BOOST_CHECK(tc.hasColumn("col_a"_hash));
 
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
   t.template component<float>("col_a") = 5.6f;
   BOOST_CHECK_EQUAL((t.template component<float, "col_a"_hash>()), 5.6f);
 }
@@ -558,7 +573,7 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
 
 BOOST_AUTO_TEST_CASE(AppendTrackState) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
 
   std::vector<VectorMultiTrajectory::TrackStateProxy> trackStates;
   trackStates.push_back(t.appendTrackState());
@@ -579,13 +594,13 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   {
     // let's create an unrelated track first
-    auto t = tc.getTrack(tc.addTrack());
+    auto t = tc.makeTrack();
     for (std::size_t i = 0; i < 10; i++) {
       t.appendTrackState();
     }
   }
 
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
 
   auto stem = t.appendTrackState();
   t.appendTrackState();
@@ -633,7 +648,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
 
 BOOST_AUTO_TEST_CASE(CalculateQuantities) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
 
   auto ts = t.appendTrackState();
   ts.typeFlags().set(MeasurementFlag);

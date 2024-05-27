@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -37,23 +38,7 @@ Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
     : RegularSurface(), m_bounds(nullptr) {
-  /// the right-handed coordinate system is defined as
-  /// T = normal
-  /// U = Z x T if T not parallel to Z otherwise U = X x T
-  /// V = T x U
-  Vector3 T = normal.normalized();
-  Vector3 U = std::abs(T.dot(Vector3::UnitZ())) < s_curvilinearProjTolerance
-                  ? Vector3::UnitZ().cross(T).normalized()
-                  : Vector3::UnitX().cross(T).normalized();
-  Vector3 V = T.cross(U);
-  RotationMatrix3 curvilinearRotation;
-  curvilinearRotation.col(0) = U;
-  curvilinearRotation.col(1) = V;
-  curvilinearRotation.col(2) = T;
-
-  // curvilinear surfaces are boundless
-  m_transform = Transform3{curvilinearRotation};
-  m_transform.pretranslate(center);
+  m_transform = CurvilinearSurface(center, normal).transform();
 }
 
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
@@ -190,7 +175,8 @@ Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable && bcheck) {
+  if (intersection.status() != Intersection3D::Status::unreachable &&
+      bcheck.isEnabled()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local

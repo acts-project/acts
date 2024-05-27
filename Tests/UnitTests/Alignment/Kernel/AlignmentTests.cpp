@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -34,7 +35,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -50,6 +50,7 @@ namespace {
 using namespace Acts;
 using namespace ActsAlignment;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
@@ -142,7 +143,7 @@ struct TelescopeDetector {
     // The volume transform
     Translation3 transVol(0, 0, 0);
     Transform3 trafoVol(rotation * transVol);
-    VolumeBoundsPtr boundsVol = std::make_shared<const CuboidVolumeBounds>(
+    auto boundsVol = std::make_shared<CuboidVolumeBounds>(
         rBounds->halfLengthX() + 10._mm, rBounds->halfLengthY() + 10._mm,
         length + 10._mm);
 
@@ -160,9 +161,9 @@ struct TelescopeDetector {
         BinningType::arbitrary, BinningValue::binX));
 
     // Build the tracking volume
-    auto trackVolume =
-        TrackingVolume::create(trafoVol, boundsVol, nullptr, std::move(layArr),
-                               nullptr, {}, "Telescope");
+    auto trackVolume = std::make_shared<TrackingVolume>(
+        trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
+        MutableTrackingVolumeVector{}, "Telescope");
 
     return std::make_shared<const TrackingGeometry>(trackVolume);
   }

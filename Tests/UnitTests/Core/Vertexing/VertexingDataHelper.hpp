@@ -9,6 +9,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -16,14 +17,10 @@
 #include <iterator>
 #include <regex>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 using Covariance = BoundSquareMatrix;
-
-// Create a test context
-GeometryContext geoCtx = GeometryContext();
 
 enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 
@@ -43,7 +40,7 @@ struct VertexInfo {
   double trk1Chi2 = 0;
 };
 
-inline std::tuple<Vertex<BoundTrackParameters>, std::vector<VertexInfo>,
+inline std::tuple<Vertex, std::vector<VertexInfo>,
                   std::vector<BoundTrackParameters>>
 readTracksAndVertexCSV(const std::string& toolString,
                        const std::string& fileBase = "vertexing_event_mu20") {
@@ -66,7 +63,7 @@ readTracksAndVertexCSV(const std::string& toolString,
   std::shared_ptr<PerigeeSurface> perigeeSurface;
   std::vector<BoundTrackParameters> tracks;
   std::vector<VertexInfo> vertices;
-  Vertex<BoundTrackParameters> beamspotConstraint;
+  Vertex beamspotConstraint;
 
   // Read in beamspot data
   std::getline(beamspotData, line);  // skip header
@@ -149,5 +146,4 @@ readTracksAndVertexCSV(const std::string& toolString,
   return std::make_tuple(beamspotConstraint, vertices, tracks);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -11,12 +11,15 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/ProtoTrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/HitSelector.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <array>
@@ -184,8 +187,9 @@ void addTruthTracking(Context& ctx) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
-      outputProtoVertices, excludeSecondaries, separateSecondaries);
+      ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputTracks,
+      inputParticles, inputMeasurementParticlesMap, outputProtoVertices,
+      excludeSecondaries, separateSecondaries, trackMatchingRatio);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
                                 "TrackModifier", inputTracks, outputTracks,
@@ -195,6 +199,20 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
       inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
+                                inputHits, outputHits, maxTime);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
+      inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
+      outputParticleTrackMatching, matchingRatio, doubleMatching);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::ProtoTrackTruthMatcher, mex, "ProtoTrackTruthMatcher",
+      inputProtoTracks, inputParticles, inputMeasurementParticlesMap,
+      outputProtoTrackParticleMatching, outputParticleProtoTrackMatching,
+      matchingRatio, doubleMatching);
 }
 
 }  // namespace Acts::Python
