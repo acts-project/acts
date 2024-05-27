@@ -176,7 +176,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  initialize(state);
+  initialize<StateType, path_aborter_t>(state);
 
   return state;
 }
@@ -217,7 +217,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  initialize(state);
+  initialize<StateType, path_aborter_t>(state);
 
   return state;
 }
@@ -311,7 +311,7 @@ auto Acts::Propagator<S, N>::makeResult(
 }
 
 template <typename S, typename N>
-template <typename propagator_state_t>
+template <typename propagator_state_t, typename path_aborter_t>
 void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
   // Navigator initialize state call
   m_navigator.initialize(state, m_stepper);

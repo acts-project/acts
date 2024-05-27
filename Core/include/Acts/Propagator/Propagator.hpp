@@ -516,7 +516,7 @@ class Propagator final
  private:
   const Logger& logger() const { return *m_logger; }
 
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename path_aborter_t>
   void initialize(propagator_state_t& state) const;
 
   template <typename propagator_state_t, typename result_t>
