@@ -52,7 +52,7 @@ using ConstDynamicMeasurementCovariance = Eigen::Map<
     const Eigen::Matrix<Covariance::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                         Eigen::ColMajor | Eigen::AutoAlign>>;
 
-constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
+constexpr static auto ProjectorFlags = Eigen::ColMajor | Eigen::AutoAlign;
 using Projector = Eigen::Matrix<typename Covariance::Scalar, eBoundSize,
                                 eBoundSize, ProjectorFlags>;
 
