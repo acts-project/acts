@@ -186,6 +186,7 @@ struct EndOfWorldReached {
   }
 };
 
+/// Aborter that checks if the propagation has reached any surface
 struct AnySurfaceReached {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
@@ -198,6 +199,8 @@ struct AnySurfaceReached {
     const Surface* targetSurface = navigator.targetSurface(state.navigation);
     const Surface* currentSurface = navigator.currentSurface(state.navigation);
 
+    // `startSurface` is excluded because we want to reach a new surface
+    // `targetSurface` is excluded because another aborter should handle it
     if (currentSurface != nullptr && currentSurface != startSurface &&
         currentSurface != targetSurface) {
       return true;

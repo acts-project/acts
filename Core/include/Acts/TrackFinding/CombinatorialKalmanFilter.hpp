@@ -1151,7 +1151,6 @@ class CombinatorialKalmanFilter {
     r.fittedStates = &trackContainer.trackStateContainer();
     r.stateBuffer = std::make_shared<traj_t>();
 
-    m_propagator.initialize(propState);
     auto propagationResult = m_propagator.propagate(propState);
 
     auto result = m_propagator.makeResult(

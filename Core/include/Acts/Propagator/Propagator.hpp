@@ -478,9 +478,6 @@ class Propagator final
   auto makeState(const parameters_t& start, const Surface& target,
                  const propagator_options_t& options) const;
 
-  template <typename propagator_state_t>
-  void initialize(propagator_state_t& state) const;
-
   /// @brief Propagate track parameters
   ///
   /// This function performs the propagation of the track parameters according
@@ -518,6 +515,9 @@ class Propagator final
 
  private:
   const Logger& logger() const { return *m_logger; }
+
+  template <typename propagator_state_t>
+  void initialize(propagator_state_t& state) const;
 
   template <typename propagator_state_t, typename result_t>
   void moveStateToResult(propagator_state_t& state, result_t& result) const;

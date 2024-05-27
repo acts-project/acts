@@ -17,13 +17,6 @@
 
 template <typename S, typename N>
 template <typename propagator_state_t>
-void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
-  // Navigator initialize state call
-  m_navigator.initialize(state, m_stepper);
-}
-
-template <typename S, typename N>
-template <typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     -> Result<void> {
   // Pre-stepping call to the navigator and action list
@@ -116,8 +109,6 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
 
   auto state = makeState(start, options);
 
-  initialize(state);
-
   // Perform the actual propagation
   auto propagationResult = propagate(state);
 
@@ -139,8 +130,6 @@ auto Acts::Propagator<S, N>::propagate(
 
   auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
                          path_aborter_t>(start, target, options);
-
-  initialize(state);
 
   // Perform the actual propagation
   auto propagationResult = propagate(state);
@@ -187,10 +176,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  // Apply the loop protection - it resets the internal path limit
-  detail::setupLoopProtection(
-      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
-      false, logger());
+  initialize(state);
 
   return state;
 }
@@ -231,10 +217,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  // Apply the loop protection, it resets the internal path limit
-  detail::setupLoopProtection(
-      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
-      false, logger());
+  initialize(state);
 
   return state;
 }
@@ -325,6 +308,18 @@ auto Acts::Propagator<S, N>::makeResult(
     result.transportJacobian = std::get<Jacobian>(bs);
   }
   return Result<ResultType>::success(std::move(result));
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t>
+void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
+  // Navigator initialize state call
+  m_navigator.initialize(state, m_stepper);
+
+  // Apply the loop protection - it resets the internal path limit
+  detail::setupLoopProtection(
+      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
+      false, logger());
 }
 
 template <typename S, typename N>
