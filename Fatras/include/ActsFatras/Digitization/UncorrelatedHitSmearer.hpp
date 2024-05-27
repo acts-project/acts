@@ -49,6 +49,7 @@ struct BoundParametersSmearer {
   /// Parameter indices that will be used to create the smeared measurements.
   std::array<Acts::BoundIndices, kSize> indices{};
   std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions{};
+  std::array<bool, kSize> forcePositive = {};
 
   static constexpr std::size_t size() { return kSize; }
 
@@ -93,6 +94,9 @@ struct BoundParametersSmearer {
       }
       auto [value, stddev] = res.value();
       par[i] = value;
+      if (forcePositive[i]) {
+        par[i] = std::abs(value);
+      }
       cov(i, i) = stddev * stddev;
     }
 

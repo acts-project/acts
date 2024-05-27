@@ -21,6 +21,8 @@ struct ParameterSmearingConfig {
   Acts::BoundIndices index = Acts::eBoundSize;
   /// The smearing function for this parameter.
   ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
+  /// A flag to return only positive smeared values
+  bool forcePositiveValues = false;
 };
 
 // The configured indices must be unique, i.e. each one can only appear once
