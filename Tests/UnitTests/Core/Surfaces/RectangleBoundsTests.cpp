@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -22,7 +20,6 @@
 #include <stdexcept>
 #include <vector>
 
-namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
 
 namespace Acts {
@@ -74,7 +71,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsException) {
 }
 
 /// Unit test for testing RectangleBounds properties
-BOOST_TEST_DECORATOR(*utf::tolerance(1e-10))
+BOOST_TEST_DECORATOR(*boost::unit_test::tolerance(1e-10))
 BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   const double halfX(10.), halfY(5.);
   RectangleBounds rect(halfX, halfY);
