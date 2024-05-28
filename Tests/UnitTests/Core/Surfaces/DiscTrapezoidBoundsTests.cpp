@@ -20,9 +20,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit tests for DiscTrapezoidBounds constrcuctors
@@ -180,6 +178,4 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

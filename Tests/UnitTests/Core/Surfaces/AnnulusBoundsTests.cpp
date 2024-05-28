@@ -19,9 +19,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 double minRadius = 7.2;
@@ -121,6 +119,4 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

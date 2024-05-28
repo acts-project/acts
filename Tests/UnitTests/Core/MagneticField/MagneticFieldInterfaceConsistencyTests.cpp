@@ -16,8 +16,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -84,5 +83,4 @@ BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
   testInterfaceConsistency(b);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -19,9 +19,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant DiamondBounds object
 BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
@@ -138,6 +136,4 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

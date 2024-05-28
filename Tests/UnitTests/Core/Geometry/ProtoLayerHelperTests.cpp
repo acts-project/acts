@@ -27,8 +27,7 @@
 namespace Acts {
 class Surface;
 
-namespace Test {
-namespace Layers {
+namespace Test::Layers {
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
@@ -217,7 +216,6 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
+}  // namespace Test::Layers
 }  // namespace Acts

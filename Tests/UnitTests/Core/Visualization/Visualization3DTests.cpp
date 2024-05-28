@@ -20,8 +20,7 @@
 
 #include "Visualization3DTester.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
@@ -318,5 +317,4 @@ f 1 2 3
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

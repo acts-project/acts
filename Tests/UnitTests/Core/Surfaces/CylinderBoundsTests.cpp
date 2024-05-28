@@ -21,9 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant CylinderBounds object
 
@@ -181,6 +179,4 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

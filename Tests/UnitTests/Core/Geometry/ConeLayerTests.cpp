@@ -24,9 +24,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant ConeLayer object
@@ -71,6 +69,4 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

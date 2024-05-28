@@ -19,8 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(frustum_construction) {
@@ -68,5 +67,4 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
