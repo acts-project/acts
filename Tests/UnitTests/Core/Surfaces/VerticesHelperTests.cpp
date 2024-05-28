@@ -18,12 +18,33 @@
 
 #include <Eigen/Geometry>
 
-namespace Acts {
-namespace detail {
-namespace Test {
+namespace Acts::detail::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
+  {
+    // 0 points - always on a plane
+    const std::vector<Vector3> testPlane = {};
+    BOOST_CHECK(VerticesHelper::onHyperPlane(testPlane));
+  }
+  {
+    // 1 point - always on a plane
+    const std::vector<Vector3> testPlane = {Vector3(1., 3., 0.)};
+    BOOST_CHECK(VerticesHelper::onHyperPlane(testPlane));
+  }
+  {
+    // 2 points - always on a plane
+    const std::vector<Vector3> testPlane = {Vector3(1., 3., 0.),
+                                            Vector3(-2., 1., 0.)};
+    BOOST_CHECK(VerticesHelper::onHyperPlane(testPlane));
+  }
+  {
+    // 3 points - always on a plane
+    const std::vector<Vector3> testPlane = {
+        Vector3(1., 3., 0.), Vector3(-2., 1., 0.), Vector3(5., 8., 0.)};
+    BOOST_CHECK(VerticesHelper::onHyperPlane(testPlane));
+  }
+
   // Create the transform
   Transform3 transform(AngleAxis3(0.234, Vector3(0., 1., 0.)) *
                        AngleAxis3(-0.734, Vector3(1., 1., 1.).normalized()) *
@@ -52,6 +73,4 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail::Test
