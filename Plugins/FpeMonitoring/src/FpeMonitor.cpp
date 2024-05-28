@@ -219,13 +219,14 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   }
 
 #if defined(__linux__) && defined(__x86_64__)
-  __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;
+  __uint16_t *cw = &(static_cast<ucontext_t *>(ctx))->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
-  __uint16_t *sw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->swd;
+  __uint16_t *sw = &(static_cast<ucontext_t *>(ctx))->uc_mcontext.fpregs->swd;
   *sw &= ~FPU_STATUS_FLAGS;
 
-  __uint32_t *mxcsr = &((ucontext_t *)ctx)->uc_mcontext.fpregs->mxcsr;
+  __uint32_t *mxcsr =
+      &(static_cast<ucontext_t *>(ctx))->uc_mcontext.fpregs->mxcsr;
   // *mxcsr |= SSE_EXCEPTION_MASK;  // disable all SSE exceptions
   *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
   *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions

@@ -57,8 +57,8 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
   }
-  if (!m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+  if (m_cfg.surfaceByIdentifier.empty()) {
+    throw std::invalid_argument("Missing Surface-GeometryID association map");
   }
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
@@ -162,16 +162,17 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const auto& moduleSimHits = simHitsGroup.second;
 
-    const Acts::Surface* surfacePtr =
-        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
 
-    if (surfacePtr == nullptr) {
+    if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
       // this is either an invalid geometry id or a misconfigured smearer
       // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId
                                            << " for configured smearer");
       return ProcessCode::ABORT;
     }
+
+    const Acts::Surface* surfacePtr = surfaceItr->second;
 
     auto digitizerItr = m_digitizers.find(moduleGeoId);
     if (digitizerItr == m_digitizers.end()) {
@@ -341,23 +342,8 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     }
     std::size_t size0 = static_cast<std::size_t>(b0max - b0min + 1);
     std::size_t size1 = static_cast<std::size_t>(b1max - b1min + 1);
-    auto variances = geoCfg.variances(size0, size1, rng);
-    if (variances.size() == dParameters.indices.size()) {
-      dParameters.variances = variances;
-    } else {
-      dParameters.variances =
-          std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
-    }
 
-    if (dParameters.variances[0] == -1) {
-      std::size_t ictr = b0min + size0 / 2;
-      dParameters.variances[0] = std::pow(binningData[0].width(ictr), 2) / 12.0;
-    }
-    if (dParameters.variances[1] == -1) {
-      std::size_t ictr = b1min + size1 / 2;
-      dParameters.variances[1] = std::pow(binningData[1].width(ictr), 2) / 12.0;
-    }
-
+    dParameters.variances = geoCfg.variances({size0, size1}, {b0min, b1min});
     dParameters.cluster.sizeLoc0 = size0;
     dParameters.cluster.sizeLoc1 = size1;
   }

@@ -20,10 +20,10 @@
 
 using Generator = std::ranlux48;
 
-BOOST_DATA_TEST_CASE(FatrasBetheBloch, Dataset::parameters, pdg, phi, lambda, p,
+BOOST_DATA_TEST_CASE(FatrasBetheBloch, Dataset::parameters, pdg, phi, theta, p,
                      seed) {
   Generator gen(seed);
-  ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, lambda, p);
+  ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, theta, p);
   ActsFatras::Particle after = before;
 
   ActsFatras::BetheBloch process;

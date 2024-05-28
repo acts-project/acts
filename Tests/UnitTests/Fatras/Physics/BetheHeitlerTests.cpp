@@ -27,12 +27,12 @@ using Generator = std::ranlux48;
 
 BOOST_DATA_TEST_CASE(
     FatrasBetheHeitler,
-    Dataset::momentumPhi* Dataset::momentumLambda* Dataset::momentumAbs ^
+    Dataset::momentumPhi* Dataset::momentumTheta* Dataset::momentumAbs ^
         Dataset::rngSeed,
-    phi, lambda, p, seed) {
+    phi, theta, p, seed) {
   Generator gen(seed);
   ActsFatras::Particle before =
-      Dataset::makeParticle(Acts::PdgParticle::eElectron, phi, lambda, p);
+      Dataset::makeParticle(Acts::PdgParticle::eElectron, phi, theta, p);
   ActsFatras::Particle after = before;
 
   ActsFatras::BetheHeitler process;
