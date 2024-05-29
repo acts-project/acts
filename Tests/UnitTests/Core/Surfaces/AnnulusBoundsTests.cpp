@@ -6,21 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
 #include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
-#include <algorithm>
-#include <array>
-#include <stdexcept>
-#include <vector>
-// clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
