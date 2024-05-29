@@ -392,4 +392,4 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
 
 ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend, ConstPodioTrackContainer);
 
-}  //  namespace Acts
+}  // namespace Acts

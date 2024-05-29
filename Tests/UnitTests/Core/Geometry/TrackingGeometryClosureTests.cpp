@@ -320,4 +320,4 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   BOOST_CHECK_EQUAL(nVolumes, 5u);
 }
 
-}  //  namespace Acts::Test
+}  // namespace Acts::Test
