@@ -8,7 +8,9 @@ add_unittest(BinningData BinningDataTests.cpp)
 add_unittest(BinUtility BinUtilityTests.cpp)
 
 add_unittest(BoundingBox BoundingBoxTest.cpp)
-target_link_libraries(ActsUnitTestBoundingBox PRIVATE std::filesystem)
+if(("${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}" STREQUAL "") OR ("ActsUnitTestBoundingBox" MATCHES "${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}"))
+  target_link_libraries(ActsUnitTestBoundingBox PRIVATE std::filesystem)
+endif()
 
 add_unittest(DBScan DBScanTests.cpp)
 add_unittest(Extendable ExtendableTests.cpp)
@@ -46,7 +48,10 @@ endif()
 
 add_unittest(Any AnyTests.cpp)
 add_unittest(AnyDebug AnyTests.cpp)
-target_compile_definitions(ActsUnitTestAnyDebug PRIVATE _ACTS_ANY_ENABLE_VERBOSE _ACTS_ANY_ENABLE_DEBUG _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+
+if(("${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}" STREQUAL "") OR ("ActsUnitTestAnyDebug" MATCHES "${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}"))
+  target_compile_definitions(ActsUnitTestAnyDebug PRIVATE _ACTS_ANY_ENABLE_VERBOSE _ACTS_ANY_ENABLE_DEBUG _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+endif()
 
 add_unittest(ParticleData ParticleDataTests.cpp)
 add_unittest(Zip ZipTests.cpp)

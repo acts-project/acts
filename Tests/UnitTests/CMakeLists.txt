@@ -6,29 +6,36 @@
 
 add_custom_target(unit_tests)
 
+if(NOT "${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}" STREQUAL "")
+  message(WARNING "Exclude unit tests which do not match '${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}'")
+endif()
+
 macro(add_unittest _name _source)
   # automatically prefix the target name
   set(_target "ActsUnitTest${_name}")
-  add_executable(${_target} ${_source})
-  # define required BOOST_TEST_... macros here to ensure consistent names
-  target_compile_definitions(
-    ${_target}
-    PRIVATE "-DBOOST_TEST_DYN_LINK")
-  set_source_files_properties(${_source} PROPERTIES 
-    COMPILE_DEFINITIONS "BOOST_TEST_MODULE=${_target}")
-  target_include_directories(
-    ${_target}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  target_link_libraries(
-    ${_target}
-    PRIVATE
-      ActsCore
-      ActsTestsCommonHelpers
-      Boost::unit_test_framework
-      ${unittest_extra_libraries})
-  # register as unittest executable
-  add_test(NAME ${_name} COMMAND ${_target})
-  add_dependencies(unit_tests ${_target})
+
+  if(("${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}" STREQUAL "") OR ("${_target}" MATCHES "${ACTS_BUILD_ONLY_MATCHING_UNITTESTS}"))
+    add_executable(${_target} ${_source})
+    # define required BOOST_TEST_... macros here to ensure consistent names
+    target_compile_definitions(
+      ${_target}
+      PRIVATE "-DBOOST_TEST_DYN_LINK")
+    set_source_files_properties(${_source} PROPERTIES
+      COMPILE_DEFINITIONS "BOOST_TEST_MODULE=${_target}")
+    target_include_directories(
+      ${_target}
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(
+      ${_target}
+      PRIVATE
+        ActsCore
+        ActsTestsCommonHelpers
+        Boost::unit_test_framework
+        ${unittest_extra_libraries})
+    # register as unittest executable
+    add_test(NAME ${_name} COMMAND ${_target})
+    add_dependencies(unit_tests ${_target})
+  endif()
 endmacro()
 
 # This function adds a non compile test. To this end it
