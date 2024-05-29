@@ -541,6 +541,7 @@ class Propagator final
   /// @param [in] state Propagator state object
   /// @param [in] result Result of the propagation
   /// @param [in] options Propagation options
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
   ///
   /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
@@ -562,6 +563,7 @@ class Propagator final
   ///
   /// @param [in] state Propagator state object
   /// @param [in] result Result of the propagation
+  /// @param [in] target Target surface of to propagate to
   /// @param [in] options Propagation options
   ///
   /// @return Propagation result
