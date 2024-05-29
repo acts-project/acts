@@ -20,6 +20,7 @@ add_library(
   src/RootAthenaNTupleReader.cpp
   src/RootVertexReader.cpp
   src/RootVertexWriter.cpp
+  src/RootAthInputReader.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot
