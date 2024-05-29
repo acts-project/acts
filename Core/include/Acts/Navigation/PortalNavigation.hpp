@@ -75,8 +75,8 @@ struct DetectorVolumesCollection {
 ///
 struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   using IndexedUpdater =
-      IndexedUpdaterImpl<IExternalNavigation, VariableBoundIndexGrid1,
-                         DetectorVolumesCollection, DetectorVolumeFiller>;
+      IndexedGridNavigation<IExternalNavigation, VariableBoundIndexGrid1,
+                            DetectorVolumesCollection, DetectorVolumeFiller>;
   // The indexed updator
   IndexedUpdater indexedUpdater;
 

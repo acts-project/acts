@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsException) {
 }
 
 /// Unit test for testing RectangleBounds properties
-BOOST_TEST_DECORATOR(*utf::tolerance(1e-10))
+BOOST_TEST_DECORATOR(*boost::unit_test::tolerance(1e-10))
 BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   const double halfX(10.), halfY(5.);
   RectangleBounds rect(halfX, halfY);
