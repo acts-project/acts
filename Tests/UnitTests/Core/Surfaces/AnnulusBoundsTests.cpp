@@ -20,6 +20,7 @@
 #include <vector>
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 double minRadius = 7.2;

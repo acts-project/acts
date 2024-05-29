@@ -27,6 +27,7 @@
 namespace bdata = boost::unit_test::data;
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object

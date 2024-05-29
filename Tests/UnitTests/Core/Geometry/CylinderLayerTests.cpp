@@ -27,6 +27,7 @@
 #include <vector>
 
 namespace Acts::Test::Layers {
+
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant CylinderLayer object

@@ -15,6 +15,7 @@
 using namespace Acts::Concepts;
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 // generate traits for methods named foo and bar
@@ -228,4 +229,5 @@ BOOST_AUTO_TEST_CASE(TypeTraitsConcepts) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test

@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant InfiniteBounds object
 BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction) {

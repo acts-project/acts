@@ -317,4 +317,5 @@ f 1 2 3
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test

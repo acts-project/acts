@@ -21,6 +21,7 @@
 #include <vector>
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit tests for DiscTrapezoidBounds constrcuctors

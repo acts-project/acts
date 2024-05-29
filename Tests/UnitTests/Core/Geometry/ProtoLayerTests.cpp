@@ -155,4 +155,5 @@ Extent in space :
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test::Layers

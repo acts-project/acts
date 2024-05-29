@@ -19,6 +19,7 @@
 #include "BoundaryCheckTestsRefs.hpp"
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 // See: https://en.wikipedia.org/wiki/Bounding_volume
 //
@@ -123,4 +124,5 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   BOOST_CHECK(!check.isInside({0, 5}, vertices));
 }
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::Test
