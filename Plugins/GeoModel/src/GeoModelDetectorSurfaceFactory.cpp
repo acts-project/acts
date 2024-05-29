@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
@@ -22,6 +23,10 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     throw std::invalid_argument("GeoModelTree has no GeoModelReader");
   }
 
+  // The map cache
+  std::vector<std::pair<GeometryIdentifier, std::shared_ptr<Surface>>> mapCache;
+
+  // Loop over the queries and retrieve the published nodes
   for (const auto& q : options.queries) {
     ACTS_VERBOSE("Constructing detector elements for query " << q);
     auto qFPV =

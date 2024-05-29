@@ -17,6 +17,14 @@ def main():
     )
 
     p.add_argument(
+        "--table-name", type=str, default= "Blueprint", help="Name of the blueprint table"
+    )
+
+    p.add_argument(
+        "-t", "--top-node", type=str, default= "", help="Name of the top node in the blueprint tree"
+    )
+
+    p.add_argument(
     "--output-obj",
     help="Write the surfaces to OBJ files",
     action="store_true",
@@ -39,6 +47,15 @@ def main():
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
     gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+
+    # Construct the building hierarchy
+    gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
+    gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
+    gmBlueprintOptions.table = args.table_name
+    gmBlueprintOptions.topEntry = args.top_node
+
+    gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logging.VERBOSE)
+    gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
 
     # Output the surface to an OBJ file
     segments = 720

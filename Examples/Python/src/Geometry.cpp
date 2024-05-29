@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Detector/CuboidalContainerBuilder.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/Detector.hpp"
@@ -267,6 +268,11 @@ void addExperimentalGeometry(Context& ctx) {
       // Return the surface volume map
       return surfaceVolumeLayerMap;
     });
+  }
+
+  {
+    py::class_<Blueprint::Node, std::shared_ptr<Blueprint::Node>>(
+        m, "BlueprintNode");
   }
 
   {

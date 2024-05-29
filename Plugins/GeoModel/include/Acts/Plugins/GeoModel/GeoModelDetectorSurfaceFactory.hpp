@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -16,6 +17,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
+
+class GeoFullPhysVol;
 
 namespace Acts {
 
@@ -49,6 +52,7 @@ class GeoModelDetectorSurfaceFactory {
 
   /// The options to steer the conversion
   struct Options {
+    /// The queries to be used for getting published modules
     std::vector<std::string> queries = {};
   };
 

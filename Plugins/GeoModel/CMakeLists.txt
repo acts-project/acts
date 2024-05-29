@@ -6,6 +6,7 @@ add_library(
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp
+  src/GeoModelBlueprintCreater.cpp
   src/converters/GeoBoxConverter.cpp
   src/converters/GeoTrdConverter.cpp
   src/converters/GeoTubeConverter.cpp

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
@@ -107,6 +108,33 @@ void addGeoModel(Context& ctx) {
         .def(py::init<>())
         .def_readwrite("queries",
                        &Acts::GeoModelDetectorSurfaceFactory::Options::queries);
+  }
+
+  {
+    py::class_<Acts::GeoModelBlueprintCreater::Blueprint,
+               std::shared_ptr<Acts::GeoModelBlueprintCreater::Blueprint>>(
+        gm, "Blueprint");
+    auto bpc =
+        py::class_<Acts::GeoModelBlueprintCreater,
+                   std::shared_ptr<Acts::GeoModelBlueprintCreater>>(
+            gm, "GeoModelBlueprintCreater")
+            .def(py::init([](const Acts::GeoModelBlueprintCreater::Config& cfg,
+                             Acts::Logging::Level level) {
+              return std::make_shared<Acts::GeoModelBlueprintCreater>(
+                  cfg,
+                  Acts::getDefaultLogger("GeoModelBlueprintCreater", level));
+            }))
+            .def("create", &Acts::GeoModelBlueprintCreater::create);
+
+    py::class_<Acts::GeoModelBlueprintCreater::Config>(bpc, "Config")
+        .def(py::init<>());
+
+    py::class_<Acts::GeoModelBlueprintCreater::Options>(bpc, "Options")
+        .def(py::init<>())
+        .def_readwrite("topEntry",
+                       &Acts::GeoModelBlueprintCreater::Options::topEntry)
+        .def_readwrite("table",
+                       &Acts::GeoModelBlueprintCreater::Options::table);
   }
 }
 }  // namespace Acts::Python
