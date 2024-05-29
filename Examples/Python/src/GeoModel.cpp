@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
@@ -113,7 +114,15 @@ void addGeoModel(Context& ctx) {
   {
     py::class_<Acts::GeoModelBlueprintCreater::Blueprint,
                std::shared_ptr<Acts::GeoModelBlueprintCreater::Blueprint>>(
-        gm, "Blueprint");
+        gm, "Blueprint")
+        .def("convertToBuilder",
+             [](Acts::GeoModelBlueprintCreater::Blueprint& self,
+                Acts::Logging::Level level) {
+               return std::make_shared<
+                   Acts::Experimental::CylindricalContainerBuilder>(self.node(),
+                                                                    level);
+             });
+
     auto bpc =
         py::class_<Acts::GeoModelBlueprintCreater,
                    std::shared_ptr<Acts::GeoModelBlueprintCreater>>(

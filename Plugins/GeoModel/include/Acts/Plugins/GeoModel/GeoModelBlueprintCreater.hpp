@@ -13,6 +13,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -39,6 +40,15 @@ class GeoModelBlueprintCreater {
   struct Blueprint {
     std::string name;
     std::unique_ptr<Acts::Experimental::Blueprint::Node> topNode;
+
+    /// Access to the top node
+    const Acts::Experimental::Blueprint::Node& node() const {
+      if (topNode == nullptr) {
+        throw std::runtime_error(
+            "GeoModelBlueprintCreater::Blueprint: No top node created");
+      }
+      return *(topNode.get());
+    }
   };
 
   // Blueprint table is:
@@ -76,9 +86,11 @@ class GeoModelBlueprintCreater {
   /// Create a blueprint node from a table entry
   ///
   /// @param entry the table entry
+  /// @param tableEntryMap the map of table entries allows construction of children
   /// @param motherBounds the bounds of the mother node
   std::unique_ptr<Experimental::Blueprint::Node> createNode(
       const TableEntry& entry,
+      const std::map<std::string, TableEntry>& tableEntryMap,
       const std::vector<ActsScalar>& motherBounds = {}) const;
 
   /// @brief Parse bound value string from the database
@@ -86,8 +98,9 @@ class GeoModelBlueprintCreater {
   /// @param boundsEntry in the database
   /// @param motherBounds
   ///
-  /// @return The bounds type, the bound values, and a translation vector
-  std::tuple<VolumeBounds::BoundsType, std::vector<ActsScalar>, Vector3>
+  /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
+  std::tuple<VolumeBounds::BoundsType, std::vector<ActsScalar>,
+             std::vector<ActsScalar>, Vector3>
   parseBounds(const std::vector<std::string>& boundsEntry,
               const std::vector<ActsScalar>& motherBounds) const;
 
