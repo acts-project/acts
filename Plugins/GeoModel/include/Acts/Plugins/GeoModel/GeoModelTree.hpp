@@ -10,6 +10,8 @@
 
 #include <GeoModelRead/ReadGeoModel.h>
 
+#include <memory>
+
 class GeoVPhysVol;
 
 namespace Acts {

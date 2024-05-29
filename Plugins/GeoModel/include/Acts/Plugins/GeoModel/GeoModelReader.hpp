@@ -11,6 +11,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
 #include <string>
+#include <memory>
 
 namespace Acts::GeoModelReader {
 

@@ -31,8 +31,8 @@ def main():
     gmTree = acts.geomodel.readFromDb(args.input)
 
     gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
-    gmFactoryConfig.shapeConverters = [ gm.GeoBoxConverter(), gm.GeoTrdConverter(), gm.GeoIntersectionAnnulusConverter() ]
-    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)
+    gmFactoryConfig.shapeConverters = [ gm.GeoBoxConverter(), gm.GeoTrdConverter(), gm.GeoIntersectionAnnulusConverter(), gm.GeoShiftConverter() ]
+    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.DEBUG)
     # The options
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
     gmFactoryOptions.queries = args.queries

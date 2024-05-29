@@ -24,59 +24,10 @@
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::GeoIntersectionAnnulusConverter::toSensitiveSurface(
-    const GeoFullPhysVol& geoFPV) const {
-  // Retrieve logcal volume and absolute transform
-  const GeoLogVol* logVol = geoFPV.getLogVol();
-  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
-  if (logVol != nullptr) {
-    const GeoShape* geoShape = logVol->getShape();
-    auto geoIntersection = dynamic_cast<const GeoShapeIntersection*>(geoShape);
-    if (geoIntersection != nullptr) {
-      // Convert and check
-      auto [element, surface] =
-          toSurface(geoFPV, *geoIntersection, transform, true);
-      if (element != nullptr) {
-        return Result<GeoModelSensitiveSurface>::success(
-            GeoModelSensitiveSurface(element, surface));
-      }
-    }
-    return Result<GeoModelSensitiveSurface>::failure(
-        GeoModelConversionError::WrongShapeForConverter);
-  }
-  return Result<GeoModelSensitiveSurface>::failure(
-      GeoModelConversionError::MissingLogicalVolume);
-}
-
-Acts::Result<std::shared_ptr<Acts::Surface>>
-Acts::GeoIntersectionAnnulusConverter::toPassiveSurface(
-    const GeoFullPhysVol& geoFPV) const {
-  // Retrieve logcal volume and absolute transform
-  const GeoLogVol* logVol = geoFPV.getLogVol();
-  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
-  if (logVol != nullptr) {
-    const GeoShape* geoShape = logVol->getShape();
-
-    auto geoIntersection = dynamic_cast<const GeoShapeIntersection*>(geoShape);
-    if (geoIntersection != nullptr) {
-      // Conversion function call with sensitive = false
-      auto [element, surface] =
-          toSurface(geoFPV, *geoIntersection, transform, false);
-      if (surface != nullptr) {
-        return Result<std::shared_ptr<Surface>>::success(surface);
-      }
-    }
-    return Result<std::shared_ptr<Surface>>::failure(
-        GeoModelConversionError::WrongShapeForConverter);
-  }
-  return Result<std::shared_ptr<Surface>>::failure(
-      GeoModelConversionError::MissingLogicalVolume);
-}
 
 std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
            std::shared_ptr<Acts::Surface>>
-Acts::GeoIntersectionAnnulusConverter::toSurface(
+Acts::detail::GeoIntersectionAnnulusConverter::operator()(
     const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion

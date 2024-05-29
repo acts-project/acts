@@ -11,6 +11,9 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 
+#include <GeoModelKernel/GeoShapeUnion.h>
+#include <GeoModelKernel/GeoShapeShift.h>
+
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
@@ -30,11 +33,28 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
     for (auto& [name, fpv] : qFPV) {
       // Convert using the list of converters
+      bool success = false;
       for (const auto& converter : m_cfg.shapeConverters) {
         auto converted = converter->toSensitiveSurface(*fpv);
         if (converted.ok()) {
           // Add the element and surface to the cache
           cache.sensitiveSurfaces.push_back(converted.value());
+          success = true;
+          ACTS_VERBOSE("successfully converted " << name << " (" << fpv->getLogVol()->getName() << " / " << fpv->getLogVol()->getShape()->type() << ")");
+          break;
+        }
+      }
+
+      if (!success) {
+        ACTS_DEBUG(name << " (" << fpv->getLogVol()->getName() << " / " << fpv->getLogVol()->getShape()->type() << ") could not be converted by any converter");
+        if(fpv->getLogVol()->getShape()->type() == "Union") {
+          auto u = static_cast<const GeoShapeUnion *>(fpv->getLogVol()->getShape());
+          ACTS_DEBUG(" -> Union A " << u->getOpA()->type());
+          ACTS_DEBUG(" -> Union B " << u->getOpB()->type());
+        }
+        if(fpv->getLogVol()->getShape()->type() == "Shift") {
+          auto s = static_cast<const GeoShapeShift *>(fpv->getLogVol()->getShape());
+          ACTS_DEBUG(" -> Shift Op " << s->getOp()->type());
         }
       }
     }

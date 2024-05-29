@@ -14,6 +14,7 @@
 #include "Acts/Plugins/GeoModel/converters/GeoIntersectionAnnulusConverter.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoTrdConverter.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoTubeConverter.hpp"
+#include "Acts/Plugins/GeoModel/converters/GeoShiftConverter.hpp"
 #include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -74,7 +75,17 @@ void addGeoModel(Context& ctx) {
              &Acts::GeoIntersectionAnnulusConverter::toSensitiveSurface)
         .def("toPassiveSurface",
              &Acts::GeoIntersectionAnnulusConverter::toPassiveSurface);
+
+    py::class_<Acts::GeoShiftConverter, Acts::IGeoShapeConverter,
+               std::shared_ptr<Acts::GeoShiftConverter>>(
+        gm, "GeoShiftConverter")
+        .def(py::init<>())
+        .def("toSensitiveSurface",
+             &Acts::GeoShiftConverter::toSensitiveSurface)
+        .def("toPassiveSurface",
+             &Acts::GeoShiftConverter::toPassiveSurface);
   }
+
 
   // Surface factory
   {

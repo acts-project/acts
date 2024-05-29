@@ -23,49 +23,9 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/Units.h>
 
-Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::GeoTrdConverter::toSensitiveSurface(const GeoFullPhysVol& geoFPV) const {
-  // Retrieve logcal volume and absolute transform
-  const GeoLogVol* logVol = geoFPV.getLogVol();
-  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
-  if (logVol != nullptr) {
-    const GeoShape* geoShape = logVol->getShape();
-    auto geoTrd = dynamic_cast<const GeoTrd*>(geoShape);
-    if (geoTrd != nullptr) {
-      return Result<GeoModelSensitiveSurface>::success(
-          toSurface(geoFPV, *geoTrd, transform, true));
-    }
-    return Result<GeoModelSensitiveSurface>::failure(
-        GeoModelConversionError::WrongShapeForConverter);
-  }
-  return Result<GeoModelSensitiveSurface>::failure(
-      GeoModelConversionError::MissingLogicalVolume);
-}
-
-Acts::Result<std::shared_ptr<Acts::Surface>>
-Acts::GeoTrdConverter::toPassiveSurface(const GeoFullPhysVol& geoFPV) const {
-  // Retrieve logcal volume and absolute transform
-  const GeoLogVol* logVol = geoFPV.getLogVol();
-  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
-  if (logVol != nullptr) {
-    const GeoShape* geoShape = logVol->getShape();
-
-    auto geoTrd = dynamic_cast<const GeoTrd*>(geoShape);
-    if (geoTrd != nullptr) {
-      // Conversion function call with sensitive = false
-      auto [element, surface] = toSurface(geoFPV, *geoTrd, transform, false);
-      return Result<std::shared_ptr<Surface>>::success(surface);
-    }
-    return Result<std::shared_ptr<Surface>>::failure(
-        GeoModelConversionError::WrongShapeForConverter);
-  }
-  return Result<std::shared_ptr<Surface>>::failure(
-      GeoModelConversionError::MissingLogicalVolume);
-}
-
 std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
            std::shared_ptr<Acts::Surface>>
-Acts::GeoTrdConverter::toSurface(const GeoFullPhysVol& geoFPV,
+Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
                                  const GeoTrd& geoTrd,
                                  const Transform3& absTransform,
                                  bool sensitive) const {

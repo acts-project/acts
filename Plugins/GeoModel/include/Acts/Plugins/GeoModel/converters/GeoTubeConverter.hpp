@@ -10,53 +10,24 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
+#include <GeoModelKernel/GeoTube.h>
+
 class GeoFullPhysVol;
 class GeoTube;
 
 namespace Acts {
 
-/// @brief The GeoTube converter
-///
-/// This is a dedicated converter for GeoTube shapes
-class GeoTubeConverter : public IGeoShapeConverter {
- public:
+namespace detail {
+struct GeoTubeConverter {
   Surface::SurfaceType targetShape = Surface::SurfaceType::Straw;
 
-  /// @brief Convert a GeoTube to a detector element and surface
-  GeoTubeConverter() = default;
-  /// Destructor
-  ~GeoTubeConverter() override = default;
-
-  /// @brief Convert a GeoFullPhysVol to a detector element and surface
-  ///
-  /// @param geoFPV The full physical volume to convert (contains shape)
-  ///
-  /// @note the Result will be not ok if the provided GeoShape is not
-  /// of the extpected type by the converter
-  ///
-  /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> toSensitiveSurface(
-      const GeoFullPhysVol& geoFPV) const override;
-
-  /// @brief Convert a GeoFullPhysVol to a detector element and passive surface
-  ///
-  /// @param geoFPV The full physical volume to convert (contains shape)
-  ///
-  /// @note the Result will be not ok if the provided GeoShape is not
-  /// of the extpected type by the converter
-  ///
-  /// @return The representing surface
-  Result<std::shared_ptr<Surface>> toPassiveSurface(
-      const GeoFullPhysVol& geoFPV) const override;
-
- private:
   /// @brief Convert a GeoTube to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
@@ -66,8 +37,15 @@ class GeoTubeConverter : public IGeoShapeConverter {
   ///
   /// @return The detector element and surface
   std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>
-  toSurface(const GeoFullPhysVol& geoFPV, const GeoTube& geoTube,
-            const Transform3& absTransform, bool sensitive) const;
+  operator()(const GeoFullPhysVol& geoFPV, const GeoTube& geoTube,
+             const Transform3& absTransform, bool sensitive) const;
 };
+}  // namespace detail
+
+/// @brief The GeoTube converter
+///
+/// This is a dedicated converter for GeoTube shapes
+using GeoTubeConverter =
+    detail::GenericGeoShapeConverter<GeoTube, detail::GeoTubeConverter>;
 
 }  // namespace Acts

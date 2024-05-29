@@ -10,11 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
+
+#include <GeoModelKernel/GeoTrd.h>
 
 class GeoFullPhysVol;
 class GeoTrd;
@@ -23,39 +25,8 @@ namespace Acts {
 
 class Surface;
 
-/// @brief The GeoTrd converter
-///
-/// This is a dedicated converter for GeoTrd shapes
-class GeoTrdConverter : public IGeoShapeConverter {
- public:
-  /// @brief Convert a GeoTrd to a detector element and surface
-  GeoTrdConverter() = default;
-  /// Destructor
-  ~GeoTrdConverter() override = default;
-
-  /// @brief Convert a GeoFullPhysVol to a detector element and surface
-  ///
-  /// @param geoFPV The full physical volume to convert (contains shape)
-  ///
-  /// @note the Result will be not ok if the provided GeoShape is not
-  /// of the extpected type by the converter
-  ///
-  /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> toSensitiveSurface(
-      const GeoFullPhysVol& geoFPV) const override;
-
-  /// @brief Convert a GeoFullPhysVol to a detector element and passive surface
-  ///
-  /// @param geoFPV The full physical volume to convert (contains shape)
-  ///
-  /// @note the Result will be not ok if the provided GeoShape is not
-  /// of the extpected type by the converter
-  ///
-  /// @return The representing surface
-  Result<std::shared_ptr<Surface>> toPassiveSurface(
-      const GeoFullPhysVol& geoFPV) const override;
-
- private:
+namespace detail {
+struct GeoTrdConverter {
   /// @brief Convert a GeoTrd to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
@@ -65,8 +36,14 @@ class GeoTrdConverter : public IGeoShapeConverter {
   ///
   /// @return The detector element and surface
   std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>
-  toSurface(const GeoFullPhysVol& geoFPV, const GeoTrd& geoTrd,
+  operator()(const GeoFullPhysVol& geoFPV, const GeoTrd& geoTrd,
             const Transform3& absTransform, bool sensitive) const;
 };
+}
+
+/// @brief The GeoTrd converter
+///
+/// This is a dedicated converter for GeoTrd shapes
+using GeoTrdConverter = detail::GenericGeoShapeConverter<GeoTrd, detail::GeoTrdConverter>;
 
 }  // namespace Acts
