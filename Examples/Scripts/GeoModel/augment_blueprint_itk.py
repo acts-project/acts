@@ -112,13 +112,17 @@ if "__main__" == __name__:
     cursor.execute(
         """
     INSERT INTO Blueprint VALUES
-            (61, 'leaf', 'ITk/Central/Detectors/Pixels/InnerPixels', 'cyl;i,130,i,i','','', '')
+            (61, 'container', 'ITk/Central/Detectors/Pixels/InnerPixels', 'cyl;i,130,i,i',
+            'children;ITk/Central/Detectors/Pixels/InnerPixels/NegEndcap,ITk/Central/Detectors/Pixels/InnerPixels/Barrel,ITk/Central/Detectors/Pixels/InnerPixels/PosEndcap',
+            'z', '')
     """
     )
     cursor.execute(
         """
     INSERT INTO Blueprint VALUES
-            (62, 'leaf', 'ITk/Central/Detectors/Pixels/OuterPixels', 'cyl;130,i,i,i','','', '')
+            (62, 'container', 'ITk/Central/Detectors/Pixels/OuterPixels', 'cyl;130,i,i,i',
+            'children;ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap,ITk/Central/Detectors/Pixels/OuterPixels/NegInclined,ITk/Central/Detectors/Pixels/OuterPixels/Barrel,ITk/Central/Detectors/Pixels/OuterPixels/PosInclined,ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap',
+            'z', '')
     """
     )
     cursor.execute(
@@ -177,6 +181,78 @@ if "__main__" == __name__:
         """
     INSERT INTO Blueprint VALUES
             (74, 'leaf', 'ITk/Central/Detectors/Strips/PosSector/OuterGap', 'cyl;990.,i,i,i',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (21, 'leaf', 'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap', 'cyl;i,i,i,-1100.',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (22, 'leaf', 'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined', 'cyl;i,i,-1100.,-380.',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (23, 'leaf', 'ITk/Central/Detectors/Pixels/OuterPixels/Barrel', 'cyl;i,i,-380.,380.',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (24, 'leaf', 'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined', 'cyl;i,i,380.,1100',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (25, 'leaf', 'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap', 'cyl;i,i,1100.,i',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (11, 'leaf', 'ITk/Central/Detectors/Pixels/InnerPixels/NegEndcap', 'cyl;i,i,i,-255.',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (12, 'leaf', 'ITk/Central/Detectors/Pixels/InnerPixels/Barrel', 'cyl;i,i,-255.,255.',
+            '',
+            '', '')
+    """
+    )
+
+    cursor.execute(
+        """
+    INSERT INTO Blueprint VALUES
+            (13, 'leaf', 'ITk/Central/Detectors/Pixels/InnerPixels/PosEndcap', 'cyl;i,i,255.,i',
             '',
             '', '')
     """
