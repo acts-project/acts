@@ -38,12 +38,8 @@ class SurfaceBoundsStub : public SurfaceBounds {
 #endif
 
   ~SurfaceBoundsStub() override = default;
-  BoundsType type() const final {
-    return SurfaceBounds::eOther;
-  }
-  std::vector<double> values() const override {
-    return m_values;
-  }
+  BoundsType type() const final { return SurfaceBounds::eOther; }
+  std::vector<double> values() const override { return m_values; }
   bool inside(const Vector2& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
@@ -58,7 +54,9 @@ class SurfaceBoundsStub : public SurfaceBounds {
   std::vector<double> m_values;
 };
 
-namespace Test {
+} // namespace Acts
+
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
@@ -92,6 +90,4 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

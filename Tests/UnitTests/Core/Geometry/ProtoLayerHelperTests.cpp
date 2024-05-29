@@ -26,7 +26,7 @@
 
 namespace Acts {
 class Surface;
-}
+}  // namespace Acts
 
 namespace Acts::Test::Layers {
 

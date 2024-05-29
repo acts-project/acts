@@ -41,12 +41,9 @@
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
+using namespace Acts::detail;
 
-namespace Acts {
-
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -212,5 +209,4 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

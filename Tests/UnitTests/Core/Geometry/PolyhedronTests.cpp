@@ -22,11 +22,9 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
-using namespace UnitLiterals;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -126,6 +124,4 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

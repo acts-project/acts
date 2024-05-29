@@ -95,9 +95,7 @@ Acts::ProtoDetector createProtoDetector() {
 
 }  // namespace
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
@@ -217,6 +215,4 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorTests) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test
