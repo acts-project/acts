@@ -122,8 +122,9 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
 
   // Recursively create the nodes
   blueprint.name = topEntry->second.name;
-  blueprint.topNode = createNode(topEntry->second, blueprintTableMap, {});
+  blueprint.topNode = createNode(topEntry->second, blueprintTableMap, Extent());
 
+  // Return the ready-to-use blueprint
   return blueprint;
 }
 
@@ -131,10 +132,10 @@ std::unique_ptr<Acts::Experimental::Blueprint::Node>
 Acts::GeoModelBlueprintCreater::createNode(
     const TableEntry& entry,
     const std::map<std::string, TableEntry>& tableEntryMap,
-    const std::vector<ActsScalar>& motherBounds) const {
+    const Extent& motherExtent) const {
   // Parse the bounds
-  auto [boundsType, rawValues, boundValues, translation] =
-      parseBounds(entry.bounds, motherBounds);
+  auto [boundsType, extent, boundValues, translation] =
+      parseBounds(entry.bounds, motherExtent);
 
   Transform3 transform = Acts::Transform3::Identity();
   transform.translation() = translation;
@@ -151,16 +152,23 @@ Acts::GeoModelBlueprintCreater::createNode(
     }
     std::vector<std::string> childrenNames =
         splitString(entry.internals[1u], ",");
-    // Create the sub nodes
+    // Create the sub nodes and keep track of the raw values
     for (const auto& childName : childrenNames) {
-      auto childEntry = tableEntryMap.find(childName);
+      std::string fChildName = entry.name + std::string("/") + childName;
+      if (childName == "*") {
+        // Gap volume detected
+        children.push_back(nullptr);
+        ACTS_VERBOSE("Gap volume detected, register for a posterio filling.");
+        continue;
+      }
+      // Check for child and build it
+      auto childEntry = tableEntryMap.find(fChildName);
       if (childEntry == tableEntryMap.end()) {
         throw std::invalid_argument("GeoModelBlueprintCreater: Child node '" +
                                     childName + "' of '" + entry.name +
                                     "' NOT found in blueprint table");
       }
-      children.push_back(
-          createNode(childEntry->second, tableEntryMap, rawValues));
+      children.push_back(createNode(childEntry->second, tableEntryMap, extent));
     }
 
     // Create the binnings
@@ -170,14 +178,16 @@ Acts::GeoModelBlueprintCreater::createNode(
                     binnings.push_back(toBinningValue(b));
                   });
 
+    // Complete the children (TODO)
+
     // Create the branch node
     return std::make_unique<Experimental::Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, binnings,
-        std::move(children));
+        std::move(children), extent);
 
   } else if (entry.type == "leaf") {
     return std::make_unique<Experimental::Blueprint::Node>(
-        entry.name, transform, boundsType, boundValues, nullptr);
+        entry.name, transform, boundsType, boundValues, nullptr, extent);
   } else {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Unknown node type '" + entry.type + "'");
@@ -186,54 +196,63 @@ Acts::GeoModelBlueprintCreater::createNode(
   return nullptr;
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, std::vector<Acts::ActsScalar>,
+std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
            std::vector<Acts::ActsScalar>, Acts::Vector3>
 Acts::GeoModelBlueprintCreater::parseBounds(
     const std::vector<std::string>& boundsEntry,
-    const std::vector<ActsScalar>& motherBounds) const {
+    const Extent& motherExtent) const {
   // Create the return values
-  Acts::VolumeBounds::BoundsType boundsType;
-  Acts::Vector3 translation{0., 0., 0.};
-  std::vector<ActsScalar> rawValues = {};
+  VolumeBounds::BoundsType boundsType;
+  Vector3 translation{0., 0., 0.};
   std::vector<ActsScalar> boundValues = {};
-
+  // Start with the mother extent
+  // -> and shrink it to size
+  Extent extent = motherExtent;
   // Switch on the bounds type
   if (boundsEntry[0u] == "cyl") {
     // Set the bounds type
-    boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
+    boundsType = VolumeBounds::BoundsType::eCylinder;
     // Capture the values
     std::vector<std::string> valuesEntry = splitString(boundsEntry[1u], ",");
     if (valuesEntry.size() < 4u) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: Cylinder bounds entry has to have at "
-          "least 4 entries (rmin, rmax, "
-          "zmin, zmax)");
+          "least 4 entries (rmin, rmax, zmin, zmax)");
     }
+    // Raw database values to extent entries
+    constexpr std::array<BinningValue, 6u> bvCyl = {binR, binR,   binZ,
+                                                    binZ, binPhi, binPhi};
     for (auto [iv, value] : Acts::enumerate(valuesEntry)) {
-      ActsScalar val = 0.;
+      Acts::BinningValue bValue = bvCyl.at(iv);
+      // Case "i" : Inherited from mother
       if (value == "i") {
-        if (iv >= motherBounds.size()) {
+        // Mother is not good enough
+        if (!motherExtent.constrains(bValue)) {
           throw std::invalid_argument(
-              "GeoModelBlueprintCreater: Mother bounds do not have enough "
-              "entries for value inheritance.");
+              "GeoModelBlueprintCreater: Mother extent does not constrain "
+              "child "
+              "extent.");
         }
-        val = motherBounds.at(iv);
+        // Already taken care of by extent copy
+        continue;
       } else {
-        val = std::stod(value);
+        // Case value is a number -> shrink mother to it or set it
+        if (iv % 2 == 0) {
+          extent.setMin(bValue, std::stod(value));
+        } else {
+          extent.setMax(bValue, std::stod(value));
+        }
       }
-      rawValues.push_back(val);
     }
-    // Create the translation
-    ActsScalar z = 0.5 * (rawValues[2] + rawValues[3]);
-    ActsScalar hz = 0.5 * std::abs(rawValues[2] - rawValues[3]);
-    translation = Acts::Vector3(0., 0., z);
-    // Create the bounds values
-    boundValues = {rawValues[0], rawValues[1], hz};
+    // Create the translation & bound values
+    translation = Acts::Vector3(0., 0., extent.medium(binZ));
+    boundValues = {extent.min(binR), extent.max(binR),
+                   0.5 * extent.interval(binZ)};
   } else {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Unknown bounds type, only 'cyl' is "
         "supported for the moment.");
   }
 
-  return std::make_tuple(boundsType, rawValues, boundValues, translation);
+  return std::make_tuple(boundsType, extent, boundValues, translation);
 }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Detector/Blueprint.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -87,22 +88,24 @@ class GeoModelBlueprintCreater {
   ///
   /// @param entry the table entry
   /// @param tableEntryMap the map of table entries allows construction of children
-  /// @param motherBounds the bounds of the mother node
+  /// @param motherExtent the raw extent of the mother
+  ///
+  /// @return a newly created node
   std::unique_ptr<Experimental::Blueprint::Node> createNode(
       const TableEntry& entry,
       const std::map<std::string, TableEntry>& tableEntryMap,
-      const std::vector<ActsScalar>& motherBounds = {}) const;
+      const Extent& motherExtent = Extent()) const;
 
   /// @brief Parse bound value string from the database
   ///
   /// @param boundsEntry in the database
-  /// @param motherBounds
+  /// @param rawValuesMother the raw bound values of the mother
+  /// @param motherExtent the raw extent of the mother
   ///
   /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
-  std::tuple<VolumeBounds::BoundsType, std::vector<ActsScalar>,
-             std::vector<ActsScalar>, Vector3>
+  std::tuple<VolumeBounds::BoundsType, Extent, std::vector<ActsScalar>, Vector3>
   parseBounds(const std::vector<std::string>& boundsEntry,
-              const std::vector<ActsScalar>& motherBounds) const;
+              const Extent& motherExtent) const;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
