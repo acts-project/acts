@@ -53,9 +53,9 @@
 
 #include "VertexingDataHelper.hpp"
 
-namespace Acts::Test {
-
 using namespace Acts::UnitLiterals;
+
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;

@@ -25,9 +25,8 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
+
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant DiscLayer object
@@ -83,6 +82,5 @@ BOOST_AUTO_TEST_CASE(DiscLayerProperties) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test::Layers

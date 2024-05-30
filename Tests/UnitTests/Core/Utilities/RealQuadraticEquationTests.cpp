@@ -13,8 +13,8 @@
 
 using Acts::detail::RealQuadraticEquation;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating RealQuadraticEquation object
 BOOST_AUTO_TEST_CASE(RealQuadraticEquationConstruction) {
@@ -59,5 +59,5 @@ BOOST_AUTO_TEST_CASE(RealQuadraticEquationAssignment) {
   //                   realQuadraticEquationObject);
 }
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

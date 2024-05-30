@@ -22,11 +22,12 @@
 #include "../Surfaces/SurfaceStub.hpp"
 
 namespace Acts::Test {
-
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+}  // namespace Acts::Test
 
-namespace Layers {
+namespace Acts::Test::Layers {
+
 BOOST_AUTO_TEST_SUITE(Layers)
 
 /// Unit test for creating compliant/non-compliant NavigationLayer object
@@ -70,5 +71,5 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Acts::Test
+
+}  // namespace Acts::Test::Layers

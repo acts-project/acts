@@ -18,8 +18,7 @@
 #include "SurfaceView3DBase.hpp"
 #include "Visualization3DTester.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
@@ -79,5 +78,4 @@ BOOST_AUTO_TEST_CASE(SurfaceView3DPly) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
