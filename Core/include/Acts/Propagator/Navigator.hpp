@@ -167,9 +167,6 @@ class Navigator {
     bool startLayerResolved = false;
     /// Indicator if the target is reached
     bool targetReached = false;
-    /// Indicator that the last VolumeHierarchy surface was reached
-    /// skip the next layer targeting to the next boundary/volume
-    bool lastHierarchySurfaceReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
     // The navigation stage (@todo: integrate break, target)
@@ -462,7 +459,6 @@ class Navigator {
         state.navigation.navSurfaceIndex = state.navigation.navSurfaces.size();
         state.navigation.navLayers.clear();
         state.navigation.navLayerIndex = state.navigation.navLayers.size();
-        state.navigation.lastHierarchySurfaceReached = false;
         // Update volume information
         // get the attached volume information
         const BoundarySurface* boundary = state.navigation.navBoundary().second;
@@ -672,8 +668,6 @@ class Navigator {
       } else {
         ACTS_VERBOSE(volInfo(state)
                      << "Last surface on layer reached, and no layer.");
-        // first clear the surface cache
-        state.navigation.lastHierarchySurfaceReached = true;
         state.navigation.navigationBreak =
             (state.navigation.currentVolume == state.navigation.targetVolume);
       }
@@ -704,8 +698,7 @@ class Navigator {
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
     using namespace UnitLiterals;
 
-    if (state.navigation.navigationBreak ||
-        state.navigation.lastHierarchySurfaceReached) {
+    if (state.navigation.navigationBreak) {
       return false;
     }
 

@@ -23,9 +23,9 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-ttbar_pu200 = False
+ttbar_pu200 = True
 u = acts.UnitConstants
-geo_dir = pathlib.Path("acts-itk")
+geo_dir = pathlib.Path("../../acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
@@ -33,7 +33,7 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=10, numThreads=-1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
