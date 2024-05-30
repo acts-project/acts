@@ -27,11 +27,11 @@
 #include "LayerStub.hpp"
 
 namespace Acts::Test {
-
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+}  // namespace Acts::Test
 
-namespace Layers {
+namespace Acts::Test::Layers {
 
 BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -99,5 +99,5 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Acts::Test
+
+}  // namespace Acts::Test::Layers

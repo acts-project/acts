@@ -16,9 +16,8 @@
 
 #include <Eigen/Geometry>
 
-namespace Acts {
-namespace detail {
-namespace Test {
+namespace Acts::detail::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
@@ -50,6 +49,5 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace detail
-}  // namespace Acts
+
+}  // namespace Acts::detail::Test

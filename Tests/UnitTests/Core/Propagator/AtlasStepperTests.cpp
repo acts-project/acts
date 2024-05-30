@@ -48,9 +48,10 @@
 #include <type_traits>
 #include <utility>
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts::Test {
 
-using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;

@@ -78,7 +78,9 @@ struct MaterialCollector {
   }
 };
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -289,5 +291,4 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

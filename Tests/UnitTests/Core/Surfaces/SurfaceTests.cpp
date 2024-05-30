@@ -39,8 +39,9 @@ class MockTrack {
   Vector3 m_mom;
   Vector3 m_pos;
 };
+}  // namespace Acts
 
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -174,5 +175,5 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   BOOST_CHECK(*surfacePtr == *sharedSurfacePtr);
 }
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

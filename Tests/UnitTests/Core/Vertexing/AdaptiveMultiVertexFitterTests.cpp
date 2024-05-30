@@ -47,9 +47,10 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts::Test {
 
-using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 // Set up logger
