@@ -79,14 +79,13 @@ struct TGeoParser {
   static void select(State& state, const Options& options,
                      const TGeoMatrix& gmatrix = TGeoIdentity("ID"));
 
-
   /// Simple utility function that recursively finds the node by the volume name
   /// in the tgeo branch.
   /// @param currentNode [in] the pointer to the current node in the branch
   /// @param volumeName  [in] the name of the volume to be searched for
   /// @return the pointer to the node corresponding to the volume
 
-  static TGeoNode* findNodeRecursive(TGeoNode* currentNode, const char* volumeName);
-
+  static TGeoNode* findNodeRecursive(TGeoNode* currentNode,
+                                     const char* volumeName);
 };
 }  // namespace Acts

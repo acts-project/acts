@@ -202,9 +202,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     // Either pick the configured volume or take the top level volume
     // and retrieve its global transformation.
     TGeoVolume* tVolume =
-      gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
-    TGeoHMatrix gmatrix = TGeoIdentity((layerCfg.volumeName+"ID").c_str());
-    
+        gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
+    TGeoHMatrix gmatrix = TGeoIdentity((layerCfg.volumeName + "ID").c_str());
+
     if (tVolume == nullptr) {
       tVolume = gGeoManager->GetTopVolume();
       ACTS_DEBUG("- search volume is TGeo top volume");
@@ -212,11 +212,11 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ACTS_DEBUG("- setting search volume to " << tVolume->GetName());
 
       auto node = TGeoParser::findNodeRecursive(gGeoManager->GetTopNode(),
-						tVolume->GetName());
-      
+                                                tVolume->GetName());
+
       if (!node) {
-	std::string volname(tVolume->GetName());
-	throw std::invalid_argument("Could not locate node for " + volname);
+        std::string volname(tVolume->GetName());
+        throw std::invalid_argument("Could not locate node for " + volname);
       }
 
       gmatrix = *(node->GetMatrix());
