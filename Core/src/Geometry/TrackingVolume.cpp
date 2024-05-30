@@ -445,24 +445,6 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
         continue;
       }
 
-      if (options.forceIntersectBoundaries) {
-        const bool coCriterion =
-            std::abs(intersection.pathLength()) < std::abs(nearLimit);
-        ACTS_VERBOSE("Forcing intersection with surface "
-                     << boundary->surfaceRepresentation().geometryId());
-        if (coCriterion) {
-          ACTS_VERBOSE("Intersection forced successfully ");
-          ACTS_VERBOSE("- intersection path length "
-                       << std::abs(intersection.pathLength())
-                       << " < overstep limit " << std::abs(nearLimit));
-          return BoundaryIntersection(intersection, boundary);
-        }
-        ACTS_VERBOSE("Can't force intersection: ");
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(intersection.pathLength())
-                     << " > overstep limit " << std::abs(nearLimit));
-      }
-
       ACTS_VERBOSE("Check intersection with surface "
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkIntersection(intersection.intersection(), nearLimit,
