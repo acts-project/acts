@@ -179,16 +179,18 @@ class BranchStopper {
   using Config =
       std::optional<std::variant<Acts::TrackSelector::Config,
                                  Acts::TrackSelector::EtaBinnedConfig>>;
+  using BranchStopperResult =
+      Acts::CombinatorialKalmanFilterBranchStopperResult;
 
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
   explicit BranchStopper(const Config& config) : m_config(config) {}
 
-  bool operator()(
+  BranchStopperResult operator()(
       const Acts::CombinatorialKalmanFilterTipState& tipState,
       Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
     if (!m_config.has_value()) {
-      return false;
+      return BranchStopperResult::Continue;
     }
 
     const Acts::TrackSelector::Config* singleConfig = std::visit(
@@ -207,35 +209,21 @@ class BranchStopper {
 
     if (singleConfig == nullptr) {
       ++m_nStoppedBranches;
-      return true;
+      return BranchStopperResult::StopAndDrop;
     }
 
-    // Continue if the number of holes is below the maximum
-    if (tipState.nHoles <= singleConfig->maxHoles) {
-      return false;
-    }
+    bool enoughMeasurements =
+        tipState.nMeasurements >= singleConfig->minMeasurements;
+    bool tooManyHoles = tipState.nHoles > singleConfig->maxHoles;
+    bool tooManyOutliers = tipState.nOutliers > singleConfig->maxOutliers;
 
-    // Continue if the number of outliers is below the maximum
-    if (tipState.nOutliers <= singleConfig->maxOutliers) {
-      return false;
-    }
-
-    // If there are not enough measurements but more holes than allowed we stop
-    if (tipState.nMeasurements < singleConfig->minMeasurements) {
+    if (tooManyHoles || tooManyOutliers) {
       ++m_nStoppedBranches;
-      return true;
+      return enoughMeasurements ? BranchStopperResult::StopAndKeep
+                                : BranchStopperResult::StopAndDrop;
     }
 
-    // Getting another measurement guarantees that the holes are in the middle
-    // of the track
-    if (trackState.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-      ++m_nStoppedBranches;
-      return true;
-    }
-
-    // We cannot be sure if the holes are just at the end of the track so we
-    // have to keep going
-    return false;
+    return BranchStopperResult::Continue;
   }
 
  private:

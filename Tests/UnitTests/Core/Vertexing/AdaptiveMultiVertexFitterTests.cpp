@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -49,9 +47,10 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts::Test {
 
-using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
 // Set up logger
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
     // Index of current vertex
-    int vtxIdx = (int)(iTrack / nTracksPerVtx);
+    int vtxIdx = static_cast<int>(iTrack / nTracksPerVtx);
 
     // Construct random track parameters
     BoundTrackParameters::ParametersVector paramVec;
@@ -209,7 +208,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
     // Index of current vertex
-    int vtxIdx = (int)(iTrack / nTracksPerVtx);
+    int vtxIdx = static_cast<int>(iTrack / nTracksPerVtx);
 
     InputTrack inputTrack{&allTracks[iTrack]};
 

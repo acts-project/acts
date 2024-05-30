@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
@@ -70,7 +68,7 @@ inline const Acts::Transform3& ExternallyAlignedDetectorElement::transform(
   }
   // cast into the right context object
   const auto& alignContext = gctx.get<ContextType>();
-  identifier_type idValue = identifier_type(identifier());
+  identifier_type idValue = static_cast<identifier_type>(identifier());
 
   if (alignContext.alignmentStore == nullptr) {
     // geometry construction => nominal alignment

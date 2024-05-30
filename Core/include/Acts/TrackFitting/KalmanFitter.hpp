@@ -726,7 +726,10 @@ class KalmanFitter {
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
-        TrackStatePropMask mask = TrackStatePropMask::All;
+        TrackStatePropMask mask =
+            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+            TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
+            TrackStatePropMask::Calibrated;
         const std::size_t currentTrackIndex = fittedStates.addTrackState(
             mask, Acts::MultiTrajectoryTraits::kInvalid);
 
@@ -1258,7 +1261,7 @@ class KalmanFitter {
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template propagate(propagatorState);
+    auto result = m_propagator.propagate(propagatorState);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error());

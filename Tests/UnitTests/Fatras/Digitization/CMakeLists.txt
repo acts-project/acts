@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsFatras)
+set(unittest_extra_libraries ActsExamplesDigitization ActsExamplesIoJson ActsFatras)
 
 add_unittest(FatrasChannelMerger ChannelMergerTests.cpp)
 add_unittest(FatrasChannelizer ChannelizerTests.cpp)

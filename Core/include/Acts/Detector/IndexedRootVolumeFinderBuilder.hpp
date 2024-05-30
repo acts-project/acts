@@ -10,7 +10,7 @@
 
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
 #include <memory>
@@ -34,7 +34,7 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
   /// @param rootVolumes the root volumes to be used for the finder
   ///
   /// @return a shared detector object
-  DetectorVolumeUpdater construct(
+  ExternalNavigationDelegate construct(
       const GeometryContext& gctx,
       const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes)
       const final;

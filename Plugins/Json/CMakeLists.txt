@@ -18,7 +18,8 @@ add_library(
   src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp
   src/VolumeBoundsJsonConverter.cpp
-  src/VolumeJsonConverter.cpp)
+  src/VolumeJsonConverter.cpp
+  src/AmbiguityConfigJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
   PUBLIC
@@ -28,6 +29,9 @@ target_link_libraries(
   ActsPluginJson PUBLIC ActsCore)
 acts_target_link_libraries_system(
   ActsPluginJson PUBLIC nlohmann_json::nlohmann_json)
+target_compile_definitions(
+  ActsPluginJson
+  PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1)
 
 install(
   TARGETS ActsPluginJson

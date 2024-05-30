@@ -380,10 +380,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         addSeeding,
         TruthSeedRanges,
     )
-    from acts.examples.reconstruction import (
-        addSeeding,
-        TruthSeedRanges,
-    )
     from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
     addSeeding(
@@ -716,7 +712,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     field = acts.NullBField()
 
     runMaterialValidation(
-        trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
+        10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
     )
 
     s.run()
@@ -795,6 +791,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     field = acts.NullBField()
 
     runMaterialValidation(
+        10,
+        1000,
         trackingGeometry,
         decorators,
         field,
@@ -1223,7 +1221,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         subprocess.check_call(
-            [sys.executable, str(script), "-n1", "--MLSolver"],
+            [sys.executable, str(script), "-n1", "--ambi-solver", "ML"],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,

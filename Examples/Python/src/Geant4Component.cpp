@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,8 @@
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
+#include "ActsExamples/Geant4/RegionCreator.hpp"
+#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
@@ -97,6 +99,66 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
+    using Config = SensitiveSurfaceMapper::Config;
+    auto sm =
+        py::class_<SensitiveSurfaceMapper,
+                   std::shared_ptr<SensitiveSurfaceMapper>>(
+            mod, "SensitiveSurfaceMapper")
+            .def(py::init([](const Config& cfg, Acts::Logging::Level level) {
+              return std::make_shared<SensitiveSurfaceMapper>(
+                  cfg, getDefaultLogger("SensitiveSurfaceMapper", level));
+            }));
+
+    auto c = py::class_<Config>(sm, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(materialMappings);
+    ACTS_PYTHON_MEMBER(volumeMappings);
+    ACTS_PYTHON_MEMBER(candidateSurfaces);
+    ACTS_PYTHON_STRUCT_END();
+
+    sm.def(
+        "create", [](const Config& cfg, Acts::Logging::Level level,
+                     const std::shared_ptr<const TrackingGeometry> tGeometry) {
+          // Set a new surface finder
+          Config ccfg = cfg;
+          ccfg.candidateSurfaces = ActsExamples::SensitiveCandidates{tGeometry};
+          return std::make_shared<SensitiveSurfaceMapper>(
+              ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
+        });
+
+    sm.def("create",
+           [](const Config& cfg, Acts::Logging::Level level,
+              const std::shared_ptr<const Experimental::Detector>& detector) {
+             // Helper struct to find the sensitive surface candidates
+             struct SensitiveCandidates {
+               std::shared_ptr<const Experimental::Detector> detector;
+
+               /// Find the sensitive surfaces for a given position
+               std::vector<const Acts::Surface*> operator()(
+                   const Acts::GeometryContext& gctx,
+                   const Acts::Vector3& position) const {
+                 std::vector<const Acts::Surface*> surfaces;
+                 // Here's the detector volume
+                 auto volume = detector->findDetectorVolume(gctx, position);
+                 if (volume != nullptr) {
+                   for (const auto& surface : volume->surfaces()) {
+                     if (surface->associatedDetectorElement() != nullptr) {
+                       surfaces.push_back(surface);
+                     }
+                   }
+                 }
+                 return surfaces;
+               }
+             };
+             // Set a new surface finder
+             Config ccfg = cfg;
+             ccfg.candidateSurfaces = SensitiveCandidates{detector};
+             return std::make_shared<SensitiveSurfaceMapper>(
+                 ccfg, getDefaultLogger("SensitiveSurfaceMapper", level));
+           });
+  }
+
+  {
     using Algorithm = Geant4Simulation;
     using Config = Algorithm::Config;
     auto alg =
@@ -113,7 +175,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticlesInitial);
     ACTS_PYTHON_MEMBER(outputParticlesFinal);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
     ACTS_PYTHON_MEMBER(volumeMappings);
@@ -149,7 +211,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     py::class_<GdmlDetectorConstructionFactory, DetectorConstructionFactory,
                std::shared_ptr<GdmlDetectorConstructionFactory>>(
         mod, "GdmlDetectorConstructionFactory")
-        .def(py::init<std::string>());
+        .def(py::init<std::string,
+                      std::vector<std::shared_ptr<RegionCreator>>>(),
+             py::arg("path"),
+             py::arg("regionCreators") =
+                 std::vector<std::shared_ptr<RegionCreator>>());
   }
 
   {
@@ -158,7 +224,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         DetectorConstructionFactory,
         std::shared_ptr<Telescope::TelescopeG4DetectorConstructionFactory>>(
         mod, "TelescopeG4DetectorConstructionFactory")
-        .def(py::init<const Telescope::TelescopeDetector::Config&>());
+        .def(py::init<const Telescope::TelescopeDetector::Config&,
+                      std::vector<std::shared_ptr<RegionCreator>>>(),
+             py::arg("cfg"),
+             py::arg("regionCreators") =
+                 std::vector<std::shared_ptr<RegionCreator>>());
   }
 
   {
@@ -223,7 +293,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    /// Helper function to test if the autmotaic geometry conversion works
+    /// Helper function to test if the automatic geometry conversion works
     ///
     /// @param gdmlFileName is the name of the GDML file
     /// @param sensitiveMatches is a list of strings to match sensitive volumes
@@ -307,6 +377,25 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(SensitiveNames);
     ACTS_PYTHON_MEMBER(PassiveNames);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Tool = RegionCreator;
+    using Config = Tool::Config;
+    auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
+                    .def(py::init<const Config&, std::string, Logging::Level>(),
+                         py::arg("config"), py::arg("name"),
+                         py::arg("logLevel") = Logging::INFO)
+                    .def_property_readonly("config", &Tool::config);
+
+    auto c = py::class_<Config>(tool, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(gammaCut);
+    ACTS_PYTHON_MEMBER(electronCut);
+    ACTS_PYTHON_MEMBER(positronCut);
+    ACTS_PYTHON_MEMBER(protonCut);
+    ACTS_PYTHON_MEMBER(volumes);
     ACTS_PYTHON_STRUCT_END();
   }
 

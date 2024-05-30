@@ -20,7 +20,7 @@
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
@@ -43,11 +43,11 @@ class SurfaceBuilder : public Acts::Experimental::IInternalStructureBuilder {
     // Trivialities first: internal volumes
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
         internalVolumes = {};
-    Acts::Experimental::DetectorVolumeUpdater internalVolumeUpdater =
+    Acts::Experimental::ExternalNavigationDelegate internalVolumeUpdater =
         Acts::Experimental::tryNoVolumes();
 
     // Retrieve the layer surfaces
-    Acts::Experimental::SurfaceCandidatesUpdater internalCandidatesUpdater =
+    Acts::Experimental::InternalNavigationDelegate internalCandidatesUpdater =
         Acts::Experimental::tryAllPortalsAndSurfaces();
 
     // Return the internal structure

@@ -13,8 +13,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -187,7 +185,8 @@ struct CubicTrackingGeometry {
         new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
     MutableTrackingVolumePtr mtvpWorld(std::make_shared<TrackingVolume>(
-        trafoWorld, worldVolBds, trVolArr, "World"));
+        trafoWorld, worldVolBds, nullptr, nullptr, trVolArr,
+        MutableTrackingVolumeVector{}, "World"));
 
     // Build and return tracking geometry
     return std::make_shared<TrackingGeometry>(mtvpWorld);

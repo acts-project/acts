@@ -62,15 +62,23 @@ inline void updateCandidates(const GeometryContext& gctx,
   nState.surfaceCandidates = std::move(nextSurfaceCandidates);
 }
 
-/// @brief  This sets a single object, e.g. single surface or single volume
+/// @brief This sets a single object, e.g. single surface or single volume
+/// into the navigation state
+///
+/// @tparam navigation_type distinguishes between internal and external navigation
 /// @tparam object_type the type of the object to be filled
 /// @tparam filler_type is the helper to fill the object into nState
-template <typename object_type, typename filler_type>
-class SingleObjectImpl : public INavigationDelegate {
+///
+template <typename navigation_type, typename object_type, typename filler_type>
+class SingleObjectNavigation : public navigation_type {
  public:
   /// Convenience constructor
   /// @param so the single object
-  SingleObjectImpl(const object_type* so) : object(so) {}
+  SingleObjectNavigation(const object_type* so) : m_object(so) {
+    if (so == nullptr) {
+      throw std::invalid_argument("SingleObjectNavigation: object is nullptr");
+    }
+  }
 
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -80,21 +88,27 @@ class SingleObjectImpl : public INavigationDelegate {
   /// @note this is attaching objects without intersecting nor checking
   void update([[maybe_unused]] const GeometryContext& gctx,
               NavigationState& nState) const {
-    filler_type::fill(nState, object);
+    filler_type::fill(nState, m_object);
   }
+
+  /// Const Access to the object
+  const object_type* object() const { return m_object; }
 
  private:
   // The object to be filled in
-  const object_type* object = nullptr;
+  const object_type* m_object = nullptr;
 };
 
 /// @brief This uses state less extractor and fillers to manipulate
 /// the navigation state
 ///
+/// @tparam navigation_type distinguishes between internal and external navigation
 /// @tparam extractor_type the helper to extract the objects from
 /// @tparam filler_type is the helper to fill the object into nState
-template <typename extractor_type, typename filler_type>
-class StaticUpdaterImpl : public INavigationDelegate {
+///
+template <typename navigation_type, typename extractor_type,
+          typename filler_type>
+class StaticAccessNavigation : public navigation_type {
  public:
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -117,11 +131,14 @@ class StaticUpdaterImpl : public INavigationDelegate {
 ///
 /// It can be used for volumes, surfaces at convenience
 ///
+/// @tparam navigation_type distinguishes between internal and external navigation
 /// @tparam grid_t is the type of the grid
 /// @tparam extractor_type is the helper to extract the object
 /// @tparam filler_type is the helper to fill the object into the nState
-template <typename grid_t, typename extractor_type, typename filler_type>
-class IndexedUpdaterImpl : public INavigationDelegate {
+///
+template <typename navigation_type, typename grid_t, typename extractor_type,
+          typename filler_type>
+class IndexedGridNavigation : public navigation_type {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -142,12 +159,12 @@ class IndexedUpdaterImpl : public INavigationDelegate {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
-  IndexedUpdaterImpl(grid_type&& igrid,
-                     const std::array<BinningValue, grid_type::DIM>& icasts,
-                     const Transform3& itr = Transform3::Identity())
+  IndexedGridNavigation(grid_type&& igrid,
+                        const std::array<BinningValue, grid_type::DIM>& icasts,
+                        const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
-  IndexedUpdaterImpl() = delete;
+  IndexedGridNavigation() = delete;
 
   /// @brief updates the navigation state with objects from the grid according
   /// to the filling type AFTER applying `p3loc = transform * p3`
@@ -164,7 +181,11 @@ class IndexedUpdaterImpl : public INavigationDelegate {
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
 
-    updateCandidates(gctx, nState);
+    // If the delegate type is of type IInternalNavigation
+    if constexpr (std::is_base_of_v<IInternalNavigation, navigation_type>) {
+      // Update the candidates
+      updateCandidates(gctx, nState);
+    }
   }
 };
 
@@ -172,9 +193,11 @@ class IndexedUpdaterImpl : public INavigationDelegate {
 /// Since there is no control whether it is a static or
 /// payload extractor, these have to be provided by a tuple
 ///
+/// @tparam navigation_type distinguishes between internal and external navigation
 /// @tparam updators_t the updators that will be called in sequence
-template <typename... updators_t>
-class ChainedUpdaterImpl : public INavigationDelegate {
+///
+template <typename navigation_type, typename... updators_t>
+class ChainedNavigation : public navigation_type {
  public:
   /// The stored updators
   std::tuple<updators_t...> updators;
@@ -183,7 +206,7 @@ class ChainedUpdaterImpl : public INavigationDelegate {
   /// the tuple and call them in sequence
   ///
   /// @param upts the updators to be called in chain
-  ChainedUpdaterImpl(const std::tuple<updators_t...>&& upts)
+  ChainedNavigation(const std::tuple<updators_t...>&& upts)
       : updators(std::move(upts)) {}
 
   /// A combined navigation state updator w/o intersection specifics

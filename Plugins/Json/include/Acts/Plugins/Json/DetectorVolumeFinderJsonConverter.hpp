@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -29,13 +30,14 @@ namespace Acts::DetectorVolumeFinderJsonConverter {
 /// @param refInstance is a reference instance of potential type casting
 template <typename instance_type>
 void convert(nlohmann::json& jIndexedVolumes,
-             const Experimental::DetectorVolumeUpdater& delegate, bool detray,
-             [[maybe_unused]] const instance_type& refInstance) {
+             const Experimental::ExternalNavigationDelegate& delegate,
+             bool detray, [[maybe_unused]] const instance_type& refInstance) {
   using GridType = typename instance_type::template grid_type<std::size_t>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedUpdaterImpl<
-      GridType, Acts::Experimental::IndexedDetectorVolumeExtractor,
-      Acts::Experimental::DetectorVolumeFiller>;
+  using DelegateType = Experimental::IndexedGridNavigation<
+      Experimental::IExternalNavigation, GridType,
+      Experimental::IndexedDetectorVolumeExtractor,
+      Experimental::DetectorVolumeFiller>;
   // Get the instance
   const auto* instance = delegate.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -62,7 +64,7 @@ void convert(nlohmann::json& jIndexedVolumes,
 /// @param detray indicate if this is a detray json to be written out
 template <typename... Args>
 void unrollConvert(nlohmann::json& jIndexedVolumes,
-                   const Experimental::DetectorVolumeUpdater& delegate,
+                   const Experimental::ExternalNavigationDelegate& delegate,
                    bool detray, TypeList<Args...> /*unused*/) {
   (convert(jIndexedVolumes, delegate, detray, Args{}), ...);
 }
@@ -79,7 +81,8 @@ void unrollConvert(nlohmann::json& jIndexedVolumes,
 ///
 /// @return a json object
 static inline nlohmann::json toJson(
-    const Experimental::DetectorVolumeUpdater& delegate, bool detray = false) {
+    const Experimental::ExternalNavigationDelegate& delegate,
+    bool detray = false) {
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedVolumes;
   unrollConvert(jIndexedVolumes, delegate, detray,
@@ -93,7 +96,7 @@ static inline nlohmann::json toJson(
 /// @param jVolumeFinder the json file to read from
 ///
 /// @return the connected navigation delegate
-Experimental::DetectorVolumeUpdater fromJson(
+Experimental::ExternalNavigationDelegate fromJson(
     const nlohmann::json& jVolumeFinder);
 
 }  // namespace Acts::DetectorVolumeFinderJsonConverter

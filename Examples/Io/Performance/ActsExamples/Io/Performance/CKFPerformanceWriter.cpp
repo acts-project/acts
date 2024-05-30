@@ -87,15 +87,18 @@ CKFPerformanceWriter::~CKFPerformanceWriter() {
 }
 
 ProcessCode CKFPerformanceWriter::finalize() {
-  float eff_tracks = float(m_nTotalMatchedTracks) / m_nTotalTracks;
-  float fakeRate_tracks = float(m_nTotalFakeTracks) / m_nTotalTracks;
+  float eff_tracks = static_cast<float>(m_nTotalMatchedTracks) / m_nTotalTracks;
+  float fakeRate_tracks =
+      static_cast<float>(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRate_tracks =
-      float(m_nTotalDuplicateTracks) / m_nTotalTracks;
+      static_cast<float>(m_nTotalDuplicateTracks) / m_nTotalTracks;
 
-  float eff_particle = float(m_nTotalMatchedParticles) / m_nTotalParticles;
-  float fakeRate_particle = float(m_nTotalFakeParticles) / m_nTotalParticles;
+  float eff_particle =
+      static_cast<float>(m_nTotalMatchedParticles) / m_nTotalParticles;
+  float fakeRate_particle =
+      static_cast<float>(m_nTotalFakeParticles) / m_nTotalParticles;
   float duplicationRate_particle =
-      float(m_nTotalDuplicateParticles) / m_nTotalParticles;
+      static_cast<float>(m_nTotalDuplicateParticles) / m_nTotalParticles;
 
   ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
   ACTS_DEBUG("nTotalMatchedTracks         = " << m_nTotalMatchedTracks);

@@ -115,6 +115,12 @@ class StraightLineStepper {
     /// accummulated path length state
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     /// adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
@@ -211,11 +217,6 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.pars[eFreeTime]; }
-
-  /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
-    return -m_overstepLimit;
-  }
 
   /// Update surface status
   ///
@@ -436,15 +437,15 @@ class StraightLineStepper {
       state.stepping.jacTransport = D * state.stepping.jacTransport;
       state.stepping.derivative.template head<3>() = dir;
     }
+
     // state the path length
     state.stepping.pathAccumulated += h;
+    ++state.stepping.nSteps;
+    ++state.stepping.nStepTrials;
 
     // return h
     return h;
   }
-
- private:
-  double m_overstepLimit = s_onSurfaceTolerance;
 };
 
 template <typename navigator_t>

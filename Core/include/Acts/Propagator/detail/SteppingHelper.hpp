@@ -17,6 +17,8 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <limits>
+
 namespace Acts::detail {
 
 /// Update surface status - Single component
@@ -36,7 +38,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
     const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
-               << surface.geometryId() << " index " << (int)index);
+               << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
@@ -50,8 +52,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     return Intersection3D::Status::onSurface;
   }
 
-  // Path and overstep limit checking
-  const double nearLimit = stepper.overstepLimit(state);
+  const double nearLimit = std::numeric_limits<double>::lowest();
   const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
 
   if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
