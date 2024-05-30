@@ -35,6 +35,8 @@ class GeoModelBlueprintCreater {
     std::string table;
     /// The top level node name
     std::string topEntry;
+    /// Optionally override the top node bounds
+    std::vector<ActsScalar> topNodeBounds;
   };
 
   /// The Blueprint return object

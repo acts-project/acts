@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 
+#include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -144,6 +145,8 @@ Acts::GeoModelBlueprintCreater::createNode(
   if (entry.type == "branch" || entry.type == "container" ||
       entry.type == "root") {
     std::vector<std::unique_ptr<Experimental::Blueprint::Node>> children;
+    // Check for gap filling
+    bool gapFilling = false;
     // Check if the entry has children
     if (entry.internals.size() < 2u) {
       throw std::invalid_argument(
@@ -157,8 +160,8 @@ Acts::GeoModelBlueprintCreater::createNode(
       std::string fChildName = entry.name + std::string("/") + childName;
       if (childName == "*") {
         // Gap volume detected
-        children.push_back(nullptr);
-        ACTS_VERBOSE("Gap volume detected, register for a posterio filling.");
+        gapFilling = true;
+        ACTS_VERBOSE("Gap volume detected, gap filling will be triggered.");
         continue;
       }
       // Check for child and build it
@@ -178,14 +181,19 @@ Acts::GeoModelBlueprintCreater::createNode(
                     binnings.push_back(toBinningValue(b));
                   });
 
-    // Complete the children (TODO)
-
-    // Create the branch node
-    return std::make_unique<Experimental::Blueprint::Node>(
+    // Complete the children
+    auto node = std::make_unique<Experimental::Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, binnings,
         std::move(children), extent);
+    if (gapFilling) {
+      // Find the first child that is not a gap
+      Experimental::detail::BlueprintHelper::fillGaps(*node, true);
+    }
+    // Create the branch node
+    return node;
 
   } else if (entry.type == "leaf") {
+    // Create and return the container node
     return std::make_unique<Experimental::Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, nullptr, extent);
   } else {
@@ -236,6 +244,7 @@ Acts::GeoModelBlueprintCreater::parseBounds(
         // Already taken care of by extent copy
         continue;
       } else {
+        std::cout << " Truomg to cast value " << value << std::endl;
         // Case value is a number -> shrink mother to it or set it
         if (iv % 2 == 0) {
           extent.setMin(bValue, std::stod(value));
