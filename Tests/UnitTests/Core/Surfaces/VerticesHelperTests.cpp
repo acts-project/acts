@@ -17,6 +17,7 @@
 #include <Eigen/Geometry>
 
 namespace Acts::detail::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
@@ -92,4 +93,5 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Acts::detail::Test

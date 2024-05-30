@@ -15,11 +15,9 @@
 #include <cstddef>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
   EquidistantAxis a(0.0, 10.0, 10u);
@@ -374,6 +372,4 @@ BOOST_AUTO_TEST_CASE(wrapBin) {
   BOOST_CHECK_EQUAL(a6.wrapBin(7), 2u);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test
