@@ -259,9 +259,9 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                << "covarianceMeasurement:\n"
                << covarianceMeasurement << "\n"
                << "projector:\n"
-               << projector << "\n"
+               << projector.eval() << "\n"
                << "projJacobian:\n"
-               << projJacobian << "\n"
+               << projJacobian.eval() << "\n"
                << "projPredicted: " << projPredicted.transpose() << "\n"
                << "residual: " << residual.transpose());
 
@@ -271,19 +271,25 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
     chi2sum +=
         (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
     aMatrix +=
-        projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian;
-    bVector += residual.transpose() * (*safeInvCovMeasurement) * projJacobian;
+        (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
+            .eval();
+    bVector +=
+        (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
 
-    ACTS_VERBOSE("aMatrixMeas:\n"
-                 << projJacobian.transpose() * (*safeInvCovMeasurement) *
-                        projJacobian
-                 << "\n"
-                 << "bVectorMeas: " << bVector.transpose() << "\n"
-                 << "chi2sumMeas: "
-                 << (residual.transpose() * (*safeInvCovMeasurement) *
-                     residual)(0, 0)
-                 << "safeInvCovMeasurement:\n"
-                 << (*safeInvCovMeasurement));
+    ACTS_VERBOSE(
+        "aMatrixMeas:\n"
+        << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
+               .eval()
+        << "\n"
+        << "bVectorMeas: "
+        << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
+               .eval()
+        << "\n"
+        << "chi2sumMeas: "
+        << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
+        << "\n"
+        << "safeInvCovMeasurement:\n"
+        << (*safeInvCovMeasurement));
   } else {
     ACTS_WARNING("\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻\n");
   }
