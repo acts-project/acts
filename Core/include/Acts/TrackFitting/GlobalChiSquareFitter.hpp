@@ -273,7 +273,8 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                  << "kMeasDim: " << kMeasDim << "\n"
               << "measurement: " << measurement.transpose() << "\n"
               << "projPredicted: " << projPredicted.transpose() << "\n"
-              << "residual: " << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).transpose() << "\n"
+              << "residual: " << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian) << "\n"
+              << "covarianceMeasurement:\n" << covarianceMeasurement << "\n"
                  << "aMatrixMeas:\n"
                  << projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian << "\n"
                  << "bVectorMeas: " << bVector.transpose() << "\n"
@@ -284,7 +285,8 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
               << "kMeasDim: " << kMeasDim << "\n"
               << "measurement: " << measurement.transpose() << "\n"
               << "projPredicted: " << projPredicted.transpose() << "\n"
-              << "residual: " << residual.transpose() << std::endl;
+              << "residual: " << residual.transpose()
+              << "covarianceMeasurement:\n" << covarianceMeasurement << std::endl;
   }
 }
 
