@@ -239,7 +239,7 @@ struct Gx2FitterResult {
 template <std::size_t kMeasDim, typename track_state_t>
 void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
-                   const track_state_t& trackState) {
+                   const track_state_t& trackState, const Logger& logger) {
   auto predicted = trackState.predicted();
   auto measurement = trackState.template calibrated<kMeasDim>();
   auto covarianceMeasurement =
@@ -252,6 +252,19 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
 
   auto residual = measurement - projPredicted;
 
+  ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
+               << "kMeasDim: " << kMeasDim << "\n"
+               << "predicted" << predicted.transpose() << "\n"
+               << "measurement: " << measurement.transpose() << "\n"
+               << "covarianceMeasurement:\n"
+               << covarianceMeasurement << "\n"
+               << "projector:\n"
+               << projector << "\n"
+               << "projJacobian:\n"
+               << projJacobian << "\n"
+               << "projPredicted: " << projPredicted.transpose() << "\n"
+               << "residual: " << residual.transpose());
+
   auto safeInvCovMeasurement = safeInverse(covarianceMeasurement.eval());
 
   if (safeInvCovMeasurement) {
@@ -261,40 +274,18 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
         projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian;
     bVector += residual.transpose() * (*safeInvCovMeasurement) * projJacobian;
 
-    //    ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
-    //                 << "kMeasDim: " << kMeasDim << "\n"
-    //                 << "aMatrixMeas:\n"
-    //                 << aMatrix << "\n"
-    //                 << "bVectorMeas:\n"
-    //                 << bVector << "\n"
-    //                 << "chi2sumMeas: " << chi2sum);
-
-    std::cout
-        << "\nContributions in addToGx2fSums:\n"
-        << "kMeasDim: " << kMeasDim << "\n"
-        << "measurement: " << measurement.transpose() << "\n"
-        << "projPredicted: " << projPredicted.transpose() << "\n"
-        << "residual: "
-        << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
-        << "\n"
-        << "covarianceMeasurement:\n"
-        << covarianceMeasurement << "\n"
-        << "aMatrixMeas:\n"
-        << projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian
-        << "\n"
-        << "bVectorMeas: " << bVector.transpose() << "\n"
-        << "chi2sumMeas: "
-        << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
-        << std::endl;
+    ACTS_VERBOSE("aMatrixMeas:\n"
+                 << projJacobian.transpose() * (*safeInvCovMeasurement) *
+                        projJacobian
+                 << "\n"
+                 << "bVectorMeas: " << bVector.transpose() << "\n"
+                 << "chi2sumMeas: "
+                 << (residual.transpose() * (*safeInvCovMeasurement) *
+                     residual)(0, 0)
+                 << "safeInvCovMeasurement:\n"
+                 << (*safeInvCovMeasurement));
   } else {
-    std::cout << "\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻" << std::endl;
-    std::cout << "Contributions in addToGx2fSums:\n"
-              << "kMeasDim: " << kMeasDim << "\n"
-              << "measurement: " << measurement.transpose() << "\n"
-              << "projPredicted: " << projPredicted.transpose() << "\n"
-              << "residual: " << residual.transpose()
-              << "covarianceMeasurement:\n"
-              << covarianceMeasurement << std::endl;
+    ACTS_WARNING("\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻\n");
   }
 }
 
@@ -321,7 +312,8 @@ class Gx2Fitter {
                 getDefaultLogger("Gx2Fitter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
-        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")},
+        m_addToSumLogger{m_logger->cloneWithSuffix("AddToSum")} {}
 
  private:
   /// The propagator for the transport and material update
@@ -330,6 +322,7 @@ class Gx2Fitter {
   /// The logger instance
   std::unique_ptr<const Logger> m_logger;
   std::unique_ptr<const Logger> m_actorLogger;
+  std::unique_ptr<const Logger> m_addToSumLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -801,23 +794,23 @@ class Gx2Fitter {
 
           if (measDim == 1) {
             addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState);
+                             trackState, *m_addToSumLogger);
 
           } else if (measDim == 2) {
             addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState);
+                             trackState, *m_addToSumLogger);
           } else if (measDim == 3) {
             addToGx2fSums<3>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState);
+                             trackState, *m_addToSumLogger);
           } else if (measDim == 4) {
             addToGx2fSums<4>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState);
+                             trackState, *m_addToSumLogger);
           } else if (measDim == 5) {
             addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState);
+                             trackState, *m_addToSumLogger);
           } else if (measDim == 6) {
             addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState);
+                             trackState, *m_addToSumLogger);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
                        << measDim << " dimensions.")
