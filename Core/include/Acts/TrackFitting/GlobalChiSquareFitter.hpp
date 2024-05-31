@@ -236,6 +236,7 @@ struct Gx2FitterResult {
 /// @param chi2sum The total chi2 of the system
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
+/// @param logger A logger instance
 template <std::size_t kMeasDim, typename track_state_t>
 void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
