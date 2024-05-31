@@ -18,11 +18,9 @@
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
-using namespace UnitLiterals;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
@@ -77,5 +75,4 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
                   1e-5);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

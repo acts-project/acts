@@ -27,10 +27,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
-namespace Layers {
+namespace Acts::Test::Layers {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -158,7 +155,5 @@ Extent in space :
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test::Layers

@@ -31,17 +31,17 @@
 #include <boost/hana/union.hpp>
 
 namespace hana = boost::hana;
-namespace Acts {
-namespace detail {
+
+namespace Acts::detail {
 template <bool ascending, bool strict, typename T, T... values>
 struct are_sorted;
 template <typename T, T MIN, T MAX, T... values>
 struct are_within;
 template <typename T, std::size_t index, T... values>
 struct at_index;
-}  // namespace detail
+}  // namespace Acts::detail
 
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(all_of_test) {
   using detail::all_of_v;
@@ -291,6 +291,5 @@ BOOST_AUTO_TEST_CASE(at_index_helper_tests) {
   BOOST_CHECK_EQUAL((at_index<int, 3, 10, 1, 3, 7, 2>::value), 7);
   BOOST_CHECK_EQUAL((at_index<int, 4, 10, 1, 3, 7, 2>::value), 2);
 }
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test

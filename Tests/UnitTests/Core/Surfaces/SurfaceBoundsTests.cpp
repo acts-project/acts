@@ -58,7 +58,9 @@ class SurfaceBoundsStub : public SurfaceBounds {
   std::vector<double> m_values;
 };
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
@@ -92,6 +94,4 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

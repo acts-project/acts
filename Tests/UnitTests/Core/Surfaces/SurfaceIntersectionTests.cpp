@@ -25,9 +25,9 @@
 #include <memory>
 #include <utility>
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
-using namespace UnitLiterals;
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -36,8 +36,6 @@ GeometryContext tgContext = GeometryContext();
 Transform3 aTransform = Transform3::Identity() *
                         Translation3(30_cm, 7_m, -87_mm) *
                         AngleAxis3(0.42, Vector3(-3., 1., 8).normalized());
-
-namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -434,6 +432,4 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test
