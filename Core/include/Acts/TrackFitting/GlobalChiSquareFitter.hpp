@@ -246,7 +246,8 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   auto covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
   auto projector =
-      trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
+      (trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>())
+          .eval();
 
   auto projJacobian = (projector * jacobianFromStart).eval();
   auto projPredicted = (projector * predicted).eval();
@@ -260,9 +261,9 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                << "covarianceMeasurement:\n"
                << covarianceMeasurement << "\n"
                << "projector:\n"
-               << projector.eval() << "\n"
+               << projector << "\n"
                << "projJacobian:\n"
-               << projJacobian.eval() << "\n"
+               << projJacobian << "\n"
                << "projPredicted: " << projPredicted.transpose() << "\n"
                << "residual: " << residual.transpose());
 
