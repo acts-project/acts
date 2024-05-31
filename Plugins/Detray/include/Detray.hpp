@@ -14,15 +14,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-//#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
-
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -36,7 +33,6 @@
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
 #include "detray/io/frontend/implementation/json_readers.hpp"
-#include "detray/io/frontend/utils/detector_components_reader.hpp"
 
 #include "detray/io/common/geometry_reader.hpp"
 #include "detray/io/common/geometry_writer.hpp"
@@ -205,7 +201,7 @@ namespace DetrayConverter{
         std::vector<io::surface_payload> portals {};
 
         const RegularSurface& surface = portal.surface();
-        const auto& volumeLinks = portal.detectorVolumeUpdaters();
+        const auto& volumeLinks = portal.portalNavigation();
 
         // First assumption for outside link (along direction)
         std::size_t outside = 1u;
@@ -235,7 +231,7 @@ namespace DetrayConverter{
         const auto* instance = outsideLink.instance();
         // Single link cast
         auto singleLink =
-            dynamic_cast<const Acts::Experimental::SingleDetectorVolumeImpl*>(
+            dynamic_cast<const Acts::Experimental::SingleDetectorVolumeNavigation*>(
                 instance);
 
         auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
@@ -246,14 +242,14 @@ namespace DetrayConverter{
         // in order to make sure the size is adjusted
         if (singleLink != nullptr) {
             // Single link can be written out
-            std::size_t vLink = findVolume(singleLink->dVolume, detectorVolumes);
+            std::size_t vLink = findVolume(singleLink->object(), detectorVolumes);
             auto portal_pd = convertSurface(*surfaceAdjusted, gctx, surfaceOptions);
             portal_pd.mask.volume_link.link= vLink;
             portals.push_back(portal_pd);
         } else {
             // Multi link detected - 1D
             auto multiLink1D =
-                dynamic_cast<const Experimental::BoundVolumesGrid1Impl*>(instance);
+                dynamic_cast<const Experimental::BoundVolumesGrid1Navigation*>(instance);
             if (multiLink1D != nullptr) {
             // Resolve the multi link 1D
             auto boundaries =
