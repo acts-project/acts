@@ -803,7 +803,6 @@ class Gx2Fitter {
           if (measDim == 1) {
             addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
-
           } else if (measDim == 2) {
             addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
@@ -973,9 +972,17 @@ class Gx2Fitter {
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
 
+    std::cout << "QPDATAOUTMEASUREMENTSSIZE " << track.nMeasurements()
+              << std::endl;
+
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
     track.chi2() = chi2sum;
+
+    if (track.nMeasurements() == 0) {
+      ACTS_ERROR("DEBUG - somehow the track has zero measurements");
+      return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+    }
 
     // Return the converted Track
     return track;
