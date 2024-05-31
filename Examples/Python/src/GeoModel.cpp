@@ -136,12 +136,20 @@ void addGeoModel(Context& ctx) {
             .def("create", &Acts::GeoModelBlueprintCreater::create);
 
     py::class_<Acts::GeoModelBlueprintCreater::Config>(bpc, "Config")
-        .def(py::init<>());
+        .def(py::init<>())
+        .def_readwrite(
+            "detectorSurfaces",
+            &Acts::GeoModelBlueprintCreater::Config::detectorSurfaces)
+        .def_readwrite("kdtBinning",
+                       &Acts::GeoModelBlueprintCreater::Config::kdtBinning);
 
     py::class_<Acts::GeoModelBlueprintCreater::Options>(bpc, "Options")
         .def(py::init<>())
         .def_readwrite("topEntry",
                        &Acts::GeoModelBlueprintCreater::Options::topEntry)
+        .def_readwrite(
+            "topBoundsOverride",
+            &Acts::GeoModelBlueprintCreater::Options::topBoundsOverride)
         .def_readwrite("table",
                        &Acts::GeoModelBlueprintCreater::Options::table);
   }

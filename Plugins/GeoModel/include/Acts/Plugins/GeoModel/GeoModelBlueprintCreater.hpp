@@ -9,13 +9,17 @@
 #pragma once
 
 #include "Acts/Detector/Blueprint.hpp"
+#include "Acts/Detector/KdtSurfacesProvider.hpp"
+#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -27,7 +31,21 @@ struct GeoModelTree;
 class GeoModelBlueprintCreater {
  public:
   /// The configuration struct
-  struct Config {};
+  struct Config {
+    /// The detector surfaces - leave empty if filling is not done
+    /// with a kdtree sorting structure
+    std::vector<std::shared_ptr<Surface>> detectorSurfaces = {};
+    /// The binning values - see above
+    std::vector<BinningValue> kdtBinning = {};
+    /// Polyhedron approximations
+    unsigned int nSegments = 1u;
+  };
+
+  /// The cache struct
+  struct Cache {
+    /// The kdtree of surfaces
+    std::shared_ptr<Experimental::KdtSurfaces<3u>> kdtSurfaces = nullptr;
+  };
 
   /// The Options struct
   struct Options {
@@ -36,7 +54,7 @@ class GeoModelBlueprintCreater {
     /// The top level node name
     std::string topEntry;
     /// Optionally override the top node bounds
-    std::vector<ActsScalar> topNodeBounds;
+    std::string topBoundsOverride = "";
   };
 
   /// The Blueprint return object
@@ -88,32 +106,55 @@ class GeoModelBlueprintCreater {
  private:
   /// Create a blueprint node from a table entry
   ///
+  /// @param cache the cache object
+  /// @param gctx the geometry context
   /// @param entry the table entry
   /// @param tableEntryMap the map of table entries allows construction of children
-  /// @param motherExtent the raw extent of the mother
+  /// @param externalExtent an extent given from external parameters (e.g. mother volume)
   ///
   /// @return a newly created node
   std::unique_ptr<Experimental::Blueprint::Node> createNode(
-      const TableEntry& entry,
+      Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
       const std::map<std::string, TableEntry>& tableEntryMap,
-      const Extent& motherExtent = Extent()) const;
+      const Extent& externalExtent = Extent()) const;
+
+  /// Create an IInternalStructureBuilder
+  ///
+  /// @param cache the cache object
+  /// @param gctx the geometry context
+  /// @param entry the teable entry map
+  /// @param externalExtent an extent given from external parameters (e.g. confining volume)
+  /// @param interalContstraints a set of binning values to be estimated
+  ///
+  /// @return a newly created IInternalStructureBuilder and the internal extent from it
+  std::tuple<std::shared_ptr<const Experimental::IInternalStructureBuilder>,
+             Extent>
+  createInternalStructureBuilder(
+      Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
+      const Extent& externalExtent = Extent(),
+      const std::vector<BinningValue>& internalConstraints = {}) const;
 
   /// @brief Parse bound value string from the database
   ///
   /// @param boundsEntry in the database
   /// @param rawValuesMother the raw bound values of the mother
-  /// @param motherExtent the raw extent of the mother
+  /// @param externalExtent the extend from external constraints (marked "e" in the database)
+  /// @param internalExtent the extend of the internal objects (marked "i" in the database)
   ///
   /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
   std::tuple<VolumeBounds::BoundsType, Extent, std::vector<ActsScalar>, Vector3>
   parseBounds(const std::vector<std::string>& boundsEntry,
-              const Extent& motherExtent) const;
-
-  /// Logging instance
-  std::unique_ptr<const Logger> m_logger;
+              const Extent& externalExtent = Extent(),
+              const Extent& internalExtant = Extent()) const;
 
   /// Private access to the logger
   const Logger& logger() const { return *m_logger; }
+
+  /// The configuration
+  Config m_cfg;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts

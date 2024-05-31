@@ -72,10 +72,10 @@ if "__main__" == __name__:
     # Inner Pixels sections - IP
     IP_r_min = BP_r_max
     IP_r_max = 124.
-    IP_z_mid = 245.
-
     IP_b_z_max = 255.
    
+    IP_iec_z_max = 1100.
+
     IP_coupled_rings_bins_r = 2 
     IP_coupled_rings_bins_phi = 20 
 
@@ -125,7 +125,7 @@ if "__main__" == __name__:
             (36, 
             'leaf', 
             'ITk/NegSector', 
-            'cyl;i,i,-{ITk_z_max},-{ITK_central_z_max}',
+            'cyl;e,e,-{ITk_z_max},-{ITK_central_z_max}',
             '',
             '',
             '')
@@ -137,7 +137,7 @@ if "__main__" == __name__:
             (35, 
             'container', 
             'ITk/Central', 
-            'cyl;i,i,-{ITK_central_z_max},{ITK_central_z_max}',
+            'cyl;e,e,-{ITK_central_z_max},{ITK_central_z_max}',
             'children;BeamPipe,Detectors,Outer',
             'r', 
             '')
@@ -149,7 +149,7 @@ if "__main__" == __name__:
             (33, 
             'leaf', 
             'ITk/PosSector',
-            'cyl;,i,i,{ITK_central_z_max},{ITk_z_max}',
+            'cyl;,e,e,{ITK_central_z_max},{ITk_z_max}',
             '',
             '', 
             '')
@@ -162,7 +162,7 @@ if "__main__" == __name__:
             (0, 
             'leaf',
             'ITk/Central/BeamPipe',
-            'cyl;i,{BP_r_max},i,i',
+            'cyl;e,{BP_r_max},e,e',
             '',
             '', 
             '')
@@ -175,7 +175,7 @@ if "__main__" == __name__:
             (32, 
             'container',
             'ITk/Central/Detectors',
-            'cyl;{IP_r_min},{ITk_central_r_max},i,i',
+            'cyl;{IP_r_min},{ITk_central_r_max},e,e',
             'children;Pixels,Strips',
             'r', 
             '')
@@ -187,7 +187,7 @@ if "__main__" == __name__:
             (34, 
             'leaf', 
             'ITk/Central/Outer', 
-            'cyl;{ITk_central_r_max},i,i,i',
+            'cyl;{ITk_central_r_max},e,e,e',
             '',
             '',
             '')
@@ -199,7 +199,7 @@ if "__main__" == __name__:
             (30, 
             'container',
             'ITk/Central/Detectors/Pixels',
-            'cyl;i,{P_r_max},i,i',
+            'cyl;e,{P_r_max},e,e',
             'children;InnerPixels,OuterPixels',
             'r',
             '')
@@ -211,7 +211,7 @@ if "__main__" == __name__:
             (31, 
             'container',
             'ITk/Central/Detectors/Strips',
-            'cyl;{S_r_min},i,i,i',
+            'cyl;{S_r_min},e,e,e',
             'children;NegSector,Barrel,PosSector',
             'z', 
             '')
@@ -223,8 +223,8 @@ if "__main__" == __name__:
             (20, 
             'container',
             'ITk/Central/Detectors/Pixels/InnerPixels',
-            'cyl;i,{IP_r_max},i,i',
-            'children;NegEndcap,Barrel,PosEndcap',
+            'cyl;e,{IP_r_max},e,e',
+            'children;NegOuterEndcap,NegInnerEndcap,Barrel,PosInnerEndcap,PosOuterEndcap',
             'z',
             '')
     """
@@ -235,7 +235,7 @@ if "__main__" == __name__:
             (25, 
             'container',
             'ITk/Central/Detectors/Pixels/OuterPixels',
-            'cyl;{OP_r_min},i,i,i',
+            'cyl;{OP_r_min},e,e,e',
             'children;NegEndcap,NegInclined,Barrel,PosInclined,PosEndcap',
             'z',
             '')
@@ -247,7 +247,7 @@ if "__main__" == __name__:
             (27,
             'container',
             'ITk/Central/Detectors/Strips/NegSector',
-            'cyl;i,i,i,-{S_z_mid}',
+            'cyl;e,e,e,-{S_z_mid}',
             'children;NegEndcap,OuterGap',
             'r', 
             '')
@@ -260,7 +260,7 @@ if "__main__" == __name__:
             (18,
             'leaf',
             'ITk/Central/Detectors/Strips/Barrel',
-            'cyl;i,i,-{S_z_mid},{S_z_mid}',
+            'cyl;e,e,-{S_z_mid},{S_z_mid}',
             '',
             '', 
             '')
@@ -273,7 +273,7 @@ if "__main__" == __name__:
             (29,
             'container',
             'ITk/Central/Detectors/Strips/PosSector',
-            'cyl;i,i,{S_z_mid},i',
+            'cyl;e,e,{S_z_mid},e',
             'children;PosEndcap,OuterGap',
             'r', '')
     """
@@ -285,7 +285,7 @@ if "__main__" == __name__:
             (17,
             'leaf',
             'ITk/Central/Detectors/Strips/NegSector/NegEndcap',
-            'cyl;i,{S_ec_r_max},i,i',
+            'cyl;e,{S_ec_r_max},e,e',
             '',
             '',
             '')
@@ -298,7 +298,7 @@ if "__main__" == __name__:
             (26,
             'leaf',
             'ITk/Central/Detectors/Strips/NegSector/OuterGap',
-            'cyl;{S_ec_r_max},i,i,i',
+            'cyl;{S_ec_r_max},e,e,e',
             '',
             '',
             '')
@@ -311,7 +311,7 @@ if "__main__" == __name__:
             (19,
             'leaf',
             'ITk/Central/Detectors/Strips/PosSector/PosEndcap', 
-            'cyl;i,{S_ec_r_max},i,i',
+            'cyl;e,{S_ec_r_max},e,e',
             '',
             '',
             '')
@@ -324,7 +324,7 @@ if "__main__" == __name__:
             (28,
             'leaf',
             'ITk/Central/Detectors/Strips/PosSector/OuterGap',
-            'cyl;{S_ec_r_max},i,i,i',
+            'cyl;{S_ec_r_max},e,e,e',
             '',
             '', '')
     """
@@ -336,7 +336,7 @@ if "__main__" == __name__:
             (21, 
             'container', 
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap', 
-            'cyl;i,i,i,-{OP_incl_z_max}',
+            'cyl;e,e,e,-{OP_incl_z_max}',
             'children;Ring0,Ring1,Ring2',
             'r', 
             '')
@@ -349,7 +349,7 @@ if "__main__" == __name__:
             (22, 
             'container', 
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined',
-            'cyl;i,i,-{OP_incl_z_max},-{OP_b_z_max}',
+            'cyl;e,e,-{OP_incl_z_max},-{OP_b_z_max}',
             'children;Ring0,Ring1,Ring2',
             'r', 
             '')
@@ -362,7 +362,7 @@ if "__main__" == __name__:
             (10, 
             'leaf', 
             'ITk/Central/Detectors/Pixels/OuterPixels/Barrel',
-            'cyl;i,i,-{OP_b_z_max},{OP_b_z_max}',
+            'cyl;e,e,-{OP_b_z_max},{OP_b_z_max}',
             '',
             '',
             '')
@@ -375,7 +375,7 @@ if "__main__" == __name__:
             (23, 
             'container', 
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined',
-            'cyl;i,i,{OP_b_z_max},{OP_incl_z_max}',
+            'cyl;e,e,{OP_b_z_max},{OP_incl_z_max}',
             'children;Ring0,Ring1,Ring2',
             'r', 
             '')
@@ -388,7 +388,7 @@ if "__main__" == __name__:
             (24, 
             'container',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap',
-            'cyl;i,i,{OP_incl_z_max},i',
+            'cyl;e,e,{OP_incl_z_max},e',
             'children;Ring0,Ring1,Ring2',
             'r',
             '')
@@ -401,7 +401,7 @@ if "__main__" == __name__:
             (4,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring0', 
-            'cyl;i,{OP_ring0_r_max},i,i',
+            'cyl;e,{OP_ring0_r_max},e,e',
             '',
             '',
             '')
@@ -414,7 +414,7 @@ if "__main__" == __name__:
             (5,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1',
-            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},i,i',
+            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '',
             '',
             '')
@@ -427,7 +427,7 @@ if "__main__" == __name__:
             (6, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring2',
-            'cyl;{OP_ring1_r_max},i,i,i',
+            'cyl;{OP_ring1_r_max},e,e,e',
             '',
             '', 
             '')
@@ -440,7 +440,7 @@ if "__main__" == __name__:
             (7, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0',
-            'cyl;i,{OP_ring0_r_max},i,i',
+            'cyl;e,{OP_ring0_r_max},e,e',
             '',
             '', 
             '')
@@ -453,7 +453,7 @@ if "__main__" == __name__:
             (8,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring1',
-            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},i,i',
+            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '',
             '', 
             '')
@@ -466,7 +466,7 @@ if "__main__" == __name__:
             (9,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring2',
-            'cyl;{OP_ring1_r_max},i,i,i',
+            'cyl;{OP_ring1_r_max},e,e,e',
             '',
             '',
             '')
@@ -479,7 +479,7 @@ if "__main__" == __name__:
             (11,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring0',
-            'cyl;i,{OP_ring0_r_max},i,i',
+            'cyl;e,{OP_ring0_r_max},e,e',
             '',
             '',
             '')
@@ -492,7 +492,7 @@ if "__main__" == __name__:
             (12,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring1',
-            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},i,i',
+            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '',
             '',
             '')
@@ -505,7 +505,7 @@ if "__main__" == __name__:
             (13, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring2',
-            'cyl;{OP_ring1_r_max},i,i,i',
+            'cyl;{OP_ring1_r_max},e,e,e',
             '',
             '', 
             '')
@@ -518,7 +518,7 @@ if "__main__" == __name__:
             (14, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0',
-            'cyl;i,{OP_ring0_r_max},i,i',
+            'cyl;e,{OP_ring0_r_max},e,e',
             '',
             '', 
             '')
@@ -531,7 +531,7 @@ if "__main__" == __name__:
             (15,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring1',
-            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},i,i',
+            'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '',
             '', 
             '')
@@ -544,7 +544,7 @@ if "__main__" == __name__:
             (16,
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring2',
-            'cyl;{OP_ring1_r_max},i,i,i',
+            'cyl;{OP_ring1_r_max},e,e,e',
             '',
             '',
             '')
@@ -555,8 +555,8 @@ if "__main__" == __name__:
     INSERT INTO Blueprint VALUES
             (1, 
             'leaf',
-            'ITk/Central/Detectors/Pixels/InnerPixels/NegEndcap',
-            'cyl;i,i,i,-{IP_b_z_max}',
+            'ITk/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap',
+            'cyl;e,e,e,-{IP_iec_z_max}',
             '',
             '', 
             '')
@@ -566,23 +566,24 @@ if "__main__" == __name__:
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (2,
-            'container',
-            'ITk/Central/Detectors/Pixels/InnerPixels/Barrel',
-            'cyl;i,i,-{OP_ring1_r_max},{IP_b_z_max}',
-            'children;Layer0,Layer1,Layer2,Layer3',
-            'r', 
+            (1, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap',
+            'cyl;e,e,-{IP_iec_z_max},-{IP_b_z_max}',
+            '',
+            '', 
             '')
     """
     )
 
+
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (200,
+            (2,
             'container',
             'ITk/Central/Detectors/Pixels/InnerPixels/Barrel',
-            'cyl;i,i,-{OP_ring1_r_max},{IP_b_z_max}',
+            'cyl;e,e,-{IP_b_z_max},{IP_b_z_max}',
             'children;Layer0,*,Layer1,*',
             'r', 
             '')
@@ -595,8 +596,8 @@ if "__main__" == __name__:
             (201,
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/Barrel/Layer0',
-            'cyl;i,30,i,i',
-            'sensitives;kdt;i,30,i,i',
+            'cyl;e,i+2,e,e',
+            'layer;kdt;cyl;e,50,e,e',
             '', 
             '')
     """
@@ -608,8 +609,8 @@ if "__main__" == __name__:
             (202,
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/Barrel/Layer1',
-            'cyl;80,120,i,i',
-            'sensitives;kdt;80,120,i,i',
+            'cyl;i+2,i+2,e,e',
+            'layer;kdt;cyl;80,120,e,e',
             '', 
             '')
     """
@@ -618,10 +619,23 @@ if "__main__" == __name__:
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (3, 
+            (103, 
             'leaf',
-            'ITk/Central/Detectors/Pixels/InnerPixels/PosEndcap',
-            'cyl;i,i,{OP_ring1_r_max},i',
+            'ITk/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap',
+            'cyl;e,e,{IP_b_z_max},{IP_iec_z_max}',
+            '',
+            '',
+            '')
+    """
+    )
+
+    cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            (104, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap',
+            'cyl;e,e,{IP_iec_z_max},e',
             '',
             '',
             '')

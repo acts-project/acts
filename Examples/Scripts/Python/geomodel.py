@@ -17,6 +17,8 @@ def main():
 
     p.add_argument("-i", "--input", type=str, default="", help="Input SQL file")
 
+    p.add_argument("-o", "--output", type=str, default="GeoModel", help="Output file(s) base name")
+
     p.add_argument(
         "-q",
         "--queries",
@@ -39,6 +41,14 @@ def main():
         type=str,
         default="",
         help="Name of the top node in the blueprint tree",
+    )
+
+    p.add_argument(
+        "-b",
+        "--top-node-bounds",
+        type=str,
+        default="",
+        help="Table entry string overriding the top node bounds",
     )
 
     p.add_argument(
@@ -76,11 +86,19 @@ def main():
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
     gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
+    # All surfaces from GeoModel
+    gmSurfaces = [ ss[1] for ss in gmFactoryCache.sensitiveSurfaces ]
+
     # Construct the building hierarchy
     gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
+    gmBlueprintConfig.detectorSurfaces = gmSurfaces
+    gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
+
     gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
     gmBlueprintOptions.table = args.table_name
     gmBlueprintOptions.topEntry = args.top_node
+    if len(args.top_node_bounds) > 0:
+        gmBlueprintOptions.topBoundsOverride = args.top_node_bounds
 
     gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logging.VERBOSE)
     gmBlueprint = gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
@@ -119,15 +137,15 @@ def main():
         volumeOptions.surfaceOptions = surfaceOptions
 
         xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
-        zrRange = acts.Extent([[acts.Binning.phi, [-0.1, 0.1]]])
+        zrRange = acts.Extent([[acts.Binning.phi, [-0.5, 0.5]]])
 
         acts.svg.viewDetector(
             gContext,
             detector,
             args.top_node,
             [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
-            [["xy", ["sensitives"], xyRange], ["zr", [ "sensitives", "portals", "materials"], zrRange]],
-            args.top_node + "_detector",
+            [["xy", ["sensitives", "portals"], xyRange], ["zr", [ "sensitives", "portals", "materials"], zrRange]],
+            args.output + "_detector",
         )
 
 
@@ -136,7 +154,7 @@ def main():
         segments = 720
         ssurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
         acts.examples.writeSurfacesObj(
-            ssurfaces, gContext, [75, 220, 100], segments, "geomodel.obj"
+            ssurfaces, gContext, [75, 220, 100], segments, args.output+"_sensitives.obj"
         )
 
     return

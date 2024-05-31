@@ -85,8 +85,8 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
     std::vector<ProtoBinning> binnings = {};
-    /// Optional extent (if already parsed), will trigger binning autorange
-    /// check
+    /// Optional extent (if already parsed),
+    /// will trigger binning autorange check
     std::optional<Extent> extent = std::nullopt;
     /// Minimum number of surfaces to build an internal structure
     /// - otherwise the tryAll options is used
