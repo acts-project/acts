@@ -261,24 +261,31 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
         projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian;
     bVector += residual.transpose() * (*safeInvCovMeasurement) * projJacobian;
 
-//    ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
-//                 << "kMeasDim: " << kMeasDim << "\n"
-//                 << "aMatrixMeas:\n"
-//                 << aMatrix << "\n"
-//                 << "bVectorMeas:\n"
-//                 << bVector << "\n"
-//                 << "chi2sumMeas: " << chi2sum);
+    //    ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
+    //                 << "kMeasDim: " << kMeasDim << "\n"
+    //                 << "aMatrixMeas:\n"
+    //                 << aMatrix << "\n"
+    //                 << "bVectorMeas:\n"
+    //                 << bVector << "\n"
+    //                 << "chi2sumMeas: " << chi2sum);
 
-    std::cout << "\nContributions in addToGx2fSums:\n"
-                 << "kMeasDim: " << kMeasDim << "\n"
-              << "measurement: " << measurement.transpose() << "\n"
-              << "projPredicted: " << projPredicted.transpose() << "\n"
-              << "residual: " << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian) << "\n"
-              << "covarianceMeasurement:\n" << covarianceMeasurement << "\n"
-                 << "aMatrixMeas:\n"
-                 << projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian << "\n"
-                 << "bVectorMeas: " << bVector.transpose() << "\n"
-                 << "chi2sumMeas: " << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0) << std::endl;
+    std::cout
+        << "\nContributions in addToGx2fSums:\n"
+        << "kMeasDim: " << kMeasDim << "\n"
+        << "measurement: " << measurement.transpose() << "\n"
+        << "projPredicted: " << projPredicted.transpose() << "\n"
+        << "residual: "
+        << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
+        << "\n"
+        << "covarianceMeasurement:\n"
+        << covarianceMeasurement << "\n"
+        << "aMatrixMeas:\n"
+        << projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian
+        << "\n"
+        << "bVectorMeas: " << bVector.transpose() << "\n"
+        << "chi2sumMeas: "
+        << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
+        << std::endl;
   } else {
     std::cout << "\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻" << std::endl;
     std::cout << "Contributions in addToGx2fSums:\n"
@@ -286,7 +293,8 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
               << "measurement: " << measurement.transpose() << "\n"
               << "projPredicted: " << projPredicted.transpose() << "\n"
               << "residual: " << residual.transpose()
-              << "covarianceMeasurement:\n" << covarianceMeasurement << std::endl;
+              << "covarianceMeasurement:\n"
+              << covarianceMeasurement << std::endl;
   }
 }
 
@@ -821,19 +829,6 @@ class Gx2Fitter {
           ACTS_ERROR("Unknown state encountered")
         }
         /// Missing: Material handling. Should be there for hole and measurement
-
-        // calculate delta params [a] * delta = b
-        deltaParams =
-            calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
-
-        ACTS_VERBOSE("aMatrix:\n"
-                     << aMatrix << "\n"
-                     << "bVector:\n"
-                     << bVector << "\n"
-                     << "deltaParams:\n"
-                     << deltaParams << "\n"
-                     << "oldChi2sum = " << oldChi2sum << "\n"
-                     << "chi2sum = " << chi2sum);
       }
 
       // This check takes into account the evaluated dimensions of the
@@ -855,6 +850,19 @@ class Gx2Fitter {
                   << ndf + 1 << ", but only " << countNdf << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
+
+      // calculate delta params [a] * delta = b
+      deltaParams =
+          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+
+      ACTS_VERBOSE("aMatrix:\n"
+                   << aMatrix << "\n"
+                   << "bVector:\n"
+                   << bVector << "\n"
+                   << "deltaParams:\n"
+                   << deltaParams << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << chi2sum);
 
       tipIndex = gx2fResult.lastMeasurementIndex;
 
