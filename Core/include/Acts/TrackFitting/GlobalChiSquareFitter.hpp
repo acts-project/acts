@@ -261,7 +261,7 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
         projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian;
     bVector += residual.transpose() * (*safeInvCovMeasurement) * projJacobian;
   }
-};
+}
 
 BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
                                  const BoundVector& bVector);
