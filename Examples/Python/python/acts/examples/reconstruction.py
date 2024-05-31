@@ -544,6 +544,15 @@ def addSpacePointsMaking(
         ),
     )
     sequence.addAlgorithm(spAlg)
+
+    sequence.addWriter(
+        acts.examples.CsvSpacePointWriter(
+            level=logLevel,
+            inputSpacepoints=spAlg.config.outputSpacePoints,
+            outputDir="odd_output",
+        )
+    )
+
     return spAlg.config.outputSpacePoints
 
 

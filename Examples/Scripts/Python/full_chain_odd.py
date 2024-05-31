@@ -219,7 +219,7 @@ addDigitization(
     field,
     digiConfigFile=oddDigiConfig,
     outputDirRoot=outputDir,
-    # outputDirCsv=outputDir,
+    outputDirCsv=outputDir,
     rnd=rnd,
 )
 
