@@ -260,6 +260,31 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
     aMatrix +=
         projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian;
     bVector += residual.transpose() * (*safeInvCovMeasurement) * projJacobian;
+
+//    ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
+//                 << "kMeasDim: " << kMeasDim << "\n"
+//                 << "aMatrixMeas:\n"
+//                 << aMatrix << "\n"
+//                 << "bVectorMeas:\n"
+//                 << bVector << "\n"
+//                 << "chi2sumMeas: " << chi2sum);
+
+    std::cout << "\nContributions in addToGx2fSums:\n"
+                 << "kMeasDim: " << kMeasDim << "\n"
+              << "measurement: " << measurement.transpose() << "\n"
+              << "projPredicted: " << projPredicted.transpose() << "\n"
+              << "residual: " << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).transpose() << "\n"
+                 << "aMatrixMeas:\n"
+                 << projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian << "\n"
+                 << "bVectorMeas: " << bVector.transpose() << "\n"
+                 << "chi2sumMeas: " << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0) << std::endl;
+  } else {
+    std::cout << "\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻" << std::endl;
+    std::cout << "Contributions in addToGx2fSums:\n"
+              << "kMeasDim: " << kMeasDim << "\n"
+              << "measurement: " << measurement.transpose() << "\n"
+              << "projPredicted: " << projPredicted.transpose() << "\n"
+              << "residual: " << residual.transpose() << std::endl;
   }
 }
 
