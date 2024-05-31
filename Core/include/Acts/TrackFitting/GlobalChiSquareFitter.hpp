@@ -219,76 +219,23 @@ struct Gx2FitterResult {
 
   Result<void> result{Result<void>::success()};
 
-  // collectors
-  std::vector<ActsScalar> collectorResiduals;
-  std::vector<ActsScalar> collectorCovariances;
-  std::vector<BoundVector> collectorProjectedJacobians;
-
-  BoundMatrix jacobianFromStart = BoundMatrix::Identity();
-
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
 };
 
-/// Collector for the GX2F Actor
-/// The collector prepares each measurement for the actual fitting process. Each
-/// n-dimensional measurement is split into n 1-dimensional linearly independent
-/// measurements. Then the collector saves the following information:
-/// - Residual: Calculated from measurement and prediction
-/// - Covariance: The covariance of the measurement
-/// - Projected Jacobian: This implicitly contains the measurement type
-/// It also checks if the covariance is above a threshold, to detect and avoid
-/// too small covariances for a stable fit.
+/// addToGx2fSums Function
+/// The function processes each measurement for the GX2F Actor fitting process.
+/// It extracts the information from the track state and adds it to aMatrix,
+/// bVector, and chi2sum.
 ///
-/// @tparam measDim Number of dimensions of the measurement
-/// @tparam traj_t The trajectory type
+/// @tparam kMeasDim Number of dimensions of the measurement
+/// @tparam track_state_t The type of the track state
 ///
-/// @param trackStateProxy is the track state proxy
-/// @param result is the mutable result/cache object
-/// @param logger a logger instance
-template <std::size_t measDim, typename traj_t>
-void collector(const typename traj_t::ConstTrackStateProxy& trackStateProxy,
-               Gx2FitterResult<traj_t>& result, const Logger& logger) {
-  auto predicted = trackStateProxy.predicted();
-  auto measurement = trackStateProxy.template calibrated<measDim>();
-  auto covarianceMeasurement =
-      trackStateProxy.template calibratedCovariance<measDim>();
-  // Project Jacobian and predicted measurements into the measurement dimensions
-  auto projJacobian = (trackStateProxy.projector()
-                           .template topLeftCorner<measDim, eBoundSize>() *
-                       result.jacobianFromStart)
-                          .eval();
-  auto projPredicted = (trackStateProxy.projector()
-                            .template topLeftCorner<measDim, eBoundSize>() *
-                        predicted)
-                           .eval();
-
-  ACTS_VERBOSE("Processing and collecting measurements in Actor:"
-               << "\n    Measurement:\t" << measurement.transpose()
-               << "\n    Predicted:\t" << predicted.transpose()
-               << "\n    Projector:\t" << trackStateProxy.effectiveProjector()
-               << "\n    Projected Jacobian:\t" << projJacobian
-               << "\n    Covariance Measurements:\t" << covarianceMeasurement);
-
-  // Collect residuals, covariances, and projected jacobians
-  for (std::size_t i = 0; i < measDim; i++) {
-    if (covarianceMeasurement(i, i) < 1e-10) {
-      ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
-                                                             << ") ~ 0")
-      continue;
-    }
-
-    result.collectorResiduals.push_back(measurement[i] - projPredicted[i]);
-    result.collectorCovariances.push_back(covarianceMeasurement(i, i));
-    result.collectorProjectedJacobians.push_back(projJacobian.row(i));
-
-    ACTS_VERBOSE("    Splitting the measurement:"
-                 << "\n        Residual:\t" << measurement[i] - projPredicted[i]
-                 << "\n        Covariance:\t" << covarianceMeasurement(i, i)
-                 << "\n        Projected Jacobian:\t" << projJacobian.row(i));
-  }
-}
-
+/// @param aMatrix The aMatrix sums over the second derivatives
+/// @param bVector The bVector sums over the first derivatives
+/// @param chi2sum The total chi2 of the system
+/// @param jacobianFromStart The Jacobian matrix from start to the current state
+/// @param trackState The track state to analyse
 template <std::size_t kMeasDim, typename track_state_t>
 void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
@@ -305,33 +252,15 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
 
   auto residual = measurement - projPredicted;
 
-  auto safeInverseCovarianceMeasurement =
-      safeInverse(covarianceMeasurement.eval());
+  auto safeInvCovMeasurement = safeInverse(covarianceMeasurement.eval());
 
-  if (!safeInverseCovarianceMeasurement) {
-    // ACTS_ERROR("non-invertible covariance\n" << covarianceMeasurement);
+  if (safeInvCovMeasurement) {
+    chi2sum +=
+        (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
+    aMatrix +=
+        projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian;
+    bVector += residual.transpose() * (*safeInvCovMeasurement) * projJacobian;
   }
-
-  const double chi2meas =
-      (residual.transpose() * (*safeInverseCovarianceMeasurement) * residual)(
-          0, 0);
-  const BoundMatrix aMatrixMeas = projJacobian.transpose() *
-                                  (*safeInverseCovarianceMeasurement) *
-                                  projJacobian;
-  const BoundVector bVectorMeas =
-      residual.transpose() * (*safeInverseCovarianceMeasurement) * projJacobian;
-
-  chi2sum += chi2meas;
-  aMatrix += aMatrixMeas;
-  bVector += bVectorMeas;
-
-  //  ACTS_VERBOSE("LOOPING Processing and collecting measurements in Actor:"
-  //               << "\n    measDim:\t" << measDim
-  //               << "\n    Predicted:\t" << predicted.transpose()
-  //               << "\n    Measurement:\t" << measurement.transpose()
-  //               << "\n    Covariance Measurements:\t\n" << covarianceMeasurement
-  //               << "\n    effectiveProjector:\t\n" << trackState.effectiveProjector()
-  //               << "\n    Projector:\t\n" << projector);
 };
 
 BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
@@ -534,24 +463,6 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
             typeFlags.set(TrackStateFlag::MaterialFlag);
-          }
-
-          result.jacobianFromStart =
-              trackStateProxy.jacobian() * result.jacobianFromStart;
-
-          // Collect:
-          // - Residuals
-          // - Covariances
-          // - ProjectedJacobians
-          if (trackStateProxy.calibratedSize() == 1) {
-            collector<1>(trackStateProxy, result, *actorLogger);
-          } else if (trackStateProxy.calibratedSize() == 2) {
-            collector<2>(trackStateProxy, result, *actorLogger);
-          } else {
-            ACTS_WARNING("Found measurement with "
-                         << trackStateProxy.calibratedSize()
-                         << " dimensions. Only measurements of 1 and 2 "
-                            "dimensions are implemented yet.");
           }
 
           // Set the measurement type flag
@@ -884,13 +795,6 @@ class Gx2Fitter {
                      << "oldChi2sum = " << oldChi2sum << "\n"
                      << "chi2sum = " << chi2sum);
       }
-
-      ACTS_VERBOSE("gx2fResult.collectorResiduals.size() = "
-                   << gx2fResult.collectorResiduals.size());
-      ACTS_VERBOSE("gx2fResult.collectorCovariances.size() = "
-                   << gx2fResult.collectorCovariances.size());
-      ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
-                   << gx2fResult.collectorProjectedJacobians.size());
 
       // This check takes into account the evaluated dimensions of the
       // measurements. To fit, we need at least NDF+1 measurements. However,
