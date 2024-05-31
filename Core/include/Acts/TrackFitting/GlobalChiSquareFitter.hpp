@@ -755,8 +755,6 @@ class Gx2Fitter {
       BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
       for (const auto& trackState : track.trackStates()) {
-        std::cout << "LOOPING THROUGH TRACK" << std::endl;
-
         auto typeFlags = trackState.typeFlags();
         if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           /// Handle measurement
@@ -773,10 +771,25 @@ class Gx2Fitter {
           } else if (measDim == 2) {
             addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState);
+          } else if (measDim == 3) {
+            addToGx2fSums<3>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState);
+          } else if (measDim == 4) {
+            addToGx2fSums<4>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState);
+          } else if (measDim == 5) {
+            addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState);
+          } else if (measDim == 6) {
+            addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState);
+          } else {
+            ACTS_ERROR("Can not process state with measurement with "
+                       << measDim << " dimensions.")
           }
-
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           /// Handle hole
+          ACTS_VERBOSE("Handle hole.")
         } else {
           ACTS_ERROR("Unknown state encountered")
         }
