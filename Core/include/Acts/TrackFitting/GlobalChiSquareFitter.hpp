@@ -979,7 +979,7 @@ class Gx2Fitter {
     // it for each state
     track.chi2() = chi2sum;
 
-    if (track.nMeasurements() == 0) {
+    if ((track.nMeasurements() == 0) && (nUpdate > 0)) {
       ACTS_ERROR("DEBUG - somehow the track has zero measurements");
       return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
     }
