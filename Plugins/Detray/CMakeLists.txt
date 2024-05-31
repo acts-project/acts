@@ -1,7 +1,12 @@
 add_library(
-  ActsPluginDetray SHARED#not sure about "shared" library type sos
+  ActsPluginDetray SHARED
   src/Detray.cpp)
   #include/*.hpp
+
+add_dependencies(ActsPluginDetray 
+    detray::core
+    covfie::core
+    vecmem::core)
 
 target_include_directories(
   ActsPluginDetray
@@ -14,7 +19,7 @@ target_link_libraries(
   PUBLIC 
     ActsCore
     detray::core
-    detray::core_array#changed i shoudl check SOS
+    detray::core_array
     detray::io
     detray::utils
     detray::svgtools
