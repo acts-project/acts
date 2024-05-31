@@ -303,7 +303,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
       lsbCfg.surfacesProvider =
           std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
               surfaces);
-      lsbCfg.nMinimalSurfaces = 1000u;
+      lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
 
       return std::make_tuple(
           std::make_shared<Experimental::LayerStructureBuilder>(

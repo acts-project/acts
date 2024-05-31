@@ -261,7 +261,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Strips/Barrel',
             'cyl;e,e,-{S_z_mid},{S_z_mid}',
-            '',
+            'layer;kdt;cyl;e,e,-{S_z_mid},{S_z_mid}',
             '', 
             '')
     """
@@ -286,7 +286,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Strips/NegSector/NegEndcap',
             'cyl;e,{S_ec_r_max},e,e',
-            '',
+            'layer;kdt;cyl;e,{S_ec_r_max},e,e',
             '',
             '')
     """
@@ -312,7 +312,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Strips/PosSector/PosEndcap', 
             'cyl;e,{S_ec_r_max},e,e',
-            '',
+            'layer;kdt;cyl;e,{S_ec_r_max},e,e',
             '',
             '')
     """
@@ -363,7 +363,7 @@ if "__main__" == __name__:
             'leaf', 
             'ITk/Central/Detectors/Pixels/OuterPixels/Barrel',
             'cyl;e,e,-{OP_b_z_max},{OP_b_z_max}',
-            '',
+            'layer;kdt;cyl;e,e,-{OP_b_z_max},{OP_b_z_max}',
             '',
             '')
     """
@@ -402,7 +402,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring0', 
             'cyl;e,{OP_ring0_r_max},e,e',
-            '',
+            'layer;kdt;cyl;e,{OP_ring0_r_max},e,e',
             '',
             '')
     """
@@ -415,7 +415,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1',
             'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '',
             '')
     """
@@ -428,7 +428,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring2',
             'cyl;{OP_ring1_r_max},e,e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring1_r_max},e,e,e',
             '', 
             '')
     """
@@ -441,7 +441,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0',
             'cyl;e,{OP_ring0_r_max},e,e',
-            '',
+            'layer;kdt;cyl;e,{OP_ring0_r_max},e,e',
             '', 
             '')
     """
@@ -454,7 +454,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring1',
             'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '', 
             '')
     """
@@ -467,7 +467,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring2',
             'cyl;{OP_ring1_r_max},e,e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring1_r_max},e,e,e',
             '',
             '')
     """
@@ -480,7 +480,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring0',
             'cyl;e,{OP_ring0_r_max},e,e',
-            '',
+            'layer;kdt;cyl;e,{OP_ring0_r_max},e,e',
             '',
             '')
     """
@@ -493,7 +493,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring1',
             'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '',
             '')
     """
@@ -506,7 +506,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring2',
             'cyl;{OP_ring1_r_max},e,e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring1_r_max},e,e,e',
             '', 
             '')
     """
@@ -519,7 +519,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0',
             'cyl;e,{OP_ring0_r_max},e,e',
-            '',
+            'layer;kdt;cyl;e,{OP_ring0_r_max},e,e',
             '', 
             '')
     """
@@ -532,7 +532,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring1',
             'cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             '', 
             '')
     """
@@ -545,7 +545,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring2',
             'cyl;{OP_ring1_r_max},e,e,e',
-            '',
+            'layer;kdt;cyl;{OP_ring1_r_max},e,e,e',
             '',
             '')
     """
@@ -553,11 +553,11 @@ if "__main__" == __name__:
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (1, 
+            (1001, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap',
             'cyl;e,e,e,-{IP_iec_z_max}',
-            '',
+            'layer;kdt;cyl;e,e,e,-{IP_iec_z_max}',
             '', 
             '')
     """
@@ -566,11 +566,11 @@ if "__main__" == __name__:
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (1, 
+            (1002, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap',
             'cyl;e,e,-{IP_iec_z_max},-{IP_b_z_max}',
-            '',
+            'layer;kdt;cyl;e,e,-{IP_iec_z_max},-{IP_b_z_max}',
             '', 
             '')
     """
@@ -623,7 +623,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap',
             'cyl;e,e,{IP_b_z_max},{IP_iec_z_max}',
-            '',
+            'layer;kdt;cyl;e,e,{IP_b_z_max},{IP_iec_z_max}',
             '',
             '')
     """
@@ -636,7 +636,7 @@ if "__main__" == __name__:
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap',
             'cyl;e,e,{IP_iec_z_max},e',
-            '',
+            'layer;kdt;cyl;e,e,{IP_iec_z_max},e',
             '',
             '')
     """
