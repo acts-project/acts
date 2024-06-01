@@ -16,7 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"

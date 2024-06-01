@@ -29,8 +29,8 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
@@ -407,5 +407,5 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsSetValues) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

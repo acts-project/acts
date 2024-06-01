@@ -18,9 +18,9 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
-
 using namespace Acts::Logging;
+
+namespace Acts::Test {
 
 /// @cond
 namespace detail {

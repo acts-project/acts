@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <boost/test/data/test_case.hpp>
-
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"

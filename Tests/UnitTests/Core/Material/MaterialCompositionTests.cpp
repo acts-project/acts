@@ -13,8 +13,7 @@
 
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(material_composition)
 
@@ -80,5 +79,4 @@ BOOST_AUTO_TEST_CASE(construct_with_weights) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

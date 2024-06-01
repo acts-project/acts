@@ -16,7 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Enumerate.hpp"

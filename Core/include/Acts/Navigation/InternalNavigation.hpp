@@ -13,7 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/MultiLayerSurfacesUpdater.hpp"
+#include "Acts/Navigation/MultiLayerNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
@@ -24,7 +24,7 @@
 
 namespace Acts::Experimental {
 
-struct AllPortalsImpl : public INavigationDelegate {
+struct AllPortalsNavigation : public IInternalNavigation {
   /// A ordered portal provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -38,7 +38,7 @@ struct AllPortalsImpl : public INavigationDelegate {
                      NavigationState& nState) const {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
-          "AllPortalsImpl: no detector volume set to navigation state.");
+          "AllPortalsNavigation: no detector volume set to navigation state.");
     }
     // Retrieval necessary
     if (nState.surfaceCandidates.empty()) {
@@ -56,7 +56,7 @@ struct AllPortalsImpl : public INavigationDelegate {
   }
 };
 
-struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
+struct AllPortalsAndSurfacesNavigation : public IInternalNavigation {
   /// An ordered list of portals and surfaces provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -70,7 +70,8 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
                      NavigationState& nState) const {
     if (nState.currentDetector == nullptr) {
       throw std::runtime_error(
-          "AllPortalsAndSurfacesImpl: no detector volume set to navigation "
+          "AllPortalsAndSurfacesNavigation: no detector volume set to "
+          "navigation "
           "state.");
     }
     // A volume switch has happened, update list of portals & surfaces
@@ -94,10 +95,10 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
 /// Generate a provider for all portals
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdater tryAllPortals() {
-  auto ap = std::make_unique<const AllPortalsImpl>();
-  SurfaceCandidatesUpdater nStateUpdater;
-  nStateUpdater.connect<&AllPortalsImpl::update>(std::move(ap));
+inline static InternalNavigationDelegate tryAllPortals() {
+  auto ap = std::make_unique<const AllPortalsNavigation>();
+  InternalNavigationDelegate nStateUpdater;
+  nStateUpdater.connect<&AllPortalsNavigation::update>(std::move(ap));
   return nStateUpdater;
 }
 
@@ -107,10 +108,11 @@ inline static SurfaceCandidatesUpdater tryAllPortals() {
 /// setup with many surfaces
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdater tryAllPortalsAndSurfaces() {
-  auto aps = std::make_unique<const AllPortalsAndSurfacesImpl>();
-  SurfaceCandidatesUpdater nStateUpdater;
-  nStateUpdater.connect<&AllPortalsAndSurfacesImpl::update>(std::move(aps));
+inline static InternalNavigationDelegate tryAllPortalsAndSurfaces() {
+  auto aps = std::make_unique<const AllPortalsAndSurfacesNavigation>();
+  InternalNavigationDelegate nStateUpdater;
+  nStateUpdater.connect<&AllPortalsAndSurfacesNavigation::update>(
+      std::move(aps));
   return nStateUpdater;
 }
 
@@ -118,7 +120,7 @@ inline static SurfaceCandidatesUpdater tryAllPortalsAndSurfaces() {
 /// checking, this could be e.g. support surfaces for layer structures,
 /// e.g.
 ///
-struct AdditionalSurfacesImpl : public INavigationDelegate {
+struct AdditionalSurfacesNavigation : public IInternalNavigation {
   /// The volumes held by this collection
   std::vector<const Surface*> surfaces = {};
 
@@ -137,21 +139,23 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
 ///
 /// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
-using IndexedSurfacesImpl =
-    IndexedUpdaterImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
+using IndexedSurfacesNavigation =
+    IndexedGridNavigation<IInternalNavigation, grid_type,
+                          IndexedSurfacesExtractor, SurfacesFiller>;
 
 /// @brief  An indexed multi layer surface implementation access
 ///
 /// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
-using MultiLayerSurfacesImpl =
-    MultiLayerSurfacesUpdaterImpl<grid_type, PathGridSurfacesGenerator>;
+using MultiLayerSurfacesNavigation =
+    MultiLayerNavigation<grid_type, PathGridSurfacesGenerator>;
 
 /// @brief An indexed surface implementation with portal access
 ///
 ///@tparam inexed_updator is the updator for the indexed surfaces
 template <typename grid_type, template <typename> class indexed_updator>
-using IndexedSurfacesAllPortalsImpl =
-    ChainedUpdaterImpl<AllPortalsImpl, indexed_updator<grid_type>>;
+using IndexedSurfacesAllPortalsNavigation =
+    ChainedNavigation<IInternalNavigation, AllPortalsNavigation,
+                      indexed_updator<grid_type>>;
 
 }  // namespace Acts::Experimental

@@ -25,7 +25,7 @@ class DetectorVolume;
 /// @brief  The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
-struct EndOfWorldImpl : public INavigationDelegate {
+struct EndOfWorld : public IExternalNavigation {
   /// @brief a null volume link - explicitly
   ///
   /// @note the method parameters are ignored
@@ -35,33 +35,10 @@ struct EndOfWorldImpl : public INavigationDelegate {
   }
 };
 
-/// @brief Single volume updator, it sets the current navigation
-/// volume to the volume in question
-///
-struct SingleDetectorVolumeImpl : public INavigationDelegate {
-  const DetectorVolume* dVolume = nullptr;
-
-  /// @brief Allowed constructor
-  /// @param sVolume the volume to which it points
-  SingleDetectorVolumeImpl(const DetectorVolume* sVolume) noexcept(false)
-      : dVolume(sVolume) {
-    if (sVolume == nullptr) {
-      throw std::invalid_argument(
-          "DetectorVolumeUpdaters: nullptr provided, use EndOfWorld instead.");
-    }
-  }
-
-  SingleDetectorVolumeImpl() = delete;
-
-  /// @brief a null volume link - explicitly
-  ///
-  /// @note the method parameters are ignored
-  ///
-  inline void update(const GeometryContext& /*ignored*/,
-                     NavigationState& nState) const {
-    nState.currentVolume = dVolume;
-  }
-};
+/// Navigation to a connected single detector volumed
+using SingleDetectorVolumeNavigation =
+    SingleObjectNavigation<IExternalNavigation, DetectorVolume,
+                           DetectorVolumeFiller>;
 
 using SingleIndex = std::size_t;
 
@@ -96,10 +73,10 @@ struct DetectorVolumesCollection {
 /// 1-dimensional grid, e.g. a z-spaced array, or an r-spaced array
 /// of volumes.
 ///
-struct BoundVolumesGrid1Impl : public INavigationDelegate {
+struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   using IndexedUpdater =
-      IndexedUpdaterImpl<VariableBoundIndexGrid1, DetectorVolumesCollection,
-                         DetectorVolumeFiller>;
+      IndexedGridNavigation<IExternalNavigation, VariableBoundIndexGrid1,
+                            DetectorVolumesCollection, DetectorVolumeFiller>;
   // The indexed updator
   IndexedUpdater indexedUpdater;
 
@@ -109,7 +86,7 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
   /// @param bValue the binning value
   /// @param cVolumes the contained volumes
   /// @param bTransform is the optional transform
-  BoundVolumesGrid1Impl(
+  BoundVolumesGrid1Navigation(
       const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
@@ -120,7 +97,8 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
 
     if (gBoundaries.size() != cVolumes.size() + 1u) {
       throw std::invalid_argument(
-          "DetectorVolumeUpdaters: mismatching boundaries and volume numbers");
+          "ExternalNavigationDelegates: mismatching boundaries and volume "
+          "numbers");
     }
     // Initialize the grid entries
     for (std::size_t ib = 1u; ib < gBoundaries.size(); ++ib) {
@@ -128,7 +106,7 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
     }
   }
   // Deleted default constructor
-  BoundVolumesGrid1Impl() = delete;
+  BoundVolumesGrid1Navigation() = delete;
 
   /// @brief This updator relies on an 1D single index grid
   ///
