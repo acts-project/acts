@@ -587,6 +587,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrackStatesWriter::writeT(
 
         // track parameters error
         // MARK: fpeMaskBegin(FLTINV, 1, #2348)
+        std::cout << "F_P_E_RTSW covariance(Acts::eBoundLoc0, Acts::eBoundLoc0): " << covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)
+                  << "\nF_P_E_RTSW covariance(Acts::eBoundLoc0, Acts::eBoundLoc0):\n" << covariance
+                  << "F_P_E_RTSW std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)): " << std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0))
+                  << std::endl;
         m_err_eLOC0[ipar].push_back(
             std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
         m_err_eLOC1[ipar].push_back(

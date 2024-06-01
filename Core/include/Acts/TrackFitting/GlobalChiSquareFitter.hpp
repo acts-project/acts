@@ -972,17 +972,12 @@ class Gx2Fitter {
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
 
-    std::cout << "QPDATAOUTMEASUREMENTSSIZE " << track.nMeasurements()
-              << std::endl;
-
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
     track.chi2() = chi2sum;
 
-    if ((track.nMeasurements() == 0) && (nUpdate > 0)) {
-      ACTS_ERROR("DEBUG - somehow the track has zero measurements");
-      return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
-    }
+    std::cout << "F_P_E_GX2F track.nMeasurements(): " << track.nMeasurements()
+              << std::endl;
 
     // Return the converted Track
     return track;

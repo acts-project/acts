@@ -94,6 +94,9 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
 
     // Check if the trajectory is matched with truth.
     // If not, it will be classified as 'fake'
+    std::cout << "F_P_E_CHECK nMajorityHits: " << nMajorityHits
+              << "\nF_P_E_CHECK track.nMeasurements(): "
+              << track.nMeasurements() << std::endl;
     const bool recoMatched =
         static_cast<double>(nMajorityHits) / track.nMeasurements() >=
         m_cfg.matchingRatio;
