@@ -917,12 +917,14 @@ class Gx2Fitter {
 //        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
 //      }
 
+      std::cout << "countNdf: " << countNdf << "\ngx2fResult.collectorResiduals.size(): " << gx2fResult.collectorResiduals.size() << std::endl;
+
       // REMOVE
       constexpr std::size_t ndf = 4;
       if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
         ACTS_INFO("Not enough measurements. Require "
                   << ndf + 1 << ", but only "
-                  << gx2fResult.collectorResiduals.size() << " could be used.");
+                  << gx2fResult.collectorResiduals.size()<< "|" << countNdf << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
