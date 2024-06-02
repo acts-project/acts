@@ -910,10 +910,19 @@ class Gx2Fitter {
       // guarantee to hit all/enough measurement surfaces with the initial
       // parameter guess.
       // TODO genernalize for n-dimensional fit
+//      constexpr std::size_t ndf = 4;
+//      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+//        ACTS_INFO("Not enough measurements. Require "
+//                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+//        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+//      }
+
+      // REMOVE
       constexpr std::size_t ndf = 4;
-      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+      if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
         ACTS_INFO("Not enough measurements. Require "
-                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+                  << ndf + 1 << ", but only "
+                  << gx2fResult.collectorResiduals.size() << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
