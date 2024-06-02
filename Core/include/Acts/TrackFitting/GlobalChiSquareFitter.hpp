@@ -837,11 +837,14 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trackContainer.trackStateContainer();
+
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainerTemp = trackContainer;
+
+      r.fittedStates = &trackContainerTemp.trackStateContainer();
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
-      trackContainer.clear();
+      trackContainerTemp.clear();
 
       auto propagationResult = m_propagator.template propagate(propagatorState);
 
@@ -854,7 +857,7 @@ class Gx2Fitter {
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
-      auto track = trackContainer.makeTrack();
+      auto track = trackContainerTemp.makeTrack();
       track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
       track.linkForward();
       {
@@ -921,10 +924,6 @@ class Gx2Fitter {
           }
           /// Missing: Material handling. Should be there for hole and measurement
         }
-
-        // Clear the track container. It could be more performant to update the
-        // existing states, but this needs some more thinking.
-        trackContainer.clear();
 
         // calculate delta params [a] * delta = b
         deltaParams =
