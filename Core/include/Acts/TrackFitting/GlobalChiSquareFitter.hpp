@@ -857,88 +857,88 @@ class Gx2Fitter {
       auto track = trackContainer.makeTrack();
       track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
       track.linkForward();
+      {
+        // This check takes into account the evaluated dimensions of the
+        // measurements. To fit, we need at least NDF+1 measurements. However,
+        // we count n-dimensional measurements for n measurements, reducing the
+        // effective number of needed measurements.
+        // We might encounter the case, where we cannot use some (parts of a)
+        // measurements, maybe if we do not support that kind of measurement. This is also taken into account here. `ndf = 4` is chosen, since this a minimum that makes sense for us, but a more general approach is desired. We skip the check during the first iteration, since we cannot guarantee to hit all/enough measurement surfaces with the initial parameter guess.
+        // TODO genernalize for n-dimensional fit
+        //      constexpr std::size_t ndf = 4;
+        //      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+        //        ACTS_INFO("Not enough measurements. Require "
+        //                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+        //        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+        //      }
 
-      // This check takes into account the evaluated dimensions of the
-      // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we count n-dimensional measurements for n measurements, reducing the
-      // effective number of needed measurements.
-      // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement. This
-      // is also taken into account here.
-      // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
-      // a more general approach is desired.
-      // We skip the check during the first iteration, since we cannot
-      // guarantee to hit all/enough measurement surfaces with the initial
-      // parameter guess.
-      // TODO genernalize for n-dimensional fit
-      //      constexpr std::size_t ndf = 4;
-      //      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
-      //        ACTS_INFO("Not enough measurements. Require "
-      //                  << ndf + 1 << ", but only " << countNdf << " could be used.");
-      //        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
-      //      }
-
-      // REMOVE
-      constexpr std::size_t ndf = 4;
-      if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
-        ACTS_INFO("Not enough measurements. Require "
-                  << ndf + 1 << ", but only "
-                  << gx2fResult.collectorResiduals.size() << " could be used.");
-        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
-      }
-
-      // This goes up for each measurement (for each dimension)
-      std::size_t countNdf = 0;
-
-      chi2sum = 0;
-      aMatrix = BoundMatrix::Zero();
-      bVector = BoundVector::Zero();
-
-      BoundMatrix jacobianFromStart = BoundMatrix::Identity();
-
-      for (const auto& trackState : track.trackStates()) {
-        auto typeFlags = trackState.typeFlags();
-        if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-          /// Handle measurement
-
-          auto measDim = trackState.calibratedSize();
-          countNdf += measDim;
-
-          jacobianFromStart = trackState.jacobian() * jacobianFromStart;
-
-          if (measDim == 1) {
-            addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
-          } else if (measDim == 2) {
-            addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
-          } else {
-            ACTS_ERROR("Can not process state with measurement with "
-                       << measDim << " dimensions.")
-            countNdf -= measDim;
-          }
-        } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
-          /// Handle hole
-          ACTS_VERBOSE("Handle hole.")
-        } else {
-          ACTS_WARNING("Unknown state encountered")
+        // REMOVE
+        constexpr std::size_t ndf = 4;
+        if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
+          ACTS_INFO("Not enough measurements. Require "
+                    << ndf + 1 << ", but only "
+                    << gx2fResult.collectorResiduals.size()
+                    << " could be used.");
+          return Experimental::GlobalChiSquareFitterError::
+              NotEnoughMeasurements;
         }
-        /// Missing: Material handling. Should be there for hole and measurement
+
+        // This goes up for each measurement (for each dimension)
+        std::size_t countNdf = 0;
+
+        chi2sum = 0;
+        aMatrix = BoundMatrix::Zero();
+        bVector = BoundVector::Zero();
+
+        BoundMatrix jacobianFromStart = BoundMatrix::Identity();
+
+        for (const auto& trackState : track.trackStates()) {
+          auto typeFlags = trackState.typeFlags();
+          if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+            /// Handle measurement
+
+            auto measDim = trackState.calibratedSize();
+            countNdf += measDim;
+
+            jacobianFromStart = trackState.jacobian() * jacobianFromStart;
+
+            if (measDim == 1) {
+              addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                               trackState, *m_addToSumLogger);
+            } else if (measDim == 2) {
+              addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                               trackState, *m_addToSumLogger);
+            } else {
+              ACTS_ERROR("Can not process state with measurement with "
+                         << measDim << " dimensions.")
+              countNdf -= measDim;
+            }
+          } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
+            /// Handle hole
+            ACTS_VERBOSE("Handle hole.")
+          } else {
+            ACTS_WARNING("Unknown state encountered")
+          }
+          /// Missing: Material handling. Should be there for hole and measurement
+        }
+
+        // Clear the track container. It could be more performant to update the
+        // existing states, but this needs some more thinking.
+        trackContainer.clear();
+
+        // calculate delta params [a] * delta = b
+        deltaParams =
+            calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+
+        ACTS_INFO("aMatrix:\n"
+                  << aMatrix << "\n"
+                  << "bVector:\n"
+                  << bVector << "\n"
+                  << "deltaParams:\n"
+                  << deltaParams << "\n"
+                  << "oldChi2sum = " << oldChi2sum << "\n"
+                  << "chi2sum = " << chi2sum);
       }
-
-      // calculate delta params [a] * delta = b
-      deltaParams =
-          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
-
-      ACTS_INFO("aMatrix:\n"
-                   << aMatrix << "\n"
-                   << "bVector:\n"
-                   << bVector << "\n"
-                   << "deltaParams:\n"
-                   << deltaParams << "\n"
-                   << "oldChi2sum = " << oldChi2sum << "\n"
-                   << "chi2sum = " << chi2sum);
-
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
       bVector = BoundVector::Zero();
