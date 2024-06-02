@@ -250,7 +250,7 @@ const Acts::Transform3& Acts::Surface::transform(
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);
   }
-  return (*m_transform);
+  return *m_transform;
 }
 
 bool Acts::Surface::insideBounds(const Vector2& lposition,
