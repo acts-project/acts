@@ -938,40 +938,40 @@ class Gx2Fitter {
                   << "oldChi2sum = " << oldChi2sum << "\n"
                   << "chi2sum = " << chi2sum);
       }
-      chi2sum = 0;
-      aMatrix = BoundMatrix::Zero();
-      bVector = BoundVector::Zero();
-
-      // TODO generalize for non-2D measurements
-      for (std::size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
-           iMeas++) {
-        const auto ri = gx2fResult.collectorResiduals[iMeas];
-        const auto covi = gx2fResult.collectorCovariances[iMeas];
-        const auto projectedJacobian =
-            gx2fResult.collectorProjectedJacobians[iMeas];
-
-        const double chi2meas = ri / covi * ri;
-        const BoundMatrix aMatrixMeas =
-            projectedJacobian * projectedJacobian.transpose() / covi;
-        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
-
-        chi2sum += chi2meas;
-        aMatrix += aMatrixMeas;
-        bVector += bVectorMeas;
-      }
-
-      // calculate delta params [a] * delta = b
-      deltaParams =
-          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
-
-      ACTS_INFO("aMatrix:\n"
-                   << aMatrix << "\n"
-                   << "bVector:\n"
-                   << bVector << "\n"
-                   << "deltaParams:\n"
-                   << deltaParams << "\n"
-                   << "oldChi2sum = " << oldChi2sum << "\n"
-                   << "chi2sum = " << chi2sum);
+//      chi2sum = 0;
+//      aMatrix = BoundMatrix::Zero();
+//      bVector = BoundVector::Zero();
+//
+//      // TODO generalize for non-2D measurements
+//      for (std::size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
+//           iMeas++) {
+//        const auto ri = gx2fResult.collectorResiduals[iMeas];
+//        const auto covi = gx2fResult.collectorCovariances[iMeas];
+//        const auto projectedJacobian =
+//            gx2fResult.collectorProjectedJacobians[iMeas];
+//
+//        const double chi2meas = ri / covi * ri;
+//        const BoundMatrix aMatrixMeas =
+//            projectedJacobian * projectedJacobian.transpose() / covi;
+//        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
+//
+//        chi2sum += chi2meas;
+//        aMatrix += aMatrixMeas;
+//        bVector += bVectorMeas;
+//      }
+//
+//      // calculate delta params [a] * delta = b
+//      deltaParams =
+//          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+//
+//      ACTS_INFO("aMatrix:\n"
+//                   << aMatrix << "\n"
+//                   << "bVector:\n"
+//                   << bVector << "\n"
+//                   << "deltaParams:\n"
+//                   << deltaParams << "\n"
+//                   << "oldChi2sum = " << oldChi2sum << "\n"
+//                   << "chi2sum = " << chi2sum);
 
       tipIndex = gx2fResult.lastMeasurementIndex;
 
