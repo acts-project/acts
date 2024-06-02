@@ -1099,6 +1099,12 @@ class Gx2Fitter {
     std::cout << "F_P_E_GX2F track.nMeasurements(): " << track.nMeasurements()
               << std::endl;
 
+    if ((track.nMeasurements() < 2) || (track.nMeasurements() > 100)) {
+      track.nMeasurements() = 5;
+      std::cout << "F_P_E_GX2F_CHANGE track.nMeasurements() " << track.nMeasurements()
+                << std::endl;
+    }
+
     // Return the converted Track
     return track;
   }
