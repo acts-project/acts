@@ -858,6 +858,35 @@ class Gx2Fitter {
       track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
       track.linkForward();
 
+      // This check takes into account the evaluated dimensions of the
+      // measurements. To fit, we need at least NDF+1 measurements. However,
+      // we count n-dimensional measurements for n measurements, reducing the
+      // effective number of needed measurements.
+      // We might encounter the case, where we cannot use some (parts of a)
+      // measurements, maybe if we do not support that kind of measurement. This
+      // is also taken into account here.
+      // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
+      // a more general approach is desired.
+      // We skip the check during the first iteration, since we cannot
+      // guarantee to hit all/enough measurement surfaces with the initial
+      // parameter guess.
+      // TODO genernalize for n-dimensional fit
+      //      constexpr std::size_t ndf = 4;
+      //      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+      //        ACTS_INFO("Not enough measurements. Require "
+      //                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+      //        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      //      }
+
+      // REMOVE
+      constexpr std::size_t ndf = 4;
+      if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
+        ACTS_INFO("Not enough measurements. Require "
+                  << ndf + 1 << ", but only "
+                  << gx2fResult.collectorResiduals.size() << " could be used.");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
+
       // This goes up for each measurement (for each dimension)
       std::size_t countNdf = 0;
 
@@ -895,37 +924,6 @@ class Gx2Fitter {
           ACTS_WARNING("Unknown state encountered")
         }
         /// Missing: Material handling. Should be there for hole and measurement
-      }
-
-      // This check takes into account the evaluated dimensions of the
-      // measurements. To fit, we need at least NDF+1 measurements. However,
-      // we count n-dimensional measurements for n measurements, reducing the
-      // effective number of needed measurements.
-      // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement. This
-      // is also taken into account here.
-      // `ndf = 4` is chosen, since this a minimum that makes sense for us, but
-      // a more general approach is desired.
-      // We skip the check during the first iteration, since we cannot
-      // guarantee to hit all/enough measurement surfaces with the initial
-      // parameter guess.
-      // TODO genernalize for n-dimensional fit
-//      constexpr std::size_t ndf = 4;
-//      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
-//        ACTS_INFO("Not enough measurements. Require "
-//                  << ndf + 1 << ", but only " << countNdf << " could be used.");
-//        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
-//      }
-
-      std::cout << "countNdf: " << countNdf << "\ngx2fResult.collectorResiduals.size(): " << gx2fResult.collectorResiduals.size() << std::endl;
-
-      // REMOVE
-      constexpr std::size_t ndf = 4;
-      if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
-        ACTS_INFO("Not enough measurements. Require "
-                  << ndf + 1 << ", but only "
-                  << gx2fResult.collectorResiduals.size()<< "|" << countNdf << " could be used.");
-        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
       // calculate delta params [a] * delta = b
