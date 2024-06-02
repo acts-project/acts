@@ -219,9 +219,66 @@ struct Gx2FitterResult {
 
   Result<void> result{Result<void>::success()};
 
+  // collectors REMOVE
+  std::vector<ActsScalar> collectorResiduals;
+  std::vector<ActsScalar> collectorCovariances;
+  std::vector<BoundVector> collectorProjectedJacobians;
+  BoundMatrix jacobianFromStart = BoundMatrix::Identity();
+
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
 };
+
+/// REMOVE
+///
+/// @tparam measDim Number of dimensions of the measurement
+/// @tparam traj_t The trajectory type
+///
+/// @param trackStateProxy is the track state proxy
+/// @param result is the mutable result/cache object
+/// @param logger a logger instance
+template <std::size_t measDim, typename traj_t>
+void collector(const typename traj_t::ConstTrackStateProxy& trackStateProxy,
+               Gx2FitterResult<traj_t>& result, const Logger& logger) {
+  auto predicted = trackStateProxy.predicted();
+  auto measurement = trackStateProxy.template calibrated<measDim>();
+  auto covarianceMeasurement =
+      trackStateProxy.template calibratedCovariance<measDim>();
+  // Project Jacobian and predicted measurements into the measurement dimensions
+  auto projJacobian = (trackStateProxy.projector()
+                           .template topLeftCorner<measDim, eBoundSize>() *
+                       result.jacobianFromStart)
+                          .eval();
+  auto projPredicted = (trackStateProxy.projector()
+                            .template topLeftCorner<measDim, eBoundSize>() *
+                        predicted)
+                           .eval();
+
+  ACTS_VERBOSE("Processing and collecting measurements in Actor:"
+               << "\n    Measurement:\t" << measurement.transpose()
+               << "\n    Predicted:\t" << predicted.transpose()
+               << "\n    Projector:\t" << trackStateProxy.effectiveProjector()
+               << "\n    Projected Jacobian:\t" << projJacobian
+               << "\n    Covariance Measurements:\t" << covarianceMeasurement);
+
+  // Collect residuals, covariances, and projected jacobians
+  for (std::size_t i = 0; i < measDim; i++) {
+    if (covarianceMeasurement(i, i) < 1e-10) {
+      ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
+                                                             << ") ~ 0")
+      continue;
+    }
+
+    result.collectorResiduals.push_back(measurement[i] - projPredicted[i]);
+    result.collectorCovariances.push_back(covarianceMeasurement(i, i));
+    result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+
+    ACTS_VERBOSE("    Splitting the measurement:"
+                 << "\n        Residual:\t" << measurement[i] - projPredicted[i]
+                 << "\n        Covariance:\t" << covarianceMeasurement(i, i)
+                 << "\n        Projected Jacobian:\t" << projJacobian.row(i));
+  }
+}
 
 /// addToGx2fSums Function
 /// The function processes each measurement for the GX2F Actor fitting process.
@@ -499,6 +556,26 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
             typeFlags.set(TrackStateFlag::MaterialFlag);
+          }
+
+          {// REMOVE
+          result.jacobianFromStart =
+              trackStateProxy.jacobian() * result.jacobianFromStart;
+
+          // Collect:
+          // - Residuals
+          // - Covariances
+          // - ProjectedJacobians
+          if (trackStateProxy.calibratedSize() == 1) {
+            collector<1>(trackStateProxy, result, *actorLogger);
+          } else if (trackStateProxy.calibratedSize() == 2) {
+            collector<2>(trackStateProxy, result, *actorLogger);
+          } else {
+            ACTS_WARNING("Found measurement with "
+                         << trackStateProxy.calibratedSize()
+                         << " dimensions. Only measurements of 1 and 2 "
+                            "dimensions are implemented yet.");
+          }
           }
 
           // Set the measurement type flag
@@ -815,7 +892,7 @@ class Gx2Fitter {
           /// Handle hole
           ACTS_VERBOSE("Handle hole.")
         } else {
-          ACTS_ERROR("Unknown state encountered")
+          ACTS_WARNING("Unknown state encountered")
         }
         /// Missing: Material handling. Should be there for hole and measurement
       }
