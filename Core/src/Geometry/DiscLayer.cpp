@@ -39,9 +39,7 @@ Acts::DiscLayer::DiscLayer(const Transform3& transform,
     auto rVolumeBounds =
         std::make_shared<CylinderVolumeBounds>(*rBounds, thickness);
     // @todo rotate around x for the avePhi if you have a sector
-    Transform3 volTrf = m_transform ? *m_transform : Transform3::Identity();
-    m_representingVolume =
-        std::make_unique<Volume>(std::move(volTrf), rVolumeBounds);
+    m_representingVolume = std::make_unique<Volume>(*m_transform, rVolumeBounds);
   }
   // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
