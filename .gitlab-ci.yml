@@ -236,7 +236,7 @@ linux_physmon:
     - /usr/local/bin/geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
     - cd src
-    - CI/physmon/phys_perf_mon.sh all physmon
+    - CI/physmon/phys_perf_mon.sh gx2f physmon
 
 ###############################
 ### UBUNTU EXTRA JOB MATRIX ###
