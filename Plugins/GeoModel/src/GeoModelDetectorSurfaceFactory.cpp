@@ -14,6 +14,28 @@
 #include <GeoModelKernel/GeoShapeUnion.h>
 #include <GeoModelKernel/GeoShapeShift.h>
 
+namespace {
+  std::string gname(const GeoShapeShift &gshift);
+  std::string gname(const GeoShapeUnion &gunion);
+  std::string gname(const GeoShape &gshape);
+
+  std::string gname(const GeoShapeShift &gshift){
+    return "Shift[" + gname(*gshift.getOp()) + "]";
+  }
+  std::string gname(const GeoShapeUnion &gunion){
+    return "Union[" + gname(*gunion.getOpA()) + ", " + gname(*gunion.getOpB()) + "]";
+  }
+  std::string gname(const GeoShape &gshape){
+    if( auto ptr = dynamic_cast<const GeoShapeUnion *>(&gshape); ptr != nullptr){
+      return gname(*ptr);
+    }
+    if( auto ptr = dynamic_cast<const GeoShapeShift *>(&gshape); ptr != nullptr) {
+      return gname(*ptr);
+    }
+    return gshape.type();
+  }
+}
+
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
@@ -31,7 +53,21 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         geoModelTree.geoReader->getPublishedNodes<std::string, GeoFullPhysVol*>(
             q);
 
+    auto matches = [&](const std::string &str) {
+      if( m_cfg.nameList.empty() ) {
+        return true;
+      }
+      return std::any_of(m_cfg.nameList.begin(), m_cfg.nameList.end(), [&](const auto &n){ return str.find(n) != std::string::npos; });
+    };
+
     for (auto& [name, fpv] : qFPV) {
+      const auto &vname = fpv->getLogVol()->getName();
+      const auto &shape = *fpv->getLogVol()->getShape();
+
+      // Mask
+      if( !matches(name) ) {
+        continue;
+      }
       // Convert using the list of converters
       bool success = false;
       for (const auto& converter : m_cfg.shapeConverters) {
@@ -40,22 +76,13 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
           // Add the element and surface to the cache
           cache.sensitiveSurfaces.push_back(converted.value());
           success = true;
-          ACTS_VERBOSE("successfully converted " << name << " (" << fpv->getLogVol()->getName() << " / " << fpv->getLogVol()->getShape()->type() << ")");
+          ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << ")");
           break;
         }
       }
 
       if (!success) {
-        ACTS_DEBUG(name << " (" << fpv->getLogVol()->getName() << " / " << fpv->getLogVol()->getShape()->type() << ") could not be converted by any converter");
-        if(fpv->getLogVol()->getShape()->type() == "Union") {
-          auto u = static_cast<const GeoShapeUnion *>(fpv->getLogVol()->getShape());
-          ACTS_DEBUG(" -> Union A " << u->getOpA()->type());
-          ACTS_DEBUG(" -> Union B " << u->getOpB()->type());
-        }
-        if(fpv->getLogVol()->getShape()->type() == "Shift") {
-          auto s = static_cast<const GeoShapeShift *>(fpv->getLogVol()->getShape());
-          ACTS_DEBUG(" -> Shift Op " << s->getOp()->type());
-        }
+        ACTS_DEBUG(name << " (" << vname << " / " << gname(shape) << ") could not be converted by any converter");
       }
     }
     ACTS_VERBOSE("Found " << qFPV.size()

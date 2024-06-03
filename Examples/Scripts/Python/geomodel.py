@@ -32,7 +32,13 @@ def main():
 
     gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
     gmFactoryConfig.shapeConverters = [ gm.GeoBoxConverter(), gm.GeoTrdConverter(), gm.GeoIntersectionAnnulusConverter(), gm.GeoShiftConverter() ]
-    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.DEBUG)
+    gmFactoryConfig.nameList = [
+        # "FwdModuleR2", # almost rectangles (46.425, 46.925 - 82.2)
+        # "FwdModuleR0",
+        # "FwdModuleR1",
+        # "",
+    ]
+    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)
     # The options
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
     gmFactoryOptions.queries = args.queries

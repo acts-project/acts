@@ -16,7 +16,11 @@
 #include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include <Acts/Surfaces/PlaneSurface.hpp>
+#include <Acts/Surfaces/DiscSurface.hpp>
 #include <Acts/Surfaces/TrapezoidBounds.hpp>
+#include <Acts/Surfaces/CylinderBounds.hpp>
+#include <Acts/Surfaces/StrawSurface.hpp>
+#include <Acts/Surfaces/LineBounds.hpp>
 
 #include <memory>
 #include <tuple>
@@ -36,8 +40,8 @@ struct GeoShiftConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  template <typename ContainedShape, typename Converter, typename Bounds>
-  std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>
+  template <typename ContainedShape, typename Converter, typename Surface, typename Bounds>
+  std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Acts::Surface>>
   impl(const GeoFullPhysVol& geoFPV, const GeoShapeShift& geoShift,
        const Transform3& absTransform, bool sensitive) const {
     auto trd = dynamic_cast<const ContainedShape*>(geoShift.getOp());
@@ -51,18 +55,19 @@ struct GeoShiftConverter {
     // Use knowledge from GeoTrdConverter to make shared bounds object
     const auto& bounds = static_cast<const Bounds&>(surface->bounds());
     auto sharedBounds = std::make_shared<const Bounds>(bounds);
+    // std::cout << "     Extracted bounds params: " << sharedBounds->values()[0] << ", " << sharedBounds->values()[1] << ", " << sharedBounds->values()[2] << std::endl;
 
     const Transform3& shift = geoShift.getX();
 
     // TODO this procedure could be stripped from all converters because it is
     // pretty generic
     if (!sensitive) {
-      auto newSurface = Surface::makeShared<PlaneSurface>(
+      auto newSurface = Surface::template makeShared<Surface>(
           shift * surface->transform({}), sharedBounds);
       return std::make_tuple(nullptr, newSurface);
     }
 
-    auto newEl = GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
+    auto newEl = GeoModelDetectorElement::createDetectorElement<Surface>(
         el->physicalVolume(), sharedBounds, shift * el->transform({}),
         el->thickness());
     auto newSurface = newEl->surface().getSharedPtr();
@@ -85,21 +90,24 @@ struct GeoShiftConverter {
         r;
     auto& [el, surface] = r;
 
-    r = impl<GeoTrd, detail::GeoTrdConverter, TrapezoidBounds>(
+    r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
+        geoFPV, geoShift, absTransform, sensitive);
+
+    if (surface) {
+      // Acts::GeometryContext gctx{};
+      // std::cout << "Final surface: " << std::tie(*surface, gctx) << std::endl;
+      return r;
+    }
+
+    r = impl<GeoBox, detail::GeoBoxConverter, PlaneSurface, RectangleBounds>(
         geoFPV, geoShift, absTransform, sensitive);
 
     if (surface) {
       return r;
     }
 
-    r = impl<GeoBox, detail::GeoBoxConverter, RectangleBounds>(
-        geoFPV, geoShift, absTransform, sensitive);
-
-    if (surface) {
-      return r;
-    }
-
-    r = impl<GeoTube, detail::GeoTubeConverter, RectangleBounds>(
+    // For now this does straw by default
+    r = impl<GeoTube, detail::GeoTubeConverter, StrawSurface, LineBounds>(
         geoFPV, geoShift, absTransform, sensitive);
 
     if (surface) {

@@ -37,6 +37,8 @@ class GeoModelDetectorSurfaceFactory {
   struct Config {
     /// The shape conveters to be use
     std::vector<std::shared_ptr<const IGeoShapeConverter>> shapeConverters = {};
+    /// List for names to match
+    std::vector<std::string> nameList;
   };
 
   /// Nested cache that records the conversion status

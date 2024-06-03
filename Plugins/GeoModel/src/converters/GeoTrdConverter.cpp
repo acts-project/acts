@@ -85,6 +85,7 @@ Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
 
   auto trapezoidBounds =
       std::make_shared<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
+  // std::cout << "     TrapezoidBounds: minHalfX=" << minHalfX << ", maxHalfX=" << maxHalfX << ", halfz=" << halfZ << std::endl;
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, trapezoidBounds);
