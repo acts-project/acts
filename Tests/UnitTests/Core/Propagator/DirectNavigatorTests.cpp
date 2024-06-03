@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -46,8 +45,7 @@ class Surface;
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -79,7 +77,7 @@ bool referenceTiming = false;
 bool oversteppingTest = false;
 double oversteppingMaxStepSize = 1_mm;
 
-/// The actual test nethod that runs the test
+/// The actual test method that runs the test
 /// can be used with several propagator types
 ///
 /// @tparam rpropagator_t is the reference propagator type
@@ -200,5 +198,4 @@ BOOST_DATA_TEST_CASE(
   runTest(rpropagator, dpropagator, pT, phi, theta, charge, index);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

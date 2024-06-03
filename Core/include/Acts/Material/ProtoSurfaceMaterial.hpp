@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -20,112 +21,97 @@ namespace Acts {
 
 /// @class ProtoSurfaceMaterial
 ///
-/// @brief proxy to SurfaceMaterial hand over BinUtility
+/// @brief proxy to SurfaceMaterial hand over BinUtility or other suitable
+/// binning description
 ///
 /// The ProtoSurfaceMaterial class acts as a proxy to the SurfaceMaterial
 /// to mark the layers and surfaces on which the material should be mapped on
 /// at construction time of the geometry and to hand over the granularity of
 /// of the material map with the bin Utility.
-
-class ProtoSurfaceMaterial : public ISurfaceMaterial {
+template <typename BinningType>
+class ProtoSurfaceMaterialT : public ISurfaceMaterial {
  public:
-  /// Constructor without BinUtility - homogeneous material
-  ProtoSurfaceMaterial() = default;
+  /// Constructor without binningType - homogeneous material
+  ProtoSurfaceMaterialT() = default;
 
-  /// Constructor with BinUtility - multidimensional material
-  ///
-  /// @param binUtility a BinUtility determining the granularity
-  ///        and binning of the material on the surface/layer
+  /// Constructor with BinningType
+  /// @param binning a binning description for the material map binning
   /// @param mappingType is the type of surface mapping associated to the surface
-  ProtoSurfaceMaterial(const BinUtility& binUtility,
-                       MappingType mappingType = MappingType::Default);
+  ProtoSurfaceMaterialT(const BinningType& binning,
+                        MappingType mappingType = MappingType::Default)
+      : ISurfaceMaterial(1., mappingType), m_binning(binning) {}
 
   /// Copy constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterial(const ProtoSurfaceMaterial& smproxy) = default;
+  ProtoSurfaceMaterialT(const ProtoSurfaceMaterialT<BinningType>& smproxy) =
+      default;
 
   /// Copy move constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) = default;
+  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
   /// Destructor
-  ~ProtoSurfaceMaterial() override = default;
+  ~ProtoSurfaceMaterialT() override = default;
 
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterial& operator=(const ProtoSurfaceMaterial& smproxy) =
-      default;
+  ProtoSurfaceMaterialT<BinningType>& operator=(
+      const ProtoSurfaceMaterialT<BinningType>& smproxy) = default;
 
   /// Assignment move operator
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterial& operator=(ProtoSurfaceMaterial&& smproxy) = default;
+  ProtoSurfaceMaterialT<BinningType>& operator=(
+      ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
-  /// Scale operator
+  /// Scale operator - dummy implementation
   ///
-  /// @param scale The value to scale this material by
-  ProtoSurfaceMaterial& operator*=(double scale) final;
+  ProtoSurfaceMaterialT<BinningType>& operator*=(double /*scale*/) final {
+    return (*this);
+  }
 
   /// Return the BinUtility
-  const BinUtility& binUtility() const;
+  const BinningType& binning() const { return (m_binning); }
 
   /// Return method for full material description of the Surface - from local
   /// coordinates
   ///
-  /// @param lp is local positioning vector
-  ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector2& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2& /*lp*/) const final {
+    return (m_materialSlab);
+  }
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
   ///
-  /// @param gp is the global positioning vector
-  ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& gp) const final;
-
-  /// Direct access via bins to the MaterialSlab
-  ///
-  /// @param ib0 indicates the first bin
-  /// @param ib1 indicates the second bin
-  ///
-  /// @return will return dummy material
-  const MaterialSlab& materialSlab(std::size_t ib0,
-                                   std::size_t ib1) const final;
+  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
+    return (m_materialSlab);
+  }
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  std::ostream& toStream(std::ostream& sl) const final;
+  ///
+  /// @param sl is the output stream
+  std::ostream& toStream(std::ostream& sl) const final {
+    sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
+    sl << m_binning.toString() << std::endl;
+    return sl;
+  }
 
  private:
-  /// two dimensional BinUtility determining
-  /// the granularity and binning of the
-  /// material on the surface/layer
-  BinUtility m_binUtility;
+  /// A binning description
+  BinningType m_binning;
 
   /// Dummy material properties
   MaterialSlab m_materialSlab;
 };
+
+using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
+
+using ProtoGridSurfaceMaterial =
+    ProtoSurfaceMaterialT<Acts::Experimental::BinningDescription>;
+
 }  // namespace Acts
-
-inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
-    const Vector2& /*lp*/) const {
-  return (m_materialSlab);
-}
-
-inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
-    const Vector3& /*gp*/) const {
-  return (m_materialSlab);
-}
-
-inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
-    std::size_t /*ib0*/, std::size_t /*ib1*/) const {
-  return (m_materialSlab);
-}
-
-inline const Acts::BinUtility& Acts::ProtoSurfaceMaterial::binUtility() const {
-  return m_binUtility;
-}

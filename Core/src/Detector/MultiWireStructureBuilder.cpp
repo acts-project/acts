@@ -13,7 +13,6 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
@@ -21,7 +20,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -63,18 +63,20 @@ class MultiWireInternalStructureBuilder
       ACTS_DEBUG(m_cfg.auxiliary);
     }
 
-    Acts::Experimental::DetectorVolumeUpdater internalVolumeUpdater =
+    Acts::Experimental::ExternalNavigationDelegate internalVolumeUpdater =
         Acts::Experimental::tryNoVolumes();
     // Create the indexed surfaces
     auto internalSurfaces = m_cfg.iSurfaces;
     Acts::Experimental::detail::IndexedSurfacesGenerator<
-        decltype(internalSurfaces), Acts::Experimental::MultiLayerSurfacesImpl>
+        decltype(internalSurfaces),
+        Acts::Experimental::MultiLayerSurfacesNavigation>
         isg{internalSurfaces,
             {},
             {m_cfg.binning[0u].binValue, m_cfg.binning[1u].binValue},
-            {m_cfg.binning[0u].expansion, m_cfg.binning[1u].expansion}};
+            {m_cfg.binning[0u].expansion, m_cfg.binning[1u].expansion},
+            m_cfg.transform};
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
-    Acts::Experimental::detail::GridAxisGenerators::EqBoundEqBound aGenerator{
+    Acts::GridAxisGenerators::EqBoundEqBound aGenerator{
         {m_cfg.binning[0u].edges.front(), m_cfg.binning[0u].edges.back()},
         m_cfg.binning[0u].edges.size() - 1,
         {m_cfg.binning[1u].edges.front(), m_cfg.binning[1u].edges.back()},
@@ -116,12 +118,6 @@ Acts::Experimental::MultiWireStructureBuilder::MultiWireStructureBuilder(
 Acts::Experimental::DetectorComponent
 Acts::Experimental::MultiWireStructureBuilder::construct(
     const Acts::GeometryContext& gctx) {
-  if (mCfg.mlBounds.size() != 4u) {
-    throw std::invalid_argument(
-        "MultiWireStructureBuilder: Invalid dimension for bounds. Trapezoid "
-        "Volume Bounds are supported.");
-  }
-
   // Configure the external structure builder for the internal structure
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
   vsConfig.boundsType = Acts::VolumeBounds::eTrapezoid;
@@ -133,6 +129,7 @@ Acts::Experimental::MultiWireStructureBuilder::construct(
   MultiWireInternalStructureBuilder::Config iConfig;
   iConfig.iSurfaces = mCfg.mlSurfaces;
   iConfig.binning = mCfg.mlBinning;
+  iConfig.transform = mCfg.transform.inverse();
   iConfig.auxiliary = "Construct Internal Structure";
 
   Acts::Experimental::DetectorVolumeBuilder::Config dvConfig;

@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-from pathlib import Path
-from typing import Optional, Union
-from collections import namedtuple
-import argparse
-import sys
-import os
 
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
+from pathlib import Path
+from typing import Optional
+import argparse
 
 import acts
-
 from acts import UnitConstants as u
+from acts.examples import GenericDetector, RootParticleReader
 
 
 def getArgumentParser():
@@ -164,8 +160,7 @@ def runCKFTracks(
             RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection="particles_input",
-                orderedEvents=False,
+                outputParticles="particles_input",
             )
         )
 

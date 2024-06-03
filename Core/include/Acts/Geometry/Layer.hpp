@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -35,7 +35,7 @@ class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
-template <typename T>
+template <typename object_t>
 struct NavigationOptions;
 
 // Simple surface intersection
@@ -206,7 +206,7 @@ class Layer : public virtual GeometryObject {
   ///  Return the abstract volume that represents the layer
   ///
   /// @return the representing volume of the layer
-  const AbstractVolume* representingVolume() const;
+  const Volume* representingVolume() const;
 
   /// return the LayerType
   LayerType layerType() const;
@@ -262,7 +262,7 @@ class Layer : public virtual GeometryObject {
 
   /// Representing Volume
   /// can be used as approach surface sources
-  std::unique_ptr<AbstractVolume> m_representingVolume = nullptr;
+  std::unique_ptr<Volume> m_representingVolume = nullptr;
 
   /// make a passive/active either way
   LayerType m_layerType;

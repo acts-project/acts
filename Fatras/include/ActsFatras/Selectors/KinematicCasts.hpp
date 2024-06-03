@@ -13,8 +13,7 @@
 
 #include <cmath>
 
-namespace ActsFatras {
-namespace Casts {
+namespace ActsFatras::Casts {
 
 /// Retrieve the transverse absolute distance of the position to the origin.
 struct Vrho {
@@ -76,5 +75,4 @@ struct E {
   }
 };
 
-}  // namespace Casts
-}  // namespace ActsFatras
+}  // namespace ActsFatras::Casts

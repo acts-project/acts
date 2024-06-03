@@ -12,6 +12,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
@@ -34,8 +35,8 @@ struct TestTrackState {
   // @param std::size_t nMeasurement either 1 or 2
   template <typename rng_t>
   TestTrackState(rng_t& rng, std::size_t measdim)
-      : surface(Surface::makeShared<PlaneSurface>(Vector3::Zero(),
-                                                  Vector3::UnitZ())),
+      : surface(
+            CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).surface()),
         // set bogus parameters first since they are not default-constructible
         predicted(surface, BoundVector::Zero(), std::nullopt,
                   ParticleHypothesis::pion()),

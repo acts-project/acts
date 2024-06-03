@@ -109,7 +109,6 @@ class VectorTrackContainerBase {
 
   bool checkConsistency() const {
     std::size_t size = m_tipIndex.size();
-    (void)size;
 
     bool result = true;
     result = result && m_tipIndex.size() == size;
@@ -188,6 +187,7 @@ class VectorTrackContainerBase {
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
+  std::vector<HashedString> m_dynamicKeys;
 };
 
 }  // namespace detail_vtc
@@ -224,7 +224,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void removeTrack_impl(IndexType itrack);
 
   template <typename T>
-  constexpr void addColumn_impl(const std::string& key) {
+  constexpr void addColumn_impl(std::string_view key) {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }

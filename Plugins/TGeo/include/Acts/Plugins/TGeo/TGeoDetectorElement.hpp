@@ -9,9 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
 
 #include <iostream>
 #include <memory>
@@ -37,8 +36,12 @@ class Surface;
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///
-class TGeoDetectorElement : public IdentifiedDetectorElement {
+class TGeoDetectorElement : public Acts::DetectorElementBase {
  public:
+  using identifier_type = unsigned long long;
+  using identifier_diff = long long;
+  using Identifier = identifier_type;
+
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
@@ -109,7 +112,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
 
   ~TGeoDetectorElement() override;
 
-  Identifier identifier() const final;
+  Identifier identifier() const;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -123,12 +126,6 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   ///
   /// @note this is the non-const access
   Surface& surface() override;
-
-  /// Retrieve the DigitizationModule
-  const std::shared_ptr<const DigitizationModule> digitizationModule()
-      const final {
-    return nullptr;
-  };
 
   /// Returns the thickness of the module
   double thickness() const override;
@@ -151,7 +148,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   std::shared_ptr<Surface> m_surface{nullptr};
 };
 
-inline Identifier TGeoDetectorElement::identifier() const {
+inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 

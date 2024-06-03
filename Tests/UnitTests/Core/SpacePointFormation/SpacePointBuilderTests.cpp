@@ -46,11 +46,9 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
-
-using namespace UnitLiterals;
+namespace Acts::Test {
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;
@@ -178,10 +176,12 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
   Vector3 vertex = Vector3(-3_m, 0., 0.);
 
-  auto spConstructor = [](const Vector3& pos, const Vector2& cov,
-                          boost::container::static_vector<SourceLink, 2> slinks)
+  auto spConstructor =
+      [](const Vector3& pos, const std::optional<ActsScalar>& t,
+         const Vector2& cov, const std::optional<ActsScalar>& covT,
+         boost::container::static_vector<SourceLink, 2> slinks)
       -> TestSpacePoint {
-    return TestSpacePoint(pos, cov[0], cov[1], std::move(slinks));
+    return TestSpacePoint(pos, t, cov[0], cov[1], covT, std::move(slinks));
   };
 
   auto spBuilderConfig = SpacePointBuilderConfig();
@@ -319,5 +319,4 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   BOOST_CHECK_EQUAL(spacePoints.size(), 6);
 }
 
-}  // end of namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

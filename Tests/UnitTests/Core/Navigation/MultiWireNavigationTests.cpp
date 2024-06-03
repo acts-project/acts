@@ -13,10 +13,10 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/MultiWireStructureBuilder.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -92,8 +92,9 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
   nState.currentVolume = volumes.front().get();
   nState.currentVolume->updateNavigationState(tContext, nState);
 
-  // check the surface candidates after update (12 surfaces + 6 portals)
-  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 18u);
+  // check the surface candidates after update (12 surfaces + 6 portals but only
+  // 5 are reachable)
+  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

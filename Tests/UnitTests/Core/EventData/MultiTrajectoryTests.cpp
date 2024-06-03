@@ -14,6 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -41,6 +42,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::Test;
 using namespace Acts::detail::Test;
+using namespace Acts::HashedStringLiteral;
 namespace bd = boost::unit_test::data;
 
 using ParametersVector = BoundTrackParameters::ParametersVector;
@@ -75,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   VectorMultiTrajectory t;
   auto i0 = t.addTrackState();
 
-  BOOST_CHECK(!t.ReadOnly);
+  BOOST_CHECK(!IsReadOnlyMultiTrajectory<decltype(t)>::value);
 
   {
     VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
@@ -127,6 +129,11 @@ BOOST_AUTO_TEST_CASE(ApplyWithAbort) {
 BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   CommonTests ct;
   ct.testAddTrackStateWithBitMask();
+}
+
+BOOST_AUTO_TEST_CASE(AddTrackStateComponents) {
+  CommonTests ct;
+  ct.testAddTrackStateComponents();
 }
 
 // assert expected "cross-talk" between trackstate proxies
@@ -223,7 +230,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
   }
 
   TestTrackState pc(rng, 2u);
-  auto ts = mt.getTrackState(mt.addTrackState());
+  auto ts = mt.makeTrackState();
   fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
 
   stats = mt.statistics();
@@ -242,6 +249,33 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
       }
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(Accessors) {
+  VectorMultiTrajectory mtj;
+  mtj.addColumn<unsigned int>("ndof");
+  mtj.addColumn<double>("super_chi2");
+
+  auto ts = mtj.makeTrackState();
+
+  ProxyAccessor<unsigned int> ndof("ndof");
+  ConstProxyAccessor<unsigned int> ndofConst("ndof");
+  ProxyAccessor<double> superChi2("super_chi2");
+  ConstProxyAccessor<double> superChi2Const("super_chi2");
+
+  ndof(ts) = 65;
+  BOOST_CHECK_EQUAL((ts.component<unsigned int, "ndof"_hash>()), 65);
+  BOOST_CHECK_EQUAL(ndofConst(ts), 65);
+
+  // should not compile
+  // ndofConst(ts) = 66;
+
+  superChi2(ts) = 123.45;
+  BOOST_CHECK_EQUAL((ts.component<double, "super_chi2"_hash>()), 123.45);
+  BOOST_CHECK_EQUAL(superChi2Const(ts), 123.45);
+
+  // should not compile
+  // superChi2Const(ts) = 66.66;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

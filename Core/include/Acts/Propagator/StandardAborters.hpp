@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,9 +43,8 @@ struct PathLimitReached {
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    if (navigator.targetReached(state.navigation)) {
-      return true;
-    }
+    (void)navigator;
+
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
@@ -54,8 +53,6 @@ struct PathLimitReached {
     if (limitReached) {
       ACTS_VERBOSE("PathLimit aborter | "
                    << "Path limit reached at distance " << distance);
-      // reaching the target means navigation break
-      navigator.targetReached(state.navigation, true);
       return true;
     }
     stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
@@ -67,15 +64,20 @@ struct PathLimitReached {
   }
 };
 
-/// This is the condition that the Surface has been reached
-/// it then triggers an propagation abort of the propagation
+/// This is the condition that the Surface has been reached it then triggers a
+/// propagation abort
 struct SurfaceReached {
   const Surface* surface = nullptr;
   BoundaryCheck boundaryCheck = BoundaryCheck(true);
-  std::optional<double> overstepLimit;
+
+  // TODO https://github.com/acts-project/acts/issues/2738
+  /// Distance limit to discard intersections "behind us"
+  /// @note this is only necessary because some surfaces have more than one
+  ///       intersection
+  double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  SurfaceReached(double oLimit) : overstepLimit(oLimit) {}
+  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -101,10 +103,11 @@ struct SurfaceReached {
       return true;
     }
 
-    const double pLimit =
-        state.stepping.stepSize.value(ConstrainedStep::aborter);
-    const double oLimit =
-        overstepLimit.value_or(stepper.overstepLimit(state.stepping));
+    // not using the stepper overstep limit here because it does not always work
+    // for perigee surfaces
+    // note: the near limit is necessary for surfaces with more than one
+    // intersection in order to discard the ones which are behind us
+    const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = surface->intersect(
@@ -113,34 +116,49 @@ struct SurfaceReached {
         boundaryCheck, tolerance);
     const auto closest = sIntersection.closest();
 
+    bool reached = false;
+
     if (closest.status() == Intersection3D::Status::onSurface) {
       const double distance = closest.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target surface reached at distance (tolerance) "
           << distance << " (" << tolerance << ")");
-      return true;
+      reached = true;
     }
+
+    bool intersectionFound = false;
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
-          detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
-                                    tolerance, logger)) {
+          detail::checkIntersection(intersection.intersection(), nearLimit,
+                                    farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
                                ConstrainedStep::aborter, false);
         ACTS_VERBOSE(
             "SurfaceReached aborter | "
             "Target stepSize (surface) updated to "
             << stepper.outputStepSize(state.stepping));
-        return false;
+        intersectionFound = true;
+        break;
       }
     }
 
-    ACTS_VERBOSE(
-        "SurfaceReached aborter | "
-        "Target intersection not found. Maybe next time?");
-    return false;
+    if (!intersectionFound) {
+      ACTS_VERBOSE(
+          "SurfaceReached aborter | "
+          "Target intersection not found. Maybe next time?");
+    }
+    return reached;
   }
+};
+
+/// Similar to SurfaceReached, but with an infinite overstep limit.
+///
+/// This can be used to force the propagation to the target surface.
+struct ForcedSurfaceReached : SurfaceReached {
+  ForcedSurfaceReached()
+      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
 };
 
 /// This is the condition that the end of World has been reached
@@ -161,8 +179,31 @@ struct EndOfWorldReached {
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    navigator.targetReached(state.navigation, endOfWorld);
     return endOfWorld;
+  }
+};
+
+/// Aborter that checks if the propagation has reached any surface
+struct AnySurfaceReached {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const Logger& logger) const {
+    (void)stepper;
+    (void)logger;
+
+    const Surface* startSurface = navigator.startSurface(state.navigation);
+    const Surface* targetSurface = navigator.targetSurface(state.navigation);
+    const Surface* currentSurface = navigator.currentSurface(state.navigation);
+
+    // `startSurface` is excluded because we want to reach a new surface
+    // `targetSurface` is excluded because another aborter should handle it
+    if (currentSurface != nullptr && currentSurface != startSurface &&
+        currentSurface != targetSurface) {
+      return true;
+    }
+
+    return false;
   }
 };
 

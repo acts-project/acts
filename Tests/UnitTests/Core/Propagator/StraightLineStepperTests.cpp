@@ -15,8 +15,8 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -38,8 +38,7 @@
 
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -151,8 +150,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   BOOST_CHECK_EQUAL(sls.time(slsState), time);
 
-  //~ BOOST_CHECK_EQUAL(sls.overstepLimit(slsState), tolerance);
-
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
@@ -239,7 +236,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                                  charge2 / absMom2, cov2,
                                  ParticleHypothesis::pion());
   BOOST_CHECK(cp2.covariance().has_value());
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
   double stepSize2 = -2. * stepSize;
@@ -380,18 +377,16 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
-  freeParams = detail::transformBoundToFreeParameters(
-      bp.referenceSurface(), tgContext, bp.parameters());
-  freeParams.segment<3>(eFreePos0) *= 2;
-  freeParams[eFreeTime] *= 2;
+  freeParams = transformBoundToFreeParameters(bp.referenceSurface(), tgContext,
+                                              bp.parameters());
 
   BOOST_CHECK(bp.covariance().has_value());
   sls.update(slsState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
              *plane);
-  CHECK_CLOSE_OR_SMALL(sls.position(slsState), 2. * pos, eps, eps);
-  BOOST_CHECK_EQUAL(sls.charge(slsState), 1. * charge);
-  CHECK_CLOSE_OR_SMALL(sls.time(slsState), 2. * time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(sls.position(slsState), pos, eps, eps);
+  BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
+  CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

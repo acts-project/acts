@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -19,6 +17,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -40,22 +39,19 @@
 #include <utility>
 #include <vector>
 
-namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 // We will compare analytical and numerical computations in the case of a
 // (non-zero) constant B-field and a zero B-field.
 using HelicalPropagator = Propagator<EigenStepper<>>;
 using StraightPropagator = Propagator<StraightLineStepper>;
-using AnalyticalLinearizer = HelicalTrackLinearizer<HelicalPropagator>;
-using StraightAnalyticalLinearizer = HelicalTrackLinearizer<StraightPropagator>;
-using NumericalLinearizer = NumericalTrackLinearizer<HelicalPropagator>;
-using StraightNumericalLinearizer =
-    NumericalTrackLinearizer<StraightPropagator>;
+using AnalyticalLinearizer = HelicalTrackLinearizer;
+using StraightAnalyticalLinearizer = HelicalTrackLinearizer;
+using NumericalLinearizer = NumericalTrackLinearizer;
+using StraightNumericalLinearizer = NumericalTrackLinearizer;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -170,33 +166,35 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   }
 
   // Linearizer for constant field and corresponding state
-  AnalyticalLinearizer::Config linConfig(constField, propagator);
+  AnalyticalLinearizer::Config linConfig;
+  linConfig.bField = constField;
+  linConfig.propagator = propagator;
   AnalyticalLinearizer linFactory(linConfig);
-  AnalyticalLinearizer::State linState(constField->makeCache(magFieldContext));
 
   NumericalLinearizer::Config numLinConfig(constField, propagator);
   NumericalLinearizer numLinFactory(numLinConfig);
-  NumericalLinearizer::State numLinState(
-      constField->makeCache(magFieldContext));
 
   // Linearizer for 0 field and corresponding state
-  StraightAnalyticalLinearizer::Config straightLinConfig(straightPropagator);
+  StraightAnalyticalLinearizer::Config straightLinConfig;
+  straightLinConfig.propagator = straightPropagator;
   StraightAnalyticalLinearizer straightLinFactory(straightLinConfig);
-  StraightAnalyticalLinearizer::State straightLinState(
-      zeroField->makeCache(magFieldContext));
 
   StraightNumericalLinearizer::Config numStraightLinConfig(straightPropagator);
   StraightNumericalLinearizer numStraightLinFactory(numStraightLinConfig);
-  StraightNumericalLinearizer::State numStraightLinState(
-      zeroField->makeCache(magFieldContext));
+
+  MagneticFieldProvider::Cache fieldCache =
+      constField->makeCache(magFieldContext);
+  MagneticFieldProvider::Cache zeroFieldCache =
+      zeroField->makeCache(magFieldContext);
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
-  auto checkLinearizers = [](auto& lin1, auto& linState1, auto& lin2,
-                             auto& linState2, const BoundTrackParameters& track,
-                             const Vector4& linPoint,
-                             const auto& geometryContext,
-                             const auto& fieldContext) {
+  auto checkLinearizers = [&fieldCache, &zeroFieldCache](
+                              auto& lin1, auto& lin2,
+                              const BoundTrackParameters& track,
+                              const Vector4& linPoint,
+                              const auto& geometryContext,
+                              const auto& fieldContext) {
     // In addition to comparing the output of the linearizers, we check that
     // they return non-zero quantities
     BoundVector vecBoundZero = BoundVector::Zero();
@@ -218,11 +216,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
     const LinearizedTrack linTrack1 =
         lin1.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
-                            fieldContext, linState1)
+                            fieldContext, fieldCache)
             .value();
     const LinearizedTrack linTrack2 =
         lin2.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
-                            fieldContext, linState2)
+                            fieldContext, zeroFieldCache)
             .value();
 
     // There should be no problem here because both linearizers compute
@@ -265,16 +263,14 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Compare linearizers for all tracks
   for (const BoundTrackParameters& trk : tracks) {
     BOOST_TEST_CONTEXT("Linearization in constant magnetic field") {
-      checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
-                       vtxPos, geoContext, magFieldContext);
+      checkLinearizers(linFactory, numLinFactory, trk, vtxPos, geoContext,
+                       magFieldContext);
     }
     BOOST_TEST_CONTEXT("Linearization without magnetic field") {
-      checkLinearizers(straightLinFactory, straightLinState,
-                       numStraightLinFactory, numStraightLinState, trk, vtxPos,
+      checkLinearizers(straightLinFactory, numStraightLinFactory, trk, vtxPos,
                        geoContext, magFieldContext);
     }
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

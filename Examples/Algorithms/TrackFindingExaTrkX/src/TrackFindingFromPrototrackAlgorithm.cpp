@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
@@ -93,9 +94,6 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -125,7 +123,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   tracks.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   std::size_t nSeed = 0;
   std::size_t nFailed = 0;
