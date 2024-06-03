@@ -863,9 +863,9 @@ class Gx2Fitter {
       auto& propRes = *result;
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
-//      auto track = trackContainerTemp.makeTrack();
-//      track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
-//      track.linkForward();
+      auto track = trackContainerTemp.makeTrack();
+      track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
+      track.linkForward();
       {
         // This check takes into account the evaluated dimensions of the
         // measurements. To fit, we need at least NDF+1 measurements. However,
