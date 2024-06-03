@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -16,8 +15,6 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 using namespace Acts;
-
-namespace bd = boost::unit_test::data;
 
 BOOST_AUTO_TEST_SUITE(GridAccessHelpersTests)
 

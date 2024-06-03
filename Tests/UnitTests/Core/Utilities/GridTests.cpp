@@ -24,11 +24,9 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   using Point = std::array<double, 1>;
@@ -1371,6 +1369,4 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
   BOOST_CHECK_EQUAL(g1ConvertedInt.atPosition(Point({{0.6}})), 2);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test
