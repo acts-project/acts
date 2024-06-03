@@ -432,33 +432,33 @@ class MultiTrajectory {
   }
 
   /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param istate The track state
+  /// @param parIdx Index into the parameter column
   /// @return Mutable proxy
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Parameters parameters(IndexType istate) {
-    return self().parameters_impl(istate);
+  typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
+    return self().parameters_impl(parIdx);
   }
 
   /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param istate The track state
+  /// @param parIdx Index into the parameter column
   /// @return Const proxy
-  typename ConstTrackStateProxy::Parameters parameters(IndexType istate) const {
-    return self().parameters_impl(istate);
+  typename ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
+    return self().parameters_impl(parIdx);
   }
 
   /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param istate The track state
+  /// @param covIdx Index into the covariance column
   /// @return Mutable proxy
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Covariance covariance(IndexType istate) {
-    return self().covariance_impl(istate);
+  typename TrackStateProxy::Covariance covariance(IndexType covIdx) {
+    return self().covariance_impl(covIdx);
   }
 
   /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param istate The track state
+  /// @param covIdx Index into the covariance column
   /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance covariance(IndexType istate) const {
-    return self().covariance_impl(istate);
+  typename ConstTrackStateProxy::Covariance covariance(IndexType covIdx) const {
+    return self().covariance_impl(covIdx);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
