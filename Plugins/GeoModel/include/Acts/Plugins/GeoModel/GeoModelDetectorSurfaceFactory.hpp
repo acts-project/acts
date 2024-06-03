@@ -17,6 +17,9 @@
 #include <tuple>
 #include <vector>
 
+class GeoShape;
+class GeoFullPhysVol;
+
 namespace Acts {
 
 struct GeoModelTree;

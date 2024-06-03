@@ -35,7 +35,7 @@ def main():
     gmFactoryConfig.nameList = [
         # "FwdModuleR2", # almost rectangles (46.425, 46.925 - 82.2)
         # "FwdModuleR0",
-        # "FwdModuleR1",
+        "FwdSensor",
         # "",
     ]
     gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)

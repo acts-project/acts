@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "Acts/Plugins/GeoModel/converters/GeoUnionConverter.hpp"
 
 #include <GeoModelKernel/GeoShapeUnion.h>
 #include <GeoModelKernel/GeoShapeShift.h>
@@ -68,16 +69,38 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
       if( !matches(name) ) {
         continue;
       }
-      // Convert using the list of converters
+
       bool success = false;
-      for (const auto& converter : m_cfg.shapeConverters) {
-        auto converted = converter->toSensitiveSurface(*fpv);
-        if (converted.ok()) {
-          // Add the element and surface to the cache
-          cache.sensitiveSurfaces.push_back(converted.value());
-          success = true;
-          ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << ")");
-          break;
+
+      // This is only hacked right now, for a proper solution we should restructure the code
+      // and add a convert function that recursively calls itself for unions
+      if( auto gunion = dynamic_cast<const GeoShapeUnion *>(&shape); gunion != nullptr){
+        GeoUnionConverter converter;
+        converter.useA = true;
+        auto converted1 = converter.toSensitiveSurface(*fpv);
+        if (converted1.ok()) {
+          cache.sensitiveSurfaces.push_back(converted1.value());
+          ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << " / A)");
+        }
+        converter.useA = false;
+        auto converted2 = converter.toSensitiveSurface(*fpv);
+        if (converted2.ok()) {
+          cache.sensitiveSurfaces.push_back(converted2.value());
+          ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << " / B)");
+        }
+        success = converted1.ok() && converted2.ok();
+      }
+      // Convert using the list of converters
+      else {
+        for (const auto& converter : m_cfg.shapeConverters) {
+          auto converted = converter->toSensitiveSurface(*fpv);
+          if (converted.ok()) {
+            // Add the element and surface to the cache
+            cache.sensitiveSurfaces.push_back(converted.value());
+            success = true;
+            ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << ")");
+            break;
+          }
         }
       }
 

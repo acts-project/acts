@@ -27,7 +27,7 @@ template<typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-toSensitiveSurface(const GeoFullPhysVol& geoFPV) const {
+toSensitiveSurface(const GeoFullPhysVol& geoFPV) const override {
   // Retrieve logcal volume and absolute transform
   const GeoLogVol* logVol = geoFPV.getLogVol();
   const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
@@ -46,7 +46,7 @@ toSensitiveSurface(const GeoFullPhysVol& geoFPV) const {
 }
 
 Acts::Result<std::shared_ptr<Acts::Surface>>
-toPassiveSurface(const GeoFullPhysVol& geoFPV) const {
+toPassiveSurface(const GeoFullPhysVol& geoFPV) const override {
   // Retrieve logcal volume and absolute transform
   const GeoLogVol* logVol = geoFPV.getLogVol();
   const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
