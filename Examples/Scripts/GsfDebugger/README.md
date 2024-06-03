@@ -3,7 +3,7 @@
 This is a (not so) tiny tool that should ease inspecting the very complicated GSF logs.
 The infrastructure is designed to be generic and extendable, so it should be not too much of an effort to adapt it e.g. to the CKF.
 
-**Important:** This tool is proably quite unstable, especially the log parsing. However, the code is not so complicated, if you encounter problems, just fix the issue :)
+**Important:** This tool is probably quite unstable, especially the log parsing. However, the code is not so complicated, if you encounter problems, just fix the issue :)
 
 ## Usage
 

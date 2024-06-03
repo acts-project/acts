@@ -93,7 +93,7 @@ class CsvCartesianDrawer:
 
         l = len(d)
 
-        # milimeter precision should be enough
+        # millimeter precision should be enough
         for c in centers:
             d[c] = d[c].astype(int)
 
