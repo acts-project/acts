@@ -2,7 +2,8 @@ include(FetchContent)
 
 add_library(
   ActsPluginGeoModel SHARED
-  src/GeoModelReader.cpp)
+  src/GeoModelReader.cpp
+  src/GeoModelToDetVol.cpp)
 target_include_directories(
     ActsPluginGeoModel
   PUBLIC
@@ -10,7 +11,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
     ActsPluginGeoModel
-  PUBLIC ActsCore GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
+  PUBLIC ActsCore GeoModelCore::GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
 
 install(
   TARGETS ActsPluginGeoModel
