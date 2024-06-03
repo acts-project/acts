@@ -801,6 +801,12 @@ class Gx2Fitter {
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
+    BoundVector deltaParamsNEW = BoundVector::Zero();
+    double chi2sumNEW = 0;
+    double oldChi2sumNEW = std::numeric_limits<double>::max();
+    BoundMatrix aMatrixNEW = BoundMatrix::Zero();
+    BoundVector bVectorNEW = BoundVector::Zero();
+
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
@@ -889,9 +895,9 @@ class Gx2Fitter {
         // This goes up for each measurement (for each dimension)
         std::size_t countNdf = 0;
 
-        chi2sum = 0;
-        aMatrix = BoundMatrix::Zero();
-        bVector = BoundVector::Zero();
+        chi2sumNEW = 0;
+        aMatrixNEW = BoundMatrix::Zero();
+        bVectorNEW = BoundVector::Zero();
 
         BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
@@ -906,10 +912,10 @@ class Gx2Fitter {
             jacobianFromStart = trackState.jacobian() * jacobianFromStart;
 
             if (measDim == 1) {
-              addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
+              addToGx2fSums<1>(aMatrixNEW, bVectorNEW, chi2sumNEW, jacobianFromStart,
                                trackState, *m_addToSumLogger);
             } else if (measDim == 2) {
-              addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
+              addToGx2fSums<2>(aMatrixNEW, bVectorNEW, chi2sumNEW, jacobianFromStart,
                                trackState, *m_addToSumLogger);
             } else {
               ACTS_ERROR("Can not process state with measurement with "
@@ -926,52 +932,52 @@ class Gx2Fitter {
         }
 
         // calculate delta params [a] * delta = b
-        deltaParams =
-            calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+        deltaParamsNEW =
+            calculateDeltaParams(gx2fOptions.zeroField, aMatrixNEW, bVectorNEW);
 
-        ACTS_INFO("aMatrix:\n"
-                  << aMatrix << "\n"
-                  << "bVector:\n"
-                  << bVector << "\n"
-                  << "deltaParams:\n"
-                  << deltaParams << "\n"
-                  << "oldChi2sum = " << oldChi2sum << "\n"
-                  << "chi2sum = " << chi2sum);
+        ACTS_INFO("aMatrixNEW:\n"
+                  << aMatrixNEW << "\n"
+                  << "bVectorNEW:\n"
+                  << bVectorNEW << "\n"
+                  << "deltaParamsNEW:\n"
+                  << deltaParamsNEW << "\n"
+                  << "oldChi2sumNEW = " << oldChi2sumNEW << "\n"
+                  << "chi2sumNEW = " << chi2sumNEW);
       }
-//      chi2sum = 0;
-//      aMatrix = BoundMatrix::Zero();
-//      bVector = BoundVector::Zero();
-//
-//      // TODO generalize for non-2D measurements
-//      for (std::size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
-//           iMeas++) {
-//        const auto ri = gx2fResult.collectorResiduals[iMeas];
-//        const auto covi = gx2fResult.collectorCovariances[iMeas];
-//        const auto projectedJacobian =
-//            gx2fResult.collectorProjectedJacobians[iMeas];
-//
-//        const double chi2meas = ri / covi * ri;
-//        const BoundMatrix aMatrixMeas =
-//            projectedJacobian * projectedJacobian.transpose() / covi;
-//        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
-//
-//        chi2sum += chi2meas;
-//        aMatrix += aMatrixMeas;
-//        bVector += bVectorMeas;
-//      }
-//
-//      // calculate delta params [a] * delta = b
-//      deltaParams =
-//          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
-//
-//      ACTS_INFO("aMatrix:\n"
-//                   << aMatrix << "\n"
-//                   << "bVector:\n"
-//                   << bVector << "\n"
-//                   << "deltaParams:\n"
-//                   << deltaParams << "\n"
-//                   << "oldChi2sum = " << oldChi2sum << "\n"
-//                   << "chi2sum = " << chi2sum);
+      chi2sum = 0;
+      aMatrix = BoundMatrix::Zero();
+      bVector = BoundVector::Zero();
+
+      // TODO generalize for non-2D measurements
+      for (std::size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
+           iMeas++) {
+        const auto ri = gx2fResult.collectorResiduals[iMeas];
+        const auto covi = gx2fResult.collectorCovariances[iMeas];
+        const auto projectedJacobian =
+            gx2fResult.collectorProjectedJacobians[iMeas];
+
+        const double chi2meas = ri / covi * ri;
+        const BoundMatrix aMatrixMeas =
+            projectedJacobian * projectedJacobian.transpose() / covi;
+        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
+
+        chi2sum += chi2meas;
+        aMatrix += aMatrixMeas;
+        bVector += bVectorMeas;
+      }
+
+      // calculate delta params [a] * delta = b
+      deltaParams =
+          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+
+      ACTS_INFO("aMatrix:\n"
+                   << aMatrix << "\n"
+                   << "bVector:\n"
+                   << bVector << "\n"
+                   << "deltaParams:\n"
+                   << deltaParams << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << chi2sum);
 
       tipIndex = gx2fResult.lastMeasurementIndex;
 
@@ -989,6 +995,7 @@ class Gx2Fitter {
         ACTS_DEBUG("chi2 not converging monotonically");
       }
 
+      oldChi2sumNEW = chi2sumNEW;
       oldChi2sum = chi2sum;
     }
     ACTS_DEBUG("Finished to iterate");
@@ -1108,8 +1115,8 @@ class Gx2Fitter {
 //    }
 
     // Return the converted Track
-//    return track;
-    return tconst;
+    return track;
+//    return tconst;
   }
 };
 
