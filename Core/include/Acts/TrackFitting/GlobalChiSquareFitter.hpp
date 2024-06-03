@@ -865,7 +865,7 @@ class Gx2Fitter {
 
       auto track = trackContainerTemp.makeTrack();
       track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
-      track.linkForward();
+//      track.linkForward();
       {
         // This check takes into account the evaluated dimensions of the
         // measurements. To fit, we need at least NDF+1 measurements. However,
