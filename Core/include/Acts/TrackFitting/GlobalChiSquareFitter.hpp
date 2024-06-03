@@ -1092,21 +1092,24 @@ class Gx2Fitter {
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
 
+    const auto& tconst = (track);
+
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
     track.chi2() = chi2sum;
 
     std::cout << "F_P_E_GX2F track.nMeasurements(): " << track.nMeasurements()
-              << std::endl;
+              << " | " << tconst.nMeasurements() << std::endl;
 
 //    if (((track.nMeasurements() < 2) || (track.nMeasurements() > 100)) && (nUpdate > 0)) {
-      track.nMeasurements() = 5;
+//      track.nMeasurements() = 5;
 //      std::cout << "F_P_E_GX2F_CHANGE track.nMeasurements() " << track.nMeasurements()
 //                << std::endl;
 //    }
 
     // Return the converted Track
-    return track;
+//    return track;
+    return tconst;
   }
 };
 
