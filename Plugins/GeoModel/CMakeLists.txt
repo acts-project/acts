@@ -15,6 +15,7 @@ add_library(
   src/detail/GeoModelBinningHelper.cpp
   src/detail/GeoModelExtentHelper.cpp
   src/detail/GeoUnionDoubleTrdConverter.cpp)
+
 target_include_directories(
     ActsPluginGeoModel
   PUBLIC
