@@ -8,8 +8,10 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelDbHelper.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
@@ -180,9 +182,13 @@ Acts::GeoModelBlueprintCreater::createNode(
   Transform3 transform = Acts::Transform3::Identity();
   transform.translation() = translation;
 
+  std::vector<std::string> entryTypeSplit =
+      detail::GeoModelDbHelper::splitString(entry.type, "|");
+  std::string entryType = entryTypeSplit[0u];
+
   // Block for branch or container nodes that have children
-  if (entry.type == "branch" || entry.type == "container" ||
-      entry.type == "root") {
+  if (entryType == "branch" || entryType == "container" ||
+      entryType == "root") {
     std::vector<std::unique_ptr<Experimental::Blueprint::Node>> children;
     // Check for gap filling
     bool gapFilling = false;
@@ -229,10 +235,24 @@ Acts::GeoModelBlueprintCreater::createNode(
       // Find the first child that is not a gap
       Experimental::detail::BlueprintHelper::fillGaps(*node, true);
     }
+
+    // Attach a geoID generator if configured
+    if (entryTypeSplit.size() > 1u) {
+      // Get the geometry ID from the string
+      int geoID = std::stoi(entryTypeSplit[1u]);
+      Experimental::GeometryIdGenerator::Config geoIDCfg;
+      geoIDCfg.containerMode = true;
+      geoIDCfg.containerId = geoID;
+      geoIDCfg.resetSubCounters = true;
+      // Make the container geoID generator
+      node->geoIdGenerator = std::make_shared<Experimental::GeometryIdGenerator>(
+          geoIDCfg, m_logger->clone(entry.name + "_GeometryIdGenerator"));
+    }
+
     // Create the branch node
     return node;
 
-  } else if (entry.type == "leaf") {
+  } else if (entryType == "leaf") {
     return std::make_unique<Experimental::Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, internalsBuilder,
         extent);

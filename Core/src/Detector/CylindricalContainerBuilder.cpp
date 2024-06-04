@@ -242,12 +242,14 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     if (m_cfg.geoIdReverseGen) {
       std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
-        ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
+        ACTS_VERBOSE("-> Assigning geometry id " << v->geometryId()
+                                                 << " to volume " << v->name());
       });
     } else {
       std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
         m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
-        ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
+        ACTS_VERBOSE("-> Assigning geometry id " << v->geometryId()
+                                                 << " to volume " << v->name());
       });
     }
   }

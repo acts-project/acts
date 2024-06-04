@@ -35,6 +35,9 @@ if "__main__" == __name__:
 
     print(">> Creating new table called Blueprint")
 
+    volCount = 0
+
+    volCount += 1
     cursor.execute(
         "CREATE TABLE Blueprint(id INT, type TEXT, name TEXT, bounds TEXT, internals TEXT, binnings TEXT, materials TEXT)"
     )
@@ -94,11 +97,14 @@ if "__main__" == __name__:
     OP_ring0_r_max = 205.
     OP_ring1_r_max = 265.
 
+
     OP_b_searchsplits = [ OP_r_min, 220 , 280, OP_r_max ]
 
-    OP_incl_ring2_searchsplits = [ ]
+    OP_incl_ring0_searchsplits = [ -1090, -900, -750, -650, -550, -450, -375 ]
+    OP_incl_ring1_searchsplits = [ -1090, -950, -850, -750, -650, -570, -500, -420, -375]
+    OP_incl_ring2_searchsplits = [  -1090, -990, -870,-770,-700,-625, -545, -485, -420, -375] 
 
-    OP_ec_ring0_searchsplits = [ ]
+    OP_ec_ring0_searchsplits = [ -3000, -2800, -2500, -2350, -2100, -1900, -1700, -1550, -1400, -1300, -1200, -1100 ]
     OP_ec_ring1_searchsplits = [ -3000, -2600, -2300, -2000, -1800, -1600, -1400, -1200, -1100 ]
     OP_ec_ring2_searchsplits = [  -3000, -2700, -2400, -2100, -1900, -1700, -1500, -1300, -1200, -1100 ] 
 
@@ -116,12 +122,14 @@ if "__main__" == __name__:
     S_b_searchsplits = [ 350 , 500, 700, 850 , 1100] 
     S_ec_searchsplits = [ -3000 , -2700, -2400, -2100 , -1800, -1600, -1450] 
 
+    volCount = 0
 
     # Augmenting the GeoModel sqlite
+    volCount += 1
     cursor.execute(
        f"""
     INSERT INTO Blueprint VALUES 
-            (37, 
+            ({volCount}, 
             'root', 
             'ITk', 
             'cyl|0.,{ITk_r_max},-{ITk_z_max},{ITk_z_max}',
@@ -130,10 +138,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (36, 
+            ({volCount}, 
             'leaf', 
             'ITk/NegSector', 
             'cyl|e,e,-{ITk_z_max},-{ITK_central_z_max}',
@@ -142,11 +152,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (35, 
-            'container', 
+            ({volCount}, 
+            'container|100', 
             'ITk/Central', 
             'cyl|e,e,-{ITK_central_z_max},{ITK_central_z_max}',
             'children:BeamPipe,Detectors,Outer',
@@ -154,10 +165,11 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (33, 
+            ({volCount}, 
             'leaf', 
             'ITk/PosSector',
             'cyl|,e,e,{ITK_central_z_max},{ITk_z_max}',
@@ -167,10 +179,11 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (0, 
+            ({volCount}, 
             'leaf',
             'ITk/Central/BeamPipe',
             'cyl|e,{BP_r_max},e,e',
@@ -180,11 +193,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (32, 
-            'container',
+            ({volCount}, 
+            'container|98',
             'ITk/Central/Detectors',
             'cyl|{IP_r_min},{ITk_central_r_max},e,e',
             'children:Pixels,Strips',
@@ -192,10 +206,12 @@ if "__main__" == __name__:
             '')
     """
     )
+
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (34, 
+            ({volCount}, 
             'leaf', 
             'ITk/Central/Outer', 
             'cyl|{ITk_central_r_max},e,e,e',
@@ -204,11 +220,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (30, 
-            'container',
+            ({volCount}, 
+            'container|45',
             'ITk/Central/Detectors/Pixels',
             'cyl|e,{P_r_max},e,e',
             'children:InnerPixels,OuterPixels',
@@ -216,11 +233,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
        f"""
     INSERT INTO Blueprint VALUES
-            (31, 
-            'container',
+            ({volCount}, 
+            'container|55',
             'ITk/Central/Detectors/Strips',
             'cyl|{S_r_min},e,e,e',
             'children:NegSector,Barrel,PosSector',
@@ -228,11 +246,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (20, 
-            'container',
+            ({volCount}, 
+            'container|13',
             'ITk/Central/Detectors/Pixels/InnerPixels',
             'cyl|e,{IP_r_max},e,e',
             'children:NegOuterEndcap,NegInnerEndcap,Barrel,PosInnerEndcap,PosOuterEndcap',
@@ -240,11 +259,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (25, 
-            'container',
+            ({volCount}, 
+            'container|14',
             'ITk/Central/Detectors/Pixels/OuterPixels',
             'cyl|{OP_r_min},e,e,e',
             'children:NegEndcap,NegInclined,Barrel,PosInclined,PosEndcap',
@@ -252,11 +272,12 @@ if "__main__" == __name__:
             '')
     """
     )
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (27,
-            'container',
+            ({volCount}, 
+            'container|57',
             'ITk/Central/Detectors/Strips/NegSector',
             'cyl|e,e,e,-{S_z_mid}',
             'children:NegEndcap,OuterGap',
@@ -265,11 +286,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (18,
-            'container',
+            ({volCount}, 
+            'container|50',
             'ITk/Central/Detectors/Strips/Barrel',
             'cyl|e,e,-{S_z_mid},{S_z_mid}',
             'children:*,Layer0,*,Layer1,*,Layer2,*,Layer3,*',
@@ -283,10 +305,11 @@ if "__main__" == __name__:
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (2000{i},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Strips/Barrel/Layer{i-1}',
             'cyl|i+2,i+2,e,e',
@@ -297,11 +320,12 @@ if "__main__" == __name__:
     )
 
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (29,
-            'container',
+            ({volCount}, 
+            'container|56',
             'ITk/Central/Detectors/Strips/PosSector',
             'cyl|e,e,{S_z_mid},e',
             'children:PosEndcap,OuterGap',
@@ -310,11 +334,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (17,
-            'container',
+            ({volCount}, 
+            'container|51',
             'ITk/Central/Detectors/Strips/NegSector/NegEndcap',
             'cyl|e,{S_ec_r_max},e,e',
             'children:*,Disk5,*,Disk4,*,Disk3,*,Disk2,*,Disk1,*,Disk0,*',
@@ -328,23 +353,25 @@ if "__main__" == __name__:
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (3000{i},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Strips/NegSector/NegEndcap/Disk{len(S_ec_searchsplits)-1-i}',
             'cyl|e,e,i+2,i+2',
             'layer:kdt|cyl|e,e,{S_ec_searchsplits[i-1]},{sp}',
             '', 
             '')
-    """
-    )
+        """
+        )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (26,
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Strips/NegSector/OuterGap',
             'cyl|{S_ec_r_max},e,e,e',
@@ -354,11 +381,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (19,
-            'container',
+            ({volCount}, 
+            'container|52',
             'ITk/Central/Detectors/Strips/PosSector/PosEndcap', 
             'cyl|e,{S_ec_r_max},e,e',
             'children:*,Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*',
@@ -367,10 +395,11 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (28,
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Strips/PosSector/OuterGap',
             'cyl|{S_ec_r_max},e,e,e',
@@ -387,10 +416,11 @@ if "__main__" == __name__:
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (4000{i},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Strips/PosSector/PosEndcap/Disk{i-1}',
             'cyl|e,e,i+2,i+2',
@@ -400,11 +430,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (21, 
-            'container', 
+            ({volCount}, 
+            'container|81', 
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap', 
             'cyl|e,e,e,-{OP_incl_z_max}',
             'children:Ring0,Ring1,Ring2',
@@ -413,11 +444,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (22, 
-            'container', 
+            ({volCount}, 
+            'container|82', 
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined',
             'cyl|e,e,-{OP_incl_z_max},-{OP_b_z_max}',
             'children:Ring0,Ring1,Ring2',
@@ -426,11 +458,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (10, 
-            'container', 
+            ({volCount}, 
+            'container|83', 
             'ITk/Central/Detectors/Pixels/OuterPixels/Barrel',
             'cyl|e,e,-{OP_b_z_max},{OP_b_z_max}',
             'children:*,Layer0,*,Layer1,*,Layer2,*',
@@ -443,10 +476,11 @@ if "__main__" == __name__:
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""
         INSERT INTO Blueprint VALUES
-            (1000{i+1},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/Barrel/Layer{i-1}',
             'cyl|i+2,i+2,e,e',
@@ -456,11 +490,12 @@ if "__main__" == __name__:
         """
         )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (23, 
-            'container', 
+            ({volCount}, 
+            'container|84', 
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined',
             'cyl|e,e,{OP_b_z_max},{OP_incl_z_max}',
             'children:Ring0,Ring1,Ring2',
@@ -469,11 +504,12 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (24, 
-            'container',
+            ({volCount}, 
+            'container|85',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap',
             'cyl|e,e,{OP_incl_z_max},e',
             'children:Ring0,Ring1,Ring2',
@@ -482,53 +518,74 @@ if "__main__" == __name__:
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (4,
-            'leaf',
+            ({volCount}, 
+            'container|23',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring0', 
             'cyl|e,{OP_ring0_r_max},e,e',
-            'layer:kdt|cyl|e,{OP_ring0_r_max},e,e',
-            '',
-            '')
-    """
-    )
-
-    cursor.execute(
-        f"""
-    INSERT INTO Blueprint VALUES
-            (5,
-            'container',
-            'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1',
-            'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*',
+            'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,ECRing8,*,ECRing9,*,ECRing10,*',
             'z',
             '')
     """
     )
 
+    for i,sp in enumerate(OP_ec_ring0_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        cursor.execute(
+        f"""INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring0/ECRing{len(OP_ec_ring0_searchsplits)-1-i}',
+            'cyl|e,e,i+2,i+2',
+            'layer:kdt|cyl|e,e,{OP_ec_ring0_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+    volCount += 1
+    cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'container|33',
+            'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1',
+            'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
+            'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*',
+            'z',
+            '')
+        """
+        )
+
     for i,sp in enumerate(OP_ec_ring1_searchsplits):
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""INSERT INTO Blueprint VALUES
-            (5008{i},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1/ECRing{len(OP_ec_ring1_searchsplits)-1-i}',
             'cyl|e,e,i+2,i+2',
             'layer:kdt|cyl|e,e,{OP_ec_ring1_searchsplits[i-1]},{sp}',
             '', 
             '')
-    """
-    )
+        """
+        )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (6, 
-            'container',
+            ({volCount}, 
+            'container|43',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring2',
             'cyl|{OP_ring1_r_max},e,e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*,ECRing8,*',
@@ -542,114 +599,202 @@ if "__main__" == __name__:
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (5009{i},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring2/ECRing{len(OP_ec_ring2_searchsplits)-1-i}',
             'cyl|e,e,i+2,i+2',
             'layer:kdt|cyl|e,e,{OP_ec_ring2_searchsplits[i-1]},{sp}',
             '', 
             '')
-    """
-    )
+        """
+        )
 
+    volCount += 1
     cursor.execute(
        f"""
     INSERT INTO Blueprint VALUES
-            (7, 
-            'leaf',
+            ({volCount}, 
+            'container|21',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0',
             'cyl|e,{OP_ring0_r_max},e,e',
-            'layer:kdt|cyl|e,{OP_ring0_r_max},e,e',
-            '', 
+            'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*',
+            'z', 
             '')
     """
     )
 
+   # Inclined Layers
+    for i,sp in enumerate(OP_incl_ring0_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0/InclRing{len(OP_incl_ring0_searchsplits)-1-i}',
+            'cyl|e,e,i+2,i+2',
+            'layer:kdt|cyl|e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (8,
-            'leaf',
+            ({volCount}, 
+            'container|31',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring1',
             'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            'layer:kdt|cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
+            'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*',
+            'z', 
+            '')
+    """
+    )
+
+   # Inclined Layers
+    for i,sp in enumerate(OP_incl_ring1_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != len(OP_incl_ring1_searchsplits)-1 else 'i+2,e'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring1/InclRing{len(OP_incl_ring1_searchsplits)-1-i}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{OP_incl_ring1_searchsplits[i-1]},{sp}',
             '', 
             '')
-    """
-    )
+        """
+        )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (9,
-            'leaf',
+            ({volCount}, 
+            'container|41',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring2',
             'cyl|{OP_ring1_r_max},e,e,e',
-            'layer:kdt|cyl|{OP_ring1_r_max},e,e,e',
-            '',
+            'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*,InclRing8,*',
+            'z',
             '')
     """
     )
 
+   # Inclined Layers
+    for i,sp in enumerate(OP_incl_ring2_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != len(OP_incl_ring2_searchsplits)-1 else 'i+2,e'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring2/InclRing{len(OP_incl_ring2_searchsplits)-1-i}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{OP_incl_ring2_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (11,
-            'leaf',
+            ({volCount}, 
+            'container|24',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring0',
             'cyl|e,{OP_ring0_r_max},e,e',
-            'layer:kdt|cyl|e,{OP_ring0_r_max},e,e',
-            '',
+            'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,ECRing8,*,ECRing9,*,ECRing10,*',
+            'z',
             '')
     """
     )
 
+    OP_ec_ring0_searchsplits = [ -1 * ss for ss in OP_ec_ring0_searchsplits ]
+    OP_ec_ring0_searchsplits.reverse()
+    for i,sp in enumerate(OP_ec_ring0_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        cursor.execute(
+                f"""
+        INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring0/ECRing{i-1}',
+            'cyl|e,e,i+2,i+2',
+            'layer:kdt|cyl|e,e,{OP_ec_ring0_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (12,
-            'leaf',
+            ({volCount}, 
+            'container|34',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring1',
             'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*',
-            '',
+            'z',
             '')
     """
     )
     OP_ec_ring1_searchsplits = [ -1 * ss for ss in OP_ec_ring1_searchsplits ]
     OP_ec_ring1_searchsplits.reverse()
     for i,sp in enumerate(OP_ec_ring1_searchsplits):
-                if i == 0:
-                        continue
-                # now make the layers
-                cursor.execute(
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        cursor.execute(
                 f"""
-INSERT INTO Blueprint VALUES
-            (6000{i},
+        INSERT INTO Blueprint VALUES
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring1/ECRing{i-1}',
             'cyl|e,e,i+2,i+2',
             'layer:kdt|cyl|e,e,{OP_ec_ring1_searchsplits[i-1]},{sp}',
             '', 
             '')
-    """
-    )
+        """
+        )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (13, 
-            'container',
+            ({volCount}, 
+            'container|44',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring2',
             'cyl|{OP_ring1_r_max},e,e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*,ECRing8,*',
             'z', 
             '')
-    """
-    )
+        """
+        )
 
     # Endcap Layers
     OP_ec_ring2_searchsplits = [ -1 * ss for ss in OP_ec_ring2_searchsplits ]
@@ -658,62 +803,134 @@ INSERT INTO Blueprint VALUES
         if i == 0:
             continue
         # now make the layers
+        volCount += 1
         cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (6000{i},
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring2/ECRing{i-1}',
             'cyl|e,e,i+2,i+2',
             'layer:kdt|cyl|e,e,{OP_ec_ring2_searchsplits[i-1]},{sp}',
             '', 
             '')
-    """
-    )
+        """
+        )
         
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (14, 
-            'leaf',
+            ({volCount}, 
+            'container|22',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0',
             'cyl|e,{OP_ring0_r_max},e,e',
-            'layer:kdt|cyl|e,{OP_ring0_r_max},e,e',
-            '', 
+            'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*',
+            'z', 
             '')
     """
     )
 
+    OP_incl_ring0_searchsplits = [ -1 * ss for ss in OP_incl_ring0_searchsplits ]
+    OP_incl_ring0_searchsplits.reverse()
+    for i,sp in enumerate(OP_incl_ring0_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        cursor.execute(
+        f"""           
+      INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0/InclRing{i-1}',
+            'cyl|e,e,i+2,i+2',
+            'layer:kdt|cyl|e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+    volCount += 1
     cursor.execute(
        f"""
     INSERT INTO Blueprint VALUES
-            (15,
-            'leaf',
+            ({volCount}, 
+            'container|32',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring1',
             'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            'layer:kdt|cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
-            '', 
+            'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*',
+            'z', 
             '')
     """
     )
 
+    # Inclined Layers
+    OP_incl_ring1_searchsplits = [ -1 * ss for ss in OP_incl_ring1_searchsplits ]
+    OP_incl_ring1_searchsplits.reverse()
+    for i,sp in enumerate(OP_incl_ring1_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != 1 else 'e,i+2'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring1/InclRing{i-1}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{OP_incl_ring1_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (16,
-            'leaf',
+            ({volCount}, 
+            'container|42',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring2',
             'cyl|{OP_ring1_r_max},e,e,e',
-            'layer:kdt|cyl|{OP_ring1_r_max},e,e,e',
-            '',
+            'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*,InclRing8,*',
+            'z',
             '')
     """
     )
+
+    # Inclined Layers
+    OP_incl_ring2_searchsplits = [ -1 * ss for ss in OP_incl_ring2_searchsplits ]
+    OP_incl_ring2_searchsplits.reverse()
+    
+    for i,sp in enumerate(OP_incl_ring2_searchsplits):
+           if i == 0:
+                  continue
+           # now make the layers
+           volCount += 1
+           zbest = 'i+2,i+2' if i != 1 else 'e,i+2'
+           cursor.execute(
+                f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring2/InclRing{i-1}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{OP_incl_ring2_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (1001, 
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap',
             'cyl|e,e,e,-{IP_iec_z_max}',
@@ -723,10 +940,11 @@ INSERT INTO Blueprint VALUES
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (1002, 
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap',
             'cyl|e,e,-{IP_iec_z_max},-{IP_b_z_max}',
@@ -737,11 +955,12 @@ INSERT INTO Blueprint VALUES
     )
 
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (2,
-            'container',
+            ({volCount}, 
+            'container|10',
             'ITk/Central/Detectors/Pixels/InnerPixels/Barrel',
             'cyl|e,e,-{IP_b_z_max},{IP_b_z_max}',
             'children:Layer0,*,Layer1,*',
@@ -750,10 +969,11 @@ INSERT INTO Blueprint VALUES
     """
     )
 
+    volCount += 1
     cursor.execute(
-        """
+        f"""
     INSERT INTO Blueprint VALUES
-            (201,
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/Barrel/Layer0',
             'cyl|i+2,i+2,e,e',
@@ -763,10 +983,11 @@ INSERT INTO Blueprint VALUES
     """
     )
 
+    volCount += 1
     cursor.execute(
-        """
+        f"""
     INSERT INTO Blueprint VALUES
-            (202,
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/Barrel/Layer1',
             'cyl|i+2,i+2,e,e',
@@ -776,10 +997,11 @@ INSERT INTO Blueprint VALUES
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (103, 
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap',
             'cyl|e,e,{IP_b_z_max},{IP_iec_z_max}',
@@ -789,10 +1011,11 @@ INSERT INTO Blueprint VALUES
     """
     )
 
+    volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
-            (104, 
+            ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap',
             'cyl|e,e,{IP_iec_z_max},e',

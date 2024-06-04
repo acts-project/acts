@@ -80,9 +80,9 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
         position = Acts::Vector3(refC * std::cos(phi), refC * std::sin(phi),
                                  refPosition.z());
       } else if (bValue == Acts::binZ) {
-        position[2] = refC;
         // correct to global
-        refC += surface.transform(gctx).translation().z();
+        refC += surface.transform(gctx).translation().z();j
+        position[2] = refC;
       } else if (bValue == Acts::binPhi) {
         Acts::ActsScalar r = Acts::VectorHelpers::perp(refPosition);
         position = Acts::Vector3(r * std::cos(refC), r * std::sin(refC),
