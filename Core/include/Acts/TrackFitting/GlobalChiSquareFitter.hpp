@@ -219,66 +219,9 @@ struct Gx2FitterResult {
 
   Result<void> result{Result<void>::success()};
 
-  // collectors REMOVE
-  std::vector<ActsScalar> collectorResiduals;
-  std::vector<ActsScalar> collectorCovariances;
-  std::vector<BoundVector> collectorProjectedJacobians;
-  BoundMatrix jacobianFromStart = BoundMatrix::Identity();
-
   // Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
 };
-
-/// REMOVE
-///
-/// @tparam measDim Number of dimensions of the measurement
-/// @tparam traj_t The trajectory type
-///
-/// @param trackStateProxy is the track state proxy
-/// @param result is the mutable result/cache object
-/// @param logger a logger instance
-template <std::size_t measDim, typename traj_t>
-void collector(const typename traj_t::ConstTrackStateProxy& trackStateProxy,
-               Gx2FitterResult<traj_t>& result, const Logger& logger) {
-  auto predicted = trackStateProxy.predicted();
-  auto measurement = trackStateProxy.template calibrated<measDim>();
-  auto covarianceMeasurement =
-      trackStateProxy.template calibratedCovariance<measDim>();
-  // Project Jacobian and predicted measurements into the measurement dimensions
-  auto projJacobian = (trackStateProxy.projector()
-                           .template topLeftCorner<measDim, eBoundSize>() *
-                       result.jacobianFromStart)
-                          .eval();
-  auto projPredicted = (trackStateProxy.projector()
-                            .template topLeftCorner<measDim, eBoundSize>() *
-                        predicted)
-                           .eval();
-
-  ACTS_VERBOSE("Processing and collecting measurements in Actor:"
-               << "\n    Measurement:\t" << measurement.transpose()
-               << "\n    Predicted:\t" << predicted.transpose()
-               << "\n    Projector:\t" << trackStateProxy.effectiveProjector()
-               << "\n    Projected Jacobian:\t" << projJacobian
-               << "\n    Covariance Measurements:\t" << covarianceMeasurement);
-
-  // Collect residuals, covariances, and projected jacobians
-  for (std::size_t i = 0; i < measDim; i++) {
-    if (covarianceMeasurement(i, i) < 1e-10) {
-      ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
-                                                             << ") ~ 0")
-      continue;
-    }
-
-    result.collectorResiduals.push_back(measurement[i] - projPredicted[i]);
-    result.collectorCovariances.push_back(covarianceMeasurement(i, i));
-    result.collectorProjectedJacobians.push_back(projJacobian.row(i));
-
-    ACTS_VERBOSE("    Splitting the measurement:"
-                 << "\n        Residual:\t" << measurement[i] - projPredicted[i]
-                 << "\n        Covariance:\t" << covarianceMeasurement(i, i)
-                 << "\n        Projected Jacobian:\t" << projJacobian.row(i));
-  }
-}
 
 /// addToGx2fSums Function
 /// The function processes each measurement for the GX2F Actor fitting process.
@@ -294,65 +237,65 @@ void collector(const typename traj_t::ConstTrackStateProxy& trackStateProxy,
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
-//template <std::size_t kMeasDim, typename track_state_t>
-//void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
-//                   const BoundMatrix& jacobianFromStart,
-//                   const track_state_t& trackState, const Logger& logger) {
-//  auto predicted = trackState.predicted();
-//  auto measurement = trackState.template calibrated<kMeasDim>();
-//  auto covarianceMeasurement =
-//      trackState.template calibratedCovariance<kMeasDim>();
-//  auto projector =
-//      (trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>())
-//          .eval();
-//
-//  auto projJacobian = (projector * jacobianFromStart).eval();
-//  auto projPredicted = (projector * predicted).eval();
-//
-//  auto residual = measurement - projPredicted;
-//
-//  ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
-//               << "kMeasDim: " << kMeasDim << "\n"
-//               << "predicted" << predicted.transpose() << "\n"
-//               << "measurement: " << measurement.transpose() << "\n"
-//               << "covarianceMeasurement:\n"
-//               << covarianceMeasurement << "\n"
-//               << "projector:\n"
-//               << projector << "\n"
-//               << "projJacobian:\n"
-//               << projJacobian << "\n"
-//               << "projPredicted: " << projPredicted.transpose() << "\n"
-//               << "residual: " << residual.transpose());
-//
-//  auto safeInvCovMeasurement = safeInverse(covarianceMeasurement.eval());
-//
-//  if (safeInvCovMeasurement) {
-//    chi2sum +=
-//        (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-//    aMatrix +=
-//        (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-//            .eval();
-//    bVector +=
-//        (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
-//
-//    ACTS_VERBOSE(
-//        "aMatrixMeas:\n"
-//        << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-//               .eval()
-//        << "\n"
-//        << "bVectorMeas: "
-//        << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
-//               .eval()
-//        << "\n"
-//        << "chi2sumMeas: "
-//        << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
-//        << "\n"
-//        << "safeInvCovMeasurement:\n"
-//        << (*safeInvCovMeasurement));
-//  } else {
-//    ACTS_WARNING("\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻\n");
-//  }
-//}
+template <std::size_t kMeasDim, typename track_state_t>
+void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
+                   const BoundMatrix& jacobianFromStart,
+                   const track_state_t& trackState, const Logger& logger) {
+  auto predicted = trackState.predicted();
+  auto measurement = trackState.template calibrated<kMeasDim>();
+  auto covarianceMeasurement =
+      trackState.template calibratedCovariance<kMeasDim>();
+  auto projector =
+      (trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>())
+          .eval();
+
+  auto projJacobian = (projector * jacobianFromStart).eval();
+  auto projPredicted = (projector * predicted).eval();
+
+  auto residual = measurement - projPredicted;
+
+  ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
+               << "kMeasDim: " << kMeasDim << "\n"
+               << "predicted" << predicted.transpose() << "\n"
+               << "measurement: " << measurement.transpose() << "\n"
+               << "covarianceMeasurement:\n"
+               << covarianceMeasurement << "\n"
+               << "projector:\n"
+               << projector << "\n"
+               << "projJacobian:\n"
+               << projJacobian << "\n"
+               << "projPredicted: " << projPredicted.transpose() << "\n"
+               << "residual: " << residual.transpose());
+
+  auto safeInvCovMeasurement = safeInverse(covarianceMeasurement.eval());
+
+  if (safeInvCovMeasurement) {
+    chi2sum +=
+        (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
+    aMatrix +=
+        (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
+            .eval();
+    bVector +=
+        (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
+
+    ACTS_VERBOSE(
+        "aMatrixMeas:\n"
+        << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
+               .eval()
+        << "\n"
+        << "bVectorMeas: "
+        << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
+               .eval()
+        << "\n"
+        << "chi2sumMeas: "
+        << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
+        << "\n"
+        << "safeInvCovMeasurement:\n"
+        << (*safeInvCovMeasurement));
+  } else {
+    ACTS_WARNING("\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻\n");
+  }
+}
 
 BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
                                  const BoundVector& bVector);
@@ -556,26 +499,6 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
             typeFlags.set(TrackStateFlag::MaterialFlag);
-          }
-
-          {// REMOVE
-          result.jacobianFromStart =
-              trackStateProxy.jacobian() * result.jacobianFromStart;
-
-          // Collect:
-          // - Residuals
-          // - Covariances
-          // - ProjectedJacobians
-          if (trackStateProxy.calibratedSize() == 1) {
-            collector<1>(trackStateProxy, result, *actorLogger);
-          } else if (trackStateProxy.calibratedSize() == 2) {
-            collector<2>(trackStateProxy, result, *actorLogger);
-          } else {
-            ACTS_WARNING("Found measurement with "
-                         << trackStateProxy.calibratedSize()
-                         << " dimensions. Only measurements of 1 and 2 "
-                            "dimensions are implemented yet.");
-          }
           }
 
           // Set the measurement type flag
@@ -801,11 +724,13 @@ class Gx2Fitter {
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
-//    BoundVector deltaParamsNEW = BoundVector::Zero();
-//    double chi2sumNEW = 0;
-//    double oldChi2sumNEW = std::numeric_limits<double>::max();
-//    BoundMatrix aMatrixNEW = BoundMatrix::Zero();
-//    BoundVector bVectorNEW = BoundVector::Zero();
+    // We need to create a temporary track container. We create several times a
+    // new track and delete it after updating the parameters. However, if we
+    // would work on the externally provided track container, it would be
+    // difficult to remove the correct track, if it contains more than one.
+    track_container_t tc;
+    traj_t traj;
+    TrackContainer trackContainerTemp{tc, traj};
 
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
@@ -844,11 +769,6 @@ class Gx2Fitter {
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
 
-      track_container_t tc;
-      traj_t traj;
-//      TrackContainer<track_container_t, traj_t, holder_t> trackContainerTemp{tc, traj};// = trackContainer;
-      TrackContainer trackContainerTemp{tc, traj};// = trackContainer;
-
       r.fittedStates = &trackContainerTemp.trackStateContainer();
 
       // Clear the track container. It could be more performant to update the
@@ -869,104 +789,63 @@ class Gx2Fitter {
       auto track = trackContainerTemp.makeTrack();
       track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
       track.linkForward();
-//      {
-//        // This check takes into account the evaluated dimensions of the
-//        // measurements. To fit, we need at least NDF+1 measurements. However,
-//        // we count n-dimensional measurements for n measurements, reducing the
-//        // effective number of needed measurements.
-//        // We might encounter the case, where we cannot use some (parts of a)
-//        // measurements, maybe if we do not support that kind of measurement. This is also taken into account here. `ndf = 4` is chosen, since this a minimum that makes sense for us, but a more general approach is desired. We skip the check during the first iteration, since we cannot guarantee to hit all/enough measurement surfaces with the initial parameter guess.
-//        // TODO genernalize for n-dimensional fit
-//        //      constexpr std::size_t ndf = 4;
-//        //      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
-//        //        ACTS_INFO("Not enough measurements. Require "
-//        //                  << ndf + 1 << ", but only " << countNdf << " could be used.");
-//        //        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
-//        //      }
-//
-        // REMOVE
-        constexpr std::size_t ndf = 4;
-        if ((nUpdate > 0) && (ndf + 1 > gx2fResult.collectorResiduals.size())) {
-          ACTS_INFO("Not enough measurements. Require "
-                    << ndf + 1 << ", but only "
-                    << gx2fResult.collectorResiduals.size()
-                    << " could be used.");
-          return Experimental::GlobalChiSquareFitterError::
-              NotEnoughMeasurements;
-        }
-//
-//        // This goes up for each measurement (for each dimension)
-//        std::size_t countNdf = 0;
-//
-//        chi2sumNEW = 0;
-//        aMatrixNEW = BoundMatrix::Zero();
-//        bVectorNEW = BoundVector::Zero();
-//
-//        BoundMatrix jacobianFromStart = BoundMatrix::Identity();
-//
-//        for (const auto& trackState : track.trackStates()) {
-//          auto typeFlags = trackState.typeFlags();
-//          if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-//            /// Handle measurement
-//
-//            auto measDim = trackState.calibratedSize();
-//            countNdf += measDim;
-//
-//            jacobianFromStart = trackState.jacobian() * jacobianFromStart;
-//
-//            if (measDim == 1) {
-//              addToGx2fSums<1>(aMatrixNEW, bVectorNEW, chi2sumNEW, jacobianFromStart,
-//                               trackState, *m_addToSumLogger);
-//            } else if (measDim == 2) {
-//              addToGx2fSums<2>(aMatrixNEW, bVectorNEW, chi2sumNEW, jacobianFromStart,
-//                               trackState, *m_addToSumLogger);
-//            } else {
-//              ACTS_ERROR("Can not process state with measurement with "
-//                         << measDim << " dimensions.")
-//              countNdf -= measDim;
-//            }
-//          } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
-//            /// Handle hole
-//            ACTS_VERBOSE("Handle hole.")
-//          } else {
-//            ACTS_WARNING("Unknown state encountered")
-//          }
-//          /// Missing: Material handling. Should be there for hole and measurement
-//        }
-//
-//        // calculate delta params [a] * delta = b
-//        deltaParamsNEW =
-//            calculateDeltaParams(gx2fOptions.zeroField, aMatrixNEW, bVectorNEW);
-//
-//        ACTS_INFO("aMatrixNEW:\n"
-//                  << aMatrixNEW << "\n"
-//                  << "bVectorNEW:\n"
-//                  << bVectorNEW << "\n"
-//                  << "deltaParamsNEW:\n"
-//                  << deltaParamsNEW << "\n"
-//                  << "oldChi2sumNEW = " << oldChi2sumNEW << "\n"
-//                  << "chi2sumNEW = " << chi2sumNEW);
-//      }
+
+      // This goes up for each measurement (for each dimension)
+      std::size_t countNdf = 0;
+
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
       bVector = BoundVector::Zero();
 
-      // TODO generalize for non-2D measurements
-      for (std::size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
-           iMeas++) {
-        const auto ri = gx2fResult.collectorResiduals[iMeas];
-        const auto covi = gx2fResult.collectorCovariances[iMeas];
-        const auto projectedJacobian =
-            gx2fResult.collectorProjectedJacobians[iMeas];
+      BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
-        const double chi2meas = ri / covi * ri;
-        const BoundMatrix aMatrixMeas =
-            projectedJacobian * projectedJacobian.transpose() / covi;
-        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
+      for (const auto& trackState : track.trackStates()) {
+        auto typeFlags = trackState.typeFlags();
+        if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+          /// Handle measurement
 
-        chi2sum += chi2meas;
-        aMatrix += aMatrixMeas;
-        bVector += bVectorMeas;
+          auto measDim = trackState.calibratedSize();
+          countNdf += measDim;
+
+          jacobianFromStart = trackState.jacobian() * jacobianFromStart;
+
+          if (measDim == 1) {
+            addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 2) {
+            addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else {
+            ACTS_ERROR("Can not process state with measurement with "
+                       << measDim << " dimensions.")
+            countNdf -= measDim;
+          }
+        } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
+          /// Handle hole
+          ACTS_VERBOSE("Handle hole.")
+        } else {
+          ACTS_WARNING("Unknown state encountered")
+        }
+        /// Missing: Material handling. Should be there for hole and measurement
+      }
+
+      // This check takes into account the evaluated dimensions of the
+      // measurements. To fit, we need at least NDF+1 measurements. However,
+      // we count n-dimensional measurements for n measurements, reducing the
+      // effective number of needed measurements.
+      // We might encounter the case, where we cannot use some (parts of a)
+      // measurements, maybe if we do not support that kind of measurement.
+      // This is also taken into account here. `ndf = 4` is chosen, since this
+      // a minimum that makes sense for us, but a more general approach is
+      // desired. We skip the check during the first iteration, since we
+      // cannot guarantee to hit all/enough measurement surfaces with the
+      // initial parameter guess.
+      // TODO genernalize for n-dimensional fit
+      constexpr std::size_t ndf = 4;
+      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+        ACTS_INFO("Not enough measurements. Require "
+                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
       // calculate delta params [a] * delta = b
@@ -974,13 +853,13 @@ class Gx2Fitter {
           calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
 
       ACTS_INFO("aMatrix:\n"
-                   << aMatrix << "\n"
-                   << "bVector:\n"
-                   << bVector << "\n"
-                   << "deltaParams:\n"
-                   << deltaParams << "\n"
-                   << "oldChi2sum = " << oldChi2sum << "\n"
-                   << "chi2sum = " << chi2sum);
+                << aMatrix << "\n"
+                << "bVector:\n"
+                << bVector << "\n"
+                << "deltaParams:\n"
+                << deltaParams << "\n"
+                << "oldChi2sum = " << oldChi2sum << "\n"
+                << "chi2sum = " << chi2sum);
 
       tipIndex = gx2fResult.lastMeasurementIndex;
 
@@ -998,7 +877,6 @@ class Gx2Fitter {
         ACTS_DEBUG("chi2 not converging monotonically");
       }
 
-//      oldChi2sumNEW = chi2sumNEW;
       oldChi2sum = chi2sum;
     }
     ACTS_DEBUG("Finished to iterate");
