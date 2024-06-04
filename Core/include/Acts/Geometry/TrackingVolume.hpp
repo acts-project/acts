@@ -13,6 +13,7 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
