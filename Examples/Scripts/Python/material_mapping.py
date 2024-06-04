@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import argparse
 
 import acts
 from acts import (
@@ -31,6 +32,7 @@ def runMaterialMapping(
     outputDir,
     inputDir,
     mapName="material-map",
+    mapFormat=JsonFormat.Json,
     mapSurface=True,
     mapVolume=True,
     readCachedSurfaceInformation=False,
@@ -106,7 +108,7 @@ def runMaterialMapping(
         level=acts.logging.VERBOSE,
         converterCfg=jmConverterCfg,
         fileName=os.path.join(outputDir, mapName),
-        writeFormat=JsonFormat.Json,
+        writeFormat=mapFormat,
     )
 
     mmAlgCfg.materialWriters = [jmw]
@@ -130,6 +132,27 @@ def runMaterialMapping(
 
 
 if "__main__" == __name__:
+    p = argparse.ArgumentParser(description="Script to generate ACTS material map")
+    p.add_argument(
+        "-o",
+        "--outFile",
+        type=str,
+        default="material-map.json",
+        help="Output filename for the generated material map. Supported formats: JSON, CBOR.",
+    )
+    args = p.parse_args()
+    if ".json" in args.outFile:
+        mapFormat = JsonFormat.Json
+    elif ".cbor" in args.outFile:
+        mapFormat = JsonFormat.Cbor
+    else:
+        print(
+            "ERROR(material_mapping.py): please provide an output name ending with .json or .cbor"
+        )
+        exit()
+
+    mapName = args.outFile.split(".")[0]
+
     matDeco = acts.IMaterialDecorator.fromFile("geometry-map.json")
     detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
 
@@ -139,4 +162,6 @@ if "__main__" == __name__:
         outputDir=os.getcwd(),
         inputDir=os.getcwd(),
         readCachedSurfaceInformation=False,
+        mapName=mapName,
+        mapFormat=mapFormat,
     ).run()
