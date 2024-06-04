@@ -732,6 +732,14 @@ class Gx2Fitter {
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
+    // We need to create a temporary track container. We create several times a
+    // new track and delete it after updating the parameters. However, if we
+    // would work on the externally provided track container, it would be
+    // difficult to remove the correct track, if it contains more than one.
+    track_container_t tc;
+    traj_t traj;
+    TrackContainer trackContainerTemp{tc, traj};
+
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
@@ -768,11 +776,11 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trackContainer.trackStateContainer();
+      r.fittedStates = &trackContainerTemp.trackStateContainer();
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
-      trackContainer.clear();
+      trackContainerTemp.clear();
 
       auto propagationResult = m_propagator.template propagate(propagatorState);
 
@@ -938,10 +946,6 @@ class Gx2Fitter {
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
-
-      // Clear the track container. It could be more performant to update the
-      // existing states, but this needs some more thinking.
-      trackContainer.clear();
 
       m_propagator.template propagate(propagatorState);
     }
