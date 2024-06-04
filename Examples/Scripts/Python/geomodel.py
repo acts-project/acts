@@ -137,7 +137,7 @@ def main():
         volumeOptions.surfaceOptions = surfaceOptions
 
         xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
-        zrRange = acts.Extent([[acts.Binning.phi, [-0.5, 0.5]]])
+        zrRange = acts.Extent([[acts.Binning.phi, [-0.8, 0.8]]])
 
         acts.svg.viewDetector(
             gContext,

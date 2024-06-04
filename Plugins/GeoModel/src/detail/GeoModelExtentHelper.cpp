@@ -14,7 +14,7 @@
 
 std::vector<Acts::BinningValue>
 Acts::detail::GeoModelExentHelper::readConstaints(
-    const std::vector<std::string>& boundsEntry, std::size_t boundsPos,
+    const std::vector<std::string>& boundsEntry,
     const std::string& ctype) {
   // Check the bounds entry
   if (boundsEntry.size() < 2u) {
@@ -24,10 +24,10 @@ Acts::detail::GeoModelExentHelper::readConstaints(
   }
   std::set<Acts::BinningValue> constraints;
   // Switch on the bounds type
-  if (boundsEntry[boundsPos] == "cyl") {
+  if (boundsEntry[0u] == "cyl") {
     // Capture the values
     std::vector<std::string> valuesEntry =
-        GeoModelDbHelper::splitString(boundsEntry[boundsPos + 1u], ",");
+        GeoModelDbHelper::splitString(boundsEntry[1u], ",");
     if (valuesEntry.size() < 4u) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: Cylinder bounds entry has to have at "
@@ -48,7 +48,7 @@ Acts::detail::GeoModelExentHelper::readConstaints(
 
 std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent>
 Acts::detail::GeoModelExentHelper::extentFromTable(
-    const std::vector<std::string>& boundsEntry, std::size_t boundsPos,
+    const std::vector<std::string>& boundsEntry,
     const Acts::Extent& externalExtent, const Acts::Extent& internalExtent) {
   // Check the bounds entry
   if (boundsEntry.size() < 2u) {
@@ -62,12 +62,12 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
   VolumeBounds::BoundsType boundsType = VolumeBounds::BoundsType::eOther;
   Extent extent;
   // Switch on the bounds type
-  if (boundsEntry[boundsPos] == "cyl") {
+  if (boundsEntry[0u] == "cyl") {
     // Set the bounds type
     boundsType = VolumeBounds::BoundsType::eCylinder;
     // Capture the values
     std::vector<std::string> valuesEntry =
-        GeoModelDbHelper::splitString(boundsEntry[boundsPos + 1u], ",");
+        GeoModelDbHelper::splitString(boundsEntry[1u], ",");
     if (valuesEntry.size() < 4u) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: Cylinder bounds entry has to have at "

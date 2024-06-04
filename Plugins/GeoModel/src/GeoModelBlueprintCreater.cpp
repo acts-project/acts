@@ -107,10 +107,10 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
     // volume bounds of top volume might be overruled for top node
     std::vector<std::string> volumeBounds =
         (!options.topBoundsOverride.empty() && volumeName == options.topEntry)
-            ? GeoModelDbHelper::splitString(options.topBoundsOverride, ";")
-            : GeoModelDbHelper::splitString(line.at(3), ";");
+            ? GeoModelDbHelper::splitString(options.topBoundsOverride, "|")
+            : GeoModelDbHelper::splitString(line.at(3), "|");
     std::vector<std::string> volumeInternals =
-        GeoModelDbHelper::splitString(line.at(4), ";");
+        GeoModelDbHelper::splitString(line.at(4), ":");
     std::vector<std::string> volumeBinnings =
         GeoModelDbHelper::splitString(line.at(5), ";");
     std::vector<std::string> volumeMaterials =
@@ -160,7 +160,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   // Peak into the volume entry to understand which one should be constraint
   // by the internals building
   auto internalContraints =
-      detail::GeoModelExentHelper::readConstaints(entry.bounds, 0u, "i");
+      detail::GeoModelExentHelper::readConstaints(entry.bounds, "i");
 
   // Create and return the container node with internal constrtins
   auto [internalsBuilder, internalExtent] = createInternalStructureBuilder(
@@ -258,16 +258,22 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
   // Build a layer structure
   if (entry.internals[0u] == "layer") {
     // Check if the internals entry is interpretable
-    if (entry.internals.size() < 3u) {
+    if (entry.internals.size() < 2u) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: Internals entry not complete.");
     }
 
+    // Internal split of the internals
+    std::vector<std::string> internalsSplit =
+        detail::GeoModelDbHelper::splitString(entry.internals[1u], "|");
+
     // Prepare an internal extent
     Extent internalExtent;
-    if (entry.internals[1u] == "kdt" && cache.kdtSurfaces != nullptr) {
+    if (internalsSplit[0u] == "kdt" && cache.kdtSurfaces != nullptr) {
+      std::vector<std::string> internalsData = {internalsSplit[1u],
+                                                internalsSplit[2u]};
       auto [boundsType, rangeExtent] =
-          detail::GeoModelExentHelper::extentFromTable(entry.internals, 2u,
+          detail::GeoModelExentHelper::extentFromTable(internalsData,
                                                        externalExtent);
 
       ACTS_VERBOSE("Requested range: " << rangeExtent.toString());
@@ -328,7 +334,7 @@ Acts::GeoModelBlueprintCreater::parseBounds(
   Vector3 translation{0., 0., 0.};
   std::vector<ActsScalar> boundValues = {};
   auto [boundsType, extent] = detail::GeoModelExentHelper::extentFromTable(
-      boundsEntry, 0u, externalExtent, internalExtent);
+      boundsEntry, externalExtent, internalExtent);
 
   // Switch on the bounds type
   if (boundsEntry[0u] == "cyl") {

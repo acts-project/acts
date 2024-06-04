@@ -22,24 +22,22 @@ namespace Acts::detail::GeoModelExentHelper {
 /// @brief Helper function to find out which ones are constraint from internal / external
 ///
 /// @param boundsEntry the bounds entry from the database
-/// @param boundsPos the position of the bound in the entry
 /// @param ctype the type of the constraint as string from the database
 ///
 /// @return a vector
 std::vector<BinningValue> readConstaints(
-    const std::vector<std::string>& boundsEntry, std::size_t boundsPos,
+    const std::vector<std::string>& boundsEntry,
     const std::string& ctype = "i");
 
 /// @brief Helper function to create the extent from database volume entry
 ///
 /// @param boundsEntry the bounds entry from the database
-/// @param boundsPos the position of the bound in the entry
 /// @param externalExtent the extend from external constraints (marked "e" in the database)
 /// @param internalExtent the extend of the internal objects (marked "i" in the database)
 ///
 /// @return a tuple of the bounds type, the extent, and a list of binning values to be determined from the internals
 std::tuple<VolumeBounds::BoundsType, Extent> extentFromTable(
-    const std::vector<std::string>& boundsEntry, std::size_t boundsPos,
+    const std::vector<std::string>& boundsEntry,
     const Extent& externalExtent = Extent(),
     const Extent& internalExtent = Extent());
 
