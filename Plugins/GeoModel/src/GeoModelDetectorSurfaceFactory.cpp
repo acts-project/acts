@@ -12,104 +12,127 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoUnionConverter.hpp"
 
-#include <GeoModelKernel/GeoShapeUnion.h>
 #include <GeoModelKernel/GeoShapeShift.h>
+#include <GeoModelKernel/GeoShapeUnion.h>
 
 namespace {
-  std::string gname(const GeoShapeShift &gshift);
-  std::string gname(const GeoShapeUnion &gunion);
-  std::string gname(const GeoShape &gshape);
+std::string gname(const GeoShapeShift &gshift);
+std::string gname(const GeoShapeUnion &gunion);
+std::string gname(const GeoShape &gshape);
 
-  std::string gname(const GeoShapeShift &gshift){
-    return "Shift[" + gname(*gshift.getOp()) + "]";
-  }
-  std::string gname(const GeoShapeUnion &gunion){
-    return "Union[" + gname(*gunion.getOpA()) + ", " + gname(*gunion.getOpB()) + "]";
-  }
-  std::string gname(const GeoShape &gshape){
-    if( auto ptr = dynamic_cast<const GeoShapeUnion *>(&gshape); ptr != nullptr){
-      return gname(*ptr);
-    }
-    if( auto ptr = dynamic_cast<const GeoShapeShift *>(&gshape); ptr != nullptr) {
-      return gname(*ptr);
-    }
-    return gshape.type();
-  }
+std::string gname(const GeoShapeShift &gshift) {
+  return "Shift[" + gname(*gshift.getOp()) + "]";
 }
+std::string gname(const GeoShapeUnion &gunion) {
+  return "Union[" + gname(*gunion.getOpA()) + ", " + gname(*gunion.getOpB()) +
+         "]";
+}
+std::string gname(const GeoShape &gshape) {
+  if (auto ptr = dynamic_cast<const GeoShapeUnion *>(&gshape); ptr != nullptr) {
+    return gname(*ptr);
+  }
+  if (auto ptr = dynamic_cast<const GeoShapeShift *>(&gshape); ptr != nullptr) {
+    return gname(*ptr);
+  }
+  return gshape.type();
+}
+}  // namespace
 
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
-    const Config& cfg, std::unique_ptr<const Logger> mlogger)
+    const Config &cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
 void Acts::GeoModelDetectorSurfaceFactory::construct(
-    Cache& cache, const GeometryContext&, const GeoModelTree& geoModelTree,
-    const Options& options) {
+    Cache &cache, const GeometryContext &, const GeoModelTree &geoModelTree,
+    const Options &options) {
   if (geoModelTree.geoReader == nullptr) {
     throw std::invalid_argument("GeoModelTree has no GeoModelReader");
   }
 
-  for (const auto& q : options.queries) {
+  for (const auto &q : options.queries) {
     ACTS_VERBOSE("Constructing detector elements for query " << q);
-    auto qFPV =
-        geoModelTree.geoReader->getPublishedNodes<std::string, GeoFullPhysVol*>(
-            q);
+    auto qFPV = geoModelTree.geoReader
+                    ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
     auto matches = [&](const std::string &str) {
-      if( m_cfg.nameList.empty() ) {
+      if (m_cfg.nameList.empty()) {
         return true;
       }
-      return std::any_of(m_cfg.nameList.begin(), m_cfg.nameList.end(), [&](const auto &n){ return str.find(n) != std::string::npos; });
+      return std::any_of(
+          m_cfg.nameList.begin(), m_cfg.nameList.end(),
+          [&](const auto &n) { return str.find(n) != std::string::npos; });
     };
 
-    for (auto& [name, fpv] : qFPV) {
+    std::set<std::string> fordebug;
+
+    for (auto &[name, fpv] : qFPV) {
       const auto &vname = fpv->getLogVol()->getName();
       const auto &shape = *fpv->getLogVol()->getShape();
 
       // Mask
-      if( !matches(name) ) {
+      if (!matches(name)) {
         continue;
       }
 
       bool success = false;
 
-      // This is only hacked right now, for a proper solution we should restructure the code
-      // and add a convert function that recursively calls itself for unions
-      if( auto gunion = dynamic_cast<const GeoShapeUnion *>(&shape); gunion != nullptr){
+      // This is only hacked right now, for a proper solution we should
+      // restructure the code and add a convert function that recursively calls
+      // itself for unions
+      if (auto gunion = dynamic_cast<const GeoShapeUnion *>(&shape);
+          gunion != nullptr) {
         GeoUnionConverter converter;
         converter.useA = true;
         auto converted1 = converter.toSensitiveSurface(*fpv);
         if (converted1.ok()) {
           cache.sensitiveSurfaces.push_back(converted1.value());
-          ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << " / A)");
         }
         converter.useA = false;
         auto converted2 = converter.toSensitiveSurface(*fpv);
         if (converted2.ok()) {
           cache.sensitiveSurfaces.push_back(converted2.value());
-          ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << " / B)");
         }
         success = converted1.ok() && converted2.ok();
+        if (success) {
+          ACTS_VERBOSE("successfully converted " << name << " (" << vname
+                                                 << " / " << gname(shape)
+                                                 << ")");
+        }
       }
       // Convert using the list of converters
       else {
-        for (const auto& converter : m_cfg.shapeConverters) {
+        for (const auto &converter : m_cfg.shapeConverters) {
           auto converted = converter->toSensitiveSurface(*fpv);
           if (converted.ok()) {
             // Add the element and surface to the cache
             cache.sensitiveSurfaces.push_back(converted.value());
             success = true;
-            ACTS_VERBOSE("successfully converted " << name << " (" << vname << " / " << gname(shape) << ")");
+            ACTS_VERBOSE("successfully converted " << name << " (" << vname
+                                                   << " / " << gname(shape)
+                                                   << ")");
             break;
           }
         }
       }
 
       if (!success) {
-        ACTS_DEBUG(name << " (" << vname << " / " << gname(shape) << ") could not be converted by any converter");
+        ACTS_DEBUG(name << " (" << vname << " / " << gname(shape)
+                        << ") could not be converted by any converter");
+      } else {
+        fordebug.emplace(name.substr(0, 6));
       }
     }
     ACTS_VERBOSE("Found " << qFPV.size()
                           << " full physical volumes matching the query.");
+    {
+      ACTS_DEBUG("Stems of converted volumes: " << [&]() {
+        std::stringstream ss;
+        for (const auto &el : fordebug) {
+          ss << el << " ";
+        }
+        return ss.str();
+      }());
+    }
   }
   ACTS_DEBUG("Constructed "
              << cache.sensitiveSurfaces.size() << " sensitive elements and "

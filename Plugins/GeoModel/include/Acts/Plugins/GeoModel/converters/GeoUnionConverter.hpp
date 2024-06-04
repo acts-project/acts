@@ -27,6 +27,7 @@
 
 #include "GeoTrdConverter.hpp"
 #include "GeoShiftConverter.hpp"
+#include "GeoBoxConverter.hpp"
 
 namespace Acts {
 
@@ -39,6 +40,9 @@ struct GeoUnionConverter : public IGeoShapeConverter {
                bool sensitive) const -> Result<GeoModelSensitiveSurface> {
     if (auto trd = dynamic_cast<const GeoTrd*>(&shape); trd != nullptr) {
       return detail::GeoTrdConverter{}(geoFPV, *trd, transform, sensitive);
+    }
+    if (auto box = dynamic_cast<const GeoBox*>(&shape); box != nullptr) {
+      return detail::GeoBoxConverter{}(geoFPV, *box, transform, sensitive);
     }
     if (auto shift = dynamic_cast<const GeoShapeShift*>(&shape); shift != nullptr) {
       return detail::GeoShiftConverter{}(geoFPV, *shift, transform, sensitive);
