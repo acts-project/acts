@@ -13,7 +13,7 @@ setup = makeSetup()
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=10000,
-        numThreads=-1,
+        numThreads=1,
         logLevel=acts.logging.INFO,
         trackFpes=True,
     )
