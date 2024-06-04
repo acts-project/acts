@@ -214,7 +214,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       auto node = TGeoParser::findNodeRecursive(gGeoManager->GetTopNode(),
                                                 tVolume->GetName());
 
-      if (!node) {
+      if (node == nullptr) {
         std::string volname(tVolume->GetName());
         throw std::invalid_argument("Could not locate node for " + volname);
       }

@@ -119,7 +119,7 @@ TGeoNode* Acts::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
   for (int i = 0; i < nDaughters; ++i) {
     TGeoNode* daughterNode = currentNode->GetDaughter(i);
     TGeoNode* foundNode = findNodeRecursive(daughterNode, volumeName);
-    if (foundNode) {
+    if (foundNode != nullptr) {
       return foundNode;
     }
   }
