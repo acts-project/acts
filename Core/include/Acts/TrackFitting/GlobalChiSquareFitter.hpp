@@ -844,7 +844,7 @@ class Gx2Fitter {
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
 
-      TrackContainer<track_container_t, traj_t, holder_t>& trackContainerTemp = trackContainer;
+      TrackContainer<track_container_t, traj_t, holder_t> trackContainerTemp = trackContainer;
 
       r.fittedStates = &trackContainerTemp.trackStateContainer();
 
