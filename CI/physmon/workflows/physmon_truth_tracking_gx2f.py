@@ -15,7 +15,7 @@ with tempfile.TemporaryDirectory() as temp:
         events=10000,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        trackFpes=False
+        trackFpes=True,
     )
 
     tp = Path(temp)
