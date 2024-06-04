@@ -13,6 +13,7 @@
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
+#include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
@@ -100,6 +101,19 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(volumeLayerComponents);
     ACTS_PYTHON_MEMBER(outputDigiComponents);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    py::class_<ActsExamples::DigitizationCoordinatesConverter,
+               std::shared_ptr<ActsExamples::DigitizationCoordinatesConverter>>(
+        mex, "DigitizationCoordinatesConverter")
+        .def(py::init<ActsExamples::DigitizationConfig&>(), py::arg("config"))
+        .def_property_readonly(
+            "config", &ActsExamples::DigitizationCoordinatesConverter::config)
+        .def("globalToLocal",
+             &ActsExamples::DigitizationCoordinatesConverter::globalToLocal)
+        .def("localToGlobal",
+             &ActsExamples::DigitizationCoordinatesConverter::localToGlobal);
   }
 }
 
