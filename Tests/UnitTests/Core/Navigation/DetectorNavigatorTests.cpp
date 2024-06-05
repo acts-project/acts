@@ -22,7 +22,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -98,26 +98,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                                        Acts::Experimental::DetectorNavigator>(
         stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
-
-    BOOST_CHECK_THROW(navigator.initialize(state, stepper),
+    BOOST_CHECK_THROW(propagator.makeState(start, options),
                       std::invalid_argument);
-
-    navigator.preStep(state, stepper);
-    auto preStepState = state.navigation;
-    BOOST_CHECK_EQUAL(preStepState.currentDetector, nullptr);
-    BOOST_CHECK_EQUAL(preStepState.currentVolume, nullptr);
-    BOOST_CHECK_EQUAL(preStepState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(preStepState.currentPortal, nullptr);
-    BOOST_CHECK(preStepState.surfaceCandidates.empty());
-
-    navigator.postStep(state, stepper);
-    auto postStepState = state.navigation;
-    BOOST_CHECK_EQUAL(postStepState.currentDetector, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentVolume, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentPortal, nullptr);
-    BOOST_CHECK(postStepState.surfaceCandidates.empty());
   }
 
   // Run with geometry but without resolving
@@ -168,31 +150,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                                        Acts::Experimental::DetectorNavigator>(
         stepper, navigator);
 
-    auto state = propagator.makeState(startEoW, options);
-
-    BOOST_CHECK(navigator.endOfWorldReached(state.navigation));
-
-    BOOST_CHECK_THROW(navigator.initialize(state, stepper),
+    BOOST_CHECK_THROW(propagator.makeState(startEoW, options),
                       std::invalid_argument);
-    auto initState = state.navigation;
-    BOOST_CHECK_EQUAL(initState.currentVolume, nullptr);
-    BOOST_CHECK_EQUAL(initState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(initState.currentPortal, nullptr);
-    BOOST_CHECK(initState.surfaceCandidates.empty());
-
-    navigator.preStep(state, stepper);
-    auto preStepState = state.navigation;
-    BOOST_CHECK_EQUAL(preStepState.currentVolume, nullptr);
-    BOOST_CHECK_EQUAL(preStepState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(preStepState.currentPortal, nullptr);
-    BOOST_CHECK(preStepState.surfaceCandidates.empty());
-
-    navigator.postStep(state, stepper);
-    auto postStepState = state.navigation;
-    BOOST_CHECK_EQUAL(postStepState.currentVolume, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentPortal, nullptr);
-    BOOST_CHECK(postStepState.surfaceCandidates.empty());
   }
 
   // Initialize properly
