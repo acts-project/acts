@@ -172,7 +172,7 @@ double Acts::CylinderSurface::pathCorrection(
             << "\nnormalT: " << normalT
             << "\ndirection: " << direction
             << "\ncosAlpha: " << cosAlpha << std::endl;
-  return std::fabs(Acts::safeDivide(1. / cosAlpha));
+  return std::fabs(Acts::safeDivide(1., cosAlpha));
 }
 
 const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
