@@ -26,14 +26,14 @@ struct DD4hepIdentifierCapture {
   /// @brief Return an invalid identifier for volumes as they are not directly translated
   /// @return maximum value
   DD4hepIdentifier operator()(
-      const Acts::Experimental::DetectorVolume& /*unused*/) const {
+      const Acts::Experimental::DetectorVolume& /*volume*/) const {
     return std::numeric_limits<DD4hepIdentifier>::max();
   }
 
   /// @brief Return an invalid identifier for portal objects as they are not directly translated
   /// @return maximum value
   DD4hepIdentifier operator()(
-      const Acts::Experimental::Portal& /*unused*/) const {
+      const Acts::Experimental::Portal& /*portal*/) const {
     return std::numeric_limits<DD4hepIdentifier>::max();
   }
 

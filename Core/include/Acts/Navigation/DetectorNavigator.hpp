@@ -29,8 +29,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/container/small_vector.hpp>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorNavigator {
  public:
@@ -439,5 +438,4 @@ class DetectorNavigator {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

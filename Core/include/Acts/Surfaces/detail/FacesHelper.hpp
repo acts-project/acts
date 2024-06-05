@@ -15,9 +15,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 /// @brief Helper for writing out faces for polyhedron representation
 struct FacesHelper {
@@ -83,6 +81,4 @@ struct FacesHelper {
   }
 };
 
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

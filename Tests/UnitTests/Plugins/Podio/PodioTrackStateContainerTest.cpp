@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
@@ -19,6 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Podio/PodioTrackStateContainer.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"

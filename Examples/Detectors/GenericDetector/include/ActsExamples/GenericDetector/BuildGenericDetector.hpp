@@ -48,8 +48,7 @@ class IMaterialDecorator;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples {
-namespace Generic {
+namespace ActsExamples::Generic {
 
 /// Helper method for positioning
 /// @param radius is the cylinder radius
@@ -271,11 +270,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.centralModuleMaterial = {
       pCentralModuleMaterial, pCentralModuleMaterial, pCentralModuleMaterial,
       pCentralModuleMaterial};
-  // pitch definitions
-  pplConfig.centralModuleReadoutBinsX = {336, 336, 336, 336};
-  pplConfig.centralModuleReadoutBinsY = {1280, 1280, 1280, 1280};
-  pplConfig.centralModuleReadoutSide = {-1, -1, -1, -1};
-  pplConfig.centralModuleLorentzAngle = {0.12, 0.12, 0.12, 0.12};
 
   // no frontside/backside
   pplConfig.centralModuleFrontsideStereo = {};
@@ -327,13 +321,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.posnegModulePhiBins =
       std::vector<std::vector<std::size_t>>(7, perBP);
   pplConfig.posnegModuleThickness = std::vector<std::vector<double>>(7, perT);
-  pplConfig.posnegModuleReadoutBinsX =
-      std::vector<std::vector<std::size_t>>(7, perBX);
-  pplConfig.posnegModuleReadoutBinsY =
-      std::vector<std::vector<std::size_t>>(7, perBY);
-  pplConfig.posnegModuleReadoutSide = std::vector<std::vector<int>>(7, perRS);
-  pplConfig.posnegModuleLorentzAngle =
-      std::vector<std::vector<double>>(7, perLA);
   pplConfig.posnegModuleMaterial =
       std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
           7, perM);
@@ -490,11 +477,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.centralModuleThickness = {ssCentralModuleT, ssCentralModuleT,
                                          ssCentralModuleT, ssCentralModuleT};
 
-    ssplConfig.centralModuleReadoutBinsX = {600, 600, 600, 600};  // 80 um pitch
-    ssplConfig.centralModuleReadoutBinsY = {90, 90, 90, 90};  // 1.2 mm strixels
-    ssplConfig.centralModuleReadoutSide = {1, 1, 1, 1};
-    ssplConfig.centralModuleLorentzAngle = {0.12, 0.12, 0.12, 0.12};
-
     ssplConfig.centralModuleMaterial = {
         ssCentralModuleMaterial, ssCentralModuleMaterial,
         ssCentralModuleMaterial, ssCentralModuleMaterial};
@@ -520,13 +502,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     std::vector<double> mrMaxHx = {24.2, 32.2, 40.0};
     std::vector<double> mrHy = {78., 78., 78.};
 
-    // simplified strixels readout
-    std::vector<std::size_t> mrReadoutBinsX = {605, 805, 1000};  // 80 um pitch
-    std::vector<std::size_t> mrReadoutBinsY = {130, 130,
-                                               130};  // 1.2 mm strixels
-    std::vector<int> mrReadoutSide = {1, 1, 1};
-    std::vector<double> mrLorentzAngle = {0., 0., 0.};
-
     std::vector<std::size_t> mPhiBins = {54, 56, 60};
     std::vector<double> mThickness = {ssEndcapModuleT, ssEndcapModuleT,
                                       ssEndcapModuleT};
@@ -550,15 +525,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
         std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
     ssplConfig.posnegModuleThickness =
         std::vector<std::vector<double>>(nposnegs, mThickness);
-
-    ssplConfig.posnegModuleReadoutBinsX =
-        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsX);
-    ssplConfig.posnegModuleReadoutBinsY =
-        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsY);
-    ssplConfig.posnegModuleReadoutSide =
-        std::vector<std::vector<int>>(nposnegs, mrReadoutSide);
-    ssplConfig.posnegModuleLorentzAngle =
-        std::vector<std::vector<double>>(nposnegs, mrLorentzAngle);
 
     ssplConfig.posnegModuleMaterial =
         std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
@@ -686,11 +652,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsplConfig.centralModuleMaterial = {lsCentralModuleMaterial,
                                         lsCentralModuleMaterial};
 
-    lsplConfig.centralModuleReadoutBinsX = {400, 400};  // 120 um pitch
-    lsplConfig.centralModuleReadoutBinsY = {10, 10};    // 10 strips = 10.8 mm
-    lsplConfig.centralModuleReadoutSide = {1, 1};
-    lsplConfig.centralModuleLorentzAngle = {0.08, 0.08};
-
     lsplConfig.centralModuleFrontsideStereo = {};
     lsplConfig.centralModuleBacksideStereo = {};
     lsplConfig.centralModuleBacksideGap = {};
@@ -716,11 +677,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     mThickness = {lsEndcapModuleT, lsEndcapModuleT};
     mMaterial = {lsEndcapModuleMaterial, lsEndcapModuleMaterial};
 
-    mrReadoutBinsX = {1070, 1200};  // 120 um pitch
-    mrReadoutBinsY = {15, 15};      // 15 strips - 10.2 mm
-    mrReadoutSide = {1, 1};
-    mrLorentzAngle = {0., 0.};
-
     // endcap
     lsplConfig.posnegLayerBinMultipliers = {1, 2};
     lsplConfig.posnegLayerPositionsZ = {1220., 1500., 1800.,
@@ -738,15 +694,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
         std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
     lsplConfig.posnegModuleThickness =
         std::vector<std::vector<double>>(nposnegs, mThickness);
-
-    lsplConfig.posnegModuleReadoutBinsX =
-        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsX);
-    lsplConfig.posnegModuleReadoutBinsY =
-        std::vector<std::vector<std::size_t>>(nposnegs, mrReadoutBinsY);
-    lsplConfig.posnegModuleReadoutSide =
-        std::vector<std::vector<int>>(nposnegs, mrReadoutSide);
-    lsplConfig.posnegModuleLorentzAngle =
-        std::vector<std::vector<double>>(nposnegs, mrLorentzAngle);
 
     lsplConfig.posnegModuleMaterial =
         std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
@@ -835,5 +782,4 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   return trackingGeometry;
 }
 
-}  // end of namespace Generic
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Generic

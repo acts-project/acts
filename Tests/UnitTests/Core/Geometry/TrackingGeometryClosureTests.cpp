@@ -29,8 +29,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -321,5 +320,4 @@ BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   BOOST_CHECK_EQUAL(nVolumes, 5u);
 }
 
-}  //  end of namespace Test
-}  //  end of namespace Acts
+}  // namespace Acts::Test

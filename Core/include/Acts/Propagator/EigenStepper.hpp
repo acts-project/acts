@@ -124,6 +124,12 @@ class EigenStepper {
     /// Accummulated path length state
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     /// Adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
@@ -156,8 +162,11 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-               double overstepLimit = 100 * UnitConstants::um);
+  /// @param bField The magnetic field provider
+  /// @param overstepLimit The limit for the overstep check
+  /// @note `overstepLimit` will be removed in a future release
+  explicit EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
+                        double overstepLimit = 100 * UnitConstants::um);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -311,15 +320,6 @@ class EigenStepper {
     return state.stepSize.toString();
   }
 
-  /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    (void)state;
-    // A dynamic overstep limit could sit here
-    return -m_overstepLimit;
-  }
-
   /// Create and return the bound state at the current position
   ///
   /// @brief This transports (if necessary) the covariance
@@ -432,9 +432,6 @@ class EigenStepper {
  protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
-
-  /// Overstep limit
-  double m_overstepLimit;
 };
 
 template <typename navigator_t>

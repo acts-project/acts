@@ -21,8 +21,7 @@ __global__ void MatrixLoadStore(const Eigen::Matrix<AFloat, row, col>* input,
   }
 }
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
@@ -55,5 +54,4 @@ BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

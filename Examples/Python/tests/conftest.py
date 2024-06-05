@@ -87,7 +87,7 @@ def root_file_exp_hashes():
 
 
 @pytest.fixture(name="assert_root_hash")
-def assert_root_hash(request, root_file_exp_hashes, record_property):
+def assert_root_hash(request, root_file_exp_hashes):
     if not helpers.doHashChecks:
 
         def fn(*args, **kwargs):
@@ -220,7 +220,7 @@ def basic_prop_seq(rng):
 
 
 @pytest.fixture
-def trk_geo(request):
+def trk_geo():
     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
     yield geo
 
@@ -349,7 +349,7 @@ def fatras(ptcl_gun, trk_geo, rng):
                     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
                 )
             ),
-            trackingGeometry=trk_geo,
+            surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
             randomNumbers=rng,
             inputSimHits=simAlg.config.outputSimHits,
         )

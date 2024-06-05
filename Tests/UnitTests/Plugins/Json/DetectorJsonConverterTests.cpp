@@ -21,7 +21,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -179,8 +179,9 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
 
     Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
     shapeConfig.boundValues = {18, 100, 10., M_PI, 0.};
-    shapeConfig.transform = Acts::Transform3(Acts::Transform3::Identity())
-                                .pretranslate(Acts::Vector3(0., 0., ep));
+    shapeConfig.transform =
+        Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
+            Acts::Vector3(0., 0., ep));
     shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
     auto shapeBuilder =

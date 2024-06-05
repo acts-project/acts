@@ -29,8 +29,7 @@
 #include <map>
 #include <numeric>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 template <typename traj_t>
 struct GsfResult {
@@ -798,5 +797,4 @@ struct GsfActor {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

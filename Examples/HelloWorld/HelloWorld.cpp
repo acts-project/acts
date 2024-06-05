@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file
-/// @brief An example tools that shows the sequencer functionality
-
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 
@@ -19,9 +16,7 @@
 #include "HelloRandomAlgorithm.hpp"
 #include "HelloWhiteBoardAlgorithm.hpp"
 
-int main(int argc, char* argv[]) {
-  (void)argc;
-  (void)argv;
+int main(void) {
   Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
   // setup basic tools shared among algorithms

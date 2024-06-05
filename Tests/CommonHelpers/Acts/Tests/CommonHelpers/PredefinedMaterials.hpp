@@ -6,17 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file
-/// @brief Predefined materials for test
-
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 inline Material makeBeryllium() {
   using namespace UnitLiterals;
@@ -46,5 +42,4 @@ inline MaterialSlab makePercentSlab() {
   return slab;
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

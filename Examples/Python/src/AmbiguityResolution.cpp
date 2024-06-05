@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
 
 #include <memory>
 
@@ -28,6 +29,13 @@ void addAmbiguityResolution(Context& ctx) {
       ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
       "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
       maximumSharedHits, maximumIterations, nMeasurementsMin);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm, mex,
+      "ScoreBasedAmbiguityResolutionAlgorithm", inputTracks, configFile,
+      outputTracks, minScore, minScoreSharedTracks, maxShared,
+      maxSharedTracksPerMeasurement, pTMin, pTMax, phiMin, phiMax, etaMin,
+      etaMax, useAmbiguityFunction);
 }
 
 }  // namespace Acts::Python

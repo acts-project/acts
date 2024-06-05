@@ -28,8 +28,7 @@
 #include <DD4hep/DD4hepUnits.h>
 #include <DD4hep/DetElement.h>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DD4hepBlueprintFactory {
  public:
@@ -133,5 +132,4 @@ class DD4hepBlueprintFactory {
                    const std::string& baseName) const;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

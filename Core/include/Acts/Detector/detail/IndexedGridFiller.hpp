@@ -13,7 +13,7 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
@@ -26,9 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// @brief Helper method to generate completely populated bin sequences
 /// that respect the boundary type of the axis
@@ -253,6 +251,4 @@ struct IndexedGridFiller {
   const Logger& logger() const { return (*oLogger); }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

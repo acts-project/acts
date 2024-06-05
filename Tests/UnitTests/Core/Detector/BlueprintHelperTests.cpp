@@ -15,11 +15,9 @@
 #include <exception>
 #include <fstream>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class IInternalStructureBuilder {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 

@@ -27,7 +27,6 @@ install(
 install(
   FILES
     ${CMAKE_CURRENT_LIST_DIR}/FindOnnxRuntime.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/FindSYCL.cmake
   DESTINATION ${install_package_config_dir}/Modules)    
 
 # install target configs for all available components

@@ -74,7 +74,7 @@ struct IndexedMaterialAccessor {
   ///
   /// @param scale the amount of the scaling
   template <typename grid_type>
-  void scale(grid_type& /*unused*/, ActsScalar scale) {
+  void scale(grid_type& /*grid*/, ActsScalar scale) {
     for (auto& m : material) {
       m.scaleThickness(scale);
     }

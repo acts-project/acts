@@ -99,7 +99,6 @@ def run() -> None:
         "Acts::TrackContainer",
         "Acts::ConeLayer",
         "Acts::CylinderLayer",
-        "Acts::IdentifiedDetectorElement",
         "Acts::DiscLayer",
         "Acts::PlaneLayer",
         "Acts::NullBField",

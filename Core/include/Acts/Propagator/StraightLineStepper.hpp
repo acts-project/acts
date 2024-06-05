@@ -60,14 +60,13 @@ class StraightLineStepper {
     /// Constructor from the initial bound track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
-    /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& mctx,
+                   const MagneticFieldContext& /*mctx*/,
                    const BoundTrackParameters& par,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
@@ -75,7 +74,6 @@ class StraightLineStepper {
           stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
-      (void)mctx;
       Vector3 position = par.position(gctx);
       Vector3 direction = par.direction();
       pars.template segment<3>(eFreePos0) = position;
@@ -117,6 +115,12 @@ class StraightLineStepper {
     /// accummulated path length state
     double pathAccumulated = 0.;
 
+    /// Total number of performed steps
+    std::size_t nSteps = 0;
+
+    /// Totoal number of attempted steps
+    std::size_t nStepTrials = 0;
+
     /// adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
@@ -157,13 +161,7 @@ class StraightLineStepper {
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, this gives back a zero field
-  ///
-  /// @param [in,out] state is the propagation state associated with the track
-  ///                 the magnetic field cell is used (and potentially updated)
-  /// @param [in] pos is the field position
-  Result<Vector3> getField(State& state, const Vector3& pos) const {
-    (void)state;
-    (void)pos;
+  Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success({0., 0., 0.});
   }
@@ -219,14 +217,6 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.pars[eFreeTime]; }
-
-  /// Overstep limit
-  ///
-  /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    (void)state;
-    return -m_overstepLimit;
-  }
 
   /// Update surface status
   ///
@@ -447,15 +437,15 @@ class StraightLineStepper {
       state.stepping.jacTransport = D * state.stepping.jacTransport;
       state.stepping.derivative.template head<3>() = dir;
     }
+
     // state the path length
     state.stepping.pathAccumulated += h;
+    ++state.stepping.nSteps;
+    ++state.stepping.nStepTrials;
 
     // return h
     return h;
   }
-
- private:
-  double m_overstepLimit = s_onSurfaceTolerance;
 };
 
 template <typename navigator_t>

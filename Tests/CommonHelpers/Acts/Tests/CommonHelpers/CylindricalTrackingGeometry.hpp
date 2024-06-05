@@ -38,8 +38,7 @@
 #include <functional>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct CylindricalTrackingGeometry {
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -192,12 +191,14 @@ struct CylindricalTrackingGeometry {
     double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
     double zStep = 2 * std::abs(zStart) / (nZbins - 1);
     // loop over the bins
-    for (std::size_t zBin = 0; zBin < std::size_t(nZbins); ++zBin) {
+    for (std::size_t zBin = 0; zBin < static_cast<std::size_t>(nZbins);
+         ++zBin) {
       // prepare z and r
       double moduleZ = zStart + zBin * zStep;
       double moduleR =
           (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
-      for (std::size_t phiBin = 0; phiBin < std::size_t(nPhiBins); ++phiBin) {
+      for (std::size_t phiBin = 0; phiBin < static_cast<std::size_t>(nPhiBins);
+           ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;
         mPositions.push_back(Vector3(moduleR * cos(modulePhi),
@@ -334,5 +335,4 @@ struct CylindricalTrackingGeometry {
   }
 };
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

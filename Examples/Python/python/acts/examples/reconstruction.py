@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Optional, Union, List
 from enum import Enum
 from collections import namedtuple
-import warnings
 
 import acts
 import acts.examples
@@ -135,14 +134,38 @@ TrackSelectorConfig = namedtuple(
 
 CkfConfig = namedtuple(
     "CkfConfig",
-    ["chi2CutOff", "numMeasurementsCutOff", "maxSteps"],
-    defaults=[15.0, 10, None],
+    [
+        "chi2CutOff",
+        "numMeasurementsCutOff",
+        "maxSteps",
+        "seedDeduplication",
+        "stayOnSeed",
+    ],
+    defaults=[15.0, 10, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
     ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
     defaults=[None] * 3,
+)
+
+ScoreBasedAmbiguityResolutionConfig = namedtuple(
+    "ScoreBasedAmbiguityResolutionConfig",
+    [
+        "minScore",
+        "minScoreSharedTracks",
+        "maxShared",
+        "maxSharedTracksPerMeasurement",
+        "pTMax",
+        "pTMin",
+        "phiMax",
+        "phiMin",
+        "etaMax",
+        "etaMin",
+        "useAmbiguityFunction",
+    ],
+    defaults=[None] * 11,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -357,6 +380,7 @@ def addSeeding(
             level=logLevel,
             inputSeeds=seeds,
             outputTrackParameters="estimatedparameters",
+            outputSeeds="estimatedseeds",
             trackingGeometry=trackingGeometry,
             magneticField=field,
             **acts.examples.defaultKWArgs(
@@ -595,12 +619,16 @@ def addStandardSeeding(
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
             zOutermostLayers=(
-                seedFinderConfigArg.zOutermostLayers[0]
-                if seedFinderConfigArg.zOutermostLayers[0] is not None
-                else seedFinderConfigArg.z[0],
-                seedFinderConfigArg.zOutermostLayers[1]
-                if seedFinderConfigArg.zOutermostLayers[1] is not None
-                else seedFinderConfigArg.z[1],
+                (
+                    seedFinderConfigArg.zOutermostLayers[0]
+                    if seedFinderConfigArg.zOutermostLayers[0] is not None
+                    else seedFinderConfigArg.z[0]
+                ),
+                (
+                    seedFinderConfigArg.zOutermostLayers[1]
+                    if seedFinderConfigArg.zOutermostLayers[1] is not None
+                    else seedFinderConfigArg.z[1]
+                ),
             ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
@@ -623,10 +651,12 @@ def addStandardSeeding(
     )
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos == (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            beamPos=(
+                acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                )
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
@@ -747,12 +777,16 @@ def addOrthogonalSeeding(
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
             zOutermostLayers=(
-                seedFinderConfigArg.zOutermostLayers[0]
-                if seedFinderConfigArg.zOutermostLayers[0] is not None
-                else seedFinderConfigArg.z[0],
-                seedFinderConfigArg.zOutermostLayers[1]
-                if seedFinderConfigArg.zOutermostLayers[1] is not None
-                else seedFinderConfigArg.z[1],
+                (
+                    seedFinderConfigArg.zOutermostLayers[0]
+                    if seedFinderConfigArg.zOutermostLayers[0] is not None
+                    else seedFinderConfigArg.z[0]
+                ),
+                (
+                    seedFinderConfigArg.zOutermostLayers[1]
+                    if seedFinderConfigArg.zOutermostLayers[1] is not None
+                    else seedFinderConfigArg.z[1]
+                ),
             ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
@@ -773,10 +807,12 @@ def addOrthogonalSeeding(
     )
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos == (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            beamPos=(
+                acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                )
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
@@ -859,10 +895,12 @@ def addGbtsSeeding(
     )
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos == (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            beamPos=(
+                acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                )
             ),
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
@@ -1164,6 +1202,7 @@ def addCKFTracks(
         Union[TrackSelectorConfig, List[TrackSelectorConfig]]
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
+    twoWay: bool = True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -1258,6 +1297,11 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
+        inputSeeds=(
+            "estimatedseeds"
+            if ckfConfig.seedDeduplication or ckfConfig.stayOnSeed
+            else ""
+        ),
         outputTracks="ckf_tracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field, customLogLevel()
@@ -1267,6 +1311,9 @@ def addCKFTracks(
             magneticField=field,
             trackSelectorCfg=trkSelCfg,
             maxSteps=ckfConfig.maxSteps,
+            twoWay=twoWay,
+            seedDeduplication=ckfConfig.seedDeduplication,
+            stayOnSeed=ckfConfig.stayOnSeed,
         ),
     )
     s.addAlgorithm(trackFinder)
@@ -1615,7 +1662,8 @@ def addExaTrkX(
             acts.examples.TrackFinderPerformanceWriter(
                 level=customLogLevel(),
                 inputProtoTracks=findingAlg.config.outputProtoTracks,
-                inputParticles="particles_initial",  # the original selected particles after digitization
+                # the original selected particles after digitization
+                inputParticles="particles_initial",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputProtoTrackParticleMatching=matchAlg.config.outputProtoTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
@@ -1675,6 +1723,60 @@ def addAmbiguityResolution(
         s,
         name="ambi",
         tracks=alg.config.outputTracks,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        logLevel=logLevel,
+        writeCovMat=writeCovMat,
+    )
+
+    return s
+
+
+@acts.examples.NamedTypeArgs(
+    config=ScoreBasedAmbiguityResolutionConfig,
+)
+def addScoreBasedAmbiguityResolution(
+    s,
+    config: ScoreBasedAmbiguityResolutionConfig = ScoreBasedAmbiguityResolutionConfig(),
+    tracks: str = "tracks",
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    ambiVolumeFile: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
+) -> None:
+    from acts.examples import ScoreBasedAmbiguityResolutionAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, acts.logging.INFO)
+
+    algScoreBased = ScoreBasedAmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputTracks=tracks,
+        configFile=ambiVolumeFile,
+        outputTracks="ambiTracksScoreBased",
+        **acts.examples.defaultKWArgs(
+            minScore=config.minScore,
+            minScoreSharedTracks=config.minScoreSharedTracks,
+            maxShared=config.maxShared,
+            maxSharedTracksPerMeasurement=config.maxSharedTracksPerMeasurement,
+            phiMax=config.phiMax,
+            phiMin=config.phiMin,
+            etaMax=config.etaMax,
+            etaMin=config.etaMin,
+            useAmbiguityFunction=config.useAmbiguityFunction,
+        ),
+    )
+    s.addAlgorithm(algScoreBased)
+    s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
+
+    addTrackWriters(
+        s,
+        name="ambi_scorebased",
+        tracks=algScoreBased.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,

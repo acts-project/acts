@@ -19,12 +19,10 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 /// Define a dummy detector volume
 class DetectorVolume {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 

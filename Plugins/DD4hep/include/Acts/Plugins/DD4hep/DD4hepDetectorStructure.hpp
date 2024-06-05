@@ -24,6 +24,8 @@ class DetElement;
 
 namespace Acts {
 
+class IMaterialDecorator;
+
 namespace Experimental {
 
 /// @brief This class allows to generate layer structure builders for dd4hep sub detectors
@@ -44,6 +46,8 @@ class DD4hepDetectorStructure {
     std::string emulateToGraph = "";
     /// A Top level geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// A Top level material decorator
+    std::shared_ptr<const IMaterialDecorator> materialDecorator = nullptr;
   };
 
   /// Constructor with from file name

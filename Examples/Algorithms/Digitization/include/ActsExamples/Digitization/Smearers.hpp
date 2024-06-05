@@ -21,8 +21,7 @@
 #include <tuple>
 #include <utility>
 
-namespace ActsExamples {
-namespace Digitization {
+namespace ActsExamples::Digitization {
 
 /// Exact smearing of a single parameter.
 ///
@@ -205,5 +204,4 @@ struct Digital {
   }
 };
 
-}  // namespace Digitization
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Digitization
