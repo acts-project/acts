@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -171,7 +172,7 @@ double Acts::CylinderSurface::pathCorrection(
             << "\nnormalT: " << normalT
             << "\ndirection: " << direction
             << "\ncosAlpha: " << cosAlpha << std::endl;
-  return std::fabs(1. / cosAlpha);
+  return std::fabs(Acts::safeDivide(1. / cosAlpha));
 }
 
 const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
