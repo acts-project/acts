@@ -19,11 +19,10 @@ with tempfile.TemporaryDirectory() as temp:
 
     tp = Path(temp)
     runTruthTrackingKalman(
-        setup.trackingGeometry,
-        setup.field,
-        setup.digiConfig,
-        outputDir=tp,
+        trackingGeometry=setup.trackingGeometry,
+        field=setup.field,
         digiConfigFile=setup.digiConfig,
+        outputDir=tp,
         s=s,
     )
 
