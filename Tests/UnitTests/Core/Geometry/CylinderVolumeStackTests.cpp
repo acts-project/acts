@@ -27,7 +27,7 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::INFO);
 
 BOOST_AUTO_TEST_SUITE(Geometry);
 
