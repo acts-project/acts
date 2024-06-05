@@ -31,7 +31,13 @@ def main():
     gmTree = acts.geomodel.readFromDb(args.input)
 
     gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
-    gmFactoryConfig.shapeConverters = [ gm.GeoBoxConverter(), gm.GeoTrdConverter(), gm.GeoIntersectionAnnulusConverter(), gm.GeoShiftConverter() ]
+    gmFactoryConfig.shapeConverters = [
+        gm.GeoBoxConverter(),
+        gm.GeoTrdConverter(),
+        gm.GeoIntersectionAnnulusConverter(),
+        gm.GeoShiftConverter(),
+        gm.GeoUnionDoubleTrdConverter(),
+    ]
     gmFactoryConfig.nameList = [
         # "Sensor",
         # "FwdSen",
@@ -40,11 +46,11 @@ def main():
         # "Pixel",
         # "Module", # Catches a lot
         # "ModuleBrl",
-        "FwdSensor_Side#1_2_0_0_33",
+        # "FwdSensor_Side#1_2_0_0_33",
         # "ECSensor0",
     ]
     gmFactoryConfig.materialList = [
-        # "std::Silicon",
+        "std::Silicon",
     ]
 
     gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)
