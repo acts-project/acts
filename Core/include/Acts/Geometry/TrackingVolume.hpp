@@ -45,6 +45,7 @@ namespace Acts {
 
 class GlueVolumesDescriptor;
 class VolumeBounds;
+template <typename object_t>
 struct NavigationOptions;
 class GeometryIdentifier;
 class IMaterialDecorator;
@@ -339,7 +340,7 @@ class TrackingVolume : public Volume {
   /// @return vector of compatible intersections with layers
   boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions& options) const;
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -355,7 +356,7 @@ class TrackingVolume : public Volume {
   /// @return is the templated boundary intersection
   boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const NavigationOptions& options,
+      const Vector3& direction, const NavigationOptions<Surface>& options,
       const Logger& logger = getDummyLogger()) const;
 
   /// Return the confined static layer array - if it exists

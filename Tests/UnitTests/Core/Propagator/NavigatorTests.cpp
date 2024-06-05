@@ -27,10 +27,7 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
-<<<<<<< HEAD
 #include "Acts/Propagator/TryAllNavigator.hpp"
-    =======
->>>>>>> 57576e595d9b4509766c7c28b9da16048b3321e2
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -49,9 +46,9 @@
 #include <tuple>
 #include <utility>
 
-    namespace Acts {
-  class Layer;
-  struct FreeToBoundCorrection;
+namespace Acts {
+class Layer;
+struct FreeToBoundCorrection;
 }  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
