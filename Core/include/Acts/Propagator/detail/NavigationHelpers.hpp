@@ -94,8 +94,9 @@ struct IntersectionCandidate {
 
   static bool forwardOrder(const IntersectionCandidate& aCandidate,
                            const IntersectionCandidate& bCandidate) {
-    return Intersection3D::forwardOrder(aCandidate.intersection.intersection(),
-                                        bCandidate.intersection.intersection());
+    return Intersection3D::pathLengthOrder(
+        aCandidate.intersection.intersection(),
+        bCandidate.intersection.intersection());
   }
 };
 
