@@ -77,7 +77,13 @@ if "__main__" == __name__:
     IP_r_max = 130.
     IP_b_z_max = 255.
    
-    IP_iec_z_max = 1100.
+    IP_iec_z_max = 1090.
+
+    # IP_iec z-positions: 265, 293, 324, 359, 398, 439, 488, 545, 606, 677, 751, 837, 927, 1028, 
+    IP_iec_searchsplits = [ -IP_iec_z_max, -900, -800, -700, -620, -580, -450, -410, -380, -340, -305, -280, -IP_b_z_max ]
+
+    # IP_ec z-positions: 1105, 1144, 1231, 1274, 1361, 1405, 1505, 1555, 1667, 1723, 1848, 1911, 2122, 2359, 2623
+    IP_ec_searchsplits =  [ -2700, -2500, -2200, -2000, -1880, -1800, -1700, -1600, -1520, -1450, -1380, -1300, -1250, -1200, -1120, -IP_iec_z_max ]
 
     IP_coupled_rings_bins_r = 2 
     IP_coupled_rings_bins_phi = 20 
@@ -92,8 +98,8 @@ if "__main__" == __name__:
     # Outer Pixes sections - OP
     OP_r_min = IP_r_max
     OP_r_max = 345.
-    OP_b_z_max = 376.
-    OP_incl_z_max = 1100.
+    OP_b_z_max = 380.
+    OP_incl_z_max = IP_iec_z_max
     OP_ring0_r_max = 205.
     OP_ring1_r_max = 265.
 
@@ -251,7 +257,7 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|13',
+            'container|15',
             'ITk/Central/Detectors/Pixels/InnerPixels',
             'cyl|e,{IP_r_max},e,e',
             'children:NegOuterEndcap,NegInnerEndcap,Barrel,PosInnerEndcap,PosOuterEndcap',
@@ -633,13 +639,14 @@ if "__main__" == __name__:
             continue
         # now make the layers
         volCount += 1
+        zbest = 'i+2,i+2' if i != len(OP_incl_ring0_searchsplits)-1 else 'i+2,e'
         cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0/InclRing{len(OP_incl_ring0_searchsplits)-1-i}',
-            'cyl|e,e,i+2,i+2',
+            'cyl|e,e,{zbest}',
             'layer:kdt|cyl|e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
             '', 
             '')
@@ -839,13 +846,14 @@ if "__main__" == __name__:
             continue
         # now make the layers
         volCount += 1
+        zbest = 'i+2,i+2' if i != 1 else 'e,i+2'
         cursor.execute(
         f"""           
       INSERT INTO Blueprint VALUES
             ({volCount}, 
             'leaf',
             'ITk/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0/InclRing{i-1}',
-            'cyl|e,e,i+2,i+2',
+            'cyl|e,e,{zbest}',
             'layer:kdt|cyl|e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
             '', 
             '')
@@ -931,28 +939,69 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'leaf',
+            'container|13',
             'ITk/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap',
             'cyl|e,e,e,-{IP_iec_z_max}',
-            'layer:kdt|cyl|e,e,e,-{IP_iec_z_max}',
-            '', 
+            'children:*,Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*,Disk12,*,Disk13,*',
+            'z', 
             '')
     """
     )
+
+    # Endcap Layers
+    for i,sp in enumerate(IP_ec_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != len(IP_ec_searchsplits)-1 else 'i+2,e'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap/Disk{len(IP_ec_searchsplits)-1-i}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{IP_ec_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
 
     volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'leaf',
+            'container|11',
             'ITk/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap',
             'cyl|e,e,-{IP_iec_z_max},-{IP_b_z_max}',
-            'layer:kdt|cyl|e,e,-{IP_iec_z_max},-{IP_b_z_max}',
-            '', 
+            'children:Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*',
+            'z', 
             '')
     """
     )
+
+    # Endcap Disks
+    for i,sp in enumerate(IP_iec_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != len(IP_iec_searchsplits)-1 else 'i+2,e'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap/Disk{len(IP_iec_searchsplits)-1-i}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{IP_iec_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )  
 
 
     volCount += 1
@@ -1002,28 +1051,75 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'leaf',
+            'container|12',
             'ITk/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap',
             'cyl|e,e,{IP_b_z_max},{IP_iec_z_max}',
-            'layer:kdt|cyl|e,e,{IP_b_z_max},{IP_iec_z_max}',
-            '',
+           'children:Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*',
+            'z', 
             '')
     """
     )
+
+    # Endcap Disks
+    IP_iec_searchsplits = [ -1 * ss for ss in IP_iec_searchsplits ]
+    IP_iec_searchsplits.reverse()
+    for i,sp in enumerate(IP_iec_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != 1 else 'e,i+2'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap/Disk{i-1}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{IP_iec_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
+
 
     volCount += 1
     cursor.execute(
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'leaf',
+            'container|14',
             'ITk/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap',
             'cyl|e,e,{IP_iec_z_max},e',
-            'layer:kdt|cyl|e,e,{IP_iec_z_max},e',
-            '',
+             'children:*,Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*,Disk12,*,Disk13,*',
+            'z', 
             '')
     """
     )
+
+    # Endcap layers
+    IP_ec_searchsplits = [ -1 * ss for ss in IP_ec_searchsplits ]
+    IP_ec_searchsplits.reverse()
+    for i,sp in enumerate(IP_ec_searchsplits):
+        if i == 0:
+            continue
+        # now make the layers
+        volCount += 1
+        zbest = 'i+2,i+2' if i != 1 else 'e,i+2'
+        cursor.execute(
+        f"""
+    INSERT INTO Blueprint VALUES
+            ({volCount}, 
+            'leaf',
+            'ITk/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap/Disk{i-1}',
+            'cyl|e,e,{zbest}',
+            'layer:kdt|cyl|e,e,{IP_ec_searchsplits[i-1]},{sp}',
+            '', 
+            '')
+        """
+        )
+
 
     connection.commit()
 
