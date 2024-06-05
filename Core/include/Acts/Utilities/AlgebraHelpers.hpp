@@ -272,7 +272,8 @@ struct SafeDivideEpsilon<long double> {
 /// @param denominator the denominator of the division.
 ///
 /// @return numerator / denominator if denominator is not zero or near-zero.
-/// Throws a runtime_error if the denominator is zero or near-zero.
+/// Otherwise it will round the denominator towards +-epsilon to ensure a proper
+/// result. Zero will be rounded up.
 template <typename T>
 constexpr T safeDivide(T numerator, T denominator) {
   static_assert(std::is_floating_point<T>::value,
@@ -281,7 +282,11 @@ constexpr T safeDivide(T numerator, T denominator) {
   constexpr T epsilon = SafeDivideEpsilon<T>::value;
 
   if (std::abs(denominator) < epsilon) {
-    throw std::runtime_error("Division by zero or near-zero value.");
+    if (denominator >= 0) {
+      return numerator / epsilon;
+    } else {
+      return -numerator / epsilon;
+    }
   }
 
   return numerator / denominator;

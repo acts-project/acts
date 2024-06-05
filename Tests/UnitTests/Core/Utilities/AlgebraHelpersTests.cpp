@@ -134,38 +134,49 @@ BOOST_AUTO_TEST_CASE(SafeDivideFloat) {
 
   const FloatType zero = 0.;
   const FloatType a = 2.;
-  const FloatType b = 5.;
 
   {
-    BOOST_CHECK_EQUAL(Acts::safeDivide(a, b), a / b);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, a), b / a);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, a), zero);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, b), zero);
+    const FloatType denom = 5.;
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = largerThanEpsilon;
     BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, denom), b / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
     BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = epsilon;
     BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, denom), b / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
     BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = smallerThanEpsilon;
-    BOOST_CHECK_THROW(Acts::safeDivide(a, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(b, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(zero, denom), std::runtime_error);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = zero;
-    BOOST_CHECK_THROW(Acts::safeDivide(a, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(b, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(zero, denom), std::runtime_error);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / epsilon);
+
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
   }
 }
 
@@ -178,38 +189,49 @@ BOOST_AUTO_TEST_CASE(SafeDivideDouble) {
 
   const FloatType zero = 0.;
   const FloatType a = 2.;
-  const FloatType b = 5.;
 
   {
-    BOOST_CHECK_EQUAL(Acts::safeDivide(a, b), a / b);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, a), b / a);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, a), zero);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, b), zero);
+    const FloatType denom = 5.;
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = largerThanEpsilon;
     BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, denom), b / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
     BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = epsilon;
     BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, denom), b / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
     BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = smallerThanEpsilon;
-    BOOST_CHECK_THROW(Acts::safeDivide(a, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(b, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(zero, denom), std::runtime_error);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = zero;
-    BOOST_CHECK_THROW(Acts::safeDivide(a, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(b, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(zero, denom), std::runtime_error);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / epsilon);
+
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
   }
 }
 
@@ -222,38 +244,49 @@ BOOST_AUTO_TEST_CASE(SafeDivideLongDouble) {
 
   const FloatType zero = 0.;
   const FloatType a = 2.;
-  const FloatType b = 5.;
 
   {
-    BOOST_CHECK_EQUAL(Acts::safeDivide(a, b), a / b);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, a), b / a);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, a), zero);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, b), zero);
+    const FloatType denom = 5.;
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = largerThanEpsilon;
     BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, denom), b / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
     BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = epsilon;
     BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / denom);
-    BOOST_CHECK_EQUAL(Acts::safeDivide(b, denom), b / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / denom);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / denom);
     BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = smallerThanEpsilon;
-    BOOST_CHECK_THROW(Acts::safeDivide(a, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(b, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(zero, denom), std::runtime_error);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, -denom), -a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, -denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, -denom), zero);
   }
   {
     const FloatType denom = zero;
-    BOOST_CHECK_THROW(Acts::safeDivide(a, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(b, denom), std::runtime_error);
-    BOOST_CHECK_THROW(Acts::safeDivide(zero, denom), std::runtime_error);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(a, denom), a / epsilon);
+    BOOST_CHECK_EQUAL(Acts::safeDivide(-a, denom), -a / epsilon);
+
+    BOOST_CHECK_EQUAL(Acts::safeDivide(zero, denom), zero);
   }
 }
 
