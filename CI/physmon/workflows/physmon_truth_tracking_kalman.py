@@ -23,6 +23,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         setup.digiConfig,
         outputDir=tp,
+        digiConfigFile=setup.digiConfig,
         s=s,
     )
 
