@@ -65,6 +65,14 @@ def main():
         default=False,
     )
 
+    p.add_argument(
+        "--output-json",
+        help="Write the surfaces to OBJ files",
+        action="store_true",
+        default=False,
+    )
+
+
     args = p.parse_args()
 
     gContext = acts.GeometryContext()
@@ -155,7 +163,10 @@ def main():
         ssurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
         acts.examples.writeSurfacesObj(
             ssurfaces, gContext, [75, 220, 100], segments, args.output+"_sensitives.obj"
-        )
+         )
+    # Output to a JSON file     
+    if args.output_json:
+        acts.examples.writeDetectorToJsonDetray(gContext, detector, args.output)
 
     return
 
