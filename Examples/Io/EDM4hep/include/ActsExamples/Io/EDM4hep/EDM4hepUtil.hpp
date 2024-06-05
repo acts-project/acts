@@ -27,13 +27,17 @@
 #include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
 
-namespace ActsExamples {
-namespace EDM4hepUtil {
+namespace ActsExamples::EDM4hepUtil {
 
 using MapParticleIdFrom =
-    std::function<ActsFatras::Barcode(edm4hep::MCParticle particle)>;
+    std::function<ActsFatras::Barcode(const edm4hep::MCParticle& particle)>;
 using MapParticleIdTo =
     std::function<edm4hep::MCParticle(ActsFatras::Barcode particleId)>;
+
+inline ActsFatras::Barcode zeroParticleMapper(
+    const edm4hep::MCParticle& /*particle*/) {
+  return 0;
+}
 
 using MapGeometryIdFrom =
     std::function<Acts::GeometryIdentifier(std::uint64_t cellId)>;
@@ -45,8 +49,9 @@ using MapGeometryIdTo =
 /// Inpersistent information:
 /// - particle ID
 /// - process
-ActsFatras::Particle readParticle(const edm4hep::MCParticle& from,
-                                  const MapParticleIdFrom& particleMapper);
+ActsFatras::Particle readParticle(
+    const edm4hep::MCParticle& from,
+    const MapParticleIdFrom& particleMapper = zeroParticleMapper);
 
 /// Write a Fatras particle into EDM4hep.
 ///
@@ -132,5 +137,4 @@ uint64_t podioObjectIDToInteger(T&& o) {
   }
 }
 
-}  // namespace EDM4hepUtil
-}  // namespace ActsExamples
+}  // namespace ActsExamples::EDM4hepUtil

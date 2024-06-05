@@ -11,10 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-namespace Acts {
-
 /// @brief Helpers for planar surfaces that share the same maths
-namespace PlanarHelper {
+namespace Acts::PlanarHelper {
 
 /// Intersection with a planar surface
 ///
@@ -46,5 +44,4 @@ inline Intersection3D intersect(const Transform3& transform,
   return Intersection3D::invalid();
 }
 
-}  // namespace PlanarHelper
-}  // namespace Acts
+}  // namespace Acts::PlanarHelper

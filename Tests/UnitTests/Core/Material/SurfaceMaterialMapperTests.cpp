@@ -87,7 +87,6 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   cvbConfig.layerBuilder = layerBuilder;
   cvbConfig.layerEnvelopeR = {1_mm, 1_mm};
   cvbConfig.buildToRadiusZero = true;
-  cvbConfig.volumeSignature = 0;
   auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
       cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
 
@@ -104,7 +103,9 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
 
 std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -129,6 +130,4 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

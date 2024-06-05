@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file InterpolatedMaterialdMapTests.cpp
-
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -28,9 +25,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 constexpr unsigned int dim = 2;
 using grid_t = Grid<Acts::Material::ParametersVector, detail::EquidistantAxis,
@@ -168,6 +163,4 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 4., 0.)), false);
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 0., 4.)), true);
 }
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

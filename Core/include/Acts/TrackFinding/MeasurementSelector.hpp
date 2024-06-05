@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -35,9 +36,9 @@ namespace Acts {
 /// cut on the local chi2.
 struct MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
-  std::vector<double> etaBins;
+  std::vector<double> etaBins{};
   /// Maximum local chi2 contribution.
-  std::vector<double> chi2CutOff{std::numeric_limits<double>::max()};
+  std::vector<double> chi2CutOff{15};
   /// Maximum number of associated measurements on a single surface.
   std::vector<std::size_t> numMeasurementsCutOff{1};
 };
@@ -61,11 +62,19 @@ class MeasurementSelector {
   using Config = Acts::GeometryHierarchyMap<MeasurementSelectorCuts>;
 
   /// @brief Default constructor
-  MeasurementSelector() = default;
-  /// @brief Constructor with config and (non-owning) logger
+  ///
+  /// This will use the default configuration for the cuts.
+  MeasurementSelector();
+
+  /// @brief Constructor with cuts
+  ///
+  /// @param cuts The cuts to use
+  explicit MeasurementSelector(const MeasurementSelectorCuts& cuts);
+
+  /// @brief Constructor with config
   ///
   /// @param config a config instance
-  MeasurementSelector(Config config) : m_config(std::move(config)) {}
+  explicit MeasurementSelector(Config config);
 
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
@@ -82,157 +91,17 @@ class MeasurementSelector {
       typename std::vector<typename traj_t::TrackStateProxy>::iterator,
       typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
   select(std::vector<typename traj_t::TrackStateProxy>& candidates,
-         bool& isOutlier, const Logger& logger) const {
-    using Result = Result<std::pair<
-        typename std::vector<typename traj_t::TrackStateProxy>::iterator,
-        typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
-
-    ACTS_VERBOSE("Invoked MeasurementSelector");
-
-    // Return error if no measurement
-    if (candidates.empty()) {
-      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
-    }
-
-    // Get geoID of this surface
-    auto surface = &candidates.front().referenceSurface();
-    auto geoID = surface->geometryId();
-
-    // Find the appropriate cuts
-    auto cuts = m_config.find(geoID);
-    if (cuts == m_config.end()) {
-      // for now we consider missing cuts an unrecoverable error
-      // TODO consider other options e.g. do not add measurements at all (not
-      // even as outliers)
-      return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
-    }
-
-    assert(!cuts->chi2CutOff.empty());
-    const auto& chi2CutOff = cuts->chi2CutOff;
-    auto maxChi2Cut = *std::max_element(chi2CutOff.begin(), chi2CutOff.end());
-    double minChi2 = std::numeric_limits<double>::max();
-    std::size_t minIndex = 0;
-    auto trackStateIterEnd = candidates.end();
-    {
-      auto trackStateIter = candidates.begin();
-      // Loop over all measurements to select the compatible measurements
-      // Sort track states which do not satisfy the chi2 cut to the end.
-      // When done trackStateIterEnd will point to the first element that
-      // does not satisfy the chi2 cut.
-      assert(trackStateIter != trackStateIterEnd);
-      for (;;) {
-        double chi2 = calculateChi2(
-            // This abuses an incorrectly sized vector / matrix to access the
-            // data pointer! This works (don't use the matrix as is!), but be
-            // careful!
-            trackStateIter
-                ->template calibrated<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackStateIter
-                ->template calibratedCovariance<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackStateIter->predicted(), trackStateIter->predictedCovariance(),
-            trackStateIter->projector(), trackStateIter->calibratedSize());
-
-        trackStateIter->chi2() = chi2;
-
-        // only consider track states which pass the chi2 cut
-        if (chi2 >= maxChi2Cut ||
-            chi2 >= VariableCut<traj_t>(*trackStateIter, cuts, chi2CutOff,
-                                        logger)) {
-          --trackStateIterEnd;
-          // still check whether the element has the smallest chi2 in case an
-          // outlier is returned.
-          if (chi2 < minChi2) {
-            minChi2 = chi2;
-            // the current element will be swapped with the last unchecked
-            // element if they are different
-            minIndex = std::distance(candidates.begin(), trackStateIterEnd);
-          }
-
-          if (trackStateIter == trackStateIterEnd) {
-            break;
-          } else {
-            // swap rejected element with last element in list
-            std::swap(*trackStateIter, *trackStateIterEnd);
-          }
-        } else {
-          // Search for the measurement with the min chi2
-          // @if there is a track state which passes the cut-off there is
-          // no need to remember the track state with the smallest chi2.
-          ++trackStateIter;
-          if (trackStateIter == trackStateIterEnd) {
-            break;
-          }
-        }
-      }
-    }
-
-    // If there are no measurements below the chi2 cut off, return the
-    // measurement with the best chi2 and tag it as an outlier
-    if (candidates.begin() == trackStateIterEnd) {
-      const auto bestIt = std::next(candidates.begin(), minIndex);
-      ACTS_VERBOSE(
-          "No measurement candidate. Return an outlier measurement chi2="
-          << bestIt->chi2());
-      isOutlier = true;
-      // return single item range, no sorting necessary
-      return Result::success(std::pair{bestIt, std::next(bestIt, 1)});
-    }
-
-    std::sort(candidates.begin(), trackStateIterEnd,
-              [](const auto& tsa, const auto& tsb) {
-                return tsa.chi2() < tsb.chi2();
-              });
-
-    // use |eta| of best measurement to select numMeasurementsCut
-    const auto numMeasurementsCut = VariableCut<traj_t>(
-        *candidates.begin(), cuts, cuts->numMeasurementsCutOff, logger);
-
-    if (static_cast<std::size_t>(std::distance(
-            candidates.begin(), trackStateIterEnd)) > numMeasurementsCut &&
-        numMeasurementsCut > 0) {
-      trackStateIterEnd = std::next(candidates.begin(), numMeasurementsCut);
-    }
-
-    ACTS_VERBOSE("Number of selected measurements: "
-                 << std::distance(candidates.begin(), trackStateIterEnd)
-                 << ", max: " << numMeasurementsCut);
-
-    isOutlier = false;
-    return std::pair{candidates.begin(), trackStateIterEnd};
-  }
+         bool& isOutlier, const Logger& logger) const;
 
  private:
   template <typename traj_t, typename cut_value_t>
-  static cut_value_t VariableCut(
+  static cut_value_t getCut(
       const typename traj_t::TrackStateProxy& trackState,
       const Acts::MeasurementSelector::Config::Iterator selector,
-      const std::vector<cut_value_t>& cuts, const Logger& logger) {
-    const auto& etaBins = selector->etaBins;
-    if (etaBins.empty()) {
-      return cuts[0];  // shortcut if no etaBins
-    }
-    const auto eta = std::atanh(std::cos(trackState.predicted()[eBoundTheta]));
-    const auto abseta = std::abs(eta);
-    std::size_t bin = 0;
-    for (auto etaBin : etaBins) {
-      if (etaBin >= abseta) {
-        break;
-      }
-      bin++;
-    }
-    if (bin >= cuts.size()) {
-      bin = cuts.size() - 1;
-    }
-    ACTS_VERBOSE("Variable cut for eta=" << eta << ": " << cuts[bin]);
-    return cuts[bin];
-  }
+      const std::vector<cut_value_t>& cuts, const Logger& logger);
 
   double calculateChi2(
-      double* fullCalibrated, double* fullCalibratedCovariance,
+      const double* fullCalibrated, const double* fullCalibratedCovariance,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Parameters predicted,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -245,3 +114,5 @@ class MeasurementSelector {
 };
 
 }  // namespace Acts
+
+#include "MeasurementSelector.ipp"

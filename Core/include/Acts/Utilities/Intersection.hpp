@@ -75,10 +75,10 @@ class Intersection {
 
   constexpr static Intersection invalid() { return Intersection(); }
 
-  /// Comparison function for forward order i.e. intersection closest to -inf
-  /// will be first.
-  constexpr static bool forwardOrder(const Intersection& aIntersection,
-                                     const Intersection& bIntersection) {
+  /// Comparison function for path length order i.e. intersection closest to
+  /// -inf will be first.
+  constexpr static bool pathLengthOrder(const Intersection& aIntersection,
+                                        const Intersection& bIntersection) {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return a < b;
@@ -100,6 +100,16 @@ class Intersection {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return std::abs(a) < std::abs(b);
+  }
+
+  /// Comparison function for closest forward order i.e. intersection closest to
+  /// 0 with positive path length will be first.
+  constexpr static bool closestForwardOrder(const Intersection& aIntersection,
+                                            const Intersection& bIntersection) {
+    auto a = aIntersection.pathLength();
+    auto b = bIntersection.pathLength();
+    return std::signbit(a) == std::signbit(b) ? std::abs(a) < std::abs(b)
+                                              : a > b;
   }
 
  private:
@@ -168,16 +178,24 @@ class ObjectIntersection {
 
   constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
 
-  constexpr static bool forwardOrder(const ObjectIntersection& aIntersection,
-                                     const ObjectIntersection& bIntersection) {
-    return Intersection3D::forwardOrder(aIntersection.intersection(),
-                                        bIntersection.intersection());
+  constexpr static bool pathLengthOrder(
+      const ObjectIntersection& aIntersection,
+      const ObjectIntersection& bIntersection) {
+    return Intersection3D::pathLengthOrder(aIntersection.intersection(),
+                                           bIntersection.intersection());
   }
 
   constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
                                      const ObjectIntersection& bIntersection) {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
+  }
+
+  constexpr static bool closestForwardOrder(
+      const ObjectIntersection& aIntersection,
+      const ObjectIntersection& bIntersection) {
+    return Intersection3D::closestForwardOrder(aIntersection.intersection(),
+                                               bIntersection.intersection());
   }
 
  private:
@@ -231,6 +249,13 @@ class ObjectMultiIntersection {
     return *std::min_element(splitIntersections.begin(),
                              splitIntersections.end(),
                              ObjectIntersection<object_t>::closestOrder);
+  }
+
+  constexpr ObjectIntersection<object_t> closestForward() const {
+    auto splitIntersections = split();
+    return *std::min_element(splitIntersections.begin(),
+                             splitIntersections.end(),
+                             ObjectIntersection<object_t>::closestForwardOrder);
   }
 
  private:

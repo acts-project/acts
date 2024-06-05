@@ -38,8 +38,7 @@
 #include <functional>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct CylindricalTrackingGeometry {
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -192,12 +191,14 @@ struct CylindricalTrackingGeometry {
     double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
     double zStep = 2 * std::abs(zStart) / (nZbins - 1);
     // loop over the bins
-    for (std::size_t zBin = 0; zBin < std::size_t(nZbins); ++zBin) {
+    for (std::size_t zBin = 0; zBin < static_cast<std::size_t>(nZbins);
+         ++zBin) {
       // prepare z and r
       double moduleZ = zStart + zBin * zStep;
       double moduleR =
           (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
-      for (std::size_t phiBin = 0; phiBin < std::size_t(nPhiBins); ++phiBin) {
+      for (std::size_t phiBin = 0; phiBin < static_cast<std::size_t>(nPhiBins);
+           ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;
         mPositions.push_back(Vector3(moduleR * cos(modulePhi),
@@ -259,7 +260,6 @@ struct CylindricalTrackingGeometry {
     bpvConfig.layerBuilder = beamPipeBuilder;
     bpvConfig.layerEnvelopeR = {1_mm, 1_mm};
     bpvConfig.buildToRadiusZero = true;
-    bpvConfig.volumeSignature = 0;
     auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
         bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
@@ -320,11 +320,11 @@ struct CylindricalTrackingGeometry {
     auto pLayerArray = layerArrayCreator->layerArray(geoContext, pLayers, 25.,
                                                      300., arbitrary, binR);
     auto pVolumeBounds =
-        std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
+        std::make_shared<CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
-    auto pVolume = TrackingVolume::create(Transform3::Identity(), pVolumeBounds,
-                                          nullptr, std::move(pLayerArray),
-                                          nullptr, {}, "Pixel::Barrel");
+    auto pVolume = std::make_shared<TrackingVolume>(
+        Transform3::Identity(), pVolumeBounds, nullptr, std::move(pLayerArray),
+        nullptr, MutableTrackingVolumeVector{}, "Pixel::Barrel");
 
     // The combined volume
     auto detectorVolume = cylinderVolumeHelper->createContainerTrackingVolume(
@@ -335,5 +335,4 @@ struct CylindricalTrackingGeometry {
   }
 };
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

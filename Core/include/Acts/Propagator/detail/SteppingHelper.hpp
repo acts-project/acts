@@ -19,8 +19,7 @@
 
 #include <limits>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Update surface status - Single component
 ///
@@ -39,7 +38,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
     const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
-               << surface.geometryId() << " index " << (int)index);
+               << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
@@ -54,7 +53,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = std::numeric_limits<double>::max();
+  const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
 
   if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
                                                  nearLimit, farLimit, logger)) {
@@ -84,5 +83,4 @@ void updateSingleStepSize(typename stepper_t::State& state,
   state.stepSize.update(stepSize, ConstrainedStep::actor, release);
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

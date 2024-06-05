@@ -23,6 +23,7 @@
 #include <vector>
 
 #include <TFile.h>
+#include <TVectorT.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
@@ -73,14 +74,16 @@ ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
-  float eff = float(m_nTotalMatchedParticles) / m_nTotalParticles;
-  float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
-  float duplicationRate =
-      float(m_nTotalDuplicatedParticles) / m_nTotalMatchedParticles;
+  float eff = static_cast<float>(m_nTotalMatchedParticles) / m_nTotalParticles;
+  float fakeRate =
+      static_cast<float>(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
+  float duplicationRate = static_cast<float>(m_nTotalDuplicatedParticles) /
+                          m_nTotalMatchedParticles;
   float aveNDuplicatedSeeds =
-      float(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
+      static_cast<float>(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
       m_nTotalMatchedParticles;
-  float totalSeedPurity = float(m_nTotalMatchedSeeds) / m_nTotalSeeds;
+  float totalSeedPurity =
+      static_cast<float>(m_nTotalMatchedSeeds) / m_nTotalSeeds;
   ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
   ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
   ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);
@@ -99,10 +102,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       "/ nMatchedParticles) = "
       << aveNDuplicatedSeeds);
 
+  auto writeFloat = [&](float f, const char* name) {
+    TVectorF v(1);
+    v[0] = f;
+    m_outputFile->WriteObject(&v, name);
+  };
+
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
+    writeFloat(eff, "eff_seeds");
+    writeFloat(fakeRate, "fakerate_seeds");
+    writeFloat(duplicationRate, "duplicaterate_seeds");
+    writeFloat(totalSeedPurity, "purity_seeds");
     ACTS_INFO("Wrote performance plots to '" << m_outputFile->GetPath() << "'");
   }
   return ProcessCode::SUCCESS;

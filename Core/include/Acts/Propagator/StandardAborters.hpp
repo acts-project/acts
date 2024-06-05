@@ -43,9 +43,8 @@ struct PathLimitReached {
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    if (navigator.targetReached(state.navigation)) {
-      return true;
-    }
+    (void)navigator;
+
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
@@ -54,8 +53,6 @@ struct PathLimitReached {
     if (limitReached) {
       ACTS_VERBOSE("PathLimit aborter | "
                    << "Path limit reached at distance " << distance);
-      // reaching the target means navigation break
-      navigator.targetReached(state.navigation, true);
       return true;
     }
     stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
@@ -109,7 +106,7 @@ struct SurfaceReached {
     // not using the stepper overstep limit here because it does not always work
     // for perigee surfaces
     // note: the near limit is necessary for surfaces with more than one
-    // intersections in order to discard the ones which are behind us
+    // intersection in order to discard the ones which are behind us
     const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
@@ -156,6 +153,14 @@ struct SurfaceReached {
   }
 };
 
+/// Similar to SurfaceReached, but with an infinite overstep limit.
+///
+/// This can be used to force the propagation to the target surface.
+struct ForcedSurfaceReached : SurfaceReached {
+  ForcedSurfaceReached()
+      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
+};
+
 /// This is the condition that the end of World has been reached
 /// it then triggers an propagation abort
 struct EndOfWorldReached {
@@ -174,8 +179,31 @@ struct EndOfWorldReached {
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    navigator.targetReached(state.navigation, endOfWorld);
     return endOfWorld;
+  }
+};
+
+/// Aborter that checks if the propagation has reached any surface
+struct AnySurfaceReached {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const Logger& logger) const {
+    (void)stepper;
+    (void)logger;
+
+    const Surface* startSurface = navigator.startSurface(state.navigation);
+    const Surface* targetSurface = navigator.targetSurface(state.navigation);
+    const Surface* currentSurface = navigator.currentSurface(state.navigation);
+
+    // `startSurface` is excluded because we want to reach a new surface
+    // `targetSurface` is excluded because another aborter should handle it
+    if (currentSurface != nullptr && currentSurface != startSurface &&
+        currentSurface != targetSurface) {
+      return true;
+    }
+
+    return false;
   }
 };
 

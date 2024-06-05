@@ -26,8 +26,7 @@ class PlanarBounds;
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// @class AlignmentContext
 struct AlignmentContext {
@@ -210,5 +209,4 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

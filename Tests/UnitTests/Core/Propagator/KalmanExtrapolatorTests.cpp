@@ -42,8 +42,7 @@ struct EndOfWorldReached;
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Jacobian = BoundMatrix;
 using Covariance = BoundSquareMatrix;
@@ -91,9 +90,7 @@ struct StepWiseActor {
       result.paths.push_back(std::get<double>(boundState));
     }
     // Also store the jacobian and full path
-    if ((navigator.navigationBreak(state.navigation) ||
-         navigator.targetReached(state.navigation)) &&
-        !result.finalized) {
+    if (state.stage == PropagatorStage::postPropagation && !result.finalized) {
       // Set the last stepping parameter
       result.paths.push_back(state.stepping.pathAccumulated);
       // Set the full parameter
@@ -186,5 +183,4 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

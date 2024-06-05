@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -40,8 +39,9 @@
 
 namespace Acts {
 class AssertionFailureException;
+}  // namespace Acts
 
-namespace Test {
+namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
@@ -283,14 +283,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Vector3 globalPosition{0, 4, 2};
   Vector3 momentum{0, 0, 1};
   Vector3 direction = momentum.normalized();
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      discSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
+      discSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
+                                                   direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 0, 0, 1, 3, 0, 0;
@@ -377,6 +374,4 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

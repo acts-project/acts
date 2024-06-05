@@ -11,9 +11,6 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -22,12 +19,9 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
-#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
@@ -195,50 +189,49 @@ struct KalmanFitterOptions {
 
 template <typename traj_t>
 struct KalmanFitterResult {
-  // Fitted states that the actor has handled.
+  /// Fitted states that the actor has handled.
   traj_t* fittedStates{nullptr};
 
-  // This is the index of the 'tip' of the track stored in multitrajectory.
-  // This corresponds to the last measurement state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  /// This is the index of the 'tip' of the track stored in multitrajectory.
+  /// This corresponds to the last measurement state in the multitrajectory.
+  /// Since this KF only stores one trajectory, it is unambiguous.
+  /// SIZE_MAX is the start of a trajectory.
   std::size_t lastMeasurementIndex = SIZE_MAX;
 
-  // This is the index of the 'tip' of the states stored in multitrajectory.
-  // This corresponds to the last state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  /// This is the index of the 'tip' of the states stored in multitrajectory.
+  /// This corresponds to the last state in the multitrajectory.
+  /// Since this KF only stores one trajectory, it is unambiguous.
+  /// SIZE_MAX is the start of a trajectory.
   std::size_t lastTrackIndex = SIZE_MAX;
 
-  // The optional Parameters at the provided surface
+  /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
 
-  // Counter for states with non-outlier measurements
+  /// Counter for states with non-outlier measurements
   std::size_t measurementStates = 0;
 
-  // Counter for measurements holes
-  // A hole correspond to a surface with an associated detector element with no
-  // associated measurement. Holes are only taken into account if they are
-  // between the first and last measurements.
+  /// Counter for measurements holes
+  /// A hole correspond to a surface with an associated detector element with no
+  /// associated measurement. Holes are only taken into account if they are
+  /// between the first and last measurements.
   std::size_t measurementHoles = 0;
 
-  // Counter for handled states
+  /// Counter for handled states
   std::size_t processedStates = 0;
 
-  // Indicator if smoothing has been done.
+  /// Indicator if smoothing has been done.
   bool smoothed = false;
 
-  // Indicator if navigation direction has been reversed
+  /// Indicator if navigation direction has been reversed
   bool reversed = false;
 
-  // Indicator if track fitting has been done
+  /// Indicator if track fitting has been done
   bool finished = false;
 
-  // Measurement surfaces without hits
+  /// Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
 
-  // Measurement surfaces handled in both forward and
-  // backward filtering
+  /// Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
 
   Result<void> result{Result<void>::success()};
@@ -324,7 +317,7 @@ class KalmanFitter {
     /// Whether run reversed filtering
     bool reversedFiltering = false;
 
-    // Scale the covariance before the reversed filtering
+    /// Scale the covariance before the reversed filtering
     double reversedFilteringCovarianceScaling = 1.0;
 
     /// Whether to include non-linear correction during global to local
@@ -733,7 +726,10 @@ class KalmanFitter {
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
-        TrackStatePropMask mask = TrackStatePropMask::All;
+        TrackStatePropMask mask =
+            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+            TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
+            TrackStatePropMask::Calibrated;
         const std::size_t currentTrackIndex = fittedStates.addTrackState(
             mask, Acts::MultiTrajectoryTraits::kInvalid);
 
@@ -751,17 +747,14 @@ class KalmanFitter {
           if (!res.ok()) {
             return res.error();
           }
-          auto& [boundParams, jacobian, pathLength] = *res;
+          const auto& [boundParams, jacobian, pathLength] = *res;
 
           // Fill the track state
-          trackStateProxy.predicted() = std::move(boundParams.parameters());
-          if (boundParams.covariance().has_value()) {
-            trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
-          }
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-          trackStateProxy.jacobian() = std::move(jacobian);
-          trackStateProxy.pathLength() = std::move(pathLength);
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
         }
 
         // We have predicted parameters, so calibrate the uncalibrated input
@@ -1056,13 +1049,14 @@ class KalmanFitter {
   template <typename parameters_t>
   class Aborter {
    public:
-    /// Broadcast the result_type
+    /// Broadcast the action type
     using action_type = Actor<parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
+              typename navigator_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/, const result_t& result,
+                    const navigator_t& /*navigator*/,
+                    const typename action_type::result_type& result,
                     const Logger& /*logger*/) const {
       if (!result.result.ok() || result.finished) {
         return true;
@@ -1128,7 +1122,7 @@ class KalmanFitter {
     PropagatorOptions<Actors, Aborters> kalmanOptions(
         kfOptions.geoContext, kfOptions.magFieldContext);
 
-    // // Set the trivial propagator options
+    // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
@@ -1259,27 +1253,20 @@ class KalmanFitter {
       TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
       -> Result<typename TrackContainer<track_container_t, traj_t,
                                         holder_t>::TrackProxy> {
-    typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, actor_list_t>
-        inputResult;
+    auto propagatorState =
+        m_propagator.template makeState(sParameters, kalmanOptions);
 
-    auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
-
-    r.fittedStates = &trackContainer.trackStateContainer();
+    auto& kalmanResult =
+        propagatorState.template get<KalmanFitterResult<traj_t>>();
+    kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template propagate(
-        sParameters, kalmanOptions, false, std::move(inputResult));
+    auto result = m_propagator.propagate(propagatorState);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error());
       return result.error();
     }
-
-    const auto& propRes = *result;
-
-    /// Get the result of the fit
-    auto kalmanResult = propRes.template get<kalman_result_t>();
 
     /// It could happen that the fit ends in zero measurement states.
     /// The result gets meaningless so such case is regarded as fit failure.
@@ -1294,7 +1281,7 @@ class KalmanFitter {
       return kalmanResult.result.error();
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    auto track = trackContainer.makeTrack();
     track.tipIndex() = kalmanResult.lastMeasurementIndex;
     if (kalmanResult.fittedParameters) {
       const auto& params = kalmanResult.fittedParameters.value();

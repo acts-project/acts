@@ -3,7 +3,6 @@ add_library(
   src/DigitizationAlgorithm.cpp
   src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
-  src/PlanarSteppingAlgorithm.cpp
   src/DigitizationConfigurator.cpp
   src/ModuleClusters.cpp)
 target_include_directories(
@@ -12,7 +11,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDigitization
   PUBLIC
-    ActsCore ActsPluginIdentification ActsExamplesFramework)
+    ActsCore ActsExamplesFramework)
 
 install(
   TARGETS ActsExamplesDigitization

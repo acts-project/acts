@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -49,18 +48,15 @@ struct AlgorithmContext;
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-  using HitSimHitsMap = IndexMultimap<Index>;
-
   struct Config {
     /// Input (fitted) tracks collection
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Input collection of simulated hits.
     std::string inputSimHits;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
     /// output filename.
@@ -99,9 +95,9 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMaps"};
   ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
@@ -143,6 +139,9 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   std::vector<float> m_t_eQOP;
   /// truth parameter eT
   std::vector<float> m_t_eT;
+
+  /// event-unique particle identifier a.k.a barcode for hits per each surface
+  std::vector<std::vector<std::uint64_t>> m_particleId;
 
   /// number of all states
   unsigned int m_nStates{0};

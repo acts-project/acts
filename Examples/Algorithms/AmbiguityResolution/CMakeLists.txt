@@ -1,6 +1,7 @@
 add_library(
   ActsExamplesAmbiguityResolution SHARED
   src/GreedyAmbiguityResolutionAlgorithm.cpp
+  src/ScoreBasedAmbiguityResolutionAlgorithm.cpp
 )
 
 target_include_directories(
@@ -13,6 +14,7 @@ target_link_libraries(
   PUBLIC
     ActsCore
     ActsExamplesFramework
+    ActsPluginJson
 )
 
 install(

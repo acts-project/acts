@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Detector/detail/DetectorVolumeConsistency.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -205,87 +206,6 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
   return pRep;
 }
 
-/// @brief  Helper method to strip side volumes from containers
-///
-/// @param containers the list of container
-/// @param sides the sides
-/// @param selectedOnly the selection restriction
-///
-/// @return a map of stripped out container
-std::map<unsigned int,
-         std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
-stripSideVolumes(
-    const std::vector<Acts::Experimental::DetectorComponent::PortalContainer>&
-        containers,
-    const std::vector<unsigned int>& sides,
-    const std::vector<unsigned int>& selectedOnly = {},
-    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("::stripSideVolumes", logLevel));
-
-  // These are the stripped off outside volumes
-  std::map<unsigned int,
-           std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
-      sideVolumes;
-
-  // Principle sides and selected sides, make an intersection
-  std::vector<unsigned int> selectedSides;
-  if (!selectedOnly.empty()) {
-    std::set_intersection(sides.begin(), sides.end(), selectedOnly.begin(),
-                          selectedOnly.end(),
-                          std::back_inserter(selectedSides));
-  } else {
-    selectedSides = sides;
-  }
-
-  // Loop through the containers
-  for (const auto& pc : containers) {
-    // Loop through the selected sides and check if they are contained
-    for (const auto& s : selectedSides) {
-      auto cSide = pc.find(s);
-      if (cSide != pc.end()) {
-        auto p = cSide->second;
-        auto& sVolumes = sideVolumes[s];
-        auto aVolumes =
-            Acts::Experimental::detail::PortalHelper::attachedDetectorVolumes(
-                *p);
-        sVolumes.insert(sVolumes.end(), aVolumes.begin(), aVolumes.end());
-      }
-    }
-  }
-  // return them
-  return sideVolumes;
-}
-
-/// @brief Helper method to check alignment of the volumes, this method checks
-/// if the z-axes are aligned and throws an exception if not, it assumes that
-/// the detector volume content has been checked already
-///
-/// @param gctx the geometry context
-/// @param volumes the input volumes to be checked
-///
-/// @note this is a strict matching that requires the rotation to be identical
-///
-/// @note throws exception if any of checks fails
-void checkAlignment(
-    const Acts::GeometryContext& gctx,
-    const std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
-        volumes) {
-  // Take first transform as reference transform
-  auto refRotation = volumes[0u]->transform(gctx).rotation();
-  // Loop over rest and recursively test
-  for (auto [iv, v] : Acts::enumerate(volumes)) {
-    if (iv > 0) {
-      auto curRotation = v->transform(gctx).rotation();
-      if (!curRotation.isApprox(refRotation)) {
-        std::string message = "CylindricalDetectorHelper: rotation of volume ";
-        message += std::to_string(iv);
-        message += std::string(" is not aligned with previous volume");
-        throw std::invalid_argument(message.c_str());
-      }
-    }
-  }
-}
-
 /// @brief Helper method to check the volumes in general and throw and exception if fails
 ///
 /// @param gctx the geometry context
@@ -309,20 +229,19 @@ void checkVolumes(
   for (auto [iv, v] : Acts::enumerate(volumes)) {
     // Check for nullptr
     if (v == nullptr) {
-      message += std::string("nullptr detector instead of volume " +
-                             std::to_string(iv));
+      message += "nullptr detector instead of volume " + std::to_string(iv);
       throw std::invalid_argument(message.c_str());
     }
     // Check for cylindrical volume type
     if (v->volumeBounds().type() != Acts::VolumeBounds::BoundsType::eCylinder) {
-      message +=
-          std::string("non-cylindrical volume bounds detected for volume " +
-                      std::to_string(iv));
+      message += "non-cylindrical volume bounds detected for volume " +
+                 std::to_string(iv);
       throw std::invalid_argument(message.c_str());
     }
   }
   // Check the alignment of the volumes
-  checkAlignment(gctx, volumes);
+  Acts::Experimental::detail::DetectorVolumeConsistency::checkRotationAlignment(
+      gctx, volumes);
 }
 
 /// @brief Helper method to check the volume bounds
@@ -492,7 +411,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   }
 
   // Attach the new volume multi links
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
 
   // Exchange the portals of the volumes
   ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
@@ -697,7 +616,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   }
 
   // Attach the new volume multi links
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
 
   // Exchange the portals of the volumes
   ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
@@ -827,7 +746,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   }
 
   // Attach the new volume multi links
-  PortalHelper::attachDetectorVolumeUpdaters(gctx, volumes, pReplacements);
+  PortalHelper::attachExternalNavigationDelegates(gctx, volumes, pReplacements);
   // Exchange the portals of the volumes
   ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
   for (auto& iv : volumes) {
@@ -892,18 +811,22 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   // If needed, insert new cylinder
   if (volumes[0u]->portalPtrs().size() == 4u &&
       volumes[1u]->portalPtrs().size() == 8u) {
+    const auto* cylVolBounds =
+        dynamic_cast<const CylinderVolumeBounds*>(&volumes[0u]->volumeBounds());
+    const auto* ccylVolBounds = dynamic_cast<const CutoutCylinderVolumeBounds*>(
+        &volumes[1u]->volumeBounds());
+    if (cylVolBounds == nullptr || ccylVolBounds == nullptr) {
+      throw std::invalid_argument(
+          "Wrapping the detector volume requires a cylinder and a cutout "
+          "cylinder volume.");
+    }
     // We need a new cylinder spanning over the entire inner tube
-    ActsScalar hlZ =
-        volumes[0u]
-            ->volumeBounds()
-            .values()[Acts::CylinderVolumeBounds::BoundValues::eHalfLengthZ];
-    ActsScalar HlZ =
-        volumes[1u]->volumeBounds().values()
-            [Acts::CutoutCylinderVolumeBounds::BoundValues::eHalfLengthZ];
+    ActsScalar hlZ = cylVolBounds->get(
+        Acts::CylinderVolumeBounds::BoundValues::eHalfLengthZ);
+    ActsScalar HlZ = ccylVolBounds->get(
+        Acts::CutoutCylinderVolumeBounds::BoundValues::eHalfLengthZ);
     ActsScalar innerR =
-        volumes[0u]
-            ->volumeBounds()
-            .values()[Acts::CylinderVolumeBounds::BoundValues::eMinR];
+        cylVolBounds->get(CylinderVolumeBounds::BoundValues::eMinR);
     // Create the inner replacement
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
@@ -912,7 +835,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {
         volumes[1u], volumes[0u], volumes[1u]};
     // Attach the new volume multi links
-    PortalHelper::attachDetectorVolumeUpdaters(gctx, zVolumes, pReplacements);
+    PortalHelper::attachExternalNavigationDelegates(gctx, zVolumes,
+                                                    pReplacements);
     auto& [p, i, dir, boundaries, binning] = pReplacements[0u];
     // Update the portals
     volumes[1u]->updatePortal(p, 6u);
@@ -986,8 +910,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   }
   dShell[2u] = containers[containers.size() - 1u].find(2u)->second;
 
-  auto sideVolumes =
-      stripSideVolumes(containers, {0u, 1u, 4u, 5u}, selectedOnly, logLevel);
+  auto sideVolumes = PortalHelper::stripSideVolumes(
+      containers, {0u, 1u, 4u, 5u}, selectedOnly, logLevel);
 
   for (auto [s, volumes] : sideVolumes) {
     auto pR = connectInR(gctx, volumes, {s});
@@ -1061,8 +985,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   }
 
   // Strip the side volumes
-  auto sideVolumes =
-      stripSideVolumes(containers, nominalSides, selectedOnly, logLevel);
+  auto sideVolumes = PortalHelper::stripSideVolumes(containers, nominalSides,
+                                                    selectedOnly, logLevel);
 
   ACTS_VERBOSE("There remain " << sideVolumes.size()
                                << " side volume packs to be connected");
@@ -1207,7 +1131,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     ActsScalar pHalfLengthZ =
         pValues[CylinderBounds::BoundValues::eHalfLengthZ];
 
-    auto sideVolumes = stripSideVolumes({innerContainer}, {3u}, {3u}, logLevel);
+    auto sideVolumes =
+        PortalHelper::stripSideVolumes({innerContainer}, {3u}, {3u}, logLevel);
 
     // First the left volume sector
     std::vector<std::shared_ptr<DetectorVolume>> innerVolumes = {
@@ -1218,7 +1143,14 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     // Loop over side volume and register the z boundaries
     for (auto& svs : sideVolumes) {
       for (auto& v : svs.second) {
-        ActsScalar hlZ = v->volumeBounds().values()[2u];
+        const auto* cylVolBounds =
+            dynamic_cast<const CylinderVolumeBounds*>(&v->volumeBounds());
+        if (cylVolBounds == nullptr) {
+          throw std::invalid_argument(
+              "CylindricalDetectorHelper: side volume must be a cylinder.");
+        }
+        ActsScalar hlZ =
+            cylVolBounds->get(CylinderVolumeBounds::BoundValues::eHalfLengthZ);
         zBoundaries.push_back(zBoundaries.back() + 2 * hlZ);
         innerVolumes.push_back(v);
       }

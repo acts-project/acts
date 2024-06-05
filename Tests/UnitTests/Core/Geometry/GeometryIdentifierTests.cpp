@@ -10,8 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_construct_default) {
   GeometryIdentifier id;
@@ -92,5 +91,4 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
                  GeometryIdentifier(vol1).setSensitive(2u).setExtra(1u));
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

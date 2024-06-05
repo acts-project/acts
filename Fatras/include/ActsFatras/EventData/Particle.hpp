@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,13 +18,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <iosfwd>
-#include <limits>
-#include <memory>
 #include <optional>
 
 namespace ActsFatras {
@@ -147,7 +145,7 @@ class Particle {
   Particle &correctEnergy(Scalar delta) {
     const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
     if (newEnergy <= m_mass) {
-      m_absMomentum = Scalar(0);
+      m_absMomentum = Scalar{0};
     } else {
       m_absMomentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
     }
@@ -214,7 +212,7 @@ class Particle {
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr bool isAlive() const { return Scalar(0) < m_absMomentum; }
+  constexpr bool isAlive() const { return Scalar{0} < m_absMomentum; }
 
   constexpr bool isSecondary() const {
     return particleId().vertexSecondary() != 0 ||
@@ -284,6 +282,28 @@ class Particle {
         fourPosition(), direction(), qOverP(), std::nullopt, hypothesis());
   }
 
+  /// Set the number of hits.
+  ///
+  /// @param nHits number of hits
+  constexpr Particle &setNumberOfHits(std::uint32_t nHits) {
+    m_numberOfHits = nHits;
+    return *this;
+  }
+
+  /// Number of hits.
+  constexpr std::uint32_t numberOfHits() const { return m_numberOfHits; }
+
+  /// Set the outcome of particle.
+  ///
+  /// @param outcome outcome code
+  constexpr Particle &setOutcome(ParticleOutcome outcome) {
+    m_outcome = outcome;
+    return *this;
+  }
+
+  /// Particle outcome.
+  constexpr ParticleOutcome outcome() const { return m_outcome; }
+
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
@@ -293,19 +313,23 @@ class Particle {
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
-  Scalar m_charge = Scalar(0);
-  Scalar m_mass = Scalar(0);
+  Scalar m_charge = Scalar{0};
+  Scalar m_mass = Scalar{0};
   // kinematics, i.e. things that change over the particle lifetime.
   Vector3 m_direction = Vector3::UnitZ();
-  Scalar m_absMomentum = Scalar(0);
+  Scalar m_absMomentum = Scalar{0};
   Vector4 m_position4 = Vector4::Zero();
-  // proper time in the particle rest frame
-  Scalar m_properTime = Scalar(0);
+  /// proper time in the particle rest frame
+  Scalar m_properTime = Scalar{0};
   // accumulated material
-  Scalar m_pathInX0 = Scalar(0);
-  Scalar m_pathInL0 = Scalar(0);
-  // reference surface
+  Scalar m_pathInX0 = Scalar{0};
+  Scalar m_pathInL0 = Scalar{0};
+  /// number of hits
+  std::uint32_t m_numberOfHits = 0;
+  /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
+  /// outcome
+  ParticleOutcome m_outcome = ParticleOutcome::Alive;
 };
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle);

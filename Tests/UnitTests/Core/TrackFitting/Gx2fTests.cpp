@@ -42,8 +42,7 @@ using namespace Acts::detail::Test;
 Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 const auto gx2fLogger = Acts::getDefaultLogger("Gx2f", logLevel);
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
@@ -80,7 +79,8 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 /// @param geoCtx
 /// @param nSurfaces Number of surfaces
 std::shared_ptr<const TrackingGeometry> makeToyDetector(
-    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5) {
+    const Acts::GeometryContext& geoCtx, const std::size_t nSurfaces = 5,
+    const std::set<std::size_t>& surfaceIndexWithMaterial = {}) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -99,7 +99,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (unsigned int surfPos = 1; surfPos <= nSurfaces; surfPos++) {
+  for (std::size_t surfPos = 1; surfPos <= nSurfaces; surfPos++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
     cfg.position = {surfPos * UnitConstants::m, 0., 0.};
@@ -113,9 +113,12 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
     cfg.rBounds = std::make_shared<const RectangleBounds>(
         RectangleBounds(halfSizeSurface, halfSizeSurface));
 
-    // Material of the surfaces
-    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
-    cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+    // Add material only for selected surfaces
+    if (surfaceIndexWithMaterial.count(surfPos) != 0) {
+      // Material of the surfaces
+      MaterialSlab matProp(makeSilicon(), 5_mm);
+      cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
+    }
 
     // Thickness of the detector element
     cfg.thickness = 1_um;
@@ -344,7 +347,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   // Track quantities
   CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
-  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
@@ -358,7 +361,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
@@ -461,7 +465,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 2e-28, 1e0);
 
   // Convergence
@@ -541,7 +546,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
 
   // Track quantities
   CHECK_CLOSE_ABS(track.chi2(), 7.5, 1.5);
-  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
@@ -556,7 +561,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-4, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundQOverP], 0.5, 2e-1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 8e-35, 4e0);
 
   // Convergence
@@ -637,7 +643,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   // Track quantities
   CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
-  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
   BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
@@ -651,7 +657,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
@@ -663,6 +670,368 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
 
   ACTS_INFO("*** Test: relChi2changeCutOff -- Finish");
 }
+
+BOOST_AUTO_TEST_CASE(DidNotConverge) {
+  ACTS_INFO("*** Test: DidNotConverge -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 5;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  // simulation propagator
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  // The relChi2changeCutOff = 0 prevents to stop the fitter after convergence,
+  // therefore all updates will be done (even if the result does not change).
+  // Since we didn't break due to convergence, we reach nUpdatesMax and
+  // therefore fail the fit.
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 6, true, 0);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(!res.ok());
+  BOOST_CHECK_EQUAL(
+      res.error(),
+      Acts::Experimental::GlobalChiSquareFitterError::DidNotConverge);
+
+  ACTS_INFO("*** Test: DidNotConverge -- Finish");
+}
+
+BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
+  ACTS_INFO("*** Test: NotEnoughMeasurements -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 2;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  // simulation propagator
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 6, true, 0);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(!res.ok());
+  BOOST_CHECK_EQUAL(
+      res.error(),
+      Acts::Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements);
+
+  ACTS_INFO("*** Test: NotEnoughMeasurements -- Finish");
+}
+
+BOOST_AUTO_TEST_CASE(FindHoles) {
+  ACTS_INFO("*** Test: FindHoles -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  //  const std::size_t nSurfaces = 7;
+  const std::size_t nSurfaces = 8;
+  Detector detector;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  const auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() [before] = " << sourceLinks.size());
+
+  // We remove the first measurement in the list. This does not create a hole.
+  sourceLinks.erase(std::next(sourceLinks.begin(), 0));
+  ACTS_VERBOSE(
+      "sourceLinks.size() [after first erase] = " << sourceLinks.size());
+
+  // We remove the last measurement in the list. This does not create a hole.
+  sourceLinks.pop_back();
+  ACTS_VERBOSE("sourceLinks.size() [after pop] = " << sourceLinks.size());
+
+  // We remove the second to last measurement in the list. This effectivly
+  // creates a hole on that surface.
+  const std::size_t indexHole = sourceLinks.size() - 2;
+  ACTS_VERBOSE("Remove measurement " << indexHole);
+  sourceLinks.erase(std::next(sourceLinks.begin(), indexHole));
+  ACTS_VERBOSE("sourceLinks.size() [after second-to-last erase]= "
+               << sourceLinks.size());
+
+  // We removed 3 measurements
+  //  const std::size_t nMeasurements = nSurfaces - 2;
+  const std::size_t nMeasurements = nSurfaces - 3;
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 20, true, 1e-5);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  const auto& track = *res;
+
+  // -1, because the index starts at 0
+  // -2, because the first and the last surface are not part of the track
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1 - 2);
+  BOOST_CHECK(track.hasReferenceSurface());
+
+  // Track quantities
+  CHECK_CLOSE_ABS(track.chi2(), 6.5, 2.);
+  BOOST_CHECK_EQUAL(track.nDoF(), 10u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 1u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nMeasurements);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 4.7e-28, 2e0);
+
+  ACTS_INFO("*** Test: FindHoles -- Finish");
+}
+
+BOOST_AUTO_TEST_CASE(Material) {
+  ACTS_INFO("*** Test: Material -- Start");
+
+  std::default_random_engine rng(42);
+
+  ACTS_DEBUG("Create the detector");
+  const std::size_t nSurfaces = 7;
+  const std::set<std::size_t> surfaceIndexWithMaterial = {4};
+  Detector detector;
+  detector.geometry =
+      makeToyDetector(geoCtx, nSurfaces, surfaceIndexWithMaterial);
+
+  ACTS_DEBUG("Set the start parameters for measurement creation and fit");
+  const auto parametersMeasurements = makeParameters();
+  const auto startParametersFit = makeParameters(
+      7_mm, 11_mm, 15_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+
+  ACTS_DEBUG("Create the measurements");
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  const SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  auto measurements =
+      createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
+                         resMapAllPixel, rng);
+
+  const Acts::ActsVector<2> scatterOffset = {100_mm, 100_mm};
+  const std::size_t indexMaterialSurface = 3;
+  for (std::size_t iMeas = indexMaterialSurface; iMeas < nSurfaces; iMeas++) {
+    // This only works, because our detector is evenly spaced
+    const std::size_t offsetFactor = iMeas - indexMaterialSurface;
+
+    auto& sl = measurements.sourceLinks[iMeas];
+    sl.parameters[0] += scatterOffset[0] * offsetFactor;
+    sl.parameters[1] += scatterOffset[1] * offsetFactor;
+  }
+
+  const auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Set up the fitter");
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  using RecoStepper = EigenStepper<>;
+  const auto recoPropagator =
+      makeConstantFieldPropagator<RecoStepper>(detector.geometry, 0_T);
+
+  using RecoPropagator = decltype(recoPropagator);
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  const Gx2Fitter fitter(recoPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 5, true, 0);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  ACTS_DEBUG("Fit the track");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                              startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  const auto& track = *res;
+
+  BOOST_CHECK_EQUAL(track.tipIndex(), nSurfaces - 1);
+  BOOST_CHECK(track.hasReferenceSurface());
+
+  // TODO Add material handling to the gx2f, to pass the 6 commented tests
+  // Track quantities
+  //  CHECK_CLOSE_ABS(track.chi2(), 8., 2.);
+  BOOST_CHECK_EQUAL(track.nDoF(), nSurfaces * 2);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  BOOST_CHECK_EQUAL(track.nMeasurements(), nSurfaces);
+  BOOST_CHECK_EQUAL(track.nSharedHits(), 0u);
+  BOOST_CHECK_EQUAL(track.nOutliers(), 0u);
+
+  // Parameters
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  //  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
+                    startParametersFit.parameters()[eBoundTime], 1e-6);
+  //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+
+  // Convergence
+  BOOST_CHECK_EQUAL(
+      (track.template component<
+          std::size_t,
+          hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
+      5);
+
+  ACTS_INFO("*** Test: Material -- Finish");
+}
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -10,16 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class IGeometryIdGenerator;
 class IInternalStructureBuilder;
@@ -91,6 +92,9 @@ struct Node final {
   /// Branch definition binning
   std::vector<BinningValue> binning = {};
 
+  /// Portal proto material binning
+  std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
+
   /// Auxiliary information
   std::vector<std::string> auxiliary = {};
 
@@ -117,5 +121,4 @@ struct Node final {
 };
 
 }  // namespace Blueprint
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

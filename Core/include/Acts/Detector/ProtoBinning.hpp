@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
@@ -18,9 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief  Simple helper class to define a binning structure
 ///
@@ -39,6 +38,8 @@ struct ProtoBinning {
   std::vector<ActsScalar> edges = {};
   /// An expansion for the filling (in bins)
   std::size_t expansion = 0u;
+  /// Indication if this is an auto-range binning
+  bool autorange = false;
 
   /// Convenience constructors - for variable binning
   ///
@@ -106,7 +107,8 @@ struct ProtoBinning {
       : binValue(bValue),
         boundaryType(bType),
         edges(nbins + 1, 0.),
-        expansion(exp) {}
+        expansion(exp),
+        autorange(true) {}
 
   // Return the number of bins
   std::size_t bins() const { return edges.size() - 1u; }
@@ -118,13 +120,65 @@ struct ProtoBinning {
        << binningValueNames()[binValue];
     ss << (axisType == Acts::detail::AxisType::Variable ? ", variable "
                                                         : ", equidistant ");
-    ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    if (!autorange) {
+      ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    } else {
+      ss << "within automatic range";
+    }
     return ss.str();
   }
 };
 
 /// @brief A binning description, it helps for screen output
 struct BinningDescription {
+  /// Convert the binning description into a bin utility
+  ///
+  /// @param binUtility the bin utility to be converted into a BinningDescription
+  static BinningDescription fromBinUtility(const BinUtility& binUtility) {
+    BinningDescription bDesc;
+    for (const auto& bData : binUtility.binningData()) {
+      // One proto binning per binning data
+      Acts::detail::AxisBoundaryType boundaryType =
+          bData.option == open ? Acts::detail::AxisBoundaryType::Bound
+                               : Acts::detail::AxisBoundaryType::Closed;
+      std::vector<ActsScalar> edges;
+      if (bData.type == equidistant) {
+        bDesc.binning.push_back(ProtoBinning(bData.binvalue, boundaryType,
+                                             bData.min, bData.max, bData.bins(),
+                                             0u));
+
+      } else {
+        std::for_each(bData.boundaries().begin(), bData.boundaries().end(),
+                      [&](ActsScalar edge) { edges.push_back(edge); });
+        bDesc.binning.push_back(
+            ProtoBinning(bData.binvalue, boundaryType, edges, 0u));
+      }
+    }
+    return bDesc;
+  }
+
+  /// Convert to a BinUtility - only basic types are supported
+  ///
+  BinUtility toBinUtility() const {
+    BinUtility binUtility;
+    for (const auto& b : binning) {
+      Acts::BinningOption bOption =
+          b.boundaryType == Acts::detail::AxisBoundaryType::Bound
+              ? Acts::open
+              : Acts::closed;
+      if (b.axisType == Acts::detail::AxisType::Equidistant) {
+        binUtility += BinUtility(b.bins(), b.edges.front(), b.edges.back(),
+                                 bOption, b.binValue);
+      } else {
+        std::vector<float> edges;
+        std::for_each(b.edges.begin(), b.edges.end(),
+                      [&](ActsScalar edge) { edges.push_back(edge); });
+        binUtility += BinUtility(edges, bOption, b.binValue);
+      }
+    }
+    return binUtility;
+  }
+
   /// The contained binnings
   std::vector<ProtoBinning> binning;
 
@@ -139,5 +193,4 @@ struct BinningDescription {
   }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -120,20 +120,21 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
 
   FatrasSimulationT(const ActsExamples::FatrasSimulation::Config &cfg,
                     Acts::Logging::Level lvl)
-      : simulation(ChargedSimulation(
-                       ChargedPropagator(
-                           ChargedStepper(cfg.magneticField),
-                           Acts::Navigator{{cfg.trackingGeometry},
-                                           Acts::getDefaultLogger("nav", lvl)},
-                           Acts::getDefaultLogger("prop", lvl)),
-                       Acts::getDefaultLogger("Simulation", lvl)),
-                   NeutralSimulation(
-                       NeutralPropagator(
-                           NeutralStepper(),
-                           Acts::Navigator{{cfg.trackingGeometry},
-                                           Acts::getDefaultLogger("nav", lvl)},
-                           Acts::getDefaultLogger("prop", lvl)),
-                       Acts::getDefaultLogger("Simulation", lvl))) {
+      : simulation(
+            ChargedSimulation(
+                ChargedPropagator(
+                    ChargedStepper(cfg.magneticField),
+                    Acts::Navigator({cfg.trackingGeometry},
+                                    Acts::getDefaultLogger("SimNav", lvl)),
+                    Acts::getDefaultLogger("SimProp", lvl)),
+                Acts::getDefaultLogger("Simulation", lvl)),
+            NeutralSimulation(
+                NeutralPropagator(
+                    NeutralStepper(),
+                    Acts::Navigator({cfg.trackingGeometry},
+                                    Acts::getDefaultLogger("SimNav", lvl)),
+                    Acts::getDefaultLogger("SimProp", lvl)),
+                Acts::getDefaultLogger("Simulation", lvl))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration

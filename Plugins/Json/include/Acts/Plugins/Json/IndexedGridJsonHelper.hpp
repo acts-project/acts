@@ -8,16 +8,17 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <tuple>
 
 namespace Acts {
-using namespace Experimental::detail::GridAxisGenerators;
+using namespace GridAxisGenerators;
 
 namespace IndexedGridJsonHelper {
 
@@ -88,7 +89,8 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
   /// Helper extractor for variable axis
   /// @param jAxis the axis
   auto vExtractor = [](const nlohmann::json& jAxis) -> std::vector<ActsScalar> {
-    return std::vector<ActsScalar>(jAxis["boundaries"]);
+    std::vector<ActsScalar> vEx(jAxis["boundaries"]);
+    return vEx;
   };
 
   // Peek into the json object to understand what to do

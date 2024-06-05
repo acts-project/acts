@@ -108,10 +108,9 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
 }
 
 boost::container::small_vector<Acts::SurfaceIntersection, 10>
-Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
-                                const Vector3& position,
-                                const Vector3& direction,
-                                const NavigationOptions& options) const {
+Acts::Layer::compatibleSurfaces(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const NavigationOptions<Surface>& options) const {
   // the list of valid intersection
   boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
 
@@ -123,6 +122,7 @@ Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
   double nearLimit = options.nearLimit;
   double farLimit = options.farLimit;
 
+  // TODO this looks like a major hack; is this really needed?
   // (0) End surface check
   // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface
@@ -130,7 +130,7 @@ Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
     // intersect the end surface
     // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter =
-        static_cast<const Surface*>(options.endObject)
+        options.endObject
             ->intersect(gctx, position, direction, BoundaryCheck(true))
             .closest();
     // non-valid intersection with the end surface provided at this layer
@@ -186,7 +186,7 @@ Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
-    bool boundaryCheck = options.boundaryCheck;
+    bool boundaryCheck = options.boundaryCheck.isEnabled();
     if (std::find(options.externalSurfaces.begin(),
                   options.externalSurfaces.end(),
                   sf.geometryId()) != options.externalSurfaces.end()) {
@@ -248,7 +248,7 @@ Acts::Layer::compatibleSurfaces(const GeometryContext& gctx,
 
 Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions& options) const {
+    const Vector3& direction, const NavigationOptions<Layer>& options) const {
   // resolve directive based by options
   // - options.resolvePassive is on -> always
   // - options.resolveSensitive is on -> always

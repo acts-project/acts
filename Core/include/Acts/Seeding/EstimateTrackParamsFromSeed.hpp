@@ -148,15 +148,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 /// @param bFieldMin is the minimum magnetic field required to trigger the
 /// estimation of q/pt
 /// @param logger A logger instance
-/// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
 template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger(),
-    ActsScalar mass = 139.57018 * UnitConstants::MeV) {
+    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
@@ -180,6 +178,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The global positions of the bottom, middle and space points
   std::array<Vector3, 3> spGlobalPositions = {Vector3::Zero(), Vector3::Zero(),
                                               Vector3::Zero()};
+  std::array<std::optional<float>, 3> spGlobalTimes = {
+      std::nullopt, std::nullopt, std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
   for (std::size_t isp = 0; isp < 3; ++isp) {
@@ -190,6 +190,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     }
     const auto& sp = *it;
     spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
+    spGlobalTimes[isp] = sp->t();
   }
 
   // Define a new coordinate frame with its origin at the bottom space point, z
@@ -234,19 +235,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
   ActsScalar b = 0.5 * (local2(1) + 1. / a * sumX21);
   circleCenter(1) = -1. / a * circleCenter(0) + b;
-  // Radius is distance between circleCenter and first sp, which is at (0, 0) in
-  // the new frame
-  // Sign depends on the slope a (positive vs negative)
+  // Radius is a signed distance between circleCenter and first sp, which is at
+  // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
   int sign = a > 0 ? -1 : 1;
-  ActsScalar rho = sign / circleCenter.norm();
-
-  // The projection of the top space point on the transverse plane of the new
-  // frame
-  ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
-  // The (1/tanTheta) of momentum in the new frame,
-  static constexpr ActsScalar G = static_cast<ActsScalar>(1. / 24.);
+  const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
-      local2.z() * std::sqrt(1. / rn) / (1. + G * rho * rho * rn);
+      local2.z() /
+      (2.f * R * std::asin(std::hypot(local2.x(), local2.y()) / (2.f * R)));
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   ActsScalar A = -circleCenter(0) / circleCenter(1);
@@ -274,32 +269,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // The estimated loc0 and loc1
   params[eBoundLoc0] = bottomLocalPos.x();
   params[eBoundLoc1] = bottomLocalPos.y();
+  params[eBoundTime] = spGlobalTimes[0].value_or(0.);
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  ActsScalar qOverPt = rho * (UnitConstants::m) / (0.3 * bFieldInTesla);
+  ActsScalar qOverPt = sign * (UnitConstants::m) / (0.3 * bFieldInTesla * R);
   // The estimated q/p in [GeV/c]^-1
   params[eBoundQOverP] = qOverPt / std::hypot(1., invTanTheta);
-
-  // The estimated momentum, and its projection along the magnetic field
-  // diretion
-  ActsScalar pInGeV = std::abs(1.0 / params[eBoundQOverP]);
-  ActsScalar pzInGeV = 1.0 / std::abs(qOverPt) * invTanTheta;
-  ActsScalar massInGeV = mass / UnitConstants::GeV;
-  // The estimated velocity, and its projection along the magnetic field
-  // diretion
-  ActsScalar v = pInGeV / std::hypot(pInGeV, massInGeV);
-  ActsScalar vz = pzInGeV / std::hypot(pInGeV, massInGeV);
-  // The z coordinate of the bottom space point along the magnetic field
-  // direction
-  ActsScalar pathz = spGlobalPositions[0].dot(bField) / bField.norm();
-  // The estimated time (use path length along magnetic field only if it's not
-  // zero)
-  if (pathz != 0 && vz != 0) {
-    params[eBoundTime] = pathz / vz;
-  } else {
-    params[eBoundTime] = spGlobalPositions[0].norm() / v;
-  }
 
   if (params.hasNaN()) {
     ACTS_ERROR(

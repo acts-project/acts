@@ -19,8 +19,7 @@
 
 #include "Eigen/Dense"
 
-namespace Acts {
-namespace VectorHelpers {
+namespace Acts::VectorHelpers {
 
 namespace detail {
 template <class T>
@@ -132,18 +131,21 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @param direction for this evaluatoin
 ///
 /// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-inline std::array<ActsScalar, 5> evaluateTrigonomics(const Vector3& direction) {
+inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
   const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
   const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
   const ActsScalar z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const ActsScalar cosTheta = z;
-  const ActsScalar sinTheta = std::hypot(x, y);
+  const ActsScalar sinTheta = std::sqrt(1 - z * z);
+  assert(sinTheta != 0 &&
+         "VectorHelpers: Vector is parallel to the z-axis "
+         "which leads to division by zero");
   const ActsScalar invSinTheta = 1. / sinTheta;
   const ActsScalar cosPhi = x * invSinTheta;
   const ActsScalar sinPhi = y * invSinTheta;
 
-  return {cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta};
+  return {cosPhi, sinPhi, cosTheta, sinTheta};
 }
 
 /// Helper method to extract the binning value from a 3D vector.
@@ -232,5 +234,4 @@ inline std::pair<double, double> incidentAngles(
   return {phi, theta};
 }
 
-}  // namespace VectorHelpers
-}  // namespace Acts
+}  // namespace Acts::VectorHelpers
