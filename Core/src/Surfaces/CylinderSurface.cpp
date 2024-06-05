@@ -166,6 +166,11 @@ double Acts::CylinderSurface::pathCorrection(
     const Acts::Vector3& direction) const {
   Vector3 normalT = normal(gctx, position);
   double cosAlpha = normalT.dot(direction);
+  std::cout << "DEBUG_CylinderSurface_pathCorrection"
+            << "\nposition: " << position
+            << "\nnormalT: " << normalT
+            << "\ndirection: " << direction
+            << "\ncosAlpha: " << cosAlpha << std::endl;
   return std::fabs(1. / cosAlpha);
 }
 
