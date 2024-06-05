@@ -281,7 +281,11 @@ constexpr T safeDivide(T numerator, T denominator) {
   constexpr T epsilon = SafeDivideEpsilon<T>::value;
 
   if (std::abs(denominator) < epsilon) {
-    throw std::runtime_error("Division by zero or near-zero value.");
+    if (denominator >= 0) {
+      return numerator / epsilon;
+    } else {
+      return - numerator / epsilon;
+    }
   }
 
   return numerator / denominator;
