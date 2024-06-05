@@ -28,11 +28,19 @@ using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-// Note: The tests will emit ERROR logs that the CI will interpret as failures,
-// but they're expected.
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::FATAL);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(Geometry);
+struct Fixture {
+  Logging::Level m_level;
+  Fixture() {
+    m_level = Acts::Logging::getFailureThreshold();
+    Acts::Logging::setFailureThreshold(Acts::Logging::FATAL);
+  }
+
+  ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
+};
+
+BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture);
 
 static const std::vector<CylinderVolumeStack::AttachmentStrategy> strategies = {
     CylinderVolumeStack::AttachmentStrategy::Gap,
