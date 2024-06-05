@@ -10,10 +10,12 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoUnionConverter.hpp"
+#include "Acts/Plugins/GeoModel/converters/GeoUnionDoubleTrdConverter.hpp"
 
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/GeoShapeUnion.h>
+
+#include <set>
 
 namespace {
 std::string gname(const GeoShapeShift &gshift);
@@ -54,23 +56,35 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     auto qFPV = geoModelTree.geoReader
                     ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
-    auto matches = [&](const std::string &str) {
-      if (m_cfg.nameList.empty()) {
+    auto matches = [&](const std::string &name, const GeoVFullPhysVol &fpv) {
+      bool match = m_cfg.nameList.empty() && m_cfg.materialList.empty();
+      if(match){
         return true;
       }
-      return std::any_of(
+
+      match |= std::any_of(
           m_cfg.nameList.begin(), m_cfg.nameList.end(),
-          [&](const auto &n) { return str.find(n) != std::string::npos; });
+          [&](const auto &n) { return name.find(n) != std::string::npos; });
+      if(match){
+        return true;
+      }
+
+      const auto &matStr = fpv.getLogVol()->getMaterial()->getName();
+      match |= std::any_of(
+          m_cfg.materialList.begin(), m_cfg.materialList.end(),
+          [&](const auto &m) { return matStr.find(m) != std::string::npos; });
+
+      return match;
     };
 
-    std::set<std::string> fordebug;
+    std::set<std::string> nameStems;
+    std::set<std::string> materials;
 
     for (auto &[name, fpv] : qFPV) {
-      const auto &vname = fpv->getLogVol()->getName();
-      const auto &shape = *fpv->getLogVol()->getShape();
-
+      const std::string &vname = fpv->getLogVol()->getName();
+      const GeoShape &shape = *fpv->getLogVol()->getShape();
       // Mask
-      if (!matches(name)) {
+      if (!matches(name, *fpv)) {
         continue;
       }
 
@@ -96,7 +110,13 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         if (success) {
           ACTS_VERBOSE("successfully converted " << name << " (" << vname
                                                  << " / " << gname(shape)
-                                                 << ")");
+                                                 << ")      mat: " << fpv->getLogVol()->getMaterial()->getName());
+
+        auto isBigTrap = detail::unionIsBigTrapezoid(*std::get<1>(converted1.value()), *std::get<1>(converted2.value()));
+        ACTS_DEBUG("Is union big trapezoid? " << (isBigTrap != nullptr));
+        if (isBigTrap) {
+          cache.sensitiveSurfaces.push_back(GeoModelSensitiveSurface{nullptr, isBigTrap});
+        }
         }
       }
       // Convert using the list of converters
@@ -109,7 +129,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
             success = true;
             ACTS_VERBOSE("successfully converted " << name << " (" << vname
                                                    << " / " << gname(shape)
-                                                   << ")");
+                                                   << ")      mat: " << fpv->getLogVol()->getMaterial()->getName());
             break;
           }
         }
@@ -119,7 +139,8 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         ACTS_DEBUG(name << " (" << vname << " / " << gname(shape)
                         << ") could not be converted by any converter");
       } else {
-        fordebug.emplace(name.substr(0, 6));
+        nameStems.emplace(name.substr(0, 6));
+        materials.emplace(fpv->getLogVol()->getMaterial()->getName());
       }
     }
     ACTS_VERBOSE("Found " << qFPV.size()
@@ -127,7 +148,14 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     {
       ACTS_DEBUG("Stems of converted volumes: " << [&]() {
         std::stringstream ss;
-        for (const auto &el : fordebug) {
+        for (const auto &el : nameStems) {
+          ss << el << " ";
+        }
+        return ss.str();
+      }());
+      ACTS_DEBUG("Converted volumes with materials: " << [&]() {
+        std::stringstream ss;
+        for (const auto &el : materials) {
           ss << el << " ";
         }
         return ss.str();

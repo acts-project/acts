@@ -33,14 +33,20 @@ def main():
     gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
     gmFactoryConfig.shapeConverters = [ gm.GeoBoxConverter(), gm.GeoTrdConverter(), gm.GeoIntersectionAnnulusConverter(), gm.GeoShiftConverter() ]
     gmFactoryConfig.nameList = [
-        "Sensor",
-        "FwdSen",
-        "Wheel",
-        "Side",
-        "Pixel",
-        "Module", # Catches a lot
-        "ModuleBrl",
+        # "Sensor",
+        # "FwdSen",
+        # "Wheel",
+        # "Side",
+        # "Pixel",
+        # "Module", # Catches a lot
+        # "ModuleBrl",
+        "FwdSensor_Side#1_2_0_0_33",
+        # "ECSensor0",
     ]
+    gmFactoryConfig.materialList = [
+        # "std::Silicon",
+    ]
+
     gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)
     # The options
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()

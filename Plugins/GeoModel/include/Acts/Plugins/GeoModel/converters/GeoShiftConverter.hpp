@@ -50,25 +50,24 @@ struct GeoShiftConverter {
       return {nullptr, nullptr};
     }
 
-    auto [el, surface] = Converter{}(geoFPV, *trd, absTransform, sensitive);
+    const Transform3& shift = geoShift.getX();
+    auto [el, surface] = Converter{}(geoFPV, *trd, absTransform * shift, sensitive);
 
     // Use knowledge from GeoTrdConverter to make shared bounds object
     const auto& bounds = static_cast<const Bounds&>(surface->bounds());
     auto sharedBounds = std::make_shared<const Bounds>(bounds);
     // std::cout << "     Extracted bounds params: " << sharedBounds->values()[0] << ", " << sharedBounds->values()[1] << ", " << sharedBounds->values()[2] << std::endl;
 
-    const Transform3& shift = geoShift.getX();
-
     // TODO this procedure could be stripped from all converters because it is
     // pretty generic
     if (!sensitive) {
       auto newSurface = Surface::template makeShared<Surface>(
-          shift * surface->transform({}), sharedBounds);
+          surface->transform({}), sharedBounds);
       return std::make_tuple(nullptr, newSurface);
     }
 
     auto newEl = GeoModelDetectorElement::createDetectorElement<Surface>(
-        el->physicalVolume(), sharedBounds, shift * el->transform({}),
+        el->physicalVolume(), sharedBounds, el->transform({}),
         el->thickness());
     auto newSurface = newEl->surface().getSharedPtr();
     return std::make_tuple(newEl, newSurface);

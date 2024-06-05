@@ -42,6 +42,8 @@ class GeoModelDetectorSurfaceFactory {
     std::vector<std::shared_ptr<const IGeoShapeConverter>> shapeConverters = {};
     /// List for names to match
     std::vector<std::string> nameList;
+    /// List for materials to match
+    std::vector<std::string> materialList;
   };
 
   /// Nested cache that records the conversion status
