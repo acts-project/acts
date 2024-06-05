@@ -40,7 +40,7 @@ struct Fixture {
   ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
 };
 
-BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture);
+BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
 
 static const std::vector<CylinderVolumeStack::AttachmentStrategy> strategies = {
     CylinderVolumeStack::AttachmentStrategy::Gap,
@@ -55,8 +55,8 @@ static const std::vector<CylinderVolumeStack::ResizeStrategy> resizeStrategies =
         CylinderVolumeStack::ResizeStrategy::Gap,
 };
 
-BOOST_AUTO_TEST_SUITE(CylinderVolumeStackTest);
-BOOST_AUTO_TEST_SUITE(ZDirection);
+BOOST_AUTO_TEST_SUITE(CylinderVolumeStackTest)
+BOOST_AUTO_TEST_SUITE(ZDirection)
 
 BOOST_DATA_TEST_CASE(Baseline,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
@@ -813,9 +813,9 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(RDirection);
+BOOST_AUTO_TEST_SUITE(RDirection)
 
 BOOST_DATA_TEST_CASE(Baseline,
                      (boost::unit_test::data::xrange(-135, 180, 45) *
@@ -1503,9 +1503,9 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(Common);
+BOOST_AUTO_TEST_SUITE(Common)
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidDirection,
                      boost::unit_test::data::make(strategies), strategy) {
@@ -1663,8 +1663,8 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
   BOOST_CHECK_EQUAL(vol->volumeBounds(), cylStack.volumeBounds());
 }
 
-BOOST_AUTO_TEST_SUITE_END();
-BOOST_AUTO_TEST_SUITE_END();
-BOOST_AUTO_TEST_SUITE_END();
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
