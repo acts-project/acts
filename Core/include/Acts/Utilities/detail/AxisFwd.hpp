@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
+#include <ostream>
+
 namespace Acts::detail {
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
@@ -19,8 +23,44 @@ namespace Acts::detail {
 /// bin on the opposite side
 enum class AxisBoundaryType { Open, Bound, Closed };
 
+/// Tag helper type for Axis constructors with class template deduction
+template <AxisBoundaryType bdt>
+struct AxisBoundaryTypeTag {};
+
+/// Convenience typedefs for AxisBoundaryTypeTag
+using AxisOpen = AxisBoundaryTypeTag<AxisBoundaryType::Open>;
+using AxisBound = AxisBoundaryTypeTag<AxisBoundaryType::Bound>;
+using AxisClosed = AxisBoundaryTypeTag<AxisBoundaryType::Closed>;
+
+inline std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt) {
+  switch (bdt) {
+    case AxisBoundaryType::Open:
+      os << "Open";
+      break;
+    case AxisBoundaryType::Bound:
+      os << "Bound";
+      break;
+    case AxisBoundaryType::Closed:
+      os << "Closed";
+      break;
+  }
+  return os;
+}
+
 /// Enum which determines the binning type of the axis
 enum class AxisType { Equidistant, Variable };
+
+inline std::ostream& operator<<(std::ostream& os, AxisType type) {
+  switch (type) {
+    case AxisType::Equidistant:
+      os << "Equidistant";
+      break;
+    case AxisType::Variable:
+      os << "Variable";
+      break;
+  }
+  return os;
+}
 
 /// @brief calculate bin indices from a given binning structure
 ///
@@ -35,6 +75,20 @@ enum class AxisType { Equidistant, Variable };
 ///                     or not (@c false)
 template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
 class Axis;
+
+Axis(ActsScalar min, ActsScalar max, std::size_t bins)
+    ->Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+
+template <AxisBoundaryType bdt>
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, ActsScalar min, ActsScalar max,
+     std::size_t bins) -> Axis<AxisType::Equidistant, bdt>;
+
+Axis(std::vector<ActsScalar> bins)
+    ->Axis<AxisType::Variable, AxisBoundaryType::Open>;
+
+template <AxisBoundaryType bdt>
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<ActsScalar> bins)
+    -> Axis<AxisType::Variable, bdt>;
 
 using EquidistantAxis = Axis<AxisType::Equidistant>;
 using VariableAxis = Axis<AxisType::Variable>;

@@ -30,6 +30,13 @@ class GridLocalIterator;
 
 namespace Acts {
 
+class IGrid {
+ public:
+  virtual ~IGrid() = default;
+
+  virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
+};
+
 /// @brief class for describing a regular multi-dimensional grid
 ///
 /// @tparam T    type of values stored inside the bins of the grid
@@ -41,7 +48,7 @@ namespace Acts {
 ///
 /// @note @c T must be default-constructible.
 template <typename T, class... Axes>
-class Grid final {
+class Grid final : public IGrid {
  public:
   /// number of dimensions of the grid
   static constexpr std::size_t DIM = sizeof...(Axes);
@@ -516,8 +523,11 @@ class Grid final {
   const std::tuple<Axes...>& axesTuple() const { return m_axes; }
 
   /// @brief get the axes as an array of IAxis pointers
-  std::array<const IAxis*, DIM> axes() const {
-    return detail::grid_helper::getAxes(m_axes);
+  boost::container::small_vector<const IAxis*, 3> axes() const override {
+    boost::container::small_vector<const IAxis*, 3> result;
+    auto axes = detail::grid_helper::getAxes(m_axes);
+    std::copy(axes.begin(), axes.end(), std::back_inserter(result));
+    return result;
   }
 
   /// begin iterator for global bins

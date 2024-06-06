@@ -101,6 +101,8 @@ class NeighborHoodIndices {
 template <AxisBoundaryType bdt>
 class Axis<AxisType::Equidistant, bdt> final : public IAxis {
  public:
+  static constexpr AxisType type = AxisType::Equidistant;
+
   /// @brief default constructor
   ///
   /// @param [in] xmin lower boundary of axis range
@@ -115,6 +117,19 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
         m_width((xmax - xmin) / nBins),
         m_bins(nBins) {}
 
+  /// Constructor with a tag for the boundary type
+  ///
+  /// @param [in] bdt boundary type tag
+  /// @param [in] xmin lower boundary of axis range
+  /// @param [in] xmax upper boundary of axis range
+  /// @param [in] nBins number of bins to divide the axis range into
+  ///
+  /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
+  /// equidistant bins.
+  Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, ActsScalar xmin, ActsScalar xmax,
+       std::size_t nBins)
+      : Axis(xmin, xmax, nBins) {}
+
   /// @brief returns whether the axis is equidistant
   ///
   /// @return bool is equidistant
@@ -124,6 +139,10 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @return bool is variable
   bool isVariable() const override { return false; }
+
+  /// @brief returns the type of the axis
+  /// @return @c AxisType of this axis
+  detail::AxisType getType() const override { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
@@ -372,13 +391,13 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 
  private:
   /// minimum of binning range
-  ActsScalar m_min;
+  ActsScalar m_min{};
   /// maximum of binning range
-  ActsScalar m_max;
+  ActsScalar m_max{};
   /// constant bin width
-  ActsScalar m_width;
+  ActsScalar m_width{};
   /// number of bins (excluding under-/overflow bins)
-  std::size_t m_bins;
+  std::size_t m_bins{};
 };
 
 /// @brief calculate bin indices for a variable binning
@@ -388,8 +407,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 template <AxisBoundaryType bdt>
 class Axis<AxisType::Variable, bdt> final : public IAxis {
  public:
-  /// @brief default constructor
-  ///
+  static constexpr AxisType type = AxisType::Variable;
+
   /// @param [in] binEdges vector of bin edges
   /// @pre @c binEdges must be strictly sorted in ascending order.
   /// @pre @c binEdges must contain at least two entries.
@@ -398,6 +417,17 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
   Axis(std::vector<ActsScalar> binEdges) : m_binEdges(std::move(binEdges)) {}
+
+  /// @param [in] bdt boundary type tag
+  /// @param [in] binEdges vector of bin edges
+  /// @pre @c binEdges must be strictly sorted in ascending order.
+  /// @pre @c binEdges must contain at least two entries.
+  ///
+  /// Create a binning structure with @c nBins variable-sized bins from the
+  /// given bin boundaries. @c nBins is given by the number of bin edges
+  /// reduced by one.
+  Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<ActsScalar> binEdges)
+      : Axis(std::move(binEdges)) {}
 
   /// @brief returns whether the axis is equidistante
   ///
@@ -408,6 +438,10 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @return bool is variable
   bool isVariable() const override { return true; }
+
+  /// @brief returns the type of the axis
+  /// @return @c AxisType of this axis
+  detail::AxisType getType() const override { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///

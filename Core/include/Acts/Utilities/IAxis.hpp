@@ -29,6 +29,10 @@ class IAxis {
   /// @return bool is variable
   virtual bool isVariable() const = 0;
 
+  /// @brief returns the type of the axis
+  /// @return @c AxisType of this axis
+  virtual detail::AxisType getType() const = 0;
+
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
