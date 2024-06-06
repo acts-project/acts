@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -67,7 +67,6 @@ class TryAllOverstepNavigator {
     // while initialization. NOTE: This information is mostly used by actors to
     // check if we are on the starting surface (e.g. MaterialInteraction).
     const Surface* startSurface = nullptr;
-    const TrackingVolume* startVolume = nullptr;
 
     // Target geometry information of the navigation which should only be set
     // while initialization. NOTE: This information is mostly used by actors to
@@ -176,29 +175,27 @@ class TryAllOverstepNavigator {
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     ACTS_VERBOSE("initialize");
 
+    const TrackingVolume* startVolume = nullptr;
+
     if (state.navigation.startSurface != nullptr &&
         state.navigation.startSurface->associatedLayer() != nullptr) {
       ACTS_VERBOSE(
           "Fast start initialization through association from Surface.");
       const auto* startLayer = state.navigation.startSurface->associatedLayer();
-      state.navigation.startVolume = startLayer->trackingVolume();
-    } else if (state.navigation.startVolume != nullptr) {
-      ACTS_VERBOSE(
-          "Fast start initialization through association from Volume.");
+      startVolume = startLayer->trackingVolume();
     } else {
       ACTS_VERBOSE("Slow start initialization through search.");
       ACTS_VERBOSE("Starting from position "
                    << toString(stepper.position(state.stepping))
                    << " and direction "
                    << toString(stepper.direction(state.stepping)));
-      state.navigation.startVolume =
-          m_cfg.trackingGeometry->lowestTrackingVolume(
-              state.geoContext, stepper.position(state.stepping));
+      startVolume = m_cfg.trackingGeometry->lowestTrackingVolume(
+          state.geoContext, stepper.position(state.stepping));
     }
 
     // Initialize current volume, layer and surface
     {
-      state.navigation.currentVolume = state.navigation.startVolume;
+      state.navigation.currentVolume = startVolume;
       if (state.navigation.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       } else {
