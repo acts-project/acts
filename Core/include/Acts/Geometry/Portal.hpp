@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 // #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
@@ -53,6 +54,10 @@ class GridPortalLink2;
 // template <std::size_t N>
 // class GridPortalLinkN;
 
+enum class PortalDirection { loc0, loc1 };
+
+std::ostream& operator<<(std::ostream& os, PortalDirection direction);
+
 class PortalLinkBase {
  public:
   virtual ~PortalLinkBase() = default;
@@ -60,23 +65,26 @@ class PortalLinkBase {
 
   // virtual bool inside(const Vector2& position) const = 0;
 
-  virtual std::unique_ptr<PortalLinkBase> merge(
-      const PortalLinkBase& other) const = 0;
+  std::unique_ptr<PortalLinkBase> merge(
+      const PortalLinkBase& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const;
 
   // virtual std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink& other) const = 0;
-  //
-  virtual std::unique_ptr<PortalLinkBase> merge(
-      const GridPortalLink1& other) const = 0;
-
-  virtual std::unique_ptr<PortalLinkBase> merge(
-      const GridPortalLink2& other) const = 0;
+  //     const PortalLinkBase& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const = 0;
 
   // virtual std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink<1>& other) const = 0;
+  //     const GridPortalLink1& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const = 0;
   //
   // virtual std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink<2>& other) const = 0;
+  //     const GridPortalLink2& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const = 0;
+
+  static std::unique_ptr<GridPortalLink1> merge1d(const GridPortalLink1& a,
+                                                  const GridPortalLink1& b,
+                                                  const Vector2& offset,
+                                                  const Logger& logger);
 
   virtual void toStream(std::ostream& os) const = 0;
 
@@ -85,29 +93,15 @@ class PortalLinkBase {
 
 class BinaryPortalLink : public PortalLinkBase {};
 
+template <typename... Axes>
+class GridPortalLinkN;
+
 class GridPortalLink : public PortalLinkBase {
  public:
   template <typename... Axes>
-  static std::unique_ptr<GridPortalLink> make(Axes&&... axes);
-  // static std::unique_ptr<GridPortalLink> make(ActsScalar min, ActsScalar max,
-  //                                             std::size_t bins);
-  //
-  // static std::unique_ptr<GridPortalLink> make(std::vector<ActsScalar> bins);
+  static std::unique_ptr<GridPortalLinkN<Axes...>> make(Axes&&... axes);
 
-  // static std::unique_ptr<GridPortalLink> make(ActsScalar min0, ActsScalar
-  // max0,
-  //                                             std::size_t bins0,
-  //                                             ActsScalar min1, ActsScalar
-  //                                             max1, std::size_t bins1);
-  //
-  // static std::unique_ptr<GridPortalLink> make(std::vector<ActsScalar> bins0,
-  //                                             std::vector<ActsScalar> bins1);
-
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const PortalLinkBase& other) const override;
-
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink& other) const override;
+  virtual const IGrid& grid() const = 0;
 };
 
 // template <std::size_t N>
@@ -128,25 +122,43 @@ class GridPortalLink : public PortalLinkBase {
 // };
 
 class GridPortalLink1 : public GridPortalLink {
-  std::unique_ptr<PortalLinkBase> merge(
-      const PortalLinkBase& other) const override;
+ public:
+  // std::unique_ptr<PortalLinkBase> merge(
+  //     const PortalLinkBase& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const override;
+  //
+  // std::unique_ptr<PortalLinkBase> merge(
+  //     const GridPortalLink1& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const override;
+  //
+  // std::unique_ptr<PortalLinkBase> merge(
+  //     const GridPortalLink2& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const override;
 
-  std::unique_ptr<PortalLinkBase> merge(
-      const GridPortalLink1& other) const override;
+  PortalDirection direction() const { return m_direction; }
 
-  std::unique_ptr<PortalLinkBase> merge(
-      const GridPortalLink2& other) const override;
+ protected:
+  GridPortalLink1(PortalDirection direction) : m_direction(direction) {}
+
+ private:
+  /// Local direction of the 1D grid:
+  /// - 0 means the axis is along
+  PortalDirection m_direction;
 };
 
 class GridPortalLink2 : public GridPortalLink {
-  std::unique_ptr<PortalLinkBase> merge(
-      const PortalLinkBase& other) const override;
-
-  std::unique_ptr<PortalLinkBase> merge(
-      const GridPortalLink1& other) const override;
-
-  std::unique_ptr<PortalLinkBase> merge(
-      const GridPortalLink2& other) const override;
+ public:
+  // std::unique_ptr<PortalLinkBase> merge(
+  //     const PortalLinkBase& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const override;
+  //
+  // std::unique_ptr<PortalLinkBase> merge(
+  //     const GridPortalLink1& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const override;
+  //
+  // std::unique_ptr<PortalLinkBase> merge(
+  //     const GridPortalLink2& other, const Vector2& offset,
+  //     const Logger& logger = getDummyLogger()) const override;
 };
 
 template <typename... Axes>
@@ -159,11 +171,19 @@ class GridPortalLinkN
 
   using GridType = Grid<int, Axes...>;
 
-  GridPortalLinkN(Axes... axes) : m_grid(axes...) {}
+  template <std::size_t D = dim, typename = std::enable_if_t<D == 1>>
+  GridPortalLinkN(GridType grid,
+                  PortalDirection direction = PortalDirection::loc0)
+      : GridPortalLink1(direction), m_grid(std::move(grid)) {}
+
+  template <std::size_t D = dim, typename = std::enable_if_t<D == 2>>
+  GridPortalLinkN(GridType grid) : m_grid(std::move(grid)) {}
 
   void toStream(std::ostream& os) const override {
     os << "GridPortalLinkN<" << dim << ">";
   }
+
+  const IGrid& grid() const override { return m_grid; }
 
   // std::unique_ptr<PortalLinkBase> merge(
   //     const PortalLinkBase& other) const override {
@@ -176,9 +196,11 @@ class GridPortalLinkN
 };
 
 template <typename... Axes>
-std::unique_ptr<GridPortalLink> GridPortalLink::make(Axes&&... axes) {
-  return std::make_unique<GridPortalLinkN<Axes...>>(
-      std::forward<Axes>(axes)...);
+std::unique_ptr<GridPortalLinkN<Axes...>> GridPortalLink::make(Axes&&... axes) {
+  using portal_link_t = GridPortalLinkN<Axes...>;
+  using grid_t = typename portal_link_t::GridType;
+  return std::make_unique<portal_link_t>(
+      grid_t{std::tuple{std::forward<Axes>(axes)...}});
 }
 
 }  // namespace Acts
