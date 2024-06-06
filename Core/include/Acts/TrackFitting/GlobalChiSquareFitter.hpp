@@ -20,7 +20,6 @@
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -733,15 +732,6 @@ class Gx2Fitter {
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
-    // We need to create a temporary track container. We create several times a
-    // new track and delete it after updating the parameters. However, if we
-    // would work on the externally provided track container, it would be
-    // difficult to remove the correct track, if it contains more than one.
-    Acts::VectorTrackContainer trackContainerTempBackend;
-    Acts::VectorMultiTrajectory trajectoryTempBackend;
-    TrackContainer trackContainerTemp{trackContainerTempBackend,
-                                      trajectoryTempBackend};
-
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
@@ -778,11 +768,11 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trajectoryTempBackend;
+      r.fittedStates = &trackContainer.trackStateContainer();
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
-      trackContainerTemp.clear();
+      trackContainer.clear();
 
       auto propagationResult = m_propagator.template propagate(propagatorState);
 
@@ -948,6 +938,10 @@ class Gx2Fitter {
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
+
+      // Clear the track container. It could be more performant to update the
+      // existing states, but this needs some more thinking.
+      trackContainer.clear();
 
       m_propagator.template propagate(propagatorState);
     }

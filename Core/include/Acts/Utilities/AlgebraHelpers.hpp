@@ -249,46 +249,4 @@ constexpr T safeExp(T val) noexcept {
   return std::exp(val);
 }
 
-/// Specialisation of the save divide epsilon to be used for safe division,
-/// depending on the floating point type.
-template <typename T>
-struct SafeDivideEpsilon {};
-template <>
-struct SafeDivideEpsilon<float> {
-  static constexpr float value = 1e-7f;
-};
-template <>
-struct SafeDivideEpsilon<double> {
-  static constexpr double value = 1e-15;
-};
-template <>
-struct SafeDivideEpsilon<long double> {
-  static constexpr long double value = 1e-19L;
-};
-
-/// Perform safe division while avoiding division by zero or near-zero values.
-///
-/// @param numerator the numerator of the division.
-/// @param denominator the denominator of the division.
-///
-/// @return numerator / denominator if denominator is not zero or near-zero.
-/// Throws a runtime_error if the denominator is zero or near-zero.
-template <typename T>
-constexpr T safeDivide(T numerator, T denominator) {
-  static_assert(std::is_floating_point<T>::value,
-                "safeDivide requires floating-point types");
-
-  constexpr T epsilon = SafeDivideEpsilon<T>::value;
-
-  if (std::abs(denominator) < epsilon) {
-    if (denominator >= 0) {
-      return numerator / epsilon;
-    } else {
-      return - numerator / epsilon;
-    }
-  }
-
-  return numerator / denominator;
-}
-
 }  // namespace Acts
