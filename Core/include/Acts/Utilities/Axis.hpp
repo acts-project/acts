@@ -119,16 +119,18 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 
   /// Constructor with a tag for the boundary type
   ///
-  /// @param [in] bdt boundary type tag
+  /// @param [in] typeTag boundary type tag
   /// @param [in] xmin lower boundary of axis range
   /// @param [in] xmax upper boundary of axis range
   /// @param [in] nBins number of bins to divide the axis range into
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, ActsScalar xmin, ActsScalar xmax,
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, ActsScalar xmin, ActsScalar xmax,
        std::size_t nBins)
-      : Axis(xmin, xmax, nBins) {}
+      : Axis(xmin, xmax, nBins) {
+    static_cast<void>(typeTag);
+  }
 
   /// @brief returns whether the axis is equidistant
   ///
@@ -154,7 +156,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// Generic overload with symmetric size
   ///
   /// @param [in] idx requested bin index
-  /// @param [in] sizes how many neighboring bins (up/down)
+  /// @param [in] size how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
@@ -418,7 +420,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// reduced by one.
   Axis(std::vector<ActsScalar> binEdges) : m_binEdges(std::move(binEdges)) {}
 
-  /// @param [in] bdt boundary type tag
+  /// @param [in] typeTag boundary type tag
   /// @param [in] binEdges vector of bin edges
   /// @pre @c binEdges must be strictly sorted in ascending order.
   /// @pre @c binEdges must contain at least two entries.
@@ -426,8 +428,10 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<ActsScalar> binEdges)
-      : Axis(std::move(binEdges)) {}
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<ActsScalar> binEdges)
+      : Axis(std::move(binEdges)) {
+    static_cast<void>(typeTag);
+  }
 
   /// @brief returns whether the axis is equidistante
   ///
