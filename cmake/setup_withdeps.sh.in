@@ -20,7 +20,11 @@ else
 fi
 
 # source the python and ODD environment
-. $script_dir/python/setup.sh
+if [[ -f "$script_dir/python/setup.sh" ]]; then
+  . "$script_dir/python/setup.sh"
+else
+  echo "WARNING: setup.sh for python and ODD is missing."
+fi
 
 # set ACTS and ODD environment variables
 export ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
