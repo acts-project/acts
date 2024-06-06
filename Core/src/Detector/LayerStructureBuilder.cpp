@@ -58,7 +58,7 @@ void adaptBinningRange(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
       vmax = range.max();
     }
     // Possibly update the edges
-    if (pb.axisType == Acts::detail::AxisType::Equidistant) {
+    if (pb.axisType == Acts::AxisType::Equidistant) {
       Acts::ActsScalar binWidth = (vmax - vmin) / nBins;
       // Fill the edges
       pb.edges = {vmin};
@@ -83,7 +83,7 @@ void adaptBinningRange(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
 /// @param binning the binning struct
 ///
 /// @return a configured surface candidate updators
-template <Acts::detail::AxisBoundaryType aType>
+template <Acts::AxisBoundaryType aType>
 Acts::Experimental::InternalNavigationDelegate createUpdater(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
@@ -99,7 +99,7 @@ Acts::Experimental::InternalNavigationDelegate createUpdater(
           std::move(assignToAll),
           {binning.binValue},
           {binning.expansion}};
-  if (binning.axisType == Acts::detail::AxisType::Equidistant) {
+  if (binning.axisType == Acts::AxisType::Equidistant) {
     // Equidistant
     Acts::GridAxisGenerators::Eq<aType> aGenerator{
         {binning.edges.front(), binning.edges.back()}, binning.bins()};
@@ -124,8 +124,7 @@ Acts::Experimental::InternalNavigationDelegate createUpdater(
 /// @param bBinning the binning struct of axis b
 ///
 /// @return a configured surface candidate updators
-template <Acts::detail::AxisBoundaryType aType,
-          Acts::detail::AxisBoundaryType bType>
+template <Acts::AxisBoundaryType aType, Acts::AxisBoundaryType bType>
 Acts::Experimental::InternalNavigationDelegate createUpdater(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
@@ -143,8 +142,8 @@ Acts::Experimental::InternalNavigationDelegate createUpdater(
           {aBinning.binValue, bBinning.binValue},
           {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
-  if (aBinning.axisType == Acts::detail::AxisType::Equidistant &&
-      bBinning.axisType == Acts::detail::AxisType::Equidistant) {
+  if (aBinning.axisType == Acts::AxisType::Equidistant &&
+      bBinning.axisType == Acts::AxisType::Equidistant) {
     // Equidistant-Equidistant
     Acts::GridAxisGenerators::EqEq<aType, bType> aGenerator{
         {aBinning.edges.front(), aBinning.edges.back()},
@@ -152,14 +151,14 @@ Acts::Experimental::InternalNavigationDelegate createUpdater(
         {bBinning.edges.front(), bBinning.edges.back()},
         bBinning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
-  } else if (bBinning.axisType == Acts::detail::AxisType::Equidistant) {
+  } else if (bBinning.axisType == Acts::AxisType::Equidistant) {
     // Variable-Equidistant
     Acts::GridAxisGenerators::VarEq<aType, bType> aGenerator{
         aBinning.edges,
         {bBinning.edges.front(), bBinning.edges.back()},
         bBinning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
-  } else if (aBinning.axisType == Acts::detail::AxisType::Equidistant) {
+  } else if (aBinning.axisType == Acts::AxisType::Equidistant) {
     // Equidistant-Variable
     Acts::GridAxisGenerators::EqVar<aType, bType> aGenerator{
         {aBinning.edges.front(), aBinning.edges.back()},
@@ -320,16 +319,16 @@ Acts::Experimental::LayerStructureBuilder::construct(
       ACTS_DEBUG("- 1-dimensional surface binning detected.");
       // Capture the binning
       auto binning = binnings[0u];
-      if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      if (binning.boundaryType == Acts::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- closed binning option.");
         internalCandidatesUpdater =
-            createUpdater<Acts::detail::AxisBoundaryType::Closed>(
+            createUpdater<Acts::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning);
       } else {
         ACTS_VERBOSE("-- bound binning option.");
         internalCandidatesUpdater =
-            createUpdater<Acts::detail::AxisBoundaryType::Bound>(
-                gctx, internalSurfaces, assignToAll, binning);
+            createUpdater<Acts::AxisBoundaryType::Bound>(gctx, internalSurfaces,
+                                                         assignToAll, binning);
       }
     } else if (binnings.size() == 2u) {
       // Check if autorange for binning applies
@@ -349,24 +348,23 @@ Acts::Experimental::LayerStructureBuilder::construct(
       const auto& binning0 = binnings[0u];
       const auto& binning1 = binnings[1u];
 
-      if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      if (binning0.boundaryType == Acts::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- closed/bound binning option.");
         internalCandidatesUpdater =
-            createUpdater<Acts::detail::AxisBoundaryType::Closed,
-                          Acts::detail::AxisBoundaryType::Bound>(
+            createUpdater<Acts::AxisBoundaryType::Closed,
+                          Acts::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
-      } else if (binning1.boundaryType ==
-                 Acts::detail::AxisBoundaryType::Closed) {
+      } else if (binning1.boundaryType == Acts::AxisBoundaryType::Closed) {
         ACTS_VERBOSE("-- bound/closed binning option.");
         internalCandidatesUpdater =
-            createUpdater<Acts::detail::AxisBoundaryType::Bound,
-                          Acts::detail::AxisBoundaryType::Closed>(
+            createUpdater<Acts::AxisBoundaryType::Bound,
+                          Acts::AxisBoundaryType::Closed>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       } else {
         ACTS_VERBOSE("-- bound/bound binning option.");
         internalCandidatesUpdater =
-            createUpdater<Acts::detail::AxisBoundaryType::Bound,
-                          Acts::detail::AxisBoundaryType::Bound>(
+            createUpdater<Acts::AxisBoundaryType::Bound,
+                          Acts::AxisBoundaryType::Bound>(
                 gctx, internalSurfaces, assignToAll, binning0, binning1);
       }
     }

@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -31,8 +31,8 @@ auto Acts::materialMapperRZ(
         materialVectorToGridMapper,
     std::vector<double> rPos, std::vector<double> zPos,
     const std::vector<Acts::Material>& material, double lengthUnit)
-    -> MaterialMapper<Grid<Material::ParametersVector, detail::EquidistantAxis,
-                           detail::EquidistantAxis>> {
+    -> MaterialMapper<
+        Grid<Material::ParametersVector, EquidistantAxis, EquidistantAxis>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
@@ -69,12 +69,12 @@ auto Acts::materialMapperRZ(
   zMax += stepZ;
 
   // Create the axis for the grid
-  detail::EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
-  detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
+  EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = Grid<Material::ParametersVector, detail::EquidistantAxis,
-                      detail::EquidistantAxis>;
+  using Grid_t =
+      Grid<Material::ParametersVector, EquidistantAxis, EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // [3] Set the material values
@@ -102,8 +102,8 @@ auto Acts::materialMapperRZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<Grid<Material::ParametersVector,
-                             detail::EquidistantAxis, detail::EquidistantAxis>>(
+  return MaterialMapper<
+      Grid<Material::ParametersVector, EquidistantAxis, EquidistantAxis>>(
       transformPos, std::move(grid));
 }
 
@@ -114,8 +114,8 @@ auto Acts::materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit)
-    -> MaterialMapper<Grid<Material::ParametersVector, detail::EquidistantAxis,
-                           detail::EquidistantAxis, detail::EquidistantAxis>> {
+    -> MaterialMapper<Grid<Material::ParametersVector, EquidistantAxis,
+                           EquidistantAxis, EquidistantAxis>> {
   // [1] Decompose material
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
@@ -163,12 +163,12 @@ auto Acts::materialMapperXYZ(
   yMax += stepY;
   zMax += stepZ;
 
-  detail::EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
-  detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
-  detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
+  EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
+  EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  using Grid_t = Grid<Material::ParametersVector, detail::EquidistantAxis,
-                      detail::EquidistantAxis, detail::EquidistantAxis>;
+  using Grid_t = Grid<Material::ParametersVector, EquidistantAxis,
+                      EquidistantAxis, EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
@@ -198,8 +198,7 @@ auto Acts::materialMapperXYZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return MaterialMapper<
-      Grid<Material::ParametersVector, detail::EquidistantAxis,
-           detail::EquidistantAxis, detail::EquidistantAxis>>(transformPos,
-                                                              std::move(grid));
+  return MaterialMapper<Grid<Material::ParametersVector, EquidistantAxis,
+                             EquidistantAxis, EquidistantAxis>>(
+      transformPos, std::move(grid));
 }

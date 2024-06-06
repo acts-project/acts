@@ -15,7 +15,7 @@
 #include <cmath>
 #include <vector>
 
-namespace Acts::detail {
+namespace Acts {
 
 // This object can be iterated to produce up to two sequences of integer
 // indices, corresponding to the half-open integer ranges [begin1, end1[ and
@@ -142,7 +142,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  detail::AxisType getType() const override { return type; }
+  AxisType getType() const override { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
@@ -441,7 +441,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  detail::AxisType getType() const override { return type; }
+  AxisType getType() const override { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
@@ -692,4 +692,4 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// vector of bin edges (sorted in ascending order)
   std::vector<ActsScalar> m_binEdges;
 };
-}  // namespace Acts::detail
+}  // namespace Acts

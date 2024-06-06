@@ -13,9 +13,9 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "ActsExamples/MagneticField/ScalableBField.hpp"
@@ -27,11 +27,10 @@
 namespace ActsExamples::detail {
 
 using InterpolatedMagneticField2 = Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-               Acts::detail::EquidistantAxis>>;
+    Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>>;
 
 using InterpolatedMagneticField3 = Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
-               Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>;
+    Acts::Grid<Acts::Vector3, Acts::EquidistantAxis, Acts::EquidistantAxis,
+               Acts::EquidistantAxis>>;
 
 }  // namespace ActsExamples::detail

@@ -10,10 +10,10 @@
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -28,8 +28,7 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-               Acts::detail::EquidistantAxis>>
+    Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>>
 Acts::fieldMapRZ(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
@@ -68,14 +67,12 @@ Acts::fieldMapRZ(
   }
 
   // Create the axis for the grid
-  Acts::detail::EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit,
-                                      nBinsR);
-  Acts::detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit,
-                                      nBinsZ);
+  Acts::EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
+  Acts::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                            Acts::detail::EquidistantAxis>;
+  using Grid_t =
+      Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // [2] Set the bField values
@@ -136,8 +133,8 @@ Acts::fieldMapRZ(
 }
 
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
-               Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
+    Acts::Grid<Acts::Vector3, Acts::EquidistantAxis, Acts::EquidistantAxis,
+               Acts::EquidistantAxis>>
 Acts::fieldMapXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
@@ -190,16 +187,12 @@ Acts::fieldMapXYZ(
     nBinsY = 2 * nBinsY - 1;
     nBinsZ = 2 * nBinsZ - 1;
   }
-  Acts::detail::EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit,
-                                      nBinsX);
-  Acts::detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit,
-                                      nBinsY);
-  Acts::detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit,
-                                      nBinsZ);
+  Acts::EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
+  Acts::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
+  Acts::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  using Grid_t =
-      Acts::Grid<Acts::Vector3, Acts::detail::EquidistantAxis,
-                 Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>;
+  using Grid_t = Acts::Grid<Acts::Vector3, Acts::EquidistantAxis,
+                            Acts::EquidistantAxis, Acts::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
@@ -255,8 +248,7 @@ Acts::fieldMapXYZ(
 }
 
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-               Acts::detail::EquidistantAxis>>
+    Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>>
 Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
                        std::pair<std::size_t, std::size_t> nbins,
@@ -275,12 +267,12 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
   zMax += stepZ;
 
   // Create the axis for the grid
-  Acts::detail::EquidistantAxis rAxis(rMin, rMax, nBinsR);
-  Acts::detail::EquidistantAxis zAxis(zMin, zMax, nBinsZ);
+  Acts::EquidistantAxis rAxis(rMin, rMax, nBinsR);
+  Acts::EquidistantAxis zAxis(zMin, zMax, nBinsZ);
 
   // Create the grid
-  using Grid_t = Acts::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
-                            Acts::detail::EquidistantAxis>;
+  using Grid_t =
+      Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // Create the transformation for the position

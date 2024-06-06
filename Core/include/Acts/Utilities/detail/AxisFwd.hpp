@@ -12,7 +12,7 @@
 
 #include <ostream>
 
-namespace Acts::detail {
+namespace Acts {
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
 /// - Open is the default behaviour: out of bounds
@@ -93,4 +93,4 @@ Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<ActsScalar> bins)
 using EquidistantAxis = Axis<AxisType::Equidistant>;
 using VariableAxis = Axis<AxisType::Variable>;
 
-}  // namespace Acts::detail
+}  // namespace Acts

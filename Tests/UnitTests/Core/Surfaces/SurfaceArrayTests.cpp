@@ -16,10 +16,10 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
@@ -185,10 +185,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, 30u);
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-      zAxis(-14, 14, 7u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI,
+                                                                30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
   double angleShift = 2 * M_PI / 30. / 2.;
   auto transform = [angleShift](const Vector3& pos) {

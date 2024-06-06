@@ -115,8 +115,10 @@ class TestAxis : public IAxis {
 
   bool isVariable() const final { return false; }
 
-  detail::AxisBoundaryType getBoundaryType() const final {
-    return detail::AxisBoundaryType::Closed;
+  AxisType getType() const final { return AxisType::Equidistant; }
+
+  AxisBoundaryType getBoundaryType() const final {
+    return AxisBoundaryType::Closed;
   }
 
   std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }

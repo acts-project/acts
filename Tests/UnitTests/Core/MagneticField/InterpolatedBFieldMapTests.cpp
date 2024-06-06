@@ -13,10 +13,10 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
@@ -57,11 +57,10 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   };
 
   // magnetic field known on grid in (r,z)
-  detail::EquidistantAxis r(0.0, 4.0, 4u);
-  detail::EquidistantAxis z(-5, 7, 6u);
+  EquidistantAxis r(0.0, 4.0, 4u);
+  EquidistantAxis z(-5, 7, 6u);
 
-  using Grid_t =
-      Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
+  using Grid_t = Grid<Vector3, EquidistantAxis, EquidistantAxis>;
   using BField_t = InterpolatedBFieldMap<Grid_t>;
 
   Grid_t g(std::make_tuple(std::move(r), std::move(z)));

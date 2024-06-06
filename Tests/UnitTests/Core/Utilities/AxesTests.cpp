@@ -9,13 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <cstddef>
 #include <vector>
-
-using namespace Acts::detail;
 
 namespace Acts::Test {
 

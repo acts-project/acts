@@ -31,12 +31,12 @@ class IAxis {
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  virtual detail::AxisType getType() const = 0;
+  virtual AxisType getType() const = 0;
 
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
-  virtual detail::AxisBoundaryType getBoundaryType() const = 0;
+  virtual AxisBoundaryType getBoundaryType() const = 0;
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges

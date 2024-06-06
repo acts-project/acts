@@ -18,16 +18,15 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis> grid(
       std::make_tuple(std::move(xAxis)));
 
   BOOST_CHECK_EQUAL(grid.size(true), nBins + 2ul);
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStart =
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis> gridStart =
       grid.begin();
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStop =
-      grid.end();
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis> gridStop = grid.end();
 
   BOOST_CHECK_EQUAL(gridStart == gridStop, false);
   BOOST_CHECK_EQUAL(gridStart != gridStop, true);
@@ -65,9 +64,8 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
 
   [[maybe_unused]] double value = *gridStart;
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridDefault;
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridDummy(
-      grid, 0ul);
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis> gridDefault;
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis> gridDummy(grid, 0ul);
 
   BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
 }
@@ -75,19 +73,16 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
   const std::size_t nBinsX = 10ul;
   const std::size_t nBinsY = 5ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::EquidistantAxis xAxis(0, 100, nBinsX);
+  Acts::EquidistantAxis yAxis(0, 100, nBinsY);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis), std::move(yAxis)));
 
   BOOST_CHECK_EQUAL(grid.size(true), (nBinsX + 2ul) * (nBinsY + 2ul));
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStart = grid.begin();
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStop = grid.end();
 
   BOOST_CHECK_EQUAL(gridStart == gridStop, false);
@@ -126,11 +121,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
 
   [[maybe_unused]] double value = *gridStart;
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridDefault;
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridDummy(grid, 0ul);
 
   BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
@@ -138,8 +131,8 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis> grid(
       std::make_tuple(std::move(xAxis)));
 
   // test general properties
@@ -149,10 +142,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   const std::array<std::size_t, 1ul> numLocalBins = grid.numLocalBins();
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStart =
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis> gridStart =
       grid.begin();
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis> gridStop =
-      grid.end();
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis> gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; gridStart++) {
     BOOST_CHECK_EQUAL(gridStart.globalBinIndex(), numIterations);
@@ -166,11 +158,10 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::EquidistantAxis yAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis), std::move(yAxis)));
 
   // test general properties
   BOOST_CHECK_EQUAL(grid.size(false), nBins * nBins);
@@ -180,11 +171,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
   BOOST_CHECK_EQUAL(numLocalBins[0ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStart = grid.begin();
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
@@ -197,11 +186,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
   const std::size_t nBins = 10ul;
   const std::size_t nBinsZ = 20ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::EquidistantAxis yAxis(0, 100, nBins);
+  Acts::EquidistantAxis zAxis(0, 100, nBinsZ);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+             Acts::EquidistantAxis>
       grid(std::make_tuple(std::move(xAxis), std::move(yAxis),
                            std::move(zAxis)));
 
@@ -215,13 +204,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
   BOOST_CHECK_EQUAL(numLocalBins[1ul], nBins);
   BOOST_CHECK_EQUAL(numLocalBins[2ul], nBinsZ);
 
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                           Acts::EquidistantAxis>
       gridStart = grid.begin();
-  Acts::GridGlobalIterator<double, Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis,
-                           Acts::detail::EquidistantAxis>
+  Acts::GridGlobalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                           Acts::EquidistantAxis>
       gridStop = grid.end();
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
@@ -233,8 +220,8 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis> grid(
       std::make_tuple(std::move(xAxis)));
 
   std::array<std::vector<std::size_t>, 1ul> navigation;
@@ -242,16 +229,16 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
 
   // Constructor without navigation
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridIterNoNav(
-      grid, {0ul});
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridIterNoNav(grid,
+                                                                       {0ul});
   // Constructor(s) with navigation
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStart(
-      grid, {0ul}, navigation);
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridStart(grid, {0ul},
+                                                                   navigation);
 
   BOOST_CHECK_EQUAL(std::distance(gridIterNoNav, gridStart), 0ul);
   BOOST_CHECK_EQUAL(gridIterNoNav == gridStart, true);
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStop(
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridStop(
       grid, {nBins}, std::move(navigation));
 
   BOOST_CHECK_EQUAL(gridStart == gridStop, false);
@@ -276,9 +263,8 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   std::size_t globPos = gridStart.globalBinIndex();
   BOOST_CHECK_EQUAL(globPos, 3ul);
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDefault;
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridDummy(
-      grid, {0ul});
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridDefault;
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridDummy(grid, {0ul});
 
   BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
 
@@ -293,11 +279,10 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
   const std::size_t nBinsX = 10ul;
   const std::size_t nBinsY = 5ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::EquidistantAxis xAxis(0, 100, nBinsX);
+  Acts::EquidistantAxis yAxis(0, 100, nBinsY);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis), std::move(yAxis)));
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[0ul].resize(nBinsX);
@@ -306,19 +291,16 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
   std::iota(navigation[1ul].begin(), navigation[1ul].end(), 1ul);
 
   // Constructor without navigation
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridIterNoNav(grid, {0ul, 0ul});
   // Constructor(s) with navigation
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStart(grid, {0ul, 0ul}, navigation);
 
   BOOST_CHECK_EQUAL(std::distance(gridIterNoNav, gridStart), 0ul);
   BOOST_CHECK_EQUAL(gridIterNoNav == gridStart, true);
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStop(grid, {nBinsX, nBinsY}, std::move(navigation));
 
   BOOST_CHECK_EQUAL(gridStart == gridStop, false);
@@ -341,11 +323,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
   BOOST_CHECK_EQUAL(locPos[0ul], 1ul);
   BOOST_CHECK_EQUAL(locPos[1ul], 3ul);
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridDefault;
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridDummy(grid, {0ul, 0ul});
 
   BOOST_CHECK_EQUAL(gridDefault == gridDummy, false);
@@ -360,31 +340,29 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_notvalid) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis> grid(
       std::make_tuple(std::move(xAxis)));
 
   // no navigation bins
   std::array<std::vector<std::size_t>, 1ul> noNavigation;
-  BOOST_CHECK_THROW(
-      (Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis>(
-          grid, {0ul}, std::move(noNavigation))),
-      std::invalid_argument);
+  BOOST_CHECK_THROW((Acts::GridLocalIterator<double, Acts::EquidistantAxis>(
+                        grid, {0ul}, std::move(noNavigation))),
+                    std::invalid_argument);
 
   // too many steps in the navigation, there are not enough bins in the axis
   std::array<std::vector<std::size_t>, 1ul> tooMuchNavigation;
   tooMuchNavigation[0ul].resize(2 * nBins);
   std::iota(tooMuchNavigation[0ul].begin(), tooMuchNavigation[0ul].end(), 1ul);
-  BOOST_CHECK_THROW(
-      (Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis>(
-          grid, {0ul}, std::move(tooMuchNavigation))),
-      std::invalid_argument);
+  BOOST_CHECK_THROW((Acts::GridLocalIterator<double, Acts::EquidistantAxis>(
+                        grid, {0ul}, std::move(tooMuchNavigation))),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis> grid(
       std::make_tuple(std::move(xAxis)));
 
   // test general properties
@@ -398,9 +376,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
   navigation[0ul].resize(nBins);
   std::iota(navigation[0ul].begin(), navigation[0ul].end(), 1ul);
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStart =
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridStart =
       grid.begin(navigation);
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis> gridStop =
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis> gridStop =
       grid.end(navigation);
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
@@ -411,11 +389,10 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
 
 BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::EquidistantAxis yAxis(0, 100, nBins);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis> grid(
+      std::make_tuple(std::move(xAxis), std::move(yAxis)));
 
   // test general properties
   BOOST_CHECK_EQUAL(grid.size(false), nBins * nBins);
@@ -432,11 +409,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
     std::iota(navigation[i].begin(), navigation[i].end(), 1ul);
   }
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStart = grid.begin(navigation);
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis>
       gridStop = grid.end(navigation);
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; gridStart++) {
@@ -448,11 +423,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local) {
   const std::size_t nBins = 10ul;
   const std::size_t nBinsZ = 20ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::EquidistantAxis yAxis(0, 100, nBins);
+  Acts::EquidistantAxis zAxis(0, 100, nBinsZ);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+             Acts::EquidistantAxis>
       grid(std::make_tuple(std::move(xAxis), std::move(yAxis),
                            std::move(zAxis)));
 
@@ -474,13 +449,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local) {
     std::iota(navigation[i].begin(), navigation[i].end(), 1ul);
   }
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStart = grid.begin(navigation);
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStop = grid.end(navigation);
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
@@ -492,11 +465,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_custom_navigation) {
   const std::size_t nBins = 10ul;
   const std::size_t nBinsZ = 20ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::EquidistantAxis yAxis(0, 100, nBins);
+  Acts::EquidistantAxis zAxis(0, 100, nBinsZ);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+             Acts::EquidistantAxis>
       grid(std::make_tuple(std::move(xAxis), std::move(yAxis),
                            std::move(zAxis)));
 
@@ -517,13 +490,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_custom_navigation) {
                      6ul,  8ul,  7ul,  11ul, 15ul, 13ul, 12ul,
                      19ul, 20ul, 14ul, 16ul, 18ul, 17ul};
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStart = grid.begin(navigation);
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStop = grid.end(navigation);
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
@@ -536,14 +507,14 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_5d_local_custom_subnavigation) {
   const std::size_t nBins = 10ul;
   const std::size_t nBinsZ = 20ul;
   const std::size_t nBinsJK = 5ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBins);
-  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
-  Acts::detail::EquidistantAxis jAxis(0, 100, nBinsJK);
-  Acts::detail::EquidistantAxis kAxis(0, 100, nBinsJK);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
+  Acts::EquidistantAxis xAxis(0, 100, nBins);
+  Acts::EquidistantAxis yAxis(0, 100, nBins);
+  Acts::EquidistantAxis zAxis(0, 100, nBinsZ);
+  Acts::EquidistantAxis jAxis(0, 100, nBinsJK);
+  Acts::EquidistantAxis kAxis(0, 100, nBinsJK);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+             Acts::EquidistantAxis, Acts::EquidistantAxis,
+             Acts::EquidistantAxis>
       grid(std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis),
                            std::move(jAxis), std::move(kAxis)));
 
@@ -569,15 +540,13 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_5d_local_custom_subnavigation) {
   navigation[3ul] = {5ul, 3ul, 2ul};
   navigation[4ul] = {2ul};
 
-  Acts::GridLocalIterator<
-      double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-      Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-      Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStart = grid.begin(navigation);
-  Acts::GridLocalIterator<
-      double, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-      Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
-      Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStop = grid.end(navigation);
   std::size_t numIterations = 0ul;
   for (; gridStart != gridStop; ++gridStart) {
@@ -596,11 +565,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
   const std::size_t nBinsX = 5ul;
   const std::size_t nBinsY = 5ul;
   const std::size_t nBinsZ = 2ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
+  Acts::EquidistantAxis xAxis(0, 100, nBinsX);
+  Acts::EquidistantAxis yAxis(0, 100, nBinsY);
+  Acts::EquidistantAxis zAxis(0, 100, nBinsZ);
+  Acts::Grid<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+             Acts::EquidistantAxis>
       grid(std::make_tuple(std::move(xAxis), std::move(yAxis),
                            std::move(zAxis)));
 
@@ -629,13 +598,11 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
 
   BOOST_CHECK_EQUAL(expectedIterations, allowed_global_bins.size());
 
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStart = grid.begin(navigation);
-  Acts::GridLocalIterator<double, Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis,
-                          Acts::detail::EquidistantAxis>
+  Acts::GridLocalIterator<double, Acts::EquidistantAxis, Acts::EquidistantAxis,
+                          Acts::EquidistantAxis>
       gridStop = grid.end(navigation);
 
   // Prepare visited values

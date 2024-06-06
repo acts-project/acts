@@ -11,10 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
@@ -28,7 +28,7 @@ namespace Acts {
 
 class MaterialSlab;
 
-using EAxis = Acts::detail::EquidistantAxis;
+using EAxis = Acts::EquidistantAxis;
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =

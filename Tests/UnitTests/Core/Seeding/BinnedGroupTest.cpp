@@ -20,18 +20,15 @@
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(binned_group_constructor) {
-  Acts::detail::EquidistantAxis xAxis(0, 100, 10);
-  Acts::detail::EquidistantAxis yAxis(0, 100, 10);
-  Acts::detail::EquidistantAxis zAxis(0, 100, 10);
+  Acts::EquidistantAxis xAxis(0, 100, 10);
+  Acts::EquidistantAxis yAxis(0, 100, 10);
+  Acts::EquidistantAxis zAxis(0, 100, 10);
 
-  using grid_1d_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis>;
-  using grid_2d_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis,
-                 Acts::detail::EquidistantAxis>;
-  using grid_3d_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis,
-                 Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>;
+  using grid_1d_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis>;
+  using grid_2d_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis,
+                               Acts::EquidistantAxis>;
+  using grid_3d_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis,
+                               Acts::EquidistantAxis, Acts::EquidistantAxis>;
 
   grid_1d_t grid_1d(std::make_tuple(xAxis));
   grid_2d_t grid_2d(std::make_tuple(xAxis, yAxis));
@@ -66,11 +63,10 @@ BOOST_AUTO_TEST_CASE(binned_group_constructor) {
 }
 
 BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
-  using grid_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis>;
+  using grid_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis>;
   using binfinder_t = Acts::GridBinFinder<1ul>;
 
-  Acts::detail::EquidistantAxis xAxis(0, 100, 10);
+  Acts::EquidistantAxis xAxis(0, 100, 10);
   grid_t grid(std::make_tuple(std::move(xAxis)));
   binfinder_t binfinder(0);
   Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
@@ -87,13 +83,12 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_emptyGrid) {
 }
 
 BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
-  using grid_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis,
-                 Acts::detail::EquidistantAxis>;
+  using grid_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis,
+                            Acts::EquidistantAxis>;
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
-  Acts::detail::EquidistantAxis xAxis(0, 100, 10);
-  Acts::detail::EquidistantAxis yAxis(0, 100, 10);
+  Acts::EquidistantAxis xAxis(0, 100, 10);
+  Acts::EquidistantAxis yAxis(0, 100, 10);
   grid_t grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
   binfinder_t binfinder(0, 0);
   Acts::BinnedGroup<grid_t> group(std::move(grid), binfinder, binfinder);
@@ -110,11 +105,10 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_emptyGrid) {
 }
 
 BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
-  using grid_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis>;
+  using grid_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis>;
   using binfinder_t = Acts::GridBinFinder<1ul>;
 
-  Acts::detail::EquidistantAxis xAxis(0, 100, 10);
+  Acts::EquidistantAxis xAxis(0, 100, 10);
   grid_t grid(std::make_tuple(xAxis));
   /// Add some entries to the grid
   grid.at(1ul).push_back(4ul);
@@ -137,13 +131,12 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_1d_perFilledGrid) {
 }
 
 BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
-  using grid_t =
-      Acts::Grid<std::vector<std::size_t>, Acts::detail::EquidistantAxis,
-                 Acts::detail::EquidistantAxis>;
+  using grid_t = Acts::Grid<std::vector<std::size_t>, Acts::EquidistantAxis,
+                            Acts::EquidistantAxis>;
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
-  Acts::detail::EquidistantAxis xAxis(0, 100, 10);
-  Acts::detail::EquidistantAxis yAxis(0, 100, 10);
+  Acts::EquidistantAxis xAxis(0, 100, 10);
+  Acts::EquidistantAxis yAxis(0, 100, 10);
   grid_t grid(std::make_tuple(xAxis, yAxis));
   /// Add some entries to the grid
   grid.atLocalBins({2ul, 4ul}).push_back(4ul);
@@ -165,10 +158,8 @@ BOOST_AUTO_TEST_CASE(binned_group_iterations_2d_perFilledGrid) {
 
 BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
   using value_t = std::size_t;
-  using phiAxis_t = Acts::detail::Axis<detail::AxisType::Equidistant,
-                                       detail::AxisBoundaryType::Closed>;
-  using zAxis_t = detail::Axis<detail::AxisType::Equidistant,
-                               detail::AxisBoundaryType::Bound>;
+  using phiAxis_t = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  using zAxis_t = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
   using grid_t = Acts::Grid<std::vector<value_t>, phiAxis_t, zAxis_t>;
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
@@ -201,12 +192,9 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
 
 BOOST_AUTO_TEST_CASE(binned_group_fill_3d) {
   using value_t = std::size_t;
-  using phiAxis_t = Acts::detail::Axis<detail::AxisType::Equidistant,
-                                       detail::AxisBoundaryType::Closed>;
-  using zAxis_t = detail::Axis<detail::AxisType::Equidistant,
-                               detail::AxisBoundaryType::Bound>;
-  using rAxis_t = detail::Axis<detail::AxisType::Equidistant,
-                               detail::AxisBoundaryType::Bound>;
+  using phiAxis_t = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  using zAxis_t = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
+  using rAxis_t = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
   using grid_t = Acts::Grid<std::vector<value_t>, phiAxis_t, zAxis_t, rAxis_t>;
   using binfinder_t = Acts::GridBinFinder<3ul>;
 
