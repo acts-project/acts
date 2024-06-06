@@ -35,4 +35,5 @@ target_sources(
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
+        Portal.cpp
 )
