@@ -12,7 +12,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Portal.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 
 #include <iostream>
 
