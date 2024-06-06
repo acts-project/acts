@@ -40,7 +40,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @tparam SurfaceType the surface type
   /// @tparam BoundsType the bounds type
   ///
-  /// @param geoPhysVol reprsenting the physical volume
+  /// @param geoPhysVol representing the physical volume
   /// @param bounds the bounds class
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
@@ -61,7 +61,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
 
   /// Constructor with arguments
   ///
-  /// @param geoPhysVol reprsenting the physical volume
+  /// @param geoPhysVol representing the physical volume
   /// @param surface the representing surface
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element

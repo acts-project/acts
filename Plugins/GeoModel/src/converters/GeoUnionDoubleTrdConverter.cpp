@@ -23,7 +23,7 @@ auto distanceLinePoint(const Acts::Vector3 &lineA, const Acts::Vector3 &lineB,
 
 /// Checks with the following properties if the trapezoids are mergeable
 bool trapezoidsAreMergeable(const std::vector<Acts::Vector3> &vtxsa,
-                           const std::vector<Acts::Vector3> &vtxsb) {
+                            const std::vector<Acts::Vector3> &vtxsb) {
   // Compute the distance of the lines connecting A3 and B0 and the midpoint of
   // the gap (resp. for other trapezoid side) These should be close to zero,
   // otherwise we cannot merge the trapezoids
