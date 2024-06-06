@@ -59,25 +59,69 @@ std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
   return os;
 }
 
-// MARK: - GridPortalLink
-
-// std::unique_ptr<PortalLinkBase> GridPortalLink::merge(
-//     const PortalLinkBase& other) const {
-//   std::cout << "Merge GridPortalLink + PortalLinkBase" << std::endl;
-//   return other.merge(*this);
-// }
-//
-// std::unique_ptr<PortalLinkBase> GridPortalLink::merge(
-//     const GridPortalLink& other) const {
-//   std::cout << "Merge GridPortalLink + GridPortalLink" << std::endl;
-//   return nullptr;
-// }
-
 std::unique_ptr<GridPortalLink1> PortalLinkBase::merge1d(
     const GridPortalLink1& a, const GridPortalLink1& b, const Vector2& offset,
     const Logger& logger) {
+  return nullptr;
+}
+
+// MARK: - GridPortalLink1
+
+std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
+    const PortalLinkBase& other, const Vector2& offset,
+    const Logger& logger) const {
+  ACTS_DEBUG("Merge GridPortalLink1 + PortalLinkBase > " << offset.transpose());
+  return other.merge(*this, offset, logger);
+}
+
+// std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
+//     const PortalLinkBase& other, const Vector2& offset,
+//     const Logger& logger) const {
+// ACTS_DEBUG("Merge PortalLinkBase + PortalLinkBase with offset: "
+//            << offset.transpose());
+//
+// if (const auto* a1 = dynamic_cast<const GridPortalLink1*>(this);
+//     a1 != nullptr) {
+//   if (const auto* b1 = dynamic_cast<const GridPortalLink1*>(&other);
+//       b1 != nullptr) {
+//     ACTS_DEBUG("Merging GridPortalLink1 + GridPortalLink1");
+//     merge1d(*a1, *b1, offset, logger);
+//
+//   } else if (const auto* b2 = dynamic_cast<const GridPortalLink2*>(&other);
+//              b2 != nullptr) {
+//     ACTS_DEBUG("Merging GridPortalLink1 + GridPortalLink2");
+//
+//   } else {
+//     ACTS_DEBUG("Merging GridPortalLink1 + unknown");
+//   }
+// } else if (const auto* a2 = dynamic_cast<const GridPortalLink2*>(this);
+//            a2 != nullptr) {
+//   if (const auto* b1 = dynamic_cast<const GridPortalLink1*>(&other);
+//       b1 != nullptr) {
+//     ACTS_DEBUG("Merging GridPortalLink2 + GridPortalLink1");
+//
+//   } else if (const auto* b2 = dynamic_cast<const GridPortalLink2*>(&other);
+//              b2 != nullptr) {
+//     ACTS_DEBUG("Merging GridPortalLink2 + GridPortalLink2");
+//
+//   } else {
+//     ACTS_DEBUG("Merging GridPortalLink2 + unknown");
+//   }
+// } else {
+//   ACTS_DEBUG("Merging unknown + unknown");
+// }
+//
+//   return nullptr;
+// }
+
+std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
+    const GridPortalLink1& other, const Vector2& offset,
+    const Logger& logger) const {
   ACTS_DEBUG("Merge GridPortalLink1 + GridPortalLink1 with offset: "
              << offset.transpose());
+
+  const auto& a = *this;
+  const auto& b = other;
 
   assert(a.grid().axes().size() == 1);
   assert(b.grid().axes().size() == 1);
@@ -133,9 +177,6 @@ std::unique_ptr<GridPortalLink1> PortalLinkBase::merge1d(
           "Cannot merge 1D grids with axes != Bound along common direction"};
     }
 
-    // NOTE: We don't currently know which order the axes are in, really.
-    // We're assuming a relationship between the grids and the offset
-
     ACTS_VERBOSE("Are they both equidistant and have same bin width?");
     if (axisA.isEquidistant() == axisB.isEquidistant()) {
       ActsScalar binWidthA =
@@ -148,35 +189,40 @@ std::unique_ptr<GridPortalLink1> PortalLinkBase::merge1d(
       ActsScalar bMin = axisB.getMin() + localOffset;
       ActsScalar bMax = axisB.getMax() + localOffset;
 
-      ACTS_VERBOSE("- axis a: [" << aMin << " -> " << aMax << "] with "
-                                 << axisA.getNBins() << " bins of "
-                                 << binWidthA);
-      ACTS_VERBOSE("- axis b: [" << bMin << " -> " << bMax << "] with "
-                                 << axisB.getNBins() << " bins of "
-                                 << binWidthB);
+      ACTS_VERBOSE("  - axis a: [" << aMin << " -> " << aMax << "] with "
+                                   << axisA.getNBins() << " bins of "
+                                   << binWidthA);
+      ACTS_VERBOSE("  - axis b: [" << bMin << " -> " << bMax << "] with "
+                                   << axisB.getNBins() << " bins of "
+                                   << binWidthB);
 
       if (binWidthA == binWidthB) {
-        ACTS_VERBOSE("=> yes!");
+        ACTS_VERBOSE("  => yes!");
 
         ACTS_VERBOSE("Do their edges line up?");
 
-        if (bMin < aMax) {
-          ACTS_ERROR("=> no! Axes edges overlap, refusing to merge");
+        constexpr auto tolerance = s_onSurfaceTolerance;
+
+        if (std::abs(aMax - bMin) > tolerance) {
+          ACTS_ERROR(
+              "=> no! Axes edges overlap or have gaps, refusing to merge");
           throw std::logic_error{
               "Cannot merge 1D grids with non-matching "
               "axes along common direction"};
         }
+
         ACTS_VERBOSE("=> yes!")
 
-        ActsScalar min = axisA.getMin();
         // ActsScalar width =
         //     axisA.getMax() - axisA.getMin() + axisB.getMax() -
         //     axisB.getMin();
         ActsScalar max = axisB.getMax() + localOffset;
+        ACTS_VERBOSE("New axis will be [" << aMin << " -> " << bMax << "]");
 
-        ACTS_VERBOSE("New axis will be [" << min << " -> " << max << "]");
+        return GridPortalLink::make(
+            Axis{AxisBound{}, aMin, bMax, axisA.getNBins() + axisB.getNBins()});
       } else {
-        ACTS_VERBOSE("=> no!");
+        ACTS_VERBOSE("  => no!");
       }
     }
   } else {
@@ -190,86 +236,38 @@ std::unique_ptr<GridPortalLink1> PortalLinkBase::merge1d(
   return nullptr;
 }
 
-// MARK: - GridPortalLink1
-
-// std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
-//     const PortalLinkBase& other, const Vector2& offset,
-//     const Logger& logger) const {
-//   ACTS_DEBUG("Merge GridPortalLink1 + PortalLinkBase > " <<
-//   offset.transpose()); return other.merge(*this, -1 * offset, logger);
-// }
-
-std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
-    const PortalLinkBase& other, const Vector2& offset,
+std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
+    const GridPortalLink2& other, const Vector2& offset,
     const Logger& logger) const {
-  ACTS_DEBUG("Merge PortalLinkBase + PortalLinkBase with offset: "
+  ACTS_DEBUG("Merge GridPortalLink1 + GridPortalLink2 with offset: "
              << offset.transpose());
-
-  if (const auto* a1 = dynamic_cast<const GridPortalLink1*>(this);
-      a1 != nullptr) {
-    if (const auto* b1 = dynamic_cast<const GridPortalLink1*>(&other);
-        b1 != nullptr) {
-      ACTS_DEBUG("Merging GridPortalLink1 + GridPortalLink1");
-      merge1d(*a1, *b1, offset, logger);
-
-    } else if (const auto* b2 = dynamic_cast<const GridPortalLink2*>(&other);
-               b2 != nullptr) {
-      ACTS_DEBUG("Merging GridPortalLink1 + GridPortalLink2");
-
-    } else {
-      ACTS_DEBUG("Merging GridPortalLink1 + unknown");
-    }
-  } else if (const auto* a2 = dynamic_cast<const GridPortalLink2*>(this);
-             a2 != nullptr) {
-    if (const auto* b1 = dynamic_cast<const GridPortalLink1*>(&other);
-        b1 != nullptr) {
-      ACTS_DEBUG("Merging GridPortalLink2 + GridPortalLink1");
-
-    } else if (const auto* b2 = dynamic_cast<const GridPortalLink2*>(&other);
-               b2 != nullptr) {
-      ACTS_DEBUG("Merging GridPortalLink2 + GridPortalLink2");
-
-    } else {
-      ACTS_DEBUG("Merging GridPortalLink2 + unknown");
-    }
-  } else {
-    ACTS_DEBUG("Merging unknown + unknown");
-  }
-
   return nullptr;
 }
 
-// std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
-//     const GridPortalLink2& other, const Vector2& offset,
-//     const Logger& logger) const {
-//   ACTS_DEBUG("Merge GridPortalLink1 + GridPortalLink2 > "
-//              << offset.transpose());
-//   return mergeImpl(*this, other, offset, logger);
-// }
+// MARK : -GridPortalLink2
 
-// MARK: - GridPortalLink2
+std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
+    const PortalLinkBase& other, const Vector2& offset,
+    const Logger& logger) const {
+  ACTS_DEBUG("Merge GridPortalLink2 + PortalLinkBase with offset: "
+             << offset.transpose());
+  return nullptr;
+}
 
-// std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
-//     const PortalLinkBase& other, const Vector2& offset,
-//     const Logger& logger) const {
-//   ACTS_DEBUG("Merge GridPortalLink2 + PortalLinkBase > " <<
-//   offset.transpose()); return other.merge(*this, -1 * offset, logger);
-// }
-//
-// std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
-//     const GridPortalLink2& other, const Vector2& offset,
-//     const Logger& logger) const {
-//   ACTS_DEBUG("Merge GridPortalLink2 + GridPortalLink2 > "
-//              << offset.transpose());
-//   return nullptr;
-// }
-//
-// std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
-//     const GridPortalLink1& other, const Vector2& offset,
-//     const Logger& logger) const {
-//   ACTS_DEBUG("Merge GridPortalLink2 + GridPortalLink1 > "
-//              << offset.transpose());
-//   return mergeImpl(other, *this, offset, logger);
-// }
+std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
+    const GridPortalLink2& other, const Vector2& offset,
+    const Logger& logger) const {
+  ACTS_DEBUG("Merge GridPortalLink2 + GridPortalLink2 with offset: "
+             << offset.transpose());
+  return nullptr;
+}
+
+std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
+    const GridPortalLink1& other, const Vector2& offset,
+    const Logger& logger) const {
+  ACTS_DEBUG("Merge GridPortalLink2 + GridPortalLink1 with offset: "
+             << offset.transpose());
+  return nullptr;
+}
 
 }  // namespace Acts
