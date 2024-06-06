@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE(safeExpDouble) {
   using FloatType = double;
 
   // Values within the safe range
-  BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0), std::exp(0.0), 0.001);
-  BOOST_CHECK_CLOSE(safeExp<FloatType>(1.0), std::exp(1.0), 0.001);
-  BOOST_CHECK_CLOSE(safeExp<FloatType>(-1.0), std::exp(-1.0), 0.001);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0), std::exp(0.0), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(1.0), std::exp(1.0), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(-1.0), std::exp(-1.0), 1e-8);
 
   // Values causing underflow
   BOOST_CHECK_EQUAL(safeExp<FloatType>(-600.0), 0.0);
@@ -144,9 +144,9 @@ BOOST_AUTO_TEST_CASE(safeExpFloat) {
   using FloatType = float;
 
   // Values within the safe range
-  BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0f), std::exp(0.0f), 0.001);
-  BOOST_CHECK_CLOSE(safeExp<FloatType>(1.0f), std::exp(1.0f), 0.001);
-  BOOST_CHECK_CLOSE(safeExp<FloatType>(-1.0f), std::exp(-1.0f), 0.001);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0f), std::exp(0.0f), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(1.0f), std::exp(1.0f), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(-1.0f), std::exp(-1.0f), 1e-8);
 
   // Values causing underflow
   BOOST_CHECK_EQUAL(safeExp<FloatType>(-60.0f), 0.0f);
