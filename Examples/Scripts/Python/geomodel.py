@@ -41,17 +41,7 @@ def main():
         gm.GeoShiftConverter(),
         gm.GeoUnionDoubleTrdConverter(),
     ]
-    gmFactoryConfig.nameList = [
-        # "Sensor",
-        # "FwdSen",
-        # "Wheel",
-        # "Side",
-        # "Pixel",
-        # "Module", # Catches a lot
-        # "ModuleBrl",
-        # "FwdSensor_Side#1_2_0_0_33",
-        # "ECSensor0",
-    ]
+    gmFactoryConfig.nameList = []
     gmFactoryConfig.materialList = [
         "std::Silicon",
     ]
