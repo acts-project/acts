@@ -168,7 +168,7 @@ double Acts::CylinderSurface::pathCorrection(
   double cosAlpha = normalT.dot(direction);
   // We constrain cosAlpha in the division, for cases where we encounter a 90°
   // incline.
-  return std::fabs(1. / std::max(cosAlpha, 1e-15));
+  return 1. / std::max(std::fabs(cosAlpha), 1e-15);
 }
 
 const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
