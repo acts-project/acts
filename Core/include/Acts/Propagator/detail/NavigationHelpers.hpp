@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,8 +16,7 @@
 
 #include <variant>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 using AnyIntersectionObject =
     std::variant<const Surface*, const Layer*, const BoundarySurface*>;
@@ -66,21 +65,13 @@ struct IntersectionCandidate {
   SurfaceIntersection intersection;
   detail::AnyIntersectionObject anyObject;
   BoundaryCheck boundaryCheck;
-  bool renavigationFlag{};
-
-  static IntersectionCandidate createFlag(Intersection3D intersection) {
-    return {SurfaceIntersection(intersection, nullptr), (const Surface*)nullptr,
-            BoundaryCheck(false), true};
-  }
 
   IntersectionCandidate(SurfaceIntersection _intersection,
                         detail::AnyIntersectionObject _anyObject,
-                        BoundaryCheck _boundaryCheck,
-                        bool _renavigationFlag = false)
+                        BoundaryCheck _boundaryCheck)
       : intersection(std::move(_intersection)),
         anyObject(_anyObject),
-        boundaryCheck(std::move(_boundaryCheck)),
-        renavigationFlag(_renavigationFlag) {}
+        boundaryCheck(std::move(_boundaryCheck)) {}
 
   template <typename object_t>
   bool checkType() const {
@@ -172,5 +163,4 @@ inline void emplaceAllVolumeCandidates(
   }
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail
