@@ -30,10 +30,13 @@ class GridLocalIterator;
 
 namespace Acts {
 
+/// Base class for all grid types
 class IGrid {
  public:
   virtual ~IGrid() = default;
 
+  /// Get a dynamically sized vector of axis objects for inspection
+  /// @return a vector of axis pointers
   virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
 };
 
