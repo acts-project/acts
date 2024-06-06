@@ -65,21 +65,21 @@ class PortalLinkBase {
 
   // virtual bool inside(const Vector2& position) const = 0;
 
-  std::unique_ptr<PortalLinkBase> merge(
-      const PortalLinkBase& other, const Vector2& offset,
-      const Logger& logger = getDummyLogger()) const;
-
-  // virtual std::unique_ptr<PortalLinkBase> merge(
+  // std::unique_ptr<PortalLinkBase> merge(
   //     const PortalLinkBase& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const = 0;
+  //     const Logger& logger = getDummyLogger()) const;
 
-  // virtual std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink1& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const = 0;
-  //
-  // virtual std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink2& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const = 0;
+  virtual std::unique_ptr<PortalLinkBase> merge(
+      const PortalLinkBase& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const = 0;
+
+  virtual std::unique_ptr<PortalLinkBase> merge(
+      const GridPortalLink1& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const = 0;
+
+  virtual std::unique_ptr<PortalLinkBase> merge(
+      const GridPortalLink2& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const = 0;
 
   static std::unique_ptr<GridPortalLink1> merge1d(const GridPortalLink1& a,
                                                   const GridPortalLink1& b,
@@ -104,36 +104,19 @@ class GridPortalLink : public PortalLinkBase {
   virtual const IGrid& grid() const = 0;
 };
 
-// template <std::size_t N>
-// class GridPortalLinkN : public GridPortalLink {
-//   std::unique_ptr<PortalLinkBase> merge(
-//       const PortalLinkBase& other) const override {
-//     std::cout << "Merge GridPortalLinkN<" << N << "> + PortalLinkBase"
-//               << std::endl;
-//     return other.merge(*this);
-//   }
-//
-//   std::unique_ptr<PortalLinkBase> merge(
-//       const GridPortalLinkN<N>& other) const override {
-//     std::cout << "Merge GridPortalLinkN<" << N << "> + GridPortalLinkN<" << N
-//               << ">" << std::endl;
-//     return nullptr;
-//   }
-// };
-
 class GridPortalLink1 : public GridPortalLink {
  public:
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const PortalLinkBase& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const override;
-  //
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink1& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const override;
-  //
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink2& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const override;
+  std::unique_ptr<PortalLinkBase> merge(
+      const PortalLinkBase& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const override;
+
+  std::unique_ptr<PortalLinkBase> merge(
+      const GridPortalLink1& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const override;
+
+  std::unique_ptr<PortalLinkBase> merge(
+      const GridPortalLink2& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const override;
 
   PortalDirection direction() const { return m_direction; }
 
@@ -148,17 +131,17 @@ class GridPortalLink1 : public GridPortalLink {
 
 class GridPortalLink2 : public GridPortalLink {
  public:
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const PortalLinkBase& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const override;
-  //
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink1& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const override;
-  //
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const GridPortalLink2& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const override;
+  std::unique_ptr<PortalLinkBase> merge(
+      const PortalLinkBase& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const override;
+
+  std::unique_ptr<PortalLinkBase> merge(
+      const GridPortalLink1& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const override;
+
+  std::unique_ptr<PortalLinkBase> merge(
+      const GridPortalLink2& other, const Vector2& offset,
+      const Logger& logger = getDummyLogger()) const override;
 };
 
 template <typename... Axes>
@@ -184,12 +167,6 @@ class GridPortalLinkN
   }
 
   const IGrid& grid() const override { return m_grid; }
-
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const PortalLinkBase& other) const override {
-  //   std::cout << "Merge GridPortalLink1 + PortalLinkBase" << std::endl;
-  //   return other.merge(*this);
-  // }
 
  private:
   GridType m_grid;

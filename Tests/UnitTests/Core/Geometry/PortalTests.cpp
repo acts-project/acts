@@ -47,10 +47,13 @@ BOOST_AUTO_TEST_CASE(Merging1d) {
   // @TODO Zero offset
 
   {
-    auto mergedPtr = grid1d1->merge(*grid1d2, Vector2{6, 0}, *logger);
+    auto mergedPtr = grid1d1->merge(*grid1d2, Vector2{5, 0}, *logger);
     auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
-    // BOOST_REQUIRE_NE(merged, nullptr);
-    // merged->grid().axes();
+    BOOST_REQUIRE_NE(merged, nullptr);
+    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+    auto& axis = *merged->grid().axes().front();
+    BOOST_CHECK_EQUAL(axis.getMin(), -1);
+    BOOST_CHECK_EQUAL(axis.getMax(), 10);
   }
 
   {
