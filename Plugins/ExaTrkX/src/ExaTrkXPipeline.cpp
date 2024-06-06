@@ -8,8 +8,6 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
-#include <algorithm>
-
 namespace Acts {
 
 ExaTrkXPipeline::ExaTrkXPipeline(

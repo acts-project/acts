@@ -49,13 +49,12 @@ if "__main__" == __name__:
 
     # OBJ style output
     surfaces = []
-    segments = 1
     for vol in detector.volumePtrs():
         for surf in vol.surfacePtrs():
             if surf.geometryId().sensitive() > 0:
                 surfaces.append(surf)
     acts.examples.writeSurfacesObj(
-        surfaces, geoContext, [0, 120, 120], segments, "odd-surfaces.obj"
+        surfaces, geoContext, [0, 120, 120], "odd-surfaces.obj"
     )
 
     # SVG style output
