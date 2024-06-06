@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <iostream>
 

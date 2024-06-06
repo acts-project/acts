@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
 #include <cmath>
