@@ -9,77 +9,76 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoShape.h>
-#include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
+#include <GeoModelKernel/GeoLogVol.h>
+#include <GeoModelKernel/GeoShape.h>
 
 namespace Acts::detail {
 
-template<typename T>
-auto resultify(const T &&res) {
-  if constexpr( std::is_same_v<T, Acts::Result<Acts::GeoModelSensitiveSurface>> ) {
+template <typename T>
+auto resultify(const T&& res) {
+  if constexpr (std::is_same_v<T,
+                               Acts::Result<Acts::GeoModelSensitiveSurface>>) {
     return res;
   } else {
     return Result<GeoModelSensitiveSurface>::success(res);
   }
 }
 
-template<typename Shape, typename Converter>
+template <typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
-
-Acts::Result<Acts::GeoModelSensitiveSurface>
-toSensitiveSurface(const GeoFullPhysVol& geoFPV) const override {
-  // Retrieve logcal volume and absolute transform
-  const GeoLogVol* logVol = geoFPV.getLogVol();
-  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
-  if (logVol != nullptr) {
-    const GeoShape* geoShape = logVol->getShape();
-    auto concreteShape = dynamic_cast<const Shape*>(geoShape);
-    if (concreteShape != nullptr) {
-      return Converter{}(geoFPV, *concreteShape, transform, true);
+  Acts::Result<Acts::GeoModelSensitiveSurface> toSensitiveSurface(
+      const GeoFullPhysVol& geoFPV) const override {
+    // Retrieve logcal volume and absolute transform
+    const GeoLogVol* logVol = geoFPV.getLogVol();
+    const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
+    if (logVol != nullptr) {
+      const GeoShape* geoShape = logVol->getShape();
+      auto concreteShape = dynamic_cast<const Shape*>(geoShape);
+      if (concreteShape != nullptr) {
+        return Converter{}(geoFPV, *concreteShape, transform, true);
+      }
+      return Result<GeoModelSensitiveSurface>::failure(
+          GeoModelConversionError::WrongShapeForConverter);
     }
     return Result<GeoModelSensitiveSurface>::failure(
-        GeoModelConversionError::WrongShapeForConverter);
+        GeoModelConversionError::MissingLogicalVolume);
   }
-  return Result<GeoModelSensitiveSurface>::failure(
-      GeoModelConversionError::MissingLogicalVolume);
-}
 
-Acts::Result<std::shared_ptr<Acts::Surface>>
-toPassiveSurface(const GeoFullPhysVol& geoFPV) const override {
-  // Retrieve logcal volume and absolute transform
-  const GeoLogVol* logVol = geoFPV.getLogVol();
-  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
-  if (logVol != nullptr) {
-    const GeoShape* geoShape = logVol->getShape();
+  Acts::Result<std::shared_ptr<Acts::Surface>> toPassiveSurface(
+      const GeoFullPhysVol& geoFPV) const override {
+    // Retrieve logcal volume and absolute transform
+    const GeoLogVol* logVol = geoFPV.getLogVol();
+    const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
+    if (logVol != nullptr) {
+      const GeoShape* geoShape = logVol->getShape();
 
-    auto concreteShape = dynamic_cast<const Shape*>(geoShape);
-    if (concreteShape != nullptr) {
-      // Conversion function call with sensitive = false
-      auto res = Converter{}(geoFPV, *concreteShape, transform, false);
-      if(!res.ok()) {
-        return res.error();
+      auto concreteShape = dynamic_cast<const Shape*>(geoShape);
+      if (concreteShape != nullptr) {
+        // Conversion function call with sensitive = false
+        auto res = Converter{}(geoFPV, *concreteShape, transform, false);
+        if (!res.ok()) {
+          return res.error();
+        }
+
+        const auto& [el, surface] = res.value();
+
+        return Result<std::shared_ptr<Surface>>::success(surface);
       }
-
-      const auto &[el, surface] = res.value();
-
-      return Result<std::shared_ptr<Surface>>::success(surface);
+      return Result<std::shared_ptr<Surface>>::failure(
+          GeoModelConversionError::WrongShapeForConverter);
     }
     return Result<std::shared_ptr<Surface>>::failure(
-        GeoModelConversionError::WrongShapeForConverter);
+        GeoModelConversionError::MissingLogicalVolume);
   }
-  return Result<std::shared_ptr<Surface>>::failure(
-      GeoModelConversionError::MissingLogicalVolume);
-}
-
 };
 
-}
+}  // namespace Acts::detail

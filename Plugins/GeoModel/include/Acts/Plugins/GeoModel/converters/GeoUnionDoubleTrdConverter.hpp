@@ -37,8 +37,10 @@ struct GeoUnionDoubleTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV, const GeoShapeUnion& geoTube,
-             const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+                                              const GeoShapeUnion& geoTube,
+                                              const Transform3& absTransform,
+                                              bool sensitive) const;
 };
 }  // namespace detail
 
@@ -46,6 +48,7 @@ struct GeoUnionDoubleTrdConverter {
 ///
 /// This is a dedicated converter for GeoTube shapes
 using GeoUnionDoubleTrdConverter =
-    detail::GenericGeoShapeConverter<GeoShapeUnion, detail::GeoUnionDoubleTrdConverter>;
+    detail::GenericGeoShapeConverter<GeoShapeUnion,
+                                     detail::GeoUnionDoubleTrdConverter>;
 
 }  // namespace Acts

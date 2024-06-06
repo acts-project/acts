@@ -58,12 +58,12 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
 
   auto shiftARes =
       detail::GeoShiftConverter{}(geoFPV, *shiftA, absTransform, sensitive);
-  if(!shiftARes.ok()){
+  if (!shiftARes.ok()) {
     return shiftARes.error();
   }
   auto shiftBRes =
       detail::GeoShiftConverter{}(geoFPV, *shiftB, absTransform, sensitive);
-  if(!shiftBRes.ok()){
+  if (!shiftBRes.ok()) {
     return shiftBRes.error();
   }
 

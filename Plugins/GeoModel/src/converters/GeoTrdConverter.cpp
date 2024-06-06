@@ -25,9 +25,9 @@
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
-                                 const GeoTrd& geoTrd,
-                                 const Transform3& absTransform,
-                                 bool sensitive) const {
+                                          const GeoTrd& geoTrd,
+                                          const Transform3& absTransform,
+                                          bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr ActsScalar unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
@@ -84,7 +84,8 @@ Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
 
   auto trapezoidBounds =
       std::make_shared<TrapezoidBounds>(minHalfX, maxHalfX, halfZ);
-  // std::cout << "     TrapezoidBounds: minHalfX=" << minHalfX << ", maxHalfX=" << maxHalfX << ", halfz=" << halfZ << std::endl;
+  // std::cout << "     TrapezoidBounds: minHalfX=" << minHalfX << ", maxHalfX="
+  // << maxHalfX << ", halfz=" << halfZ << std::endl;
   if (!sensitive) {
     auto surface =
         Surface::makeShared<PlaneSurface>(transform, trapezoidBounds);

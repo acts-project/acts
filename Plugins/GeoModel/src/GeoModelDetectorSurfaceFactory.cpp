@@ -26,8 +26,8 @@ std::string recType(const GeoShapeShift &gshift) {
   return "Shift[" + recType(*gshift.getOp()) + "]";
 }
 std::string recType(const GeoShapeUnion &gunion) {
-  return "Union[" + recType(*gunion.getOpA()) + ", " + recType(*gunion.getOpB()) +
-         "]";
+  return "Union[" + recType(*gunion.getOpA()) + ", " +
+         recType(*gunion.getOpB()) + "]";
 }
 std::string recType(const GeoShape &gshape) {
   if (auto ptr = dynamic_cast<const GeoShapeUnion *>(&gshape); ptr != nullptr) {
@@ -82,7 +82,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     std::set<std::string> materials;
 
     for (auto &[name, fpv] : qFPV) {
-      if( fpv == nullptr ) {
+      if (fpv == nullptr) {
         ACTS_WARNING("Pointer to volume '" << name << "' is null");
         continue;
       }
@@ -106,9 +106,9 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
           success = true;
           ACTS_VERBOSE("successfully converted "
                        << name << " (" << vname << " / " << recType(shape)
-                       << " / "
-                       << fpv->getLogVol()->getMaterial()->getName() << ")");
-          if(!(el && sf)) {
+                       << " / " << fpv->getLogVol()->getMaterial()->getName()
+                       << ")");
+          if (!(el && sf)) {
             throw std::runtime_error("something is nullptr");
           }
           break;

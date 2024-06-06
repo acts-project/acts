@@ -20,7 +20,6 @@
 
 namespace Acts {
 
-
 namespace detail {
 struct GeoBoxConverter {
   /// @brief Convert a GeoBox to a detector element and surface
@@ -31,15 +30,17 @@ struct GeoBoxConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface>
-  operator()(const GeoFullPhysVol& geoFPV, const GeoBox& geoBox,
-            const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+                                              const GeoBox& geoBox,
+                                              const Transform3& absTransform,
+                                              bool sensitive) const;
 };
-}
+}  // namespace detail
 
 /// @brief The GeoBox converter
 ///
 /// This is a dedicated converter for GeoBox shapes
-using GeoBoxConverter = detail::GenericGeoShapeConverter<GeoBox, detail::GeoBoxConverter>;
+using GeoBoxConverter =
+    detail::GenericGeoShapeConverter<GeoBox, detail::GeoBoxConverter>;
 
 }  // namespace Acts

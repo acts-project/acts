@@ -35,15 +35,17 @@ struct GeoTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface>
-  operator()(const GeoFullPhysVol& geoFPV, const GeoTrd& geoTrd,
-            const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+                                              const GeoTrd& geoTrd,
+                                              const Transform3& absTransform,
+                                              bool sensitive) const;
 };
-}
+}  // namespace detail
 
 /// @brief The GeoTrd converter
 ///
 /// This is a dedicated converter for GeoTrd shapes
-using GeoTrdConverter = detail::GenericGeoShapeConverter<GeoTrd, detail::GeoTrdConverter>;
+using GeoTrdConverter =
+    detail::GenericGeoShapeConverter<GeoTrd, detail::GeoTrdConverter>;
 
 }  // namespace Acts

@@ -30,16 +30,17 @@ struct GeoIntersectionAnnulusConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface>
-  operator()(const GeoFullPhysVol& geoFPV,
-            const GeoShapeIntersection& geoIntersection,
-            const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(
+      const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
+      const Transform3& absTransform, bool sensitive) const;
 };
-}
+}  // namespace detail
 
 /// @brief A dedicated converter for GeoInterseciton that describe annulus bounds
 ///
 /// This is very much tailored to the AnnulusBounds class
-using GeoIntersectionAnnulusConverter = detail::GenericGeoShapeConverter<GeoShapeIntersection, detail::GeoIntersectionAnnulusConverter>;
+using GeoIntersectionAnnulusConverter =
+    detail::GenericGeoShapeConverter<GeoShapeIntersection,
+                                     detail::GeoIntersectionAnnulusConverter>;
 
 }  // namespace Acts

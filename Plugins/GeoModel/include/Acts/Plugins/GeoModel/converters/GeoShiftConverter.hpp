@@ -15,12 +15,12 @@
 #include "Acts/Plugins/GeoModel/converters/GeoTubeConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include <Acts/Surfaces/PlaneSurface.hpp>
-#include <Acts/Surfaces/DiscSurface.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/StrawSurface.hpp>
+#include <Acts/Surfaces/DiscSurface.hpp>
 #include <Acts/Surfaces/LineBounds.hpp>
+#include <Acts/Surfaces/PlaneSurface.hpp>
+#include <Acts/Surfaces/StrawSurface.hpp>
+#include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <memory>
 #include <tuple>
@@ -40,9 +40,10 @@ struct GeoShiftConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface>
-  operator()(const GeoFullPhysVol& geoFPV, const GeoShapeShift& geoShift,
-             const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+                                              const GeoShapeShift& geoShift,
+                                              const Transform3& absTransform,
+                                              bool sensitive) const;
 };
 }  // namespace detail
 

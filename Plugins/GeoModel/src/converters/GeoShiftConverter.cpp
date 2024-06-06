@@ -12,22 +12,25 @@ namespace Acts::detail {
 
 template <typename ContainedShape, typename Converter, typename Surface,
           typename Bounds>
-Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV, const GeoShapeShift& geoShift,
-     const Transform3& absTransform, bool sensitive) {
+Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
+                                      const GeoShapeShift& geoShift,
+                                      const Transform3& absTransform,
+                                      bool sensitive) {
   auto trd = dynamic_cast<const ContainedShape*>(geoShift.getOp());
 
   if (trd == nullptr) {
-    return GeoModelConversionError::WrongShapeForConverter;;
+    return GeoModelConversionError::WrongShapeForConverter;
+    ;
   }
 
   const Transform3& shift = geoShift.getX();
 
-  const auto &conversionRes = Converter{}(geoFPV, *trd, absTransform * shift, sensitive);
-  if( !conversionRes.ok() ) {
+  const auto& conversionRes =
+      Converter{}(geoFPV, *trd, absTransform * shift, sensitive);
+  if (!conversionRes.ok()) {
     return conversionRes.error();
   }
   auto [el, surface] = conversionRes.value();
-
 
   // Use knowledge from GeoTrdConverter to make shared bounds object
   const auto& bounds = static_cast<const Bounds&>(surface->bounds());
@@ -47,10 +50,9 @@ Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV, const GeoSha
   return std::make_tuple(newEl, newSurface);
 }
 
-Result<GeoModelSensitiveSurface>  GeoShiftConverter::operator()(const GeoFullPhysVol& geoFPV,
-                              const GeoShapeShift& geoShift,
-                              const Transform3& absTransform,
-                              bool sensitive) const {
+Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
+    const GeoFullPhysVol& geoFPV, const GeoShapeShift& geoShift,
+    const Transform3& absTransform, bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
       geoFPV, geoShift, absTransform, sensitive);
 

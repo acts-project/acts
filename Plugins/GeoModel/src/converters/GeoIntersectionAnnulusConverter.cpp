@@ -24,7 +24,6 @@
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/GeoTubs.h>
 
-
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoIntersectionAnnulusConverter::operator()(
     const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,

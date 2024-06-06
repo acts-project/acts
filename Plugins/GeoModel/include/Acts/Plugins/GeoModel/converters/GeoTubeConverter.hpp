@@ -36,9 +36,10 @@ struct GeoTubeConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface>
-  operator()(const GeoFullPhysVol& geoFPV, const GeoTube& geoTube,
-             const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+                                              const GeoTube& geoTube,
+                                              const Transform3& absTransform,
+                                              bool sensitive) const;
 };
 }  // namespace detail
 

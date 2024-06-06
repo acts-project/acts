@@ -21,12 +21,11 @@
 #include <GeoModelKernel/GeoShape.h>
 #include <GeoModelKernel/Units.h>
 
-
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoBoxConverter::operator()(const GeoFullPhysVol& geoFPV,
-                                 const GeoBox& geoBox,
-                                 const Transform3& absTransform,
-                                 bool sensitive) const {
+                                          const GeoBox& geoBox,
+                                          const Transform3& absTransform,
+                                          bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr ActsScalar unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;

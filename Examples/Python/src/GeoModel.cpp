@@ -12,11 +12,11 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoBoxConverter.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoIntersectionAnnulusConverter.hpp"
+#include "Acts/Plugins/GeoModel/converters/GeoShiftConverter.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoTrdConverter.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoTubeConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoShiftConverter.hpp"
-#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/GeoModel/converters/GeoUnionDoubleTrdConverter.hpp"
+#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -69,10 +69,13 @@ void addGeoModel(Context& ctx) {
         .def("toPassiveSurface", &Acts::GeoTubeConverter::toPassiveSurface);
 
     py::class_<Acts::GeoUnionDoubleTrdConverter, Acts::IGeoShapeConverter,
-               std::shared_ptr<Acts::GeoUnionDoubleTrdConverter>>(gm, "GeoUnionDoubleTrdConverter")
+               std::shared_ptr<Acts::GeoUnionDoubleTrdConverter>>(
+        gm, "GeoUnionDoubleTrdConverter")
         .def(py::init<>())
-        .def("toSensitiveSurface", &Acts::GeoUnionDoubleTrdConverter::toSensitiveSurface)
-        .def("toPassiveSurface", &Acts::GeoUnionDoubleTrdConverter::toPassiveSurface);
+        .def("toSensitiveSurface",
+             &Acts::GeoUnionDoubleTrdConverter::toSensitiveSurface)
+        .def("toPassiveSurface",
+             &Acts::GeoUnionDoubleTrdConverter::toPassiveSurface);
 
     py::class_<Acts::GeoIntersectionAnnulusConverter, Acts::IGeoShapeConverter,
                std::shared_ptr<Acts::GeoIntersectionAnnulusConverter>>(
@@ -84,15 +87,12 @@ void addGeoModel(Context& ctx) {
              &Acts::GeoIntersectionAnnulusConverter::toPassiveSurface);
 
     py::class_<Acts::GeoShiftConverter, Acts::IGeoShapeConverter,
-               std::shared_ptr<Acts::GeoShiftConverter>>(
-        gm, "GeoShiftConverter")
+               std::shared_ptr<Acts::GeoShiftConverter>>(gm,
+                                                         "GeoShiftConverter")
         .def(py::init<>())
-        .def("toSensitiveSurface",
-             &Acts::GeoShiftConverter::toSensitiveSurface)
-        .def("toPassiveSurface",
-             &Acts::GeoShiftConverter::toPassiveSurface);
+        .def("toSensitiveSurface", &Acts::GeoShiftConverter::toSensitiveSurface)
+        .def("toPassiveSurface", &Acts::GeoShiftConverter::toPassiveSurface);
   }
-
 
   // Surface factory
   {
@@ -114,9 +114,8 @@ void addGeoModel(Context& ctx) {
         .def_readwrite(
             "shapeConverters",
             &Acts::GeoModelDetectorSurfaceFactory::Config::shapeConverters)
-        .def_readwrite(
-            "nameList",
-            &Acts::GeoModelDetectorSurfaceFactory::Config::nameList)
+        .def_readwrite("nameList",
+                       &Acts::GeoModelDetectorSurfaceFactory::Config::nameList)
         .def_readwrite(
             "materialList",
             &Acts::GeoModelDetectorSurfaceFactory::Config::materialList);
