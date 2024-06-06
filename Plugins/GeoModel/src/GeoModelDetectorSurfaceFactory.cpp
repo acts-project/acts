@@ -18,23 +18,23 @@
 #include <GeoModelKernel/GeoShapeUnion.h>
 
 namespace {
-std::string gname(const GeoShapeShift &gshift);
-std::string gname(const GeoShapeUnion &gunion);
-std::string gname(const GeoShape &gshape);
+std::string recType(const GeoShapeShift &gshift);
+std::string recType(const GeoShapeUnion &gunion);
+std::string recType(const GeoShape &gshape);
 
-std::string gname(const GeoShapeShift &gshift) {
-  return "Shift[" + gname(*gshift.getOp()) + "]";
+std::string recType(const GeoShapeShift &gshift) {
+  return "Shift[" + recType(*gshift.getOp()) + "]";
 }
-std::string gname(const GeoShapeUnion &gunion) {
-  return "Union[" + gname(*gunion.getOpA()) + ", " + gname(*gunion.getOpB()) +
+std::string recType(const GeoShapeUnion &gunion) {
+  return "Union[" + recType(*gunion.getOpA()) + ", " + recType(*gunion.getOpB()) +
          "]";
 }
-std::string gname(const GeoShape &gshape) {
+std::string recType(const GeoShape &gshape) {
   if (auto ptr = dynamic_cast<const GeoShapeUnion *>(&gshape); ptr != nullptr) {
-    return gname(*ptr);
+    return recType(*ptr);
   }
   if (auto ptr = dynamic_cast<const GeoShapeShift *>(&gshape); ptr != nullptr) {
-    return gname(*ptr);
+    return recType(*ptr);
   }
   return gshape.type();
 }
@@ -77,13 +77,19 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
       return match;
     };
 
-    std::set<std::string> nameStems;
+    // Store stems of volume names and materials for INFO output
+    std::set<std::string> volNameStems;
     std::set<std::string> materials;
 
     for (auto &[name, fpv] : qFPV) {
+      if( fpv == nullptr ) {
+        ACTS_WARNING("Pointer to volume '" << name << "' is null");
+        continue;
+      }
+
       const std::string &vname = fpv->getLogVol()->getName();
       const GeoShape &shape = *fpv->getLogVol()->getShape();
-      // Mask
+
       if (!matches(name, *fpv)) {
         continue;
       }
@@ -96,41 +102,40 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         if (converted.ok()) {
           // Add the element and surface to the cache
           cache.sensitiveSurfaces.push_back(converted.value());
+          const auto &[el, sf] = converted.value();
           success = true;
           ACTS_VERBOSE("successfully converted "
-                       << name << " (" << vname << " / " << gname(shape)
-                       << ")      mat: "
-                       << fpv->getLogVol()->getMaterial()->getName());
+                       << name << " (" << vname << " / " << recType(shape)
+                       << " / "
+                       << fpv->getLogVol()->getMaterial()->getName() << ")");
+          if(!(el && sf)) {
+            throw std::runtime_error("something is nullptr");
+          }
           break;
         }
       }
 
       if (!success) {
-        ACTS_DEBUG(name << " (" << vname << " / " << gname(shape)
+        ACTS_DEBUG(name << " (" << vname << " / " << recType(shape)
                         << ") could not be converted by any converter");
       } else {
-        nameStems.emplace(name.substr(0, 6));
+        volNameStems.emplace(name.substr(0, 6));
         materials.emplace(fpv->getLogVol()->getMaterial()->getName());
       }
     }
     ACTS_VERBOSE("Found " << qFPV.size()
                           << " full physical volumes matching the query.");
-    {
-      ACTS_DEBUG("Stems of converted volumes: " << [&]() {
-        std::stringstream ss;
-        for (const auto &el : nameStems) {
-          ss << el << " ";
-        }
-        return ss.str();
-      }());
-      ACTS_DEBUG("Converted volumes with materials: " << [&]() {
-        std::stringstream ss;
-        for (const auto &el : materials) {
-          ss << el << " ";
-        }
-        return ss.str();
-      }());
-    }
+
+    auto streamVec = [](const auto &v) {
+      std::stringstream ss;
+      for (const auto &el : v) {
+        ss << el << " ";
+      }
+      return ss.str();
+    };
+
+    ACTS_INFO("Converted volumes (stems): " << streamVec(volNameStems));
+    ACTS_INFO("Materials of converted volumes: " << streamVec(materials));
   }
   ACTS_DEBUG("Constructed "
              << cache.sensitiveSurfaces.size() << " sensitive elements and "

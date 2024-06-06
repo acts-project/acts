@@ -23,6 +23,15 @@
 
 namespace Acts::detail {
 
+template<typename T>
+auto resultify(const T &&res) {
+  if constexpr( std::is_same_v<T, Acts::Result<Acts::GeoModelSensitiveSurface>> ) {
+    return res;
+  } else {
+    return Result<GeoModelSensitiveSurface>::success(res);
+  }
+}
+
 template<typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {
 
@@ -35,8 +44,7 @@ toSensitiveSurface(const GeoFullPhysVol& geoFPV) const override {
     const GeoShape* geoShape = logVol->getShape();
     auto concreteShape = dynamic_cast<const Shape*>(geoShape);
     if (concreteShape != nullptr) {
-      return Result<GeoModelSensitiveSurface>::success(
-          Converter{}(geoFPV, *concreteShape, transform, true));
+      return Converter{}(geoFPV, *concreteShape, transform, true);
     }
     return Result<GeoModelSensitiveSurface>::failure(
         GeoModelConversionError::WrongShapeForConverter);
@@ -56,7 +64,13 @@ toPassiveSurface(const GeoFullPhysVol& geoFPV) const override {
     auto concreteShape = dynamic_cast<const Shape*>(geoShape);
     if (concreteShape != nullptr) {
       // Conversion function call with sensitive = false
-      auto [element, surface] = Converter{}(geoFPV, *concreteShape, transform, false);
+      auto res = Converter{}(geoFPV, *concreteShape, transform, false);
+      if(!res.ok()) {
+        return res.error();
+      }
+
+      const auto &[el, surface] = res.value();
+
       return Result<std::shared_ptr<Surface>>::success(surface);
     }
     return Result<std::shared_ptr<Surface>>::failure(

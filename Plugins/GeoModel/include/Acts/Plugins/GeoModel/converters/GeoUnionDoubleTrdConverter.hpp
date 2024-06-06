@@ -37,8 +37,7 @@ struct GeoUnionDoubleTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>
-  operator()(const GeoFullPhysVol& geoFPV, const GeoShapeUnion& geoTube,
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV, const GeoShapeUnion& geoTube,
              const Transform3& absTransform, bool sensitive) const;
 };
 }  // namespace detail

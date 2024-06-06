@@ -23,8 +23,7 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/Units.h>
 
-std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
-           std::shared_ptr<Acts::Surface>>
+Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
                                  const GeoTrd& geoTrd,
                                  const Transform3& absTransform,

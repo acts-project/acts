@@ -35,7 +35,7 @@ struct GeoTrdConverter {
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>
+  Result<GeoModelSensitiveSurface>
   operator()(const GeoFullPhysVol& geoFPV, const GeoTrd& geoTrd,
             const Transform3& absTransform, bool sensitive) const;
 };

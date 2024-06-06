@@ -25,8 +25,7 @@
 #include <GeoModelKernel/GeoTubs.h>
 
 
-std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
-           std::shared_ptr<Acts::Surface>>
+Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoIntersectionAnnulusConverter::operator()(
     const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
     const Transform3& absTransform, bool sensitive) const {

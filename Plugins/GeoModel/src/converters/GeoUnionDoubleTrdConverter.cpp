@@ -8,6 +8,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/converters/GeoUnionDoubleTrdConverter.hpp"
+
 #include "Acts/Plugins/GeoModel/converters/GeoShiftConverter.hpp"
 #include <Acts/Surfaces/PlaneSurface.hpp>
 #include <Acts/Surfaces/TrapezoidBounds.hpp>
@@ -22,27 +23,22 @@ auto distanceLinePoint(const Acts::Vector3 &lineA, const Acts::Vector3 &lineB,
 }
 
 /// Checks with the following properties if the trapezoids are mergable
-/// - All four "straight" sides of are parallel
-/// - The "slopes" of both are equal
 bool trapezoidsAreMergable(const std::vector<Acts::Vector3> &vtxsa,
                            const std::vector<Acts::Vector3> &vtxsb) {
+  // Compute the distance of the lines connecting A3 and B0 and the midpoint of
+  // the gap (resp. for other trapezoid side) These should be close to zero,
+  // otherwise we cannot merge the trapezoids
   auto P1 = vtxsa[0] + 0.5 * (vtxsb[3] - vtxsa[0]);
   auto dist1 = distanceLinePoint(vtxsa[3], vtxsb[0], P1);
-  std::cout << "distance point to line: " << dist1 << std::endl;
 
   auto P2 = vtxsa[1] + 0.5 * (vtxsb[2] - vtxsa[1]);
   auto dist2 = distanceLinePoint(vtxsa[2], vtxsb[1], P2);
-  std::cout << "distance point to line: " << dist2 << std::endl;
 
-  std::cout << "vector A32 = " << (vtxsa[2] - vtxsa[3]).normalized().transpose()
-            << std::endl;
-  std::cout << "vector A01 = " << (vtxsa[1] - vtxsa[0]).normalized().transpose()
-            << std::endl;
-  std::cout << "vector B01 = " << (vtxsb[1] - vtxsb[0]).normalized().transpose()
-            << std::endl;
-  std::cout << "vector B32 = " << (vtxsb[2] - vtxsb[3]).normalized().transpose()
-            << std::endl;
+  if (dist1 > 1.e-3 || dist2 > 1.e-3) {
+    return false;
+  }
 
+  // We could verify other properties, but this seems sufficient for know
   return true;
 }
 
@@ -50,30 +46,37 @@ bool trapezoidsAreMergable(const std::vector<Acts::Vector3> &vtxsa,
 
 namespace Acts::detail {
 
-std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>
-GeoUnionDoubleTrdConverter::operator()(const GeoFullPhysVol &geoFPV,
-                                       const GeoShapeUnion &geoUnion,
-                                       const Transform3 &absTransform,
-                                       bool sensitive) const {
+Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
+    const GeoFullPhysVol &geoFPV, const GeoShapeUnion &geoUnion,
+    const Transform3 &absTransform, bool sensitive) const {
   const auto shiftA = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpA());
   const auto shiftB = dynamic_cast<const GeoShapeShift *>(geoUnion.getOpB());
 
   if (!(shiftA && shiftB)) {
-    return {nullptr, nullptr};
+    return GeoModelConversionError::WrongShapeForConverter;
   }
 
-  auto [elA, surfaceA] =
+  auto shiftARes =
       detail::GeoShiftConverter{}(geoFPV, *shiftA, absTransform, sensitive);
-  auto [elB, surfaceB] =
+  if(!shiftARes.ok()){
+    return shiftARes.error();
+  }
+  auto shiftBRes =
       detail::GeoShiftConverter{}(geoFPV, *shiftB, absTransform, sensitive);
+  if(!shiftBRes.ok()){
+    return shiftBRes.error();
+  }
+
+  const auto &[elA, surfaceA] = shiftARes.value();
+  const auto &[elB, surfaceB] = shiftBRes.value();
 
   if (!(surfaceA && surfaceB)) {
-    return {nullptr, nullptr};
+    return GeoModelConversionError::WrongShapeForConverter;
   }
 
   if (surfaceA->bounds().type() != Acts::SurfaceBounds::eTrapezoid ||
       surfaceB->bounds().type() != Acts::SurfaceBounds::eTrapezoid) {
-    return {nullptr, nullptr};
+    return GeoModelConversionError::WrongShapeForConverter;
   }
 
   // At this point we know, that we have two trapezoids
@@ -95,7 +98,7 @@ GeoUnionDoubleTrdConverter::operator()(const GeoFullPhysVol &geoFPV,
   const auto vtxsb = surfaceB->polyhedronRepresentation({}, 0).vertices;
 
   if (!trapezoidsAreMergable(vtxsa, vtxsb)) {
-    return {nullptr, nullptr};
+    return GeoModelConversionError::WrongShapeForConverter;
   }
 
   // Compute half length y as the distance between the middle points of the
@@ -116,7 +119,7 @@ GeoUnionDoubleTrdConverter::operator()(const GeoFullPhysVol &geoFPV,
                      boundsB.values()[TrapezoidBounds::eHalfLengthY]);
 
   if (gap > gapTolerance) {
-    return {nullptr, nullptr};
+    return GeoModelConversionError::WrongShapeForConverter;
   }
 
   // For the x half lengths, we can take the values from the 2 trapezoids
@@ -144,6 +147,11 @@ GeoUnionDoubleTrdConverter::operator()(const GeoFullPhysVol &geoFPV,
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
           geoFPV, trapezoidBounds, transform, elA->thickness());
   auto surface = detectorElement->surface().getSharedPtr();
+
+  if (!trapezoidsAreMergable(vtxsa, vtxsb)) {
+    throw std::runtime_error("blub");
+  }
+
   return std::make_tuple(detectorElement, surface);
 }
 

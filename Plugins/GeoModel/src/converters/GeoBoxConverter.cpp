@@ -22,8 +22,7 @@
 #include <GeoModelKernel/Units.h>
 
 
-std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
-           std::shared_ptr<Acts::Surface>>
+Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoBoxConverter::operator()(const GeoFullPhysVol& geoFPV,
                                  const GeoBox& geoBox,
                                  const Transform3& absTransform,

@@ -26,8 +26,7 @@
 #include <GeoModelKernel/Units.h>
 
 
-std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
-           std::shared_ptr<Acts::Surface>>
+Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoTubeConverter::operator()(const GeoFullPhysVol& geoFPV,
                                   const GeoTube& geoTube,
                                   const Transform3& absTransform,
