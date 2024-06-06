@@ -1371,8 +1371,6 @@ BOOST_AUTO_TEST_CASE(grid_full_conversion) {
 }
 
 BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
-  using namespace Acts::detail;
-
   auto eqOpen = Axis{0.0, 10., 10};
   static_assert(
       std::is_same_v<decltype(eqOpen),
