@@ -8,8 +8,8 @@
 
 #include "Acts/Geometry/Portal.hpp"
 
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 
 #include <stdexcept>
 #include <type_traits>
