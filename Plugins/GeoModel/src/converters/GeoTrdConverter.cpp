@@ -61,7 +61,7 @@ Acts::detail::GeoTrdConverter::operator()(const GeoFullPhysVol& geoFPV,
   ActsScalar maxHalfX = unitLength * (diffX > diffY ? halfX2 : halfY2);
   ActsScalar thickness = unitLength * (diffX > diffY ? diffY : diffX);
 
-  // This is a convetion of the TrapezoidBounds
+  // This is a convention of the TrapezoidBounds
   int swapZ = (maxHalfX < minHalfX) ? -1 : 1;
   if (swapZ < 0) {
     std::swap(minHalfX, maxHalfX);

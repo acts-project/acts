@@ -28,7 +28,7 @@ class GeoModelConversionErrorCategory : public std::error_category {
         return "Shape parameters can not be converted to Surface "
                "representation";
       case GeoModelConversionError::UnkownShape:
-        return "Unkown Shape provided, no converter available";
+        return "Unknown Shape provided, no converter available";
       case GeoModelConversionError::MissingLogicalVolume:
         return "No logical volume found for the shape";
       default:

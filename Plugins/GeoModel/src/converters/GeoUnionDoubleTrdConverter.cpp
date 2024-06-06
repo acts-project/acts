@@ -1,4 +1,3 @@
-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -22,8 +21,8 @@ auto distanceLinePoint(const Acts::Vector3 &lineA, const Acts::Vector3 &lineB,
   return ap.cross(dir).norm() / dir.norm();
 }
 
-/// Checks with the following properties if the trapezoids are mergable
-bool trapezoidsAreMergable(const std::vector<Acts::Vector3> &vtxsa,
+/// Checks with the following properties if the trapezoids are mergeable
+bool trapezoidsAreMergeable(const std::vector<Acts::Vector3> &vtxsa,
                            const std::vector<Acts::Vector3> &vtxsb) {
   // Compute the distance of the lines connecting A3 and B0 and the midpoint of
   // the gap (resp. for other trapezoid side) These should be close to zero,
@@ -97,7 +96,7 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
   const auto vtxsa = surfaceA->polyhedronRepresentation({}, 0).vertices;
   const auto vtxsb = surfaceB->polyhedronRepresentation({}, 0).vertices;
 
-  if (!trapezoidsAreMergable(vtxsa, vtxsb)) {
+  if (!trapezoidsAreMergeable(vtxsa, vtxsb)) {
     return GeoModelConversionError::WrongShapeForConverter;
   }
 
@@ -147,10 +146,6 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
       GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
           geoFPV, trapezoidBounds, transform, elA->thickness());
   auto surface = detectorElement->surface().getSharedPtr();
-
-  if (!trapezoidsAreMergable(vtxsa, vtxsb)) {
-    throw std::runtime_error("blub");
-  }
 
   return std::make_tuple(detectorElement, surface);
 }

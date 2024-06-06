@@ -49,15 +49,13 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
       const GeoGenericTrap* trap =
           dynamic_cast<const GeoGenericTrap*>(shapeShift->getOp());
       if (trap != nullptr) {
-        Vector3 tr = unitLength * shift.translation();
-
         ActsScalar thickness = 2 * unitLength * trap->getZHalfLength();
         //    X half length at -z, -y.
         auto trapVertices = trap->getVertices();
 
         std::vector<Vector2> faceVertices(trapVertices.begin(),
                                           trapVertices.begin() + 4u);
-        // to make sure they are in ther right order
+        // to make sure they are in the right order
         std::sort(faceVertices.begin(), faceVertices.end(),
                   [](const auto& a, const auto& b) {
                     return (VectorHelpers::phi(a) > VectorHelpers::phi(b));

@@ -57,7 +57,7 @@ Acts::detail::GeoTubeConverter::operator()(const GeoFullPhysVol& geoFPV,
             geoFPV, lineBounds, transform, 2 * outerRadius);
     auto surface = detectorElement->surface().getSharedPtr();
     return std::make_tuple(detectorElement, surface);
-    // Next option is tranlsation to disc
+    // Next option is translation to disc
   } else if (targetShape == Surface::SurfaceType::Disc) {
     auto radialBounds =
         std::make_shared<RadialBounds>(innerRadius, outerRadius);
