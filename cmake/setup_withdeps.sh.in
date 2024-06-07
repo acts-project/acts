@@ -20,10 +20,16 @@ else
 fi
 
 # source the python and ODD environment
-if [[ -f "$script_dir/python/setup.sh" ]]; then
-  . "$script_dir/python/setup.sh"
+# first check if python bindings are enabled
+# then check if the setup.sh file exists
+if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
+    if [[ -f "$script_dir/python/setup.sh" ]]; then
+      . "$script_dir/python/setup.sh"
+    else
+      echo "WARNING: setup.sh for python and ODD is missing."
+    fi
 else
-  echo "WARNING: setup.sh for python and ODD is missing."
+  echo "INFO:    Python bindings are disabled."
 fi
 
 # set ACTS and ODD environment variables
