@@ -26,7 +26,8 @@ if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
     if [[ -f "$script_dir/python/setup.sh" ]]; then
       . "$script_dir/python/setup.sh"
     else
-      echo "WARNING: setup.sh for python and ODD is missing."
+      echo "ERROR:   setup.sh for python and ODD is missing."
+      exit 1
     fi
 else
   echo "INFO:    Python bindings are disabled."
