@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -100,19 +100,10 @@ class CylinderBounds : public SurfaceBounds {
   /// the bounds  Inside can be called without/with tolerances.
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check tolerance directive
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
-
-  /// Specialized method for CylinderBounds that checks if a global position
-  /// is within the cylinder cover
-  ///
-  /// @param position is the position in the cylinder frame
-  /// @param bcheck is the boundary check directive
-  /// @return boolean indicator for operation success
-  bool inside3D(const Vector3& position,
-                const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
