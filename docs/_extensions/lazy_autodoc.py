@@ -86,6 +86,7 @@ def run() -> None:
         "Acts::BinningData",
         "Acts::Direction",
         "Acts::ConstrainedStep",
+        "Acts::Axis",
         "Acts::IAxis",
         "Acts::SeedFilter",
         "Acts::BoundaryCheck",
