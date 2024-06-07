@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <vector>
 
 #include "BoundaryCheckTestsRefs.hpp"
@@ -21,108 +22,135 @@
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 // See: https://en.wikipedia.org/wiki/Bounding_volume
 //
 // Aligned box w/ simple check
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
-  BoundaryCheck check(true);
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  BOOST_CHECK(check.isInside({0, 0}, ll, ur));
-  BOOST_CHECK(!check.isInside({2, 2}, ll, ur));
-  BOOST_CHECK(!check.isInside({0, 2}, ll, ur));
-  BOOST_CHECK(!check.isInside({2, 0}, ll, ur));
+  AlignedBoxBoundaryCheck check(ll, ur, BoundaryTolerance::None());
+  BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+  BOOST_CHECK(!check.inside({2, 2}, std::nullopt));
+  BOOST_CHECK(!check.inside({0, 2}, std::nullopt));
+  BOOST_CHECK(!check.inside({2, 0}, std::nullopt));
 }
 // Aligned box w/ tolerance check along first axis
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
-  BoundaryCheck check(true, false, 1.5, 0.0);
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  BOOST_CHECK(check.isInside({0, 0}, ll, ur));
-  BOOST_CHECK(check.isInside({2, 2}, ll, ur));
-  BOOST_CHECK(!check.isInside({4, 4}, ll, ur));
-  BOOST_CHECK(check.isInside({0, 2}, ll, ur));
-  BOOST_CHECK(check.isInside({2, 0}, ll, ur));
-}
-
-BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
-  BoundaryCheck bcheck(true);
-
-  for (std::size_t i = 0; i < rectTestPoints.size(); i++) {
-    const Vector2& testPoint = rectTestPoints.at(i);
-    double refDistance = rectDistances.at(i);
-    Vector2 ll(rectDimensions.xmin, rectDimensions.ymin);
-    Vector2 ur(rectDimensions.xmax, rectDimensions.ymax);
-    double distance = bcheck.distance(testPoint, ll, ur);
-    CHECK_CLOSE_REL(refDistance, distance, 1e-6);
-  }
-
-  for (std::size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
-    const Vector2& testPoint = rectShiftedTestPoints.at(i);
-    double refDistance = rectShiftedDistances.at(i);
-    Vector2 ll(rectShiftedDimensions.xmin, rectShiftedDimensions.ymin);
-    Vector2 ur(rectShiftedDimensions.xmax, rectShiftedDimensions.ymax);
-    double distance = bcheck.distance(testPoint, ll, ur);
-    CHECK_CLOSE_REL(refDistance, distance, 1e-6);
-  }
+  AlignedBoxBoundaryCheck check(ll, ur,
+                                BoundaryTolerance::AbsoluteBound(1.5, 100.0));
+  BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+  BOOST_CHECK(check.inside({2, 2}, std::nullopt));
+  BOOST_CHECK(!check.inside({4, 4}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 2}, std::nullopt));
+  BOOST_CHECK(check.inside({2, 0}, std::nullopt));
 }
 
 // Aligned box w/ covariance check
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
   SquareMatrix2 cov;
   cov << 1, 0.5, 0.5, 2;
-  BoundaryCheck check(cov, 3.0);
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  BOOST_CHECK(check.isInside({0, 0}, ll, ur));
-  BOOST_CHECK(check.isInside({2, 2}, ll, ur));
-  BOOST_CHECK(!check.isInside({4, 4}, ll, ur));
-  BOOST_CHECK(check.isInside({0, 3}, ll, ur));
-  BOOST_CHECK(check.isInside({3, 0}, ll, ur));
-}
-
-BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance) {
-  // we check a box again, but this time described as a poly
-
-  BoundaryCheck bcheck(true);
-
-  for (std::size_t i = 0; i < rectTestPoints.size(); i++) {
-    const Vector2& testPoint = rectTestPoints.at(i);
-    double refDistance = rectDistances.at(i);
-    double distance = bcheck.distance(testPoint, rectVertices);
-    CHECK_CLOSE_REL(refDistance, distance, 1e-6);
-  }
-
-  for (std::size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
-    const Vector2& testPoint = rectShiftedTestPoints.at(i);
-    double refDistance = rectShiftedDistances.at(i);
-    double distance = bcheck.distance(testPoint, rectShiftedVertices);
-    CHECK_CLOSE_REL(refDistance, distance, 1e-6);
-  }
+  AlignedBoxBoundaryCheck check(
+      ll, ur, BoundaryTolerance::Chi2Bound(cov.inverse(), 3.0));
+  BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+  BOOST_CHECK(check.inside({2, 2}, std::nullopt));
+  BOOST_CHECK(!check.inside({4, 4}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 3}, std::nullopt));
+  BOOST_CHECK(check.inside({3, 0}, std::nullopt));
 }
 
 // Triangle w/ simple check
 BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
-  BoundaryCheck check(true);
-  BOOST_CHECK(check.isInside({0, 0}, vertices));
-  BOOST_CHECK(check.isInside({0, 1}, vertices));
-  BOOST_CHECK(!check.isInside({2, 2}, vertices));
-  BOOST_CHECK(!check.isInside({0, -1}, vertices));
+  PolygonBoundaryCheck check(vertices, BoundaryTolerance::None());
+  BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 1}, std::nullopt));
+  BOOST_CHECK(!check.inside({2, 2}, std::nullopt));
+  BOOST_CHECK(!check.inside({0, -1}, std::nullopt));
 }
 // Triangle w/ covariance check
 BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
   SquareMatrix2 cov;
   cov << 0.5, 0, 0, 0.5;
-  BoundaryCheck check(cov, 4.1);
-  BOOST_CHECK(check.isInside({0, 0}, vertices));
-  BOOST_CHECK(check.isInside({0, 1}, vertices));
-  BOOST_CHECK(check.isInside({0, 2}, vertices));
-  BOOST_CHECK(check.isInside({0, 3}, vertices));
-  BOOST_CHECK(check.isInside({0, 4}, vertices));
-  BOOST_CHECK(!check.isInside({0, 5}, vertices));
+  PolygonBoundaryCheck check(vertices,
+                             BoundaryTolerance::Chi2Bound(cov.inverse(), 4.1));
+  BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 1}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 2}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 3}, std::nullopt));
+  BOOST_CHECK(check.inside({0, 4}, std::nullopt));
+  BOOST_CHECK(!check.inside({0, 5}, std::nullopt));
 }
+
+BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
+  Vector2 ll(-1, -1);
+  Vector2 ur(1, 1);
+
+  {
+    AlignedBoxBoundaryCheck check(ll, ur, BoundaryTolerance::None());
+    BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 2}, std::nullopt));
+    BOOST_CHECK(!check.inside({0, 2}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 0}, std::nullopt));
+  }
+
+  {
+    AlignedBoxBoundaryCheck check(ll, ur, BoundaryTolerance::Infinite());
+    BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+    BOOST_CHECK(check.inside({2, 2}, std::nullopt));
+    BOOST_CHECK(check.inside({0, 2}, std::nullopt));
+    BOOST_CHECK(check.inside({2, 0}, std::nullopt));
+  }
+
+  {
+    AlignedBoxBoundaryCheck check(ll, ur,
+                                  BoundaryTolerance::AbsoluteBound(0.5, 0.5));
+    BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+    BOOST_CHECK(check.inside({1.1, 1.1}, std::nullopt));
+    BOOST_CHECK(check.inside({0, 1.1}, std::nullopt));
+    BOOST_CHECK(check.inside({1.1, 0}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 2}, std::nullopt));
+    BOOST_CHECK(!check.inside({0, 2}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 0}, std::nullopt));
+  }
+
+  {
+    AlignedBoxBoundaryCheck check(
+        ll, ur, BoundaryTolerance::AbsoluteCartesian(0.5, 0.5));
+    BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+    BOOST_CHECK(check.inside({1.1, 1.1}, std::nullopt));
+    BOOST_CHECK(check.inside({0, 1.1}, std::nullopt));
+    BOOST_CHECK(check.inside({1.1, 0}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 2}, std::nullopt));
+    BOOST_CHECK(!check.inside({0, 2}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 0}, std::nullopt));
+  }
+
+  {
+    AlignedBoxBoundaryCheck check(ll, ur,
+                                  BoundaryTolerance::AbsoluteEuclidean(1.1));
+    BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+    BOOST_CHECK(!check.inside({2, 2}, std::nullopt));
+    BOOST_CHECK(check.inside({0, 2}, std::nullopt));
+    BOOST_CHECK(check.inside({2, 0}, std::nullopt));
+  }
+
+  {
+    AlignedBoxBoundaryCheck check(
+        ll, ur, BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 1.0));
+    BOOST_CHECK(check.inside({0, 0}, std::nullopt));
+    BOOST_CHECK(check.inside({2, 2}, std::nullopt));
+    BOOST_CHECK(check.inside({0, 2}, std::nullopt));
+    BOOST_CHECK(check.inside({2, 0}, std::nullopt));
+    BOOST_CHECK(!check.inside({3, 3}, std::nullopt));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
