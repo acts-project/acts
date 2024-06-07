@@ -952,10 +952,6 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
-      // Clear the track container. It could be more performant to update the
-      // existing states, but this needs some more thinking.
-      trackContainer.clear();
-
       m_propagator.template propagate(propagatorState);
     }
 
