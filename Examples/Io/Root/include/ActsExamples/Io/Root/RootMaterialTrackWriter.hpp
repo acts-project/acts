@@ -146,6 +146,8 @@ class RootMaterialTrackWriter
   std::vector<float> m_step_y;
   /// step z position
   std::vector<float> m_step_z;
+  /// step r position
+  std::vector<float> m_step_r;
   /// step x (end) position (optional)
   std::vector<float> m_step_ex;
   /// step y (end) position (optional)
@@ -175,12 +177,16 @@ class RootMaterialTrackWriter
   std::vector<std::uint64_t> m_sur_id;
   /// Type of the surface associated with the step
   std::vector<int32_t> m_sur_type;
-  /// x position of the center of the surface associated with the step
+  /// x position of the surface intersection associated with the step
   std::vector<float> m_sur_x;
-  /// y position of the center of the surface associated with the step
+  /// y position of the surface intersection associated with the step
   std::vector<float> m_sur_y;
-  /// z position of the center of the surface associated with the step
+  /// z position of the surface intersection associated with the step
   std::vector<float> m_sur_z;
+  /// r of the position of the surface intersection associated with the step
+  std::vector<float> m_sur_r;
+  /// the distance to the surface associated with the step
+  std::vector<float> m_sur_distance;
   /// path correction when associating material to the given surface
   std::vector<float> m_sur_pathCorrection;
   /// Min range of the surface associated with the step
