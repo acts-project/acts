@@ -84,7 +84,6 @@ struct TGeoParser {
   /// @param currentNode [in] the pointer to the current node in the branch
   /// @param volumeName  [in] the name of the volume to be searched for
   /// @return the pointer to the node corresponding to the volume
-
   static TGeoNode* findNodeRecursive(TGeoNode* currentNode,
                                      const char* volumeName);
 };
