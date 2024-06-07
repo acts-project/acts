@@ -19,8 +19,8 @@ namespace Acts::detail::GeoModelDbHelper {
 /// @param deliminater split indicator
 ///
 /// @return a vector of strings
-inline std::vector<std::string> splitString(const std::string& entry,
-                                            const std::string& deliminater) {
+inline std::vector<std::string> tokenize(const std::string& entry,
+                                         const std::string& deliminater) {
   std::vector<std::string> result;
   std::string currentEntry = entry;
   size_t pos = 0;
@@ -31,7 +31,9 @@ inline std::vector<std::string> splitString(const std::string& entry,
     }
     currentEntry.erase(0, pos + deliminater.length());
   }
-  result.push_back(currentEntry);
+  if (!currentEntry.empty()) {
+    result.push_back(currentEntry);
+  }
   return result;
 }
 

@@ -9,6 +9,7 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
@@ -155,6 +156,55 @@ actsvg::svg::object viewDetectorVolume(const Svg::ProtoVolume& pVolume,
     }
   }
   return svgDet;
+}
+
+// Helper function to view volume internal navigation
+void viewInternalNavigation(
+    const Acts::GeometryContext& gctx,
+    const Acts::Experimental::DetectorVolume& detectorVolume,
+    const std::tuple<int, int, int, int, int, int, Acts::ActsScalar>&
+        sensitivesColor,
+    const std::string& replacements = "/:;") {
+  const auto& internalNavigation = detectorVolume.internalNavigation();
+
+  Acts::Svg::IndexedSurfacesConverter::Options isOptions;
+
+  auto [Rs, Gs, Bs, Rhs, Gsh, Bsh, Os] = sensitivesColor;
+  Acts::Svg::Style sensitiveStyle{{Rs, Gs, Bs}, Os};
+  sensitiveStyle.highlightColor = {Rhs, Gsh, Bsh};
+
+  // Set the surface styles
+  using StyleMap = decltype(isOptions.surfaceStyles);
+  using StyleElement = StyleMap::InputElement;
+  std::vector<StyleElement> surfaceStyles;
+  std::set<Acts::GeometryIdentifier> volIDs;
+  for (const auto& s : detectorVolume.surfaces()) {
+    auto volID = Acts::GeometryIdentifier().setVolume(s->geometryId().volume());
+    StyleElement se{volID, sensitiveStyle};
+    if (volIDs.find(volID) == volIDs.end()) {
+      surfaceStyles.push_back(se);
+      volIDs.insert(volID);
+    }
+  }
+  isOptions.surfaceStyles = StyleMap(std::move(surfaceStyles));
+
+  std::string svgName = "Internals_" + detectorVolume.name();
+  std::replace_if(
+      svgName.begin(), svgName.end(),
+      [&](char c) {
+        auto pos = replacements.find(c);
+        return (pos != std::string::npos);
+      },
+      '_');
+  if (internalNavigation.connected()) {
+    // Lets convert the internal navigation now
+    auto protoIs = Acts::Svg::IndexedSurfacesConverter::convert(
+        gctx, detectorVolume.surfaces(), internalNavigation, isOptions);
+    auto svgIs = Svg::View::xy(protoIs, svgName);
+    if (svgIs.is_defined() && !svgIs.is_empty_group()) {
+      Svg::toFile({svgIs}, svgName + ".svg");
+    }
+  }
 }
 
 // Helper function to be picked in different access patterns
@@ -309,6 +359,9 @@ void addSvg(Context& ctx) {
 
     // Define the view functions
     svg.def("viewDetectorVolume", &viewDetectorVolume);
+
+    // Define the internal navigation view
+    svg.def("viewInternalNavigation", &viewInternalNavigation);
   }
 
   // How a detector is drawn: Svg Detector options & drawning

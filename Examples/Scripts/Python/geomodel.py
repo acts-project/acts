@@ -52,8 +52,19 @@ def main():
     )
 
     p.add_argument(
+        "-m", "--map", type=str, default="", help="Input file for the material map"
+    )
+
+    p.add_argument(
         "--output-svg",
         help="Write the surfaces to SVG files",
+        action="store_true",
+        default=False,
+    )
+
+    p.add_argument(
+        "--output-internals-svg",
+        help="Write the internal navigation to SVG files",
         action="store_true",
         default=False,
     )
@@ -76,6 +87,12 @@ def main():
     args = p.parse_args()
 
     gContext = acts.GeometryContext()
+    logLevel = logging.INFO
+
+    materialDecorator = None
+    if args.map != "":
+        print('Loading a material decorator from file:', args.map)
+        materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
 
     # Read the geometry model from the database
     gmTree = acts.geomodel.readFromDb(args.input)
@@ -86,7 +103,7 @@ def main():
         gm.GeoTrdConverter(),
         gm.GeoIntersectionAnnulusConverter(),
     ]
-    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logging.VERBOSE)
+    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
     # The options
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
     gmFactoryOptions.queries = args.queries
@@ -108,15 +125,15 @@ def main():
     if len(args.top_node_bounds) > 0:
         gmBlueprintOptions.topBoundsOverride = args.top_node_bounds
 
-    gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logging.VERBOSE)
+    gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logLevel)
     gmBlueprint = gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
 
-    gmCylindricalBuilder = gmBlueprint.convertToBuilder(logging.VERBOSE)
+    gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
 
     # Top level geo id generator
     gmGeoIdConfig = GeometryIdGenerator.Config()
     gmGeoIdGenerator = GeometryIdGenerator(
-        gmGeoIdConfig, "GeoModelGeoIdGenerator", logging.INFO
+        gmGeoIdConfig, "GeoModelGeoIdGenerator", logLevel
     )
 
     # Create the detector builder
@@ -124,12 +141,17 @@ def main():
     gmDetectorConfig.name = args.top_node + "_DetectorBuilder"
     gmDetectorConfig.builder = gmCylindricalBuilder
     gmDetectorConfig.geoIdGenerator = gmGeoIdGenerator
+    gmDetectorConfig.materialDecorator = materialDecorator
     gmDetectorConfig.auxiliary = (
         "GeoModel based Acts::Detector from '" + args.input + "'"
     )
 
-    gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logging.VERBOSE)
+    gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
     detector = gmDetectorBuilder.construct(gContext)
+
+    materialSurfaces = detector.extractMaterialSurfaces()
+    print("Found ", len(materialSurfaces), " material surfaces")
+
 
     # Output the detector to SVG
     if args.output_svg:
@@ -152,10 +174,15 @@ def main():
             detector,
             args.top_node,
             [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
-            [["xy", ["sensitives", "portals"], xyRange], ["zr", [ "sensitives", "portals", "materials"], zrRange]],
+            [["xy", ["sensitives", "portals"], xyRange], ["zr", [ "", "", "materials"], zrRange]],
             args.output + "_detector",
         )
 
+        # Output the internal navigation to SVG
+        if args.output_internals_svg :
+            for vol in detector.volumes() :
+                acts.svg.viewInternalNavigation(
+                    gContext, vol,  [66, 111, 245, 245, 203, 66, 0.8], '/;:')
 
     # Output the surface to an OBJ file
     if args.output_obj:

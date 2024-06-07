@@ -80,7 +80,7 @@ class GeoModelBlueprintCreater {
     int id;
     std::string type;
     std::string name;
-    std::vector<std::string> bounds;
+    std::string bounds;
     std::vector<std::string> internals;
     std::vector<std::string> binnings;
     std::vector<std::string> materials;
@@ -143,7 +143,7 @@ class GeoModelBlueprintCreater {
   ///
   /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
   std::tuple<VolumeBounds::BoundsType, Extent, std::vector<ActsScalar>, Vector3>
-  parseBounds(const std::vector<std::string>& boundsEntry,
+  parseBounds(const std::string& boundsEntry,
               const Extent& externalExtent = Extent(),
               const Extent& internalExtant = Extent()) const;
 

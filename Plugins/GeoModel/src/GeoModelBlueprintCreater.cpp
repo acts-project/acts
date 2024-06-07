@@ -13,32 +13,12 @@
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelDbHelper.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
-
-namespace {
-
-/// @brief Helper to transform binning string to BinningValue enum
-Acts::BinningValue toBinningValue(const std::string& binning) {
-  if (binning == "x") {
-    return Acts::BinningValue::binX;
-  } else if (binning == "y") {
-    return Acts::BinningValue::binY;
-  } else if (binning == "z") {
-    return Acts::BinningValue::binZ;
-  } else if (binning == "r") {
-    return Acts::BinningValue::binR;
-  } else if (binning == "phi") {
-    return Acts::BinningValue::binPhi;
-  } else {
-    throw std::invalid_argument(
-        "GeoModelBlueprintCreater: Unknown binning value '" + binning + "'");
-  }
-}
-
-}  // namespace
 
 using namespace Acts::detail;
 
@@ -107,24 +87,20 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
     std::string volumeName = line.at(2);
     // The bit more complicated strings from the database
     // volume bounds of top volume might be overruled for top node
-    std::vector<std::string> volumeBounds =
+    std::string volumeBounds =
         (!options.topBoundsOverride.empty() && volumeName == options.topEntry)
-            ? GeoModelDbHelper::splitString(options.topBoundsOverride, "|")
-            : GeoModelDbHelper::splitString(line.at(3), "|");
+            ? options.topBoundsOverride
+            : line.at(3);
     std::vector<std::string> volumeInternals =
-        GeoModelDbHelper::splitString(line.at(4), ":");
+        GeoModelDbHelper::tokenize(line.at(4), ":");
     std::vector<std::string> volumeBinnings =
-        GeoModelDbHelper::splitString(line.at(5), ";");
+        GeoModelDbHelper::tokenize(line.at(5), ";");
     std::vector<std::string> volumeMaterials =
-        GeoModelDbHelper::splitString(line.at(6), ";");
-
-    // The volume bounds shape
-    std::string boundsShape = volumeBounds.at(0);
+        GeoModelDbHelper::tokenize(line.at(6), "|");
 
     // Split the bounds on the deliminater
     ACTS_DEBUG("Creating (" << volumeType << ") Blueprint node for volume "
-                            << volumeName << " (id: " << volumeId
-                            << ", shape: " << boundsShape << ")");
+                            << volumeName << " (id: " << volumeId << ")");
 
     // Create a table entry per defined volume
     TableEntry entry{volumeId,       volumeType,      volumeName,
@@ -161,12 +137,30 @@ Acts::GeoModelBlueprintCreater::createNode(
 
   // Peak into the volume entry to understand which one should be constraint
   // by the internals building
-  auto internalContraints =
-      detail::GeoModelExentHelper::readConstaints(entry.bounds, "i");
+  std::vector<BinningValue> internalConstraints =
+      detail::GeoModelExentHelper::readBoundsConstaints(entry.bounds, "i");
+  // Check if the binnning will also use the internal constraints
+  std::vector<BinningValue> binningConstraints =
+      detail::GeoModelExentHelper::readBinningConstraints(entry.binnings);
+  // Concatenate the binning constraints
+  for (const auto& bc : binningConstraints) {
+    if (std::find(internalConstraints.begin(), internalConstraints.end(), bc) ==
+        internalConstraints.end()) {
+      internalConstraints.push_back(bc);
+    }
+  }
+
+  if (!internalConstraints.empty()) {
+    ACTS_VERBOSE("Found " << internalConstraints.size()
+                          << " internal constraints to check for: ");
+    for (const auto& ic : internalConstraints) {
+      ACTS_VERBOSE("- " << binningValueNames()[ic]);
+    }
+  }
 
   // Create and return the container node with internal constrtins
   auto [internalsBuilder, internalExtent] = createInternalStructureBuilder(
-      cache, gctx, entry, motherExtent, internalContraints);
+      cache, gctx, entry, motherExtent, internalConstraints);
 
   if (internalsBuilder != nullptr) {
     ACTS_VERBOSE("Internal building yielded extent "
@@ -183,8 +177,41 @@ Acts::GeoModelBlueprintCreater::createNode(
   transform.translation() = translation;
 
   std::vector<std::string> entryTypeSplit =
-      detail::GeoModelDbHelper::splitString(entry.type, "|");
+      detail::GeoModelDbHelper::tokenize(entry.type, ":");
   std::string entryType = entryTypeSplit[0u];
+
+  // Check if material has to be attached
+  std::map<unsigned int, Experimental::BinningDescription>
+      portalMaterialBinning;
+  if (!entry.materials.empty()) {
+    for (const auto& material : entry.materials) {
+      std::vector<std::string> materialTokens =
+          detail::GeoModelDbHelper::tokenize(material, ":");
+      ACTS_DEBUG(" - Material detected for " << materialTokens[0u]);
+      auto pPos = materialTokens[0u].find("p");
+      if (pPos != std::string::npos) {
+        // Erase the p
+        materialTokens[0u].erase(pPos, 1);
+        // Get the portal number
+        unsigned int portalNumber = std::stoi(materialTokens[0u]);
+        // Get the binning description - first split the string
+        std::vector<std::string> binningTokens =
+            detail::GeoModelDbHelper::tokenize(materialTokens[1u], ";");
+
+        std::vector<Experimental::ProtoBinning> protoBinnings;
+        for (const auto& bToken : binningTokens) {
+          ACTS_VERBOSE("   - Binning: " << bToken);
+          protoBinnings.push_back(
+              detail::GeoModelBinningHelper::toProtoBinning(bToken));
+        }
+        portalMaterialBinning[portalNumber] =
+            Experimental::BinningDescription{protoBinnings};
+      }
+    }
+    ACTS_VERBOSE("Node " << entry.name << " has "
+                         << portalMaterialBinning.size()
+                         << " material portals.");
+  }
 
   // Block for branch or container nodes that have children
   if (entryType == "branch" || entryType == "container" ||
@@ -199,7 +226,7 @@ Acts::GeoModelBlueprintCreater::createNode(
           "' has no children defined in blueprint table");
     }
     std::vector<std::string> childrenNames =
-        GeoModelDbHelper::splitString(entry.internals[1u], ",");
+        GeoModelDbHelper::tokenize(entry.internals[1u], ",");
     // Create the sub nodes and keep track of the raw values
     for (const auto& childName : childrenNames) {
       std::string fChildName = entry.name + std::string("/") + childName;
@@ -216,21 +243,25 @@ Acts::GeoModelBlueprintCreater::createNode(
                                     childName + "' of '" + entry.name +
                                     "' NOT found in blueprint table");
       }
-      children.push_back(
-          createNode(cache, gctx, childEntry->second, tableEntryMap, extent));
+      auto node =
+          createNode(cache, gctx, childEntry->second, tableEntryMap, extent);
+      children.push_back(std::move(node));
     }
 
     // Create the binnings
     std::vector<Acts::BinningValue> binnings;
-    std::for_each(entry.binnings.begin(), entry.binnings.end(),
-                  [&binnings](const std::string& b) {
-                    binnings.push_back(toBinningValue(b));
-                  });
+    std::for_each(
+        entry.binnings.begin(), entry.binnings.end(),
+        [&binnings](const std::string& b) {
+          binnings.push_back(detail::GeoModelBinningHelper::toBinningValue(b));
+        });
 
     // Complete the children
     auto node = std::make_unique<Experimental::Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, binnings,
         std::move(children), extent);
+    node->portalMaterialBinning = portalMaterialBinning;
+
     if (gapFilling) {
       // Find the first child that is not a gap
       Experimental::detail::BlueprintHelper::fillGaps(*node, true);
@@ -245,17 +276,20 @@ Acts::GeoModelBlueprintCreater::createNode(
       geoIDCfg.containerId = geoID;
       geoIDCfg.resetSubCounters = true;
       // Make the container geoID generator
-      node->geoIdGenerator = std::make_shared<Experimental::GeometryIdGenerator>(
-          geoIDCfg, m_logger->clone(entry.name + "_GeometryIdGenerator"));
+      node->geoIdGenerator =
+          std::make_shared<Experimental::GeometryIdGenerator>(
+              geoIDCfg, m_logger->clone(entry.name + "_GeometryIdGenerator"));
     }
 
     // Create the branch node
     return node;
 
   } else if (entryType == "leaf") {
-    return std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, internalsBuilder,
         extent);
+    node->portalMaterialBinning = portalMaterialBinning;
+    return node;
   } else {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Unknown node type '" + entry.type + "'");
@@ -285,13 +319,13 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
 
     // Internal split of the internals
     std::vector<std::string> internalsSplit =
-        detail::GeoModelDbHelper::splitString(entry.internals[1u], "|");
+        detail::GeoModelDbHelper::tokenize(entry.internals[1u], ",");
 
     // Prepare an internal extent
     Extent internalExtent;
     if (internalsSplit[0u] == "kdt" && cache.kdtSurfaces != nullptr) {
-      std::vector<std::string> internalsData = {internalsSplit[1u],
-                                                internalsSplit[2u]};
+      std::vector<std::string> internalsData = {internalsSplit.begin() + 1,
+                                                internalsSplit.end()};
       auto [boundsType, rangeExtent] =
           detail::GeoModelExentHelper::extentFromTable(internalsData,
                                                        externalExtent);
@@ -329,7 +363,21 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
       lsbCfg.surfacesProvider =
           std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
               surfaces);
-      lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
+
+      // Let's check the binning description
+      if (!entry.binnings.empty()) {
+        ACTS_VERBOSE("Binning description detected for this layer structure.");
+        for (const auto& binning : entry.binnings) {
+          if (!binning.empty()) {
+            ACTS_VERBOSE("- Adding binning: " << binning);
+            lsbCfg.binnings.push_back(
+                detail::GeoModelBinningHelper::toProtoBinning(binning,
+                                                              internalExtent));
+          }
+        }
+      } else {
+        lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
+      }
 
       return std::make_tuple(
           std::make_shared<Experimental::LayerStructureBuilder>(
@@ -348,16 +396,19 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
 std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
            std::vector<Acts::ActsScalar>, Acts::Vector3>
 Acts::GeoModelBlueprintCreater::parseBounds(
-    const std::vector<std::string>& boundsEntry, const Extent& externalExtent,
+    const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {
+  std::vector<std::string> boundsEntrySplit =
+      detail::GeoModelDbHelper::tokenize(boundsEntry, ",");
+
   // Create the return values
   Vector3 translation{0., 0., 0.};
   std::vector<ActsScalar> boundValues = {};
   auto [boundsType, extent] = detail::GeoModelExentHelper::extentFromTable(
-      boundsEntry, externalExtent, internalExtent);
+      boundsEntrySplit, externalExtent, internalExtent);
 
   // Switch on the bounds type
-  if (boundsEntry[0u] == "cyl") {
+  if (boundsType == VolumeBounds::BoundsType::eCylinder) {
     // Create the translation & bound values
     translation = Acts::Vector3(0., 0., extent.medium(binZ));
     boundValues = {extent.min(binR), extent.max(binR),

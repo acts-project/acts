@@ -11,7 +11,8 @@ add_library(
   src/converters/GeoTrdConverter.cpp
   src/converters/GeoTubeConverter.cpp
   src/converters/GeoIntersectionAnnulusConverter.cpp
-  src/detail/GeoModelExtentHelper.cpp)
+  src/detail/GeoModelExtentHelper.cpp
+  src/detail/GeoModelBinningHelper.cpp)
 target_include_directories(
     ActsPluginGeoModel
   PUBLIC

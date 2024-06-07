@@ -118,6 +118,7 @@ void addGeoModel(Context& ctx) {
         .def("convertToBuilder",
              [](Acts::GeoModelBlueprintCreater::Blueprint& self,
                 Acts::Logging::Level level) {
+               // It's a container builder
                return std::make_shared<
                    Acts::Experimental::CylindricalContainerBuilder>(self.node(),
                                                                     level);

@@ -44,9 +44,9 @@ if "__main__" == __name__:
 
     # Bounds nomenclature is:
     # (type;[values])
-    # type: cyl| box
+    # type: cyl, box
     # values:
-    #  - cyl| [rmin, rmax, zmin, zmax]
+    #  - cyl, [rmin, rmax, zmin, zmax]
     #  - box: [xmin, xmax, ymin, ymax, zmin, zmax]
     # special characters: e ... external (from mother),
     #                     c ... calculated (from container siblings),
@@ -114,12 +114,19 @@ if "__main__" == __name__:
     OP_ec_ring1_searchsplits = [ -3000, -2600, -2300, -2000, -1800, -1600, -1400, -1200, -1100 ]
     OP_ec_ring2_searchsplits = [  -3000, -2700, -2400, -2100, -1900, -1700, -1500, -1300, -1200, -1100 ] 
 
+    # Binnings
+    # opBarrelBinnings = [ [ 18, 32], [18, 44], [18, 56] ]
+    OP_b_z_bins = 18
+    OP_b_phi_bins = [ 32, 44, 56 ]
+    OP_incl_phi_bins = [ 32, 44, 56 ]
+    OP_ec_phi_bins = [ 32, 44, 56 ]
+
     # --------------------------------------------------------------------------------------
     # Pixels - P
     P_r_min = IP_r_min
     P_r_max = OP_r_max
 
-    # --------------------------------------------------------------------------------------
+    # STRIPS --------------------------------------------------------------------------------
     S_r_min = P_r_max
     S_r_max = ITk_central_r_max
     S_z_mid = 1400.
@@ -128,6 +135,14 @@ if "__main__" == __name__:
     S_b_searchsplits = [ 350 , 500, 700, 850 , 1100] 
     S_ec_searchsplits = [ -3000 , -2700, -2400, -2100 , -1800, -1600, -1450] 
 
+
+    # Strip binning: sBarrelBinnings = [ [ 56, 28*4], [56, 40*4], [56, 56*2], [56, 72*2] ]
+    S_b_z_bins = 56
+    S_b_phi_bins = [ 28, 40, 56, 72 ]
+
+
+    # --------------------------------------------------------------------------------------
+
     volCount = 0
 
     volCount += 1    
@@ -135,9 +150,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|110',
+            'container:110',
             'ITk',
-            'cyl|0,{ITk_r_max},-{ITk_z_max},{ITk_z_max}',
+            'cyl,0,{ITk_r_max},-{ITk_z_max},{ITk_z_max}',
             'children:BeamPipe,Container',
             'r', 
             '')
@@ -151,10 +166,10 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/BeamPipe',
-            'cyl|e,{BP_r_max},e,e',
+            'cyl,e,{BP_r_max},e,e',
             '',
             '', 
-            '')
+            'p2:z,bound,1000,0,*,*;phi,closed,1,0,*,*')
     """
     )
 
@@ -166,7 +181,7 @@ if "__main__" == __name__:
             ({volCount}, 
             'root', 
             'ITk/Container', 
-            'cyl|e,e,e,e',
+            'cyl,{BP_r_max},e,e,e',
             'children:NegSector,Central,PosSector',
             'z', 
             '')
@@ -180,7 +195,7 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf', 
             'ITk/Container/NegSector', 
-            'cyl|e,e,-{ITk_z_max},-{ITK_central_z_max}',
+            'cyl,e,e,-{ITk_z_max},-{ITK_central_z_max}',
             '',
             '',
             '')
@@ -191,9 +206,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|100', 
+            'container:100', 
             'ITk/Container/Central', 
-            'cyl|e,e,-{ITK_central_z_max},{ITK_central_z_max}',
+            'cyl,e,e,-{ITK_central_z_max},{ITK_central_z_max}',
             'children:Detectors,Outer',
             'r', 
             '')
@@ -206,7 +221,7 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf', 
             'ITk/Container/PosSector',
-            'cyl|,e,e,{ITK_central_z_max},{ITk_z_max}',
+            'cyl,,e,e,{ITK_central_z_max},{ITk_z_max}',
             '',
             '', 
             '')
@@ -218,9 +233,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|98',
+            'container:98',
             'ITk/Container/Central/Detectors',
-            'cyl|{IP_r_min},{ITk_central_r_max},e,e',
+            'cyl,{IP_r_min},{ITk_central_r_max},e,e',
             'children:Pixels,Strips',
             'r', 
             '')
@@ -234,7 +249,7 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf', 
             'ITk/Container/Central/Outer', 
-            'cyl|{ITk_central_r_max},e,e,e',
+            'cyl,{ITk_central_r_max},e,e,e',
             '',
             '',
             '')
@@ -245,9 +260,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|45',
+            'container:45',
             'ITk/Container/Central/Detectors/Pixels',
-            'cyl|e,{P_r_max},e,e',
+            'cyl,e,{P_r_max},e,e',
             'children:InnerPixels,OuterPixels',
             'r',
             '')
@@ -258,9 +273,9 @@ if "__main__" == __name__:
        f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|55',
+            'container:55',
             'ITk/Container/Central/Detectors/Strips',
-            'cyl|{S_r_min},e,e,e',
+            'cyl,{S_r_min},e,e,e',
             'children:NegSector,Barrel,PosSector',
             'z', 
             '')
@@ -271,9 +286,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|15',
+            'container:15',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels',
-            'cyl|e,{IP_r_max},e,e',
+            'cyl,e,{IP_r_max},e,e',
             'children:NegOuterEndcap,NegInnerEndcap,Barrel,PosInnerEndcap,PosOuterEndcap',
             'z',
             '')
@@ -284,9 +299,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|14',
+            'container:14',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels',
-            'cyl|{OP_r_min},e,e,e',
+            'cyl,{OP_r_min},e,e,e',
             'children:NegEndcap,NegInclined,Barrel,PosInclined,PosEndcap',
             'z',
             '')
@@ -297,9 +312,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|57',
+            'container:57',
             'ITk/Container/Central/Detectors/Strips/NegSector',
-            'cyl|e,e,e,-{S_z_mid}',
+            'cyl,e,e,e,-{S_z_mid}',
             'children:NegEndcap,OuterGap',
             'r', 
             '')
@@ -311,9 +326,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|50',
+            'container:50',
             'ITk/Container/Central/Detectors/Strips/Barrel',
-            'cyl|e,e,-{S_z_mid},{S_z_mid}',
+            'cyl,e,e,-{S_z_mid},{S_z_mid}',
             'children:*,Layer0,*,Layer1,*,Layer2,*,Layer3,*',
             'r',
             '')
@@ -332,9 +347,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Strips/Barrel/Layer{i-1}',
-            'cyl|i+2,i+2,e,e',
-            'layer:kdt|cyl|{S_b_searchsplits[i-1]},{sp},e,e',
-            '', 
+            'cyl,i+2,i+2,e,e',
+            'layer:kdt,cyl,{S_b_searchsplits[i-1]},{sp},e,e',
+            'z,bound,{S_b_z_bins},1;phi,closed,{S_b_phi_bins[i-1]},1', 
             '')
     """
     )
@@ -345,9 +360,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|56',
+            'container:56',
             'ITk/Container/Central/Detectors/Strips/PosSector',
-            'cyl|e,e,{S_z_mid},e',
+            'cyl,e,e,{S_z_mid},e',
             'children:PosEndcap,OuterGap',
             'r', 
             '')
@@ -359,9 +374,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|51',
+            'container:51',
             'ITk/Container/Central/Detectors/Strips/NegSector/NegEndcap',
-            'cyl|e,{S_ec_r_max},e,e',
+            'cyl,e,{S_ec_r_max},e,e',
             'children:*,Disk5,*,Disk4,*,Disk3,*,Disk2,*,Disk1,*,Disk0,*',
             'z',
             '')
@@ -380,9 +395,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Strips/NegSector/NegEndcap/Disk{len(S_ec_searchsplits)-1-i}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{S_ec_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{S_ec_searchsplits[i-1]},{sp}',
+            'r,bound,12,1;phi,closed,64,1', 
             '')
         """
         )
@@ -394,7 +409,7 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Strips/NegSector/OuterGap',
-            'cyl|{S_ec_r_max},e,e,e',
+            'cyl,{S_ec_r_max},e,e,e',
             '',
             '',
             '')
@@ -406,9 +421,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|52',
+            'container:52',
             'ITk/Container/Central/Detectors/Strips/PosSector/PosEndcap', 
-            'cyl|e,{S_ec_r_max},e,e',
+            'cyl,e,{S_ec_r_max},e,e',
             'children:*,Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*',
             'z',
             '')
@@ -422,7 +437,7 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Strips/PosSector/OuterGap',
-            'cyl|{S_ec_r_max},e,e,e',
+            'cyl,{S_ec_r_max},e,e,e',
             '',
             '', 
             '')
@@ -443,9 +458,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Strips/PosSector/PosEndcap/Disk{i-1}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{S_ec_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{S_ec_searchsplits[i-1]},{sp}',
+            'r,bound,12,1;phi,closed,64,1', 
             '')
     """
     )
@@ -455,9 +470,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|81', 
+            'container:81', 
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap', 
-            'cyl|e,e,e,-{OP_incl_z_max}',
+            'cyl,e,e,e,-{OP_incl_z_max}',
             'children:Ring0,Ring1,Ring2',
             'r', 
             '')
@@ -469,9 +484,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|82', 
+            'container:82', 
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined',
-            'cyl|e,e,-{OP_incl_z_max},-{OP_b_z_max}',
+            'cyl,e,e,-{OP_incl_z_max},-{OP_b_z_max}',
             'children:Ring0,Ring1,Ring2',
             'r', 
             '')
@@ -483,9 +498,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|83', 
+            'container:83', 
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/Barrel',
-            'cyl|e,e,-{OP_b_z_max},{OP_b_z_max}',
+            'cyl,e,e,-{OP_b_z_max},{OP_b_z_max}',
             'children:*,Layer0,*,Layer1,*,Layer2,*',
             'r',
             '')
@@ -503,9 +518,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/Barrel/Layer{i-1}',
-            'cyl|i+2,i+2,e,e',
-            'layer:kdt|cyl|{OP_b_searchsplits[i-1]},{sp},e,e',
-            '', 
+            'cyl,i+2,i+2,e,e',
+            'layer:kdt,cyl,{OP_b_searchsplits[i-1]},{sp},e,e',
+            'z,bound,{OP_b_z_bins},1;phi,closed,{OP_b_phi_bins[i-1]},1', 
             '')
         """
         )
@@ -515,9 +530,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|84', 
+            'container:84', 
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined',
-            'cyl|e,e,{OP_b_z_max},{OP_incl_z_max}',
+            'cyl,e,e,{OP_b_z_max},{OP_incl_z_max}',
             'children:Ring0,Ring1,Ring2',
             'r', 
             '')
@@ -529,9 +544,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|85',
+            'container:85',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap',
-            'cyl|e,e,{OP_incl_z_max},e',
+            'cyl,e,e,{OP_incl_z_max},e',
             'children:Ring0,Ring1,Ring2',
             'r',
             '')
@@ -543,9 +558,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|23',
+            'container:23',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring0', 
-            'cyl|e,{OP_ring0_r_max},e,e',
+            'cyl,e,{OP_ring0_r_max},e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,ECRing8,*,ECRing9,*,ECRing10,*',
             'z',
             '')
@@ -562,9 +577,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring0/ECRing{len(OP_ec_ring0_searchsplits)-1-i}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{OP_ec_ring0_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{OP_ec_ring0_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_ec_phi_bins[0]},1', 
             '')
         """
         )
@@ -574,9 +589,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|33',
+            'container:33',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1',
-            'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
+            'cyl,{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*',
             'z',
             '')
@@ -593,9 +608,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring1/ECRing{len(OP_ec_ring1_searchsplits)-1-i}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{OP_ec_ring1_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{OP_ec_ring1_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_ec_phi_bins[1]},1', 
             '')
         """
         )
@@ -605,9 +620,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|43',
+            'container:43',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring2',
-            'cyl|{OP_ring1_r_max},e,e,e',
+            'cyl,{OP_ring1_r_max},e,e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*,ECRing8,*',
             'z', 
             '')
@@ -626,9 +641,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegEndcap/Ring2/ECRing{len(OP_ec_ring2_searchsplits)-1-i}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{OP_ec_ring2_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{OP_ec_ring2_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_ec_phi_bins[2]},1', 
             '')
         """
         )
@@ -638,9 +653,9 @@ if "__main__" == __name__:
        f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|21',
+            'container:21',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0',
-            'cyl|e,{OP_ring0_r_max},e,e',
+            'cyl,e,{OP_ring0_r_max},e,e',
             'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*',
             'z', 
             '')
@@ -660,9 +675,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring0/InclRing{len(OP_incl_ring0_searchsplits)-1-i}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_incl_phi_bins[0]},1',   
             '')
         """
         )
@@ -672,9 +687,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|31',
+            'container:31',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring1',
-            'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
+            'cyl,{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*',
             'z', 
             '')
@@ -694,9 +709,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring1/InclRing{len(OP_incl_ring1_searchsplits)-1-i}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{OP_incl_ring1_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{OP_incl_ring1_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_incl_phi_bins[1]},1',   
             '')
         """
         )
@@ -706,9 +721,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|41',
+            'container:41',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring2',
-            'cyl|{OP_ring1_r_max},e,e,e',
+            'cyl,{OP_ring1_r_max},e,e,e',
             'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*,InclRing8,*',
             'z',
             '')
@@ -728,9 +743,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/NegInclined/Ring2/InclRing{len(OP_incl_ring2_searchsplits)-1-i}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{OP_incl_ring2_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{OP_incl_ring2_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_incl_phi_bins[2]},1',   
             '')
         """
         )
@@ -741,9 +756,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|24',
+            'container:24',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring0',
-            'cyl|e,{OP_ring0_r_max},e,e',
+            'cyl,e,{OP_ring0_r_max},e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,ECRing8,*,ECRing9,*,ECRing10,*',
             'z',
             '')
@@ -763,9 +778,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring0/ECRing{i-1}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{OP_ec_ring0_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{OP_ec_ring0_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_ec_phi_bins[0]},1',   
             '')
         """
         )
@@ -775,9 +790,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|34',
+            'container:34',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring1',
-            'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
+            'cyl,{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*',
             'z',
             '')
@@ -796,9 +811,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring1/ECRing{i-1}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{OP_ec_ring1_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{OP_ec_ring1_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_ec_phi_bins[1]},1',   
             '')
         """
         )
@@ -808,9 +823,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|44',
+            'container:44',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring2',
-            'cyl|{OP_ring1_r_max},e,e,e',
+            'cyl,{OP_ring1_r_max},e,e,e',
             'children:*,ECRing0,*,ECRing1,*,ECRing2,*,ECRing3,*,ECRing4,*,ECRing5,*,ECRing6,*,ECRing7,*,ECRing8,*',
             'z', 
             '')
@@ -831,9 +846,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosEndcap/Ring2/ECRing{i-1}',
-            'cyl|e,e,i+2,i+2',
-            'layer:kdt|cyl|e,e,{OP_ec_ring2_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,i+2,i+2',
+            'layer:kdt,cyl,e,e,{OP_ec_ring2_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_ec_phi_bins[2]},1',   
             '')
         """
         )
@@ -844,9 +859,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|22',
+            'container:22',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0',
-            'cyl|e,{OP_ring0_r_max},e,e',
+            'cyl,e,{OP_ring0_r_max},e,e',
             'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*',
             'z', 
             '')
@@ -867,9 +882,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring0/InclRing{i-1}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{OP_incl_ring0_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_incl_phi_bins[0]},1',   
             '')
         """
         )
@@ -879,9 +894,9 @@ if "__main__" == __name__:
        f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|32',
+            'container:32',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring1',
-            'cyl|{OP_ring0_r_max},{OP_ring1_r_max},e,e',
+            'cyl,{OP_ring0_r_max},{OP_ring1_r_max},e,e',
             'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*',
             'z', 
             '')
@@ -903,9 +918,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring1/InclRing{i-1}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{OP_incl_ring1_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{OP_incl_ring1_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_incl_phi_bins[1]},1',   
             '')
         """
         )
@@ -916,9 +931,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|42',
+            'container:42',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring2',
-            'cyl|{OP_ring1_r_max},e,e,e',
+            'cyl,{OP_ring1_r_max},e,e,e',
             'children:*,InclRing0,*,InclRing1,*,InclRing2,*,InclRing3,*,InclRing4,*,InclRing5,*,InclRing6,*,InclRing7,*,InclRing8,*',
             'z',
             '')
@@ -941,9 +956,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/OuterPixels/PosInclined/Ring2/InclRing{i-1}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{OP_incl_ring2_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{OP_incl_ring2_searchsplits[i-1]},{sp}',
+            'phi,closed,{OP_incl_phi_bins[2]},1',   
             '')
         """
         )
@@ -953,9 +968,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|13',
+            'container:13',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap',
-            'cyl|e,e,e,-{IP_iec_z_max}',
+            'cyl,e,e,e,-{IP_iec_z_max}',
             'children:*,Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*,Disk12,*,Disk13,*',
             'z', 
             '')
@@ -975,9 +990,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/NegOuterEndcap/Disk{len(IP_ec_searchsplits)-1-i}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{IP_ec_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{IP_ec_searchsplits[i-1]},{sp}',
+            'phi,closed,30,1', 
             '')
         """
         )
@@ -988,9 +1003,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|11',
+            'container:11',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap',
-            'cyl|e,e,-{IP_iec_z_max},-{IP_b_z_max}',
+            'cyl,e,e,-{IP_iec_z_max},-{IP_b_z_max}',
             'children:Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*,Disk12,*,Disk13,*',
             'z', 
             '')
@@ -1010,9 +1025,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/NegInnerEndcap/Disk{len(IP_iec_searchsplits)-1-i}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{IP_iec_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{IP_iec_searchsplits[i-1]},{sp}',
+            'r,bound,2,1;phi,closed,20,1', 
             '')
         """
         )  
@@ -1023,9 +1038,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|10',
+            'container:10',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/Barrel',
-            'cyl|e,e,-{IP_b_z_max},{IP_b_z_max}',
+            'cyl,e,e,-{IP_b_z_max},{IP_b_z_max}',
             'children:Layer0,*,Layer1,*',
             'r', 
             '')
@@ -1039,9 +1054,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/Barrel/Layer0',
-            'cyl|i+2,i+2,e,e',
-            'layer:kdt|cyl|30,80,e,e',
-            '', 
+            'cyl,i+2,i+2,e,e',
+            'layer:kdt,cyl,30,80,e,e',
+            'z,bound,12,1;phi,closed,12,1', 
             '')
     """
     )
@@ -1053,9 +1068,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/Barrel/Layer1',
-            'cyl|i+2,i+2,e,e',
-            'layer:kdt|cyl|80,120,e,e',
-            '', 
+            'cyl,i+2,i+2,e,e',
+            'layer:kdt,cyl,80,120,e,e',
+            'z,bound,12,1;phi,closed,20,1', 
             '')
     """
     )
@@ -1065,9 +1080,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|12',
+            'container:12',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap',
-            'cyl|e,e,{IP_b_z_max},{IP_iec_z_max}',
+            'cyl,e,e,{IP_b_z_max},{IP_iec_z_max}',
            'children:Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*,Disk12,*,Disk13,*',
             'z', 
             '')
@@ -1089,9 +1104,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/PosInnerEndcap/Disk{i-1}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{IP_iec_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{IP_iec_searchsplits[i-1]},{sp}',
+            'r,bound,2,1;phi,closed,20,1',  
             '')
         """
         )
@@ -1103,9 +1118,9 @@ if "__main__" == __name__:
         f"""
     INSERT INTO Blueprint VALUES
             ({volCount}, 
-            'container|14',
+            'container:14',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap',
-            'cyl|e,e,{IP_iec_z_max},e',
+            'cyl,e,e,{IP_iec_z_max},e',
              'children:*,Disk0,*,Disk1,*,Disk2,*,Disk3,*,Disk4,*,Disk5,*,Disk6,*,Disk7,*,Disk8,*,Disk9,*,Disk10,*,Disk11,*,Disk12,*,Disk13,*',
             'z', 
             '')
@@ -1127,9 +1142,9 @@ if "__main__" == __name__:
             ({volCount}, 
             'leaf',
             'ITk/Container/Central/Detectors/Pixels/InnerPixels/PosOuterEndcap/Disk{i-1}',
-            'cyl|e,e,{zbest}',
-            'layer:kdt|cyl|e,e,{IP_ec_searchsplits[i-1]},{sp}',
-            '', 
+            'cyl,e,e,{zbest}',
+            'layer:kdt,cyl,e,e,{IP_ec_searchsplits[i-1]},{sp}',
+            'phi,closed,30,1', 
             '')
         """
         )

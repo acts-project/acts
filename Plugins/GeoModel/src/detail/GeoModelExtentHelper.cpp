@@ -8,26 +8,27 @@
 
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 
+#include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelDbHelper.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 std::vector<Acts::BinningValue>
-Acts::detail::GeoModelExentHelper::readConstaints(
-    const std::vector<std::string>& boundsEntry,
-    const std::string& ctype) {
-  // Check the bounds entry
-  if (boundsEntry.size() < 2u) {
+Acts::detail::GeoModelExentHelper::readBoundsConstaints(
+    const std::string& boundsEntry, const std::string& ctype) {
+  std::vector<std::string> boundsEntrySplit =
+      GeoModelDbHelper::tokenize(boundsEntry, ",");
+  if (boundsEntrySplit.size() < 2u) {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Bounds entry has to have at least 2 "
         "entries (type, values)");
   }
   std::set<Acts::BinningValue> constraints;
   // Switch on the bounds type
-  if (boundsEntry[0u] == "cyl") {
+  if (boundsEntrySplit[0u] == "cyl") {
     // Capture the values
-    std::vector<std::string> valuesEntry =
-        GeoModelDbHelper::splitString(boundsEntry[1u], ",");
+    std::vector<std::string> valuesEntry = {boundsEntrySplit.begin() + 1,
+                                            boundsEntrySplit.end()};
     if (valuesEntry.size() < 4u) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: Cylinder bounds entry has to have at "
@@ -46,12 +47,39 @@ Acts::detail::GeoModelExentHelper::readConstaints(
   return {constraints.begin(), constraints.end()};
 }
 
+std::vector<Acts::BinningValue>
+Acts::detail::GeoModelExentHelper::readBinningConstraints(
+    const std::vector<std::string>& binningEntry) {
+  std::set<BinningValue> constraints;
+  // Loop over the single binning Entires
+  for (const auto& sbe : binningEntry) {
+    if (sbe.empty()) {
+      continue;
+    }
+    std::vector<std::string> sbTokens =
+        Acts::detail::GeoModelDbHelper::tokenize(sbe, ",");
+    BinningValue bv =
+        Acts::detail::GeoModelBinningHelper::toBinningValue(sbTokens[0], false);
+    if (bv != binValues && sbTokens.size() > 1u) {
+      std::vector<std::string> valueTokens = { sbTokens.begin() + 1,
+                                               sbTokens.end()};
+      if (!valueTokens.empty() && valueTokens[0] == "bound") {
+        constraints.insert(bv);
+      }
+    }
+  }
+
+  return {constraints.begin(), constraints.end()};
+}
+
 std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent>
 Acts::detail::GeoModelExentHelper::extentFromTable(
-    const std::vector<std::string>& boundsEntry,
-    const Acts::Extent& externalExtent, const Acts::Extent& internalExtent) {
+    const std::vector<std::string>& boundsEntrySplit,
+    const Acts::Extent& externalExtent, const Acts::Extent& internalExtent,
+    bool roundInternalExtent) {
+
   // Check the bounds entry
-  if (boundsEntry.size() < 2u) {
+  if (boundsEntrySplit.size() < 2u) {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Bounds entry has to have at least 2 "
         "entries (type, values)");
@@ -62,12 +90,12 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
   VolumeBounds::BoundsType boundsType = VolumeBounds::BoundsType::eOther;
   Extent extent;
   // Switch on the bounds type
-  if (boundsEntry[0u] == "cyl") {
+  if (boundsEntrySplit[0u] == "cyl") {
     // Set the bounds type
     boundsType = VolumeBounds::BoundsType::eCylinder;
     // Capture the values
-    std::vector<std::string> valuesEntry =
-        GeoModelDbHelper::splitString(boundsEntry[1u], ",");
+    std::vector<std::string> valuesEntry = {boundsEntrySplit.begin() + 1,
+                                            boundsEntrySplit.end()};
     if (valuesEntry.size() < 4u) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: Cylinder bounds entry has to have at "
@@ -94,7 +122,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
         ActsScalar envelope = 0.;
         if (value.size() > 2u) {
           std::vector<std::string> valEntry =
-              GeoModelDbHelper::splitString(value, "+");
+              GeoModelDbHelper::tokenize(value, "+");
           envelope = std::stod(valEntry[1]);
         }
 
@@ -117,5 +145,15 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
       }
     }
   }
+  // Round up / down if configured
+  if (roundInternalExtent) {
+    for (const auto& bv : s_binningValues) {
+      if (internalExtent.constrains(bv)) {
+        extent.setMin(bv, std::floor(extent.min(bv)));
+        extent.setMax(bv, std::ceil(extent.max(bv)));
+      }
+    }
+  }
+
   return std::make_tuple(boundsType, extent);
 }
