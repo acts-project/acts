@@ -630,7 +630,7 @@ class Gx2Fitter {
       }
       ACTS_DEBUG("result.processedMeasurements: "
                  << result.processedMeasurements << "\n"
-                 << "inputMeasurements.size()" << inputMeasurements->size())
+                 << "inputMeasurements.size(): " << inputMeasurements->size())
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -802,7 +802,7 @@ class Gx2Fitter {
       for (const auto& trackState : track.trackStates()) {
         auto typeFlags = trackState.typeFlags();
         if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-          /// Handle measurement
+          // Handle measurement
 
           auto measDim = trackState.calibratedSize();
           countNdf += measDim;
@@ -821,12 +821,13 @@ class Gx2Fitter {
             countNdf -= measDim;
           }
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
-          /// Handle hole
-          ACTS_VERBOSE("Handle hole.")
+          // Handle hole
+          // TODO: write hole handling
+          ACTS_VERBOSE("Placeholder: Handle hole.")
         } else {
           ACTS_WARNING("Unknown state encountered")
         }
-        /// Missing: Material handling. Should be there for hole and measurement
+        // TODO: Material handling. Should be there for hole and measurement
       }
 
       // This check takes into account the evaluated dimensions of the
@@ -852,14 +853,14 @@ class Gx2Fitter {
       deltaParams =
           calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
 
-      ACTS_INFO("aMatrix:\n"
-                << aMatrix << "\n"
-                << "bVector:\n"
-                << bVector << "\n"
-                << "deltaParams:\n"
-                << deltaParams << "\n"
-                << "oldChi2sum = " << oldChi2sum << "\n"
-                << "chi2sum = " << chi2sum);
+      ACTS_VERBOSE("aMatrix:\n"
+                   << aMatrix << "\n"
+                   << "bVector:\n"
+                   << bVector << "\n"
+                   << "deltaParams:\n"
+                   << deltaParams << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << chi2sum);
 
       tipIndex = gx2fResult.lastMeasurementIndex;
 
