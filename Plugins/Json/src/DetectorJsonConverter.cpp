@@ -201,6 +201,21 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
         }
       }
     }
+
+    // Now write the material for the portals
+    for (const auto [ip, portal] : enumerate(volume->portals())) {
+      const ISurfaceMaterial* surfaceMaterial =
+          portal->surface().surfaceMaterial();
+      if (surfaceMaterial != nullptr) {
+        nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
+            *surfaceMaterial, portal->surface(), ip, gridLinks);
+        if (!jSurfaceMaterial.empty()) {
+          ++nGrids;
+          jMaterialVolumeGridsData.push_back(jSurfaceMaterial);
+        }
+      }
+    }
+
     if (!jMaterialVolumeGridsData.empty()) {
       jMaterialVolumeGrids["grid_data"] = {jMaterialVolumeGridsData};
       jMaterialGrids.push_back(jMaterialVolumeGrids);
