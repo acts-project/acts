@@ -12,7 +12,7 @@ import sys
 # Should be run with Python 3 if possible
 # Script that parse a Json surfaces map to create an easy to use json config file for the mapping
 # Take two arguments in input : The path to the surfaces map and the path of the json config file
-# By default the input is : 'surfaces-map.json' and the output is : 'config-map.json'
+# By default the input is : 'geometry-map.json' and the output is : 'config-map.json'
 # The config file can be used to define a binning for all the surfaces in a given volume
 # It can also be used to define the binning for volume mapping
 
@@ -46,10 +46,10 @@ def getSurfaceMaterial(mat):
 
 if sys.version_info[0] < 3:
     print("Using Python 2")
-    print("To obtain the proper ordering in the Json files Python 3 is recomanded")
+    print("To obtain the proper ordering in the Json files Python 3 is recommended")
 
 if len(sys.argv) < 2:
-    inFileName = "geometry-maps.json"
+    inFileName = "geometry-map.json"
 else:
     inFileName = sys.argv[1]
 
