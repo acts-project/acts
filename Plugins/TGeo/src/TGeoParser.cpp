@@ -111,7 +111,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
 TGeoNode* Acts::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
                                               const char* volumeName) {
   // Check if the current node's volume matches the name
-  if (strcmp(currentNode->GetVolume()->GetName(), volumeName) == 0) {
+  if (std::strcmp(currentNode->GetVolume()->GetName(), volumeName) == 0) {
     return currentNode;
   }
   // Recursively search in the daughter nodes
