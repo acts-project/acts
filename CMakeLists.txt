@@ -128,7 +128,6 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-  OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 
@@ -221,8 +220,7 @@ if (ACTS_SETUP_BOOST)
 
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
-    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
-        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+    if( ACTS_BUILD_ANALYSIS_APPS OR ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
     else()
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
