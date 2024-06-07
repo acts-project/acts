@@ -167,8 +167,8 @@ if "__main__" == __name__:
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runTruthTrackingKalman(
-        trackingGeometry,
-        field,
+        trackingGeometry=trackingGeometry,
+        field=field,
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",

@@ -12,16 +12,17 @@ u = acts.UnitConstants
 def runTruthTrackingGx2f(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    outputDir: Path,
     digiConfigFile: Path,
-    s: acts.examples.Sequencer = None,
+    outputDir: Path,
     inputParticlePath: Optional[Path] = None,
+    s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
-        MomentumConfig,
-        EtaConfig,
         ParticleConfig,
+        EtaConfig,
+        PhiConfig,
+        MomentumConfig,
         addFatras,
         addDigitization,
     )
@@ -33,18 +34,23 @@ def runTruthTrackingGx2f(
     )
 
     s = s or acts.examples.Sequencer(
-        events=10000, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    rnd = acts.examples.RandomNumbers()
+    rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
         addParticleGun(
             s,
+            ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-2.5, 2.5, uniform=True),
             MomentumConfig(100.0 * u.GeV, 100.0 * u.GeV, transverse=True),
-            EtaConfig(-2.0, 2.0),
-            ParticleConfig(2, acts.PdgParticle.eMuon, False),
+            PhiConfig(0.0, 360.0 * u.degree),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(0, 0, 0, 0),
+            ),
             multiplicity=1,
             rnd=rnd,
             outputDirRoot=outputDir,
@@ -82,11 +88,13 @@ def runTruthTrackingGx2f(
         s,
         trackingGeometry,
         field,
-        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         rnd=rnd,
+        inputParticles="particles_input",
+        seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        particleHypothesis=acts.ParticleHypothesis.muon,
         truthSeedRanges=TruthSeedRanges(
             pt=(1 * u.GeV, None),
-            nHits=(9, None),
+            nHits=(7, None),
         ),
     )
 
@@ -98,7 +106,18 @@ def runTruthTrackingGx2f(
         relChi2changeCutOff=1e-7,
     )
 
-    # Output
+    s.addAlgorithm(
+        acts.examples.TrackSelectorAlgorithm(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTracks="selected-tracks",
+            selectorConfig=acts.TrackSelector.Config(
+                minMeasurements=7,
+            ),
+        )
+    )
+    s.addWhiteboardAlias("tracks", "selected-tracks")
+
     s.addWriter(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
@@ -145,12 +164,9 @@ if "__main__" == __name__:
 
     runTruthTrackingGx2f(
         trackingGeometry=trackingGeometry,
-        # decorators=decorators,
         field=field,
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
-        # outputCsv=True,
-        # inputParticlePath=inputParticlePath,
         outputDir=Path.cwd(),
     ).run()
