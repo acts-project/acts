@@ -15,15 +15,20 @@
 namespace Acts {
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
-/// - Open is the default behaviour: out of bounds
-/// positions are filled into the over or underflow bins
-/// - Bound: out-of-bounds positions resolve to first/last bin
-/// respectively
-/// - Closed: out-of-bounds positions resolve to the outermost
-/// bin on the opposite side
-enum class AxisBoundaryType { Open, Bound, Closed };
+enum class AxisBoundaryType {
+  /// Default behaviour: out of bounds
+  /// positions are filled into the over or underflow bins
+  Open,
+  /// Out-of-bounds positions resolve to first/last bin
+  /// respectively
+  Bound,
+  /// Out-of-bounds positions resolve to the outermost
+  /// bin on the opposite side
+  Closed,
+};
 
 /// Tag helper type for Axis constructors with class template deduction
+/// @tparam bdt the boundary type
 template <AxisBoundaryType bdt>
 struct AxisBoundaryTypeTag {};
 
@@ -48,7 +53,12 @@ inline std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt) {
 }
 
 /// Enum which determines the binning type of the axis
-enum class AxisType { Equidistant, Variable };
+enum class AxisType {
+  /// An axis where all bins have the same size
+  Equidistant,
+  /// An axis where bins can have different sizes
+  Variable,
+};
 
 inline std::ostream& operator<<(std::ostream& os, AxisType type) {
   switch (type) {
