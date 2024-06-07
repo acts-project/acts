@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/converters/GeoUnionDoubleTrdConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 
-#include "Acts/Plugins/GeoModel/converters/GeoShiftConverter.hpp"
-#include <Acts/Surfaces/PlaneSurface.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
+#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoShiftConverter.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 namespace {
 

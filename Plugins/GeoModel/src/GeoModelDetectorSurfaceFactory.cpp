@@ -10,7 +10,6 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoUnionDoubleTrdConverter.hpp"
 
 #include <set>
 

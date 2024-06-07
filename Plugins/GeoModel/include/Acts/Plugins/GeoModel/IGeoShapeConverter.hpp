@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -19,12 +20,6 @@ class GeoFullPhysVol;
 namespace Acts {
 
 class Surface;
-class GeoModelDetectorElement;
-
-/// Collect the sensitive surface & detector element
-using GeoModelSensitiveSurface =
-    std::tuple<std::shared_ptr<GeoModelDetectorElement>,
-               std::shared_ptr<Surface>>;
 
 /// @class IGeoShapeConverter
 ///

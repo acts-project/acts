@@ -10,37 +10,30 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoShapeIntersection.h>
+#include <GeoModelKernel/GeoBox.h>
 
 namespace Acts {
 
 namespace detail {
-struct GeoIntersectionAnnulusConverter {
+struct GeoBoxConverter {
   /// @brief Convert a GeoBox to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
-  /// @param geoIntersection The GeoIntersection to convert
+  /// @param geoBox The GeoBox to convert
   /// @param absTransform from the GeoPhysVol
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(
-      const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
-      const Transform3& absTransform, bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
+                                              const GeoBox& geoBox,
+                                              const Transform3& absTransform,
+                                              bool sensitive) const;
 };
 }  // namespace detail
-
-/// @brief A dedicated converter for GeoInterseciton that describe annulus bounds
-///
-/// This is very much tailored to the AnnulusBounds class
-using GeoIntersectionAnnulusConverter =
-    detail::GenericGeoShapeConverter<GeoShapeIntersection,
-                                     detail::GeoIntersectionAnnulusConverter>;
 
 }  // namespace Acts

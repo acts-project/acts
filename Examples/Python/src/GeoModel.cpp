@@ -6,17 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoBoxConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoIntersectionAnnulusConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoShiftConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoTrdConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoTubeConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoUnionDoubleTrdConverter.hpp"
-#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
+#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 

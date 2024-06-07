@@ -10,42 +10,29 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoTrd.h>
-
-class GeoFullPhysVol;
-class GeoTrd;
+#include <GeoModelKernel/GeoShapeIntersection.h>
 
 namespace Acts {
 
-class Surface;
-
 namespace detail {
-struct GeoTrdConverter {
-  /// @brief Convert a GeoTrd to a detector element and surface
+struct GeoIntersectionAnnulusConverter {
+  /// @brief Convert a GeoBox to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
-  /// @param geoTrd The GeoTrd to convert
+  /// @param geoIntersection The GeoIntersection to convert
   /// @param absTransform from the GeoPhysVol
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
-  Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
-                                              const GeoTrd& geoTrd,
-                                              const Transform3& absTransform,
-                                              bool sensitive) const;
+  Result<GeoModelSensitiveSurface> operator()(
+      const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
+      const Transform3& absTransform, bool sensitive) const;
 };
 }  // namespace detail
-
-/// @brief The GeoTrd converter
-///
-/// This is a dedicated converter for GeoTrd shapes
-using GeoTrdConverter =
-    detail::GenericGeoShapeConverter<GeoTrd, detail::GeoTrdConverter>;
 
 }  // namespace Acts

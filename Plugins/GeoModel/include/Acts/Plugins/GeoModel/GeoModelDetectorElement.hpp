@@ -104,4 +104,9 @@ class GeoModelDetectorElement : public DetectorElementBase {
   ActsScalar m_thickness{0.};
 };
 
+/// Collect the sensitive surface & detector element
+using GeoModelSensitiveSurface =
+    std::tuple<std::shared_ptr<GeoModelDetectorElement>,
+               std::shared_ptr<Surface>>;
+
 }  // namespace Acts

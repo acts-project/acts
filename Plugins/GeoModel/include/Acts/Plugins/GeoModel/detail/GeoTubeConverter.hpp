@@ -10,37 +10,36 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoBox.h>
+#include <GeoModelKernel/GeoTube.h>
+
+class GeoFullPhysVol;
+class GeoTube;
 
 namespace Acts {
 
 namespace detail {
-struct GeoBoxConverter {
-  /// @brief Convert a GeoBox to a detector element and surface
+struct GeoTubeConverter {
+  Surface::SurfaceType targetShape = Surface::SurfaceType::Straw;
+
+  /// @brief Convert a GeoTube to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
-  /// @param geoBox The GeoBox to convert
+  /// @param geoTube The GeoTube shape to convert
   /// @param absTransform from the GeoPhysVol
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
-                                              const GeoBox& geoBox,
+                                              const GeoTube& geoTube,
                                               const Transform3& absTransform,
                                               bool sensitive) const;
 };
 }  // namespace detail
-
-/// @brief The GeoBox converter
-///
-/// This is a dedicated converter for GeoBox shapes
-using GeoBoxConverter =
-    detail::GenericGeoShapeConverter<GeoBox, detail::GeoBoxConverter>;
 
 }  // namespace Acts

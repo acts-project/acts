@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -23,7 +24,6 @@ class GeoFullPhysVol;
 namespace Acts {
 
 struct GeoModelTree;
-class GeoModelDetectorElement;
 class Surface;
 
 /// A factory to convert GeoModel volume into sensitive

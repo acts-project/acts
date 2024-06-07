@@ -1,3 +1,5 @@
+
+
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -8,30 +10,13 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/interface/IGeoShapeConverter.hpp"
-#include "Acts/Utilities/Result.hpp"
-
-#include <memory>
-#include <tuple>
+#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
-#include <GeoModelKernel/GeoShape.h>
 
 namespace Acts::detail {
-
-template <typename T>
-auto resultify(const T&& res) {
-  if constexpr (std::is_same_v<T,
-                               Acts::Result<Acts::GeoModelSensitiveSurface>>) {
-    return res;
-  } else {
-    return Result<GeoModelSensitiveSurface>::success(res);
-  }
-}
 
 template <typename Shape, typename Converter>
 struct GenericGeoShapeConverter : public IGeoShapeConverter {

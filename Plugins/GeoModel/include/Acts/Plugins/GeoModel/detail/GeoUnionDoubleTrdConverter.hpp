@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -43,12 +42,5 @@ struct GeoUnionDoubleTrdConverter {
                                               bool sensitive) const;
 };
 }  // namespace detail
-
-/// @brief The GeoTube converter
-///
-/// This is a dedicated converter for GeoTube shapes
-using GeoUnionDoubleTrdConverter =
-    detail::GenericGeoShapeConverter<GeoShapeUnion,
-                                     detail::GeoUnionDoubleTrdConverter>;
 
 }  // namespace Acts

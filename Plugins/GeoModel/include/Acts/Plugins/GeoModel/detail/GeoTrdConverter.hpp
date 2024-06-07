@@ -10,43 +10,35 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoTube.h>
+#include <GeoModelKernel/GeoTrd.h>
 
 class GeoFullPhysVol;
-class GeoTube;
+class GeoTrd;
 
 namespace Acts {
 
-namespace detail {
-struct GeoTubeConverter {
-  Surface::SurfaceType targetShape = Surface::SurfaceType::Straw;
+class Surface;
 
-  /// @brief Convert a GeoTube to a detector element and surface
+namespace detail {
+struct GeoTrdConverter {
+  /// @brief Convert a GeoTrd to a detector element and surface
   ///
   /// @param geoFPV The full physical volume to convert (contains shape)
-  /// @param geoTube The GeoTube shape to convert
+  /// @param geoTrd The GeoTrd to convert
   /// @param absTransform from the GeoPhysVol
   /// @param bool sensitive
   ///
   /// @return The detector element and surface
   Result<GeoModelSensitiveSurface> operator()(const GeoFullPhysVol& geoFPV,
-                                              const GeoTube& geoTube,
+                                              const GeoTrd& geoTrd,
                                               const Transform3& absTransform,
                                               bool sensitive) const;
 };
 }  // namespace detail
-
-/// @brief The GeoTube converter
-///
-/// This is a dedicated converter for GeoTube shapes
-using GeoTubeConverter =
-    detail::GenericGeoShapeConverter<GeoTube, detail::GeoTubeConverter>;
 
 }  // namespace Acts

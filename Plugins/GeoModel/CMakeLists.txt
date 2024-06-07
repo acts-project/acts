@@ -6,12 +6,12 @@ add_library(
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp
-  src/converters/GeoBoxConverter.cpp
-  src/converters/GeoTrdConverter.cpp
-  src/converters/GeoTubeConverter.cpp
-  src/converters/GeoShiftConverter.cpp
-  src/converters/GeoIntersectionAnnulusConverter.cpp
-  src/converters/GeoUnionDoubleTrdConverter.cpp)
+  src/detail/GeoBoxConverter.cpp
+  src/detail/GeoTrdConverter.cpp
+  src/detail/GeoTubeConverter.cpp
+  src/detail//GeoShiftConverter.cpp
+  src/detail//GeoIntersectionAnnulusConverter.cpp
+  src/detail/GeoUnionDoubleTrdConverter.cpp)
 target_include_directories(
     ActsPluginGeoModel
   PUBLIC

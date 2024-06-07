@@ -10,17 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoBoxConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoTrdConverter.hpp"
-#include "Acts/Plugins/GeoModel/converters/GeoTubeConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GenericGeoShapeConverter.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/DiscSurface.hpp>
-#include <Acts/Surfaces/LineBounds.hpp>
-#include <Acts/Surfaces/PlaneSurface.hpp>
-#include <Acts/Surfaces/StrawSurface.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <memory>
 #include <tuple>
@@ -46,11 +35,5 @@ struct GeoShiftConverter {
                                               bool sensitive) const;
 };
 }  // namespace detail
-
-/// @brief The GeoShift + Trd/Box/Tube converter
-///
-/// This is a dedicated converter for GeoBox shapes
-using GeoShiftConverter =
-    detail::GenericGeoShapeConverter<GeoShapeShift, detail::GeoShiftConverter>;
 
 }  // namespace Acts
