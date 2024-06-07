@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/AlgebraHelpers.hpp"
@@ -16,10 +15,11 @@
 
 Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(AlgebraHelpers)
+
+BOOST_AUTO_TEST_SUITE(SafeInverse)
 
 ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeInverse", logLevel))
 
@@ -120,5 +120,44 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+BOOST_AUTO_TEST_SUITE(SafeExp)
+
+ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeExp", logLevel))
+
+BOOST_AUTO_TEST_CASE(safeExpDouble) {
+  using FloatType = double;
+
+  // Values within the safe range
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0), std::exp(0.0), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(1.0), std::exp(1.0), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(-1.0), std::exp(-1.0), 1e-8);
+
+  // Values causing underflow
+  BOOST_CHECK_EQUAL(safeExp<FloatType>(-600.0), 0.0);
+
+  // Values causing overflow
+  BOOST_CHECK_EQUAL(safeExp<FloatType>(600.0),
+                    std::numeric_limits<FloatType>::infinity());
+}
+
+BOOST_AUTO_TEST_CASE(safeExpFloat) {
+  using FloatType = float;
+
+  // Values within the safe range
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0f), std::exp(0.0f), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(1.0f), std::exp(1.0f), 1e-8);
+  BOOST_CHECK_CLOSE(safeExp<FloatType>(-1.0f), std::exp(-1.0f), 1e-8);
+
+  // Values causing underflow
+  BOOST_CHECK_EQUAL(safeExp<FloatType>(-60.0f), 0.0f);
+
+  // Values causing overflow
+  BOOST_CHECK_EQUAL(safeExp<FloatType>(60.0f),
+                    std::numeric_limits<FloatType>::infinity());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace Acts::Test

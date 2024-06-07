@@ -60,9 +60,7 @@ TrackingVolume::TrackingVolume(
     : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr,
                      containedVolumeArray, {}, volumeName) {}
 
-TrackingVolume::~TrackingVolume() {
-  delete m_glueVolumeDescriptor;
-}
+TrackingVolume::~TrackingVolume() = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& /*gctx*/, const Vector3& position,
@@ -260,16 +258,16 @@ void TrackingVolume::updateBoundarySurface(
   m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
-void TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) {
-  delete m_glueVolumeDescriptor;
-  m_glueVolumeDescriptor = gvd;
+void TrackingVolume::registerGlueVolumeDescriptor(
+    std::unique_ptr<GlueVolumesDescriptor> gvd) {
+  m_glueVolumeDescriptor = std::move(gvd);
 }
 
 GlueVolumesDescriptor& TrackingVolume::glueVolumesDescriptor() {
   if (m_glueVolumeDescriptor == nullptr) {
-    m_glueVolumeDescriptor = new GlueVolumesDescriptor;
+    m_glueVolumeDescriptor = std::make_unique<GlueVolumesDescriptor>();
   }
-  return (*m_glueVolumeDescriptor);
+  return *m_glueVolumeDescriptor;
 }
 
 void TrackingVolume::synchronizeLayers(double envelope) const {
