@@ -86,6 +86,10 @@ class DetectorNavigator {
     return state.currentSurface;
   }
 
+  const Portal* currentPortal(const State& state) const {
+    return state.currentPortal;
+  }
+
   const DetectorVolume* currentVolume(const State& state) const {
     return state.currentVolume;
   }
