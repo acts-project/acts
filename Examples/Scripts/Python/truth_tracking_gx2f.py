@@ -44,7 +44,7 @@ def runTruthTrackingGx2f(
         addParticleGun(
             s,
             ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-            EtaConfig(-2.8, 2.8, uniform=True),
+            EtaConfig(-2.5, 2.5, uniform=True),
             MomentumConfig(100.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
