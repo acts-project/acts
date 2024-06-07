@@ -45,7 +45,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
     return m_values;
   }
   bool inside(const Vector2& /*lpos*/,
-              const BoundaryCheck& /*bcheck*/) const final {
+              const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;
   }
 

@@ -36,7 +36,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
             .intersect(state.geoContext,
                        cmpState.pars.template segment<3>(eFreePos0),
                        cmpState.pars.template segment<3>(eFreeDir0),
-                       BoundaryCheck(false))
+                       BoundaryTolerance::Infinite())
             .closest()
             .position();
 

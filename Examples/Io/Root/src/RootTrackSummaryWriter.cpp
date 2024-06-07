@@ -342,7 +342,8 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           auto intersection =
               pSurface
                   ->intersect(ctx.geoContext, particle.position(),
-                              particle.direction(), Acts::BoundaryCheck(false))
+                              particle.direction(),
+                              Acts::BoundaryTolerance::Infinite())
                   .closest();
           auto position = intersection.position();
 

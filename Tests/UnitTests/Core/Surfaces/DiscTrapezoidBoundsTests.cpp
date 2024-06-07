@@ -129,8 +129,10 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
       "0.0000000, 2.5243378, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(DiscTrapezoidBoundsObject.inside(inSurface, BoundaryCheck(true)));
-  BOOST_CHECK(!DiscTrapezoidBoundsObject.inside(outside, BoundaryCheck(true)));
+  BOOST_CHECK(
+      DiscTrapezoidBoundsObject.inside(inSurface, BoundaryTolerance::None()));
+  BOOST_CHECK(
+      !DiscTrapezoidBoundsObject.inside(outside, BoundaryTolerance::None()));
   //
   /// Test rMin
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMin(), rMin, 1e-6);

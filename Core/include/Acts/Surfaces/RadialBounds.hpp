@@ -73,11 +73,11 @@ class RadialBounds : public DiscBounds {
   /// For disc surfaces the local position in (r,phi) is checked
   ///
   /// @param lposition local position to be checked
-  /// @param bcheck boundary check directive
+  /// @param boundaryTolerance boundary check directive
   ///
   /// @return is a boolean indicating the operation success
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Outstream operator
   ///

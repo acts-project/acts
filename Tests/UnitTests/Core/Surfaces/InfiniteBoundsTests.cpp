@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
 
   /// test for inside()
   const Vector2 anyVector{0., 1.};
-  const BoundaryCheck anyBoundaryCheck(true);
-  BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
+  const BoundaryTolerance anyTolerance = BoundaryTolerance::None();
+  BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyTolerance));
 
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;

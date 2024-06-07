@@ -52,7 +52,7 @@ struct SurfacesFiller {
     std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
           ObjectIntersection<Surface>::invalid(), s, nullptr,
-          nState.surfaceBoundaryCheck});
+          nState.surfaceBoundaryTolerance});
     });
   }
 };
@@ -69,7 +69,7 @@ struct PortalsFiller {
     std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
           ObjectIntersection<Surface>::invalid(), nullptr, p,
-          BoundaryCheck(true)});
+          BoundaryTolerance::None()});
     });
   }
 };

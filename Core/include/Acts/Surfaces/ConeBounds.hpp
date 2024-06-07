@@ -87,10 +87,11 @@ class ConeBounds : public SurfaceBounds {
   /// inside method for local position
   ///
   /// @param lposition is the local position to be checked
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   /// @return is a boolean indicating if the position is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
+              const BoundaryTolerance& boundaryTolerance =
+                  BoundaryTolerance::None()) const final;
 
   /// Output Method for std::ostream
   ///

@@ -102,9 +102,10 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
                          "50.0000000, 30.0000000, 10.0000000, 20.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(diamondBoundsObject.inside(origin, BoundaryCheck(true)));
+  BOOST_CHECK(diamondBoundsObject.inside(origin, BoundaryTolerance::None()));
   // dont understand why this is so:
-  BOOST_CHECK(!diamondBoundsObject.inside(outsideBy10, BoundaryCheck(true)));
+  BOOST_CHECK(
+      !diamondBoundsObject.inside(outsideBy10, BoundaryTolerance::None()));
   //
   /// Test vertices (does this need to be implemented in this class??
   // auto v=diamondBoundsObject.vertices();

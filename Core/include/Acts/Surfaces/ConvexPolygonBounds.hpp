@@ -105,10 +105,10 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
   /// @param lposition The local position to check
-  /// @param bcheck The `BoundaryCheck` object handling tolerances.
+  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
   /// @return Whether the points is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///
@@ -162,10 +162,10 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
   /// @param lposition The local position to check
-  /// @param bcheck The `BoundaryCheck` object handling tolerances.
+  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
   /// @return Whether the points is inside
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Return the vertices
   ///

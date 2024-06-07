@@ -51,10 +51,10 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
     } -> std::same_as<void>;
   {
     cs.isOnSurface(gctx, Vector3{}, Vector3{},
-                   std::declval<const BoundaryCheck&>())
+                   std::declval<const BoundaryTolerance&>())
     } -> std::same_as<bool>;
   {
-    cs.insideBounds(Vector2{}, std::declval<const BoundaryCheck&>())
+    cs.insideBounds(Vector2{}, std::declval<const BoundaryTolerance&>())
     } -> std::same_as<bool>;
 
   { cs.localToGlobal(gctx, Vector2{}, Vector3{}) } -> std::same_as<Vector3>;
@@ -83,7 +83,8 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.intersect(gctx, Vector3{}, Vector3{},
-                 std::declval<const BoundaryCheck&>(), std::declval<double>())
+                 std::declval<const BoundaryTolerance&>(),
+                 std::declval<double>())
     } -> std::same_as<SurfaceMultiIntersection>;
 
   {

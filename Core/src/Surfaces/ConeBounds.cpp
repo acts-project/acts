@@ -9,11 +9,13 @@
 #include "Acts/Surfaces/ConeBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <optional>
 
 Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
                              double avphi) noexcept(false)
@@ -54,11 +56,14 @@ Acts::Vector2 Acts::ConeBounds::shifted(const Acts::Vector2& lposition) const {
   return shifted;
 }
 
-bool Acts::ConeBounds::inside(const Acts::Vector2& lposition,
-                              const Acts::BoundaryCheck& bcheck) const {
+bool Acts::ConeBounds::inside(
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
   auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
-  return bcheck.isInside(shifted(lposition), Vector2(-rphiHalf, get(eMinZ)),
-                         Vector2(rphiHalf, get(eMaxZ)));
+  return AlignedBoxBoundaryCheck(Vector2(-rphiHalf, get(eMinZ)),
+                                 Vector2(rphiHalf, get(eMaxZ)),
+                                 boundaryTolerance)
+      .inside(shifted(lposition), std::nullopt);
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {

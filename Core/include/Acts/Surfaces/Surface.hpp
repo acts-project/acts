@@ -249,21 +249,22 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global position to be evaludated
   /// @param direction global momentum direction (required for line-type surfaces)
-  /// @param bcheck BoundaryCheck directive for this onSurface check
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
                    const Vector3& direction,
-                   const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+                   const BoundaryTolerance& boundaryTolerance =
+                       BoundaryTolerance::None()) const;
 
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check
-  /// @param bcheck BoundaryCheck directive for this onSurface check
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(
-      const Vector2& lposition,
-      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  virtual bool insideBounds(const Vector2& lposition,
+                            const BoundaryTolerance& boundaryTolerance =
+                                BoundaryTolerance::None()) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -389,14 +390,15 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param bcheck the Boundary Check
+  /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
   /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
   virtual SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes

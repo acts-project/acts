@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
@@ -131,7 +132,7 @@ Acts::Layer::compatibleSurfaces(
     // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter =
         options.endObject
-            ->intersect(gctx, position, direction, BoundaryCheck(true))
+            ->intersect(gctx, position, direction, BoundaryTolerance::None())
             .closest();
     // non-valid intersection with the end surface provided at this layer
     // indicates wrong direction or faulty setup
@@ -186,16 +187,15 @@ Acts::Layer::compatibleSurfaces(
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
-    bool boundaryCheck = options.boundaryCheck.isEnabled();
+    BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
     if (std::find(options.externalSurfaces.begin(),
                   options.externalSurfaces.end(),
                   sf.geometryId()) != options.externalSurfaces.end()) {
-      boundaryCheck = false;
+      boundaryTolerance = BoundaryTolerance::Infinite();
     }
     // the surface intersection
     SurfaceIntersection sfi =
-        sf.intersect(gctx, position, direction, BoundaryCheck(boundaryCheck))
-            .closest();
+        sf.intersect(gctx, position, direction, boundaryTolerance).closest();
     if (sfi &&
         detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
         isUnique(sfi)) {
@@ -280,13 +280,14 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, direction, options.boundaryCheck, nearLimit, farLimit);
+        gctx, position, direction, options.boundaryTolerance, nearLimit,
+        farLimit);
     return aSurface;
   }
 
   // Intersect and check the representing surface
   const Surface& rSurface = surfaceRepresentation();
   auto sIntersection =
-      rSurface.intersect(gctx, position, direction, options.boundaryCheck);
+      rSurface.intersect(gctx, position, direction, options.boundaryTolerance);
   return findValidIntersection(sIntersection);
 }

@@ -767,7 +767,8 @@ ProcessCode VertexPerformanceWriter::writeT(
       auto intersection =
           perigeeSurface
               ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                          params.direction(), Acts::BoundaryCheck(false))
+                          params.direction(),
+                          Acts::BoundaryTolerance::Infinite())
               .closest();
 
       // Setting the geometry/magnetic field context for the event

@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
@@ -219,7 +220,7 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
 
 Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     ActsScalar tolerance) const {
   const auto& gctxTransform = transform(gctx);
 
@@ -242,26 +243,26 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       [&](const Vector3& solution,
           Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
-    if (!bcheck.isEnabled()) {
+    if (boundaryTolerance.isInfinite()) {
       return status;
     }
     const auto& cBounds = bounds();
-    if (cBounds.coversFullAzimuth() &&
-        bcheck.type() == BoundaryCheck::Type::eAbsolute) {
+    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
+        absoluteBound.has_value() && cBounds.coversFullAzimuth()) {
       // Project out the current Z value via local z axis
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
       const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc1];
+      double modifiedTolerance = tolerance + absoluteBound->tolerance1;
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : Intersection3D::Status::missed;
     }
-    return (isOnSurface(gctx, solution, direction, bcheck)
-                ? status
-                : Intersection3D::Status::missed);
+    return isOnSurface(gctx, solution, direction, boundaryTolerance)
+               ? status
+               : Intersection3D::Status::missed;
   };
   // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
@@ -288,7 +289,7 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
 Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();

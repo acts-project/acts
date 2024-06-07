@@ -211,7 +211,7 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -247,7 +247,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -279,7 +279,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
 
 Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     ActsScalar tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
@@ -289,19 +289,20 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != Intersection3D::Status::unreachable &&
-      bcheck.isEnabled() && m_bounds != nullptr) {
+      m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (bcheck.type() == BoundaryCheck::Type::eAbsolute &&
-        m_bounds->coversFullAzimuth()) {
-      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
+    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
+        absoluteBound.has_value() && m_bounds->coversFullAzimuth()) {
+      double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
         status = Intersection3D::Status::missed;
       }
-    } else if (!insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
+    } else if (!insideBounds(localCartesianToPolar(lcartesian),
+                             boundaryTolerance)) {
       status = Intersection3D::Status::missed;
     }
   }

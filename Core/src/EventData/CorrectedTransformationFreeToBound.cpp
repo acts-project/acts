@@ -155,7 +155,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
         surface
             .intersect(geoContext, params.segment<3>(eFreePos0),
                        navDir * params.segment<3>(eFreeDir0),
-                       BoundaryCheck(false))
+                       BoundaryTolerance::Infinite())
             .closest();
     correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 

@@ -88,7 +88,7 @@ def run() -> None:
         "Acts::ConstrainedStep",
         "Acts::IAxis",
         "Acts::SeedFilter",
-        "Acts::BoundaryCheck",
+        "Acts::BoundaryTolerance",
         "Acts::ConeVolumeBounds",
         "Acts::CuboidVolumeBounds",
         "Acts::CylinderVolumeBounds",

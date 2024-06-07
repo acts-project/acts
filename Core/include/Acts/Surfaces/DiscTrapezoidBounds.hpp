@@ -77,9 +77,10 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// if only tol0 is given and additional in the phi sector is tol1 is given
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   bool inside(const Vector2& lposition,
-              const BoundaryCheck& bcheck = BoundaryCheck(true)) const final;
+              const BoundaryTolerance& boundaryTolerance =
+                  BoundaryTolerance::None()) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

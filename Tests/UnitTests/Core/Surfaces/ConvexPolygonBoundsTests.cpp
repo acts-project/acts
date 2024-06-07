@@ -70,12 +70,12 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
 
-  BoundaryCheck bc(true);
+  BoundaryTolerance tolerance = BoundaryTolerance::None();
 
-  BOOST_CHECK(triangle.inside({0.2, 0.2}, bc));
-  BOOST_CHECK(!triangle.inside({0.4, 0.9}, bc));
-  BOOST_CHECK(!triangle.inside({0.8, 0.8}, bc));
-  BOOST_CHECK(!triangle.inside({0.3, -0.2}, bc));
+  BOOST_CHECK(triangle.inside({0.2, 0.2}, tolerance));
+  BOOST_CHECK(!triangle.inside({0.4, 0.9}, tolerance));
+  BOOST_CHECK(!triangle.inside({0.8, 0.8}, tolerance));
+  BOOST_CHECK(!triangle.inside({0.3, -0.2}, tolerance));
 
   // rectangular poly
   vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
@@ -85,10 +85,10 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1, 1.2));
 
-  BOOST_CHECK(quad.inside({0.2, 0.2}, bc));
-  BOOST_CHECK(!quad.inside({0.4, 0.9}, bc));
-  BOOST_CHECK(quad.inside({0.8, 0.8}, bc));
-  BOOST_CHECK(!quad.inside({0.3, -0.2}, bc));
+  BOOST_CHECK(quad.inside({0.2, 0.2}, tolerance));
+  BOOST_CHECK(!quad.inside({0.4, 0.9}, tolerance));
+  BOOST_CHECK(quad.inside({0.8, 0.8}, tolerance));
+  BOOST_CHECK(!quad.inside({0.3, -0.2}, tolerance));
 }
 
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
@@ -116,12 +116,12 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
 
-  BoundaryCheck bc(true);
+  BoundaryTolerance tolerance = BoundaryTolerance::None();
 
-  BOOST_CHECK(triangle.inside({0.2, 0.2}, bc));
-  BOOST_CHECK(!triangle.inside({0.4, 0.9}, bc));
-  BOOST_CHECK(!triangle.inside({0.8, 0.8}, bc));
-  BOOST_CHECK(!triangle.inside({0.3, -0.2}, bc));
+  BOOST_CHECK(triangle.inside({0.2, 0.2}, tolerance));
+  BOOST_CHECK(!triangle.inside({0.4, 0.9}, tolerance));
+  BOOST_CHECK(!triangle.inside({0.8, 0.8}, tolerance));
+  BOOST_CHECK(!triangle.inside({0.3, -0.2}, tolerance));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

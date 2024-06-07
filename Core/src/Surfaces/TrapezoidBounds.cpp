@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
 #include <iomanip>
@@ -48,8 +49,13 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }
 
-bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
-                                   const Acts::BoundaryCheck& bcheck) const {
+bool Acts::TrapezoidBounds::inside(
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
+  if (boundaryTolerance.isInfinite()) {
+    return true;
+  }
+
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
   const double hlY = get(TrapezoidBounds::eHalfLengthY);
@@ -59,9 +65,10 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
   const double x = extPosition[0];
   const double y = extPosition[1];
 
-  if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
-    const double tolX = bcheck.tolerance()[eBoundLoc0];
-    const double tolY = bcheck.tolerance()[eBoundLoc1];
+  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt(true);
+      absoluteBound.has_value()) {
+    double tolX = absoluteBound->tolerance0;
+    double tolY = absoluteBound->tolerance1;
 
     if (std::abs(y) - hlY > tolY) {
       // outside y range
@@ -83,7 +90,8 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
   // run slow-ish polygon check
   std::vector<Acts::Vector2> vertices = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  return bcheck.isInside(extPosition, vertices);
+  return PolygonBoundaryCheck(vertices, boundaryTolerance)
+      .inside(extPosition, std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(

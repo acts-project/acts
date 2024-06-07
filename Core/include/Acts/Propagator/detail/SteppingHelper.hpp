@@ -30,19 +30,20 @@ namespace Acts::detail {
 ///
 /// @param state [in,out] The stepping state (thread-local cache)
 /// @param surface [in] The surface provided
-/// @param bcheck [in] The boundary check for this status update
+/// @param boundaryTolerance [in] The boundary check for this status update
 template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction navDir,
-    const BoundaryCheck& bcheck, ActsScalar surfaceTolerance,
+    const BoundaryTolerance& boundaryTolerance, ActsScalar surfaceTolerance,
     const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
                << surface.geometryId() << " index " << static_cast<int>(index));
 
-  auto sIntersection = surface.intersect(
-      state.geoContext, stepper.position(state),
-      navDir * stepper.direction(state), bcheck, surfaceTolerance)[index];
+  auto sIntersection =
+      surface.intersect(state.geoContext, stepper.position(state),
+                        navDir * stepper.direction(state), boundaryTolerance,
+                        surfaceTolerance)[index];
 
   // The intersection is on surface already
   if (sIntersection.status() == Intersection3D::Status::onSurface) {

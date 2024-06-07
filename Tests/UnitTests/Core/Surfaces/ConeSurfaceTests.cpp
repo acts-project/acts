@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//#include <boost/test/tools/output_test_stream.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   //
   /// Test isOnSurface
   Vector3 offSurface{100, 1, 2};
-  BOOST_CHECK(coneSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                             momentum, BoundaryCheck(true)));
+  BOOST_CHECK(coneSurfaceObject->isOnSurface(
+      tgContext, globalPosition, momentum, BoundaryTolerance::None()));
   BOOST_CHECK(!coneSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
-                                              BoundaryCheck(true)));
+                                              BoundaryTolerance::None()));
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(tgContext, offSurface,

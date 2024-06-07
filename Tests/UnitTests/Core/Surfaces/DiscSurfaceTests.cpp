@@ -116,12 +116,12 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   /// Test isOnSurface()
   Vector3 point3DNotInSector{0.0, 1.2, 0};
   Vector3 point3DOnSurface{1.2, 0.0, 0};
-  BOOST_CHECK(!discSurfaceObject->isOnSurface(tgContext, point3DNotInSector,
-                                              ignoredMomentum,
-                                              BoundaryCheck(true)));  // passes
-  BOOST_CHECK(discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
-                                             ignoredMomentum,
-                                             BoundaryCheck(true)));  // passes
+  BOOST_CHECK(!discSurfaceObject->isOnSurface(
+      tgContext, point3DNotInSector, ignoredMomentum,
+      BoundaryTolerance::None()));  // passes
+  BOOST_CHECK(discSurfaceObject->isOnSurface(
+      tgContext, point3DOnSurface, ignoredMomentum,
+      BoundaryTolerance::None()));  // passes
   //
   /// Test localToGlobal
   Vector3 returnedPosition{10.9, 8.7, 6.5};
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   // (bool) valid, it's contained in a Surface intersection
   auto sfIntersection = discSurfaceObject
                             ->intersect(tgContext, globalPosition, direction,
-                                        BoundaryCheck(false))
+                                        BoundaryTolerance::Infinite())
                             .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    Intersection3D::Status::reachable};

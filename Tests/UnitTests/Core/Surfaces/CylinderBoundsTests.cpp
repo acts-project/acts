@@ -113,27 +113,19 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   const Vector2 unitPhi{1.0, 0.0};
   const Vector2 withinBevelMin{0.5, -20.012};
   const Vector2 outsideBevelMin{0.5, -40.};
-  const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
-  const BoundaryCheck trueBoundaryCheckWithLessTolerance(true, true, 0.01,
-                                                         0.01);
-  BOOST_CHECK(
-      cylinderBoundsObject.inside(atPiBy2, trueBoundaryCheckWithTolerance));
-  BOOST_CHECK(
-      !cylinderBoundsSegment.inside(unitPhi, trueBoundaryCheckWithTolerance));
-  BOOST_CHECK(
-      cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance));
+  const BoundaryTolerance tolerance =
+      BoundaryTolerance::AbsoluteBound(0.1, 0.1);
+  const BoundaryTolerance lessTolerance =
+      BoundaryTolerance::AbsoluteBound(0.01, 0.01);
+  BOOST_CHECK(cylinderBoundsObject.inside(atPiBy2, tolerance));
+  BOOST_CHECK(!cylinderBoundsSegment.inside(unitPhi, tolerance));
+  BOOST_CHECK(cylinderBoundsObject.inside(origin, tolerance));
 
-  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin,
-                                           trueBoundaryCheckWithLessTolerance));
-  BOOST_CHECK(cylinderBoundsBeveledObject.inside(
-      withinBevelMin, trueBoundaryCheckWithLessTolerance));
-  BOOST_CHECK(!cylinderBoundsBeveledObject.inside(
-      outsideBevelMin, trueBoundaryCheckWithLessTolerance));
-
-  /// test for inside3D() with Vector3 argument
-  const Vector3 origin3D{0., 0., 0.};
+  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin, lessTolerance));
   BOOST_CHECK(
-      !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
+      cylinderBoundsBeveledObject.inside(withinBevelMin, lessTolerance));
+  BOOST_CHECK(
+      !cylinderBoundsBeveledObject.inside(outsideBevelMin, lessTolerance));
 
   /// test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,

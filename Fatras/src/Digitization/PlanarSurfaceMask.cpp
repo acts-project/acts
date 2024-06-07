@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
@@ -97,9 +98,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                             Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside =
-        surface.bounds().inside(localStart, Acts::BoundaryCheck(true));
+        surface.bounds().inside(localStart, Acts::BoundaryTolerance::None());
     bool endInside =
-        surface.bounds().inside(localEnd, Acts::BoundaryCheck(true));
+        surface.bounds().inside(localEnd, Acts::BoundaryTolerance::None());
 
     // Fast exit, both inside
     if (startInside && endInside) {
@@ -132,8 +133,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                          Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside =
-        surface.bounds().inside(sPolar, Acts::BoundaryCheck(true));
-    bool endInside = surface.bounds().inside(ePolar, Acts::BoundaryCheck(true));
+        surface.bounds().inside(sPolar, Acts::BoundaryTolerance::None());
+    bool endInside =
+        surface.bounds().inside(ePolar, Acts::BoundaryTolerance::None());
 
     // Fast exit for both inside
     if (startInside && endInside) {

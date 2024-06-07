@@ -23,8 +23,8 @@ std::vector<Acts::SurfaceIntersection> forwardOrderedIntersections(
   // Intersect the surfaces
   for (auto& surface : surfaces) {
     // Get the intersection
-    auto sMultiIntersection = surface->intersect(gctx, position, direction,
-                                                 Acts::BoundaryCheck(true));
+    auto sMultiIntersection = surface->intersect(
+        gctx, position, direction, Acts::BoundaryTolerance::None());
 
     // Take the closest
     auto closestForward = sMultiIntersection.closestForward();

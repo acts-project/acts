@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
@@ -290,7 +291,7 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
 
 Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     ActsScalar tolerance) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
@@ -306,7 +307,8 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
 
-  if (bcheck.isEnabled() && !isOnSurface(gctx, solution1, direction, bcheck)) {
+  if (!boundaryTolerance.isInfinite() &&
+      !isOnSurface(gctx, solution1, direction, boundaryTolerance)) {
     status1 = Intersection3D::Status::missed;
   }
 
@@ -315,7 +317,8 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  if (bcheck.isEnabled() && !isOnSurface(gctx, solution2, direction, bcheck)) {
+  if (!boundaryTolerance.isInfinite() &&
+      !isOnSurface(gctx, solution2, direction, boundaryTolerance)) {
     status2 = Intersection3D::Status::missed;
   }
 
@@ -333,7 +336,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
 Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();

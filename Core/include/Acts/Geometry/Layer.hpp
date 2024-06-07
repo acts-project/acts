@@ -127,12 +127,12 @@ class Layer : public virtual GeometryObject {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be checked
-  /// @param bcheck is the boundary check directive
+  /// @param boundaryTolerance is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
-  virtual bool isOnLayer(
-      const GeometryContext& gctx, const Vector3& position,
-      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3& position,
+                         const BoundaryTolerance& boundaryTolerance =
+                             BoundaryTolerance::None()) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor* approachDescriptor() const;

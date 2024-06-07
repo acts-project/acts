@@ -48,8 +48,8 @@ inline void updateCandidates(const GeometryContext& gctx,
 
     // Get the intersection @todo make a templated intersector
     // TODO surface tolerance
-    auto sIntersection = sRep.intersect(gctx, position, direction,
-                                        c.boundaryCheck, s_onSurfaceTolerance);
+    auto sIntersection = sRep.intersect(
+        gctx, position, direction, c.boundaryTolerance, s_onSurfaceTolerance);
     for (auto& si : sIntersection.split()) {
       c.objectIntersection = si;
       if (c.objectIntersection &&

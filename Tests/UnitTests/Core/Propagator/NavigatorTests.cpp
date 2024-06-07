@@ -145,11 +145,11 @@ struct PropagatorState {
 
     Intersection3D::Status updateSurfaceStatus(
         State& state, const Surface& surface, std::uint8_t index,
-        Direction navDir, const BoundaryCheck& bcheck,
+        Direction navDir, const BoundaryTolerance& boundaryTolerance,
         ActsScalar surfaceTolerance, const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, index, navDir, bcheck, surfaceTolerance,
-          logger);
+          *this, state, surface, index, navDir, boundaryTolerance,
+          surfaceTolerance, logger);
     }
 
     template <typename object_intersection_t>
@@ -1021,7 +1021,8 @@ StraightLinePropagator slpropagator(slstepper,
 
 Reference1EigenPropagator refepropagator1(
     estepper,
-    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
+    TryAllNavigator({tGeometry, true, true, false,
+                     BoundaryTolerance::Infinite()},
                     getDefaultLogger("ref1_e_nav", Logging::INFO)),
     getDefaultLogger("ref1_e_prop", Logging::INFO));
 Reference1StraightLinePropagator refslpropagator1(
@@ -1033,7 +1034,7 @@ Reference1StraightLinePropagator refslpropagator1(
 Reference2EigenPropagator refepropagator2(
     estepper,
     TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryCheck(false)},
+                             BoundaryTolerance::Infinite()},
                             getDefaultLogger("ref2_e_nav", Logging::INFO)),
     getDefaultLogger("ref2_e_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(

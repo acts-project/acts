@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
                          "5.0000000, 0.3926991, 0.0000000)"));
   //
   /// Test inside
-  BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryCheck(true)));
-  BOOST_CHECK(!radialBoundsObject.inside(outside, BoundaryCheck(true)));
+  BOOST_CHECK(radialBoundsObject.inside(inSurface, BoundaryTolerance::None()));
+  BOOST_CHECK(!radialBoundsObject.inside(outside, BoundaryTolerance::None()));
   //
   /// Test rMin
   BOOST_CHECK_EQUAL(radialBoundsObject.get(RadialBounds::eMinR), minRadius);

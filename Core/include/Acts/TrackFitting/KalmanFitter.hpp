@@ -967,7 +967,7 @@ class KalmanFitter {
             ->intersect(
                 state.geoContext, freeVector.segment<3>(eFreePos0),
                 state.options.direction * freeVector.segment<3>(eFreeDir0),
-                BoundaryCheck(true), state.options.surfaceTolerance)
+                BoundaryTolerance::None(), state.options.surfaceTolerance)
             .closest();
       };
 
