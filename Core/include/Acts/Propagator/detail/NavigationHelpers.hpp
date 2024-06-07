@@ -95,11 +95,11 @@ struct IntersectionCandidate {
 inline void emplaceAllVolumeCandidates(
     std::vector<detail::NavigationObjectCandidate>& candidates,
     const TrackingVolume& volume, bool resolveSensitive, bool resolveMaterial,
-    bool resolvePassive, BoundaryCheck boundaryCheckSurfaceApproach,
+    bool resolvePassive, const BoundaryCheck& boundaryCheckSurfaceApproach,
     const Logger& logger) {
   auto addCandidate = [&](AnyIntersectionObject object,
                           const Surface* representation,
-                          BoundaryCheck boundaryCheck) {
+                          const BoundaryCheck& boundaryCheck) {
     candidates.emplace_back(object, representation, boundaryCheck);
   };
 
