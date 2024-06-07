@@ -21,6 +21,7 @@
 #include <DD4hep/Handle.h>
 #include <DD4hep/Volumes.h>
 #include <Parsers/Printout.h>
+#include <TError.h>
 
 class TGeoNode;
 
@@ -41,6 +42,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
 
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
+  const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
   switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::VERBOSE);
@@ -53,17 +55,25 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
       break;
     case Acts::Logging::Level::WARNING:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::WARNING);
+      gErrorIgnoreLevel = kWarning;
       break;
     case Acts::Logging::Level::ERROR:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::ERROR);
+      gErrorIgnoreLevel = kError;
       break;
     case Acts::Logging::Level::FATAL:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::FATAL);
+      gErrorIgnoreLevel = kFatal;
       break;
     case Acts::Logging::Level::MAX:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::ALWAYS);
       break;
   }
+  // completely silence std::cout as DD4HEP is using it for logging
+  if (m_cfg.dd4hepLogLevel >= Acts::Logging::Level::WARNING) {
+    std::cout.setstate(std::ios_base::failbit);
+  }
+
   m_detector = &dd4hep::Detector::getInstance();
   for (auto& file : m_cfg.xmlFileNames) {
     m_detector->fromCompact(file.c_str());
@@ -71,6 +81,10 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   m_detector->volumeManager();
   m_detector->apply("DD4hepVolumeManager", 0, nullptr);
   m_geometry = m_detector->world();
+
+  // restore the logging
+  gErrorIgnoreLevel = old_gErrorIgnoreLevel;
+  std::cout.clear();
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
