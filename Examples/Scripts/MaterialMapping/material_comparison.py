@@ -126,7 +126,7 @@ if "__main__" == __name__:
 
     input_files = args.input
 
-    # Optinal detray csv file
+    # Detray csv file
     if args.detray_input:
         input_files.append(args.detray_input)
 
