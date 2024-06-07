@@ -27,6 +27,7 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/TryAllNavigator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -997,6 +998,9 @@ bool debugMode = false;
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
+using Reference1StraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllNavigator>;
 
 EigenStepper estepper(bField);
 StraightLineStepper slstepper;
@@ -1010,6 +1014,17 @@ StraightLinePropagator slpropagator(slstepper,
                                               getDefaultLogger("sl_nav",
                                                                Logging::INFO)),
                                     getDefaultLogger("sl_prop", Logging::INFO));
+
+Reference1EigenPropagator refepropagator1(
+    estepper,
+    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
+                    getDefaultLogger("ref1_e_nav", Logging::INFO)),
+    getDefaultLogger("ref1_e_prop", Logging::INFO));
+Reference1StraightLinePropagator refslpropagator1(
+    slstepper,
+    TryAllNavigator({tGeometry, true, true, false},
+                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref1_sl_prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
     Navigator_random,
@@ -1053,6 +1068,12 @@ BOOST_DATA_TEST_CASE(
     std::cout << ">>> Test self consistency slpropagator" << std::endl;
   }
   runSelfConsistencyTest(slpropagator, start, debugMode);
+
+  if (debugMode) {
+    std::cout << ">>> Test consistency epropagator vs refepropagator1"
+              << std::endl;
+  }
+  runConsistencyTest(epropagator, refepropagator1, start, debugMode);
 }
 
 }  // namespace Acts::Test
