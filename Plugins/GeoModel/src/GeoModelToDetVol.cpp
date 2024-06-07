@@ -9,7 +9,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelToDetVol.hpp"
 
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoPcon.h>
