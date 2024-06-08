@@ -788,7 +788,19 @@ class Gx2Fitter {
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       auto track = trackContainerTemp.makeTrack();
-      track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
+      tipIndex = gx2fResult.lastMeasurementIndex;
+
+      // It could happen, that no measurements were found. Then the track would
+      // be empty and the following operations would be invalid.
+      // Usually, this only happens during the first iteration, due to bad
+      // initial parameters.
+      if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+        ACTS_INFO("Did not find any measurements in nUpdate"
+                  << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
+
+      track.tipIndex() = tipIndex;
       track.linkForward();
 
       // This goes up for each measurement (for each dimension)
@@ -836,12 +848,13 @@ class Gx2Fitter {
       // we count n-dimensional measurements for n measurements, reducing the
       // effective number of needed measurements.
       // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement.
-      // This is also taken into account here. `ndf = 4` is chosen, since this
-      // a minimum that makes sense for us, but a more general approach is
-      // desired. We skip the check during the first iteration, since we
-      // cannot guarantee to hit all/enough measurement surfaces with the
-      // initial parameter guess.
+      // measurements, maybe if we do not support that kind of measurement. This
+      // is also taken into account here.
+      // `ndf = 4` is chosen, since it is a minimum that makes sense for us, but
+      // a more general approach is desired.
+      // We skip the check during the first iteration, since we cannot guarantee
+      // to hit all/enough measurement surfaces with the initial parameter
+      // guess.
       // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
       if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
@@ -862,8 +875,6 @@ class Gx2Fitter {
                    << deltaParams << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << chi2sum);
-
-      tipIndex = gx2fResult.lastMeasurementIndex;
 
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(chi2sum / oldChi2sum - 1) <
