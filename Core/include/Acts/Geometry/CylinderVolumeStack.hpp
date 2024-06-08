@@ -70,7 +70,7 @@ class CylinderVolumeStack : public Volume {
   ///      to be aligned in @c z and cannot have a rotation
   ///      in @c x or @c y.
   /// @pre The volumes all need to have @c CylinerVolumeBounds
-  ///      and cannot have a @f \phi @f sector or bevels.
+  ///      and cannot have a @f$\phi$@f sector or bevels.
   /// @note Preconditions are checked on construction
   CylinderVolumeStack(
       std::vector<Volume*>& volumes, BinningValue direction,
