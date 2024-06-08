@@ -21,19 +21,19 @@
 namespace Acts {
 
 struct CylinderVolumeStack::VolumeTuple {
-  Volume* volume;
+  Volume* volume{};
   const CylinderVolumeBounds* bounds{};
   std::shared_ptr<CylinderVolumeBounds> updatedBounds{};
-  Transform3 localTransform;
-  Transform3 globalTransform;
+  Transform3 localTransform = Transform3::Identity();
+  Transform3 globalTransform = Transform3::Identity();
 
   bool transformDirty = false;
 
   VolumeTuple(Volume& volume_, const Transform3& groupTransform)
       : volume{&volume_},
-        localTransform{groupTransform.inverse() * volume->transform()},
-        globalTransform{volume->transform()} {
-    bounds = dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
+        localTransform{groupTransform.inverse() * volume_.transform()},
+        globalTransform{volume_.transform()} {
+    bounds = dynamic_cast<const CylinderVolumeBounds*>(&volume_.volumeBounds());
     assert(bounds != nullptr);
     updatedBounds = std::make_shared<CylinderVolumeBounds>(*bounds);
   }
@@ -94,7 +94,8 @@ CylinderVolumeStack::CylinderVolumeStack(std::vector<Volume*>& volumes,
   initializeOuterVolume(direction, strategy, logger);
 }
 
-Volume CylinderVolumeStack::initialVolume(const std::vector<Volume*>& volumes) {
+Volume& CylinderVolumeStack::initialVolume(
+    const std::vector<Volume*>& volumes) {
   if (volumes.empty()) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires at least one volume");
@@ -126,7 +127,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
   volumeTuples.reserve(m_volumes.size());
 
   for (const auto& volume : m_volumes) {
-    auto* cylinderBounds =
+    const auto* cylinderBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&volume->volumeBounds());
     if (cylinderBounds == nullptr) {
       throw std::invalid_argument{
@@ -773,7 +774,6 @@ void CylinderVolumeStack::update(
 
           auto& last = volumeTuples.back();
           ActsScalar newMaxZLast = newVolume.maxZ();
-          ;
           ActsScalar newMidZLast = (last.minZ() + newMaxZLast) / 2.0;
           ActsScalar newHlZLast = (newMaxZLast - last.minZ()) / 2.0;
 
@@ -975,7 +975,7 @@ void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
 }
 
 std::shared_ptr<Volume> CylinderVolumeStack::addGapVolume(
-    Transform3 transform, std::shared_ptr<VolumeBounds> bounds) {
+    const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds) {
   auto gapVolume = std::make_shared<Volume>(transform, bounds);
   m_gaps.push_back(gapVolume);
   return gapVolume;
