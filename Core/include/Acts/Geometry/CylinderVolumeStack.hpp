@@ -80,7 +80,7 @@ class CylinderVolumeStack : public Volume {
 
   /// Update the volume bounds and transform. This
   /// will update the bounds of all volumes in the stack
-  /// to accomodate the new bounds and optionally create
+  /// to accommodate the new bounds and optionally create
   /// gap volumes according to the resize strategy set during
   /// construction.
   /// @param volbounds is the new bounds
@@ -92,7 +92,7 @@ class CylinderVolumeStack : public Volume {
 
   /// Update the volume bounds and transform. This
   /// will update the bounds of all volumes in the stack
-  /// to accomodate the new bounds and optionally create
+  /// to accommodate the new bounds and optionally create
   /// gap volumes according to the resize strategy set during
   /// construction.
   /// @param volbounds is the new bounds
@@ -103,7 +103,7 @@ class CylinderVolumeStack : public Volume {
   void update(std::shared_ptr<const CylinderVolumeBounds> newBounds,
               std::optional<Transform3> transform, const Logger& logger);
 
-  /// Access the gap volums that were created during attachment or resizing.
+  /// Access the gap volume that were created during attachment or resizing.
   /// @return the vector of gap volumes
   const std::vector<std::shared_ptr<Volume>>& gaps() const;
 
@@ -112,7 +112,7 @@ class CylinderVolumeStack : public Volume {
   /// there is not one.
   /// @param volumes is the vector of volumes
   /// @return the first volume
-  static Volume initialVolume(const std::vector<Volume*>& volumes);
+  static Volume& initialVolume(const std::vector<Volume*>& volumes);
 
   /// Helper function called during construction that performs the
   /// internal attachment and produces the overall outer volume bounds.
@@ -189,8 +189,8 @@ class CylinderVolumeStack : public Volume {
   /// @param transform is the transform of the gap volume
   /// @param bounds is the bounds of the gap volume
   /// @return the shared pointer to the gap volume
-  std::shared_ptr<Volume> addGapVolume(Transform3 transform,
-                                       std::shared_ptr<VolumeBounds> bounds);
+  std::shared_ptr<Volume> addGapVolume(
+      const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
 
   BinningValue m_direction{};
   ResizeStrategy m_resizeStrategy{};
