@@ -42,8 +42,8 @@ class ObjPropagationStepsWriter
   /// @param level Output logging level
   ObjPropagationStepsWriter(const Config& cfg,
                             Acts::Logging::Level level = Acts::Logging::INFO)
-      : WriterT<std::vector<std::vector<step_t>>>(cfg.collection,
-                                                  "ObjSpacePointWriter", level),
+      : WriterT<std::vector<std::vector<step_t>>>(
+            cfg.collection, "ObjPropagationStepsWriter", level),
         m_cfg(cfg) {
     if (m_cfg.collection.empty()) {
       throw std::invalid_argument("Missing input collection");
