@@ -95,7 +95,7 @@ class CylinderVolumeStack : public Volume {
   /// to accommodate the new bounds and optionally create
   /// gap volumes according to the resize strategy set during
   /// construction.
-  /// @param volbounds is the new bounds
+  /// @param newBounds is the new bounds
   /// @param transform is the new transform
   /// @param logger is the logger
   /// @pre The volume bounds need to be of type
