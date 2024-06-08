@@ -432,6 +432,10 @@ class Gx2Fitter {
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
+        if (surface->surfaceMaterial() != nullptr) {
+          std::cout << "found material: " << surface->surfaceMaterial()
+                    << std::endl;
+        }
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
@@ -481,6 +485,14 @@ class Gx2Fitter {
               return;
             }
             const auto& [boundParams, jacobian, pathLength] = *res;
+            //            auto& [boundParams, jacobian, pathLength] = *res;
+            //
+            //            std::cout << "boundParams:\n" << boundParams << std::endl;
+            //            //            std::cout << "boundParams.parameters()[eBoundLoc0]:\n" << boundParams.parameters()[eBoundPhi] << std::endl;
+            //            boundParams.parameters()[eBoundPhi] += 0.1;
+            //            //            std::cout << "after boundParams.parameters()[eBoundLoc0]:\n" << boundParams.parameters()[eBoundPhi] << std::endl;
+            //            std::cout << "after boundParams:\n" << boundParams << std::endl;
+            //            //            std::cout << "boundParams[0]:\n" << std::get<BoundVector>(boundParams) << std::endl;
 
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
@@ -631,7 +643,7 @@ class Gx2Fitter {
       }
       ACTS_DEBUG("result.processedMeasurements: "
                  << result.processedMeasurements << "\n"
-                 << "inputMeasurements.size()" << inputMeasurements->size())
+                 << "inputMeasurements.size(): " << inputMeasurements->size())
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -706,6 +718,8 @@ class Gx2Fitter {
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
+    std::cout << "QPDATAINPUTMEASUREMENTSSIZE " << inputMeasurements.size()
+              << std::endl;
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -788,7 +802,19 @@ class Gx2Fitter {
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       auto track = trackContainerTemp.makeTrack();
-      track.tipIndex() = gx2fResult.lastMeasurementIndex;  // do we need this?
+      tipIndex = gx2fResult.lastMeasurementIndex;
+
+      // It could happen, that no measurements were found. Then the track would
+      // be empty and the following operations would be invalid.
+      // Usually, this only happens during the first iteration, due to bad
+      // initial parameters.
+      if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+        ACTS_INFO("Did not find any measurements in nUpdate"
+                  << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
+        return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
+      }
+
+      track.tipIndex() = tipIndex;
       track.linkForward();
 
       // This goes up for each measurement (for each dimension)
@@ -803,7 +829,7 @@ class Gx2Fitter {
       for (const auto& trackState : track.trackStates()) {
         auto typeFlags = trackState.typeFlags();
         if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
-          /// Handle measurement
+          // Handle measurement
 
           auto measDim = trackState.calibratedSize();
           countNdf += measDim;
@@ -830,12 +856,13 @@ class Gx2Fitter {
                              trackState, *m_addToSumLogger);
           }
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
-          /// Handle hole
-          ACTS_VERBOSE("Handle hole.")
+          // Handle hole
+          // TODO: write hole handling
+          ACTS_VERBOSE("Placeholder: Handle hole.")
         } else {
           ACTS_WARNING("Unknown state encountered")
         }
-        /// Missing: Material handling. Should be there for hole and measurement
+        // TODO: Material handling. Should be there for hole and measurement
       }
 
       // This check takes into account the evaluated dimensions of the
@@ -843,12 +870,13 @@ class Gx2Fitter {
       // we count n-dimensional measurements for n measurements, reducing the
       // effective number of needed measurements.
       // We might encounter the case, where we cannot use some (parts of a)
-      // measurements, maybe if we do not support that kind of measurement.
-      // This is also taken into account here. `ndf = 4` is chosen, since this
-      // a minimum that makes sense for us, but a more general approach is
-      // desired. We skip the check during the first iteration, since we
-      // cannot guarantee to hit all/enough measurement surfaces with the
-      // initial parameter guess.
+      // measurements, maybe if we do not support that kind of measurement. This
+      // is also taken into account here.
+      // `ndf = 4` is chosen, since it is a minimum that makes sense for us, but
+      // a more general approach is desired.
+      // We skip the check during the first iteration, since we cannot guarantee
+      // to hit all/enough measurement surfaces with the initial parameter
+      // guess.
       // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
       if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
@@ -861,16 +889,14 @@ class Gx2Fitter {
       deltaParams =
           calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
 
-      ACTS_INFO("aMatrix:\n"
-                << aMatrix << "\n"
-                << "bVector:\n"
-                << bVector << "\n"
-                << "deltaParams:\n"
-                << deltaParams << "\n"
-                << "oldChi2sum = " << oldChi2sum << "\n"
-                << "chi2sum = " << chi2sum);
-
-      tipIndex = gx2fResult.lastMeasurementIndex;
+      ACTS_VERBOSE("aMatrix:\n"
+                   << aMatrix << "\n"
+                   << "bVector:\n"
+                   << bVector << "\n"
+                   << "deltaParams:\n"
+                   << deltaParams << "\n"
+                   << "oldChi2sum = " << oldChi2sum << "\n"
+                   << "chi2sum = " << chi2sum);
 
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(chi2sum / oldChi2sum - 1) <
@@ -984,6 +1010,9 @@ class Gx2Fitter {
 
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
+
+    std::cout << "QPDATAOUTMEASUREMENTSSIZE " << track.nMeasurements()
+              << std::endl;
 
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
