@@ -432,10 +432,6 @@ class Gx2Fitter {
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
-        if (surface->surfaceMaterial() != nullptr) {
-          std::cout << "found material: " << surface->surfaceMaterial()
-                    << std::endl;
-        }
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
@@ -485,14 +481,6 @@ class Gx2Fitter {
               return;
             }
             const auto& [boundParams, jacobian, pathLength] = *res;
-            //            auto& [boundParams, jacobian, pathLength] = *res;
-            //
-            //            std::cout << "boundParams:\n" << boundParams << std::endl;
-            //            //            std::cout << "boundParams.parameters()[eBoundLoc0]:\n" << boundParams.parameters()[eBoundPhi] << std::endl;
-            //            boundParams.parameters()[eBoundPhi] += 0.1;
-            //            //            std::cout << "after boundParams.parameters()[eBoundLoc0]:\n" << boundParams.parameters()[eBoundPhi] << std::endl;
-            //            std::cout << "after boundParams:\n" << boundParams << std::endl;
-            //            //            std::cout << "boundParams[0]:\n" << std::get<BoundVector>(boundParams) << std::endl;
 
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
@@ -718,8 +706,6 @@ class Gx2Fitter {
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
-    std::cout << "QPDATAINPUTMEASUREMENTSSIZE " << inputMeasurements.size()
-              << std::endl;
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -1010,9 +996,6 @@ class Gx2Fitter {
 
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
-
-    std::cout << "QPDATAOUTMEASUREMENTSSIZE " << track.nMeasurements()
-              << std::endl;
 
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
