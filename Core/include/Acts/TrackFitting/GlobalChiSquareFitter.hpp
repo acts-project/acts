@@ -734,6 +734,9 @@ class Gx2Fitter {
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
 
+    // REMOVE: this is just for testing, remove later
+    trackContainer.clear();
+
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
