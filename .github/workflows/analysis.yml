@@ -50,7 +50,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
-          -DENABLE_ACTS_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
