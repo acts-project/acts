@@ -770,7 +770,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trajectoryTempBackend;
+      r.fittedStates = &trackContainer.trackStateContainer();
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
