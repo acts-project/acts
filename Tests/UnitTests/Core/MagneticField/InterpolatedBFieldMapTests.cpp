@@ -57,13 +57,13 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   };
 
   // magnetic field known on grid in (r,z)
-  EquidistantAxis r(0.0, 4.0, 4u);
-  EquidistantAxis z(-5, 7, 6u);
+  Axis r(0.0, 4.0, 4u);
+  Axis z(-5, 7, 6u);
 
-  using Grid_t = Grid<Vector3, EquidistantAxis, EquidistantAxis>;
+  Grid g(Type<Vector3>, std::move(r), std::move(z));
+
+  using Grid_t = decltype(g);
   using BField_t = InterpolatedBFieldMap<Grid_t>;
-
-  Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
   // set grid values
   for (std::size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {

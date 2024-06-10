@@ -98,12 +98,16 @@ class Grid final : public IGrid {
     m_values.resize(size());
   }
 
+  Grid(Axes&... axes) = delete;
+
   /// @brief constructor from parameters pack of axes and type tag
   /// @param axes
   Grid(TypeTag<T> /*tag*/, Axes&&... axes)
       : m_axes(std::forward_as_tuple(axes...)) {
     m_values.resize(size());
   }
+
+  Grid(TypeTag<T> /*tag*/, Axes&... axes) = delete;
 
   /// @brief access value stored in bin for a given point
   ///
