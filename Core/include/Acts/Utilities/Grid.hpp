@@ -72,11 +72,6 @@ class Grid final : public IGrid {
   /// local iterator type
   using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
 
-  /// @brief default constructor
-  ///
-  /// @param [in] axes actual axis objects spanning the grid
-  // Grid(std::tuple<Axes...>& axes) = delete;
-
   /// @brief Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template
   /// grid object.
