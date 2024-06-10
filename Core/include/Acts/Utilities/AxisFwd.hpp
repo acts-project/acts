@@ -100,7 +100,4 @@ template <AxisBoundaryType bdt>
 Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<ActsScalar> bins)
     -> Axis<AxisType::Variable, bdt>;
 
-using EquidistantAxis = Axis<AxisType::Equidistant>;
-using VariableAxis = Axis<AxisType::Variable>;
-
 }  // namespace Acts

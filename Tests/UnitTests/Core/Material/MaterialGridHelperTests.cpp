@@ -28,7 +28,7 @@
 
 namespace Acts::Test {
 
-using EAxis = Acts::EquidistantAxis;
+using EAxis = Acts::Axis<AxisType::Equidistant>;
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =

@@ -69,7 +69,8 @@ class SolenoidBField;
 ///       {-1,0,1} and the BFieldValues will be set to {3,2,3}.
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>>
+    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>
 fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                            std::array<std::size_t, 2> nBinsRZ)>&
                localToGlobalBin,
@@ -128,8 +129,9 @@ fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
 ///       be set to {3,2,3}.
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::EquidistantAxis, Acts::EquidistantAxis,
-               Acts::EquidistantAxis>>
+    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>
 fieldMapXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
@@ -150,7 +152,8 @@ fieldMapXYZ(
 ///
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>>
+    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>
 solenoidFieldMap(std::pair<double, double> rlim, std::pair<double, double> zlim,
                  std::pair<std::size_t, std::size_t> nbins,
                  const SolenoidBField& field);

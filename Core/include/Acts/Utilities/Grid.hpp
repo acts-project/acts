@@ -75,7 +75,7 @@ class Grid final : public IGrid {
   /// @brief default constructor
   ///
   /// @param [in] axes actual axis objects spanning the grid
-  Grid(std::tuple<Axes...>& axes) = delete;
+  // Grid(std::tuple<Axes...>& axes) = delete;
 
   /// @brief Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template
@@ -98,7 +98,11 @@ class Grid final : public IGrid {
     m_values.resize(size());
   }
 
-  Grid(Axes&... axes) = delete;
+  /// @brief constructor from parameters pack of axes
+  /// @param axes
+  Grid(const Axes&... axes) : m_axes(std::tuple(axes...)) {
+    m_values.resize(size());
+  }
 
   /// @brief constructor from parameters pack of axes and type tag
   /// @param axes
@@ -107,7 +111,13 @@ class Grid final : public IGrid {
     m_values.resize(size());
   }
 
-  Grid(TypeTag<T> /*tag*/, Axes&... axes) = delete;
+  /// @brief constructor from parameters pack of axes and type tag
+  /// @param axes
+  Grid(TypeTag<T> /*tag*/, const Axes&... axes) : m_axes(std::tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  // Grid(TypeTag<T> /*tag*/, Axes&... axes) = delete;
 
   /// @brief access value stored in bin for a given point
   ///
@@ -595,5 +605,8 @@ class Grid final : public IGrid {
 
 template <typename T, class... Axes>
 Grid(TypeTag<T> /*type*/, Axes&&... axes) -> Grid<T, Axes...>;
+
+template <typename T, class... Axes>
+Grid(TypeTag<T> /*type*/, Axes&... axes) -> Grid<T, Axes...>;
 
 }  // namespace Acts

@@ -27,10 +27,12 @@
 namespace ActsExamples::detail {
 
 using InterpolatedMagneticField2 = Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>>;
+    Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>;
 
 using InterpolatedMagneticField3 = Acts::InterpolatedBFieldMap<
-    Acts::Grid<Acts::Vector3, Acts::EquidistantAxis, Acts::EquidistantAxis,
-               Acts::EquidistantAxis>>;
+    Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>,
+               Acts::Axis<Acts::AxisType::Equidistant>>>;
 
 }  // namespace ActsExamples::detail

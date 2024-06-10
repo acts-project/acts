@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <type_traits>
 
 using namespace Acts::UnitLiterals;
 
@@ -52,9 +53,8 @@ auto makeFieldMap(const SolenoidBField& field) {
   auto map =
       solenoidFieldMap({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
   // I know this is the correct grid type
-  using Grid_t =
-      Acts::Grid<Acts::Vector2, Acts::EquidistantAxis, Acts::EquidistantAxis>;
-  const Grid_t& grid = map.getGrid();
+  const auto& grid = map.getGrid();
+  using Grid_t = std::decay_t<decltype(grid)>;
   using index_t = Grid_t::index_t;
   using point_t = Grid_t::point_t;
 

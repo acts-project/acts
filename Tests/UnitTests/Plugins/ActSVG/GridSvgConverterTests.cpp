@@ -51,10 +51,9 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // x-y axis and grid
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-200., 200, 4);
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-200, 200, 6);
-  Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisX), decltype(axisY)>
-      gridXY({axisX, axisY});
+  Axis axisX(AxisBound{}, -200., 200, 4);
+  Axis axisY(AxisBound{}, -200, 200, 6);
+  Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
@@ -128,10 +127,9 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // x-y axis and grid
-  Axis<AxisType::Equidistant, AxisBoundaryType::Open> axisX(-200., 200, 4);
-  Axis<AxisType::Equidistant, AxisBoundaryType::Open> axisY(-200, 200, 6);
-  Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisX), decltype(axisY)>
-      gridXY({axisX, axisY});
+  Axis axisX(AxisOpen{}, -200., 200, 4);
+  Axis axisY(AxisOpen{}, -200, 200, 6);
+  Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
@@ -205,10 +203,9 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // z-phi Axes & Grid
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-200., 200., 3);
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI, 6);
-  Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisZ), decltype(axisPhi)>
-      gridZPhi({axisZ, axisPhi});
+  Axis axisZ(AxisBound{}, -200., 200., 3);
+  Axis axisPhi(AxisClosed{}, -M_PI, M_PI, 6);
+  Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridZPhi, {binZ, binPhi}, cOptions);
@@ -284,10 +281,9 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // r-phi Axes & Grid
-  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisR(100., 400., 3);
-  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI, 4);
-  Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisR), decltype(axisPhi)>
-      gridRPhi({axisR, axisPhi});
+  Axis axisR(AxisBound{}, 100., 400., 3);
+  Axis axisPhi(AxisClosed{}, -M_PI, M_PI, 4);
+  Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridRPhi, {binR, binPhi}, cOptions);

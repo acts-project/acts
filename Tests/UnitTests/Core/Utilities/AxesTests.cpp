@@ -18,7 +18,7 @@
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
-  EquidistantAxis a(0.0, 10.0, 10u);
+  Axis a(0.0, 10.0, 10u);
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 10u);

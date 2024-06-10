@@ -60,7 +60,8 @@ class Material;
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
 MaterialMapper<
-    Grid<Material::ParametersVector, EquidistantAxis, EquidistantAxis>>
+    Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
+         Axis<Acts::AxisType::Equidistant>>>
 materialMapperRZ(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
@@ -111,8 +112,9 @@ materialMapperRZ(
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<Grid<Material::ParametersVector, EquidistantAxis,
-                    EquidistantAxis, EquidistantAxis>>
+MaterialMapper<
+    Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
+         Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>>
 materialMapperXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
