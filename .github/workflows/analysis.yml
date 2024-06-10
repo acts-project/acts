@@ -76,7 +76,8 @@ jobs:
 
       - run: |
           ls -al
-          ls -al coverage
+          ls -al build
+          ls -al build/coverage
 
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2
@@ -88,7 +89,7 @@ jobs:
         run: |
           sonar-scanner \
             --define sonar.cfamily.compile-commands="build/compile_commands.json" \
-            --define sonar.coverageReportPaths=coverage/cov.xml
+            --define sonar.coverageReportPaths=build/coverage/cov.xml
 
   # build_performance:
   #   runs-on: ubuntu-latest
