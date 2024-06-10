@@ -48,6 +48,10 @@ ActsExamples::RootAthInputReader::RootAthInputReader(
   CLlocal_cov = 0;
   Part_vParentID = 0;
   Part_vParentBarcode = 0;
+  SPtopStripDirection = nullptr;
+  SPbottomStripDirection = nullptr;
+  SPstripCenterDistance = nullptr;
+  SPtopStripCenterPosition = nullptr;
   TRKproperties = 0;
   TRKpattern = 0;
   TRKmeasurementsOnTrack_pixcl_sctcl_index = 0;
@@ -60,15 +64,6 @@ ActsExamples::RootAthInputReader::RootAthInputReader(
   DTTstTrack_subDetType = 0;
   DTTstCommon_subDetType = 0;
 
-
-  
-  //m_inputchain->SetBranchAddress("nSP",&m_nSP);
-  //m_inputchain->SetBranchAddress("SPindex",m_SPindex);  
-  //m_inputchain->SetBranchAddress("SPx",m_SPx);
-  //m_inputchain->SetBranchAddress("SPy",m_SPy);
-  //m_inputchain->SetBranchAddress("SPz",m_SPz);
-  //m_inputchain->SetBranchAddress("SPCL1_index",m_SPCL1_index);
-  //m_inputchain->SetBranchAddress("SPCL2_index",m_SPCL2_index);
 
   m_inputchain->SetBranchAddress("run_number", &run_number, &b_run_number);
   m_inputchain->SetBranchAddress("event_number", &event_number, &b_event_number);
@@ -141,6 +136,22 @@ ActsExamples::RootAthInputReader::RootAthInputReader(
   m_inputchain->SetBranchAddress("SPCL1_index", SPCL1_index, &b_SPCL1_index);
   m_inputchain->SetBranchAddress("SPCL2_index", SPCL2_index, &b_SPCL2_index);
   m_inputchain->SetBranchAddress("SPisOverlap", SPisOverlap, &b_SPisOverlap);
+  m_inputchain->SetBranchAddress("SPradius", SPradius, &b_SPradius);
+  m_inputchain->SetBranchAddress("SPcovr", SPcovr, &b_SPcovr);
+  m_inputchain->SetBranchAddress("SPcovz", SPcovz, &b_SPcovz);
+  m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip, &b_SPhl_topstrip);
+  m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip, &b_SPhl_botstrip);
+  m_inputchain->SetBranchAddress("SPtopStripDirection",
+				 SPtopStripDirection, &b_SPtopStripDirection);
+  m_inputchain->SetBranchAddress("SPbottomStripDirection",
+				 SPbottomStripDirection, &b_SPbottomStripDirection);
+  m_inputchain->SetBranchAddress("SPstripCenterDistance",
+				 SPstripCenterDistance, &b_SPstripCenterDistance);
+  m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
+				 SPtopStripCenterPosition, &b_SPtopStripCenterPosition);
+  
+
+  
   m_inputchain->SetBranchAddress("nTRK", &nTRK, &b_nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex, &b_TRKindex);
   m_inputchain->SetBranchAddress("TRKtrack_fitter", TRKtrack_fitter, &b_TRKtrack_fitter);
@@ -182,69 +193,86 @@ ActsExamples::RootAthInputReader::RootAthInputReader(
   } // constructor
 
 
-  ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
-    const ActsExamples::AlgorithmContext& ctx){
+ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(const ActsExamples::AlgorithmContext& ctx){
+  
+  // Prepare containers for the hit data using the framework event data types
+  //GeometryIdMultimap<Measurement> orderedMeasurements;
+  //ClusterContainer clusters;
+  //IndexMultimap<Index> measurementSimHitsMap;
+  //IndexSourceLinkContainer sourceLinks;
+  
+  
+  ACTS_DEBUG("Starting loop on events");
+  auto entry = ctx.eventNumber;
+  if (entry >= m_events) {
+    ACTS_ERROR("event out of bounds");
+    return ProcessCode::ABORT;
+  }
+  
+  std::lock_guard<std::mutex> lock(m_read_mutex);
+  
+  m_inputchain->GetEntry(entry);
 
-      // Prepare containers for the hit data using the framework event data types
-      //GeometryIdMultimap<Measurement> orderedMeasurements;
-      //ClusterContainer clusters;
-      //IndexMultimap<Index> measurementSimHitsMap;
-      //IndexSourceLinkContainer sourceLinks;
+  //Loop on clusters (measurements) 
+  
+  for (int im=0; im<5000; im++) {
+    
+    int bec      = CLbarrel_endcap[im];
+    int lydisk   = CLlayer_disk   [im];
+    int etamod   = CLeta_module   [im];
+    int phimod   = CLphi_module   [im];
+    int side     = CLside         [im];
+    ULong64_t moduleID = CLmoduleID     [im];
+    
+    ACTS_DEBUG(bec<<" "<<lydisk<<" "<<etamod<<" "<<phimod<<" "<<side<<" ");
+    
+    
+  }
+  
+  
+  // Prepare space-point container
+  // They contain both pixel and SCT space points
+  SimSpacePointContainer spacePoints;
+  boost::container::static_vector<Acts::SourceLink,2> sLinks;
+  
+  ACTS_DEBUG("Found "<< nSP <<" space points");
+  
+  //Loop on space points
+  for (int isp=0; isp<nSP;isp++) {
+    
+    Acts::Vector3 globalPos{SPx[isp],SPy[isp],SPz[isp]};
+    double sp_covr = SPcovr[isp];
+    double sp_covz = SPcovz[isp];
 
-      // Prepare space-point container
-      // They contain both pixel and SCT space points
-      SimSpacePointContainer spacePoints;
-      boost::container::static_vector<Acts::SourceLink,2> sLinks;
+    //PIX=1  STRIP = 2
+    int type = SPCL2_index[isp] == -1 ?  1 : 2 ;
 
-      
-      ACTS_DEBUG("Starting loop on events");
-      auto entry = ctx.eventNumber;
-      if (entry >= m_events) {
-        ACTS_ERROR("event out of bounds");
-        return ProcessCode::ABORT;
-      }
+    //Acts::Vector3 topStripDirection{
+    //  SPtopStripDirection[isp]->at(0),
+    //  SPtopStripDirection[isp]->at(1),
+    //  SPtopStripDirection[isp]->at(2)};
+    
+    ACTS_DEBUG("SP:: "<<type<< " " <<globalPos << " " << sp_covr<< " "<<sp_covz);
+    
+    
+    //data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
+    //  topStripDirection, bottomStripDirection, stripCenterDistance,
+    //  topStripCenterPosition);
 
-      std::lock_guard<std::mutex> lock(m_read_mutex);
-      
-      m_inputchain->GetEntry(entry);
-      
+    
+    spacePoints.emplace_back(globalPos, std::nullopt,
+			     sp_covr, sp_covz, std::nullopt,sLinks);
+    //                       sp_topHalfStripLength, sp_bottomHalfStripLength,
+    //			     topStripDirection, bottomStripDirection,
+    //			     stripCenterDistance,topStripCenterPosition);
+    
+  }
+  
+  ACTS_DEBUG("Created "<<spacePoints.size() <<" " <<
+	     m_cfg.outputSpacePoints << "space points");
+  
+  m_outputSpacePoints(ctx, std::move(spacePoints));
+  
+  return ProcessCode::SUCCESS;
+}
 
-      //Loop on clusters (measurements) 
-
-      for (int im=0; im<5000; im++) {
-
-        int bec      = CLbarrel_endcap[im];
-        int lydisk   = CLlayer_disk   [im];
-        int etamod   = CLeta_module   [im];
-        int phimod   = CLphi_module   [im];
-        int side     = CLside         [im];
-        ULong64_t moduleID = CLmoduleID     [im];
-
-        ACTS_DEBUG(bec<<" "<<lydisk<<" "<<etamod<<" "<<phimod<<" "<<side<<" ");
-        std::cout<<CLmoduleID[im]<<std::endl;
-
-      }
-
-      //Loop on space points
-      for (int isp=0; isp<nSP;isp++) {
-
-        Acts::Vector3 globalPos{SPx[isp],SPy[isp],SPz[isp]};
-        double sp_covr = 0.1;
-        double sp_covz = 0.1;
-
-        spacePoints.emplace_back(globalPos, std::nullopt,
-                               sp_covr, sp_covz, std::nullopt, sLinks);
-      }
-
-
-      ACTS_DEBUG("Created "<<spacePoints.size() <<" " << m_cfg.outputSpacePoints
-      << "space points");
-     
-      m_outputSpacePoints(ctx, std::move(spacePoints));
-
-      return ProcessCode::SUCCESS;
-    }
-
-
-
-    //ActsExamples::Measurement RootAthInputReader::createMeasurement(int index) { }
