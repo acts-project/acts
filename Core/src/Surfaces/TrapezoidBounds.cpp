@@ -9,8 +9,9 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -90,8 +91,8 @@ bool Acts::TrapezoidBounds::inside(
   // run slow-ish polygon check
   std::vector<Acts::Vector2> vertices = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  return PolygonBoundaryCheck(vertices, boundaryTolerance)
-      .inside(extPosition, std::nullopt);
+  return detail::insidePolygon(vertices, boundaryTolerance, extPosition,
+                               std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(

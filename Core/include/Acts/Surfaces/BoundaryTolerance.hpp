@@ -135,67 +135,20 @@ class BoundaryTolerance {
 
   /// Check if the boundary check is of a specific type.
   template <typename T>
-  bool holdsVariant() const;
+  bool holdsVariant() const {
+    return std::holds_alternative<T>(m_variant);
+  }
 
   /// Get the specific underlying type.
   template <typename T>
-  const T& getVariant() const;
+  const T& getVariant() const {
+    return std::get<T>(m_variant);
+  }
 
   template <typename T>
-  const T* getVariantPtr() const;
-};
-
-/// Utility to check if a point is inside a box.
-class AlignedBoxBoundaryCheck {
- public:
-  /// Construct with the lower left and upper right corners of the box.
-  AlignedBoxBoundaryCheck(const Vector2& lowerLeft, const Vector2& upperRight,
-                          BoundaryTolerance tolerance);
-
-  /// Get the lower left corner of the box.
-  const Vector2& lowerLeft() const;
-
-  /// Get the upper right corner of the box.
-  const Vector2& upperRight() const;
-
-  std::array<Vector2, 4> vertices() const;
-
-  /// Get the tolerance.
-  const BoundaryTolerance& tolerance() const;
-
-  /// Check if the point is inside the box.
-  bool inside(const Vector2& point,
-              const std::optional<SquareMatrix2>& jacobian) const;
-
- private:
-  Vector2 m_lowerLeft;
-  Vector2 m_upperRight;
-  BoundaryTolerance m_tolerance;
-};
-
-/// Utility to check if a point is inside a polygon.
-template <typename Vector2Container>
-class PolygonBoundaryCheck {
- public:
-  /// Construct with the vertices of the polygon.
-  PolygonBoundaryCheck(const Vector2Container& vertices,
-                       BoundaryTolerance tolerance);
-
-  /// Get the vertices of the polygon.
-  const Vector2Container& vertices() const;
-
-  /// Get the tolerance.
-  const BoundaryTolerance& tolerance() const;
-
-  /// Check if the point is inside the polygon.
-  bool inside(const Vector2& point,
-              const std::optional<SquareMatrix2>& jacobian) const;
-
- private:
-  const Vector2Container& m_vertices;
-  BoundaryTolerance m_tolerance;
+  const T* getVariantPtr() const {
+    return holdsVariant<T>() ? &getVariant<T>() : nullptr;
+  }
 };
 
 }  // namespace Acts
-
-#include "Acts/Surfaces/BoundaryCheck.ipp"

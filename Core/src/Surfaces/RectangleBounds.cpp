@@ -8,14 +8,16 @@
 
 #include "Acts/Surfaces/RectangleBounds.hpp"
 
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+
 #include <iomanip>
 #include <iostream>
 
 bool Acts::RectangleBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
-  return AlignedBoxBoundaryCheck(m_min, m_max, boundaryTolerance)
-      .inside(lposition, std::nullopt);
+  return detail::insideAlignedBox(m_min, m_max, boundaryTolerance, lposition,
+                                  std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::RectangleBounds::vertices(

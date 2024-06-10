@@ -9,7 +9,8 @@
 #include "Acts/Surfaces/ConeBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -60,10 +61,9 @@ bool Acts::ConeBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
   auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
-  return AlignedBoxBoundaryCheck(Vector2(-rphiHalf, get(eMinZ)),
-                                 Vector2(rphiHalf, get(eMaxZ)),
-                                 boundaryTolerance)
-      .inside(shifted(lposition), std::nullopt);
+  return detail::insideAlignedBox(
+      Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
+      boundaryTolerance, shifted(lposition), std::nullopt);
 }
 
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {

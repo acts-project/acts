@@ -8,7 +8,7 @@
 
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 

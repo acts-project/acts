@@ -21,7 +21,7 @@ macro(add_benchmark _name)
 endmacro()
 
 add_benchmark(AtlasStepper AtlasStepperBenchmark.cpp)
-add_benchmark(BoundaryCheck BoundaryCheckBenchmark.cpp)
+add_benchmark(BoundaryTolerance BoundaryToleranceBenchmark.cpp)
 add_benchmark(BinUtility BinUtilityBenchmark.cpp)
 add_benchmark(EigenStepper EigenStepperBenchmark.cpp)
 add_benchmark(SolenoidField SolenoidFieldBenchmark.cpp)

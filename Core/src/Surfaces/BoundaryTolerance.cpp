@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 
@@ -193,69 +193,6 @@ SquareMatrix2 BoundaryTolerance::getMetric(
   }
 
   return metric;
-}
-
-AlignedBoxBoundaryCheck::AlignedBoxBoundaryCheck(const Vector2& lowerLeft,
-                                                 const Vector2& upperRight,
-                                                 BoundaryTolerance tolerance)
-    : m_lowerLeft(lowerLeft),
-      m_upperRight(upperRight),
-      m_tolerance(std::move(tolerance)) {}
-
-const Vector2& AlignedBoxBoundaryCheck::lowerLeft() const {
-  return m_lowerLeft;
-}
-
-const Vector2& AlignedBoxBoundaryCheck::upperRight() const {
-  return m_upperRight;
-}
-
-std::array<Vector2, 4> AlignedBoxBoundaryCheck::vertices() const {
-  return {{m_lowerLeft,
-           {m_upperRight[0], m_lowerLeft[1]},
-           m_upperRight,
-           {m_lowerLeft[0], m_upperRight[1]}}};
-}
-
-const BoundaryTolerance& AlignedBoxBoundaryCheck::tolerance() const {
-  return m_tolerance;
-}
-
-bool AlignedBoxBoundaryCheck::inside(
-    const Vector2& point,
-    const std::optional<SquareMatrix2>& jacobianOpt) const {
-  if (m_tolerance.isInfinite()) {
-    return true;
-  }
-
-  if (detail::VerticesHelper::isInsideRectangle(point, m_lowerLeft,
-                                                m_upperRight)) {
-    return true;
-  }
-
-  if (!m_tolerance.hasTolerance()) {
-    return false;
-  }
-
-  Vector2 closestPoint;
-
-  if (!m_tolerance.hasMetric(jacobianOpt.has_value())) {
-    closestPoint =
-        detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
-            point, m_lowerLeft, m_upperRight);
-  } else {
-    // TODO there might be a more optimal way to compute the closest point to a
-    // box with metric
-
-    SquareMatrix2 metric = m_tolerance.getMetric(jacobianOpt);
-
-    closestPoint = detail::VerticesHelper::computeClosestPointOnPolygon(
-        point, vertices(), metric);
-  }
-
-  Vector2 distance = closestPoint - point;
-
-  return m_tolerance.isTolerated(distance, jacobianOpt);
 }
 
 }  // namespace Acts

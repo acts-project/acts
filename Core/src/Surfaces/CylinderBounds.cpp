@@ -9,7 +9,8 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -52,10 +53,9 @@ bool Acts::CylinderBounds::inside(
   double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
-    return AlignedBoxBoundaryCheck(Vector2(-halfPhi, -halfLengthZ),
-                                   Vector2(halfPhi, halfLengthZ),
-                                   boundaryTolerance)
-        .inside(shifted(lposition), jacobian());
+    return detail::insideAlignedBox(
+        Vector2(-halfPhi, -halfLengthZ), Vector2(halfPhi, halfLengthZ),
+        boundaryTolerance, shifted(lposition), jacobian());
   }
 
   double radius = get(eR);
@@ -88,8 +88,8 @@ bool Acts::CylinderBounds::inside(
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
 
-  return PolygonBoundaryCheck(vertices, boundaryTolerance)
-      .inside(lposition, jacobian());
+  return detail::insidePolygon(vertices, boundaryTolerance, lposition,
+                               jacobian());
 }
 
 std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {

@@ -8,7 +8,7 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include <ostream>
 

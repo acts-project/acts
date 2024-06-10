@@ -9,7 +9,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"

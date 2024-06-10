@@ -9,7 +9,8 @@
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -58,8 +59,8 @@ bool Acts::DiscTrapezoidBounds::inside(
                         {-get(eHalfLengthXmaxR), m_ymax},
                         {-get(eHalfLengthXminR), get(eMinR)}};
   auto jacobian = jacobianToLocalCartesian(lposition);
-  return PolygonBoundaryCheck(vertices, boundaryTolerance)
-      .inside(toLocalCartesian(lposition), jacobian);
+  return detail::insidePolygon(vertices, boundaryTolerance,
+                               toLocalCartesian(lposition), jacobian);
 }
 
 std::vector<Acts::Vector2> Acts::DiscTrapezoidBounds::vertices(

@@ -8,7 +8,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
@@ -108,25 +109,22 @@ int main(int /*argc*/, char** /*argv[]*/) {
     };
     run_bench(
         [&] {
-          return PolygonBoundaryCheck(poly, check).inside(center, std::nullopt);
+          return detail::insidePolygon(poly, check, center, std::nullopt);
         },
         num_inside_points, "Center");
     run_bench(
         [&] {
-          return PolygonBoundaryCheck(poly, check)
-              .inside(edge_inside, std::nullopt);
+          return detail::insidePolygon(poly, check, edge_inside, std::nullopt);
         },
         num_inside_points, "Inside edge");
     run_bench(
         [&] {
-          return PolygonBoundaryCheck(poly, check)
-              .inside(edge_outside, std::nullopt);
+          return detail::insidePolygon(poly, check, edge_outside, std::nullopt);
         },
         num_outside_points, "Outside edge");
     run_bench(
         [&] {
-          return PolygonBoundaryCheck(poly, check)
-              .inside(far_away, std::nullopt);
+          return detail::insidePolygon(poly, check, far_away, std::nullopt);
         },
         num_outside_points, "Far away");
 
@@ -135,7 +133,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     std::generate(points.begin(), points.end(), random_point);
     run_bench_with_inputs(
         [&](const auto& point) {
-          return PolygonBoundaryCheck(poly, check).inside(point, std::nullopt);
+          return detail::insidePolygon(poly, check, point, std::nullopt);
         },
         points, "Random");
   };

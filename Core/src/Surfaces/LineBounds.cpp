@@ -8,7 +8,8 @@
 
 #include "Acts/Surfaces/LineBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -22,9 +23,9 @@ bool Acts::LineBounds::inside(
     const Acts::BoundaryTolerance& boundaryTolerance) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
-  return AlignedBoxBoundaryCheck(Vector2(-r, -halfLengthZ),
-                                 Vector2(r, halfLengthZ), boundaryTolerance)
-      .inside(lposition, std::nullopt);
+  return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
+                                  Vector2(r, halfLengthZ), boundaryTolerance,
+                                  lposition, std::nullopt);
 }
 
 // ostream operator overload

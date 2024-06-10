@@ -11,10 +11,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <algorithm>
 #include <array>
@@ -176,7 +177,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   for (const auto& p : testPoints) {
     BOOST_TEST_CONTEXT("p=" << p.transpose()) {
       BOOST_CHECK_EQUAL(
-          PolygonBoundaryCheck(vertices, tolerance).inside(p, std::nullopt),
+          detail::insidePolygon(vertices, tolerance, p, std::nullopt),
           trapezoidBoundsObject.inside(p, tolerance));
     }
   }
@@ -204,7 +205,7 @@ BOOST_DATA_TEST_CASE(
   }
 
   BOOST_CHECK_EQUAL(
-      PolygonBoundaryCheck(vertices, tolerance).inside({x, y}, std::nullopt),
+      detail::insidePolygon(vertices, tolerance, {x, y}, std::nullopt),
       trapezoidBoundsObject.inside({x, y}, tolerance));
 }
 

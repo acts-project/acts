@@ -9,7 +9,7 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"

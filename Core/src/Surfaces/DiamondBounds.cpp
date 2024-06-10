@@ -8,7 +8,8 @@
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -21,8 +22,8 @@ Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
 bool Acts::DiamondBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
-  return PolygonBoundaryCheck(vertices(), boundaryTolerance)
-      .inside(lposition, std::nullopt);
+  return detail::insidePolygon(vertices(), boundaryTolerance, lposition,
+                               std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
