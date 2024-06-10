@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Merging1dCylinder) {
                                                   100_mm);
 
   std::unique_ptr<GridPortalLink> grid1dCyl = GridPortalLink::make(
-      *cyl, GridPortalLink::Direction::loc1, Axis{AxisBound{}, 0, 5, 5});
+      *cyl, GridPortalLink::Direction::loc1, Axis{AxisBound, 0, 5, 5});
 
   std::cout << *grid1dCyl << std::endl;
 }
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(Merging2dCylinder) {
                                                   100_mm);
 
   std::unique_ptr<GridPortalLink> grid2dCyl = GridPortalLink::make(
-      *cyl, Axis{AxisBound{}, 0, 5, 5}, Axis{AxisBound{}, 0, 5, 5});
+      *cyl, Axis{AxisBound, 0, 5, 5}, Axis{AxisBound, 0, 5, 5});
 
   std::cout << *grid2dCyl << std::endl;
 }
