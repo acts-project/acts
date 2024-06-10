@@ -74,30 +74,30 @@ jobs:
           disable_search: true
           token: ${{ secrets.CODECOV_TOKEN }} # required
 
-  build_performance:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
-      - name: Configure
-        run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          -DCMAKE_CXX_FLAGS="-Werror"
-          -DACTS_BUILD_EVERYTHING=ON
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-      - name: Measure
-        run: cmakeperf collect build/compile_commands.json -o perf.csv
-      - name: Results
-        run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cmakeperf
-          path: perf.csv
+  # build_performance:
+  #   runs-on: ubuntu-latest
+  #   container: ghcr.io/acts-project/ubuntu2204:v41
+  #   if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install dependencies
+  #       run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
+  #     - name: Configure
+  #       run: >
+  #         cmake -B build -S .
+  #         -GNinja
+  #         -DCMAKE_BUILD_TYPE=RelWithDebInfo
+  #         -DCMAKE_CXX_FLAGS="-Werror"
+  #         -DACTS_BUILD_EVERYTHING=ON
+  #         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  #     - name: Measure
+  #       run: cmakeperf collect build/compile_commands.json -o perf.csv
+  #     - name: Results
+  #       run: cmakeperf print perf.csv
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: cmakeperf
+  #         path: perf.csv
 
   # metric_tracking:
   #   runs-on: ubuntu-latest
