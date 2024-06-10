@@ -73,7 +73,7 @@ call(
     + ["-j", str(mp.cpu_count())]
     + excludes
     + extra_flags
-    + ["--sonarqube", "-o", "coverage/cov.xml"]
+    + ["--sonarqube", "coverage/cov.xml"]
 )
 
 call(
