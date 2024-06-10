@@ -74,6 +74,10 @@ jobs:
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
 
+      - run: |
+          ls -al
+          ls -al coverage
+
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2
 
