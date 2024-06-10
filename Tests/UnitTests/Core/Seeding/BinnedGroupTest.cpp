@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
   using value_t = std::size_t;
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
-  Axis phiAxis(AxisClosed{}, -M_PI, M_PI, 40);
-  Axis zAxis(AxisBound{}, 0, 100, 10);
+  Axis phiAxis(AxisClosed, -M_PI, M_PI, 40);
+  Axis zAxis(AxisBound, 0, 100, 10);
 
   Grid grid(Type<std::vector<value_t>>, std::move(phiAxis), std::move(zAxis));
   using grid_t = decltype(grid);

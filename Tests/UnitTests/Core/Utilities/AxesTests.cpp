@@ -375,11 +375,11 @@ BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
   static_assert(
       std::is_same_v<decltype(eqOpen),
                      Axis<AxisType::Equidistant, AxisBoundaryType::Open>>);
-  auto eqBound = Axis{AxisBound{}, 0.0, 10., 10};
+  auto eqBound = Axis{AxisBound, 0.0, 10., 10};
   static_assert(
       std::is_same_v<decltype(eqBound),
                      Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>);
-  auto eqClosed = Axis{AxisClosed{}, 0.0, 10., 10};
+  auto eqClosed = Axis{AxisClosed, 0.0, 10., 10};
   static_assert(
       std::is_same_v<decltype(eqClosed),
                      Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>);
@@ -388,11 +388,11 @@ BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
   static_assert(
       std::is_same_v<decltype(varOpen),
                      Axis<AxisType::Variable, AxisBoundaryType::Open>>);
-  auto varBound = Axis{AxisBound{}, {0, 1, 2., 3, 4}};
+  auto varBound = Axis{AxisBound, {0, 1, 2., 3, 4}};
   static_assert(
       std::is_same_v<decltype(varBound),
                      Axis<AxisType::Variable, AxisBoundaryType::Bound>>);
-  auto varClosed = Axis{AxisClosed{}, {0, 1, 2., 3, 4}};
+  auto varClosed = Axis{AxisClosed, {0, 1, 2., 3, 4}};
   static_assert(
       std::is_same_v<decltype(varClosed),
                      Axis<AxisType::Variable, AxisBoundaryType::Closed>>);

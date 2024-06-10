@@ -1089,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
                 == bins_t({0,1}));
   // clang-format on
 
-  Axis d(AxisClosed{}, 0.0, 1.0, 10u);
+  Axis d(AxisClosed, 0.0, 1.0, 10u);
 
   Grid g1Cl(Type<double>, std::move(d));
   BOOST_CHECK(g1Cl.neighborHoodIndices({{0}}, 1).collectVector() ==
@@ -1101,8 +1101,8 @@ BOOST_AUTO_TEST_CASE(neighborhood) {
   BOOST_CHECK(g1Cl.neighborHoodIndices({{5}}, 1).collectVector() ==
               bins_t({4, 5, 6}));  // overflow, makes no sense
 
-  Axis f(AxisClosed{}, 0.0, 1.0, 5u);
-  Axis e(AxisClosed{}, 0.0, 1.0, 5u);
+  Axis f(AxisClosed, 0.0, 1.0, 5u);
+  Axis e(AxisClosed, 0.0, 1.0, 5u);
   Grid g2Cl(Type<double>, std::move(e), std::move(f));
   BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1).collectVector() ==
               bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
@@ -1240,8 +1240,8 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 
     // @TODO: 3D checks would also be nice
 
-    Axis  aOp(AxisBound{},0.0, 1.0, 10u);
-    Axis  bOp(AxisBound{},0.0, 1.0, 5u);
+    Axis  aOp(AxisBound,0.0, 1.0, 10u);
+    Axis  bOp(AxisBound,0.0, 1.0, 5u);
     Grid g1Op(Type<double>, Axis{aOp});
     Grid g2Op(Type<double>, std::move(aOp), std::move(bOp));
 

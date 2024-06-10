@@ -33,9 +33,9 @@ template <AxisBoundaryType bdt>
 struct AxisBoundaryTypeTag {};
 
 /// Convenience typedefs for AxisBoundaryTypeTag
-using AxisOpen = AxisBoundaryTypeTag<AxisBoundaryType::Open>;
-using AxisBound = AxisBoundaryTypeTag<AxisBoundaryType::Bound>;
-using AxisClosed = AxisBoundaryTypeTag<AxisBoundaryType::Closed>;
+constexpr auto AxisOpen = AxisBoundaryTypeTag<AxisBoundaryType::Open>{};
+constexpr auto AxisBound = AxisBoundaryTypeTag<AxisBoundaryType::Bound>{};
+constexpr auto AxisClosed = AxisBoundaryTypeTag<AxisBoundaryType::Closed>{};
 
 inline std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt) {
   switch (bdt) {

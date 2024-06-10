@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
 
   // For Closed Boundary: out-of-bounds lookups wrap-around to the other side of
   // the axis.
-  Acts::Axis xAxisClosed(AxisClosed{}, 0, 100, nBins);
+  Acts::Axis xAxisClosed(AxisClosed, 0, 100, nBins);
   Acts::Grid gridClosed(Type<double>, std::move(xAxisClosed));
 
   auto lowerClosedNeighbours = binFinder.findBins(lowerBound, gridClosed);
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
 
   // For Open Boundary [default]: out-of-bounds lookups resolve to dedicated
   // underflow and overflow bins.
-  Acts::Axis xAxisOpen(AxisOpen{}, 0, 100, nBins);
+  Acts::Axis xAxisOpen(AxisOpen, 0, 100, nBins);
   Acts::Grid gridOpen(Type<double>, std::move(xAxisOpen));
 
   auto lowerOpenNeighbours = binFinder.findBins(lowerBound, gridOpen);
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
   BOOST_CHECK_EQUAL(upperOpenNeighbours[2ul], 11ul);
 
   // For Bound Boundary: out-of-bounds lookups resolve to the closest valid bin.
-  Acts::Axis xAxisBound(AxisBound{}, 0, 100, nBins);
+  Acts::Axis xAxisBound(AxisBound, 0, 100, nBins);
   Acts::Grid gridBound(Type<double>, std::move(xAxisBound));
 
   auto lowerBoundNeighbours = binFinder.findBins(lowerBound, gridBound);

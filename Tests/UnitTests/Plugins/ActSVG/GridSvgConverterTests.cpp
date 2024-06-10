@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // x-y axis and grid
-  Axis axisX(AxisBound{}, -200., 200, 4);
-  Axis axisY(AxisBound{}, -200, 200, 6);
+  Axis axisX(AxisBound, -200., 200, 4);
+  Axis axisY(AxisBound, -200, 200, 6);
   Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // x-y axis and grid
-  Axis axisX(AxisOpen{}, -200., 200, 4);
-  Axis axisY(AxisOpen{}, -200, 200, 6);
+  Axis axisX(AxisOpen, -200., 200, 4);
+  Axis axisY(AxisOpen, -200, 200, 6);
   Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // z-phi Axes & Grid
-  Axis axisZ(AxisBound{}, -200., 200., 3);
-  Axis axisPhi(AxisClosed{}, -M_PI, M_PI, 6);
+  Axis axisZ(AxisBound, -200., 200., 3);
+  Axis axisPhi(AxisClosed, -M_PI, M_PI, 6);
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
@@ -281,8 +281,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   using LocalBin = std::array<std::size_t, 2u>;
 
   // r-phi Axes & Grid
-  Axis axisR(AxisBound{}, 100., 400., 3);
-  Axis axisPhi(AxisClosed{}, -M_PI, M_PI, 4);
+  Axis axisR(AxisBound, 100., 400., 3);
+  Axis axisPhi(AxisClosed, -M_PI, M_PI, 4);
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;
