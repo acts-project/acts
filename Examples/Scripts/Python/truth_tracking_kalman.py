@@ -159,45 +159,22 @@ def runTruthTrackingKalman(
 
 
 if "__main__" == __name__:
-    import argparse
-
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # Parse the command line arguments
-    p = argparse.ArgumentParser()
-    p.add_argument(
-        "-d",
-        "--detector",
-        type=str,
-        choices=["GenericDetector", "ODD"],
-        default="GenericDetector",
-        help="Select Detector: GenericDetector (default) or ODD",
+    # ODD
+    from acts.examples.odd import getOpenDataDetector
+
+    detector, trackingGeometry, _ = getOpenDataDetector()
+    digiConfigFile = (
+        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )
-    p.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        default=Path.cwd(),
-        help="Output directory. Default `Path.cwd()`",
-    )
-    args = p.parse_args()
 
-    if args.detector == "ODD":
-        from acts.examples.odd import getOpenDataDetector
-
-        detector, trackingGeometry, _ = getOpenDataDetector()
-        digiConfigFile = (
-            srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-        )
-    else:
-        # GenericDetector
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
-        digiConfigFile = (
-            srcdir
-            / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        )
-
-    outputDir = args.output
+    ## GenericDetector
+    # detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # digiConfigFile = (
+    #     srcdir
+    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -205,5 +182,5 @@ if "__main__" == __name__:
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
-        outputDir=outputDir,
+        outputDir=Path.cwd(),
     ).run()
