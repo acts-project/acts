@@ -246,12 +246,13 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   auto measurement = trackState.template calibrated<kMeasDim>();
   auto covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
-  auto projector =
+  ActsMatrix<kMeasDim, eBoundSize> projector =
       (trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>())
           .eval();
 
-  auto projJacobian = (projector * jacobianFromStart).eval();
-  auto projPredicted = (projector * predicted).eval();
+  ActsMatrix<kMeasDim, eBoundSize> projJacobian =
+      (projector * jacobianFromStart).eval();
+  ActsMatrix<kMeasDim, 1> projPredicted = (projector * predicted).eval();
 
   auto residual = measurement - projPredicted;
 
@@ -294,7 +295,7 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
         << "safeInvCovMeasurement:\n"
         << (*safeInvCovMeasurement));
   } else {
-    ACTS_WARNING("\nsafeInvCovMeasurement failed (╯°□°）╯︵ ┻━┻\n");
+    ACTS_WARNING("safeInvCovMeasurement failed");
   }
 }
 
