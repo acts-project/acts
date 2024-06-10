@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
@@ -88,6 +89,19 @@ class Grid final : public IGrid {
   /// @brief Move constructor from axis tuple
   /// @param axes
   Grid(std::tuple<Axes...>&& axes) : m_axes(std::move(axes)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes
+  /// @param axes
+  Grid(Axes&&... axes) : m_axes(std::forward_as_tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes and type tag
+  /// @param axes
+  Grid(TypeTag<T> /*tag*/, Axes&&... axes)
+      : m_axes(std::forward_as_tuple(axes...)) {
     m_values.resize(size());
   }
 
@@ -574,5 +588,8 @@ class Grid final : public IGrid {
     return detail::grid_helper::closestPointsIndices(localBins, m_axes);
   }
 };
+
+template <typename T, class... Axes>
+Grid(TypeTag<T> /*type*/, Axes&&... axes) -> Grid<T, Axes...>;
 
 }  // namespace Acts

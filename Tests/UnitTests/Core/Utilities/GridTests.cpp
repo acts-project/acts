@@ -445,8 +445,8 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
 BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
   using Point = std::array<double, 1>;
   using indices = std::array<std::size_t, 1>;
-  VariableAxis a({0.0, 1.0, 4.0});
-  Grid<double, VariableAxis> g(std::make_tuple(std::move(a)));
+  Axis a({0.0, 1.0, 4.0});
+  Grid g(Type<double>, std::move(a));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 4u);
@@ -513,10 +513,9 @@ BOOST_AUTO_TEST_CASE(grid_test_1d_variable) {
 BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
   using Point = std::array<double, 2>;
   using indices = std::array<std::size_t, 2>;
-  VariableAxis a({0.0, 0.5, 3.0});
-  VariableAxis b({0.0, 1.0, 4.0});
-  Grid<double, VariableAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a({0.0, 0.5, 3.0});
+  Axis b({0.0, 1.0, 4.0});
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 16u);
@@ -637,11 +636,10 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_variable) {
 BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
   using Point = std::array<double, 3>;
   using indices = std::array<std::size_t, 3>;
-  VariableAxis a({0.0, 1.0});
-  VariableAxis b({0.0, 0.5, 3.0});
-  VariableAxis c({0.0, 0.5, 3.0, 3.3});
-  Grid<double, VariableAxis, VariableAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b), std::move(c)));
+  Axis a({0.0, 1.0});
+  Axis b({0.0, 0.5, 3.0});
+  Axis c({0.0, 0.5, 3.0, 3.3});
+  Grid g(Type<double>, std::move(a), std::move(b), std::move(c));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 60u);
@@ -777,10 +775,9 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
 BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
   using Point = std::array<double, 2>;
   using indices = std::array<std::size_t, 2>;
-  EquidistantAxis a(0.0, 1.0, 4u);
-  VariableAxis b({0.0, 0.5, 3.0});
-  Grid<double, EquidistantAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a(0.0, 1.0, 4u);
+  Axis b({0.0, 0.5, 3.0});
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // test general properties
   BOOST_CHECK_EQUAL(g.size(), 24u);
@@ -934,10 +931,9 @@ BOOST_AUTO_TEST_CASE(grid_test_2d_mixed) {
 }
 
 BOOST_AUTO_TEST_CASE(grid_test_2d_mixed_at) {
-  EquidistantAxis a(0.0, 6.0, 4u);
-  VariableAxis b({0.0, 1.5, 3.0});
-  Grid<double, EquidistantAxis, VariableAxis> g(
-      std::make_tuple(std::move(a), std::move(b)));
+  Axis a(0.0, 6.0, 4u);
+  Axis b({0.0, 1.5, 3.0});
+  Grid g(Type<double>, std::move(a), std::move(b));
 
   // initialize the grid
   using Point = std::array<double, 2>;
@@ -1323,17 +1319,14 @@ BOOST_AUTO_TEST_CASE(closestPoints) {
 }
 
 BOOST_AUTO_TEST_CASE(grid_type_conversion) {
-  using EAxis = EquidistantAxis;
-  using VAxis = VariableAxis;
-
   // Type conversion test
-  using Grid2Double = Grid<double, EAxis, VAxis>;
-  using Grid2Int = Grid<int, EAxis, VAxis>;
+  using Grid2Int =
+      Grid<int, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>;
 
-  EAxis a(0.0, 1.0, 10u);
-  VAxis b({0., 1.2, 2.3, 3.4, 4.5, 5.6});
-  Grid2Double g2(std::make_tuple(a, b));
-  Grid2Double g2Copy(g2.axesTuple());
+  Axis a(0.0, 1.0, 10u);
+  Axis b({0., 1.2, 2.3, 3.4, 4.5, 5.6});
+  Grid g2(Type<double>, a, b);
+  decltype(g2) g2Copy(g2.axesTuple());
 
   bool copyKeepsType = std::is_same<decltype(g2), decltype(g2Copy)>::value;
   BOOST_CHECK(copyKeepsType);

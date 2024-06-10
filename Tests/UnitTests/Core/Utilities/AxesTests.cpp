@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(equidistant_axis) {
 }
 
 BOOST_AUTO_TEST_CASE(variable_axis) {
-  VariableAxis a({0, 0.5, 3, 4.5, 6});
+  Axis a({0, 0.5, 3, 4.5, 6});
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 4u);
