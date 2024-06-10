@@ -770,7 +770,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trackContainerTemp.trackStateContainer();
+      r.fittedStates = &trajectoryTempBackend;
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
@@ -944,9 +944,9 @@ class Gx2Fitter {
     // Propagate again with the final covariance matrix. This is necessary to
     // obtain the propagated covariance for each state.
     if (gx2fOptions.nUpdateMax > 0) {
+      ACTS_VERBOSE("final deltaParams:\n" << deltaParams);
       ACTS_VERBOSE("Propagate with the final covariance.");
       // update covariance
-      ACTS_VERBOSE("finaldeltaParams:\n" << deltaParams);
       params.covariance() = fullCovariancePredicted;
 
       // set up propagator and co
