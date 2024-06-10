@@ -6,6 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// Must be on top to avoid some conflict between forward declare and typedef
+// clang-format off
+#include "GeoModelRead/ReadGeoModel.h"
+// clang-format on
+
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
