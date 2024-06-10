@@ -2,8 +2,8 @@ name: Analysis
 
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
   pull_request:
     branches:
       - main
@@ -51,6 +51,7 @@ jobs:
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -67,12 +68,18 @@ jobs:
           pip3 install gcovr==7.2
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./build/coverage/cov.xml
-          disable_search: true
-          token: ${{ secrets.CODECOV_TOKEN }} # required
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v2
+
+      - name: Run sonar-scanner
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
+        run: |
+          sonar-scanner \
+            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
+            --define sonar.coverageReportPaths=coverage/cov.xml
 
   # build_performance:
   #   runs-on: ubuntu-latest
