@@ -18,8 +18,7 @@ namespace Acts {
 
 class AnnulusBounds;
 
-namespace detail {
-namespace AnnulusBoundsHelper {
+namespace detail::AnnulusBoundsHelper {
 
 /// @brief The factory function to create an annulus bounds
 ///
@@ -37,6 +36,5 @@ std::tuple<std::shared_ptr<AnnulusBounds>, Transform3> create(
     const Transform3& transform, ActsScalar rMin, ActsScalar rMax,
     std::vector<Vector2> vertices);
 
-}  // namespace AnnulusBoundsHelper
-}  // namespace detail
+}  // namespace detail::AnnulusBoundsHelper
 }  // namespace Acts
