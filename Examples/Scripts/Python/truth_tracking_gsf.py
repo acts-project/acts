@@ -167,7 +167,7 @@ if "__main__" == __name__:
     )
 
     ## GenericDetector
-    # detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
     # digiConfigFile = (
     #     srcdir
     #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
