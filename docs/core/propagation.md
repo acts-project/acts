@@ -78,13 +78,14 @@ if( res.ok() ) {
 
 ## Navigators
 
-ACTS comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {struct}`Acts::DirectNavigator::Initializer`.
+ACTS comes with a couple of different navigator implementations:
+- The standard navigator {class}`Acts::Navigator` which performs the full navigation in the volume/layer/surface hierarchy
+- The {class}`Acts::DirectNavigator` which takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {struct}`Acts::DirectNavigator::Initializer`.
+- The {class}`Acts::TryAllNavigator` which, as the name suggests, tries to intersect all available surfaces without acceleration structure and special assumptions. This navigator is meant for validation rather than production.
+- The {class}`Acts::TryAllOverstepNavigator` which is similar to the {class}`Acts::TryAllNavigator`, but deliberately oversteps and then intersects surfaces which might have been missed by that step and targets them. This navigator is meant for validation rather than production.
+- The {class}`Acts::Experimental::DetectorNavigator` which performs the full navigation in the gen2 geometry. Note that this is still experimental and should not be included in production code as it might be unstable and break with minor version updates of Acts.
 
-The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
-
-:::{tip}
-The {class}`Acts::Navigator` by default does a straight-line extrapolation to resolve layer candidates. In certain geometries (e.g., telescope) this can lead to the effect that bent tracks miss some layers. This can be mitigated by disabling the bound-check for layer resolution with the `boundaryCheckLayerResolving` option in {struct}`Acts::Navigator::Config`.
-:::
+The navigators provide information about the current position inside the geometry in their state variable (e.g. {struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
 
 ## Steppers
 
