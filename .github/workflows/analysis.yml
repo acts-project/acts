@@ -60,7 +60,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Unit tests
-        run: cmake --build build --target test
+        run: ctest --test-dir build -j$(nproc)
 
       - name: Remove .o files
         run: >
