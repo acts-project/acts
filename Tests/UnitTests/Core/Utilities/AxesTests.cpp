@@ -370,4 +370,32 @@ BOOST_AUTO_TEST_CASE(wrapBin) {
   BOOST_CHECK_EQUAL(a6.wrapBin(7), 2u);
 }
 
+BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
+  auto eqOpen = Axis{0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqOpen),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Open>>);
+  auto eqBound = Axis{AxisBound{}, 0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqBound),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>);
+  auto eqClosed = Axis{AxisClosed{}, 0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqClosed),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>);
+
+  auto varOpen = Axis{{0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varOpen),
+                     Axis<AxisType::Variable, AxisBoundaryType::Open>>);
+  auto varBound = Axis{AxisBound{}, {0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varBound),
+                     Axis<AxisType::Variable, AxisBoundaryType::Bound>>);
+  auto varClosed = Axis{AxisClosed{}, {0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varClosed),
+                     Axis<AxisType::Variable, AxisBoundaryType::Closed>>);
+}
+
 }  // namespace Acts::Test
