@@ -28,8 +28,7 @@ using vec2 = Acts::Vector2;
 template <int N>
 using poly = Acts::ConvexPolygonBounds<N>;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -126,5 +125,5 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

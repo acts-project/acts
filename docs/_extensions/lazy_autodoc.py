@@ -95,6 +95,7 @@ def run() -> None:
         "Acts::CutoutCylinderVolumeBounds",
         "Acts::GenericCuboidVolumeBounds",
         "Acts::TrapezoidVolumeBounds",
+        "Acts::CylinderVolumeStack",
         "Acts::GeometryObject",
         "Acts::TrackContainer",
         "Acts::ConeLayer",
