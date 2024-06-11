@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointWriter.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -25,20 +25,20 @@
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvSpacepointWriter::CsvSpacepointWriter(
-    const ActsExamples::CsvSpacepointWriter::Config& config,
+ActsExamples::CsvSpacePointWriter::CsvSpacePointWriter(
+    const ActsExamples::CsvSpacePointWriter::Config& config,
     Acts::Logging::Level level)
     : WriterT(config.inputSpacepoints, "CsvSpacepointWriter", level),
       m_cfg(config) {}
 
-ActsExamples::CsvSpacepointWriter::~CsvSpacepointWriter() = default;
+ActsExamples::CsvSpacePointWriter::~CsvSpacePointWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::finalize() {
+ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::CsvSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
   // Open per-event file for all components
   std::string pathSP =
