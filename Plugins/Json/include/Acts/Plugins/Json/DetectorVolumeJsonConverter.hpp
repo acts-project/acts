@@ -14,9 +14,15 @@
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
+#include <map>
+#include <memory>
+#include <vector>
+
 // Custom Json encoder/decoders
 
 namespace Acts {
+
+class Surface;
 
 namespace Experimental {
 class DetectorVolume;
@@ -59,8 +65,12 @@ nlohmann::json toJson(
 /// @note that detray prepares for three independent files to be written out
 /// one for the geometry, one for the surface grids, one for the material
 ///
-/// @return a json object representing the detector volume
-nlohmann::json toJsonDetray(
+/// @return a json object representing the detector volume, and a map of
+/// eventually split portal objects for material assignment
+
+std::tuple<nlohmann::json, std::map<const Experimental::Portal*,
+                                    std::vector<std::shared_ptr<Surface>>>>
+toJsonDetray(
     const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& options = Options{});

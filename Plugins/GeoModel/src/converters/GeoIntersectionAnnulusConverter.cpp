@@ -1,0 +1,150 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2024 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Plugins/GeoModel/converters/GeoIntersectionAnnulusConverter.hpp"
+
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/detail/AnnulusBoundsHelper.hpp"
+
+#include <GeoModelKernel/GeoFullPhysVol.h>
+#include <GeoModelKernel/GeoGenericTrap.h>
+#include <GeoModelKernel/GeoLogVol.h>
+#include <GeoModelKernel/GeoShape.h>
+#include <GeoModelKernel/GeoShapeIntersection.h>
+#include <GeoModelKernel/GeoShapeShift.h>
+#include <GeoModelKernel/GeoTubs.h>
+
+Acts::Result<Acts::GeoModelSensitiveSurface>
+Acts::GeoIntersectionAnnulusConverter::toSensitiveSurface(
+    const GeoFullPhysVol& geoFPV) const {
+  // Retrieve logcal volume and absolute transform
+  const GeoLogVol* logVol = geoFPV.getLogVol();
+  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
+  if (logVol != nullptr) {
+    const GeoShape* geoShape = logVol->getShape();
+    auto geoIntersection = dynamic_cast<const GeoShapeIntersection*>(geoShape);
+    if (geoIntersection != nullptr) {
+      // Convert and check
+      auto [element, surface] =
+          toSurface(geoFPV, *geoIntersection, transform, true);
+      if (element != nullptr) {
+        return Result<GeoModelSensitiveSurface>::success(
+            GeoModelSensitiveSurface(element, surface));
+      }
+    }
+    return Result<GeoModelSensitiveSurface>::failure(
+        GeoModelConversionError::WrongShapeForConverter);
+  }
+  return Result<GeoModelSensitiveSurface>::failure(
+      GeoModelConversionError::MissingLogicalVolume);
+}
+
+Acts::Result<std::shared_ptr<Acts::Surface>>
+Acts::GeoIntersectionAnnulusConverter::toPassiveSurface(
+    const GeoFullPhysVol& geoFPV) const {
+  // Retrieve logcal volume and absolute transform
+  const GeoLogVol* logVol = geoFPV.getLogVol();
+  const Transform3& transform = geoFPV.getAbsoluteTransform(nullptr);
+  if (logVol != nullptr) {
+    const GeoShape* geoShape = logVol->getShape();
+
+    auto geoIntersection = dynamic_cast<const GeoShapeIntersection*>(geoShape);
+    if (geoIntersection != nullptr) {
+      // Conversion function call with sensitive = false
+      auto [element, surface] =
+          toSurface(geoFPV, *geoIntersection, transform, false);
+      if (surface != nullptr) {
+        return Result<std::shared_ptr<Surface>>::success(surface);
+      }
+    }
+    return Result<std::shared_ptr<Surface>>::failure(
+        GeoModelConversionError::WrongShapeForConverter);
+  }
+  return Result<std::shared_ptr<Surface>>::failure(
+      GeoModelConversionError::MissingLogicalVolume);
+}
+
+std::tuple<std::shared_ptr<Acts::GeoModelDetectorElement>,
+           std::shared_ptr<Acts::Surface>>
+Acts::GeoIntersectionAnnulusConverter::toSurface(
+    const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
+    const Transform3& absTransform, bool sensitive) const {
+  /// auto-calculate the unit length conversion
+  static constexpr ActsScalar unitLength =
+      Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
+
+  // Returns the first operand being ANDed
+  const GeoShape* opA = geoIntersection.getOpA();
+  const GeoShape* opB = geoIntersection.getOpB();
+
+  const GeoTubs* tubs = dynamic_cast<const GeoTubs*>(opA);
+  if (tubs != nullptr) {
+    // rMin, rMax
+    ActsScalar rMin = unitLength * tubs->getRMin();
+    ActsScalar rMax = unitLength * tubs->getRMax();
+
+    // Get the shift
+    const GeoShapeShift* shapeShift = dynamic_cast<const GeoShapeShift*>(opB);
+    if (shapeShift != nullptr) {
+      const Transform3& shift = shapeShift->getX();
+      const GeoGenericTrap* trap =
+          dynamic_cast<const GeoGenericTrap*>(shapeShift->getOp());
+      if (trap != nullptr) {
+        Vector3 tr = unitLength * shift.translation();
+
+        ActsScalar thickness = 2 * unitLength * trap->getZHalfLength();
+        //    X half length at -z, -y.
+        auto trapVertices = trap->getVertices();
+
+        std::vector<Vector2> faceVertices(trapVertices.begin(),
+                                          trapVertices.begin() + 4u);
+        // to make sure they are in ther right order
+        std::sort(faceVertices.begin(), faceVertices.end(),
+                  [](const auto& a, const auto& b) {
+                    return (VectorHelpers::phi(a) > VectorHelpers::phi(b));
+                  });
+
+        // Turn them into global
+        std::vector<Vector3> faceVertices3D;
+        for (const auto& v : faceVertices) {
+          faceVertices3D.push_back(
+              shift * Vector3{unitLength * v.x(), unitLength * v.y(), 0.});
+        }
+
+        faceVertices.clear();
+        for (auto& v : faceVertices3D) {
+          faceVertices.push_back(v.block<2, 1>(0, 0));
+        }
+
+        auto [annulusBounds, annulusTransform] =
+            Acts::detail::AnnulusBoundsHelper::create(absTransform, rMin, rMax,
+                                                      faceVertices);
+        if (!sensitive) {
+          auto surface =
+              Surface::makeShared<DiscSurface>(annulusTransform, annulusBounds);
+          return std::make_tuple(nullptr, surface);
+        }
+
+        // Create the detector element
+        auto detectorElement =
+            GeoModelDetectorElement::createDetectorElement<DiscSurface>(
+                geoFPV, annulusBounds, annulusTransform, thickness);
+        auto surface = detectorElement->surface().getSharedPtr();
+        return std::make_tuple(detectorElement, surface);
+      }
+      return std::make_tuple(nullptr, nullptr);
+    }
+    return std::make_tuple(nullptr, nullptr);
+  }
+  return std::make_tuple(nullptr, nullptr);
+}

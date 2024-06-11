@@ -69,7 +69,9 @@ nlohmann::json Acts::PortalJsonConverter::toJson(
   return jPortal;
 }
 
-std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
+std::tuple<std::vector<nlohmann::json>,
+           std::vector<std::shared_ptr<Acts::Surface>>>
+Acts::PortalJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
     const std::vector<OrientedSurface>& orientedSurfaces,
@@ -82,6 +84,8 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
 
   // First assumption for outside link (along direction)
   std::size_t outside = 1u;
+
+  std::vector<std::shared_ptr<Acts::Surface>> subSurfaces = {};
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy
@@ -210,6 +214,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
                     subBoundValues[CylinderBounds::BoundValues::eHalfLengthZ]));
             auto subSurface =
                 Surface::makeShared<CylinderSurface>(subTransform, subBounds);
+            subSurfaces.push_back(subSurface);
             auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *subSurface,
                                                               surfaceOptions);
             DetrayJsonHelper::addVolumeLink(jPortal["mask"],
@@ -232,6 +237,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
                 portal.surface().transform(gctx), subBounds);
+            subSurfaces.push_back(subSurface);
             auto jPortal = SurfaceJsonConverter::toJsonDetray(gctx, *subSurface,
                                                               surfaceOptions);
             DetrayJsonHelper::addVolumeLink(jPortal["mask"],
@@ -251,7 +257,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
       jPortals.push_back(jPortal);
     }
   }
-  return jPortals;
+  return { jPortals, subSurfaces };
 }
 
 nlohmann::json Acts::PortalJsonConverter::toJson(

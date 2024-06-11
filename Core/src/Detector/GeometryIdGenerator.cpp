@@ -52,7 +52,6 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
 void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
     IGeometryIdGenerator::GeoIdCache& cache, Portal& portal) const {
   auto& ccache = std::any_cast<Cache&>(cache);
-
   auto& pSurface = portal.surface();
   if (pSurface.geometryId().boundary() == 0 || m_cfg.overrideExistingIds) {
     GeometryIdentifier geoID = volumeId(ccache, false);
