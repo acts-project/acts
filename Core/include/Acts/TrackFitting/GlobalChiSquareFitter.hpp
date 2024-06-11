@@ -831,15 +831,10 @@ class Gx2Fitter {
           } else if (measDim == 3) {
             addToGx2fSums<3>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
-          } else if (measDim == 4) {
-            addToGx2fSums<4>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
-          } else if (measDim == 5) {
-            addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
           } else {
-            addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            ACTS_ERROR("Can not process state with measurement with "
+                       << measDim << " dimensions.")
+            countNdf -= measDim;
           }
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
