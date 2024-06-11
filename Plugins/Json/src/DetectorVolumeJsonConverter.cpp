@@ -97,7 +97,10 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
   return jVolume;
 }
 
-nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
+std::tuple<nlohmann::json,
+           std::map<const Acts::Experimental::Portal*,
+                    std::vector<std::shared_ptr<Acts::Surface>>>>
+Acts::DetectorVolumeJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
     const Options& options) {
@@ -137,9 +140,12 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
   auto orientedSurfaces =
       volume.volumeBounds().orientedSurfaces(volume.transform(gctx));
 
+  std::map<const Acts::Experimental::Portal*,
+           std::vector<std::shared_ptr<Acts::Surface>>>
+      portalSplits;
   // Write the portals - they will end up in the surface container
   for (const auto& [ip, p] : enumerate(volume.portals())) {
-    auto jPortalSurfaces =
+    auto [jPortalSurfaces, portalSubSplits ] =
         (toJsonDetray(gctx, *p, ip, volume, orientedSurfaces, detectorVolumes,
                       options.portalOptions));
     std::for_each(jPortalSurfaces.begin(), jPortalSurfaces.end(),
@@ -147,10 +153,13 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
                     jSurface["index_in_coll"] = sIndex++;
                     jSurfaces.push_back(jSurface);
                   });
+    if (!portalSubSplits.empty()) {
+      portalSplits[p] = portalSubSplits;
+    }
   }
   jVolume["surfaces"] = jSurfaces;
 
-  return jVolume;
+  return { jVolume, portalSplits };
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>

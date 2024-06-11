@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolume) {
       detrayOptions.transformOptions;
   detrayOptions.portalOptions.surfaceOptions = detrayOptions.surfaceOptions;
 
-  auto jVolumeDetray = Acts::DetectorVolumeJsonConverter::toJsonDetray(
+  auto [ jVolumeDetray, portalSplits ] = Acts::DetectorVolumeJsonConverter::toJsonDetray(
       tContext, *volume, {volume.get()}, detrayOptions);
 
   out.open("single-empty-volume-detray.json");
