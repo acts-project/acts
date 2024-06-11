@@ -30,11 +30,6 @@ void addOnnx(Context& ctx) {
                                 inputTracks, inputDuplicateNN, outputTracks,
                                 nMeasurementsMin);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, onnx,
-      "AmbiguityResolutionMLDBScanAlgorithm", inputTracks, inputDuplicateNN,
-      outputTracks, nMeasurementsMin, epsilonDBScan, minPointsDBScan);
-
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedFilterMLAlgorithm, onnx,
                                 "SeedFilterMLAlgorithm", inputTrackParameters,
                                 inputSimSeeds, inputSeedFilterNN,
