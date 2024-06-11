@@ -35,8 +35,8 @@ class BoundaryTolerance {
 
   /// Absolute tolerance in bound coordinates
   struct AbsoluteBound {
-    double tolerance0{0};
-    double tolerance1{0};
+    double tolerance0{};
+    double tolerance1{};
 
     AbsoluteBound() = default;
     AbsoluteBound(double tolerance0_, double tolerance1_)
@@ -45,8 +45,8 @@ class BoundaryTolerance {
 
   /// Absolute tolerance in Cartesian coordinates
   struct AbsoluteCartesian {
-    double tolerance0{0};
-    double tolerance1{0};
+    double tolerance0{};
+    double tolerance1{};
 
     AbsoluteCartesian() = default;
     AbsoluteCartesian(double tolerance0_, double tolerance1_)
@@ -55,7 +55,7 @@ class BoundaryTolerance {
 
   /// Absolute tolerance in Euclidean distance
   struct AbsoluteEuclidean {
-    double tolerance{0};
+    double tolerance{};
 
     AbsoluteEuclidean() = default;
     AbsoluteEuclidean(double tolerance_) : tolerance(tolerance_) {}
@@ -63,8 +63,8 @@ class BoundaryTolerance {
 
   /// Chi2 tolerance in bound coordinates
   struct Chi2Bound {
+    double maxChi2{};
     SquareMatrix2 weight = SquareMatrix2::Identity();
-    double maxChi2{0};
 
     Chi2Bound() = default;
     Chi2Bound(const SquareMatrix2& weight_, double maxChi2_)
