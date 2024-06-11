@@ -23,6 +23,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -256,12 +257,13 @@ class MultiEigenStepperLoop
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
-  /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
-                        std::unique_ptr<const Logger> logger =
-                            getDefaultLogger("GSF", Logging::INFO))
-      : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
-        m_logger(std::move(logger)) {}
+  struct Config {};
+
+  struct Options : public StepperPlainOptions {
+    void setPlainOptions(const StepperPlainOptions& options) {
+      static_cast<StepperPlainOptions&>(*this) = options;
+    }
+  };
 
   struct State {
     /// The struct that stores the individual components
@@ -331,6 +333,13 @@ class MultiEigenStepperLoop
       }
     }
   };
+
+  /// Constructor from a magnetic field and a optionally provided Logger
+  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("GSF", Logging::INFO))
+      : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
+        m_logger(std::move(logger)) {}
 
   /// Construct and initialize a state
   State makeState(std::reference_wrapper<const GeometryContext> gctx,

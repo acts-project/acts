@@ -418,16 +418,6 @@ class Gx2Fitter {
         return;
       }
 
-      // Add the measurement surface as external surface to the navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if (state.navigation.externalSurfaces.size() == 0) {
-        for (auto measurementIt = inputMeasurements->begin();
-             measurementIt != inputMeasurements->end(); measurementIt++) {
-          navigator.insertExternalSurface(state.navigation,
-                                          measurementIt->first);
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -716,7 +706,8 @@ class Gx2Fitter {
     using Actors = Acts::ActionList<GX2FActor>;
     using Aborters = Acts::AbortList<GX2FAborter>;
 
-    using PropagatorOptions = Acts::PropagatorOptions<Actors, Aborters>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actors, Aborters>;
 
     start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
@@ -761,6 +752,13 @@ class Gx2Fitter {
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
+
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& measurement : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(measurement.first);
+      }
+
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;

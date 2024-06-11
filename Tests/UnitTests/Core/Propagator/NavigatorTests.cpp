@@ -285,12 +285,10 @@ void step(stepper_state_t& sstate) {
 /// @param [in] navBound Number of navigation boundaries
 /// @param [in] extSurf Number of external surfaces
 bool testNavigatorStateVectors(Navigator::State& state, std::size_t navSurf,
-                               std::size_t navLay, std::size_t navBound,
-                               std::size_t extSurf) {
+                               std::size_t navLay, std::size_t navBound) {
   return ((state.navSurfaces.size() == navSurf) &&
           (state.navLayers.size() == navLay) &&
-          (state.navBoundaries.size() == navBound) &&
-          (state.externalSurfaces.size() == extSurf));
+          (state.navBoundaries.size() == navBound));
 }
 
 /// @brief Method for testing pointers in @c Navigator::State
@@ -357,7 +355,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -373,7 +371,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -392,7 +390,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     // a) Because target is reached
     state.navigation.targetReached = true;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -401,7 +399,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation.targetReached = false;
     state.navigation.targetSurface = nullptr;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
@@ -412,7 +410,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Surface* targetSurf = startSurf;
     state.navigation.targetSurface = targetSurf;
     navigator.postStep(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(
         state.navigation, nullptr, nullptr, nullptr, nullptr, targetSurf,
         nullptr, nullptr, nullptr, targetSurf));
@@ -429,7 +427,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const Layer* startLay = startVol->associatedLayer(
         state.geoContext, stepper.position(state.stepping));
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
@@ -438,7 +436,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startSurface = startSurf;
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(
         state.navigation, worldVol, startVol, startLay, startSurf, startSurf,
         startVol, nullptr, nullptr, nullptr));
@@ -447,7 +445,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     state.navigation = Navigator::State();
     state.navigation.startVolume = startVol;
     navigator.initialize(state, stepper);
-    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
+    BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
@@ -730,12 +728,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
+  using Options =
+      typename propagator_t::template Options<ActionListType, AbortListType>;
 
   // forward surface test
   Options fwdOptions(tgContext, mfContext);
   fwdOptions.pathLimit = 25_cm;
-  fwdOptions.maxStepSize = 1_cm;
+  fwdOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& fwdSurfaceCollector =
@@ -766,8 +765,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // backward surface test
   Options bwdOptions(tgContext, mfContext);
   bwdOptions.pathLimit = 25_cm;
-  bwdOptions.maxStepSize = 1_cm;
   bwdOptions.direction = Direction::Backward;
+  bwdOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& bwdMSurfaceCollector =
@@ -809,7 +808,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next
   // now go from surface to surface and check
   Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 1_cm;
+  fwdStepOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
@@ -864,8 +863,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.maxStepSize = 1_cm;
   bwdStepOptions.direction = Direction::Backward;
+  bwdStepOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& bwdStepSurfaceCollector =
@@ -939,13 +938,16 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   auto run = [&](const auto& prop) {
+    using propagator_t = std::decay_t<decltype(prop)>;
+    using Options =
+        typename propagator_t::template Options<ActionListType, AbortListType>;
+
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
     fwdOptions.pathLimit = 25_cm;
-    fwdOptions.maxStepSize = 1_cm;
+    fwdOptions.stepping.maxStepSize = 1_cm;
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =

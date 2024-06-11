@@ -234,23 +234,20 @@ struct ZStrawSurfaceBuilder {
 /// Propagate the initial parameters for the given pathlength in space.
 ///
 /// Use a negative path length to indicate backward propagation.
-template <typename propagator_t, template <typename, typename>
-                                 class options_t = Acts::PropagatorOptions>
+template <typename propagator_t,
+          typename options_t = typename propagator_t::template Options<>>
 inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::CurvilinearTrackParameters& initialParams, double pathLength) {
   using namespace Acts::UnitLiterals;
 
-  using Actions = Acts::ActionList<>;
-  using Aborts = Acts::AbortList<>;
-
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx);
+  options_t options(geoCtx, magCtx);
   options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
   options.surfaceTolerance = 1_nm;
-  options.stepTolerance = 1_nm;
+  options.stepping.stepTolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, options);
   BOOST_CHECK(result.ok());
@@ -260,8 +257,8 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
 }
 
 /// Propagate the initial parameters to the target surface.
-template <typename propagator_t, template <typename, typename>
-                                 class options_t = Acts::PropagatorOptions>
+template <typename propagator_t,
+          typename options_t = typename propagator_t::template Options<>>
 inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
@@ -269,15 +266,12 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const Acts::Surface& targetSurface, double pathLimit) {
   using namespace Acts::UnitLiterals;
 
-  using Actions = Acts::ActionList<>;
-  using Aborts = Acts::AbortList<>;
-
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx);
+  options_t options(geoCtx, magCtx);
   options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
   options.surfaceTolerance = 1_nm;
-  options.stepTolerance = 1_nm;
+  options.stepping.stepTolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());
@@ -291,8 +285,8 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
 /// Propagate the initial parameters the given path length along its
 /// trajectory and then propagate the final parameters back. Verify that the
 /// propagated parameters match the initial ones.
-template <typename propagator_t, template <typename, typename>
-                                 class options_t = Acts::PropagatorOptions>
+template <typename propagator_t,
+          typename options_t = typename propagator_t::template Options<>>
 inline void runForwardBackwardTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
@@ -316,8 +310,7 @@ inline void runForwardBackwardTest(
 /// initial parameters again to the target surface. Verify that the surface has
 /// been found and the parameters are consistent.
 template <typename propagator_t, typename surface_builder_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
+          typename options_t = typename propagator_t::template Options<>>
 inline void runToSurfaceTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
@@ -355,8 +348,7 @@ inline void runToSurfaceTest(
 /// Propagate the initial parameters along their trajectory for the given path
 /// length using two different propagators and verify consistent output.
 template <typename cmp_propagator_t, typename ref_propagator_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
+          typename options_t = typename ref_propagator_t::template Options<>>
 inline void runForwardComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
@@ -383,8 +375,7 @@ inline void runForwardComparisonTest(
 /// different propagators and verify consistent output.
 template <typename cmp_propagator_t, typename ref_propagator_t,
           typename surface_builder_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
+          typename options_t = typename ref_propagator_t::template Options<>>
 inline void runToSurfaceComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,

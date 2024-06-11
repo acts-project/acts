@@ -56,8 +56,8 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
       Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::pion());
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::detail::SteppingLogger>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
+  Propagator::Options<Acts::ActionList<Acts::detail::SteppingLogger>,
+                      Acts::AbortList<Acts::EndOfWorldReached>>
       opts(geoCtx, magCtx);
 
   auto res = propagator.propagate(start, opts);

@@ -340,15 +340,18 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
 
-  Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
+  using Extrapolator = Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator>;
+  using ExtrapolatorOptions =
+      Extrapolator::template Options<Acts::ActionList<Acts::MaterialInteractor>,
+                                     Acts::AbortList<Acts::EndOfWorldReached>>;
+
+  Extrapolator extrapolator(
       Acts::EigenStepper<>(m_cfg.magneticField),
       Acts::Navigator({m_cfg.trackingGeometry},
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  Acts::PropagatorOptions<Acts::ActionList<Acts::MaterialInteractor>,
-                          Acts::AbortList<Acts::EndOfWorldReached>>
-      extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
