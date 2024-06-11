@@ -49,8 +49,12 @@ namespace ActsExamples{
       std::string inputfile;
       // name of the output measurements 
       std::string outputMeasurements = "ath_meas";
+      // name of the output pixel space points
+      std::string outputPixelSpacePoints = "outputPixelSpacepoints";
+      // name of the output strip space points
+      std::string outputStripSpacePoints = "outputStripSpacepoints";
       // name of the output space points
-      std::string outputSpacePoints = "ath_sps"; 
+      std::string outputSpacePoints = "output_spacepoints"; 
     };
     
     RootAthInputReader(const RootAthInputReader &) = delete;
@@ -84,6 +88,8 @@ namespace ActsExamples{
     /// The config class
     Config m_cfg;
     
+    WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{this,"outputPixelSpacepoints"};
+    WriteDataHandle<SimSpacePointContainer> m_outputStripSpacePoints{this,"outputStripSpacepoints"};
     WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{this, "output_spacepoints"};
     std::unique_ptr<const Acts::Logger> m_logger;
     
