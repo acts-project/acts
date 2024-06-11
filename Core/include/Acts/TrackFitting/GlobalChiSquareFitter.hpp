@@ -813,14 +813,14 @@ class Gx2Fitter {
       BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
       for (const auto& trackState : track.trackStates()) {
+        jacobianFromStart = trackState.jacobian() * jacobianFromStart;
+
         auto typeFlags = trackState.typeFlags();
         if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           // Handle measurement
 
           auto measDim = trackState.calibratedSize();
           countNdf += measDim;
-
-          jacobianFromStart = trackState.jacobian() * jacobianFromStart;
 
           if (measDim == 1) {
             addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
