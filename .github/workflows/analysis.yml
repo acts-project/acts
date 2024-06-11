@@ -32,6 +32,9 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
 
       - name: Install dependencies
         run: apt-get install -y unzip
