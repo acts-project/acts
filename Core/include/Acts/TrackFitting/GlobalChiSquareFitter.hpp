@@ -242,19 +242,17 @@ template <std::size_t kMeasDim, typename track_state_t>
 void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
                    const track_state_t& trackState, const Logger& logger) {
-  auto predicted = trackState.predicted();
-  auto measurement = trackState.template calibrated<kMeasDim>();
-  auto covarianceMeasurement =
+  BoundVector predicted = trackState.predicted();
+  ActsVector<kMeasDim> measurement = trackState.template calibrated<kMeasDim>();
+  ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
   ActsMatrix<kMeasDim, eBoundSize> projector =
-      (trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>())
-          .eval();
+      trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
-  ActsMatrix<kMeasDim, eBoundSize> projJacobian =
-      (projector * jacobianFromStart).eval();
-  ActsMatrix<kMeasDim, 1> projPredicted = (projector * predicted).eval();
+  ActsMatrix<kMeasDim, eBoundSize> projJacobian = projector * jacobianFromStart;
+  ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
-  auto residual = measurement - projPredicted;
+  ActsVector<kMeasDim> residual = measurement - projPredicted;
 
   ACTS_VERBOSE("Contributions in addToGx2fSums:\n"
                << "kMeasDim: " << kMeasDim << "\n"
@@ -263,13 +261,14 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                << "covarianceMeasurement:\n"
                << covarianceMeasurement << "\n"
                << "projector:\n"
-               << projector << "\n"
+               << projector.eval() << "\n"
                << "projJacobian:\n"
-               << projJacobian << "\n"
-               << "projPredicted: " << projPredicted.transpose() << "\n"
-               << "residual: " << residual.transpose());
+               << projJacobian.eval() << "\n"
+               << "projPredicted: " << (projPredicted.transpose()).eval()
+               << "\n"
+               << "residual: " << (residual.transpose()).eval());
 
-  auto safeInvCovMeasurement = safeInverse(covarianceMeasurement.eval());
+  auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
 
   if (safeInvCovMeasurement) {
     chi2sum +=
