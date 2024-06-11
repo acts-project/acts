@@ -21,8 +21,14 @@ BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
             .colPivHouseholderQr()
             .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else {
+  } else if (aMatrix(5, 5) == 0) {
     constexpr std::size_t reducedMatrixSize = 5;
+    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
+        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+            .colPivHouseholderQr()
+            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+  } else {
+    constexpr std::size_t reducedMatrixSize = 6;
     deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
             .colPivHouseholderQr()
