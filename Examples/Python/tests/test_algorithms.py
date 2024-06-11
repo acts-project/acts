@@ -20,11 +20,9 @@ from acts.examples import (
     TrackFittingAlgorithm,
     SurfaceSortingAlgorithm,
     ParticlesPrinter,
-    HitsPrinter,
     TrackParametersPrinter,
     PropagationAlgorithm,
     DigitizationAlgorithm,
-    PlanarSteppingAlgorithm,
 )
 
 
@@ -53,11 +51,9 @@ from helpers import geant4Enabled, hepmc3Enabled
         TrackFittingAlgorithm,
         SurfaceSortingAlgorithm,
         ParticlesPrinter,
-        HitsPrinter,
         TrackParametersPrinter,
         PropagationAlgorithm,
         # GeantinoRecording,
-        PlanarSteppingAlgorithm,
         # EventRecording,
     ],
 )

@@ -32,8 +32,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct Object {};
 
@@ -480,15 +479,15 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // BoundingBoxScalar  min = -20, max = 20;
     // os = make_svg("frust2d.svg", w, w);
 
-    // BoundingBoxScalar  step = (max - min) / BoundingBoxScalar(n);
-    // for (std::size_t i = 0; i <= n; i++) {
+    // BoundingBoxScalar  step = (max - min) /
+    // static_cast<BoundingBoxScalar>(n); for (std::size_t i = 0; i <= n; i++) {
     // for (std::size_t j = 0; j <= n; j++) {
     // ActsVector<BoundingBoxScalar,2> dir    = {1, 0};
     // ActsVector<BoundingBoxScalar,2> origin = {min + step * i, min + step *
     // j}; origin.x() *= 1.10;  // visual Eigen::Rotation2D<BoundingBoxScalar>
-    // rot(2 * M_PI / BoundingBoxScalar(n) * i); BoundingBoxScalar angle = 0.5 *
-    // M_PI / n * j; Frustum2                 fr(origin, rot * dir, angle);
-    // fr.svg(os, w, w, 2);
+    // rot(2 * M_PI / static_cast<BoundingBoxScalar>(n) * i); BoundingBoxScalar
+    // angle = 0.5 * M_PI / n * j; Frustum2                 fr(origin, rot *
+    // dir, angle); fr.svg(os, w, w, 2);
     //}
     //}
 
@@ -509,8 +508,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     BoundingBoxScalar miny = -20;
     BoundingBoxScalar maxx = 20;
     BoundingBoxScalar maxy = 20;
-    BoundingBoxScalar stepx = (maxx - minx) / BoundingBoxScalar(n);
-    BoundingBoxScalar stepy = (maxy - miny) / BoundingBoxScalar(n);
+    BoundingBoxScalar stepx = (maxx - minx) / static_cast<BoundingBoxScalar>(n);
+    BoundingBoxScalar stepy = (maxy - miny) / static_cast<BoundingBoxScalar>(n);
 
     std::set<std::size_t> act_idxs;
 
@@ -630,7 +629,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     std::size_t n = 10;
     std::size_t s = 5;
     double min = -10, max = 10;
-    double step = (max - min) / double(s);
+    double step = (max - min) / s;
 
     // BEGIN VISUAL PARAMETER TEST
 
@@ -678,9 +677,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // Eigen::Affine3f rot;
     // for (std::size_t i = 0; i <= n; i++) {
     // ActsVector<BoundingBoxScalar,3> origin(i * 4, 0, 0);
-    // rot = Eigen::AngleAxisf(M_PI / BoundingBoxScalar(n) * i,
+    // rot = Eigen::AngleAxisf(M_PI / static_cast<BoundingBoxScalar>(n) * i,
     // ActsVector<BoundingBoxScalar,3>::UnitY()); BoundingBoxScalar angle =
-    // (M_PI / 2.) / BoundingBoxScalar(n) * (1 + i);
+    // (M_PI / 2.) / static_cast<BoundingBoxScalar>(n) * (1 + i);
     // ActsVector<BoundingBoxScalar,3> dir(1, 0, 0); Frustum3 fr(origin, rot *
     // dir, angle); fr.draw(helper, 2);
     //}
@@ -873,7 +872,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       n = 10;
       min = -33;
       max = 33;
-      step = (max - min) / BoundingBoxScalar(n);
+      step = (max - min) / static_cast<BoundingBoxScalar>(n);
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
@@ -913,7 +912,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     std::size_t n = 10;
     double min = -10, max = 10;
     std::size_t s = 5;
-    double step = (max - min) / double(s);
+    double step = (max - min) / s;
     std::ofstream os;
 
     // BEGIN VISUAL PARAMETER TEST
@@ -932,11 +931,11 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // ActsVector<BoundingBoxScalar,3> dir(1, 0, 0);
 
     // Eigen::Affine3f rot;
-    // rot = Eigen::AngleAxisf(M_PI / BoundingBoxScalar(s) * i,
+    // rot = Eigen::AngleAxisf(M_PI / static_cast<BoundingBoxScalar>(s) * i,
     // ActsVector<BoundingBoxScalar,3>::UnitX())
-    //* Eigen::AngleAxisf(M_PI / BoundingBoxScalar(s) * j,
+    //* Eigen::AngleAxisf(M_PI / static_cast<BoundingBoxScalar>(s) * j,
     // ActsVector<BoundingBoxScalar,3>::UnitY())
-    //* Eigen::AngleAxisf(M_PI / BoundingBoxScalar(s) * k,
+    //* Eigen::AngleAxisf(M_PI / static_cast<BoundingBoxScalar>(s) * k,
     // ActsVector<BoundingBoxScalar,3>::UnitZ());
 
     // Frustum34 fr(origin, rot * dir, angle);
@@ -954,9 +953,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // for (std::size_t i = 0; i <= n; i++) {
     // ActsVector<BoundingBoxScalar,3>  origin(i * 4, 0, 0);
     // Eigen::Affine3f rot;
-    // rot   = Eigen::AngleAxisf(M_PI / BoundingBoxScalar(n) * i,
+    // rot   = Eigen::AngleAxisf(M_PI / static_cast<BoundingBoxScalar>(n) * i,
     // ActsVector<BoundingBoxScalar,3>::UnitY());
-    // angle = (M_PI / 2.) / BoundingBoxScalar(n) * (1 + i);
+    // angle = (M_PI / 2.) / static_cast<BoundingBoxScalar>(n) * (1 + i);
     // ActsVector<BoundingBoxScalar,3> dir(1, 0, 0);
     // Frustum34      fr(origin, rot * dir, angle);
     // fr.draw(helper, 2);
@@ -1137,7 +1136,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       n = 10;
       min = -33;
       max = 33;
-      step = (max - min) / BoundingBoxScalar(n);
+      step = (max - min) / static_cast<BoundingBoxScalar>(n);
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
@@ -1256,5 +1255,4 @@ BOOST_AUTO_TEST_CASE(ostream_operator) {
   BOOST_CHECK(ss.str() == "AABB(ctr=(0.5, 0.5) vmin=(-1, -1) vmax=(2, 2))");
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

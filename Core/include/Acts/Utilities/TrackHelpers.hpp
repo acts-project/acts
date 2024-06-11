@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -159,14 +160,21 @@ Result<void> smoothTracks(
 template <typename track_proxy_t>
 Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
 findTrackStateForExtrapolation(
-    const GeometryContext &geoContext, track_proxy_t &track,
+    const GeometryContext &geoContext, const track_proxy_t &track,
     const Surface &referenceSurface, TrackExtrapolationStrategy strategy,
     const Logger &logger = *getDefaultLogger("TrackExtrapolation",
                                              Logging::INFO)) {
   using TrackStateProxy = typename track_proxy_t::ConstTrackStateProxy;
 
   auto intersect = [&](const TrackStateProxy &state) -> SurfaceIntersection {
-    auto freeVector = MultiTrajectoryHelpers::freeSmoothed(geoContext, state);
+    assert(state.hasSmoothed() || state.hasFiltered());
+
+    FreeVector freeVector;
+    if (state.hasSmoothed()) {
+      freeVector = MultiTrajectoryHelpers::freeSmoothed(geoContext, state);
+    } else {
+      freeVector = MultiTrajectoryHelpers::freeFiltered(geoContext, state);
+    }
 
     return referenceSurface
         .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
@@ -293,11 +301,16 @@ Result<void> extrapolateTrackToReferenceSurface(
   auto &[trackState, distance] = *findResult;
 
   options.direction = Direction::fromScalarZeroAsPositive(distance);
+
+  BoundTrackParameters parameters = track.createParametersFromState(trackState);
+  ACTS_VERBOSE("extrapolating track to reference surface at distance "
+               << distance << " with direction " << options.direction
+               << " with starting parameters " << parameters);
+
   auto propagateResult =
       propagator.template propagate<BoundTrackParameters, propagator_options_t,
                                     ForcedSurfaceReached>(
-          track.createParametersFromState(trackState), referenceSurface,
-          options);
+          parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
     ACTS_ERROR("failed to extrapolate track: " << propagateResult.error());

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Clusterization/Clusterization.hpp"
@@ -21,8 +20,7 @@
 
 #include <boost/functional/hash.hpp>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct Cell1D {
   Cell1D(int colv) : col(colv) {}
@@ -129,5 +127,4 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

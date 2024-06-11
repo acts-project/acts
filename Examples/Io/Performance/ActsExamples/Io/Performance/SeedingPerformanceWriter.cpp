@@ -74,14 +74,16 @@ ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
-  float eff = float(m_nTotalMatchedParticles) / m_nTotalParticles;
-  float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
-  float duplicationRate =
-      float(m_nTotalDuplicatedParticles) / m_nTotalMatchedParticles;
+  float eff = static_cast<float>(m_nTotalMatchedParticles) / m_nTotalParticles;
+  float fakeRate =
+      static_cast<float>(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
+  float duplicationRate = static_cast<float>(m_nTotalDuplicatedParticles) /
+                          m_nTotalMatchedParticles;
   float aveNDuplicatedSeeds =
-      float(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
+      static_cast<float>(m_nTotalMatchedSeeds - m_nTotalMatchedParticles) /
       m_nTotalMatchedParticles;
-  float totalSeedPurity = float(m_nTotalMatchedSeeds) / m_nTotalSeeds;
+  float totalSeedPurity =
+      static_cast<float>(m_nTotalMatchedSeeds) / m_nTotalSeeds;
   ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
   ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
   ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);

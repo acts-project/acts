@@ -59,14 +59,10 @@ class NullBField final : public MagneticFieldProvider {
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
-  /// @param [in] position global 3D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   /// @note The method will always return true for the null B-Field
-  bool isInside(const Vector3& position) const {
-    (void)position;
-    return true;
-  }
+  bool isInside(const Vector3& /*position*/) const { return true; }
 
  private:
   /// magnetic field vector

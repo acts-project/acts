@@ -17,7 +17,6 @@
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
@@ -36,8 +35,8 @@
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
-#include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
+#include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
@@ -266,7 +265,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(filePath);
     ACTS_PYTHON_MEMBER(fileMode);
     ACTS_PYTHON_MEMBER(boundIndices);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -313,10 +312,9 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPlanarClusterWriter, mex,
-                             "RootPlanarClusterWriter", inputClusters,
-                             inputSimHits, filePath, fileMode, treeName,
-                             trackingGeometry);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSeedWriter, mex,
+                             "RootSeedWriter", inputSeeds, writingMode,
+                             filePath, fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSimHitWriter, mex,
                              "RootSimHitWriter", inputSimHits, filePath,
@@ -351,11 +349,6 @@ void addOutput(Context& ctx) {
                              "CsvMeasurementWriter", inputMeasurements,
                              inputClusters, inputMeasurementSimHitsMap,
                              outputDir, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvPlanarClusterWriter, mex,
-                             "CsvPlanarClusterWriter", inputClusters,
-                             inputSimHits, outputDir, outputPrecision,
-                             trackingGeometry);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSimHitWriter, mex,
                              "CsvSimHitWriter", inputSimHits, outputDir,

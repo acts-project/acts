@@ -188,6 +188,11 @@ class TrackSelector {
     friend std::ostream& operator<<(std::ostream& os,
                                     const EtaBinnedConfig& cfg);
 
+    /// Check if the configuration has a bin for a given eta
+    /// @param eta Eta value
+    /// @return True if the configuration has a bin for the given eta
+    bool hasCuts(double eta) const;
+
     /// Get the index of the eta bin for a given eta
     /// @param eta Eta value
     /// @return Index of the eta bin
@@ -337,8 +342,12 @@ inline TrackSelector::EtaBinnedConfig& TrackSelector::EtaBinnedConfig::addCuts(
   return addCuts(inf, callback);
 }
 
+inline bool TrackSelector::EtaBinnedConfig::hasCuts(double eta) const {
+  return std::abs(eta) < absEtaEdges.back();
+}
+
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
-  if (std::abs(eta) >= absEtaEdges.back()) {
+  if (!hasCuts(eta)) {
     throw std::invalid_argument{"Eta is outside the abs eta bin edges"};
   }
 
@@ -372,7 +381,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
     if (!isValidTrack(track)) {
       continue;
     }
-    auto destProxy = outputTracks.getTrack(outputTracks.addTrack());
+    auto destProxy = outputTracks.makeTrack();
     destProxy.copyFrom(track, false);
     destProxy.tipIndex() = track.tipIndex();
   }

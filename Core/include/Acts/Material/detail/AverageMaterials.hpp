@@ -10,8 +10,7 @@
 
 #include "Acts/Material/MaterialSlab.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Compute the average properties for a combined slab of two materials.
 ///
@@ -24,5 +23,4 @@ namespace detail {
 /// throughout the slab.
 MaterialSlab combineSlabs(const MaterialSlab& slab1, const MaterialSlab& slab2);
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

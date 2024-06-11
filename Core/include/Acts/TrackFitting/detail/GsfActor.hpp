@@ -29,8 +29,7 @@
 #include <map>
 #include <numeric>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 template <typename traj_t>
 struct GsfResult {
@@ -529,8 +528,10 @@ struct GsfActor {
       }
 
       auto& cmp = *res;
-      cmp.jacToGlobal() =
-          surface.boundToFreeJacobian(state.geoContext, cmp.pars());
+      auto freeParams = cmp.pars();
+      cmp.jacToGlobal() = surface.boundToFreeJacobian(
+          state.geoContext, freeParams.template segment<3>(eFreePos0),
+          freeParams.template segment<3>(eFreeDir0));
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
       cmp.jacobian() = Acts::BoundMatrix::Identity();
       cmp.derivative() = Acts::FreeVector::Zero();
@@ -733,9 +734,8 @@ struct GsfActor {
                     TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
               : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
 
-      result.currentTip =
-          result.fittedStates->addTrackState(mask, result.currentTip);
-      auto proxy = result.fittedStates->getTrackState(result.currentTip);
+      auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
+      result.currentTip = proxy.index();
 
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
@@ -797,5 +797,4 @@ struct GsfActor {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

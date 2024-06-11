@@ -23,8 +23,7 @@
 #include <DD4hep/Fields.h>
 #include <boost/program_options.hpp>
 
-namespace ActsExamples {
-namespace DD4hep {
+namespace ActsExamples::DD4hep {
 
 DD4hepDetector::DD4hepDetector(
     std::shared_ptr<DD4hepGeometryService> _geometryService)
@@ -82,5 +81,4 @@ std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
   return std::make_shared<Acts::DD4hepFieldAdapter>(detector.field());
 }
 
-}  // namespace DD4hep
-}  // namespace ActsExamples
+}  // namespace ActsExamples::DD4hep

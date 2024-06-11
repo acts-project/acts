@@ -26,4 +26,5 @@ target_sources(
     detail/AlignmentHelper.cpp
     VerticesHelper.cpp
     RegularSurface.cpp
+    CurvilinearSurface.cpp
 )

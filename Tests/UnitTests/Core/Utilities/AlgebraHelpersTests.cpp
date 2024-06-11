@@ -16,8 +16,7 @@
 
 Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(AlgebraHelpers)
 
@@ -120,5 +119,4 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -22,9 +22,7 @@
 #include <TVectorF.h>
 #include <TVectorT.h>
 
-namespace ActsExamples {
-namespace detail {
-namespace NuclearInteractionParametrisation {
+namespace ActsExamples::detail::NuclearInteractionParametrisation {
 namespace {
 
 /// @brief Evaluate the location in a standard normal distribution for a value
@@ -36,8 +34,8 @@ namespace {
 /// @return The location in a standard normal distribution
 float gaussianValue(TH1F const* histo, const float mom) {
   // Get the cumulative probability distribution
-  TH1F* normalised = (TH1F*)histo->DrawNormalized();
-  TH1F* cumulative = (TH1F*)normalised->GetCumulative();
+  TH1F* normalised = static_cast<TH1F*>(histo->DrawNormalized());
+  TH1F* cumulative = static_cast<TH1F*>(normalised->GetCumulative());
   // Find the cumulative probability
   const float binContent = cumulative->GetBinContent(cumulative->FindBin(mom));
   // Transform the probability to an entry in a standard normal distribution
@@ -73,7 +71,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
       mean[j] += event[j];
     }
   }
-  mean /= (float)events.size();
+  mean /= events.size();
 
   // Calculate the covariance matrix
   Matrix covariance = Matrix::Zero(multiplicity, multiplicity);
@@ -84,7 +82,7 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
       }
     }
   }
-  covariance /= (float)events.size();
+  covariance /= events.size();
 
   return std::make_pair(mean, covariance);
 }
@@ -344,16 +342,16 @@ cumulativeMultiplicityProbability(const EventCollection& events,
 }
 
 TVectorF softProbability(const EventCollection& events) {
-  float counter = 0.;
+  std::size_t countSoft = 0;
   // Count the soft events
   for (const EventFraction& event : events) {
     if (event.soft) {
-      counter++;
+      countSoft++;
     }
   }
 
   TVectorF result(1);
-  result[0] = counter / (float)events.size();
+  result[0] = static_cast<float>(countSoft) / events.size();
   return result;
 }
 
@@ -363,8 +361,10 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   float min = std::numeric_limits<float>::max();
   float max = 0.;
   for (const EventFraction& event : events) {
-    min = std::min((float)event.interactingParticle.pathInL0(), min);
-    max = std::max((float)event.interactingParticle.pathInL0(), max);
+    min =
+        std::min(static_cast<float>(event.interactingParticle.pathInL0()), min);
+    max =
+        std::max(static_cast<float>(event.interactingParticle.pathInL0()), max);
   }
 
   // Fill the histogram
@@ -377,6 +377,4 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   return histo;  // TODO: in this case the normalisation is not taking into
                  // account
 }
-}  // namespace NuclearInteractionParametrisation
-}  // namespace detail
-}  // namespace ActsExamples
+}  // namespace ActsExamples::detail::NuclearInteractionParametrisation

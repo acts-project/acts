@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
+// #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -37,8 +36,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -302,7 +300,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
   RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 
-  auto pTransform = Transform3(translation * rotationMat);
+  auto pTransform = Transform3{translation * rotationMat};
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
 
@@ -319,14 +317,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
 
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
-
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
+                                                    direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 1, 0, 0, 2, -1, -2;
@@ -347,8 +341,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   FreeVector derivatives = FreeVector::Zero();
   derivatives.head<3>() = direction;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
-                                                     derivatives);
+      planeSurfaceObject->alignmentToBoundDerivative(tgContext, globalPosition,
+                                                     direction, derivatives);
   const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =
@@ -365,6 +359,4 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -13,9 +13,9 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., 0., 2., 22u);
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
-      rSurfaces, {}, {binPhi}};
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
+      irSurfaces{rSurfaces, {}, {binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
   using DelegateType =
-      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
+      IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
 
   const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
+      std::get<IndexedSurfacesNavigation<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Check that surfaces 10, 11, 12 build the bins at phi == 0
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
                                                    std::move(rBounds));
   rSurfaces.push_back(dSurface.get());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
-      rSurfaces, {rSurfaces.size() - 1u}, {binPhi}};
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
+      irSurfaces{rSurfaces, {rSurfaces.size() - 1u}, {binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
 
   using DelegateType =
-      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
+      IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
 
   const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
+      std::get<IndexedSurfacesNavigation<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Check that surfaces 10, 11, 12 build the bins at phi == 0
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   decltype(rSurfacesR0) rSurfaces = rSurfacesR0;
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
-      rSurfaces, {}, {binR, binPhi}};
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
+      irSurfaces{rSurfaces, {}, {binR, binPhi}};
 
   GridAxisGenerators::VarBoundEqClosed aGenerator{
       {24., 74., 110.}, {-M_PI, M_PI}, 44u};
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
 
   using DelegateType =
-      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
+      IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
 
   const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
+      std::get<IndexedSurfacesNavigation<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Check that now two rows of surfaces are given
@@ -190,8 +190,8 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
-      rSurfaces, {}, {binR, binPhi}};
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
+      irSurfaces{rSurfaces, {}, {binR, binPhi}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
 
   using DelegateType =
-      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
+      IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
 
   const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
+      std::get<IndexedSurfacesNavigation<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Fine binning created fewer candidates
@@ -237,8 +237,8 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
-      rSurfaces, {}, {binR, binPhi}, {2u, 4u}};
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
+      irSurfaces{rSurfaces, {}, {binR, binPhi}, {2u, 4u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
   using DelegateType =
-      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
+      IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
+      std::get<IndexedSurfacesNavigation<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Bin expansion created again more elements
@@ -271,8 +271,8 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
   auto surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
                                              116., 3., 2., {52, 14});
 
-  IndexedSurfacesGenerator<decltype(surfaces), IndexedSurfacesImpl> icSurfaces{
-      surfaces, {}, {binZ, binPhi}, {1u, 1u}};
+  IndexedSurfacesGenerator<decltype(surfaces), IndexedSurfacesNavigation>
+      icSurfaces{surfaces, {}, {binZ, binPhi}, {1u, 1u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {-500., 500}, 28, {-M_PI, M_PI}, 52u};
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
   using DelegateType =
-      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
+      IndexedSurfacesAllPortalsNavigation<GridType, IndexedSurfacesNavigation>;
 
   const auto* instance = indexedCylinder.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 
   const auto& chainedUpdaters = castedDelegate->updators;
   const auto& indexedSurfaces =
-      std::get<IndexedSurfacesImpl<GridType>>(chainedUpdaters);
+      std::get<IndexedSurfacesNavigation<GridType>>(chainedUpdaters);
   const auto& grid = indexedSurfaces.grid;
 
   // Bin expansion created again more elements

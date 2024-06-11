@@ -28,7 +28,6 @@ def runGeometry(
     outputObj=True,
     outputCsv=True,
     outputJson=True,
-    outputRoot=True,
 ):
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
@@ -91,9 +90,9 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = AlignedDetector.create()
+    # detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    # detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
 

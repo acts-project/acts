@@ -12,7 +12,8 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionML.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+
 
 #include <string>
 
