@@ -730,12 +730,13 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
+  using Options =
+      typename propagator_t::template Options<ActionListType, AbortListType>;
 
   // forward surface test
   Options fwdOptions(tgContext, mfContext);
   fwdOptions.pathLimit = 25_cm;
-  fwdOptions.maxStepSize = 1_cm;
+  fwdOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& fwdSurfaceCollector =
@@ -766,8 +767,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // backward surface test
   Options bwdOptions(tgContext, mfContext);
   bwdOptions.pathLimit = 25_cm;
-  bwdOptions.maxStepSize = 1_cm;
   bwdOptions.direction = Direction::Backward;
+  bwdOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& bwdMSurfaceCollector =
@@ -809,7 +810,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next
   // now go from surface to surface and check
   Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 1_cm;
+  fwdStepOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
@@ -864,8 +865,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.maxStepSize = 1_cm;
   bwdStepOptions.direction = Direction::Backward;
+  bwdStepOptions.stepping.maxStepSize = 1_cm;
 
   // get the surface collector and configure it
   auto& bwdStepSurfaceCollector =
@@ -939,13 +940,16 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   auto run = [&](const auto& prop) {
+    using propagator_t = std::decay_t<decltype(prop)>;
+    using Options =
+        typename propagator_t::template Options<ActionListType, AbortListType>;
+
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
     fwdOptions.pathLimit = 25_cm;
-    fwdOptions.maxStepSize = 1_cm;
+    fwdOptions.stepping.maxStepSize = 1_cm;
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =

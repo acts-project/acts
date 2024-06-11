@@ -552,7 +552,7 @@ class KalmanFitter {
       stepper.resetState(
           state.stepping, st.filtered(),
           reversedFilteringCovarianceScaling * st.filteredCovariance(),
-          st.referenceSurface(), state.options.maxStepSize);
+          st.referenceSurface(), state.options.stepping.maxStepSize);
 
       // For the last measurement state, smoothed is filtered
       st.smoothed() = st.filtered();
@@ -562,7 +562,10 @@ class KalmanFitter {
       // Reset navigation state
       // We do not need to specify a target here since this will be handled
       // separately in the KF actor
-      state.navigation = navigator.makeState(&st.referenceSurface(), nullptr);
+      auto navigationOptions = state.navigation.options;
+      navigationOptions.startSurface = &st.referenceSurface();
+      navigationOptions.targetSurface = nullptr;
+      state.navigation = navigator.makeState(navigationOptions);
       navigator.initialize(state, stepper);
 
       // Update material effects for last measurement state in reversed
@@ -1011,13 +1014,13 @@ class KalmanFitter {
         stepper.resetState(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
                            firstCreatedState.referenceSurface(),
-                           state.options.maxStepSize);
+                           state.options.stepping.maxStepSize);
         reverseDirection = firstIntersection.pathLength() < 0;
       } else {
         stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
                            lastCreatedMeasurement.smoothedCovariance(),
                            lastCreatedMeasurement.referenceSurface(),
-                           state.options.maxStepSize);
+                           state.options.stepping.maxStepSize);
         reverseDirection = lastIntersection.pathLength() < 0;
       }
       // Reverse the navigation direction if necessary
@@ -1039,7 +1042,10 @@ class KalmanFitter {
       // Reset the navigation state to enable propagation towards the target
       // surface
       // Set targetSurface to nullptr as it is handled manually in the actor
-      state.navigation = navigator.makeState(&surface, nullptr);
+      auto navigationOptions = state.navigation.options;
+      navigationOptions.startSurface = &surface;
+      navigationOptions.targetSurface = nullptr;
+      state.navigation = navigator.makeState(navigationOptions);
       navigator.initialize(state, stepper);
 
       return Result<void>::success();
@@ -1117,16 +1123,19 @@ class KalmanFitter {
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actors, Aborters>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
+    PropagatorOptions propagatorOptions(kfOptions.geoContext,
+                                        kfOptions.magFieldContext);
 
     // Set the trivial propagator options
-    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+    propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
-    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
+    auto& kalmanActor =
+        propagatorOptions.actionList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
@@ -1140,8 +1149,8 @@ class KalmanFitter {
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 
-    return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
-                    track_container_t, holder_t>(sParameters, kalmanOptions,
+    return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
+                    track_container_t, holder_t>(sParameters, propagatorOptions,
                                                  trackContainer);
   }
 
@@ -1198,16 +1207,19 @@ class KalmanFitter {
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actors, Aborters>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
+    PropagatorOptions propagatorOptions(kfOptions.geoContext,
+                                        kfOptions.magFieldContext);
 
     // Set the trivial propagator options
-    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+    propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
-    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
+    auto& kalmanActor =
+        propagatorOptions.actionList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = &inputMeasurements;
     kalmanActor.targetReached.surface = kfOptions.referenceSurface;
     kalmanActor.targetSurfaceStrategy = kfOptions.referenceSurfaceStrategy;
@@ -1220,12 +1232,12 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     // Set the surface sequence
-    auto& dInitializer =
-        kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
+    auto& dInitializer = propagatorOptions.actionList
+                             .template get<DirectNavigator::Initializer>();
     dInitializer.navSurfaces = sSequence;
 
-    return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
-                    track_container_t, holder_t>(sParameters, kalmanOptions,
+    return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
+                    track_container_t, holder_t>(sParameters, propagatorOptions,
                                                  trackContainer);
   }
 
@@ -1240,21 +1252,21 @@ class KalmanFitter {
   /// @tparam holder_t Type defining track container backend ownership
   ///
   /// @param sParameters The initial track parameters
-  /// @param kalmanOptions The Kalman Options
+  /// @param propagatorOptions The Propagator Options
   /// @param trackContainer Input track container storage to append into
   ///
   /// @return the output as an output track
-  template <typename start_parameters_t, typename actor_list_t,
-            typename aborter_list_t, typename kalman_result_t,
-            typename track_container_t, template <typename> class holder_t>
+  template <typename start_parameters_t, typename propagator_options_t,
+            typename kalman_result_t, typename track_container_t,
+            template <typename> class holder_t>
   auto fit_impl(
       const start_parameters_t& sParameters,
-      const PropagatorOptions<actor_list_t, aborter_list_t>& kalmanOptions,
+      const propagator_options_t& propagatorOptions,
       TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
       -> Result<typename TrackContainer<track_container_t, traj_t,
                                         holder_t>::TrackProxy> {
     auto propagatorState =
-        m_propagator.template makeState(sParameters, kalmanOptions);
+        m_propagator.template makeState(sParameters, propagatorOptions);
 
     auto& kalmanResult =
         propagatorState.template get<KalmanFitterResult<traj_t>>();
