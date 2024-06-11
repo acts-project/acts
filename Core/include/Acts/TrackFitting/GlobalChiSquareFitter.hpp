@@ -734,9 +734,6 @@ class Gx2Fitter {
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
 
-    // REMOVE: this is just for testing, remove later
-    trackContainer.clear();
-
     // Create an index of the 'tip' of the track stored in multitrajectory. It
     // is needed outside the update loop. It will be updated with each iteration
     // and used for the final track
@@ -773,7 +770,7 @@ class Gx2Fitter {
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
-      r.fittedStates = &trackContainerTemp.trackStateContainer();
+      r.fittedStates = &trajectoryTempBackend;
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
