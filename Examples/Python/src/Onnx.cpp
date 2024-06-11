@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
 #include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
 
 #include <pybind11/pybind11.h>
