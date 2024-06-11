@@ -41,37 +41,35 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode
-  ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
-      const AlgorithmContext& ctx) const {
-    // Read input data
-    const auto& tracks = m_inputTracks(ctx);
-    // Associate measurement to their respective tracks
-    std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
-        trackMap = m_ambiML.mapTrackHits(tracks, &sourceLinkHash,
-                                         &sourceLinkEquality);
-    auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
-    // Select the ID of the track we want to keep
-    std::vector<std::size_t> goodTracks =
-        m_ambiML.solveAmbiguity(cluster, tracks);
-    // Prepare the output track collection from the IDs
-    TrackContainer solvedTracks{
-        std::make_shared<Acts::VectorTrackContainer>(),
-        std::make_shared<Acts::VectorMultiTrajectory>()};
-    solvedTracks.ensureDynamicColumns(tracks);
-    for (auto iTrack : goodTracks) {
-      auto destProxy = solvedTracks.makeTrack();
-      auto srcProxy = tracks.getTrack(iTrack);
-      destProxy.copyFrom(srcProxy, false);
-      destProxy.tipIndex() = srcProxy.tipIndex();
-    }
-
-    ActsExamples::ConstTrackContainer outputTracks{
-        std::make_shared<Acts::ConstVectorTrackContainer>(
-            std::move(solvedTracks.container())),
-        tracks.trackStateContainerHolder()};
-
-    m_outputTracks(ctx, std::move(outputTracks));
-
-    return ActsExamples::ProcessCode::SUCCESS;
+ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
+  // Read input data
+  const auto& tracks = m_inputTracks(ctx);
+  // Associate measurement to their respective tracks
+  std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
+      trackMap =
+          m_ambiML.mapTrackHits(tracks, &sourceLinkHash, &sourceLinkEquality);
+  auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
+  // Select the ID of the track we want to keep
+  std::vector<std::size_t> goodTracks =
+      m_ambiML.solveAmbiguity(cluster, tracks);
+  // Prepare the output track collection from the IDs
+  TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
+                              std::make_shared<Acts::VectorMultiTrajectory>()};
+  solvedTracks.ensureDynamicColumns(tracks);
+  for (auto iTrack : goodTracks) {
+    auto destProxy = solvedTracks.makeTrack();
+    auto srcProxy = tracks.getTrack(iTrack);
+    destProxy.copyFrom(srcProxy, false);
+    destProxy.tipIndex() = srcProxy.tipIndex();
   }
+
+  ActsExamples::ConstTrackContainer outputTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(solvedTracks.container())),
+      tracks.trackStateContainerHolder()};
+
+  m_outputTracks(ctx, std::move(outputTracks));
+
+  return ActsExamples::ProcessCode::SUCCESS;
+}
