@@ -111,10 +111,11 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   using ReferenceAbortList = AbortList<EndOfWorld>;
 
   // Options definition
-  using Options = PropagatorOptions<RefereceActionList, ReferenceAbortList>;
+  using Options = typename rpropagator_t::template Options<RefereceActionList,
+                                                           ReferenceAbortList>;
   Options pOptions(tgContext, mfContext);
   if (oversteppingTest) {
-    pOptions.maxStepSize = oversteppingMaxStepSize;
+    pOptions.stepping.maxStepSize = oversteppingMaxStepSize;
   }
 
   // Surface collector configuration
@@ -140,16 +141,14 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     }
 
     // Action list for direct navigator with its initializer
-    using DirectActionList = ActionList<DirectNavigator::Initializer,
-                                        MaterialInteractor, SurfaceCollector<>>;
+    using DirectActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
 
     // Direct options definition
-    using DirectOptions = PropagatorOptions<DirectActionList, AbortList<>>;
+    using DirectOptions =
+        typename dpropagator_t::template Options<DirectActionList, AbortList<>>;
     DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
-    auto& dInitializer =
-        dOptions.actionList.get<DirectNavigator::Initializer>();
-    dInitializer.navSurfaces = surfaceSequence;
+    dOptions.navigation.surfaces = surfaceSequence;
     // Surface collector configuration
     auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;

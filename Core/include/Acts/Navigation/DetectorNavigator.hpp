@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -46,18 +47,22 @@ class DetectorNavigator {
     bool resolvePassive = false;
   };
 
+  struct Options : public NavigatorPlainOptions {
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// Nested State struct
   ///
   /// It acts as an internal state which is
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State : public NavigationState {
-    /// Navigation state - external state: the start surface
-    const Surface* startSurface = nullptr;
+    Options options;
+
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
-    /// Navigation state - external state: the target surface
-    const Surface* targetSurface = nullptr;
     /// Indicator if the target is reached
     bool targetReached = false;
     /// Navigation state : a break has been detected
@@ -74,12 +79,10 @@ class DetectorNavigator {
                                                   Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    State state;
+    state.options = options;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -95,11 +98,11 @@ class DetectorNavigator {
   }
 
   const Surface* startSurface(const State& state) const {
-    return state.startSurface;
+    return state.options.startSurface;
   }
 
   const Surface* targetSurface(const State& state) const {
-    return state.targetSurface;
+    return state.options.targetSurface;
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }

@@ -81,7 +81,7 @@ struct DenseEnvironmentExtension {
     // Check for valid particle properties
     if (absQ == 0. || mass == 0. ||
         stepper.absoluteMomentum(state.stepping) <
-            state.options.momentumCutOff) {
+            state.options.stepping.dense.momentumCutOff) {
       return 0;
     }
 
@@ -141,7 +141,7 @@ struct DenseEnvironmentExtension {
     } else {
       // Update parameters and check for momentum condition
       updateEnergyLoss(mass, h, state, stepper, i);
-      if (currentMomentum < state.options.momentumCutOff) {
+      if (currentMomentum < state.options.stepping.dense.momentumCutOff) {
         return false;
       }
       // Evaluate k
@@ -183,7 +183,7 @@ struct DenseEnvironmentExtension {
         (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
     // Break propagation if momentum becomes below cut-off
-    if (newMomentum < state.options.momentumCutOff) {
+    if (newMomentum < state.options.stepping.dense.momentumCutOff) {
       return false;
     }
 
@@ -395,7 +395,7 @@ struct DenseEnvironmentExtension {
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
-    if (state.options.meanEnergyLoss) {
+    if (state.options.stepping.dense.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, absPdg, mass, static_cast<float>(qop[0]),
                                  absQ);
     } else {
@@ -410,8 +410,8 @@ struct DenseEnvironmentExtension {
     if (state.stepping.covTransport) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
-      if (state.options.includeGradient) {
-        if (state.options.meanEnergyLoss) {
+      if (state.options.stepping.dense.includeGradient) {
+        if (state.options.stepping.dense.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
               slab, absPdg, mass, static_cast<float>(qop[0]), absQ);
         } else {
@@ -455,60 +455,6 @@ struct DenseEnvironmentExtension {
                                (energy[i] * energy[i])) -
                  qop[i] * qop[i] * qop[i] * energy[i] * dgdqopValue);
     }
-  }
-};
-
-template <typename action_list_t = ActionList<>,
-          typename aborter_list_t = AbortList<>>
-struct DenseStepperPropagatorOptions
-    : public PropagatorOptions<action_list_t, aborter_list_t> {
-  /// Copy Constructor
-  DenseStepperPropagatorOptions(
-      const DenseStepperPropagatorOptions<action_list_t, aborter_list_t>&
-          dspo) = default;
-
-  /// Constructor with GeometryContext
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param mctx The current magnetic fielc context object
-  DenseStepperPropagatorOptions(const GeometryContext& gctx,
-                                const MagneticFieldContext& mctx)
-      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}
-
-  /// Toggle between mean and mode evaluation of energy loss
-  bool meanEnergyLoss = true;
-
-  /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-  bool includeGradient = true;
-
-  /// Cut-off value for the momentum in SI units
-  double momentumCutOff = 0.;
-
-  /// @brief Expand the Options with extended aborters
-  ///
-  /// @tparam extended_aborter_list_t Type of the new aborter list
-  ///
-  /// @param aborters The new aborter list to be used (internally)
-  template <typename extended_aborter_list_t>
-  DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
-      extended_aborter_list_t aborters) const {
-    DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions(this->geoContext, this->magFieldContext);
-
-    // Copy the options over
-    eoptions.setPlainOptions(*this);
-
-    // Action / abort list
-    eoptions.actionList = std::move(this->actionList);
-    eoptions.abortList = std::move(aborters);
-
-    // Copy dense environment specific parameters
-    eoptions.meanEnergyLoss = meanEnergyLoss;
-    eoptions.includeGradient = includeGradient;
-    eoptions.momentumCutOff = momentumCutOff;
-
-    // And return the options
-    return eoptions;
   }
 };
 

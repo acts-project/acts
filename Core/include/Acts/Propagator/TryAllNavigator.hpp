@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -54,11 +55,19 @@ class TryAllNavigator {
     BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
   };
 
+  struct Options : public NavigatorPlainOptions {
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// @brief Nested State struct
   ///
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    Options options;
+
     // Starting geometry information of the navigation which should only be set
     // while initialization. NOTE: This information is mostly used by actors to
     // check if we are on the starting surface (e.g. MaterialInteraction).
@@ -95,12 +104,14 @@ class TryAllNavigator {
                       getDefaultLogger("TryAllNavigator", Logging::INFO))
       : m_cfg(std::move(cfg)), m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    assert(options.startSurface != nullptr && "Start surface must be set");
+
+    State state;
+    state.options = options;
+    state.startSurface = options.startSurface;
+    state.targetSurface = options.targetSurface;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {

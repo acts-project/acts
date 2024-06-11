@@ -96,10 +96,12 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double stepTolerance = 1e-4;
-    double stepSizeCutOff = 0.;
-    unsigned int maxRungeKuttaStepTrials = 10000;
     Direction direction = Direction::Forward;
+    struct {
+      double stepTolerance = 1e-4;
+      double stepSizeCutOff = 0.;
+      unsigned int maxRungeKuttaStepTrials = 10000;
+    } stepping;
   } options;
 };
 
@@ -512,7 +514,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
-  ps.options.stepTolerance = 2. * 4.4258e+09;
+  ps.options.stepping.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
   es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
