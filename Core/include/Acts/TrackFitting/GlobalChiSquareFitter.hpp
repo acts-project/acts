@@ -929,8 +929,19 @@ class Gx2Fitter {
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             *safeReducedCovariance;
       }
-    } else {
+    } else if (aMatrix(5, 5) == 0) {
       constexpr std::size_t reducedMatrixSize = 5;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
+        fullCovariancePredicted
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
+      }
+    } else {
+      constexpr std::size_t reducedMatrixSize = 6;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
