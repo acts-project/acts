@@ -20,7 +20,6 @@
 #include <tuple>
 #include <vector>
 
-
 namespace Acts {
 
 /// Generic implementation of the machine learning ambiguity resolution

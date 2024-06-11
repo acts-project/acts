@@ -562,15 +562,6 @@ def addSpacePointsMaking(
         ),
     )
     sequence.addAlgorithm(spAlg)
-
-    sequence.addWriter(
-        acts.examples.CsvSpacePointWriter(
-            level=logLevel,
-            inputSpacepoints=spAlg.config.outputSpacePoints,
-            outputDir="odd_output",
-        )
-    )
-
     return spAlg.config.outputSpacePoints
 
 
@@ -1808,7 +1799,6 @@ def addAmbiguityResolutionML(
     from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    print(onnxModelFile)
     algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",

@@ -206,7 +206,7 @@ if args.edm4hep:
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
-            pt=(500 * u.MeV, None),
+            pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
         inputParticles="particles",
@@ -268,7 +268,6 @@ else:
                 absZ=(0.0, 1.0 * u.m),
                 eta=(-3.0, 3.0),
                 pt=(150 * u.MeV, None),
-                # measurements=(7, None),  # Require at least 7 measurements
                 removeNeutral=True,
             ),
             outputDirRoot=outputDir if args.output_root else None,
