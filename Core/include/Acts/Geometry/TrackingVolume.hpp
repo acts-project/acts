@@ -13,6 +13,7 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
@@ -428,8 +429,7 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   ///
   /// @param gvd register a new GlueVolumeDescriptor
-  /// @todo update to shared/unique ptr
-  void registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd);
+  void registerGlueVolumeDescriptor(std::unique_ptr<GlueVolumesDescriptor> gvd);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
@@ -468,7 +468,7 @@ class TrackingVolume : public Volume {
   MutableTrackingVolumeVector m_confinedDenseVolumes;
 
   /// Volumes to glue Volumes from the outside
-  GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};
+  std::unique_ptr<GlueVolumesDescriptor> m_glueVolumeDescriptor{nullptr};
 
   /// @}
 

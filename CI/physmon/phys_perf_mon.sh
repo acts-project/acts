@@ -20,8 +20,8 @@ shopt -s extglob
 
 
 mode=${1:-all}
-if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing|simulation) ]]; then
-    echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing|simulation> (outdir)"
+if ! [[ $mode = @(all|kalman|gsf|gx2f|fullchains|vertexing|simulation) ]]; then
+    echo "Usage: $0 <all|kalman|gsf|gx2f|fullchains|vertexing|simulation> (outdir)"
     exit 1
 fi
 
