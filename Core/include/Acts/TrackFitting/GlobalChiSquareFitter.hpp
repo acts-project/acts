@@ -918,7 +918,7 @@ class Gx2Fitter {
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
-    if (gx2fOptions.zeroField) {
+    if (aMatrix(4, 4) == 0) {
       constexpr std::size_t reducedMatrixSize = 4;
 
       auto safeReducedCovariance = safeInverse(

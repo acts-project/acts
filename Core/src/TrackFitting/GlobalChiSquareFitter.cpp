@@ -12,10 +12,10 @@
 
 namespace Acts::Experimental {
 
-BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
+BoundVector calculateDeltaParams(bool /*zeroField*/, const BoundMatrix& aMatrix,
                                  const BoundVector& bVector) {
   BoundVector deltaParams = BoundVector::Zero();
-  if (zeroField) {
+  if (aMatrix(4, 4) == 0) {
     constexpr std::size_t reducedMatrixSize = 4;
     deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
