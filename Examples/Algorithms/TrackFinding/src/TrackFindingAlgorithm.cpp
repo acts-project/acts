@@ -391,7 +391,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
   tracksTemp.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
-  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
+  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
