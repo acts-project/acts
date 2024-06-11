@@ -182,13 +182,21 @@ class BranchStopper {
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
+  struct BrachState {
+    int nPixelHoles = 0;
+    int nShortStripHoles = 0;
+  };
+
+  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
+      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
+
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
   explicit BranchStopper(const Config& config) : m_config(config) {}
 
   BranchStopperResult operator()(
       const Acts::CombinatorialKalmanFilterTipState& tipState,
-      const TrackContainer::TrackProxy& /*track*/,
+      const TrackContainer::TrackProxy& track,
       const TrackContainer::TrackStateProxy& trackState) const {
     if (!m_config.has_value()) {
       return BranchStopperResult::Continue;
@@ -210,6 +218,21 @@ class BranchStopper {
 
     if (singleConfig == nullptr) {
       ++m_nStoppedBranches;
+      return BranchStopperResult::StopAndDrop;
+    }
+
+    auto& branchState = branchStateAccessor(track);
+    if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+      if (trackState.referenceSurface().geometryId().volume() == 17) {
+        ++branchState.nPixelHoles;
+      } else if (trackState.referenceSurface().geometryId().volume() == 24) {
+        ++branchState.nShortStripHoles;
+      }
+    }
+    if (branchState.nPixelHoles > 1) {
+      return BranchStopperResult::StopAndDrop;
+    }
+    if (branchState.nShortStripHoles > 1) {
       return BranchStopperResult::StopAndDrop;
     }
 
@@ -365,8 +388,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracks.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
+  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
   tracksTemp.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
+  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
