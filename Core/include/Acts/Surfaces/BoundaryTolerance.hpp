@@ -68,7 +68,7 @@ class BoundaryTolerance {
 
     Chi2Bound() = default;
     Chi2Bound(const SquareMatrix2& weight_, double maxChi2_)
-        : weight(weight_), maxChi2(maxChi2_) {}
+        : maxChi2(maxChi2_), weight(weight_) {}
   };
 
   /// Underlying variant type
