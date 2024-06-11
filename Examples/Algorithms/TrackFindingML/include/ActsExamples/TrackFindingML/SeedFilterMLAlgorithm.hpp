@@ -14,7 +14,6 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-
 #include <string>
 
 namespace ActsExamples {
