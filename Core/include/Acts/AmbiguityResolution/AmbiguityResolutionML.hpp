@@ -35,8 +35,8 @@ class AmbiguityResolutionML {
   };
   /// Construct the ambiguity resolution algorithm.
   ///
-  /// @param name name of the algorithm
-  /// @param lvl is the logging level
+  /// @param cfg is the algorithm configuration
+  /// @param logger is the logging instance
   AmbiguityResolutionML(const Config& cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "AmbiguityResolutionML", Logging::INFO))
@@ -47,7 +47,8 @@ class AmbiguityResolutionML {
   /// Associated measurements ID to Tracks ID
   ///
   /// @param tracks is the input track container
-  /// @param nMeasurementsMin minimum number of measurement per track
+  /// @param sourceLinkHash is the hash function for the source link, will be used to associate to tracks
+  /// @param sourceLinkEquality is the equality function for the source link used used to associated hits to tracks
   /// @return an ordered list containing pairs of track ID and associated measurement ID
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, typename source_link_hash_t,
@@ -111,7 +112,8 @@ class AmbiguityResolutionML {
   // Configuration
   Config m_cfg;
 
-  // Onnx model for track scoring
+  // The neural network for duplicate classification, the network implementation
+  // is chosen with the AmbiguityNetwork template parameter
   AmbiguityNetwork m_duplicateClassifier;
 
   /// Logging instance
