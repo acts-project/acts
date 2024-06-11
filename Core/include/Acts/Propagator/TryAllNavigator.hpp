@@ -235,7 +235,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// Constructor with configuration object
   ///
   /// @param cfg The navigator configuration
-  /// @param _logger a logger instance
+  /// @param logger a logger instance
   TryAllNavigator(Config cfg,
                   std::unique_ptr<const Logger> logger =
                       getDefaultLogger("TryAllNavigator", Logging::INFO))
@@ -560,7 +560,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// Constructor with configuration object
   ///
   /// @param cfg The navigator configuration
-  /// @param _logger a logger instance
+  /// @param logger a logger instance
   TryAllOverstepNavigator(Config cfg,
                           std::unique_ptr<const Logger> logger =
                               getDefaultLogger("TryAllOverstepNavigator",
