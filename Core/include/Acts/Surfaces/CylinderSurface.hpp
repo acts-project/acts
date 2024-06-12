@@ -247,6 +247,10 @@ class CylinderSurface : public RegularSurface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
+  std::shared_ptr<CylinderSurface> merge(const GeometryContext& gctx,
+                                         const CylinderSurface& other,
+                                         BinningValue direction) const;
+
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 
