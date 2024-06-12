@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -35,9 +36,7 @@ class DirectNavigator {
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  DirectNavigator(std::unique_ptr<const Logger> _logger =
-                      getDefaultLogger("DirectNavigator", Logging::INFO))
-      : m_logger{std::move(_logger)} {}
+  struct Config {};
 
   /// @brief Nested Actor struct, called Initializer
   ///
@@ -126,6 +125,16 @@ class DirectNavigator {
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
   };
+
+  struct Options : public NavigatorPlainOptions {
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
+  DirectNavigator(std::unique_ptr<const Logger> _logger =
+                      getDefaultLogger("DirectNavigator", Logging::INFO))
+      : m_logger{std::move(_logger)} {}
 
   State makeState(const Surface* startSurface,
                   const Surface* targetSurface) const {

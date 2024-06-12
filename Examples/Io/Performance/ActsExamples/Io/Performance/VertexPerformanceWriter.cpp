@@ -771,7 +771,8 @@ ProcessCode VertexPerformanceWriter::writeT(
               .closest();
 
       // Setting the geometry/magnetic field context for the event
-      Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+      using PropagatorOptions = Propagator::Options<>;
+      PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
       pOptions.direction =
           Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

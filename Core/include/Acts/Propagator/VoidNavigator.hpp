@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/NavigatorOptions.hpp"
 namespace Acts {
 
 class Surface;
@@ -18,6 +19,14 @@ class Surface;
 /// should eventually optimise that the function call is not done
 ///
 struct VoidNavigator {
+  struct Config {};
+
+  struct Options : public NavigatorPlainOptions {
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// @brief Nested State struct, minimal requirement
   struct State {
     /// Navigation state - external state: the start surface
@@ -35,9 +44,6 @@ struct VoidNavigator {
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
   };
-
-  /// Unique typedef to publish to the Propagator
-  using state_type = State;
 
   State makeState(const Surface* startSurface,
                   const Surface* targetSurface) const {
