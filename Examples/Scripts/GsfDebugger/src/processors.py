@@ -4,9 +4,14 @@ import copy
 import sys
 from itertools import cycle
 
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy
+
+# This should allow to run the non-gui mode in the CI
+try:
+    from matplotlib.pyplot import subplots
+except:
+    def subplots(*args, **kwargs):
+        raise RuntimeError("Matplotlib could not be imported")
 
 
 class AverageTrackPlotter:
@@ -33,7 +38,7 @@ class AverageTrackPlotter:
         return "Average track"
 
     def get_figure_axes(self):
-        return plt.subplots(1, len(self.view_drawers))
+        return subplots(1, len(self.view_drawers))
 
     def draw(self, fig, axes, step):
         for ax, drawer in zip(axes, self.view_drawers):
@@ -136,7 +141,7 @@ class ComponentsPlotter:
         return "Components"
 
     def get_figure_axes(self):
-        return plt.subplots(1, len(self.view_drawers))
+        return subplots(1, len(self.view_drawers))
 
     def number_steps(self):
         return sum([len(s[3]) for s in self.stages])
@@ -292,7 +297,7 @@ class MomentumGraph:
         return "Momentum"
 
     def get_figure_axes(self):
-        return plt.subplots()
+        return subplots()
 
     def draw(self, fig, ax, requested_step):
         fwd_mom, bwd_mom, fwd_pls, bwd_pls = [], [], [], []
@@ -377,9 +382,11 @@ class BoundParametersProcessor:
         return f"{self.key} state"
 
     def get_figure_axes(self):
-        return plt.subplots(2, 3)
+        return subplots(2, 3)
 
     def draw(self, fig, axes, requested_step):
+        import scipy
+
         if requested_step >= len(self.step_data):
             fig.suptitle("Error: Step out of bound")
             return fig, axes

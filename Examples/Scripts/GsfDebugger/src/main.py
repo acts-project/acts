@@ -10,7 +10,6 @@ from processors import (
     MomentumGraph,
     BoundParametersProcessor,
 )
-from drawers import CsvZRDrawer, CsvXYDrawer, CsvXZDrawer
 
 
 def main():
@@ -45,14 +44,19 @@ def main():
 
         current_step.append(line)
 
-    # Initialize the processors
-    if args["view"] == "cylindrical":
-        drawers = [CsvZRDrawer(args["detector"]), CsvXYDrawer(args["detector"])]
-    elif args["view"] == "telescope":
-        drawers = [
-            CsvXZDrawer(args["detector"], assume_telescope=True),
-            CsvXYDrawer(args["detector"], assume_telescope=True),
-        ]
+    # Initialize the drawers
+    if args["nogui"]:
+        drawers = None
+    else:
+        from drawers import CsvZRDrawer, CsvXYDrawer, CsvXZDrawer
+
+        if args["view"] == "cylindrical":
+            drawers = [CsvZRDrawer(args["detector"]), CsvXYDrawer(args["detector"])]
+        elif args["view"] == "telescope":
+            drawers = [
+                CsvXZDrawer(args["detector"], assume_telescope=True),
+                CsvXYDrawer(args["detector"], assume_telescope=True),
+            ]
 
     # Initialize the processors
     processors = [
