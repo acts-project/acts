@@ -10,6 +10,7 @@ import numpy as np
 try:
     from matplotlib.pyplot import subplots
 except:
+
     def subplots(*args, **kwargs):
         raise RuntimeError("Matplotlib could not be imported")
 
