@@ -32,7 +32,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
       - name: Install dependencies
-        run: apt-get install -y unzip git-lfs
+        run: apt-get update && apt-get install -y unzip git-lfs
 
       - uses: actions/checkout@v4
         with:
