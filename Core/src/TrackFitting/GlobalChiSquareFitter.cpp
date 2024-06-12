@@ -12,7 +12,7 @@
 
 namespace Acts::Experimental {
 
-BoundVector calculateDeltaParams(bool /*zeroField*/, const BoundMatrix& aMatrix,
+BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
                                  const BoundVector& bVector) {
   BoundVector deltaParams = BoundVector::Zero();
   if (aMatrix(4, 4) == 0) {
@@ -37,4 +37,5 @@ BoundVector calculateDeltaParams(bool /*zeroField*/, const BoundMatrix& aMatrix,
 
   return deltaParams;
 }
+
 }  // namespace Acts::Experimental
