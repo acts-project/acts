@@ -89,6 +89,12 @@ class TrackStateRange {
       }
     }
 
+    Iterator operator++(int) {
+      Iterator tmp(*this);
+      operator++();
+      return tmp;
+    }
+
     bool operator==(const Iterator& other) const {
       if (!proxy && !other.proxy) {
         return true;
@@ -108,8 +114,8 @@ class TrackStateRange {
   TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
   TrackStateRange() : m_begin{std::nullopt} {}
 
-  Iterator begin() { return m_begin; }
-  Iterator end() { return Iterator{std::nullopt}; }
+  Iterator begin() const { return m_begin; }
+  Iterator end() const { return Iterator{std::nullopt}; }
 
  private:
   Iterator m_begin;
