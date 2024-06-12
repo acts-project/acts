@@ -131,7 +131,7 @@ if "__main__" == __name__:
         input_files.append(args.detray_input)
 
     # Loop over the files and create the comparison histograms
-    for fi, ifile in enumerate(args.input):
+    for fi, ifile in enumerate(input_files):
         # Special treament for detray input
         if ifile == args.detray_input:
             print("Reading detray input from file: ", args.detray_input)
