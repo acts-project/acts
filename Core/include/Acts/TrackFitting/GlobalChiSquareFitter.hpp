@@ -831,9 +831,15 @@ class Gx2Fitter {
           } else if (measDim == 5) {
             addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
-          } else {
+          } else if (measDim == 6) {
             addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
+          } else {
+            ACTS_ERROR("Can not process state with measurement with "
+                       << measDim << " dimensions.")
+            throw std::domain_error(
+                "Found measurement with less than 1 or more than 6 "
+                "dimension(s).");
           }
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
