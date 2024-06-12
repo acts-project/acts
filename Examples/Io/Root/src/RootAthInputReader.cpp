@@ -11,6 +11,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <boost/container/static_vector.hpp>
 #include <TChain.h>
@@ -31,7 +32,10 @@ ActsExamples::RootAthInputReader::RootAthInputReader(
   
   m_inputchain = std::make_shared<TChain>(m_cfg.treename.c_str());
 
+  m_outputPixelSpacePoints.initialize(m_cfg.outputPixelSpacePoints);
+  m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+
 
 
   // Set the branches
@@ -222,18 +226,21 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(const ActsExamp
     int etamod   = CLeta_module   [im];
     int phimod   = CLphi_module   [im];
     int side     = CLside         [im];
-    ULong64_t moduleID = CLmoduleID     [im];
-    
+    // ULong64_t moduleID = CLmoduleID     [im];
+      
     ACTS_DEBUG(bec<<" "<<lydisk<<" "<<etamod<<" "<<phimod<<" "<<side<<" ");
-    
-    
+  
   }
   
   
+  // Prepare pixel space points
+  SimSpacePointContainer pixelSpacePoints;
+
   // Prepare space-point container
   // They contain both pixel and SCT space points
   SimSpacePointContainer spacePoints;
-  boost::container::static_vector<Acts::SourceLink,2> sLinks;
+
+  
   
   ACTS_DEBUG("Found "<< nSP <<" space points");
   
@@ -246,31 +253,76 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(const ActsExamp
 
     //PIX=1  STRIP = 2
     int type = SPCL2_index[isp] == -1 ?  1 : 2 ;
-
-    //Acts::Vector3 topStripDirection{
-    //  SPtopStripDirection[isp]->at(0),
-    //  SPtopStripDirection[isp]->at(1),
-    //  SPtopStripDirection[isp]->at(2)};
     
     ACTS_DEBUG("SP:: "<<type<< " " <<globalPos << " " << sp_covr<< " "<<sp_covz);
-    
-    
-    //data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
-    //  topStripDirection, bottomStripDirection, stripCenterDistance,
-    //  topStripCenterPosition);
 
     
+    boost::container::static_vector<Acts::SourceLink,2> sLinks;
+    IndexSourceLink emptysl(0,isp);
+    sLinks.emplace_back(emptysl);
+  
+    
+    if (type == 1) { // pixel
+
+      pixelSpacePoints.emplace_back(globalPos,std::nullopt,
+        sp_covr, sp_covz, std::nullopt, sLinks);
+
+    } else  { // Strip 
+
+      float hl_topstrip = SPhl_topstrip[isp];
+      float hl_botstrip = SPhl_botstrip[isp];
+      //std::vector<float> topStripDir = (*SPtopStripDirection)[isp];
+
+    
+      //Acts::Vector3 topStripDirection{
+      //  topStripDir.at(0),
+      //  topStripDir.at(1),
+      //  topStripDir.at(2)};
+/*
+      Acts::Vector3 botStripDirection{
+        SPbottomStripDirection[isp].at(0),
+        SPbottomStripDirection[isp].at(1),
+        SPbottomStripDirection[isp]->at(2)
+      };
+
+      Acts::Vector3 stripCenterDistance{
+        SPstripCenterDistance[isp].at(0),
+        SPstripCenterDistance[isp].at(1),
+        SPstripCenterDistance[isp].at(2)
+      };
+
+      Acts::Vector3 topStripCenterPosition{
+        SPtopStripCenterPosition[isp].at(0),
+        SPtopStripCenterPosition[isp].at(1),
+        SPtopStripCenterPosition[isp].at(2)
+      };
+
+      
+
+      stripSpacePoints.emplace_back(globalPos, std::nullopt,
+        sp_covr, sp_covz, std::nullopt,sLinks,
+        hl_topstrip, hl_botstrip,
+        topStripDirection, botStripDirection,
+        stripCenterDistance, topStripCenterPosition
+        );
+      */
+
+    }
+    
     spacePoints.emplace_back(globalPos, std::nullopt,
-			     sp_covr, sp_covz, std::nullopt,sLinks);
-    //                       sp_topHalfStripLength, sp_bottomHalfStripLength,
-    //			     topStripDirection, bottomStripDirection,
-    //			     stripCenterDistance,topStripCenterPosition);
+			    sp_covr, sp_covz, std::nullopt,sLinks);
+
     
   }
   
+
+  ACTS_DEBUG("Created"<<pixelSpacePoints.size()<<" "<<
+      m_cfg.outputPixelSpacePoints<< "space points");
+
   ACTS_DEBUG("Created "<<spacePoints.size() <<" " <<
 	     m_cfg.outputSpacePoints << "space points");
   
+  m_outputPixelSpacePoints(ctx,std::move(pixelSpacePoints));
   m_outputSpacePoints(ctx, std::move(spacePoints));
   
   return ProcessCode::SUCCESS;
