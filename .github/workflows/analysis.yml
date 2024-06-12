@@ -19,7 +19,7 @@ concurrency:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 5G
   CCACHE_KEY_SUFFIX: r1
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -32,7 +32,9 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
       - name: Install dependencies
-        run: apt-get update && apt-get install -y unzip git-lfs
+        run: |
+          apt-get update 
+          apt-get install -y unzip git-lfs jq
 
       - uses: actions/checkout@v4
         with:
