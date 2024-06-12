@@ -292,8 +292,20 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   }
 }
 
+/// calculateDeltaParams Function
+/// This function calculates the delta parameters for a given aMatrix and
+/// bVector, depending on the number of degrees of freedom of the system, by
+/// solving the equation
+///  [a] * delta = b
+///
+/// @param aMatrix The matrix containing the coefficients of the linear system.
+/// @param bVector The vector containing the right-hand side values of the linear system.
+/// @param ndfSystem The number of degrees of freedom, determining the size of the submatrix and subvector to be solved.
+///
+/// @return deltaParams The calculated delta parameters.
 BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
-                                 const BoundVector& bVector);
+                                 const BoundVector& bVector,
+                                 const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -733,6 +745,10 @@ class Gx2Fitter {
     // and used for the final track
     std::size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
+    // Here we will store, how the ndf of the system. It automatically deduces
+    // if we want to fit e.g. q/p and adjusts itself later.
+    std::size_t ndfSystem = Acts::MultiTrajectoryTraits::kInvalid;
+
     ACTS_VERBOSE("params:\n" << params);
 
     /// Actual Fitting /////////////////////////////////////////////////////////
@@ -851,6 +867,15 @@ class Gx2Fitter {
         // TODO: Material handling. Should be there for hole and measurement
       }
 
+      // Get required number of degrees of freedom ndfSystem
+      if (aMatrix(4, 4) == 0) {
+        ndfSystem = 4;
+      } else if (aMatrix(5, 5) == 0) {
+        ndfSystem = 5;
+      } else {
+        ndfSystem = 6;
+      }
+
       // This check takes into account the evaluated dimensions of the
       // measurements. To fit, we need at least NDF+1 measurements. However,
       // we count n-dimensional measurements for n measurements, reducing the
@@ -858,21 +883,18 @@ class Gx2Fitter {
       // We might encounter the case, where we cannot use some (parts of a)
       // measurements, maybe if we do not support that kind of measurement. This
       // is also taken into account here.
-      // `ndf = 4` is chosen, since it is a minimum that makes sense for us, but
-      // a more general approach is desired.
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
-      // TODO genernalize for n-dimensional fit
-      constexpr std::size_t ndf = 4;
-      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+      if ((nUpdate > 0) && (ndfSystem + 1 > countNdf)) {
         ACTS_INFO("Not enough measurements. Require "
-                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+                  << ndfSystem + 1 << ", but only " << countNdf
+                  << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
       // calculate delta params [a] * delta = b
-      deltaParams = calculateDeltaParams(aMatrix, bVector);
+      deltaParams = calculateDeltaParams(aMatrix, bVector, ndfSystem);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << aMatrix << "\n"
@@ -917,7 +939,7 @@ class Gx2Fitter {
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
-    if (aMatrix(4, 4) == 0) {
+    if (ndfSystem == 4) {
       constexpr std::size_t reducedMatrixSize = 4;
 
       auto safeReducedCovariance = safeInverse(
@@ -928,7 +950,7 @@ class Gx2Fitter {
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             *safeReducedCovariance;
       }
-    } else if (aMatrix(5, 5) == 0) {
+    } else if (ndfSystem == 5) {
       constexpr std::size_t reducedMatrixSize = 5;
 
       auto safeReducedCovariance = safeInverse(
