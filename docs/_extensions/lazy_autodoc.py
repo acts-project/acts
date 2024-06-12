@@ -118,6 +118,7 @@ def run() -> None:
         "Acts::Logging::DefaultPrintPolicy",
         "Acts::Measurement",
         "Acts::SourceLink",
+        "Acts::Experimental::DetectorNavigator",
     }
 
     role_instances["func"] = {
