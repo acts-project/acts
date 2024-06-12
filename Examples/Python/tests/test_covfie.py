@@ -1,7 +1,6 @@
 import pathlib, acts, acts.examples
 from acts import covfie_conversion as cc
 
-
 def test_constant_field_conversion():
     v = acts.Vector3(1, 2, 3)
     af = acts.ConstantBField(v)

@@ -218,6 +218,9 @@ set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
+# Include the sources for the external dependencies.
+include(ActsExternSources)
+
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
 set(_acts_boost_recommended_version 1.78.0)

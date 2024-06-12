@@ -88,13 +88,14 @@ class DigitizationAlgorithm final : public IAlgorithm {
   using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
                                  CombinedDigitizer<2>, CombinedDigitizer<3>,
                                  CombinedDigitizer<4>>;
-
   /// Configuration of the Algorithm
   DigitizationConfig m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
   /// Geometric digtizer
   ActsFatras::Channelizer m_channelizer;
+
+  using CellsMap = std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
 
   ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
                                                            "SimHitContainer"};
@@ -103,6 +104,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
       this, "SourceLinks"};
   WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
       this, "Measurements"};
+  WriteDataHandle<CellsMap> m_cellsWriteHandle{this, "Cells"};
   WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};
