@@ -28,25 +28,6 @@
 #include <memory>
 #include <set>
 
-namespace {
-
-/// Find the position of the volume to point to
-///
-/// @param volume the volume to find
-/// @param the collection of volumes
-///
-/// @note return -1 if not found, to be interpreted by the caller
-int findVolume(
-    const Acts::Experimental::DetectorVolume* volume,
-    const std::vector<const Acts::Experimental::DetectorVolume*>& volumes) {
-  auto candidate = std::find(volumes.begin(), volumes.end(), volume);
-  if (candidate != volumes.end()) {
-    return std::distance(volumes.begin(), candidate);
-  }
-  return -1;
-}
-}  // namespace
-
 nlohmann::json Acts::DetectorJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const Options& options) {
