@@ -230,7 +230,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
         // Check for material
         if (p->surface().surfaceMaterial() != nullptr) {
           nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
-              *p->surface().surfaceMaterial(), p->surface(), sIndex, gridLinks);
+              *p->surface().surfaceMaterial(), *pSurface, sIndex, gridLinks);
           if (!jSurfaceMaterial.empty()) {
             ++nGrids;
             jMaterialVolumeGridsData.push_back(jSurfaceMaterial);
