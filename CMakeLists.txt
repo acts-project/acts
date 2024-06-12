@@ -301,6 +301,8 @@ endmacro()
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
 
+add_definitions(-DALGEBRA_PLUGINS_INCLUDE_ARRAY)
+
 # plugin dependencies
 
 if(ACTS_BUILD_PLUGIN_ACTSVG)
