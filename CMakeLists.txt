@@ -62,7 +62,7 @@ option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS
 option(ACTS_SETUP_ALGEBRAPLUGINS "Explicitly set up algebra-plugins for the project" OFF)
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
-#fatras related options
+# fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
