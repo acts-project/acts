@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/NeuralCalibrator.hpp"
+
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include <ActsExamples/EventData/NeuralCalibrator.hpp>
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <TFile.h>
 
@@ -174,7 +176,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
         Acts::SourceLink sl{idxSourceLink};
 
-        Acts::Measurement<Acts::BoundIndices, kSize> calibrated(
+        FixedSizeMeasurement<Acts::BoundIndices, kSize> calibrated(
             std::move(sl), indices, cpar, ccov);
 
         trackState.allocateCalibrated(calibrated.size());
