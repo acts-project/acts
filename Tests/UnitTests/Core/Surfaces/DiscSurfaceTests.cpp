@@ -389,6 +389,7 @@ std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rmin,
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(IncompatibleBounds) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
   Transform3 base = Transform3::Identity();
   auto discRadial = makeDisc(base, 30_mm, 100_mm);
   auto discTrap =
@@ -494,6 +495,7 @@ BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
                                                    Vector3{0_mm, 0_mm, 20_mm}) *
                       boost::unit_test::data::xrange(-1300, 1300, 104)),
                      angle, offset, phiShift) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 

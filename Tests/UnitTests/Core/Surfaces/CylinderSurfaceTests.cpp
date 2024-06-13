@@ -449,6 +449,7 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
                                                    Vector3{0_mm, 0_mm, 20_mm}) *
                       boost::unit_test::data::xrange(-1300, 1300, 104)),
                      angle, offset, phiShift) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
