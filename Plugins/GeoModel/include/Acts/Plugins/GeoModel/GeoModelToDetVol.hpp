@@ -22,5 +22,5 @@ namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const Transform3& transform);
-}  // namespace GeoModelToDetVol
+}  // namespace GeoModel
 }  // namespace Acts
