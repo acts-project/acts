@@ -704,7 +704,7 @@ class Navigator {
       return false;
     }
 
-    if (state.navigaion.navLayerIndex == state.navigation.navLayers.size()) {
+    if (state.navigation.navLayerIndex == state.navigation.navLayers.size()) {
       ACTS_VERBOSE(volInfo(state) << "No layers present, target at boundary.");
       return false;
     }
