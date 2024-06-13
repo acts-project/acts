@@ -170,17 +170,13 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
         constexpr std::size_t kSize =
             std::remove_reference_t<decltype(measurement)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::SourceLink sl{idxSourceLink};
-
-        FixedSizeMeasurement<Acts::BoundIndices, kSize> calibrated(
-            std::move(sl), indices, cpar, ccov);
-
-        trackState.allocateCalibrated(calibrated.size());
-        trackState.setCalibrated(calibrated);
+        trackState.allocateCalibrated(kSize);
+        trackState.template calibrated<kSize>() = cpar;
+        trackState.template calibratedCovariance<kSize>() = ccov;
+        trackState.setProjector(measurement.projector());
       },
       measurements[idxSourceLink.index()]);
 }
