@@ -43,6 +43,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <limits>
 
 namespace Acts::Experimental {
 
@@ -745,9 +746,9 @@ class Gx2Fitter {
     // and used for the final track
     std::size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
-    // Here we will store, how the ndf of the system. It automatically deduces
-    // if we want to fit e.g. q/p and adjusts itself later.
-    std::size_t ndfSystem = Acts::MultiTrajectoryTraits::kInvalid;
+    // Here we will store, the ndf of the system. It automatically deduces if we
+    // want to fit e.g. q/p and adjusts itself later.
+    std::size_t ndfSystem = std::numeric_limits<size_t>::max();
 
     ACTS_VERBOSE("params:\n" << params);
 
@@ -865,12 +866,22 @@ class Gx2Fitter {
           ACTS_WARNING("Unknown state encountered")
         }
         // TODO: Material handling. Should be there for hole and measurement
+        if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
+          // Add for this material a new jacobian
+          jacobianFromStart.emplace_back(BoundMatrix::Identity());
+
+
+
+
+
+
+        }
       }
 
       // Get required number of degrees of freedom ndfSystem.
       // We have only 3 cases, because we always have l0, l1, phi, theta
       // 4: no magentic field -> q/p is empty
-      // 5: no T measurement -> T not fittable
+      // 5: no time measurement -> time not fittable
       // 6: full fit
       if (aMatrix(4, 4) == 0) {
         ndfSystem = 4;
