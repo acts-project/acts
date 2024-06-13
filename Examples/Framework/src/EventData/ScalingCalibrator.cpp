@@ -172,11 +172,13 @@ void ActsExamples::ScalingCalibrator::calibrate(
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::Measurement<Acts::BoundIndices, kSize> cmeas(
+        FixedSizeMeasurement<Acts::BoundIndices, kSize> cmeas(
             Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
 
         trackState.allocateCalibrated(cmeas.size());
-        trackState.setCalibrated(cmeas);
+        trackState.calibrated<kSize>() = meas.parameters();
+        trackState.calibratedCovariance<kSize>() = meas.covariance();
+        trackState.setProjector(meas.projector());
       },
       (measurements)[idxSourceLink.index()]);
 }

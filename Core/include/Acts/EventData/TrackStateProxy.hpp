@@ -783,35 +783,6 @@ class TrackStateProxy {
   /// @return The number of dimensions
   IndexType calibratedSize() const { return m_traj->calibratedSize(m_istate); }
 
-  /// Set the calibrated measurement of this track state from a measurement
-  /// object. This is a convenience function to set the calibrated measurement
-  /// from the @c Acts::Measurement object. In general, you should implement this
-  /// functionality specifically for an (experiment-specific) uncalibrated
-  /// measurement EDM.
-  ///
-  /// @tparam kMeasurementSize Size of the calibrated measurement
-  /// @param meas The measurement object to set
-  ///
-  /// @warning This assumes this TrackState stores it's own calibrated
-  ///       measurement. **If storage is shared with another TrackState, both
-  ///       will be overwritten!**. Also assumes none of the calibrated
-  ///       components is *invalid* (i.e. unset) for this TrackState.
-  /// @note This does not set the reference surface.
-  template <std::size_t kMeasurementSize, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  void setCalibrated(
-      const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
-    static_assert(kMeasurementSize <= M,
-                  "Input measurement must be within the allowed size");
-
-    allocateCalibrated(kMeasurementSize);
-    assert(hasCalibrated());
-
-    calibrated<kMeasurementSize>() = meas.parameters();
-    calibratedCovariance<kMeasurementSize>() = meas.covariance();
-    setProjector(meas.projector());
-  }
-
   /// Allocate storage to be able to store a measurement of size @p measdim.
   /// This must be called **before** setting the measurement content.
   void allocateCalibrated(std::size_t measdim) {
