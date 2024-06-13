@@ -16,6 +16,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include <ActsExamples/EventData/Cluster.hpp>
 
 #include <mutex>
 #include <map>
@@ -54,7 +55,9 @@ namespace ActsExamples{
       // name of the output strip space points
       std::string outputStripSpacePoints = "outputStripSpacepoints";
       // name of the output space points
-      std::string outputSpacePoints = "output_spacepoints"; 
+      std::string outputSpacePoints = "output_spacepoints";
+      // name of the output clusters
+      std::string outputClusters = "output_clusters";
     };
     
     RootAthInputReader(const RootAthInputReader &) = delete;
@@ -91,6 +94,7 @@ namespace ActsExamples{
     WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{this,"outputPixelSpacepoints"};
     WriteDataHandle<SimSpacePointContainer> m_outputStripSpacePoints{this,"outputStripSpacepoints"};
     WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{this, "output_spacepoints"};
+    WriteDataHandle<ClusterContainer> m_outputClusters{this, "output_clusters"};
     std::unique_ptr<const Acts::Logger> m_logger;
     
     std::mutex m_read_mutex;
@@ -101,11 +105,11 @@ namespace ActsExamples{
     long unsigned int m_events;
     
     
-    static const unsigned int maxCL  = 1500000;
-    static const unsigned int maxSP  = 1500000;
-    static const unsigned int maxDTT = 1500000;
-    static const unsigned int maxTRK = 1500000;
-    static const unsigned int maxPart = 1500000;
+    static constexpr unsigned int maxCL  = 1500000;
+    static constexpr unsigned int maxSP  = 1500000;
+    static constexpr unsigned int maxDTT = 1500000;
+    static constexpr unsigned int maxTRK = 1500000;
+    static constexpr unsigned int maxPart = 1500000;
     
     // Declaration of leaf types
     unsigned int         run_number;
