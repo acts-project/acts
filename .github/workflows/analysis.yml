@@ -48,14 +48,6 @@ jobs:
         run: |
           CI/get_next_milestone.py | tee next_version.txt
 
-      - name: Get upcoming version from milestones
-        env:
-          GH_TOKEN: ${{ secrets.GTIHUB_TOKEN}}
-          GH_REPO: acts-project/acts
-        run: |
-          gh extension install valeriobelli/gh-milestone
-          gh milestone list --json title | jq .[].title -r | grep -v next | tail -n1 | tee next_version.txt
-
       - name: Cache build
         uses: actions/cache@v4
         with:
