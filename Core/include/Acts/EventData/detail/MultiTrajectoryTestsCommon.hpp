@@ -532,7 +532,7 @@ class MultiTrajectoryTestsCommon {
       // create a temporary measurement to extract the projector matrix
       testSourceLinkCalibratorReturn<trajectory_t>(
           gctx, cctx, SourceLink{pc.sourceLink}, ts);
-      fullProj.topLeftCorner(nMeasurements, eBoundSize) = ts.projector();
+      fullProj = ts.projector();
     }
     BOOST_CHECK_EQUAL(ts.effectiveProjector(),
                       fullProj.topLeftCorner(nMeasurements, eBoundSize));
