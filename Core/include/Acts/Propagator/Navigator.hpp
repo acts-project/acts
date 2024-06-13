@@ -611,6 +611,7 @@ class Navigator {
                    << "No surfaces present, target at layer first.");
       return false;
     }
+
     auto layerID = state.navigation.navSurface().object()->geometryId().layer();
     std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
         externalSurfaceRange =
@@ -672,6 +673,7 @@ class Navigator {
             (state.navigation.currentVolume == state.navigation.targetVolume);
       }
     }
+
     // Do not return to the propagator
     return false;
   }
@@ -702,6 +704,11 @@ class Navigator {
       return false;
     }
 
+    if (state.navigaion.navLayerIndex == state.navigation.navLayers.size()) {
+      ACTS_VERBOSE(volInfo(state) << "No layers present, target at boundary.");
+      return false;
+    }
+
     // if there are no layers, go back to the navigator (not stepper yet)
     if (state.navigation.navLayers.empty()) {
       ACTS_VERBOSE(volInfo(state)
@@ -712,6 +719,7 @@ class Navigator {
         return true;
       }
     }
+
     // loop over the available navigation layer candidates
     while (state.navigation.navLayerIndex !=
            state.navigation.navLayers.size()) {
