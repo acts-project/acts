@@ -13,15 +13,16 @@
 namespace Acts::Experimental {
 
 BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
-                                 const BoundVector& bVector) {
+                                 const BoundVector& bVector,
+                                 const std::size_t ndfSystem) {
   BoundVector deltaParams = BoundVector::Zero();
-  if (aMatrix(4, 4) == 0) {
+  if (ndfSystem == 4) {
     constexpr std::size_t reducedMatrixSize = 4;
     deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
             .colPivHouseholderQr()
             .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else if (aMatrix(5, 5) == 0) {
+  } else if (ndfSystem == 5) {
     constexpr std::size_t reducedMatrixSize = 5;
     deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
