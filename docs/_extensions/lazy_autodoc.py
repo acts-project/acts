@@ -75,7 +75,6 @@ def run() -> None:
 
     role_instances["struct"] |= {
         "Acts::DenseStepperPropagatorOptions",
-        "Acts::Experimental::DetectorNavigator::State",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",

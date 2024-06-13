@@ -89,21 +89,6 @@ BOOST_AUTO_TEST_CASE(SingleEmptyVolume) {
       volumeIn->transform(tContext).isApprox(volume->transform(tContext)));
   BOOST_CHECK_EQUAL(volumeIn->surfaces().size(), volume->surfaces().size());
   BOOST_CHECK_EQUAL(volumeIn->volumes().size(), volume->volumes().size());
-
-  // Detray format test - manipulate for detray
-  Acts::DetectorVolumeJsonConverter::Options detrayOptions;
-  detrayOptions.transformOptions.writeIdentity = true;
-  detrayOptions.transformOptions.transpose = true;
-  detrayOptions.surfaceOptions.transformOptions =
-      detrayOptions.transformOptions;
-  detrayOptions.portalOptions.surfaceOptions = detrayOptions.surfaceOptions;
-
-  auto jVolumeDetray = Acts::DetectorVolumeJsonConverter::toJsonDetray(
-      tContext, *volume, {volume.get()}, detrayOptions);
-
-  out.open("single-empty-volume-detray.json");
-  out << jVolumeDetray.dump(4);
-  out.close();
 }
 
 BOOST_AUTO_TEST_CASE(SingleSurfaceVolume) {
