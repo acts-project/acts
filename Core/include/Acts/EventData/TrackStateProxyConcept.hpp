@@ -191,7 +191,7 @@ concept MutableTrackStateProxyConcept = TrackStateProxyConcept<T> &&
              TrackIndexType index, std::shared_ptr<const Surface> surface,
              Eigen::Matrix<double, 3, 6> projector,
              ProjectorBitset projectorBitset, SourceLink sl,
-             Acts::Measurement<BoundIndices, 2> meas, std::size_t measdim) {
+             std::size_t measdim) {
   {v.shareFrom(mask, mask)};
 
   {v.shareFrom(std::declval<typename T::Trajectory::ConstTrackStateProxy>(),
@@ -238,8 +238,6 @@ concept MutableTrackStateProxyConcept = TrackStateProxyConcept<T> &&
   {
     v.effectiveCalibratedCovariance()
     } -> std::same_as<detail::DynamicMeasurementCovariance>;
-
-  {v.setCalibrated(meas)};
 
   {v.allocateCalibrated(measdim)};
 
