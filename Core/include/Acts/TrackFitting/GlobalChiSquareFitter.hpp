@@ -867,7 +867,11 @@ class Gx2Fitter {
         // TODO: Material handling. Should be there for hole and measurement
       }
 
-      // Get required number of degrees of freedom ndfSystem
+      // Get required number of degrees of freedom ndfSystem.
+      // We have only 3 cases, because we always have l0, l1, phi, theta
+      // 4: no magentic field -> q/p is empty
+      // 5: no T measurement -> T not fittable
+      // 6: full fit
       if (aMatrix(4, 4) == 0) {
         ndfSystem = 4;
       } else if (aMatrix(5, 5) == 0) {
