@@ -115,7 +115,6 @@ def run() -> None:
         "Acts::Logging::TimedOutputDecorator",
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
-        "Acts::Measurement",
         "Acts::SourceLink",
     }
 
