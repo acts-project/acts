@@ -7,8 +7,6 @@
 add_custom_target(unit_tests)
 
 macro(add_unittest _name _source)
-  set(_options EXCLUDE_FROM_PHONY)
-  cmake_parse_arguments(ADD_UNITTEST "${_options}" "" "" ${ARGN} )
   # automatically prefix the target name
   set(_target "ActsUnitTest${_name}")
   add_executable(${_target} ${_source})
@@ -30,14 +28,12 @@ macro(add_unittest _name _source)
       ${unittest_extra_libraries})
   # register as unittest executable
   add_test(NAME ${_name} COMMAND ${_target})
-  if(NOT ADD_UNITTEST_EXCLUDE_FROM_PHONY)
-    add_dependencies(unit_tests ${_target})
-  endif()
+  add_dependencies(unit_tests ${_target})
 endmacro()
 
 # This function adds a non compile test. To this end it
 # - Adds a target to process the file at `src`, and converts begin/end macros
-#   to ` #if defined` in an extra file
+#   to `#if defined` in an extra file
 # - Adds an executable target for that source file, excludes it from the default build
 #   Set a preprocessor define to enable ONE critical section.
 # - Adds a test job to ctest which invokes CMake to build this executable target.
@@ -116,7 +112,7 @@ function(add_non_compile_test name src)
 endfunction()
 
 add_subdirectory(Core)
-add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES AND ACTS_BUILD_EXAMPLES_UNITTESTS)
+add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 add_subdirectory_if(Benchmarks ACTS_BUILD_BENCHMARKS)
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)
