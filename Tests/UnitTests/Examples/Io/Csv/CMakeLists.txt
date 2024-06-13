@@ -1,3 +1,3 @@
 set(unittest_extra_libraries ActsExamplesDigitization ActsExamplesIoCsv)
 
-add_unittest(MeasurementReaderWriter MeasurementReaderWriterTests.cpp EXCLUDE_FROM_PHONY)
+add_unittest(MeasurementReaderWriter MeasurementReaderWriterTests.cpp)

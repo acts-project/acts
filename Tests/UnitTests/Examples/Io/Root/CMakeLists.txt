@@ -1,3 +1,3 @@
 set(unittest_extra_libraries ActsExamplesIoRoot)
 
-add_unittest(RootSimhitReaderWriter SimhitReaderWriterTests.cpp EXCLUDE_FROM_PHONY)
+add_unittest(RootSimhitReaderWriter SimhitReaderWriterTests.cpp)

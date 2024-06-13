@@ -1,2 +1,2 @@
 set(unittest_extra_libraries ActsExamplesAlignment)
-add_unittest(AlignmentGrouping AlignmentGroupingTests.cpp EXCLUDE_FROM_PHONY)
+add_unittest(AlignmentGrouping AlignmentGroupingTests.cpp)
