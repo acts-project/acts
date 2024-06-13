@@ -1,3 +1,3 @@
 set(unittest_extra_libraries ActsExamplesDigitization ActsExamplesIoJson)
 
-add_unittest(ModuleClusters ModuleClustersTests.cpp EXCLUDE_FROM_PHONY)
+add_unittest(ModuleClusters ModuleClustersTests.cpp)
