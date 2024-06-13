@@ -8,17 +8,11 @@
 #pragma once
 
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
-#include "GeoModelKernel/GeoShape.h"
+class GeoShape;
 
 namespace Acts {
+
 namespace GeoModelToDetVol {
 /// @brief Convert a GeoModel shape to a DetectorVolume
 ///

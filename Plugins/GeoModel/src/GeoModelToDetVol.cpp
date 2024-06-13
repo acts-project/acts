@@ -8,7 +8,13 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelToDetVol.hpp"
 
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
