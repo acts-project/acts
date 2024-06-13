@@ -47,9 +47,14 @@ with cmakefile.open() as fh:
     rows = []
     for line in fh:
         if m := re.match(
-            rf"option\( *({args.prefix}\w*) \"(.*)\" (ON|OFF|\${{\w+}})\ *\)", line
+            rf"option\( *({args.prefix}\w*) \"(.*)\" (ON|OFF|\${{.+}})\ *\) ?(?:# (.*))?.*",
+            line,
         ):
-            name, doc, default = m.groups()
+            name, doc, default, comment = m.groups()
+            # manual default override mechanism
+            if comment is not None and comment.strip().startswith("default:"):
+                default = comment.strip().split("default:")[1].strip()
+
             type = "bool"
             if m := re.match(r"\${(\w+)}", default):
                 lookup = m.group(1)
