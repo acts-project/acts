@@ -1001,6 +1001,10 @@ using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
 using Reference1StraightLinePropagator =
     Propagator<StraightLineStepper, TryAllNavigator>;
+using Reference2EigenPropagator =
+    Propagator<EigenStepper, TryAllOverstepNavigator>;
+using Reference2StraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllOverstepNavigator>;
 
 EigenStepper estepper(bField);
 StraightLineStepper slstepper;
@@ -1025,6 +1029,18 @@ Reference1StraightLinePropagator refslpropagator1(
     TryAllNavigator({tGeometry, true, true, false},
                     getDefaultLogger("ref1_sl_nav", Logging::INFO)),
     getDefaultLogger("ref1_sl_prop", Logging::INFO));
+
+Reference2EigenPropagator refepropagator2(
+    estepper,
+    TryAllOverstepNavigator({tGeometry, true, true, false,
+                             BoundaryCheck(false)},
+                            getDefaultLogger("ref2_e_nav", Logging::INFO)),
+    getDefaultLogger("ref2_e_prop", Logging::INFO));
+Reference2StraightLinePropagator refslpropagator2(
+    slstepper,
+    TryAllOverstepNavigator({tGeometry, true, true, false},
+                            getDefaultLogger("ref2_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref2_sl_prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
     Navigator_random,
@@ -1070,10 +1086,22 @@ BOOST_DATA_TEST_CASE(
   runSelfConsistencyTest(slpropagator, start, debugMode);
 
   if (debugMode) {
-    std::cout << ">>> Test consistency epropagator vs refepropagator1"
-              << std::endl;
+    std::cout << ">>> Test reference 1 consistency epropagator" << std::endl;
   }
   runConsistencyTest(epropagator, refepropagator1, start, debugMode);
+  if (debugMode) {
+    std::cout << ">>> Test reference 1 consistency slpropagator" << std::endl;
+  }
+  runConsistencyTest(slpropagator, refslpropagator1, start, debugMode);
+
+  if (debugMode) {
+    std::cout << ">>> Test reference 2 consistency epropagator" << std::endl;
+  }
+  runConsistencyTest(epropagator, refepropagator2, start, debugMode);
+  if (debugMode) {
+    std::cout << ">>> Test reference 2 consistency slpropagator" << std::endl;
+  }
+  runConsistencyTest(slpropagator, refslpropagator2, start, debugMode);
 }
 
 }  // namespace Acts::Test

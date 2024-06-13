@@ -18,11 +18,14 @@
 #include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
+#include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <ctime>
+#include <map>
+#include <memory>
 #include <set>
 
 nlohmann::json Acts::DetectorJsonConverter::toJson(
@@ -71,7 +74,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
     jVolumes.push_back(jVolume);
   }
   jData["volumes"] = jVolumes;
-
   jData["volume_finder"] = DetectorVolumeFinderJsonConverter::toJson(
       detector.detectorVolumeFinder());
 
@@ -98,38 +100,143 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
 
   nlohmann::json jFile;
 
-  // (1) Detector section
-  nlohmann::json jGeometry;
-  nlohmann::json jGeometryData;
-  nlohmann::json jGeometryHeader;
-  std::size_t nSurfaces = 0;
-
   nlohmann::json jCommonHeader;
   jCommonHeader["detector"] = detector.name();
   jCommonHeader["date"] = std::asctime(ti);
   jCommonHeader["version"] = "detray - 0.44.0";
   jCommonHeader["tag"] = "geometry";
 
-  auto volumes = detector.volumes();
+  // Three sub sections are created
+  // (1) Geometry
+  nlohmann::json jGeometry;
+  nlohmann::json jGeometryData;
+  nlohmann::json jGeometryHeader;
+  nlohmann::json jGeometryVolumes;
+  // (2) Surface grids
+  nlohmann::json jSurfaceGrids;
+  nlohmann::json jSurfaceGridsData;
+  nlohmann::json jSurfaceGridsInfoCollection;
+  nlohmann::json jSurfaceGridsHeader;
+  // (3) Material
+  nlohmann::json jMaterial;
+  nlohmann::json jMaterialData;
+  nlohmann::json jMaterialHeader;
+  nlohmann::json jMaterialGrids;
 
-  // Convert the volumes
-  nlohmann::json jVolumes;
-  for (const auto& volume : volumes) {
-    auto jVolume = DetectorVolumeJsonConverter::toJsonDetray(
-        gctx, *volume, volumes, options.volumeOptions);
-    jVolumes.push_back(jVolume);
-    if (jVolume.find("surfaces") != jVolume.end() &&
-        jVolume["surfaces"].is_array()) {
-      nSurfaces += jVolume["surfaces"].size();
+  // Counters:
+  std::size_t nSurfaces = 0;
+  std::size_t nGrids = 0;
+
+  // Main loop over volumes
+  for (auto [iv, volume] : enumerate(detector.volumes())) {
+    // Write the volume information
+    nlohmann::json jVolume;
+    jVolume["name"] = volume->name();
+
+    // Write the transform and bounds information
+    jVolume["transform"] = Transform3JsonConverter::toJson(
+        volume->transform(gctx), options.volumeOptions.transformOptions);
+    jVolume["bounds"] =
+        VolumeBoundsJsonConverter::toJson(volume->volumeBounds());
+    auto volumeBoundsType = volume->volumeBounds().type();
+    if (volumeBoundsType == VolumeBounds::BoundsType::eCylinder) {
+      jVolume["type"] = 0u;
+    } else if (volumeBoundsType == VolumeBounds::BoundsType::eCuboid) {
+      jVolume["type"] = 4u;
+    } else {
+      throw std::runtime_error("Unsupported volume bounds type");
     }
+    // Link to itself
+    jVolume["index"] = iv;
+
+    // Acceleration link if there
+    nlohmann::json jSurfacesDelegate = IndexedSurfacesJsonConverter::toJson(
+        volume->internalNavigation(), true);
+    if (!jSurfacesDelegate.is_null()) {
+      // Colplete the grid json for detray usage
+      jSurfacesDelegate["owner_link"] = iv;
+      // jSurfacesDelegate["acc_link"] =
+      nlohmann::json jSurfaceGridsCollection;
+      jSurfaceGridsCollection.push_back(jSurfacesDelegate);
+
+      nlohmann::json jSurfaceGridsInfo;
+      jSurfaceGridsInfo["volume_link"] = iv;
+      jSurfaceGridsInfo["grid_data"] = jSurfaceGridsCollection;
+      jSurfaceGridsInfoCollection.push_back(jSurfaceGridsInfo);
+    }
+
+    // Grids per volume
+    nlohmann::json jMaterialVolumeGrids;
+    nlohmann::json jMaterialVolumeGridsData;
+    jMaterialVolumeGrids["volume_link"] = iv;
+    std::map<std::size_t, std::size_t> gridLinks;
+
+    // Write the surfaces - patch bounds & augment with self links
+    std::size_t sIndex = 0;
+    nlohmann::json jSurfaces;
+    for (const auto& s : volume->surfaces()) {
+      auto jSurface = SurfaceJsonConverter::toJsonDetray(
+          gctx, *s, options.volumeOptions.surfaceOptions);
+      DetrayJsonHelper::addVolumeLink(jSurface["mask"], iv);
+      jSurface["index_in_coll"] = sIndex;
+      jSurfaces.push_back(jSurface);
+
+      // Check for material
+      if (s->surfaceMaterial() != nullptr) {
+        nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
+            *s->surfaceMaterial(), *s, sIndex, gridLinks);
+        if (!jSurfaceMaterial.empty()) {
+          ++nGrids;
+          jMaterialVolumeGridsData.push_back(jSurfaceMaterial);
+        }
+      }
+      ++sIndex;
+    }
+
+    // Write the portals - we need oriented surfaces for this
+    auto orientedSurfaces =
+        volume->volumeBounds().orientedSurfaces(volume->transform(gctx));
+    // Write the portals - they will end up in the surface container
+    for (const auto& [ip, p] : enumerate(volume->portals())) {
+      auto [jPortalSurfaces, portalSubSplits] = (toJsonDetray(
+          gctx, *p, ip, *volume, orientedSurfaces, detector.volumes(),
+          options.volumeOptions.portalOptions));
+      std::size_t splitSurfaceIdx = 0;
+      for (auto& jSurface : jPortalSurfaces) {
+        jSurface["index_in_coll"] = sIndex;
+        jSurfaces.push_back(jSurface);
+        const Surface* pSurface =
+            portalSubSplits.empty() ? (&p->surface())
+                                    : portalSubSplits[splitSurfaceIdx++].get();
+        // Check for material
+        if (p->surface().surfaceMaterial() != nullptr) {
+          nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
+              *p->surface().surfaceMaterial(), *pSurface, sIndex, gridLinks);
+          if (!jSurfaceMaterial.empty()) {
+            ++nGrids;
+            jMaterialVolumeGridsData.push_back(jSurfaceMaterial);
+          }
+        }
+        ++sIndex;
+      }
+    }
+    // If material was found, keep it
+    if (!jMaterialVolumeGridsData.empty()) {
+      jMaterialVolumeGrids["grid_data"] = {jMaterialVolumeGridsData};
+      jMaterialGrids.push_back(jMaterialVolumeGrids);
+    }
+
+    // Surfaces go into the volume
+    jVolume["surfaces"] = jSurfaces;
+    nSurfaces += jSurfaces.size();
+    jGeometryVolumes.push_back(jVolume);
   }
-  jGeometryData["volumes"] = jVolumes;
+
+  jGeometryData["volumes"] = jGeometryVolumes;
   jGeometryData["volume_grid"] = DetectorVolumeFinderJsonConverter::toJson(
       detector.detectorVolumeFinder(), true);
 
-  // (1) Geometry
-  // For detray, the number of surfaces and portals are collected
-  // from the translated volumes
+  // Collect it (1) - Geometry
   jGeometryHeader["type"] = "detray";
   jGeometryHeader["common"] = jCommonHeader;
   jGeometryHeader["surface_count"] = nSurfaces;
@@ -138,77 +245,19 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   jGeometry["data"] = jGeometryData;
   jFile["geometry"] = jGeometry;
 
-  // (2) surface grid section
-  nlohmann::json jSurfaceGrids;
-  nlohmann::json jSurfaceGridsData;
-  nlohmann::json jSurfaceGridsInfoCollection;
-  nlohmann::json jSurfaceGridsHeader;
-  for (const auto [iv, volume] : enumerate(volumes)) {
-    // And its surface navigation delegates
-    nlohmann::json jSurfacesDelegate = IndexedSurfacesJsonConverter::toJson(
-        volume->internalNavigation(), true);
-    if (jSurfacesDelegate.is_null()) {
-      continue;
-    }
-    // Colplete the grid json for detray usage
-    jSurfacesDelegate["owner_link"] = iv;
-    // jSurfacesDelegate["acc_link"] =
-    nlohmann::json jSurfaceGridsCollection;
-    jSurfaceGridsCollection.push_back(jSurfacesDelegate);
-
-    nlohmann::json jSurfaceGridsInfo;
-    jSurfaceGridsInfo["volume_link"] = iv;
-    jSurfaceGridsInfo["grid_data"] = jSurfaceGridsCollection;
-    jSurfaceGridsInfoCollection.push_back(jSurfaceGridsInfo);
-  }
-  jSurfaceGridsData["grids"] = jSurfaceGridsInfoCollection;
-
+  // Collect it (2) - Grid
   jCommonHeader["tag"] = "surface_grids";
   jSurfaceGridsHeader["common"] = jCommonHeader;
+  jSurfaceGridsData["grids"] = jSurfaceGridsInfoCollection;
   jSurfaceGridsHeader["grid_count"] = jSurfaceGridsInfoCollection.size();
-
   jSurfaceGrids["header"] = jSurfaceGridsHeader;
   jSurfaceGrids["data"] = jSurfaceGridsData;
-
   jFile["surface_grids"] = jSurfaceGrids;
 
-  // (3) material section
+  // Collect it (3) - Material
   jCommonHeader["tag"] = "material_maps";
-
-  nlohmann::json jMaterial;
-  nlohmann::json jMaterialData;
-  nlohmann::json jMaterialHeader;
   jMaterialHeader["common"] = jCommonHeader;
-
-  nlohmann::json jMaterialGrids;
-  std::size_t nGrids = 0;
-  for (const auto [iv, volume] : enumerate(volumes)) {
-    // Grids per volume
-    nlohmann::json jMaterialVolumeGrids;
-    jMaterialVolumeGrids["volume_link"] = iv;
-    std::map<std::size_t, std::size_t> gridLinks;
-    // Add the data to the grid
-    /// Create the material json
-    nlohmann::json jMaterialVolumeGridsData;
-    for (const auto [is, surface] : enumerate(volume->surfaces())) {
-      const ISurfaceMaterial* surfaceMaterial = surface->surfaceMaterial();
-      if (surfaceMaterial != nullptr) {
-        nlohmann::json jSurfaceMaterial = MaterialJsonConverter::toJsonDetray(
-            *surfaceMaterial, *surface, is, gridLinks);
-        if (!jSurfaceMaterial.empty()) {
-          ++nGrids;
-          jMaterialVolumeGridsData.push_back(jSurfaceMaterial);
-        }
-      }
-    }
-    if (!jMaterialVolumeGridsData.empty()) {
-      jMaterialVolumeGrids["grid_data"] = {jMaterialVolumeGridsData};
-      jMaterialGrids.push_back(jMaterialVolumeGrids);
-    }
-  }
-
   jMaterialData["grids"] = jMaterialGrids;
-  // Fill the header
   jMaterialHeader["grid_count"] = nGrids;
   jMaterial["header"] = jMaterialHeader;
   jMaterial["data"] = jMaterialData;
