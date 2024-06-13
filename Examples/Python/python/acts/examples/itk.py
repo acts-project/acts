@@ -418,7 +418,7 @@ def itkSeedingAlgConfig(
             [0, 1],
             [0, 2],
             [0, 1],
-            [0, 0]
+            [0, 0],
         ]  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
         zBinNeighborsBottom = [
             [0, 0],
@@ -433,7 +433,7 @@ def itkSeedingAlgConfig(
             [-1, 0],
             [-1, 0],
             [-1, 0],
-            [0, 0]
+            [0, 0],
         ]
         deltaRMiddleMinSPRange = 10 * u.mm
         deltaRMiddleMaxSPRange = 10 * u.mm
@@ -475,7 +475,7 @@ def itkSeedingAlgConfig(
             [0, 1],
             [0, 2],
             [0, 1],
-            [0, 0]
+            [0, 0],
         ]
         zBinNeighborsBottom = [
             [0, 0],
@@ -490,7 +490,7 @@ def itkSeedingAlgConfig(
             [-1, 0],
             [-1, 0],
             [-1, 0],
-            [0, 0]
+            [0, 0],
         ]
         deltaRMiddleMinSPRange = 30 * u.mm
         deltaRMiddleMaxSPRange = 150 * u.mm
