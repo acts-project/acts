@@ -33,13 +33,22 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          apt-get update 
+          apt-get update
           apt-get install -y unzip git-lfs jq
 
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
+
+
+      - name: Get upcoming version from milestones
+        env:
+          GH_TOKEN: ${{ secret.GTIHUB_TOKEN}}
+          GH_REPO: acts-project/acts
+        run: |
+          gh extension install valeriobelli/gh-milestone
+          gh milestone list --json title | jq .[].title -r | grep -v next | tail -n1 | tee next_version.txt
 
       - name: Cache build
         uses: actions/cache@v4
@@ -100,7 +109,8 @@ jobs:
         run: |
           sonar-scanner \
             --define sonar.cfamily.compile-commands="build/compile_commands.json" \
-            --define sonar.coverageReportPaths=build/coverage/cov.xml
+            --define sonar.coverageReportPaths=build/coverage/cov.xml \
+            --define sonar.projectVersion=$(cat next_version.txt)
 
   # build_performance:
   #   runs-on: ubuntu-latest
