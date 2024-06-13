@@ -331,6 +331,17 @@ class DiscSurface : public RegularSurface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
+  /// Merge two disc surfaces into a single one.
+  /// @note The surfaces need to be *compatible*, i.e. have disc bounds
+  ///       that align
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other The other disc surface to merge with
+  /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @return The merged disc surface
+  std::shared_ptr<DiscSurface> mergedWith(
+      const GeometryContext& gctx, const DiscSurface& other,
+      BinningValue direction, const Logger& = getDummyLogger()) const;
+
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
