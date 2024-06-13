@@ -44,7 +44,7 @@ jobs:
 
       - name: Get upcoming version from milestones
         env:
-          GH_TOKEN: ${{ secret.GTIHUB_TOKEN}}
+          GH_TOKEN: ${{ secrets.GTIHUB_TOKEN}}
           GH_REPO: acts-project/acts
         run: |
           gh extension install valeriobelli/gh-milestone
