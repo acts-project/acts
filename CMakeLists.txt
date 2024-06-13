@@ -88,7 +88,7 @@ if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
 else()
   set(_default_examples_unit_tests OFF)
 endif()
-option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" "${_default_examples_unit_tests}")
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_BUILD_NONCOMPILE_TESTS "Build tests that check build failure invariants" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
