@@ -108,7 +108,6 @@ struct Gx2FitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
-  /// @param zeroField_ Disables the QoP fit in case of missing B-field
   /// @param relChi2changeCutOff_ Check for convergence (abort condition). Set to 0 to skip.
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
@@ -120,7 +119,6 @@ struct Gx2FitterOptions {
                    const FreeToBoundCorrection& freeToBoundCorrection_ =
                        FreeToBoundCorrection(false),
                    const std::size_t nUpdateMax_ = 5,
-                   const bool zeroField_ = false,
                    double relChi2changeCutOff_ = 1e-5)
       : geoContext(gctx),
         magFieldContext(mctx),
@@ -132,7 +130,6 @@ struct Gx2FitterOptions {
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_),
         nUpdateMax(nUpdateMax_),
-        zeroField(zeroField_),
         relChi2changeCutOff(relChi2changeCutOff_) {}
 
   /// Contexts are required and the options must not be default-constructible.
@@ -165,9 +162,6 @@ struct Gx2FitterOptions {
 
   /// Max number of iterations during the fit (abort condition)
   std::size_t nUpdateMax = 5;
-
-  /// Disables the QoP fit in case of missing B-field
-  bool zeroField = false;
 
   /// Check for convergence (abort condition). Set to 0 to skip.
   double relChi2changeCutOff = 1e-7;
@@ -298,7 +292,7 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   }
 }
 
-BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
+BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
                                  const BoundVector& bVector);
 
 /// Global Chi Square fitter (GX2F) implementation.
@@ -828,10 +822,24 @@ class Gx2Fitter {
           } else if (measDim == 2) {
             addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
+          } else if (measDim == 3) {
+            addToGx2fSums<3>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 4) {
+            addToGx2fSums<4>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 5) {
+            addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 6) {
+            addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
                        << measDim << " dimensions.")
-            countNdf -= measDim;
+            throw std::domain_error(
+                "Found measurement with less than 1 or more than 6 "
+                "dimension(s).");
           }
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
@@ -864,8 +872,7 @@ class Gx2Fitter {
       }
 
       // calculate delta params [a] * delta = b
-      deltaParams =
-          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+      deltaParams = calculateDeltaParams(aMatrix, bVector);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << aMatrix << "\n"
@@ -910,7 +917,7 @@ class Gx2Fitter {
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
-    if (gx2fOptions.zeroField) {
+    if (aMatrix(4, 4) == 0) {
       constexpr std::size_t reducedMatrixSize = 4;
 
       auto safeReducedCovariance = safeInverse(
@@ -921,8 +928,19 @@ class Gx2Fitter {
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             *safeReducedCovariance;
       }
-    } else {
+    } else if (aMatrix(5, 5) == 0) {
       constexpr std::size_t reducedMatrixSize = 5;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
+        fullCovariancePredicted
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
+      }
+    } else {
+      constexpr std::size_t reducedMatrixSize = 6;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
