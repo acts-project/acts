@@ -332,6 +332,7 @@ class DiscSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two disc surfaces into a single one.
+  /// @image html Disc_Merging.svg
   /// @note The surfaces need to be *compatible*, i.e. have disc bounds
   ///       that align
   /// @param gctx The current geometry context object, e.g. alignment

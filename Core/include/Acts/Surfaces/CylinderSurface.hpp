@@ -249,6 +249,7 @@ class CylinderSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two cylinder surfaces into a single one.
+  /// @image html Cylinder_Merging.svg
   /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
   ///       that align, and have the same radius
   /// @param gctx The current geometry context object, e.g. alignment
