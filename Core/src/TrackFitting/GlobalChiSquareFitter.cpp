@@ -12,17 +12,23 @@
 
 namespace Acts::Experimental {
 
-BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
+BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
                                  const BoundVector& bVector) {
   BoundVector deltaParams = BoundVector::Zero();
-  if (zeroField) {
+  if (aMatrix(4, 4) == 0) {
     constexpr std::size_t reducedMatrixSize = 4;
     deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
             .colPivHouseholderQr()
             .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else {
+  } else if (aMatrix(5, 5) == 0) {
     constexpr std::size_t reducedMatrixSize = 5;
+    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
+        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+            .colPivHouseholderQr()
+            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+  } else {
+    constexpr std::size_t reducedMatrixSize = 6;
     deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
         aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
             .colPivHouseholderQr()
@@ -31,4 +37,5 @@ BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
 
   return deltaParams;
 }
+
 }  // namespace Acts::Experimental
