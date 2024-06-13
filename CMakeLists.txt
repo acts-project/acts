@@ -85,6 +85,7 @@ option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_BUILD_NONCOMPILE_TESTS "Build tests that check build failure invariants" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
+set(ACTS_BUILD_ONLY_MATCHING_UNITTESTS "" CACHE STRING "If non-empty, only build matching unit tests")
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
