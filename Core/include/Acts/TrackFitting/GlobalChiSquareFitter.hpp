@@ -748,7 +748,7 @@ class Gx2Fitter {
 
     // Here we will store, the ndf of the system. It automatically deduces if we
     // want to fit e.g. q/p and adjusts itself later.
-    std::size_t ndfSystem = std::numeric_limits<size_t>::max();
+    std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
 
     ACTS_VERBOSE("params:\n" << params);
 
