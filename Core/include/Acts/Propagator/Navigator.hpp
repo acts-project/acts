@@ -704,11 +704,6 @@ class Navigator {
       return false;
     }
 
-    if (state.navigation.navLayerIndex == state.navigation.navLayers.size()) {
-      ACTS_VERBOSE(volInfo(state) << "No layers present, target at boundary.");
-      return false;
-    }
-
     // if there are no layers, go back to the navigator (not stepper yet)
     if (state.navigation.navLayers.empty()) {
       ACTS_VERBOSE(volInfo(state)
@@ -718,6 +713,10 @@ class Navigator {
         // The layer resolving worked
         return true;
       }
+    } else if (state.navigation.navLayerIndex ==
+               state.navigation.navLayers.size()) {
+      ACTS_VERBOSE(volInfo(state) << "No layers present, target at boundary.");
+      return false;
     }
 
     // loop over the available navigation layer candidates
