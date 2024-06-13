@@ -235,7 +235,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // we can evaluate b given we know a already by imposing
   // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
   ActsScalar b = 0.5 * (local2(1) + ia * sumX21);
-  circleCenter(1) = - ia * circleCenter(0) + b;
+  circleCenter(1) = -ia * circleCenter(0) + b;
   // Radius is a signed distance between circleCenter and first sp, which is at
   // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
   int sign = ia > 0 ? -1 : 1;
