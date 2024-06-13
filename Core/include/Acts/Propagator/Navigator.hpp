@@ -278,7 +278,7 @@ class Navigator {
     // - short-cut through object association, saves navigation in the
     // - geometry and volume tree search for the lowest volume
     if (state.navigation.startSurface != nullptr &&
-        state.navigation.startSurface->associatedLayer()) {
+        state.navigation.startSurface->associatedLayer() != nullptr) {
       ACTS_VERBOSE(
           volInfo(state)
           << "Fast start initialization through association from Surface.");
@@ -315,10 +315,6 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       }
     }
-    // Set the start volume as current volume
-    state.navigation.currentVolume = state.navigation.startVolume;
-    // Set the start layer as current layer
-    state.navigation.currentLayer = state.navigation.startLayer;
 
     if (state.navigation.startLayer != nullptr) {
       ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
@@ -334,6 +330,11 @@ class Navigator {
         stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
     }
+
+    // Set the start volume as current volume
+    state.navigation.currentVolume = state.navigation.startVolume;
+    // Set the start layer as current layer
+    state.navigation.currentLayer = state.navigation.startLayer;
   }
 
   /// @brief Navigator pre step call
@@ -1175,7 +1176,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool inactive(propagator_state_t& state, const stepper_t& stepper) const {
     // Void behavior in case no tracking geometry is present
-    if (!m_cfg.trackingGeometry) {
+    if (m_cfg.trackingGeometry == nullptr) {
       return true;
     }
     // turn the navigator into void when you are instructed to do nothing
