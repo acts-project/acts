@@ -866,16 +866,6 @@ class Gx2Fitter {
           ACTS_WARNING("Unknown state encountered")
         }
         // TODO: Material handling. Should be there for hole and measurement
-        if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
-          // Add for this material a new jacobian
-          jacobianFromStart.emplace_back(BoundMatrix::Identity());
-
-
-
-
-
-
-        }
       }
 
       // Get required number of degrees of freedom ndfSystem.
