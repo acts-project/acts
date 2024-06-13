@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -481,57 +482,12 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
 
     ActsScalar hlPhi = bounds().get(CylinderBounds::eHalfPhiSector);
     ActsScalar avgPhi = bounds().get(CylinderBounds::eAveragePhi);
-    ActsScalar minPhi = detail::radian_sym(-hlPhi + avgPhi);
-    ActsScalar maxPhi = detail::radian_sym(hlPhi + avgPhi);
-
-    ACTS_VERBOSE("this: [" << minPhi / 1_degree << ", " << maxPhi / 1_degree
-                           << "] ~> " << avgPhi / 1_degree << " +- "
-                           << hlPhi / 1_degree);
 
     ActsScalar otherHlPhi = other.bounds().get(CylinderBounds::eHalfPhiSector);
     ActsScalar otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
-    ActsScalar otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
-    ActsScalar otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
 
-    ACTS_VERBOSE("other: [" << otherMinPhi / 1_degree << ", "
-                            << otherMaxPhi / 1_degree << "] ~> "
-                            << otherAvgPhi / 1_degree << " +- "
-                            << otherHlPhi / 1_degree);
-
-    ACTS_VERBOSE("Checking for CCW or CW ordering");
-    auto same = [](ActsScalar a, ActsScalar b) {
-      // std::cout << "a: " << a << " b: " << b << " diff: " << std::abs(a - b)
-      //           << " (epsilon: " << s_epsilon << ")" << std::endl;
-      return std::abs(a - b) < s_onSurfaceTolerance;
-    };
-
-    ActsScalar newMaxPhi{}, newMinPhi{};
-    ActsScalar newHlPhi = hlPhi + otherHlPhi;
-
-    if (same(minPhi, otherMaxPhi)) {
-      ACTS_VERBOSE("-> CCW ordering: this is 'left' of other");
-
-      newMinPhi = otherMinPhi;
-      newMaxPhi = maxPhi;
-
-    } else if (same(maxPhi, otherMinPhi)) {
-      ACTS_VERBOSE("-> CW ordering: this is 'right' of other");
-      newMinPhi = minPhi;
-      newMaxPhi = otherMaxPhi;
-
-    } else {
-      ACTS_ERROR(
-          "CylinderSurface::merge: surfaces have incompatible phi bounds");
-      throw std::invalid_argument(
-          "CylinderSurface::merge: surfaces have incompatible phi bounds");
-    }
-
-    ActsScalar newAvgPhi = detail::radian_sym(newMinPhi + newHlPhi);
-
-    ACTS_VERBOSE("merged: [" << newMinPhi / 1_degree << ", "
-                             << newMaxPhi / 1_degree << "] ~> "
-                             << newAvgPhi / 1_degree << " +- "
-                             << newHlPhi / 1_degree);
+    auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
+        hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
 
     auto newBounds = std::make_shared<CylinderBounds>(
         r, bounds().get(CylinderBounds::eHalfLengthZ), newHlPhi, newAvgPhi);
@@ -541,5 +497,4 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     throw std::invalid_argument("CylinderSurface::merge: invalid direction " +
                                 binningValueNames()[direction]);
   }
-  return nullptr;
 }

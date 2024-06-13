@@ -360,12 +360,20 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
       cyl->mergedWith(testContext, *cylShiftedXy, Acts::binZ, *logger),
       std::invalid_argument);
 
-  auto cylRotated = Surface::makeShared<CylinderSurface>(
+  auto cylRotatedZ = Surface::makeShared<CylinderSurface>(
       base * AngleAxis3{10_degree, Vector3::UnitZ()} *
           Translation3{Vector3::UnitZ() * 200_mm},
       30_mm, 100_mm);
   BOOST_CHECK_THROW(
-      cyl->mergedWith(testContext, *cylRotated, Acts::binZ, *logger),
+      cyl->mergedWith(testContext, *cylRotatedZ, Acts::binZ, *logger),
+      std::invalid_argument);
+
+  auto cylRotatedX = Surface::makeShared<CylinderSurface>(
+      base * AngleAxis3{10_degree, Vector3::UnitX()} *
+          Translation3{Vector3::UnitZ() * 200_mm},
+      30_mm, 100_mm);
+  BOOST_CHECK_THROW(
+      cyl->mergedWith(testContext, *cylRotatedX, Acts::binZ, *logger),
       std::invalid_argument);
 
   // Cylinder with different radius
@@ -497,13 +505,14 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 
   auto cyl3 = cyl->mergedWith(testContext, *cyl2, Acts::binRPhi, *logger);
   BOOST_REQUIRE_NE(cyl3, nullptr);
+  BOOST_CHECK_EQUAL(base.matrix(), cyl3->transform(testContext).matrix());
 
   auto cyl3Reversed =
       cyl2->mergedWith(testContext, *cyl, Acts::binRPhi, *logger);
   BOOST_REQUIRE_NE(cyl3Reversed, nullptr);
   BOOST_CHECK(*cyl3 == *cyl3Reversed);
 
-  auto bounds = cyl3->bounds();
+  const auto& bounds = cyl3->bounds();
 
   BOOST_CHECK_SMALL(
       detail::difference_periodic(bounds.get(CylinderBounds::eAveragePhi),
@@ -517,6 +526,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                                                    10_degree, a(-160_degree));
   auto cyl45 = cyl4->mergedWith(testContext, *cyl5, Acts::binRPhi, *logger);
   BOOST_REQUIRE_NE(cyl45, nullptr);
+  BOOST_CHECK_EQUAL(base.matrix(), cyl45->transform(testContext).matrix());
 
   auto cyl54 = cyl5->mergedWith(testContext, *cyl4, Acts::binRPhi, *logger);
   BOOST_REQUIRE_NE(cyl54, nullptr);
