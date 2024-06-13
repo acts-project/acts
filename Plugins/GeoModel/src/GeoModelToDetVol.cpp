@@ -28,8 +28,8 @@
 #include <GeoModelKernel/GeoTubs.h>
 
 namespace Acts {
-namespace GeoModelToDetVol {
-std::shared_ptr<Experimental::DetectorVolume> convert(
+namespace GeoModel {
+std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const Transform3& transform) {
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
@@ -40,7 +40,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
                                                tube.getZHalfLength());
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
-        Experimental::tryAllPortals());
+        Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoTubs::getClassTypeID()) {
     const GeoTubs& tubs = dynamic_cast<const GeoTubs&>(shape);
     std::shared_ptr<CylinderVolumeBounds> bounds =
@@ -53,7 +53,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
                                           Acts::Vector3::UnitZ()));
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, newTransform, bounds,
-        Experimental::tryAllPortals());
+        Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoBox::getClassTypeID()) {
     const GeoBox& box = dynamic_cast<const GeoBox&>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
@@ -61,7 +61,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
             box.getXHalfLength(), box.getYHalfLength(), box.getZHalfLength());
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
-        Experimental::tryAllPortals());
+        Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
     // Will change this in the future
     double xmin{0};
@@ -78,7 +78,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
                                              zmax - zmin);
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
-        Experimental::tryAllPortals());
+        Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd& trd = dynamic_cast<const GeoTrd&>(shape);
     float x1 = trd.getXHalfLength1();
@@ -98,7 +98,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitX()));
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
-            Experimental::tryAllPortals());
+            Experimental::tryAllPortalsAndSurfaces());
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
@@ -110,7 +110,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitZ()));
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
-            Experimental::tryAllPortals());
+            Experimental::tryAllPortalsAndSurfaces());
       }
     } else if (x1 == x2) {
       if (y1 < y2) {
@@ -124,7 +124,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitX()));
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
-            Experimental::tryAllPortals());
+            Experimental::tryAllPortalsAndSurfaces());
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(y2, y1, z, x1);
@@ -137,7 +137,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
             Eigen::AngleAxisd(rotationAngle / 2, Acts::Vector3::UnitX()));
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
-            Experimental::tryAllPortals());
+            Experimental::tryAllPortalsAndSurfaces());
       }
     } else {
       throw std::runtime_error("FATAL: Translating GeoTrd to ACTS failed");
@@ -157,14 +157,14 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
                                              zmax - zmin);
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
-        Experimental::tryAllPortals());
+        Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoShapeSubtraction::getClassTypeID()) {
     // Go down the left side (opA) of the subtraction until we reach a normal
     // shape
     const GeoShapeSubtraction& subtractionShape =
         dynamic_cast<const GeoShapeSubtraction&>(shape);
     const GeoShape* shapeA = subtractionShape.getOpA();
-    return convert(context, *shapeA, name, transform);
+    return convertVolume(context, *shapeA, name, transform);
   } else if (shape.typeID() == GeoPcon::getClassTypeID()) {
     // Will change in future, get bounding box for now
     double xmin{0};
@@ -180,7 +180,7 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
                                              zmax - zmin);
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
-        Experimental::tryAllPortals());
+        Experimental::tryAllPortalsAndSurfaces());
   }
   if (shape.typeID() == GeoShapeShift::getClassTypeID()) {
     const GeoShapeShift& shiftShape = dynamic_cast<const GeoShapeShift&>(shape);
@@ -189,9 +189,9 @@ std::shared_ptr<Experimental::DetectorVolume> convert(
     newTransform.translate(transform.translation());
     newTransform.rotate(transform.rotation());
     newTransform.translate(shiftShape.getX().translation());
-    return convert(context, *shapeOp, name, newTransform);
+    return convertVolume(context, *shapeOp, name, newTransform);
   }
   throw std::runtime_error("Unknown shape type: " + shape.type());
 }
-}  // namespace GeoModelToDetVol
+}  // namespace GeoModel
 }  // namespace Acts

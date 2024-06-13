@@ -13,13 +13,13 @@ class GeoShape;
 
 namespace Acts {
 
-namespace GeoModelToDetVol {
+namespace GeoModel {
 /// @brief Convert a GeoModel shape to a DetectorVolume
 ///
 /// @param shape the GeoModel shape
 /// @param transform the transform to be applied
 /// @return the DetectorVolume
-std::shared_ptr<Experimental::DetectorVolume> convert(
+std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape& shape,
     const std::string& name, const Transform3& transform);
 }  // namespace GeoModelToDetVol
