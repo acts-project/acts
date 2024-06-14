@@ -235,17 +235,17 @@ struct ScatteringProperties {
   /// PropagatorOptions with context.
   ///
   /// @param scatteringAngles_
-  /// @param covarianceMaterial_
+  /// @param invCovarianceMaterial_
   ScatteringProperties(const BoundVector scatteringAngles_,
-                       const ActsScalar covarianceMaterial_)
+                       const ActsScalar invCovarianceMaterial_)
       : scatteringAngles(scatteringAngles_),
-        covarianceMaterial(covarianceMaterial_) {}
+        invCovarianceMaterial(invCovarianceMaterial_) {}
 
   /// No default construction
   ScatteringProperties() = delete;
 
   BoundVector scatteringAngles;
-  const ActsScalar covarianceMaterial;
+  const ActsScalar invCovarianceMaterial;
 };
 
 /// addToGx2fSums Function
@@ -987,7 +987,34 @@ class Gx2Fitter {
           // Add for this material a new jacobian
           jacobianFromStartMaterialVector.emplace_back(BoundMatrix::Identity());
 
-          // TODO add contribution from angle
+          // Add contribution from the angle itself similar to addToGx2fSums
+          // TODO create function
+          {
+            // TODO use correct formula
+            const ActsScalar sinThetaLoc = 0.5;
+
+            // The position, where we need to insert the values in aMatrix and
+            // bVector
+            const std::size_t deltaPosition =
+                eBoundSize + 2 * geoIdVector.size();
+
+            auto scatteringMapId = scatteringMap.find(geoId);
+            const BoundVector& scatteringAngles =
+                scatteringMapId->second.scatteringAngles;
+            const ActsScalar invCov =
+                scatteringMapId->second.invCovarianceMaterial;
+
+            // Phi contribution
+            aMatrixExtended(deltaPosition, deltaPosition) +=
+                invCov * sinThetaLoc * sinThetaLoc;
+            bVectorExtended(deltaPosition, 0) +=
+                invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
+
+            // Theta Contribution
+            aMatrixExtended(deltaPosition + 1, deltaPosition + 1) += invCov;
+            bVectorExtended(deltaPosition + 1, 0) +=
+                invCov * scatteringAngles[eBoundTheta];
+          }
         }
       }
 
