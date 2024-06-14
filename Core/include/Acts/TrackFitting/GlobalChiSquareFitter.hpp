@@ -709,6 +709,7 @@ class Gx2Fitter {
                 fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
                                             result.lastTrackIndex);
             const std::size_t currentTrackIndex = trackStateProxy.index();
+
             {
               // Set the trackStateProxy components with the state from the
               // ongoing propagation
