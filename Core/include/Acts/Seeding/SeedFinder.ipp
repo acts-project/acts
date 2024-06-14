@@ -140,14 +140,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    // remove middle SPs on the last layer since there would be no outer SPs to
-    // complete a seed
-    float zM = spM->z();
-    if (zM < m_config.zOutermostLayers.first ||
-        zM > m_config.zOutermostLayers.second) {
-      continue;
-    }
-
+    const float zM = spM->z();
     const float uIP = -1. / rM;
     const float cosPhiM = -spM->x() * uIP;
     const float sinPhiM = -spM->y() * uIP;
