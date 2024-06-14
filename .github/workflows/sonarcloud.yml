@@ -15,10 +15,27 @@ jobs:
           PAYLOAD: ${{ toJson(github.event.workflow_run) }}
         run: echo "${PAYLOAD}"
 
-      - name: Download PR workflow artifacts
-        uses: actions/download-artifact@v4
+      - name: 'Download artifact'
+        uses: actions/github-script@v7
+        id: dl-af
         with:
-          run-id: ${{ github.event.workflow_run.id }}
+          script: |
+            console.log(`Getting artifacts for workflow run id: ${context.payload.workflow_run.id}`);
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            console.log(allArtifacts);
+            let matchArtifacts = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == 'PR_NUMBER'
+            });
+            return true;
+
+      # - name: Download PR workflow artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     run-id: ${{ github.event.workflow_run.id }}
           # name: PR_NUMBER
 
       # - name: Download PR number artifact
