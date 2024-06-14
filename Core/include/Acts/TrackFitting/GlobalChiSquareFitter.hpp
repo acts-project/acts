@@ -449,10 +449,16 @@ class Gx2Fitter {
       auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
         ++result.surfaceCount;
-        ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
+        const GeometryIdentifier geoId = surface->geometryId();
+        ACTS_DEBUG("Surface " << geoId << " detected.");
+
+        // Found material
+        if (surface->surfaceMaterial() != nullptr) {
+          ACTS_DEBUG("    The surface contains material.");
+        }
 
         // Check if we have a measurement surface
-        if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+        if (auto sourcelink_it = inputMeasurements->find(geoId);
             sourcelink_it != inputMeasurements->end()) {
           ACTS_DEBUG("    The surface contains a measurement.");
 
