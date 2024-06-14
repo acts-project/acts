@@ -440,6 +440,7 @@ def itkSeedingAlgConfig(
 
         if highOccupancyConfig == True:
             rMaxGridConfig = 250 * u.mm
+            rMaxSeedFinderConfig = rMaxGridConfig
             deltaRMax = 200 * u.mm
             zBinsCustomLooping = [2, 10, 3, 9, 6, 4, 8, 5, 7]
 
