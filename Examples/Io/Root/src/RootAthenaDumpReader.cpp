@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootAthInputReader.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -20,8 +20,8 @@
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
-ActsExamples::RootAthInputReader::RootAthInputReader(
-    const ActsExamples::RootAthInputReader::Config& config,
+ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
+    const ActsExamples::RootAthenaDumpReader::Config& config,
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_cfg(config),
@@ -242,15 +242,9 @@ ActsExamples::RootAthInputReader::RootAthInputReader(
 
 }  // constructor
 
-ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
+ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
-  // Prepare containers for the hit data using the framework event data types
-  // GeometryIdMultimap<Measurement> orderedMeasurements;
-  // ClusterContainer clusters;
-  // IndexMultimap<Index> measurementSimHitsMap;
-  // IndexSourceLinkContainer sourceLinks;
-
-  ACTS_DEBUG("Starting loop on events");
+  ACTS_DEBUG("Reading event " << ctx.eventNumber);
   auto entry = ctx.eventNumber;
   if (entry >= m_events) {
     ACTS_ERROR("event out of bounds");
@@ -280,6 +274,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
                      << side << " ");
 
     // Make cluster
+    // TODO refactor ActsExamples::Cluster class so it is not so tedious
     Cluster cluster;
 
     const auto& etas = CLetas->at(im);
@@ -295,8 +290,10 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
     cluster.sizeLoc1 = *maxPhi - *minPhi;
 
     for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
-      // Not sure that this is actually correct, but it should produce
-      // reasonable results
+      // Make best out of what we have:
+      // Weight the overall collected charge corresponding to the
+      // time-over-threshold of each cell Use this as activation (does this make
+      // sense?)
       auto activation = CLcharge_count[im] * tot / totalTot;
 
       // This bases every cluster at zero, but shouldn't matter right now
@@ -304,9 +301,14 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
       bin[0] = eta - *minEta;
       bin[1] = phi - *minPhi;
 
+      // Of course we have no Segment2D because this is not Fatras
       cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
                                     activation);
     }
+
+    ACTS_VERBOSE("Cluster " << im << ": " << cluster.channels.size()
+                            << "cells, dimensions: " << cluster.sizeLoc0 << ", "
+                            << cluster.sizeLoc1);
 
     clusters[im] = cluster;
   }
@@ -340,44 +342,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
       assert(SPCL2_index >= 0 && SPCL2_index < nCL);
       IndexSourceLink second(Acts::GeometryIdentifier{}, SPCL2_index[isp]);
       sLinks.emplace_back(second);
-
-      // float hl_topstrip = SPhl_topstrip[isp];
-      // float hl_botstrip = SPhl_botstrip[isp];
-
-      // std::vector<float> topStripDir = (*SPtopStripDirection)[isp];
-
-      // Acts::Vector3 topStripDirection{
-      //   topStripDir.at(0),
-      //   topStripDir.at(1),
-      //   topStripDir.at(2)};
-      /*
-            Acts::Vector3 botStripDirection{
-              SPbottomStripDirection[isp].at(0),
-              SPbottomStripDirection[isp].at(1),
-              SPbottomStripDirection[isp]->at(2)
-            };
-
-            Acts::Vector3 stripCenterDistance{
-              SPstripCenterDistance[isp].at(0),
-              SPstripCenterDistance[isp].at(1),
-              SPstripCenterDistance[isp].at(2)
-            };
-
-            Acts::Vector3 topStripCenterPosition{
-              SPtopStripCenterPosition[isp].at(0),
-              SPtopStripCenterPosition[isp].at(1),
-              SPtopStripCenterPosition[isp].at(2)
-            };
-
-
-
-            stripSpacePoints.emplace_back(globalPos, std::nullopt,
-              sp_covr, sp_covz, std::nullopt,sLinks,
-              hl_topstrip, hl_botstrip,
-              topStripDirection, botStripDirection,
-              stripCenterDistance, topStripCenterPosition
-              );
-            */
     }
 
     SimSpacePoint sp(globalPos, std::nullopt, sp_covr, sp_covz, std::nullopt,
@@ -391,7 +355,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthInputReader::read(
   }
 
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
-                       << " pixel space points");
+                        << " pixel space points");
 
   ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
 
