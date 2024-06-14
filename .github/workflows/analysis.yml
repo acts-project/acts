@@ -31,22 +31,15 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y unzip git-lfs
+      # - name: Install dependencies
+      #   run: |
+      #     apt-get update
+      #     apt-get install -y git-lfs
 
       - uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
-
-      - name: Get upcoming version from milestones
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: acts-project/acts
-        run: |
-          CI/get_next_milestone.py | tee next_version.txt
 
       - name: Cache build
         uses: actions/cache@v4
@@ -67,7 +60,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=on
           -DACTS_BUILD_EXAMPLES_UNITTESTS=off
           -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_ODD=ON
+          -DACTS_BUILD_ODD=OFF
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
