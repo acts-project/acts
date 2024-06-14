@@ -343,8 +343,9 @@ void addToGx2fSums(
         (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
             .eval();
     std::cout << "DEBUG 4" << std::endl;
-    bVectorExtended +=
-        (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
+    Eigen::VectorXd deltaB = Eigen::VectorXd::Zero(dimsExtendedParams);
+    deltaB = (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
+    bVectorExtended += deltaB;
     std::cout << "DEBUG 5" << std::endl;
     ACTS_VERBOSE(
         "aMatrixMeas:\n"
