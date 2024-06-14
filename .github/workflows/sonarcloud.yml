@@ -8,7 +8,9 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container:
+      image: ghcr.io/acts-project/ubuntu2204:v41
+      options: --user 1001
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Dump job context
