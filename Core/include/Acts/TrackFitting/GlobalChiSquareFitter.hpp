@@ -243,13 +243,17 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
                    const track_state_t& trackState, const Logger& logger) {
   BoundVector predicted = trackState.predicted();
+
   ActsVector<kMeasDim> measurement = trackState.template calibrated<kMeasDim>();
+
   ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
+
   ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
   ActsMatrix<kMeasDim, eBoundSize> projJacobian = projector * jacobianFromStart;
+
   ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
   ActsVector<kMeasDim> residual = measurement - projPredicted;
@@ -450,20 +454,11 @@ class Gx2Fitter {
         // Check if we have a measurement surface
         if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
             sourcelink_it != inputMeasurements->end()) {
-          ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-                                              << " detected.");
+          ACTS_DEBUG("    The surface contains a measurement.");
 
           // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
                                              freeToBoundCorrection);
-
-          ACTS_VERBOSE(
-              "Actor - indices before processing:"
-              << "\n    "
-              << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
-              << "\n    "
-              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n    "
-              << "result.fittedStates->size(): " << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
           auto& fittedStates = *result.fittedStates;
@@ -589,16 +584,6 @@ class Gx2Fitter {
               }
             }
 
-            ACTS_VERBOSE(
-                "Actor - indices after processing, before over writing:"
-                << "\n    "
-                << "result.lastMeasurementIndex: "
-                << result.lastMeasurementIndex << "\n    "
-                << "trackStateProxy.index(): " << trackStateProxy.index()
-                << "\n    "
-                << "result.lastTrackIndex: " << result.lastTrackIndex
-                << "\n    "
-                << "currentTrackIndex: " << currentTrackIndex)
             result.lastTrackIndex = currentTrackIndex;
 
             if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
@@ -618,12 +603,12 @@ class Gx2Fitter {
             // MaterialUpdateStage::FullUpdate);
           }
         } else {
-          ACTS_INFO("Actor: This case is not implemented yet")
+          ACTS_INFO("Surface " << geoId << " has no measurement/material/hole.")
         }
       }
-      ACTS_DEBUG("result.processedMeasurements: "
-                 << result.processedMeasurements << "\n"
-                 << "inputMeasurements.size(): " << inputMeasurements->size())
+      ACTS_VERBOSE("result.processedMeasurements: "
+                   << result.processedMeasurements << "\n"
+                   << "inputMeasurements.size(): " << inputMeasurements->size())
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
