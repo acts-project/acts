@@ -1028,16 +1028,19 @@ class Gx2Fitter {
       // calculate delta params [a] * delta = b
       deltaParams = calculateDeltaParams(aMatrix, bVector, ndfSystem);
 
-      Eigen::VectorXd deltaParamsExtended = aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
+      Eigen::VectorXd deltaParamsExtended =
+          aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
       std::cout << "deltaParamsExtended:\n" << deltaParamsExtended << std::endl;
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
 
       // update the scattering angles
-      for (std::size_t matSurface = 0;
-           matSurface < geoIdVector.size(); matSurface++) {
+      for (std::size_t matSurface = 0; matSurface < geoIdVector.size();
+           matSurface++) {
         const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-        std::cout << "delta phi theta:\n" <<  deltaParamsExtended.block<2, 1>(deltaPosition, 0) << std::endl;
+        std::cout << "delta phi theta:\n"
+                  << deltaParamsExtended.block<2, 1>(deltaPosition, 0)
+                  << std::endl;
 
         auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
         if (scatteringMapId == scatteringMap.end()) {
@@ -1045,7 +1048,8 @@ class Gx2Fitter {
           ACTS_ERROR("No scattering angles found for material surface "
                      << geoIdVector[matSurface]);
         }
-        scatteringMapId->second.scatteringAngles.block<1, 2>(0, 2) += deltaParamsExtended.block<1, 2>(0, deltaPosition).eval();
+        scatteringMapId->second.scatteringAngles.block<1, 2>(0, 2) +=
+            deltaParamsExtended.block<1, 2>(0, deltaPosition).eval();
       }
 
       ACTS_VERBOSE("aMatrix:\n"
