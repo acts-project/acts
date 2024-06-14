@@ -15,13 +15,19 @@ jobs:
           PAYLOAD: ${{ toJson(github.event.workflow_run) }}
         run: echo "${PAYLOAD}"
 
-      - name: Download PR number artifact
-        if: github.event.workflow_run.event == 'pull_request'
-        uses: dawidd6/action-download-artifact@v2
+      - name: Download PR workflow artifacts
+        uses: actions/download-artifact@v4
         with:
-          workflow: Analysis
-          run_id: ${{ github.event.workflow_run.id }}
-          name: PR_NUMBER
+          run-id: ${{ github.event.workflow_run.id }}
+
+
+      # - name: Download PR number artifact
+      #   if: github.event.workflow_run.event == 'pull_request'
+      #   uses: dawidd6/action-download-artifact@v2
+      #   with:
+      #     # workflow: Analysis
+      #     run_id: ${{ github.event.workflow_run.id }}
+      #     name: PR_NUMBER
 
       - name: Read PR_NUMBER.txt
         if: github.event.workflow_run.event == 'pull_request'
