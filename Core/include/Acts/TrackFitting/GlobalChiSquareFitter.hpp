@@ -509,6 +509,23 @@ class Gx2Fitter {
         ++result.surfaceCount;
         ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
 
+        // Found material - add an scatteringAngles entry
+        if (surface->surfaceMaterial() != nullptr) {
+          ACTS_VERBOSE("The surface contains material.");
+
+          auto scatteringMapId = scatteringMap->find(surface->geometryId());
+          if (scatteringMapId == scatteringMap->end()) {
+            ACTS_VERBOSE("There is no entry for this material. We create one.");
+            // TODO use real covariance, maybe from surface->surfaceMaterial()
+            const double cov = 1.;
+            scatteringMap->emplace(
+                surface->geometryId(),
+                ScatteringProperties{BoundVector::Zero(), 1. / cov});
+          } else {
+            ACTS_VERBOSE("Nothing to do, since we already know it.");
+          }
+        }
+
         // Check if we have a measurement surface
         if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
             sourcelink_it != inputMeasurements->end()) {
