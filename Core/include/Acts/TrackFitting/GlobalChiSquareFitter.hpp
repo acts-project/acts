@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1117,8 +1117,8 @@ class Gx2Fitter {
           ACTS_ERROR("No scattering angles found for material surface "
                      << geoIdVector[matSurface]);
         }
-        scatteringMapId->second.scatteringAngles.block<1, 2>(0, 2) +=
-            deltaParamsExtended.block<1, 2>(0, deltaPosition).eval();
+        scatteringMapId->second.scatteringAngles.block<2, 1>(2, 0) +=
+            deltaParamsExtended.block<2, 1>(deltaPosition, 0).eval();
       }
 
       ACTS_VERBOSE("aMatrix:\n"
