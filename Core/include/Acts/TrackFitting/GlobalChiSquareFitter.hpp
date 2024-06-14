@@ -976,21 +976,16 @@ class Gx2Fitter {
         }
         // TODO: Material handling. Should be there for hole and measurement
         if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
+          // Get and store geoId for the current material surface
+          const GeometryIdentifier geoId =
+              trackState.referenceSurface().geometryId();
+          ACTS_VERBOSE("Add material effects for " << geoId);
+          assert(scatteringMap.find(geoId) != scatteringMap.end() &&
+                 "No scattering angles found for material surface");
+          geoIdVector.emplace_back(geoId);
+
           // Add for this material a new jacobian
           jacobianFromStartMaterialVector.emplace_back(BoundMatrix::Identity());
-
-          // Add reference to the scattering angles
-          auto geoId = trackState.referenceSurface().geometryId();
-          std::cout << "trackState.referenceSurface()" << geoId << std::endl;
-
-          auto scatteringMapId = scatteringMap.find(geoId);
-          if (scatteringMapId == scatteringMap.end()) {
-            // TODO make proper error and return
-            ACTS_ERROR("No scattering angles found for material surface "
-                       << geoId);
-          }
-
-          geoIdVector.emplace_back(geoId);
 
           // TODO add contribution from angle
         }
