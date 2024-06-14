@@ -1097,8 +1097,6 @@ class Gx2Fitter {
       bVector = bVectorExtended.topLeftCorner<eBoundSize, 1>().eval();
 
       // calculate delta params [a] * delta = b
-      deltaParams = calculateDeltaParams(aMatrix, bVector, ndfSystem);
-
       Eigen::VectorXd deltaParamsExtended =
           aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
       std::cout << "deltaParamsExtended:\n" << deltaParamsExtended << std::endl;
