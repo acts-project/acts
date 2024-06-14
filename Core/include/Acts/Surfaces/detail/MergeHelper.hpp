@@ -18,7 +18,7 @@
 
 namespace Acts::detail {
 
-/// This helper functions calculates the combination
+/// This helper function calculates the combination
 /// of two phi sectors, defined by a phi half-length +
 /// a half phi sector in the range [0,pi). The two
 /// ranges need to line up, i.e. that one of the sector
