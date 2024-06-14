@@ -338,10 +338,11 @@ class DiscSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other The other disc surface to merge with
   /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @param logger The logger to use
   /// @return The merged disc surface
   std::shared_ptr<DiscSurface> mergedWith(
       const GeometryContext& gctx, const DiscSurface& other,
-      BinningValue direction, const Logger& = getDummyLogger()) const;
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)

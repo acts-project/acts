@@ -255,10 +255,11 @@ class CylinderSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other The other cylinder surface to merge with
   /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param logger The logger to use
   /// @return The merged cylinder surface
   std::shared_ptr<CylinderSurface> mergedWith(
       const GeometryContext& gctx, const CylinderSurface& other,
-      BinningValue direction, const Logger& = getDummyLogger()) const;
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
