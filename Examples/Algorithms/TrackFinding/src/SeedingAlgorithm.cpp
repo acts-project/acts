@@ -159,18 +159,18 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
-
     // check that the bins required in the custom bin looping
     // are contained in the bins defined by the total number of edges
 
     for (std::size_t i : m_cfg.seedFinderConfig.zBinsCustomLooping) {
       if (i >= m_cfg.gridConfig.zBinEdges.size()) {
-	throw std::invalid_argument("Inconsistent config zBinsCustomLooping does not contain a subset of bins defined by zBinEdges");
+        throw std::invalid_argument(
+            "Inconsistent config zBinsCustomLooping does not contain a subset "
+            "of bins defined by zBinEdges");
       }
-    
     }
   }
-  
+
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
     m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
         [](const void*, const SimSpacePoint& sp) -> float {
