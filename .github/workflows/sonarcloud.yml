@@ -20,7 +20,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           workflow: Analysis
-          run_id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id }}
           name: PR_NUMBER
 
       - name: Read PR_NUMBER.txt
