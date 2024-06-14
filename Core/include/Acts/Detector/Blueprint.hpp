@@ -89,7 +89,7 @@ struct Node final {
   Transform3 transform = Transform3::Identity();
   /// The boundary type
   VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
-  /// The assiciated values
+  /// The associated values
   std::vector<ActsScalar> boundaryValues = {};
   /// Parent node - nullptr for root only
   const Node* parent = nullptr;

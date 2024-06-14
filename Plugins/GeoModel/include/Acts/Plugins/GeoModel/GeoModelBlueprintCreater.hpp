@@ -89,7 +89,7 @@ class GeoModelBlueprintCreater {
     std::vector<std::string> materials;
   };
 
-  /// The GeoModel blueprint creater from the database
+  /// The GeoModel blueprint creator from the database
   ///
   /// @param cfg the configuration struct
   /// @param mlogger a screen output logger

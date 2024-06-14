@@ -190,7 +190,6 @@ if "__main__" == __name__:
     logLevel = logging.INFO
 
     if args.experimental:
-
         if len(args.geomodel_input) > 0:
             # Read the geometry model from the database
             gmTree = acts.geomodel.readFromDb(args.geomodel_input)

@@ -12,7 +12,6 @@ from acts import examples
 
 
 def main():
-
     p = argparse.ArgumentParser()
 
     p.add_argument("-i", "--input", type=str, default="", help="Input SQL file")

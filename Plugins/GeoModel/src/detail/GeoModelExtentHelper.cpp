@@ -51,7 +51,7 @@ std::vector<Acts::BinningValue>
 Acts::detail::GeoModelExentHelper::readBinningConstraints(
     const std::vector<std::string>& binningEntry) {
   std::set<BinningValue> constraints;
-  // Loop over the single binning Entires
+  // Loop over the single binning Entries
   for (const auto& sbe : binningEntry) {
     if (sbe.empty()) {
       continue;

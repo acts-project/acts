@@ -132,7 +132,6 @@ if "__main__" == __name__:
         materialDecorator = acts.IMaterialDecorator.fromFile(args.map)
 
     if args.experimental:
-
         if len(args.geomodel_input) > 0:
             # Read the geometry model from the database
             gmTree = acts.geomodel.readFromDb(args.geomodel_input)

@@ -23,7 +23,7 @@ inline std::vector<std::string> tokenize(const std::string& entry,
                                          const std::string& deliminater) {
   std::vector<std::string> result;
   std::string currentEntry = entry;
-  size_t pos = 0;
+  std::size_t pos = 0;
   while ((pos = currentEntry.find(deliminater)) != std::string::npos) {
     auto found = currentEntry.substr(0, pos);
     if (!found.empty()) {
