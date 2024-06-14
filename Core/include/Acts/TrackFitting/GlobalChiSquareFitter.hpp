@@ -41,6 +41,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 
@@ -108,7 +109,6 @@ struct Gx2FitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
-  /// @param zeroField_ Disables the QoP fit in case of missing B-field
   /// @param relChi2changeCutOff_ Check for convergence (abort condition). Set to 0 to skip.
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
@@ -120,7 +120,6 @@ struct Gx2FitterOptions {
                    const FreeToBoundCorrection& freeToBoundCorrection_ =
                        FreeToBoundCorrection(false),
                    const std::size_t nUpdateMax_ = 5,
-                   const bool zeroField_ = false,
                    double relChi2changeCutOff_ = 1e-5)
       : geoContext(gctx),
         magFieldContext(mctx),
@@ -132,7 +131,6 @@ struct Gx2FitterOptions {
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_),
         nUpdateMax(nUpdateMax_),
-        zeroField(zeroField_),
         relChi2changeCutOff(relChi2changeCutOff_) {}
 
   /// Contexts are required and the options must not be default-constructible.
@@ -165,9 +163,6 @@ struct Gx2FitterOptions {
 
   /// Max number of iterations during the fit (abort condition)
   std::size_t nUpdateMax = 5;
-
-  /// Disables the QoP fit in case of missing B-field
-  bool zeroField = false;
 
   /// Check for convergence (abort condition). Set to 0 to skip.
   double relChi2changeCutOff = 1e-7;
@@ -298,8 +293,20 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   }
 }
 
-BoundVector calculateDeltaParams(bool zeroField, const BoundMatrix& aMatrix,
-                                 const BoundVector& bVector);
+/// calculateDeltaParams Function
+/// This function calculates the delta parameters for a given aMatrix and
+/// bVector, depending on the number of degrees of freedom of the system, by
+/// solving the equation
+///  [a] * delta = b
+///
+/// @param aMatrix The matrix containing the coefficients of the linear system.
+/// @param bVector The vector containing the right-hand side values of the linear system.
+/// @param ndfSystem The number of degrees of freedom, determining the size of the submatrix and subvector to be solved.
+///
+/// @return deltaParams The calculated delta parameters.
+BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
+                                 const BoundVector& bVector,
+                                 const std::size_t ndfSystem);
 
 /// Global Chi Square fitter (GX2F) implementation.
 ///
@@ -739,6 +746,10 @@ class Gx2Fitter {
     // and used for the final track
     std::size_t tipIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
+    // Here we will store, the ndf of the system. It automatically deduces if we
+    // want to fit e.g. q/p and adjusts itself later.
+    std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
+
     ACTS_VERBOSE("params:\n" << params);
 
     /// Actual Fitting /////////////////////////////////////////////////////////
@@ -828,10 +839,24 @@ class Gx2Fitter {
           } else if (measDim == 2) {
             addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
                              trackState, *m_addToSumLogger);
+          } else if (measDim == 3) {
+            addToGx2fSums<3>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 4) {
+            addToGx2fSums<4>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 5) {
+            addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
+          } else if (measDim == 6) {
+            addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
+                             trackState, *m_addToSumLogger);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
                        << measDim << " dimensions.")
-            countNdf -= measDim;
+            throw std::domain_error(
+                "Found measurement with less than 1 or more than 6 "
+                "dimension(s).");
           }
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
@@ -843,6 +868,19 @@ class Gx2Fitter {
         // TODO: Material handling. Should be there for hole and measurement
       }
 
+      // Get required number of degrees of freedom ndfSystem.
+      // We have only 3 cases, because we always have l0, l1, phi, theta
+      // 4: no magentic field -> q/p is empty
+      // 5: no time measurement -> time not fittable
+      // 6: full fit
+      if (aMatrix(4, 4) == 0) {
+        ndfSystem = 4;
+      } else if (aMatrix(5, 5) == 0) {
+        ndfSystem = 5;
+      } else {
+        ndfSystem = 6;
+      }
+
       // This check takes into account the evaluated dimensions of the
       // measurements. To fit, we need at least NDF+1 measurements. However,
       // we count n-dimensional measurements for n measurements, reducing the
@@ -850,22 +888,18 @@ class Gx2Fitter {
       // We might encounter the case, where we cannot use some (parts of a)
       // measurements, maybe if we do not support that kind of measurement. This
       // is also taken into account here.
-      // `ndf = 4` is chosen, since it is a minimum that makes sense for us, but
-      // a more general approach is desired.
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
-      // TODO genernalize for n-dimensional fit
-      constexpr std::size_t ndf = 4;
-      if ((nUpdate > 0) && (ndf + 1 > countNdf)) {
+      if ((nUpdate > 0) && (ndfSystem + 1 > countNdf)) {
         ACTS_INFO("Not enough measurements. Require "
-                  << ndf + 1 << ", but only " << countNdf << " could be used.");
+                  << ndfSystem + 1 << ", but only " << countNdf
+                  << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
       // calculate delta params [a] * delta = b
-      deltaParams =
-          calculateDeltaParams(gx2fOptions.zeroField, aMatrix, bVector);
+      deltaParams = calculateDeltaParams(aMatrix, bVector, ndfSystem);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << aMatrix << "\n"
@@ -910,7 +944,7 @@ class Gx2Fitter {
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
     bool aMatrixIsInvertible = false;
-    if (gx2fOptions.zeroField) {
+    if (ndfSystem == 4) {
       constexpr std::size_t reducedMatrixSize = 4;
 
       auto safeReducedCovariance = safeInverse(
@@ -921,8 +955,19 @@ class Gx2Fitter {
             .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
             *safeReducedCovariance;
       }
-    } else {
+    } else if (ndfSystem == 5) {
       constexpr std::size_t reducedMatrixSize = 5;
+
+      auto safeReducedCovariance = safeInverse(
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
+      if (safeReducedCovariance) {
+        aMatrixIsInvertible = true;
+        fullCovariancePredicted
+            .topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+            *safeReducedCovariance;
+      }
+    } else {
+      constexpr std::size_t reducedMatrixSize = 6;
 
       auto safeReducedCovariance = safeInverse(
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().eval());
