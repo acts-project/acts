@@ -56,7 +56,7 @@ constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
                                               TrackStatePropMask::Calibrated;
 }  // namespace Gx2fConstants
 
-/// Extension struct which holds delegates to customise the GX2F behaviour
+/// Extension struct which holds delegates to customize the KF behavior
 template <typename traj_t>
 struct Gx2FitterExtensions {
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
