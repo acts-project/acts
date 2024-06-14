@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -77,13 +77,11 @@ class GreedyAmbiguityResolution {
   /// @param state An empty state object which is expected to be default constructed.
   /// @param sourceLinkHash A functor to acquire a hash from a given source link.
   /// @param sourceLinkEquality A functor to check equality of two source links.
-  template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t, typename source_link_hash_t,
+  template <typename track_container_t, typename source_link_hash_t,
             typename source_link_equality_t>
-  void computeInitialState(
-      const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      State& state, source_link_hash_t&& sourceLinkHash,
-      source_link_equality_t&& sourceLinkEquality) const;
+  void computeInitialState(const track_container_t& tracks, State& state,
+                           source_link_hash_t&& sourceLinkHash,
+                           source_link_equality_t&& sourceLinkEquality) const;
 
   /// Updates the state iteratively by evicting one track after the other until
   /// the final state conditions are met.

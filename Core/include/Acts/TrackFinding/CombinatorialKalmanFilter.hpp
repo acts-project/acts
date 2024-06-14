@@ -1215,8 +1215,7 @@ class CombinatorialKalmanFilter {
   ///                                      container
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam measurement_selector_t Type of the measurement selector
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param initialParameters The initial track parameters
@@ -1230,13 +1229,12 @@ class CombinatorialKalmanFilter {
   /// @return a container of track finding result for all the initial track
   /// parameters
   template <typename source_link_iterator_t, typename start_parameters_t,
-            typename track_container_t, template <typename> class holder_t,
+            typename track_container_t,
             typename parameters_t = BoundTrackParameters>
-  auto findTracks(
-      const start_parameters_t& initialParameters,
-      const CombinatorialKalmanFilterOptions<source_link_iterator_t, traj_t>&
-          tfOptions,
-      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+  auto findTracks(const start_parameters_t& initialParameters,
+                  const CombinatorialKalmanFilterOptions<source_link_iterator_t,
+                                                         traj_t>& tfOptions,
+                  track_container_t& trackContainer) const
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     using TrackContainer = typename std::decay_t<decltype(trackContainer)>;

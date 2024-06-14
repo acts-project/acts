@@ -1072,8 +1072,7 @@ class KalmanFitter {
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam parameters_t Type of parameters used for local parameters
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
   /// @param end End iterator for the fittable uncalibrated measurements
@@ -1087,15 +1086,13 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t,
-            bool _isdn = isDirectNavigator>
+            typename track_container_t, bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
-          !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                 holder_t>::TrackProxy>> {
+           track_container_t& trackContainer) const
+      -> std::enable_if_t<!_isdn,
+                          Result<typename track_container_t::TrackProxy>> {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1141,8 +1138,8 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
-                    track_container_t, holder_t>(sParameters, kalmanOptions,
-                                                 trackContainer);
+                    track_container_t>(sParameters, kalmanOptions,
+                                       trackContainer);
   }
 
   /// Fit implementation of the forward filter, calls the
@@ -1151,8 +1148,7 @@ class KalmanFitter {
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam parameters_t Type of parameters used for local parameters
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
   /// @param end End iterator for the fittable uncalibrated measurements
@@ -1168,16 +1164,14 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t,
-            bool _isdn = isDirectNavigator>
+            typename track_container_t, bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
            const std::vector<const Surface*>& sSequence,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
-          _isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                holder_t>::TrackProxy>> {
+           track_container_t& trackContainer) const
+      -> std::enable_if_t<_isdn,
+                          Result<typename track_container_t::TrackProxy>> {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1225,8 +1219,8 @@ class KalmanFitter {
     dInitializer.navSurfaces = sSequence;
 
     return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
-                    track_container_t, holder_t>(sParameters, kalmanOptions,
-                                                 trackContainer);
+                    track_container_t>(sParameters, kalmanOptions,
+                                       trackContainer);
   }
 
  private:
@@ -1236,8 +1230,7 @@ class KalmanFitter {
   /// @tparam actor_list_t Type of the actor list
   /// @tparam aborter_list_t Type of the abort list
   /// @tparam kalman_result_t Type of the KF result
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
+  /// @tparam track_container_t Type of the track container
   ///
   /// @param sParameters The initial track parameters
   /// @param kalmanOptions The Kalman Options
@@ -1246,13 +1239,12 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename start_parameters_t, typename actor_list_t,
             typename aborter_list_t, typename kalman_result_t,
-            typename track_container_t, template <typename> class holder_t>
+            typename track_container_t>
   auto fit_impl(
       const start_parameters_t& sParameters,
       const PropagatorOptions<actor_list_t, aborter_list_t>& kalmanOptions,
-      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
-      -> Result<typename TrackContainer<track_container_t, traj_t,
-                                        holder_t>::TrackProxy> {
+      track_container_t& trackContainer) const
+      -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState =
         m_propagator.template makeState(sParameters, kalmanOptions);
 

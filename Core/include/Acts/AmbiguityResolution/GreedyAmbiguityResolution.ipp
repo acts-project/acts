@@ -14,12 +14,11 @@
 
 namespace Acts {
 
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t, typename source_link_hash_t,
+template <typename track_container_t, typename source_link_hash_t,
           typename source_link_equality_t>
 void GreedyAmbiguityResolution::computeInitialState(
-    const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    State& state, source_link_hash_t&& sourceLinkHash,
+    const track_container_t& tracks, State& state,
+    source_link_hash_t&& sourceLinkHash,
     source_link_equality_t&& sourceLinkEquality) const {
   auto measurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,

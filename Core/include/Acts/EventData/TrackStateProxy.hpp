@@ -107,8 +107,8 @@ struct TrackStateTraits {
       typename detail_lt::Types<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
       typename detail_lt::Types<eBoundSize, ReadOnly>::CovarianceMap;
-  using Measurement = typename detail_lt::Types<M, ReadOnly>::CoefficientsMap;
-  using MeasurementCovariance =
+  using Calibrated = typename detail_lt::Types<M, ReadOnly>::CoefficientsMap;
+  using CalibratedCovariance =
       typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
 
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
@@ -119,7 +119,7 @@ struct TrackStateTraits {
 /// Proxy object to access a single point on the trajectory.
 ///
 /// @tparam SourceLink Type to link back to an original measurement
-/// @tparam M         Maximum number of measurement dimensions
+/// @tparam M          Maximum number of measurement dimensions
 /// @tparam read_only  true for read-only access to underlying storage
 template <typename trajectory_t, std::size_t M, bool read_only = true>
 class TrackStateProxy {
@@ -145,25 +145,25 @@ class TrackStateProxy {
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
 
-  /// Map-type for a measurement vector, where the local measurement dimension
-  /// is variable.
-  template <std::size_t N>
-  using Measurement = typename TrackStateTraits<N, ReadOnly>::Measurement;
-
-  /// Same as @c Measurement, but with const semantics
-  template <std::size_t N>
-  using ConstMeasurement = typename TrackStateTraits<N, true>::Measurement;
-
-  /// Map-type for a measurement covariance matrix, where the local measurement
+  /// Map-type for a calibrated measurement vector, where the local measurement
   /// dimension is variable.
   template <std::size_t N>
-  using MeasurementCovariance =
-      typename TrackStateTraits<N, ReadOnly>::MeasurementCovariance;
+  using Calibrated = typename TrackStateTraits<N, ReadOnly>::Calibrated;
 
-  /// Same as @ref MeasurementCovariance, but with const semantics
+  /// Same as @c Calibrated, but with const semantics
   template <std::size_t N>
-  using ConstMeasurementCovariance =
-      typename TrackStateTraits<N, true>::MeasurementCovariance;
+  using ConstCalibrated = typename TrackStateTraits<N, true>::Calibrated;
+
+  /// Map-type for a calibrated measurement covariance matrix, where the local
+  /// measurement dimension is variable.
+  template <std::size_t N>
+  using CalibratedCovariance =
+      typename TrackStateTraits<N, ReadOnly>::CalibratedCovariance;
+
+  /// Same as @ref CalibratedCovariance, but with const semantics
+  template <std::size_t N>
+  using ConstCalibratedCovariance =
+      typename TrackStateTraits<N, true>::CalibratedCovariance;
 
   /// The index type of the track state container
   using IndexType = TrackIndexType;
@@ -675,9 +675,9 @@ class TrackStateProxy {
   /// @return The measurement vector
   /// @note Const version
   template <std::size_t measdim>
-  ConstMeasurement<measdim> calibrated() const {
+  ConstCalibrated<measdim> calibrated() const {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(m_istate);
+    return m_traj->self().template calibrated<measdim>(m_istate);
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -686,18 +686,18 @@ class TrackStateProxy {
   /// @note Mutable version
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  Measurement<measdim> calibrated() {
+  Calibrated<measdim> calibrated() {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(m_istate);
+    return m_traj->self().template calibrated<measdim>(m_istate);
   }
 
   /// Const full calibrated measurement covariance matrix. The effective
   /// covariance is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
   template <std::size_t measdim>
-  ConstMeasurementCovariance<measdim> calibratedCovariance() const {
+  ConstCalibratedCovariance<measdim> calibratedCovariance() const {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(m_istate);
+    return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
 
   /// Mutable full calibrated measurement covariance matrix. The effective
@@ -705,9 +705,9 @@ class TrackStateProxy {
   /// @return The measurement covariance matrix
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  MeasurementCovariance<measdim> calibratedCovariance() {
+  CalibratedCovariance<measdim> calibratedCovariance() {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(m_istate);
+    return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
 
   /// Mutable dynamic measurement vector with only the valid dimensions.

@@ -25,13 +25,11 @@ namespace Acts {
 /// @param epsilon Maximum distance between 2 tracks to be clustered
 /// @param minPoints Minimum number of tracks to create a cluster
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+template <typename track_container_t>
 std::unordered_map<std::size_t, std::vector<std::size_t>> dbscanTrackClustering(
     std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>&
         trackMap,
-    const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    float epsilon = 0.07, int minPoints = 2) {
+    const track_container_t& tracks, float epsilon = 0.07, int minPoints = 2) {
   // Unordered map associating a vector with all the track ID of a cluster to
   // the ID of the first track of the cluster
   std::unordered_map<std::size_t, std::vector<std::size_t>> cluster;
