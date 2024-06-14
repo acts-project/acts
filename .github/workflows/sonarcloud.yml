@@ -15,6 +15,9 @@ jobs:
           PAYLOAD: ${{ toJson(github.event.workflow_run) }}
         run: echo "${PAYLOAD}"
 
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
       - name: 'Download artifact'
         uses: actions/github-script@v7
         id: dl-af
@@ -79,29 +82,27 @@ jobs:
           number: ${{ steps.pr_number.outputs.content }}
           full_name: ${{ github.event.repository.full_name }}
 
-      - uses: actions/checkout@v3
-        with:
-            repository: ${{ github.event.workflow_run.head_repository.full_name }}
-            ref: ${{ github.event.workflow_run.head_branch }}
-            fetch-depth: 0
+      - name: Get upcoming version from milestones
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: acts-project/acts
+        run: |
+          CI/get_next_milestone.py | tee next_version.txt
 
-      - name: Download coverage artifact
+      # - uses: actions/checkout@v3
+      #   with:
+      #       repository: ${{ github.event.workflow_run.head_repository.full_name }}
+      #       ref: ${{ github.event.workflow_run.head_branch }}
+      #       fetch-depth: 0
+
+      - name: Checkout base branch
         if: github.event.workflow_run.event == 'pull_request'
-        uses: actions/download-artifact@v4
-        with:
-          workflow: Analysis
-          run_id: ${{ github.event.workflow_run.id }}
-          name: build-coverage
-
-
-      # - name: Checkout base branch
-      #   if: github.event.workflow_run.event == 'pull_request'
-      #   run: |
-      #     git remote add upstream ${{ github.event.repository.clone_url }}
-      #     git fetch upstream
-      #     git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
-      #     git checkout ${{ github.event.workflow_run.head_branch }}
-      #     git clean -ffdx && git reset --hard HEAD
+        run: |
+          git remote add upstream ${{ github.event.repository.clone_url }}
+          git fetch upstream
+          git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+          git checkout ${{ github.event.workflow_run.head_branch }}
+          git clean -ffdx && git reset --hard HEAD
 
       # - uses: actions/checkout@v4
       #   with:
@@ -132,13 +133,6 @@ jobs:
       # - name: 'Unzip code coverage'
       #   run: unzip coverage-build.zip -d build
       #
-
-      - name: Get upcoming version from milestones
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: acts-project/acts
-        run: |
-          CI/get_next_milestone.py | tee next_version.txt
 
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2
