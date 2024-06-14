@@ -398,7 +398,9 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
 
   Vector3 translation = otherLocal.translation();
 
-  if (!translation.isApprox(Vector3::Zero())) {
+  if (std::abs(translation[0]) > tolerance ||
+      std::abs(translation[1]) > tolerance || 
+      std::abs(translation[2]) > tolerance) {
     ACTS_ERROR(
         "DiscSurface::merge: surfaces have relative translation in x/y/z");
     throw std::invalid_argument(

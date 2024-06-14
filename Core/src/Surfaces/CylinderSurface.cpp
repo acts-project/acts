@@ -426,7 +426,6 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
         "CylinderSurface::merge: surfaces have relative translation in x/y");
   }
 
-  // @TODO:Overlap checks are missing?
 
   if (direction == Acts::binZ) {
     // z shift must match the bounds
