@@ -45,7 +45,7 @@ jobs:
       - name: Unzip artifacts
         run: |
           ls -al
-          unzip coverage-build.zip
+          unzip coverage-build.zip -d build
           unzip PR_NUMBER.zip
           ls -al
           ls -al build
