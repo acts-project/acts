@@ -8,9 +8,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/acts-project/ubuntu2204:v41
-      options: --user 1001
+    container: ghcr.io/acts-project/ubuntu2204:v41
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Dump job context
@@ -108,6 +106,7 @@ jobs:
       - name: Checkout base branch
         if: github.event.workflow_run.event == 'pull_request'
         run: |
+          git config --global --add safe.directory .
           git remote add upstream ${{ github.event.repository.clone_url }}
           git fetch upstream
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
