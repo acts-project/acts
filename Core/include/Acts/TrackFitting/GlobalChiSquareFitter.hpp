@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -56,7 +56,7 @@ constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
                                               TrackStatePropMask::Calibrated;
 }  // namespace Gx2fConstants
 
-/// Extension struct which holds delegates to customize the KF behavior
+/// Extension struct which holds delegates to customise the GX2F behaviour
 template <typename traj_t>
 struct Gx2FitterExtensions {
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
@@ -473,7 +473,7 @@ class Gx2Fitter {
           typename traj_t::TrackStateProxy trackStateProxy =
               fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
                                           result.lastTrackIndex);
-          std::size_t currentTrackIndex = trackStateProxy.index();
+          const std::size_t currentTrackIndex = trackStateProxy.index();
 
           // Set the trackStateProxy components with the state from the ongoing
           // propagation
@@ -512,15 +512,7 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // We count the processed measurement
           ++result.processedMeasurements;
-          ACTS_VERBOSE("Actor - indices after processing, before over writing:"
-                       << "\n    "
-                       << "result.lastMeasurementIndex: "
-                       << result.lastMeasurementIndex << "\n    "
-                       << "trackStateProxy.index(): " << trackStateProxy.index()
-                       << "\n    "
-                       << "result.lastTrackIndex: " << result.lastTrackIndex
-                       << "\n    "
-                       << "currentTrackIndex: " << currentTrackIndex)
+
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
 
@@ -556,7 +548,7 @@ class Gx2Fitter {
             typename traj_t::TrackStateProxy trackStateProxy =
                 fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
                                             result.lastTrackIndex);
-            std::size_t currentTrackIndex = trackStateProxy.index();
+            const std::size_t currentTrackIndex = trackStateProxy.index();
             {
               // Set the trackStateProxy components with the state from the
               // ongoing propagation
@@ -693,7 +685,7 @@ class Gx2Fitter {
       const -> std::enable_if_t<
           !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                  holder_t>::TrackProxy>> {
-    // Preprocess Measurements (Sourcelinks -> map)
+    // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
