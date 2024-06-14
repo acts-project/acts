@@ -44,11 +44,22 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <unordered_map>
 
 namespace Acts::Experimental {
 
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
+
+// Add contribution from scattering
+// TODO use ActsMatrix<eBoundSize, 2>
+const Eigen::MatrixXd phiThetaProjector = []() {
+  Eigen::MatrixXd m = Eigen::MatrixXd::Zero(eBoundSize, 2);
+  m(2, 0) = 1;
+  m(3, 1) = 1;
+  return m;
+}();
+
 }  // namespace Gx2fConstants
 
 /// Extension struct which holds delegates to customize the KF behavior
@@ -877,12 +888,34 @@ class Gx2Fitter {
       // This goes up for each measurement (for each dimension)
       std::size_t countNdf = 0;
 
+      // Count the material surfaces, to set up the system
+      std::size_t nMaterialSurfaces = 0;
+
+      // TODO description
+      // pre-evaluate the track and count material states
+      // TODO we could also do the ndf here
+      for (const auto& trackState : track.trackStates()) {
+        auto typeFlags = trackState.typeFlags();
+
+        // update all jacobian from start
+        if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
+          nMaterialSurfaces++;
+        }
+      }
+
       chi2sum = 0;
-      aMatrix = BoundMatrix::Zero();
-      bVector = BoundVector::Zero();
+      // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
+      // dimensions for the scattering angles.
+      const size_t dimsExtendedParams = eBoundSize + 2 * nMaterialSurfaces;
+
+      Eigen::MatrixXd aMatrixExtended =
+          Eigen::MatrixXd::Zero(dimsExtendedParams, dimsExtendedParams);
+      Eigen::VectorXd bVectorExtended =
+          Eigen::VectorXd::Zero(dimsExtendedParams);
 
       BoundMatrix jacobianFromStart = BoundMatrix::Identity();
       std::vector<BoundMatrix> jacobianFromStartMaterialVector;
+      std::vector<GeometryIdentifier> geoIdVector;
 
       for (const auto& trackState : track.trackStates()) {
         auto typeFlags = trackState.typeFlags();
@@ -942,6 +975,25 @@ class Gx2Fitter {
           ACTS_WARNING("Unknown state encountered")
         }
         // TODO: Material handling. Should be there for hole and measurement
+        if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
+          // Add for this material a new jacobian
+          jacobianFromStartMaterialVector.emplace_back(BoundMatrix::Identity());
+
+          // Add reference to the scattering angles
+          auto geoId = trackState.referenceSurface().geometryId();
+          std::cout << "trackState.referenceSurface()" << geoId << std::endl;
+
+          auto scatteringMapId = scatteringMap.find(geoId);
+          if (scatteringMapId == scatteringMap.end()) {
+            // TODO make proper error and return
+            ACTS_ERROR("No scattering angles found for material surface "
+                       << geoId);
+          }
+
+          geoIdVector.emplace_back(geoId);
+
+          // TODO add contribution from angle
+        }
       }
 
       // Get required number of degrees of freedom ndfSystem.
@@ -949,9 +1001,9 @@ class Gx2Fitter {
       // 4: no magentic field -> q/p is empty
       // 5: no time measurement -> time not fittable
       // 6: full fit
-      if (aMatrix(4, 4) == 0) {
+      if (aMatrixExtended(4, 4) == 0) {
         ndfSystem = 4;
-      } else if (aMatrix(5, 5) == 0) {
+      } else if (aMatrixExtended(5, 5) == 0) {
         ndfSystem = 5;
       } else {
         ndfSystem = 6;
@@ -974,8 +1026,32 @@ class Gx2Fitter {
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
+      // get back the Bound vector components
+      aMatrix = aMatrixExtended.topLeftCorner<eBoundSize, eBoundSize>().eval();
+      bVector = bVectorExtended.topLeftCorner<eBoundSize, 1>().eval();
+
       // calculate delta params [a] * delta = b
       deltaParams = calculateDeltaParams(aMatrix, bVector, ndfSystem);
+
+      Eigen::VectorXd deltaParamsExtended = aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
+      std::cout << "deltaParamsExtended:\n" << deltaParamsExtended << std::endl;
+
+      deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
+
+      // update the scattering angles
+      for (std::size_t matSurface = 0;
+           matSurface < geoIdVector.size(); matSurface++) {
+        const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
+        std::cout << "delta phi theta:\n" <<  deltaParamsExtended.block<2, 1>(deltaPosition, 0) << std::endl;
+
+        auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
+        if (scatteringMapId == scatteringMap.end()) {
+          // TODO make proper error and return
+          ACTS_ERROR("No scattering angles found for material surface "
+                     << geoIdVector[matSurface]);
+        }
+        scatteringMapId->second.scatteringAngles.block<1, 2>(0, 2) += deltaParamsExtended.block<1, 2>(0, deltaPosition).eval();
+      }
 
       ACTS_VERBOSE("aMatrix:\n"
                    << aMatrix << "\n"
@@ -1080,6 +1156,7 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.scatteringMap = &scatteringMap;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 

@@ -12,31 +12,48 @@
 
 namespace Acts::Experimental {
 
+//BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
+//                                 const BoundVector& bVector,
+//                                 const std::size_t ndfSystem) {
+//  BoundVector deltaParams = BoundVector::Zero();
+//  if (ndfSystem == 4) {
+//    constexpr std::size_t reducedMatrixSize = 4;
+//    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
+//        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+//            .colPivHouseholderQr()
+//            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+//  } else if (ndfSystem == 5) {
+//    constexpr std::size_t reducedMatrixSize = 5;
+//    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
+//        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+//            .colPivHouseholderQr()
+//            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+//  } else {
+//    constexpr std::size_t reducedMatrixSize = 6;
+//    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
+//        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+//            .colPivHouseholderQr()
+//            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+//  }
+//
+//  return deltaParams;
+//}
+
 BoundVector calculateDeltaParams(const BoundMatrix& aMatrix,
                                  const BoundVector& bVector,
-                                 const std::size_t ndfSystem) {
+                                 const std::size_t /*ndfSystem*/) {
   BoundVector deltaParams = BoundVector::Zero();
-  if (ndfSystem == 4) {
-    constexpr std::size_t reducedMatrixSize = 4;
-    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .colPivHouseholderQr()
-            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else if (ndfSystem == 5) {
-    constexpr std::size_t reducedMatrixSize = 5;
-    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .colPivHouseholderQr()
-            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  } else {
-    constexpr std::size_t reducedMatrixSize = 6;
-    deltaParams.topLeftCorner<reducedMatrixSize, 1>() =
-        aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-            .colPivHouseholderQr()
-            .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
-  }
+  deltaParams = aMatrix.colPivHouseholderQr().solve(bVector);
 
   return deltaParams;
 }
+
+//Eigen::VectorXd calculateDeltaParams(const Eigen::MatrixXd& aMatrix,
+//                                 const Eigen::VectorXd& bVector,
+//                                 const std::size_t /*ndfSystem*/) {
+//  Eigen::VectorXd deltaParams = aMatrix.colPivHouseholderQr().solve(bVector);
+//
+//  return deltaParams;
+//}
 
 }  // namespace Acts::Experimental
