@@ -219,6 +219,24 @@ struct Gx2FitterResult {
   std::size_t surfaceCount = 0;
 };
 
+// TODO write description
+struct ScatteringProperties {
+  /// PropagatorOptions with context.
+  ///
+  /// @param scatteringAngles_
+  /// @param covarianceMaterial_
+  ScatteringProperties(const BoundVector scatteringAngles_,
+                       const ActsScalar covarianceMaterial_)
+      : scatteringAngles(scatteringAngles_),
+        covarianceMaterial(covarianceMaterial_) {}
+
+  /// No default construction
+  ScatteringProperties() = delete;
+
+  BoundVector scatteringAngles;
+  const ActsScalar covarianceMaterial;
+};
+
 /// addToGx2fSums Function
 /// The function processes each measurement for the GX2F Actor fitting process.
 /// It extracts the information from the track state and adds it to aMatrix,
@@ -422,6 +440,10 @@ class Gx2Fitter {
 
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
+
+    /// TODO description
+    std::unordered_map<GeometryIdentifier, ScatteringProperties>*
+        scatteringMap = nullptr;
 
     /// @brief Gx2f actor operation
     ///
@@ -784,6 +806,9 @@ class Gx2Fitter {
     // want to fit e.g. q/p and adjusts itself later.
     std::size_t ndfSystem = std::numeric_limits<std::size_t>::max();
 
+    // TODO description
+    std::unordered_map<GeometryIdentifier, ScatteringProperties> scatteringMap;
+
     ACTS_VERBOSE("params:\n" << params);
 
     /// Actual Fitting /////////////////////////////////////////////////////////
@@ -811,6 +836,7 @@ class Gx2Fitter {
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
+      gx2fActor.scatteringMap = &scatteringMap;
 
       auto propagatorState = m_propagator.makeState(params, propagatorOptions);
 
