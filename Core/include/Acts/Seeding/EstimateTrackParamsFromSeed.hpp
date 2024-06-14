@@ -229,15 +229,16 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // straight line connecting the two points
   // y = a * x + c (we don't care about c right now)
   // we simply need the slope
-  ActsScalar a = local2(1) / deltaX21;
+  // we compute 1./a since this is what we need for the following computation
+  ActsScalar ia = deltaX21 / local2(1);
   // Perpendicular line is then y = -1/a *x + b
   // we can evaluate b given we know a already by imposing
   // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
-  ActsScalar b = 0.5 * (local2(1) + 1. / a * sumX21);
-  circleCenter(1) = -1. / a * circleCenter(0) + b;
+  ActsScalar b = 0.5 * (local2(1) + ia * sumX21);
+  circleCenter(1) = -ia * circleCenter(0) + b;
   // Radius is a signed distance between circleCenter and first sp, which is at
   // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
-  int sign = a > 0 ? -1 : 1;
+  int sign = ia > 0 ? -1 : 1;
   const ActsScalar R = circleCenter.norm();
   ActsScalar invTanTheta =
       local2.z() /

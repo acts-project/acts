@@ -90,7 +90,7 @@ if "__main__" == __name__:
         "--eta",
         type=float,
         nargs=2,
-        default=[-3.0, 3.0],
+        default=[-4.0, 4.0],
         help="Eta range for the plotting",
     )
     p.add_argument("--eta-bins", type=int, default=60, help="Eta bins for the plotting")
