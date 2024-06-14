@@ -233,18 +233,52 @@ struct Gx2FitterResult {
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
+/// TODO finish description
 template <std::size_t kMeasDim, typename track_state_t>
-void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
-                   const BoundMatrix& jacobianFromStart,
-                   const track_state_t& trackState, const Logger& logger) {
+void addToGx2fSums(
+    Eigen::MatrixXd& aMatrixExtended, Eigen::VectorXd& bVectorExtended,
+    double& chi2sum, const BoundMatrix& jacobianFromStart,
+    const track_state_t& trackState, const Logger& logger,
+    const std::vector<BoundMatrix>& jacobianFromStartMaterialVector) {
+  // Create an extended Jacobian. This one contains only eBoundSize rows,
+  // because the rest is irrelevant
+  // TODO make dimsExtendedParams template with unrolling
+  const size_t dimsExtendedParams = aMatrixExtended.rows();
+
+  Eigen::MatrixXd extendedJacobian =
+      Eigen::MatrixXd::Zero(eBoundSize, dimsExtendedParams);
+
+  extendedJacobian.topLeftCorner<eBoundSize, eBoundSize>() = jacobianFromStart;
+
+  std::cout << "phiThetaProjector:\n"
+            << Gx2fConstants::phiThetaProjector << std::endl;
+
+  for (std::size_t matSurface = 0;
+       matSurface < jacobianFromStartMaterialVector.size(); matSurface++) {
+    std::cout << "tried to use material number: " << matSurface << "/"
+              << jacobianFromStartMaterialVector.size() << std::endl;
+    const BoundMatrix jac = jacobianFromStartMaterialVector[matSurface];
+
+    const ActsMatrix<eBoundSize, 2> jacPhiTheta =
+        jac * Gx2fConstants::phiThetaProjector;
+
+    extendedJacobian.block<eBoundSize, 2>(0, 6 + 2 * matSurface) = jacPhiTheta;
+  }
+
+  std::cout << "extendedJacobian:\n" << extendedJacobian << std::endl;
+
   BoundVector predicted = trackState.predicted();
+
   ActsVector<kMeasDim> measurement = trackState.template calibrated<kMeasDim>();
+
   ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
+
   ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
-  ActsMatrix<kMeasDim, eBoundSize> projJacobian = projector * jacobianFromStart;
+  Eigen::MatrixXd projJacobian = projector * extendedJacobian;
+
   ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
   ActsVector<kMeasDim> residual = measurement - projPredicted;
@@ -268,10 +302,10 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
   if (safeInvCovMeasurement) {
     chi2sum +=
         (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-    aMatrix +=
+    aMatrixExtended +=
         (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
             .eval();
-    bVector +=
+    bVectorExtended +=
         (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
 
     ACTS_VERBOSE(
@@ -822,35 +856,51 @@ class Gx2Fitter {
       bVector = BoundVector::Zero();
 
       BoundMatrix jacobianFromStart = BoundMatrix::Identity();
+      std::vector<BoundMatrix> jacobianFromStartMaterialVector;
 
       for (const auto& trackState : track.trackStates()) {
         auto typeFlags = trackState.typeFlags();
+
+        // update all Jacobians from start
+        if ((typeFlags.test(TrackStateFlag::MeasurementFlag)) ||
+            (typeFlags.test(TrackStateFlag::MaterialFlag))) {
+          jacobianFromStart = trackState.jacobian() * jacobianFromStart;
+
+          for (auto& jac : jacobianFromStartMaterialVector) {
+            jac = trackState.jacobian() * jac;
+          }
+        }
+
         if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           // Handle measurement
 
           auto measDim = trackState.calibratedSize();
           countNdf += measDim;
 
-          jacobianFromStart = trackState.jacobian() * jacobianFromStart;
-
           if (measDim == 1) {
-            addToGx2fSums<1>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            addToGx2fSums<1>(aMatrixExtended, bVectorExtended, chi2sum,
+                             jacobianFromStart, trackState, *m_addToSumLogger,
+                             jacobianFromStartMaterialVector);
           } else if (measDim == 2) {
-            addToGx2fSums<2>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            addToGx2fSums<2>(aMatrixExtended, bVectorExtended, chi2sum,
+                             jacobianFromStart, trackState, *m_addToSumLogger,
+                             jacobianFromStartMaterialVector);
           } else if (measDim == 3) {
-            addToGx2fSums<3>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            addToGx2fSums<3>(aMatrixExtended, bVectorExtended, chi2sum,
+                             jacobianFromStart, trackState, *m_addToSumLogger,
+                             jacobianFromStartMaterialVector);
           } else if (measDim == 4) {
-            addToGx2fSums<4>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            addToGx2fSums<4>(aMatrixExtended, bVectorExtended, chi2sum,
+                             jacobianFromStart, trackState, *m_addToSumLogger,
+                             jacobianFromStartMaterialVector);
           } else if (measDim == 5) {
-            addToGx2fSums<5>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            addToGx2fSums<5>(aMatrixExtended, bVectorExtended, chi2sum,
+                             jacobianFromStart, trackState, *m_addToSumLogger,
+                             jacobianFromStartMaterialVector);
           } else if (measDim == 6) {
-            addToGx2fSums<6>(aMatrix, bVector, chi2sum, jacobianFromStart,
-                             trackState, *m_addToSumLogger);
+            addToGx2fSums<6>(aMatrixExtended, bVectorExtended, chi2sum,
+                             jacobianFromStart, trackState, *m_addToSumLogger,
+                             jacobianFromStartMaterialVector);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
                        << measDim << " dimensions.")
