@@ -60,9 +60,14 @@ const Eigen::MatrixXd phiThetaProjector = []() {
   return m;
 }();
 
+// Mask for the track states. We don't need Smoothed and Filtered
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
+                                              TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated;
+
 }  // namespace Gx2fConstants
 
-/// Extension struct which holds delegates to customize the KF behavior
+/// Extension struct which holds delegates to customise the GX2F behaviour
 template <typename traj_t>
 struct Gx2FitterExtensions {
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
@@ -452,11 +457,6 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
-    /// Mask for the track states. We don't need Smoothed and Filtered
-    const TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
-                                              TrackStatePropMask::Jacobian |
-                                              TrackStatePropMask::Calibrated;
-
     /// TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties>*
         scatteringMap = nullptr;
@@ -550,14 +550,12 @@ class Gx2Fitter {
           // TODO generalize the update of the currentTrackIndex
           auto& fittedStates = *result.fittedStates;
 
-          ACTS_VERBOSE("    processSurface: addTrackState");
-
           // Add a <trackStateMask> TrackState entry multi trajectory. This
           // allocates storage for all components, which we will set later.
           typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.makeTrackState(trackStateMask,
+              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
                                           result.lastTrackIndex);
-          std::size_t currentTrackIndex = trackStateProxy.index();
+          const std::size_t currentTrackIndex = trackStateProxy.index();
 
           // Set the trackStateProxy components with the state from the ongoing
           // propagation
@@ -622,8 +620,7 @@ class Gx2Fitter {
                    surface->surfaceMaterial() != nullptr) {
           // Here we handle material and holes
           // TODO add material handling
-          ACTS_VERBOSE("Non-Measurement surface " << surface->geometryId()
-                                                  << " detected.");
+          ACTS_VERBOSE("The surface contains no measurement.");
 
           // We only create track states here if there is already a measurement
           // detected or if the surface has material (no holes before the first
@@ -635,14 +632,12 @@ class Gx2Fitter {
 
             auto& fittedStates = *result.fittedStates;
 
-            ACTS_VERBOSE("    processSurface: addTrackState");
-
             // Add a <trackStateMask> TrackState entry multi trajectory. This
             // allocates storage for all components, which we will set later.
             typename traj_t::TrackStateProxy trackStateProxy =
-                fittedStates.makeTrackState(trackStateMask,
+                fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
                                             result.lastTrackIndex);
-            std::size_t currentTrackIndex = trackStateProxy.index();
+            const std::size_t currentTrackIndex = trackStateProxy.index();
             {
               // Set the trackStateProxy components with the state from the
               // ongoing propagation
