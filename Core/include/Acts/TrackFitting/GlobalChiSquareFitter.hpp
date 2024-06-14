@@ -512,40 +512,33 @@ class Gx2Fitter {
       auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
         ++result.surfaceCount;
-        ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
+        const GeometryIdentifier geoId = surface->geometryId();
+        ACTS_DEBUG("Surface " << geoId << " detected.");
 
         // Found material - add an scatteringAngles entry
         if (surface->surfaceMaterial() != nullptr) {
-          ACTS_VERBOSE("The surface contains material.");
+          ACTS_DEBUG("    The surface contains material.");
 
-          auto scatteringMapId = scatteringMap->find(surface->geometryId());
+          auto scatteringMapId = scatteringMap->find(geoId);
           if (scatteringMapId == scatteringMap->end()) {
-            ACTS_VERBOSE("There is no entry for this material. We create one.");
+            ACTS_DEBUG("    Create entry in scattering map.");
             // TODO use real covariance, maybe from surface->surfaceMaterial()
-            const double cov = 1.;
+            const ActsScalar cov = 1.;
             scatteringMap->emplace(
-                surface->geometryId(),
-                ScatteringProperties{BoundVector::Zero(), 1. / cov});
+                geoId, ScatteringProperties{BoundVector::Zero(), 1. / cov});
           } else {
-            ACTS_VERBOSE("Nothing to do, since we already know it.");
+            ACTS_DEBUG("    Found entry in scattering map.");
           }
         }
 
         // Check if we have a measurement surface
-        if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+        if (auto sourcelink_it = inputMeasurements->find(geoId);
             sourcelink_it != inputMeasurements->end()) {
-          ACTS_VERBOSE("The surface contains a measurement.");
+          ACTS_DEBUG("    The surface contains a measurement.");
 
           // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
                                              freeToBoundCorrection);
-
-          ACTS_VERBOSE(
-              "Actor - indices before processing:"
-              << "\n    result.lastMeasurementIndex: "
-              << result.lastMeasurementIndex << "\n    result.lastTrackIndex: "
-              << result.lastTrackIndex << "\n    result.fittedStates->size(): "
-              << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
           auto& fittedStates = *result.fittedStates;
@@ -568,7 +561,8 @@ class Gx2Fitter {
               result.result = res.error();
               return;
             }
-            const auto& [boundParams, jacobian, pathLength] = *res;
+            // Not const since, we might need to update with scattering angles
+            auto& [boundParams, jacobian, pathLength] = *res;
 
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
@@ -576,6 +570,19 @@ class Gx2Fitter {
 
             trackStateProxy.jacobian() = jacobian;
             trackStateProxy.pathLength() = pathLength;
+
+            // For material surfaces, we also update the angles with the
+            // available scattering information
+            if (surface->surfaceMaterial() != nullptr) {
+              ACTS_DEBUG("    Update parameters with scattering angles.");
+              auto scatteringMapId = scatteringMap->find(geoId);
+              ACTS_VERBOSE("    boundParams before the update:\n"
+                           << boundParams);
+              boundParams.parameters() +=
+                  scatteringMapId->second.scatteringAngles;
+              ACTS_VERBOSE("    boundParams after the update:\n"
+                           << boundParams);
+            }
           }
 
           // We have predicted parameters, so calibrate the uncalibrated input
@@ -594,15 +601,7 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // We count the processed measurement
           ++result.processedMeasurements;
-          ACTS_VERBOSE("Actor - indices after processing, before over writing:"
-                       << "\n    "
-                       << "result.lastMeasurementIndex: "
-                       << result.lastMeasurementIndex << "\n    "
-                       << "trackStateProxy.index(): " << trackStateProxy.index()
-                       << "\n    "
-                       << "result.lastTrackIndex: " << result.lastTrackIndex
-                       << "\n    "
-                       << "currentTrackIndex: " << currentTrackIndex)
+
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
 
@@ -616,19 +615,86 @@ class Gx2Fitter {
           // Update the number of holes count only when encountering a
           // measurement
           result.measurementHoles = result.missedActiveSurfaces.size();
-        } else if (surface->associatedDetectorElement() != nullptr ||
-                   surface->surfaceMaterial() != nullptr) {
-          // Here we handle material and holes
-          // TODO add material handling
-          ACTS_VERBOSE("The surface contains no measurement.");
+        } else if (surface->surfaceMaterial() != nullptr) {
+          // Here we handle material and holes. Material-less holes come later
+          ACTS_DEBUG("    The surface contains no measurement, but material.");
+
+          // Transport the covariance to the surface
+          stepper.transportCovarianceToBound(state.stepping, *surface,
+                                             freeToBoundCorrection);
+
+          // TODO generalize the update of the currentTrackIndex
+          auto& fittedStates = *result.fittedStates;
+
+          // Add a <trackStateMask> TrackState entry multi trajectory. This
+          // allocates storage for all components, which we will set later.
+          typename traj_t::TrackStateProxy trackStateProxy =
+              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                          result.lastTrackIndex);
+          const std::size_t currentTrackIndex = trackStateProxy.index();
+
+          // Set the trackStateProxy components with the state from the ongoing
+          // propagation
+          {
+            trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+            // Bind the transported state to the current surface
+            auto res = stepper.boundState(state.stepping, *surface, false,
+                                          freeToBoundCorrection);
+            if (!res.ok()) {
+              result.result = res.error();
+              return;
+            }
+            // Not const since, we might need to update with scattering angles
+            auto& [boundParams, jacobian, pathLength] = *res;
+
+            // Fill the track state
+            // TODO Do we need to get a prediction?
+            // trackStateProxy.predicted() = boundParams.parameters();
+            // trackStateProxy.predictedCovariance() = state.stepping.cov;
+
+            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.pathLength() = pathLength;
+
+            // For material surfaces, we also update the angles with the
+            // available scattering information
+            if (surface->surfaceMaterial() != nullptr) {
+              ACTS_DEBUG("    Update parameters with scattering angles.");
+              auto scatteringMapId = scatteringMap->find(geoId);
+              ACTS_VERBOSE("boundParams before the update:\n" << boundParams);
+              boundParams.parameters() +=
+                  scatteringMapId->second.scatteringAngles;
+              ACTS_VERBOSE("boundParams after the update:\n" << boundParams);
+            }
+          }
+
+          // Get and set the type flags
+          auto typeFlags = trackStateProxy.typeFlags();
+          // Parameterflag seems irrelevant
+          // typeFlags.set(TrackStateFlag::ParameterFlag);
+          typeFlags.set(TrackStateFlag::MaterialFlag);
+
+          // Set hole only, if we are on a sensitive surface
+          if (surface->associatedDetectorElement() != nullptr) {
+            ACTS_DEBUG("Surface is also sensitive. Marked as hole.");
+            typeFlags.set(TrackStateFlag::HoleFlag);
+
+            // Count the missed surface
+            result.missedActiveSurfaces.push_back(surface);
+          }
+
+          result.lastTrackIndex = currentTrackIndex;
+
+          ++result.processedStates;
+        } else if (surface->associatedDetectorElement() != nullptr) {
+          // Here we handle only holes. All material cases are already excluded
+          ACTS_DEBUG(
+              "    The surface contains no measurement and no material. Since "
+              "it is sensitive, we check if it contains a hole.");
 
           // We only create track states here if there is already a measurement
-          // detected or if the surface has material (no holes before the first
-          // measurement)
-          if (result.measurementStates > 0
-              // || surface->surfaceMaterial() != nullptr
-          ) {
-            ACTS_VERBOSE("Handle hole.");
+          // detected (no holes before the first measurement)
+          if (result.measurementStates > 0) {
+            ACTS_DEBUG("    Handle hole.");
 
             auto& fittedStates = *result.fittedStates;
 
@@ -662,57 +728,27 @@ class Gx2Fitter {
 
               // Get and set the type flags
               auto typeFlags = trackStateProxy.typeFlags();
-              typeFlags.set(TrackStateFlag::ParameterFlag);
-              if (surface->surfaceMaterial() != nullptr) {
-                typeFlags.set(TrackStateFlag::MaterialFlag);
-              }
-
-              // Set hole only, if we are on a sensitive surface
-              if (surface->associatedDetectorElement() != nullptr) {
-                ACTS_VERBOSE("Detected hole on " << surface->geometryId());
-                // If the surface is sensitive, set the hole type flag
-                typeFlags.set(TrackStateFlag::HoleFlag);
-              } else {
-                ACTS_VERBOSE("Detected in-sensitive surface "
-                             << surface->geometryId());
-              }
+              // TODO no parameters for hole?
+              // typeFlags.set(TrackStateFlag::ParameterFlag);
+              typeFlags.set(TrackStateFlag::HoleFlag);
             }
 
-            ACTS_VERBOSE(
-                "Actor - indices after processing, before over writing:"
-                << "\n    "
-                << "result.lastMeasurementIndex: "
-                << result.lastMeasurementIndex << "\n    "
-                << "trackStateProxy.index(): " << trackStateProxy.index()
-                << "\n    "
-                << "result.lastTrackIndex: " << result.lastTrackIndex
-                << "\n    "
-                << "currentTrackIndex: " << currentTrackIndex)
             result.lastTrackIndex = currentTrackIndex;
 
-            if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
-              // Count the missed surface
-              result.missedActiveSurfaces.push_back(surface);
-            }
+            // Count the missed surface
+            result.missedActiveSurfaces.push_back(surface);
 
             ++result.processedStates;
           } else {
-            ACTS_VERBOSE("Ignoring hole, because no preceding measurements.");
-          }
-
-          if (surface->surfaceMaterial() != nullptr) {
-            // TODO write similar to KF?
-            // Update state and stepper with material effects
-            // materialInteractor(surface, state, stepper, navigator,
-            // MaterialUpdateStage::FullUpdate);
+            ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
         } else {
-          ACTS_INFO("Actor: This case is not implemented yet")
+          ACTS_INFO("Surface " << geoId << " has no measurement/material/hole.")
         }
       }
-      ACTS_DEBUG("result.processedMeasurements: "
-                 << result.processedMeasurements << "\n"
-                 << "inputMeasurements.size(): " << inputMeasurements->size())
+      ACTS_VERBOSE("result.processedMeasurements: "
+                   << result.processedMeasurements << "\n"
+                   << "inputMeasurements.size(): " << inputMeasurements->size())
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -774,7 +810,7 @@ class Gx2Fitter {
       const -> std::enable_if_t<
           !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                  holder_t>::TrackProxy>> {
-    // Preprocess Measurements (Sourcelinks -> map)
+    // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
