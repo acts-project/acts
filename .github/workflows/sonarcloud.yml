@@ -16,6 +16,11 @@ jobs:
           PAYLOAD: ${{ toJson(github.event.workflow_run) }}
         run: echo "${PAYLOAD}"
 
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y unzip
+
       - name: "Checkout repository"
         uses: actions/checkout@v4
 
