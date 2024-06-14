@@ -2,6 +2,7 @@ include(FetchContent)
 
 add_library(
   ActsPluginGeoModel SHARED
+  src/GeoModelBlueprintCreater.cpp
   src/GeoModelConversionError.cpp
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
@@ -11,6 +12,8 @@ add_library(
   src/detail/GeoTubeConverter.cpp
   src/detail//GeoShiftConverter.cpp
   src/detail//GeoIntersectionAnnulusConverter.cpp
+  src/detail/GeoModelBinningHelper.cpp
+  src/detail/GeoModelExtentHelper.cpp
   src/detail/GeoUnionDoubleTrdConverter.cpp)
 target_include_directories(
     ActsPluginGeoModel
