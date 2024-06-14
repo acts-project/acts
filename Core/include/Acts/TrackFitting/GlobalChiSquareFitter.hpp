@@ -49,9 +49,14 @@ namespace Acts::Experimental {
 
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
+
+// Mask for the track states. We don't need Smoothed and Filtered
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
+                                              TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated;
 }  // namespace Gx2fConstants
 
-/// Extension struct which holds delegates to customize the KF behavior
+/// Extension struct which holds delegates to customise the GX2F behaviour
 template <typename traj_t>
 struct Gx2FitterExtensions {
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
@@ -463,17 +468,11 @@ class Gx2Fitter {
           // TODO generalize the update of the currentTrackIndex
           auto& fittedStates = *result.fittedStates;
 
-          // Mask for the track states. We don't need Smoothed and Filtered
-          TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                    TrackStatePropMask::Jacobian |
-                                    TrackStatePropMask::Calibrated;
-
-          ACTS_VERBOSE("    processSurface: addTrackState");
-
-          // Add a <mask> TrackState entry multi trajectory. This allocates
-          // storage for all components, which we will set later.
+          // Add a <trackStateMask> TrackState entry multi trajectory. This
+          // allocates storage for all components, which we will set later.
           typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.makeTrackState(mask, result.lastTrackIndex);
+              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                          result.lastTrackIndex);
           std::size_t currentTrackIndex = trackStateProxy.index();
 
           // Set the trackStateProxy components with the state from the ongoing
@@ -552,17 +551,11 @@ class Gx2Fitter {
 
             auto& fittedStates = *result.fittedStates;
 
-            // Mask for the track states. We don't need Smoothed and Filtered
-            TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                      TrackStatePropMask::Jacobian |
-                                      TrackStatePropMask::Calibrated;
-
-            ACTS_VERBOSE("    processSurface: addTrackState");
-
-            // Add a <mask> TrackState entry multi trajectory. This allocates
-            // storage for all components, which we will set later.
+            // Add a <trackStateMask> TrackState entry multi trajectory. This
+            // allocates storage for all components, which we will set later.
             typename traj_t::TrackStateProxy trackStateProxy =
-                fittedStates.makeTrackState(mask, result.lastTrackIndex);
+                fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                            result.lastTrackIndex);
             std::size_t currentTrackIndex = trackStateProxy.index();
             {
               // Set the trackStateProxy components with the state from the
