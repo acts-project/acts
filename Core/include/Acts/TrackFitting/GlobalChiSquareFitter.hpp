@@ -51,12 +51,14 @@ namespace Acts::Experimental {
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
 
-// Add contribution from scattering
-// TODO use ActsMatrix<eBoundSize, 2>
-const Eigen::MatrixXd phiThetaProjector = []() {
-  Eigen::MatrixXd m = Eigen::MatrixXd::Zero(eBoundSize, 2);
-  m(2, 0) = 1;
-  m(3, 1) = 1;
+// A projector used for scattering. By using
+// Jacobian * phiThetaProjector
+// one gets only the derivatives for the variables phi and theta.
+const Eigen::Matrix<double, eBoundSize, 2> phiThetaProjector = [] {
+  Eigen::Matrix<double, eBoundSize, 2> m =
+      Eigen::Matrix<double, eBoundSize, 2>::Zero();
+  m(eBoundPhi, 0) = 1.0;
+  m(eBoundTheta, 1) = 1.0;
   return m;
 }();
 
@@ -64,7 +66,6 @@ const Eigen::MatrixXd phiThetaProjector = []() {
 constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
                                               TrackStatePropMask::Jacobian |
                                               TrackStatePropMask::Calibrated;
-
 }  // namespace Gx2fConstants
 
 /// Extension struct which holds delegates to customise the GX2F behaviour
@@ -1039,7 +1040,7 @@ class Gx2Fitter {
             // The position, where we need to insert the values in aMatrix and
             // bVector
             const std::size_t deltaPosition =
-                eBoundSize + 2 * geoIdVector.size();
+                eBoundSize + 2 * (geoIdVector.size() - 1);
 
             auto scatteringMapId = scatteringMap.find(geoId);
             const BoundVector& scatteringAngles =

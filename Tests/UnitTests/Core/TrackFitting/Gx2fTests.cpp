@@ -1025,11 +1025,11 @@ BOOST_AUTO_TEST_CASE(Material) {
 //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   // Convergence
-//  BOOST_CHECK_EQUAL(
-//      (track.template component<
-//          std::size_t,
-//          hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
-//      5);
+  BOOST_CHECK_EQUAL(
+      (track.template component<
+          std::size_t,
+          hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
+      5);
 
   ACTS_INFO("*** Test: Material -- Finish");
 }
