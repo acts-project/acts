@@ -93,23 +93,10 @@ jobs:
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
 
-      - run: |
-          ls -al
-          ls -al build
-          ls -al build/coverage
-
-      - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v2
-
-      - name: Run sonar-scanner
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
-        run: |
-          sonar-scanner \
-            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
-            --define sonar.coverageReportPaths=build/coverage/cov.xml \
-            --define sonar.projectVersion=$(cat next_version.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-build
+          path: build
 
   # build_performance:
   #   runs-on: ubuntu-latest
