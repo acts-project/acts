@@ -10,35 +10,85 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
-      - uses: actions/checkout@v4
+      - name: Download PR number artifact
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: actions/download-artifact@v4
         with:
-          repository: ${{ github.event.workflow_run.head_repository.full_name }}
-          ref: ${{ github.event.workflow_run.head_branch }}
-          fetch-depth: 0
-      - name: 'Download code coverage'
-        uses: actions/github-script@v6
+          workflow: Analysis
+          run_id: ${{ github.event.workflow_run.id }}
+          name: PR_NUMBER
+
+      - name: Read PR_NUMBER.txt
+        if: github.event.workflow_run.event == 'pull_request'
+        id: pr_number
+        uses: juliangruber/read-file-action@v1
         with:
-          script: |
-            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: context.payload.workflow_run.id,
-            });
-            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "coverage-build"
-            })[0];
-            let download = await github.rest.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            let fs = require('fs');
-            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/coverage-build.zip`, Buffer.from(download.data));
+          path: ./PR_NUMBER.txt
 
-      - name: 'Unzip code coverage'
-        run: unzip coverage-build.zip -d build
+      - name: Request GitHub API for PR data
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: octokit/request-action@v2.x
+        id: get_pr_data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          route: GET /repos/{full_name}/pulls/{number}
+          number: ${{ steps.pr_number.outputs.content }}
+          full_name: ${{ github.event.repository.full_name }}
 
+      - uses: actions/checkout@v3
+        with:
+            repository: ${{ github.event.workflow_run.head_repository.full_name }}
+            ref: ${{ github.event.workflow_run.head_branch }}
+            fetch-depth: 0
+
+      - name: Download coverage artifact
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          workflow: Analysis
+          run_id: ${{ github.event.workflow_run.id }}
+          name: build-coverage
+
+
+      # - name: Checkout base branch
+      #   if: github.event.workflow_run.event == 'pull_request'
+      #   run: |
+      #     git remote add upstream ${{ github.event.repository.clone_url }}
+      #     git fetch upstream
+      #     git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+      #     git checkout ${{ github.event.workflow_run.head_branch }}
+      #     git clean -ffdx && git reset --hard HEAD
+
+      # - uses: actions/checkout@v4
+      #   with:
+      #     repository: ${{ github.event.workflow_run.head_repository.full_name }}
+      #     ref: ${{ github.event.workflow_run.head_branch }}
+      #     fetch-depth: 0
+      # - name: 'Download code coverage'
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+      #          owner: context.repo.owner,
+      #          repo: context.repo.repo,
+      #          run_id: context.payload.workflow_run.id,
+      #       });
+      #       let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+      #         return artifact.name == "coverage-build"
+      #       })[0];
+      #       let download = await github.rest.actions.downloadArtifact({
+      #          owner: context.repo.owner,
+      #          repo: context.repo.repo,
+      #          artifact_id: matchArtifact.id,
+      #          archive_format: 'zip',
+      #       });
+      #       let fs = require('fs');
+      #       fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/coverage-build.zip`, Buffer.from(download.data));
+      #
+      # - name: 'Unzip code coverage'
+      #   run: unzip coverage-build.zip -d build
+      #
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2
 

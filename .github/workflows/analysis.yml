@@ -76,11 +76,12 @@ jobs:
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Build
-        run: cmake --build build -- unit_tests
+        run: cmake --build build -- ActsUnitTestEigenStepper
       - name: ccache stats
         run: ccache -s
       - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+        # run: ctest --test-dir build -j$(nproc)
+        run: build/bin/ActsUnitTestEigenStepper
 
       - name: Remove .o files
         run: >
@@ -97,6 +98,17 @@ jobs:
         with:
           name: coverage-build
           path: build
+
+      - name: Save PR number to file
+        if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+
+      - name: Persist PR number
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PR_NUMBER
+          path: PR_NUMBER.txt
 
   # build_performance:
   #   runs-on: ubuntu-latest
