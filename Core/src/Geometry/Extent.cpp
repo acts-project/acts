@@ -100,6 +100,20 @@ void Acts::Extent::set(BinningValue bValue, ActsScalar min, ActsScalar max) {
   m_constrains.set(bValue);
 }
 
+void Acts::Extent::setMin(BinningValue bValue, ActsScalar min) {
+  ActsScalar minval = min;
+  if (bValue == binR && minval < 0.) {
+    minval = 0.;
+  }
+  m_range[bValue].setMin(0u, minval);
+  m_constrains.set(bValue);
+}
+
+void Acts::Extent::setMax(BinningValue bValue, ActsScalar max) {
+  m_range[bValue].setMax(0u, max);
+  m_constrains.set(bValue);
+}
+
 void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
   m_envelope = envelope;
 }
