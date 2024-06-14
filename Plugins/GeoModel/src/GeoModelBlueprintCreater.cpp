@@ -14,11 +14,12 @@
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoModelDbHelper.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+
+#include <boost/algorithm/string.hpp>
 
 using namespace Acts::detail;
 
@@ -91,12 +92,12 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
         (!options.topBoundsOverride.empty() && volumeName == options.topEntry)
             ? options.topBoundsOverride
             : line.at(3);
-    std::vector<std::string> volumeInternals =
-        GeoModelDbHelper::tokenize(line.at(4), ":");
-    std::vector<std::string> volumeBinnings =
-        GeoModelDbHelper::tokenize(line.at(5), ";");
-    std::vector<std::string> volumeMaterials =
-        GeoModelDbHelper::tokenize(line.at(6), "|");
+    std::vector<std::string> volumeInternals;
+    boost::split(volumeInternals, line.at(4), boost::is_any_of(":"));
+    std::vector<std::string> volumeBinnings;
+    boost::split(volumeBinnings, line.at(5), boost::is_any_of(";"));
+    std::vector<std::string> volumeMaterials;
+    boost::split(volumeMaterials, line.at(6), boost::is_any_of("|"));
 
     // Split the bounds on the deliminater
     ACTS_DEBUG("Creating (" << volumeType << ") Blueprint node for volume "
@@ -176,8 +177,8 @@ Acts::GeoModelBlueprintCreater::createNode(
   Transform3 transform = Acts::Transform3::Identity();
   transform.translation() = translation;
 
-  std::vector<std::string> entryTypeSplit =
-      detail::GeoModelDbHelper::tokenize(entry.type, ":");
+  std::vector<std::string> entryTypeSplit;
+  boost::split(entryTypeSplit, entry.type, boost::is_any_of(":"));
   std::string entryType = entryTypeSplit[0u];
 
   // Check if material has to be attached
@@ -185,8 +186,8 @@ Acts::GeoModelBlueprintCreater::createNode(
       portalMaterialBinning;
   if (!entry.materials.empty()) {
     for (const auto& material : entry.materials) {
-      std::vector<std::string> materialTokens =
-          detail::GeoModelDbHelper::tokenize(material, ":");
+      std::vector<std::string> materialTokens;
+      boost::split(materialTokens, material, boost::is_any_of(":"));
       ACTS_DEBUG(" - Material detected for " << materialTokens[0u]);
       auto pPos = materialTokens[0u].find("p");
       if (pPos != std::string::npos) {
@@ -195,8 +196,8 @@ Acts::GeoModelBlueprintCreater::createNode(
         // Get the portal number
         unsigned int portalNumber = std::stoi(materialTokens[0u]);
         // Get the binning description - first split the string
-        std::vector<std::string> binningTokens =
-            detail::GeoModelDbHelper::tokenize(materialTokens[1u], ";");
+        std::vector<std::string> binningTokens;
+        boost::split(binningTokens, materialTokens[1u], boost::is_any_of(";"));
 
         std::vector<Experimental::ProtoBinning> protoBinnings;
         for (const auto& bToken : binningTokens) {
@@ -225,8 +226,8 @@ Acts::GeoModelBlueprintCreater::createNode(
           "GeoModelBlueprintCreater: Branch node '" + entry.name +
           "' has no children defined in blueprint table");
     }
-    std::vector<std::string> childrenNames =
-        GeoModelDbHelper::tokenize(entry.internals[1u], ",");
+    std::vector<std::string> childrenNames;
+    boost::split(childrenNames, entry.internals[1u], boost::is_any_of(","));
     // Create the sub nodes and keep track of the raw values
     for (const auto& childName : childrenNames) {
       std::string fChildName = entry.name + std::string("/") + childName;
@@ -318,8 +319,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
     }
 
     // Internal split of the internals
-    std::vector<std::string> internalsSplit =
-        detail::GeoModelDbHelper::tokenize(entry.internals[1u], ",");
+    std::vector<std::string> internalsSplit;
+    boost::split(internalsSplit, entry.internals[1u], boost::is_any_of(","));
 
     // Prepare an internal extent
     Extent internalExtent;
@@ -398,8 +399,8 @@ std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
 Acts::GeoModelBlueprintCreater::parseBounds(
     const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {
-  std::vector<std::string> boundsEntrySplit =
-      detail::GeoModelDbHelper::tokenize(boundsEntry, ",");
+  std::vector<std::string> boundsEntrySplit;
+  boost::split(boundsEntrySplit, boundsEntry, boost::is_any_of(","));
 
   // Create the return values
   Vector3 translation{0., 0., 0.};

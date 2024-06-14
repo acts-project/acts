@@ -8,14 +8,13 @@
 
 #include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 
-#include "Acts/Plugins/GeoModel/detail/GeoModelDbHelper.hpp"
+#include <boost/algorithm/string.hpp>
 
 Acts::Experimental::ProtoBinning
 Acts::detail::GeoModelBinningHelper::toProtoBinning(
     const std::string& binning, const std::optional<Extent>& extent) {
-  // The implementation of this function is not relevant for this example
-  std::vector<std::string> binningTokens =
-      Acts::detail::GeoModelDbHelper::tokenize(binning, ",");
+  std::vector<std::string> binningTokens;
+  boost::split(binningTokens, binning, boost::is_any_of(","));
   BinningValue bValue = toBinningValue(binningTokens[0]);
 
   std::vector<std::string> binningDetails = {binningTokens.begin() + 1,

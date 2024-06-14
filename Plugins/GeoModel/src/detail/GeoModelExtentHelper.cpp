@@ -9,15 +9,16 @@
 #include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 
 #include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoModelDbHelper.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+
+#include <boost/algorithm/string.hpp>
 
 std::vector<Acts::BinningValue>
 Acts::detail::GeoModelExentHelper::readBoundsConstaints(
     const std::string& boundsEntry, const std::string& ctype) {
-  std::vector<std::string> boundsEntrySplit =
-      GeoModelDbHelper::tokenize(boundsEntry, ",");
+  std::vector<std::string> boundsEntrySplit;
+  boost::split(boundsEntrySplit, boundsEntry, boost::is_any_of(","));
   if (boundsEntrySplit.size() < 2u) {
     throw std::invalid_argument(
         "GeoModelBlueprintCreater: Bounds entry has to have at least 2 "
@@ -56,8 +57,8 @@ Acts::detail::GeoModelExentHelper::readBinningConstraints(
     if (sbe.empty()) {
       continue;
     }
-    std::vector<std::string> sbTokens =
-        Acts::detail::GeoModelDbHelper::tokenize(sbe, ",");
+    std::vector<std::string> sbTokens;
+    boost::split(sbTokens, sbe, boost::is_any_of(","));
     BinningValue bv =
         Acts::detail::GeoModelBinningHelper::toBinningValue(sbTokens[0], false);
     if (bv != binValues && sbTokens.size() > 1u) {
@@ -120,8 +121,8 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
         // Add the envelope
         ActsScalar envelope = 0.;
         if (value.size() > 2u) {
-          std::vector<std::string> valEntry =
-              GeoModelDbHelper::tokenize(value, "+");
+          std::vector<std::string> valEntry;
+          boost::split(valEntry, value, boost::is_any_of("+"));
           envelope = std::stod(valEntry[1]);
         }
 

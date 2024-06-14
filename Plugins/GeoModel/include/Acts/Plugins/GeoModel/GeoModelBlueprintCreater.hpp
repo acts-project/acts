@@ -38,7 +38,7 @@ class GeoModelBlueprintCreater {
     /// The detector surfaces - leave empty if filling is not done
     /// with a kdtree sorting structure
     std::vector<std::shared_ptr<Surface>> detectorSurfaces = {};
-    /// The binning values - see above
+    /// The binning values for the KDTree sorting
     std::vector<BinningValue> kdtBinning = {};
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
@@ -75,10 +75,13 @@ class GeoModelBlueprintCreater {
     }
   };
 
-  // Blueprint table is:
-  // cursor.execute("CREATE TABLE Blueprint(id INT, type TEXT, name TEXT, bounds
-  // TEXT, internals TEXT, binnings TEXT, materials TEXT)")
-  //
+  /// Table entry representing the Blueprint tablein the database
+  ///
+  /// Blueprint table is:
+  ///
+  /// cursor.execute("CREATE TABLE Blueprint(id INT, type TEXT, name TEXT,
+  /// bounds TEXT, internals TEXT, binnings TEXT, materials TEXT)")
+  ///
   struct TableEntry {
     int id;
     std::string type;
