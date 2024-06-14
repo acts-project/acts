@@ -28,4 +28,5 @@ target_sources(
     CurvilinearSurface.cpp
     detail/AlignmentHelper.cpp
     detail/AnnulusBoundsHelper.cpp
+    detail/MergeHelper.cpp
 )
