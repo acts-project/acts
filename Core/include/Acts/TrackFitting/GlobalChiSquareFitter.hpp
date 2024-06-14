@@ -535,12 +535,9 @@ class Gx2Fitter {
                                                   << " detected.");
 
           // We only create track states here if there is already a measurement
-          // detected or if the surface has material (no holes before the first
-          // measurement)
-          if (result.measurementStates > 0
-              // || surface->surfaceMaterial() != nullptr
-          ) {
-            ACTS_VERBOSE("Handle hole.");
+          // detected (no holes before the first measurement)
+          if (result.measurementStates > 0) {
+            ACTS_DEBUG("    Handle hole.");
 
             auto& fittedStates = *result.fittedStates;
 
@@ -599,7 +596,7 @@ class Gx2Fitter {
 
             ++result.processedStates;
           } else {
-            ACTS_VERBOSE("Ignoring hole, because no preceding measurements.");
+            ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
 
           if (surface->surfaceMaterial() != nullptr) {
