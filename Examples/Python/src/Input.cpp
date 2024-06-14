@@ -92,8 +92,8 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthInputReader, mex,
 			     "RootAthInputReader",treename,
 			     inputfile, outputMeasurements, 
-                 outputPixelSpacePoints,outputStripSpacePoints,
-                 outputSpacePoints);
+                 outputPixelSpacePoints, outputStripSpacePoints,
+                 outputSpacePoints, outputClusters);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
