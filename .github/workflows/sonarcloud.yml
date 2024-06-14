@@ -27,7 +27,7 @@ jobs:
                run_id: context.payload.workflow_run.id,
             });
             for (artifact of allArtifacts.data.artifacts) {
-              console.log(`Artifact id is: ${artifact.id}`);
+              console.log(`Artifact #${artifact.id} ${artifact.name}`);
               let download = await github.rest.actions.downloadArtifact({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -38,6 +38,14 @@ jobs:
               fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/${artifact.name}.zip`, Buffer.from(download.data));
             }
             return true;
+
+      - name: Unzip artifacts
+        run: |
+          ls -al
+          unzip coverage-build.zip -d build
+          unzip PR_NUMBER.zip
+          ls -al
+
 
       # - name: Download PR workflow artifacts
       #   uses: actions/download-artifact@v4
