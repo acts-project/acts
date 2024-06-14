@@ -1,7 +1,7 @@
 name: Analysis
 
 on:
-  # push:
+  push:
     # branches:
     #   - main
   pull_request:
@@ -38,67 +38,67 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # - name: Cache build
-      #   uses: actions/cache/restore@v4
-      #   with:
-      #     path: ${{ github.workspace }}/ccache
-      #     key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-      #     restore-keys: |
-      #       ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_
-      #
-      # - name: Configure
-      #   run: >
-      #     ccache -z &&
-      #     cmake -B build -S .
-      #     -GNinja
-      #     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      #     -DCMAKE_BUILD_TYPE=Debug
-      #     -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
-      #     -DACTS_BUILD_UNITTESTS=on
-      #     -DACTS_BUILD_EXAMPLES_UNITTESTS=off
-      #     -DACTS_BUILD_EVERYTHING=ON
-      #     -DACTS_BUILD_ODD=OFF
-      #     -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      #     -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-      #     -DACTS_BUILD_ANALYSIS_APPS=ON
-      #     -DACTS_BUILD_PLUGIN_ONNX=ON
-      #     -DACTS_BUILD_PLUGIN_ACTSVG=ON
-      #     -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-      #     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-      # - name: Build
-      #   run: cmake --build build -- ActsUnitTestEigenStepper
-      # - name: ccache stats
-      #   run: ccache -s
-      # - name: Unit tests
-      #   # run: ctest --test-dir build -j$(nproc)
-      #   run: build/bin/ActsUnitTestEigenStepper
-      #
-      # - name: Remove .o files
-      #   run: >
-      #     du -sh build
-      #     && find build -name *.o -delete
-      #     && du -sh build
-      # - name: Coverage
-      #   run: >
-      #     pip3 install gcovr==7.2
-      #     && cd build
-      #     && /usr/bin/python3 ../CI/test_coverage.py
-      #
-      # - uses: actions/upload-artifact@v4
-      #   with:
-      #     name: coverage-build
-      #     path: build
-      #
-      # - name: Save PR number to file
-      #   if: github.event_name == 'pull_request'
-      #   run: echo ${{ github.event.number }} > PR_NUMBER.txt
-      #
-      # - name: Persist PR number
-      #   if: github.event_name == 'pull_request'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: PR_NUMBER
-      #     path: PR_NUMBER.txt
+      - name: Cache build
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
+          -DACTS_BUILD_UNITTESTS=on
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=off
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=OFF
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_BUILD_ANALYSIS_APPS=ON
+          -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Build
+        run: cmake --build build -- ActsUnitTestEigenStepper
+      - name: ccache stats
+        run: ccache -s
+      - name: Unit tests
+        # run: ctest --test-dir build -j$(nproc)
+        run: build/bin/ActsUnitTestEigenStepper
+
+      - name: Remove .o files
+        run: >
+          du -sh build
+          && find build -name *.o -delete
+          && du -sh build
+      - name: Coverage
+        run: >
+          pip3 install gcovr==7.2
+          && cd build
+          && /usr/bin/python3 ../CI/test_coverage.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-build
+          path: build
+
+      - name: Save PR number to file
+        if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+
+      - name: Persist PR number
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PR_NUMBER
+          path: PR_NUMBER.txt
 
   #
   # build_performance:
