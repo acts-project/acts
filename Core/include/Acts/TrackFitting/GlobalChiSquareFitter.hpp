@@ -272,7 +272,7 @@ void addToGx2fSums(
   // Create an extended Jacobian. This one contains only eBoundSize rows,
   // because the rest is irrelevant
   // TODO make dimsExtendedParams template with unrolling
-  const size_t dimsExtendedParams = aMatrixExtended.rows();
+  const std::size_t dimsExtendedParams = aMatrixExtended.rows();
 
   Eigen::MatrixXd extendedJacobian =
       Eigen::MatrixXd::Zero(eBoundSize, dimsExtendedParams);
@@ -452,6 +452,11 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
+    /// Mask for the track states. We don't need Smoothed and Filtered
+    const TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
+                                              TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated;
+
     /// TODO description
     std::unordered_map<GeometryIdentifier, ScatteringProperties>*
         scatteringMap = nullptr;
@@ -529,8 +534,7 @@ class Gx2Fitter {
         // Check if we have a measurement surface
         if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
             sourcelink_it != inputMeasurements->end()) {
-          ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-                                              << " detected.");
+          ACTS_VERBOSE("The surface contains a measurement.");
 
           // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
@@ -538,26 +542,21 @@ class Gx2Fitter {
 
           ACTS_VERBOSE(
               "Actor - indices before processing:"
-              << "\n    "
-              << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
-              << "\n    "
-              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n    "
-              << "result.fittedStates->size(): " << result.fittedStates->size())
+              << "\n    result.lastMeasurementIndex: "
+              << result.lastMeasurementIndex << "\n    result.lastTrackIndex: "
+              << result.lastTrackIndex << "\n    result.fittedStates->size(): "
+              << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
           auto& fittedStates = *result.fittedStates;
 
-          // Mask for the track states. We don't need Smoothed and Filtered
-          TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                    TrackStatePropMask::Jacobian |
-                                    TrackStatePropMask::Calibrated;
-
           ACTS_VERBOSE("    processSurface: addTrackState");
 
-          // Add a <mask> TrackState entry multi trajectory. This allocates
-          // storage for all components, which we will set later.
+          // Add a <trackStateMask> TrackState entry multi trajectory. This
+          // allocates storage for all components, which we will set later.
           typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.makeTrackState(mask, result.lastTrackIndex);
+              fittedStates.makeTrackState(trackStateMask,
+                                          result.lastTrackIndex);
           std::size_t currentTrackIndex = trackStateProxy.index();
 
           // Set the trackStateProxy components with the state from the ongoing
@@ -636,17 +635,13 @@ class Gx2Fitter {
 
             auto& fittedStates = *result.fittedStates;
 
-            // Mask for the track states. We don't need Smoothed and Filtered
-            TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                      TrackStatePropMask::Jacobian |
-                                      TrackStatePropMask::Calibrated;
-
             ACTS_VERBOSE("    processSurface: addTrackState");
 
-            // Add a <mask> TrackState entry multi trajectory. This allocates
-            // storage for all components, which we will set later.
+            // Add a <trackStateMask> TrackState entry multi trajectory. This
+            // allocates storage for all components, which we will set later.
             typename traj_t::TrackStateProxy trackStateProxy =
-                fittedStates.makeTrackState(mask, result.lastTrackIndex);
+                fittedStates.makeTrackState(trackStateMask,
+                                            result.lastTrackIndex);
             std::size_t currentTrackIndex = trackStateProxy.index();
             {
               // Set the trackStateProxy components with the state from the
@@ -923,7 +918,7 @@ class Gx2Fitter {
       chi2sum = 0;
       // We need 6 dimensions for the bound parameters and 2 * nMaterialSurfaces
       // dimensions for the scattering angles.
-      const size_t dimsExtendedParams = eBoundSize + 2 * nMaterialSurfaces;
+      const std::size_t dimsExtendedParams = eBoundSize + 2 * nMaterialSurfaces;
 
       Eigen::MatrixXd aMatrixExtended =
           Eigen::MatrixXd::Zero(dimsExtendedParams, dimsExtendedParams);
