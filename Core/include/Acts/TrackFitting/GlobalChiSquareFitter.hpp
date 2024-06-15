@@ -333,18 +333,26 @@ void addToGx2fSums(
                << "residual: " << (residual.transpose()).eval());
 
   auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
-//  std::cout << "DEBUG 1" << std::endl;
+  std::cout << "DEBUG 1" << std::endl;
   if (safeInvCovMeasurement) {
-//    std::cout << "DEBUG 2" << std::endl;
+    std::cout << "DEBUG 2" << std::endl;
     chi2sum +=
         (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-//    std::cout << "DEBUG 3" << std::endl;
+    std::cout << "DEBUG 3" << std::endl;
     aMatrixExtended +=
         (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
             .eval();
-//    std::cout << "DEBUG 4" << std::endl;
-    bVectorExtended += (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval();
-//    std::cout << "DEBUG 5" << std::endl;
+    std::cout << "DEBUG 4" << std::endl;
+    if (kMeasDim == 1){
+      bVectorExtended +=
+        (residual(0,0) * (*safeInvCovMeasurement)(0,0) * projJacobian)
+            .eval();
+    } else {
+      bVectorExtended +=
+          (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
+              .eval();
+    }
+    std::cout << "DEBUG 5" << std::endl;
     ACTS_VERBOSE(
         "aMatrixMeas:\n"
         << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
