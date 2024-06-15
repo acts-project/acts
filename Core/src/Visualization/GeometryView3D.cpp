@@ -34,32 +34,27 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
 
-#include <limits.h>
-#include <unistd.h>
-
 namespace {
 
 std::string joinPaths(const std::string& a, const std::string& b) {
-  if (b.substr(0, 1) == "/" || a.empty()) {
-    return b;
+  std::filesystem::path path_a(a);
+  std::filesystem::path path_b(b);
+
+  if (path_b.is_absolute() || path_a.empty()) {
+      return path_b.string();
   }
 
-  if (a.substr(a.size() - 1) == "/") {
-    return a.substr(a.size() - 1) + "/" + b;
-  }
-
-  return a + "/" + b;
+  return (path_a / path_b).string();
 }
 
 std::string getWorkingDirectory() {
-  char buffer[PATH_MAX];
-  return (getcwd(buffer, sizeof(buffer)) != nullptr ? std::string(buffer)
-                                                    : std::string(""));
+  return std::filesystem::current_path().string();
 }
 
 }  // namespace
