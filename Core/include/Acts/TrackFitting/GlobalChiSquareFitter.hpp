@@ -1047,7 +1047,7 @@ class Gx2Fitter {
           // TODO create function
           {
             // TODO use correct formula
-            const ActsScalar sinThetaLoc = 0.1;
+            const ActsScalar sinThetaLoc = 1;
 
             // The position, where we need to insert the values in aMatrix and
             // bVector
@@ -1063,12 +1063,12 @@ class Gx2Fitter {
             // Phi contribution
             aMatrixExtended(deltaPosition, deltaPosition) +=
                 invCov * sinThetaLoc * sinThetaLoc;
-            bVectorExtended(deltaPosition, 0) +=
+            bVectorExtended(deltaPosition, 0) -=
                 invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
 
             // Theta Contribution
             aMatrixExtended(deltaPosition + 1, deltaPosition + 1) += invCov;
-            bVectorExtended(deltaPosition + 1, 0) +=
+            bVectorExtended(deltaPosition + 1, 0) -=
                 invCov * scatteringAngles[eBoundTheta];
           }
         }
