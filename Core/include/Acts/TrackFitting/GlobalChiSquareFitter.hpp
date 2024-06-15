@@ -534,8 +534,8 @@ class Gx2Fitter {
 //                particle.mass(),
 //                particle.qOverP(),
 //                particle.absoluteCharge());
-//            const double sigma2 = sigma * sigma;
-            const double sigma2 = 0.001;
+            const double sigma = 0.001;
+            const double sigma2 = sigma * sigma;
 
             scatteringMap->emplace(
                 geoId, ScatteringProperties{BoundVector::Zero(), 1. / sigma2});
@@ -1058,12 +1058,12 @@ class Gx2Fitter {
             // Phi contribution
             aMatrixExtended(deltaPosition, deltaPosition) +=
                 invCov * sinThetaLoc * sinThetaLoc;
-            bVectorExtended(deltaPosition, 0) +=
+            bVectorExtended(deltaPosition, 0) -=
                 invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
 
             // Theta Contribution
             aMatrixExtended(deltaPosition + 1, deltaPosition + 1) += invCov;
-            bVectorExtended(deltaPosition + 1, 0) +=
+            bVectorExtended(deltaPosition + 1, 0) -=
                 invCov * scatteringAngles[eBoundTheta];
           }
         }
