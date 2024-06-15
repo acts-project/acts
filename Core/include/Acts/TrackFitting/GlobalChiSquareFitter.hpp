@@ -355,7 +355,7 @@ void addToGx2fSums(
       std::cout << "dims bVectorExtended: " << bVectorExtended.rows() << " x " << bVectorExtended.cols() << std::endl;
 
       bVectorExtended +=
-        (residual(0,0) * (*safeInvCovMeasurement)(0,0) * projJacobian)
+        (residual(0,0) * (*safeInvCovMeasurement)(0,0) * projJacobian.transpose())
             .eval();
     } else {
       bVectorExtended +=
