@@ -21,9 +21,6 @@ jobs:
           apt-get update
           apt-get install -y unzip
 
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-
       - name: 'Download artifact'
         uses: actions/github-script@v7
         id: dl-af
@@ -61,21 +58,6 @@ jobs:
           ls -al build
           ls -al build/coverage
 
-
-      # - name: Download PR workflow artifacts
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     run-id: ${{ github.event.workflow_run.id }}
-          # name: PR_NUMBER
-
-      # - name: Download PR number artifact
-      #   if: github.event.workflow_run.event == 'pull_request'
-      #   uses: dawidd6/action-download-artifact@v2
-      #   with:
-      #     # workflow: Analysis
-      #     run_id: ${{ github.event.workflow_run.id }}
-      #     name: PR_NUMBER
-
       - name: Read PR_NUMBER.txt
         if: github.event.workflow_run.event == 'pull_request'
         id: pr_number
@@ -94,12 +76,21 @@ jobs:
           number: ${{ steps.pr_number.outputs.content }}
           full_name: ${{ github.event.repository.full_name }}
 
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
       - name: Get upcoming version from milestones
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: acts-project/acts
         run: |
           CI/get_next_milestone.py | tee next_version.txt
+
+      - name: Read next_version.txt
+        id: next_version
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./next_version.txt
 
       # - uses: actions/checkout@v3
       #   with:
@@ -112,40 +103,12 @@ jobs:
         run: |
           git config --global --add safe.directory $PWD
           git remote add upstream ${{ github.event.repository.clone_url }}
-          git fetch upstream
+          git remote rename origin upstream
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
-          git checkout ${{ github.event.workflow_run.head_branch }}
-          # git clean -ffdx && git reset --hard HEAD
-
-      # - uses: actions/checkout@v4
-      #   with:
-      #     repository: ${{ github.event.workflow_run.head_repository.full_name }}
-      #     ref: ${{ github.event.workflow_run.head_branch }}
-      #     fetch-depth: 0
-      # - name: 'Download code coverage'
-      #   uses: actions/github-script@v6
-      #   with:
-      #     script: |
-      #       let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-      #          owner: context.repo.owner,
-      #          repo: context.repo.repo,
-      #          run_id: context.payload.workflow_run.id,
-      #       });
-      #       let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
-      #         return artifact.name == "coverage-build"
-      #       })[0];
-      #       let download = await github.rest.actions.downloadArtifact({
-      #          owner: context.repo.owner,
-      #          repo: context.repo.repo,
-      #          artifact_id: matchArtifact.id,
-      #          archive_format: 'zip',
-      #       });
-      #       let fs = require('fs');
-      #       fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/coverage-build.zip`, Buffer.from(download.data));
-      #
-      # - name: 'Unzip code coverage'
-      #   run: unzip coverage-build.zip -d build
-      #
+          git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          git fetch origin
+          git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          git clean -ffdx && git reset --hard HEAD
 
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2
@@ -165,9 +128,9 @@ jobs:
           sonar-scanner \
             --define sonar.cfamily.compile-commands="build/compile_commands.json" \
             --define sonar.coverageReportPaths=build/coverage/cov.xml \
-            --define sonar.projectVersion=$(cat next_version.txt) \
+            --define sonar.projectVersion=${{ steps.next_version.outputs.content }} \
             --define sonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
-            --define sonar.pullrequest.key=$(cat PR_NUMBER.txt) \
+            --define sonar.pullrequest.key=${{ steps.pr_number.outputs.content }} \
             --define sonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }} \
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
