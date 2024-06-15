@@ -333,30 +333,18 @@ void addToGx2fSums(
                << "residual: " << (residual.transpose()).eval());
 
   auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
-//  std::cout << "DEBUG 1" << std::endl;
   if (safeInvCovMeasurement) {
-//    std::cout << "DEBUG 2" << std::endl;
     chi2sum +=
         (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-//    std::cout << "DEBUG 3" << std::endl;
+
     aMatrixExtended +=
         (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
             .eval();
-    std::cout << "DEBUG 4" << std::endl;
-    std::cout << "residual: " << residual << std::endl;
-    std::cout << "(*safeInvCovMeasurement): " << (*safeInvCovMeasurement) << std::endl;
-    std::cout << "projJacobian:\n" << projJacobian << std::endl;
-    std::cout << "dims residual: " << residual.rows() << " x " << residual.cols() << std::endl;
-    std::cout << "dims (*safeInvCovMeasurement): " << (*safeInvCovMeasurement).rows() << " x " << (*safeInvCovMeasurement).cols() << std::endl;
-    std::cout << "dims projJacobian: " << projJacobian.rows() << " x " << projJacobian.cols() << std::endl;
-
-    std::cout << "bVectorExtended:\n" << bVectorExtended << std::endl;
-    std::cout << "dims bVectorExtended: " << bVectorExtended.rows() << " x " << bVectorExtended.cols() << std::endl;
 
     bVectorExtended +=
       (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
           .eval().transpose();
-//    std::cout << "DEBUG 5" << std::endl;
+
     ACTS_VERBOSE(
         "aMatrixMeas:\n"
         << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
@@ -374,7 +362,6 @@ void addToGx2fSums(
   } else {
     ACTS_WARNING("safeInvCovMeasurement failed");
   }
-  std::cout << "DEBUG 6" << std::endl;
 }
 
 /// calculateDeltaParams Function
@@ -539,9 +526,19 @@ class Gx2Fitter {
           if (scatteringMapId == scatteringMap->end()) {
             ACTS_DEBUG("    Create entry in scattering map.");
             // TODO use real covariance, maybe from surface->surfaceMaterial()
-            const ActsScalar cov = 1.;
+
+            /// Calculate the highland formula first
+//            const double sigma = Acts::computeMultipleScatteringTheta0(
+//                materialSlab,
+//                particle.absolutePdg(),
+//                particle.mass(),
+//                particle.qOverP(),
+//                particle.absoluteCharge());
+//            const double sigma2 = sigma * sigma;
+            const double sigma2 = 0.001;
+
             scatteringMap->emplace(
-                geoId, ScatteringProperties{BoundVector::Zero(), 1. / cov});
+                geoId, ScatteringProperties{BoundVector::Zero(), 1. / sigma2});
           } else {
             ACTS_DEBUG("    Found entry in scattering map.");
           }
@@ -937,7 +934,7 @@ class Gx2Fitter {
       // Usually, this only happens during the first iteration, due to bad
       // initial parameters.
       if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
-        ACTS_INFO("Did not find any measurements in nUpdate"
+        ACTS_INFO("Did not find any measurements in nUpdate "
                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
@@ -1027,14 +1024,8 @@ class Gx2Fitter {
                 "Found measurement with less than 1 or more than 6 "
                 "dimension(s).");
           }
-        } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
-          // Handle hole
-          // TODO: write hole handling
-          ACTS_VERBOSE("Placeholder: Handle hole.")
-        } else {
-          ACTS_WARNING("Unknown state encountered")
         }
-        // TODO: Material handling. Should be there for hole and measurement
+
         if (typeFlags.test(TrackStateFlag::MaterialFlag)) {
           // Get and store geoId for the current material surface
           const GeometryIdentifier geoId =
@@ -1051,7 +1042,7 @@ class Gx2Fitter {
           // TODO create function
           {
             // TODO use correct formula
-            const ActsScalar sinThetaLoc = 0.5;
+            const ActsScalar sinThetaLoc = 0.1;
 
             // The position, where we need to insert the values in aMatrix and
             // bVector
