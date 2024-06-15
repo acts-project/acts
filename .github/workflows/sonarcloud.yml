@@ -166,6 +166,6 @@ jobs:
             --define sonar.coverageReportPaths=build/coverage/cov.xml \
             --define sonar.projectVersion=$(cat next_version.txt) \
             --define sonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
-            --define sonar.pullrequest.key=${{ github.event.workflow_run.pull_requests[0].number }} \
-            --define sonar.pullrequest.branch=${{ github.event.workflow_run.pull_requests[0].head.ref }} \
-            --define sonar.pullrequest.base=${{ github.event.workflow_run.pull_requests[0].base.ref }}
+            --define sonar.pullrequest.key=$(cat PR_NUMBER.txt) \
+            --define sonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }} \
+            --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
