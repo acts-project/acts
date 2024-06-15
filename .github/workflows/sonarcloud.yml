@@ -48,11 +48,15 @@ jobs:
             }
             return true;
 
-      - name: Unzip artifacts
+      - name: Unzip coverage build
+        run: unzip coverage-build.zip -d build
+
+      - name: Unzip PR_NUMBER
+        if: github.event.workflow_run.event == 'pull_request'
+        run: unzip PR_NUMBER.zip
+
+      - name: Debug
         run: |
-          ls -al
-          unzip coverage-build.zip -d build
-          unzip PR_NUMBER.zip
           ls -al
           ls -al build
           ls -al build/coverage
