@@ -344,6 +344,16 @@ void addToGx2fSums(
             .eval();
     std::cout << "DEBUG 4" << std::endl;
     if (kMeasDim == 1){
+      std::cout << "residual: " << residual << std::endl;
+      std::cout << "(*safeInvCovMeasurement): " << (*safeInvCovMeasurement) << std::endl;
+      std::cout << "projJacobian:\n" << projJacobian << std::endl;
+      std::cout << "dims residual: " << residual.rows() << " x " << residual.cols() << std::endl;
+      std::cout << "dims (*safeInvCovMeasurement): " << (*safeInvCovMeasurement).rows() << " x " << (*safeInvCovMeasurement).cols() << std::endl;
+      std::cout << "dims projJacobian: " << projJacobian.rows() << " x " << projJacobian.cols() << std::endl;
+
+      std::cout << "bVectorExtended:\n" << bVectorExtended << std::endl;
+      std::cout << "dims bVectorExtended: " << bVectorExtended.rows() << " x " << bVectorExtended.cols() << std::endl;
+
       bVectorExtended +=
         (residual(0,0) * (*safeInvCovMeasurement)(0,0) * projJacobian)
             .eval();
