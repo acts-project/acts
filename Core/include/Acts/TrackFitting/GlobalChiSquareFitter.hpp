@@ -342,20 +342,20 @@ void addToGx2fSums(
     aMatrixExtended +=
         (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
             .eval();
-//    std::cout << "DEBUG 4" << std::endl;
-//    std::cout << "residual: " << residual << std::endl;
-//    std::cout << "(*safeInvCovMeasurement): " << (*safeInvCovMeasurement) << std::endl;
-//    std::cout << "projJacobian:\n" << projJacobian << std::endl;
-//    std::cout << "dims residual: " << residual.rows() << " x " << residual.cols() << std::endl;
-//    std::cout << "dims (*safeInvCovMeasurement): " << (*safeInvCovMeasurement).rows() << " x " << (*safeInvCovMeasurement).cols() << std::endl;
-//    std::cout << "dims projJacobian: " << projJacobian.rows() << " x " << projJacobian.cols() << std::endl;
-//
-//    std::cout << "bVectorExtended:\n" << bVectorExtended << std::endl;
-//    std::cout << "dims bVectorExtended: " << bVectorExtended.rows() << " x " << bVectorExtended.cols() << std::endl;
+    std::cout << "DEBUG 4" << std::endl;
+    std::cout << "residual: " << residual << std::endl;
+    std::cout << "(*safeInvCovMeasurement): " << (*safeInvCovMeasurement) << std::endl;
+    std::cout << "projJacobian:\n" << projJacobian << std::endl;
+    std::cout << "dims residual: " << residual.rows() << " x " << residual.cols() << std::endl;
+    std::cout << "dims (*safeInvCovMeasurement): " << (*safeInvCovMeasurement).rows() << " x " << (*safeInvCovMeasurement).cols() << std::endl;
+    std::cout << "dims projJacobian: " << projJacobian.rows() << " x " << projJacobian.cols() << std::endl;
+
+    std::cout << "bVectorExtended:\n" << bVectorExtended << std::endl;
+    std::cout << "dims bVectorExtended: " << bVectorExtended.rows() << " x " << bVectorExtended.cols() << std::endl;
 
     bVectorExtended +=
-      (residual * (*safeInvCovMeasurement) * projJacobian.transpose())
-          .eval();
+      (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
+          .eval().transpose();
 //    std::cout << "DEBUG 5" << std::endl;
     ACTS_VERBOSE(
         "aMatrixMeas:\n"
