@@ -156,7 +156,8 @@ jobs:
           ls -al build
           ls -al build/coverage
 
-      - name: Run sonar-scanner
+      - name: Run sonar-scanner (PR mode)
+        if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
@@ -169,3 +170,15 @@ jobs:
             --define sonar.pullrequest.key=$(cat PR_NUMBER.txt) \
             --define sonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }} \
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+
+      - name: Run sonar-scanner (push mode)
+        if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
+        run: |
+          sonar-scanner \
+            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
+            --define sonar.coverageReportPaths=build/coverage/cov.xml \
+            --define sonar.projectVersion=$(cat next_version.txt) \
+            --define sonar.branch.name=main
