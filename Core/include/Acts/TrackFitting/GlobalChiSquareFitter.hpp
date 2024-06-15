@@ -887,12 +887,12 @@ class Gx2Fitter {
     // nUpdate is initialized outside to save its state for the track
     std::size_t nUpdate = 0;
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
-      ACTS_VERBOSE("nUpdate = " << nUpdate + 1 << "/"
+      ACTS_INFO("nUpdate = " << nUpdate + 1 << "/"
                                 << gx2fOptions.nUpdateMax);
 
       // update params
       params.parameters() += deltaParams;
-      ACTS_VERBOSE("updated params:\n" << params);
+      ACTS_INFO("updated params:\n" << params);
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -1063,12 +1063,12 @@ class Gx2Fitter {
             // Phi contribution
             aMatrixExtended(deltaPosition, deltaPosition) +=
                 invCov * sinThetaLoc * sinThetaLoc;
-            bVectorExtended(deltaPosition, 0) -=
+            bVectorExtended(deltaPosition, 0) +=
                 invCov * scatteringAngles[eBoundPhi] * sinThetaLoc;
 
             // Theta Contribution
             aMatrixExtended(deltaPosition + 1, deltaPosition + 1) += invCov;
-            bVectorExtended(deltaPosition + 1, 0) -=
+            bVectorExtended(deltaPosition + 1, 0) +=
                 invCov * scatteringAngles[eBoundTheta];
           }
         }
@@ -1119,9 +1119,9 @@ class Gx2Fitter {
       for (std::size_t matSurface = 0; matSurface < geoIdVector.size();
            matSurface++) {
         const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-        std::cout << "delta phi theta:\n"
-                  << deltaParamsExtended.block<2, 1>(deltaPosition, 0)
-                  << std::endl;
+//        std::cout << "delta phi theta:\n"
+//                  << deltaParamsExtended.block<2, 1>(deltaPosition, 0)
+//                  << std::endl;
 
         auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
         if (scatteringMapId == scatteringMap.end()) {
