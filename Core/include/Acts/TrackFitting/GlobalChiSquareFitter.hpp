@@ -921,6 +921,11 @@ class Gx2Fitter {
                                                      propagationResult,
                                                      propagatorOptions, false);
 
+      if (!result.ok()) {
+        ACTS_ERROR("Propagation failed: " << result.error());
+        return result.error();
+      }
+
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
       auto& propRes = *result;
