@@ -4,7 +4,7 @@
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
 the core library requires a C++17 compatible compiler,
-[Boost](http://boost.org), and [Eigen](http://eigen.tuxfamily.org). The
+[Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
 
@@ -25,8 +25,8 @@ The following dependencies are required to build the ACTS core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.14
--   [Boost](http://boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
+-   [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
 components:
@@ -34,7 +34,7 @@ components:
 -   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
 -   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
--   [Geant4](http://geant4.org/) for some examples
+-   [Geant4](https://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
@@ -336,7 +336,7 @@ want and it will figure out the rest.
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the
 most common ones. For more details, have a look at the annotated list of [useful
-CMake variables](https://cmake.org/Wiki/CMake_Useful_Variables) or at the [CMake
+CMake variables](https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/Useful-Variables) or at the [CMake
 documentation](https://cmake.org/documentation/).
 
 | Option               | Description                                                                                                                       |
@@ -363,7 +363,7 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
-It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
+It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.com/) need to be installed on your machine):
 
 ```console
 $ git submodule init
