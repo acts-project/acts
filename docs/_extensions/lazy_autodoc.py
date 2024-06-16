@@ -75,7 +75,6 @@ def run() -> None:
 
     role_instances["struct"] |= {
         "Acts::DenseStepperPropagatorOptions",
-        "Acts::Experimental::DetectorNavigator::State",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
@@ -95,6 +94,7 @@ def run() -> None:
         "Acts::CutoutCylinderVolumeBounds",
         "Acts::GenericCuboidVolumeBounds",
         "Acts::TrapezoidVolumeBounds",
+        "Acts::CylinderVolumeStack",
         "Acts::GeometryObject",
         "Acts::TrackContainer",
         "Acts::ConeLayer",
