@@ -87,10 +87,10 @@ authors:
   given-names: Felix
   orcid: https://orcid.org/0009-0005-8975-2245
 cff-version: 1.1.0
-date-released: '2024-06-01'
+date-released: '2024-06-16'
 doi: 10.5281/zenodo.5141419
 license: MPL-2.0
 message: If you use this software, please cite it using these metadata.
 repository-code: https://github.com/acts-project/acts
 title: A Common Tracking Software Project
-version: v35.1.0
+version: v36.0.0
