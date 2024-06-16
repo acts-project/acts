@@ -4,7 +4,7 @@
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
 the core library requires a C++17 compatible compiler,
-[Boost](https://www.boost.org), and [Eigen](http://eigen.tuxfamily.org). The
+[Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
 
@@ -26,7 +26,7 @@ The following dependencies are required to build the ACTS core library:
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.14
 -   [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
+-   [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
 components:
