@@ -68,8 +68,8 @@ class GeometryIdentifier {
     // use compiler builtin to extract the number of trailing bits from the
     // mask. the builtin should be available on all supported compilers.
     // need unsigned long long version (...ll) to ensure std::uint64_t
-    // compatibility. WARNING undefined behaviour for mask == 0 which we should
-    // not have.
+    // compatibility.
+    // WARNING undefined behaviour for mask == 0 which we should not have.
     return __builtin_ctzll(mask);
   }
   /// Extract the masked bits from the encoded value.
