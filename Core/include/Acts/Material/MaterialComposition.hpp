@@ -38,8 +38,9 @@ class ElementFraction {
   /// @param e is the atomic number of the element
   /// @param f is the relative fraction and must be a value in [0,1]
   constexpr ElementFraction(unsigned int e, float f)
-      : m_element(static_cast<uint8_t>(e)),
-        m_fraction(static_cast<uint8_t>(f * UINT8_MAX)) {
+      : m_element(static_cast<std::uint8_t>(e)),
+        m_fraction(static_cast<std::uint8_t>(
+            f * std::numeric_limits<std::uint8_t>::max())) {
     assert((0u < e) && ("The atomic number must be positive"));
     assert((0.0f <= f) && (f <= 1.0f) && "Relative fraction must be in [0,1]");
   }
@@ -48,8 +49,8 @@ class ElementFraction {
   /// @param e is the atomic number of the element
   /// @param w is the integer weight and must be a value in [0,256)
   constexpr explicit ElementFraction(unsigned int e, unsigned int w)
-      : m_element(static_cast<uint8_t>(e)),
-        m_fraction(static_cast<uint8_t>(w)) {
+      : m_element(static_cast<std::uint8_t>(e)),
+        m_fraction(static_cast<std::uint8_t>(w)) {
     assert((0u < e) && ("The atomic number must be positive"));
     assert((w < 256u) && "Integer weight must be in [0,256)");
   }
@@ -66,7 +67,8 @@ class ElementFraction {
   constexpr uint8_t element() const { return m_element; }
   /// The relative fraction of this element.
   constexpr float fraction() const {
-    return static_cast<float>(m_fraction) / UINT8_MAX;
+    return static_cast<float>(m_fraction) /
+           std::numeric_limits<std::uint8_t>::max();
   }
 
  private:

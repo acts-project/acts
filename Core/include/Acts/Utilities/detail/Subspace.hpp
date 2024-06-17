@@ -61,7 +61,8 @@ namespace Acts::detail {
 /// @tparam kSize Size of the subspace
 template <std::size_t kFullSize, std::size_t kSize>
 class FixedSizeSubspace {
-  static_assert(kFullSize <= static_cast<std::size_t>(UINT8_MAX),
+  static_assert(kFullSize <= static_cast<std::size_t>(
+                                 std::numeric_limits<std::uint8_t>::max()),
                 "Full vector space size is larger than the supported range");
   static_assert(1u <= kSize, "Subspace size must be at least 1");
   static_assert(kSize <= kFullSize,
