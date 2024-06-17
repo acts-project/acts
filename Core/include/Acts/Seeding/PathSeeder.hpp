@@ -29,6 +29,11 @@ class PathSeeder {
     Vector3 ipDir;
     Vector3 ipVertex;
     std::vector<SourceLink> sourceLinks;
+
+    Seed() = delete;
+    Seed(ActsScalar ipPmag, Vector3 ipPdir, Vector3 ipPos,
+         std::vector<SourceLink> sls)
+        : ipP(ipPmag), ipDir(ipPdir), ipVertex(ipPos), sourceLinks(sls){};
   };
 
   using SourceLinkCalibrator =
@@ -84,16 +89,14 @@ class PathSeeder {
 
     // Get plane of the telescope
     // sensitive surfaces
-    BinningValue bin0, bin1;
+    BinningValue bin0 = binX;
+    BinningValue bin1 = binY;
     if (m_cfg.orientation == binX) {
       bin0 = binY;
       bin1 = binZ;
     } else if (m_cfg.orientation == binY) {
       bin0 = binX;
       bin1 = binZ;
-    } else {
-      bin0 = binX;
-      bin1 = binY;
     }
 
     // Create the seeds
@@ -121,12 +124,6 @@ class PathSeeder {
       }
       // Vector to store the source links
       std::vector<SourceLink> seedSourceLinks;
-
-      // Store the IP parameters
-      Seed seed;
-      seed.ipP = ipP;
-      seed.ipDir = ipDir;
-      seed.ipVertex = ipVertex;
 
       // Store the pivot source link
       seedSourceLinks.push_back(sl);
@@ -168,8 +165,9 @@ class PathSeeder {
         }
       }
 
-      // Add the source links to the seed
-      seed.sourceLinks = seedSourceLinks;
+      // Store the IP parameters and
+      // add the source links to the seed
+      Seed seed{ipP, ipDir, ipVertex, seedSourceLinks};
 
       // Add the seed to the list
       seeds.push_back(seed);

@@ -95,9 +95,9 @@ struct TestSourceLink final {
 
     const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
       const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-      if (trackingGeometry) {
+      if (trackingGeometry != nullptr) {
         return trackingGeometry->findSurface(testSourceLink.m_geometryId);
-      } else if (detector) {
+      } else if (detector != nullptr) {
         return *detector->sensitiveHierarchyMap().find(
             testSourceLink.m_geometryId);
       } else {
