@@ -46,9 +46,9 @@ void CheckMagneticFieldEqual(const Acts::MagneticFieldProvider& fieldProvider,
          covfieValueZ = covfieValues[2];
 
     auto isEqual =
-        error_margin_half_width < std::abs(covfieValueX - actsValueX) ||
-        error_margin_half_width < std::abs(covfieValueY - actsValueY) ||
-        error_margin_half_width < std::abs(covfieValueZ - actsValueZ);
+        std::abs(covfieValueX - actsValueX) <= error_margin_half_width &&
+        std::abs(covfieValueY - actsValueY) <= error_margin_half_width &&
+        std::abs(covfieValueZ - actsValueZ) <= error_margin_half_width;
 
     std::stringstream ss;
     ss << "Fields are not equal at position (" << x << ", " << y << ", " << z
@@ -56,7 +56,7 @@ void CheckMagneticFieldEqual(const Acts::MagneticFieldProvider& fieldProvider,
        << "), Covfie: (" << covfieValueX << ", " << covfieValueY << ", "
        << covfieValueZ << ")" << std::endl;
 
-    BOOST_CHECK_MESSAGE(!isEqual, ss.str());
+    BOOST_CHECK_MESSAGE(isEqual, ss.str());
   }
 }
 
@@ -86,10 +86,11 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
   auto field = Acts::CovfiePlugin::covfieField(actsField);
   auto view = typename decltype(field)::view_t(field);
 
-  std::array<std::array<float, 3>, 13> points = {{
+  std::array<std::array<float, 3>, 14> points = {{
       {0.f, 0.f, 0.f},
       {1.f, 1.f, 1.f},
       {2.f, 2.f, 2.f},
+      {2.9f, 2.9f, 2.9f},
       {1.2f, 2.5f, 0.8f},
       {0.7f, 1.9f, 2.3f},
       {2.1f, 0.3f, 1.5f},
@@ -129,10 +130,11 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField2) {
   auto field = Acts::CovfiePlugin::covfieField(actsField);
   auto view = typename decltype(field)::view_t(field);
 
-  std::array<std::array<float, 3>, 13> points = {{
+  std::array<std::array<float, 3>, 14> points = {{
       {8.f, 8.f, 8.f},
       {12.f, 12.f, 12.f},
       {16.f, 16.f, 16.f},
+      {19.9, 19.9, 19.9},
       {8.1f, 10.2f, 12.3f},
       {9.4f, 11.5f, 13.6f},
       {10.7f, 12.8f, 14.9f},

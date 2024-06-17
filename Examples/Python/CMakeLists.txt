@@ -197,7 +197,7 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_COVFIE)
+if(ACTS_BUILD_PLUGIN_TRACCC)
   target_link_libraries(ActsPythonBindings PUBLIC ActsPluginCovfie)
   target_sources(ActsPythonBindings PRIVATE src/Covfie.cpp)
 else()
