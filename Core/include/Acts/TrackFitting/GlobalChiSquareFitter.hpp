@@ -285,13 +285,8 @@ void addToGx2fSums(
 
   extendedJacobian.topLeftCorner<eBoundSize, eBoundSize>() = jacobianFromStart;
 
-  std::cout << "phiThetaProjector:\n"
-            << Gx2fConstants::phiThetaProjector << std::endl;
-
   for (std::size_t matSurface = 0;
        matSurface < jacobianFromStartMaterialVector.size(); matSurface++) {
-    std::cout << "tried to use material number: " << matSurface << "/"
-              << jacobianFromStartMaterialVector.size() << std::endl;
     const BoundMatrix jac = jacobianFromStartMaterialVector[matSurface];
 
     const ActsMatrix<eBoundSize, 2> jacPhiTheta =
@@ -299,8 +294,6 @@ void addToGx2fSums(
 
     extendedJacobian.block<eBoundSize, 2>(0, 6 + 2 * matSurface) = jacPhiTheta;
   }
-
-  std::cout << "extendedJacobian:\n" << extendedJacobian << std::endl;
 
   BoundVector predicted = trackState.predicted();
 
@@ -330,7 +323,8 @@ void addToGx2fSums(
                << projJacobian.eval() << "\n"
                << "projPredicted: " << (projPredicted.transpose()).eval()
                << "\n"
-               << "residual: " << (residual.transpose()).eval());
+               << "residual: " << (residual.transpose()).eval() << "\n"
+               << "extendedJacobian:\n" << extendedJacobian);
 
   auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
   if (safeInvCovMeasurement) {
@@ -1111,7 +1105,6 @@ class Gx2Fitter {
       // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
           aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
-      std::cout << "deltaParamsExtended:\n" << deltaParamsExtended << std::endl;
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
 
@@ -1119,9 +1112,6 @@ class Gx2Fitter {
       for (std::size_t matSurface = 0; matSurface < geoIdVector.size();
            matSurface++) {
         const std::size_t deltaPosition = eBoundSize + 2 * matSurface;
-//        std::cout << "delta phi theta:\n"
-//                  << deltaParamsExtended.block<2, 1>(deltaPosition, 0)
-//                  << std::endl;
 
         auto scatteringMapId = scatteringMap.find(geoIdVector[matSurface]);
         if (scatteringMapId == scatteringMap.end()) {
@@ -1139,6 +1129,8 @@ class Gx2Fitter {
                    << bVector << "\n"
                    << "deltaParams:\n"
                    << deltaParams << "\n"
+                   << "deltaParamsExtended:\n"
+                   << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << chi2sum);
 
