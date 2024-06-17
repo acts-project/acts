@@ -34,7 +34,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const std::string& name, const Transform3& transform) {
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   if (shape.typeID() == GeoTube::getClassTypeID()) {
-    const GeoTube& tube = dynamic_cast<const GeoTube&>(shape);
+    const GeoTube& tube = static_cast<const GeoTube&>(shape);
     std::shared_ptr<CylinderVolumeBounds> bounds =
         std::make_shared<CylinderVolumeBounds>(tube.getRMin(), tube.getRMax(),
                                                tube.getZHalfLength());
@@ -42,7 +42,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, transform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoTubs::getClassTypeID()) {
-    const GeoTubs& tubs = dynamic_cast<const GeoTubs&>(shape);
+    const GeoTubs& tubs = static_cast<const GeoTubs&>(shape);
     std::shared_ptr<CylinderVolumeBounds> bounds =
         std::make_shared<CylinderVolumeBounds>(tubs.getRMin(), tubs.getRMax(),
                                                tubs.getZHalfLength(),
@@ -55,7 +55,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, newTransform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoBox::getClassTypeID()) {
-    const GeoBox& box = dynamic_cast<const GeoBox&>(shape);
+    const GeoBox& box = static_cast<const GeoBox&>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(
             box.getXHalfLength(), box.getYHalfLength(), box.getZHalfLength());
@@ -71,7 +71,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     double zmin{0};
     double zmax{0};
     const GeoSimplePolygonBrep& brep =
-        dynamic_cast<const GeoSimplePolygonBrep&>(shape);
+        static_cast<const GeoSimplePolygonBrep&>(shape);
     brep.extent(xmin, ymin, zmin, xmax, ymax, zmax);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(xmax - xmin, ymax - ymin,
@@ -80,7 +80,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         portalGenerator, context, name, transform, bounds,
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
-    const GeoTrd& trd = dynamic_cast<const GeoTrd&>(shape);
+    const GeoTrd& trd = static_cast<const GeoTrd&>(shape);
     float x1 = trd.getXHalfLength1();
     float x2 = trd.getXHalfLength2();
     float y1 = trd.getYHalfLength1();
@@ -150,7 +150,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     double ymax{0};
     double zmin{0};
     double zmax{0};
-    const GeoShapeUnion& unionShape = dynamic_cast<const GeoShapeUnion&>(shape);
+    const GeoShapeUnion& unionShape = static_cast<const GeoShapeUnion&>(shape);
     unionShape.extent(xmin, ymin, zmin, xmax, ymax, zmax);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(xmax - xmin, ymax - ymin,
@@ -162,7 +162,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     // Go down the left side (opA) of the subtraction until we reach a normal
     // shape
     const GeoShapeSubtraction& subtractionShape =
-        dynamic_cast<const GeoShapeSubtraction&>(shape);
+        static_cast<const GeoShapeSubtraction&>(shape);
     const GeoShape* shapeA = subtractionShape.getOpA();
     return convertVolume(context, *shapeA, name, transform);
   } else if (shape.typeID() == GeoPcon::getClassTypeID()) {
@@ -173,7 +173,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     double ymax{0};
     double zmin{0};
     double zmax{0};
-    const GeoPcon& pcon = dynamic_cast<const GeoPcon&>(shape);
+    const GeoPcon& pcon = static_cast<const GeoPcon&>(shape);
     pcon.extent(xmin, ymin, zmin, xmax, ymax, zmax);
     std::shared_ptr<CuboidVolumeBounds> bounds =
         std::make_shared<CuboidVolumeBounds>(xmax - xmin, ymax - ymin,
@@ -183,7 +183,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         Experimental::tryAllPortalsAndSurfaces());
   }
   if (shape.typeID() == GeoShapeShift::getClassTypeID()) {
-    const GeoShapeShift& shiftShape = dynamic_cast<const GeoShapeShift&>(shape);
+    const GeoShapeShift& shiftShape = static_cast<const GeoShapeShift&>(shape);
     const GeoShape* shapeOp = shiftShape.getOp();
     Acts::Transform3 newTransform = Acts::Transform3::Identity();
     newTransform.translate(transform.translation());
