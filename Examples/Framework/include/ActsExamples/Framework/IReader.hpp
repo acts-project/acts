@@ -24,7 +24,8 @@ namespace ActsExamples {
 /// calls.
 class IReader : public SequenceElement {
  public:
-  /// Provide range of available events or [0, SIZE_MAX) if undefined.
+  /// Provide range of available events or [0,
+  /// std::numeric_limits<std::size_t>::max()) if undefined.
   ///
   /// The upper limit is exclusive, i.e. [0,3) means events 0, 1, and 2.
   virtual std::pair<std::size_t, std::size_t> availableEvents() const = 0;

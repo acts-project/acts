@@ -112,7 +112,6 @@ nitpicky = True
 nitpick_ignore = [
     ("cpp:identifier", "Acts"),
     ("cpp:identifier", "detail"),
-    ("cpp:identifier", "SIZE_MAX"),
     ("cpp:identifier", "M_PI"),
     ("cpp:identifier", "eSize"),
     ("cpp:identifier", "eBoundSize"),
