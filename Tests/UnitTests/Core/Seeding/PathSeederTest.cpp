@@ -295,7 +295,7 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
       "TelescopeDetector", volumes, Experimental::tryRootVolumes());
 
   return detector;
-};
+}
 
 std::vector<SourceLink> createSourceLinks(
     const GeometryContext& geoCtx, const Experimental::Detector& detector) {
