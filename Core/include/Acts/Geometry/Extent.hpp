@@ -111,6 +111,18 @@ class Extent {
   /// @param max the maximum parameter
   void set(BinningValue bValue, ActsScalar min, ActsScalar max);
 
+  /// Set a min value for a dedicated binning value
+  ///
+  /// @param bValue the binning identification
+  /// @param min the minimum parameter
+  void setMin(BinningValue bValue, ActsScalar min);
+
+  /// Set a max value for a dedicated binning value
+  ///
+  /// @param bValue the binning identification
+  /// @param max the maximum parameter
+  void setMax(BinningValue bValue, ActsScalar max);
+
   /// (re-)Set the envelope
   ///
   /// @param envelope new envelope to be set
