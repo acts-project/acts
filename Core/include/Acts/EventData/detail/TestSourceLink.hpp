@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Detector/Detector.hpp" 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -90,23 +90,21 @@ struct TestSourceLink final {
   constexpr std::size_t index() const { return sourceId; }
 
   struct SurfaceAccessor {
-        const Acts::TrackingGeometry* trackingGeometry = nullptr;
-        const Acts::Experimental::Detector* detector = nullptr;
+    const Acts::TrackingGeometry* trackingGeometry = nullptr;
+    const Acts::Experimental::Detector* detector = nullptr;
 
-        const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-        const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-            if (trackingGeometry) {
-                return trackingGeometry->findSurface(testSourceLink.m_geometryId);
-            }
-            else if (detector) {
-                return *detector->sensitiveHierarchyMap().find(
-                        testSourceLink.m_geometryId);
-            }
-            else {
-                throw std::runtime_error("No tracking geometry or detector set");
-            }
-        }
-    };
+    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+      if (trackingGeometry) {
+        return trackingGeometry->findSurface(testSourceLink.m_geometryId);
+      } else if (detector) {
+        return *detector->sensitiveHierarchyMap().find(
+            testSourceLink.m_geometryId);
+      } else {
+        throw std::runtime_error("No tracking geometry or detector set");
+      }
+    }
+  };
 };
 
 inline std::ostream& operator<<(std::ostream& os,
