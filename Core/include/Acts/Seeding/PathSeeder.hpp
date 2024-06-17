@@ -33,7 +33,10 @@ class PathSeeder {
     Seed() = delete;
     Seed(ActsScalar ipPmag, Vector3 ipPdir, Vector3 ipPos,
          std::vector<SourceLink> sls)
-        : ipP(ipPmag), ipDir(ipPdir), ipVertex(ipPos), sourceLinks(sls){};
+        : ipP(ipPmag),
+          ipDir(std::move(ipPdir)),
+          ipVertex(std::move(ipPos)),
+          sourceLinks(std::move(sls)){};
   };
 
   using SourceLinkCalibrator =
