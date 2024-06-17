@@ -41,8 +41,8 @@ void addCovfie(Context& ctx) {
   auto m = main.def_submodule("covfie_conversion",
                               "Submodule for covfie conversion");
 
-  declareCovfieField<Acts::CovfiePlugin::ConstantField>(
-      m, "CovfieConstantField");
+  declareCovfieField<Acts::CovfiePlugin::ConstantField>(m,
+                                                        "CovfieConstantField");
   declareCovfieField<Acts::CovfiePlugin::InterpolatedField>(
       m, "CovfieAffineLinearStridedField");
 

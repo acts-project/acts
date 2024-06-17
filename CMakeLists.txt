@@ -65,7 +65,7 @@ option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
 # alignment related options
 option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
-# examples related options
+# examples related optionsExplicitly set up vecmem for the project<br> type
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)

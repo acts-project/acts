@@ -54,10 +54,10 @@ ConstantField covfieField(const Acts::ConstantBField& magneticField);
 /// @param min (min_x, min_y, min_z)
 /// @param max (max_x, max_y, max_z)
 /// @return An affine linear strided covfie field.
-InterpolatedField covfieField(
-    const Acts::MagneticFieldProvider& magneticField,
-    Acts::MagneticFieldProvider::Cache& cache,
-    const std::vector<std::size_t>& nBins, const std::vector<double>& min,
-    const std::vector<double>& max);
+InterpolatedField covfieField(const Acts::MagneticFieldProvider& magneticField,
+                              Acts::MagneticFieldProvider::Cache& cache,
+                              const std::vector<std::size_t>& nBins,
+                              const std::vector<double>& min,
+                              const std::vector<double>& max);
 
 }  // namespace Acts::CovfiePlugin

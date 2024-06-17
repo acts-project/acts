@@ -39,7 +39,7 @@ namespace Acts::Python {
 /// @brief Get the field value without needing a cache.
 /// @note Does not return an Acts::Result, so will throw an error if the lookup fails.
 Acts::Vector3 getField(Acts::MagneticFieldProvider& self,
-                                    const Acts::Vector3& position) {
+                       const Acts::Vector3& position) {
   Acts::MagneticFieldContext mctx;
   Acts::MagneticFieldProvider::Cache cache = self.makeCache(mctx);
   auto lookupResult = self.getField(position, cache);
@@ -54,8 +54,8 @@ void addMagneticField(Context& ctx) {
 
   py::class_<Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::MagneticFieldProvider>>(
-      m, "MagneticFieldProvider").def("getField",
-           &getField);
+      m, "MagneticFieldProvider")
+      .def("getField", &getField);
 
   py::class_<Acts::InterpolatedMagneticField,
              std::shared_ptr<Acts::InterpolatedMagneticField>>(
