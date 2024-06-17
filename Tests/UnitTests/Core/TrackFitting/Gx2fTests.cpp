@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -714,7 +714,7 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -874,7 +874,7 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  TestSourceLink::SurfaceAccessor surfaceAccessor{detector.geometry.get()};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
