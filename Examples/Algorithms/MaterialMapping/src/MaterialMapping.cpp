@@ -125,7 +125,7 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
 }
 
 std::vector<std::pair<double, int>> MaterialMapping::scoringParameters(
-    uint64_t surfaceID) {
+    std::uint64_t surfaceID) {
   std::vector<std::pair<double, int>> scoringParameters;
 
   if (m_cfg.materialSurfaceMapper) {

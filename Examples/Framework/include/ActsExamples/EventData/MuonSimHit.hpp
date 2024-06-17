@@ -34,12 +34,12 @@ enum class MuonIdentifierFieldMaps {
   tube = 0,
 };
 struct muonMdtIdentifierFields {
-  int8_t stationName = 0;
-  int8_t stationEta = 0;
-  int8_t stationPhi = 0;
-  int8_t multilayer = 0;
-  int8_t tubeLayer = 0;
-  int8_t tube = 0;
+  std::int8_t stationName = 0;
+  std::int8_t stationEta = 0;
+  std::int8_t stationPhi = 0;
+  std::int8_t multilayer = 0;
+  std::int8_t tubeLayer = 0;
+  std::int8_t tube = 0;
 };
 muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
   muonMdtIdentifierFields f;
