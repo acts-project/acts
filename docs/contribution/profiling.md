@@ -43,7 +43,7 @@ An older version of pprof comes bundled with gperftools but using the newer Go v
 ### Install Go pprof (Optional)
 
 First, you must install Go. Instructions to do so are available [here](https://go.dev/doc/install).
-Optionally, you can install [Graphviz](http://www.graphviz.org/download/) to produce visualisations of profiles.
+Optionally, you can install [Graphviz](https://www.graphviz.org/download/) to produce visualisations of profiles.
 
 Then, run the following command to install pprof itself:
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,9 +49,14 @@ namespace Acts::Experimental {
 
 namespace Gx2fConstants {
 constexpr std::string_view gx2fnUpdateColumn = "Gx2fnUpdateColumn";
+
+// Mask for the track states. We don't need Smoothed and Filtered
+constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Predicted |
+                                              TrackStatePropMask::Jacobian |
+                                              TrackStatePropMask::Calibrated;
 }  // namespace Gx2fConstants
 
-/// Extension struct which holds delegates to customize the KF behavior
+/// Extension struct which holds delegates to customise the GX2F behaviour
 template <typename traj_t>
 struct Gx2FitterExtensions {
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
@@ -238,13 +243,17 @@ void addToGx2fSums(BoundMatrix& aMatrix, BoundVector& bVector, double& chi2sum,
                    const BoundMatrix& jacobianFromStart,
                    const track_state_t& trackState, const Logger& logger) {
   BoundVector predicted = trackState.predicted();
+
   ActsVector<kMeasDim> measurement = trackState.template calibrated<kMeasDim>();
+
   ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
+
   ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
 
   ActsMatrix<kMeasDim, eBoundSize> projJacobian = projector * jacobianFromStart;
+
   ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
 
   ActsVector<kMeasDim> residual = measurement - projPredicted;
@@ -440,41 +449,32 @@ class Gx2Fitter {
       auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
         ++result.surfaceCount;
-        ACTS_VERBOSE("Surface " << surface->geometryId() << " detected.");
+        const GeometryIdentifier geoId = surface->geometryId();
+        ACTS_DEBUG("Surface " << geoId << " detected.");
+
+        // Found material
+        if (surface->surfaceMaterial() != nullptr) {
+          ACTS_DEBUG("    The surface contains material.");
+        }
 
         // Check if we have a measurement surface
-        if (auto sourcelink_it = inputMeasurements->find(surface->geometryId());
+        if (auto sourcelink_it = inputMeasurements->find(geoId);
             sourcelink_it != inputMeasurements->end()) {
-          ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-                                              << " detected.");
+          ACTS_DEBUG("    The surface contains a measurement.");
 
           // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
                                              freeToBoundCorrection);
 
-          ACTS_VERBOSE(
-              "Actor - indices before processing:"
-              << "\n    "
-              << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
-              << "\n    "
-              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n    "
-              << "result.fittedStates->size(): " << result.fittedStates->size())
-
           // TODO generalize the update of the currentTrackIndex
           auto& fittedStates = *result.fittedStates;
 
-          // Mask for the track states. We don't need Smoothed and Filtered
-          TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                    TrackStatePropMask::Jacobian |
-                                    TrackStatePropMask::Calibrated;
-
-          ACTS_VERBOSE("    processSurface: addTrackState");
-
-          // Add a <mask> TrackState entry multi trajectory. This allocates
-          // storage for all components, which we will set later.
+          // Add a <trackStateMask> TrackState entry multi trajectory. This
+          // allocates storage for all components, which we will set later.
           typename traj_t::TrackStateProxy trackStateProxy =
-              fittedStates.makeTrackState(mask, result.lastTrackIndex);
-          std::size_t currentTrackIndex = trackStateProxy.index();
+              fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                          result.lastTrackIndex);
+          const std::size_t currentTrackIndex = trackStateProxy.index();
 
           // Set the trackStateProxy components with the state from the ongoing
           // propagation
@@ -513,15 +513,7 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // We count the processed measurement
           ++result.processedMeasurements;
-          ACTS_VERBOSE("Actor - indices after processing, before over writing:"
-                       << "\n    "
-                       << "result.lastMeasurementIndex: "
-                       << result.lastMeasurementIndex << "\n    "
-                       << "trackStateProxy.index(): " << trackStateProxy.index()
-                       << "\n    "
-                       << "result.lastTrackIndex: " << result.lastTrackIndex
-                       << "\n    "
-                       << "currentTrackIndex: " << currentTrackIndex)
+
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
 
@@ -543,27 +535,19 @@ class Gx2Fitter {
                                                   << " detected.");
 
           // We only create track states here if there is already a measurement
-          // detected or if the surface has material (no holes before the first
-          // measurement)
-          if (result.measurementStates > 0
-              // || surface->surfaceMaterial() != nullptr
-          ) {
-            ACTS_VERBOSE("Handle hole.");
+          // detected (no holes before the first measurement)
+          if (result.measurementStates > 0) {
+            ACTS_DEBUG("    Handle hole.");
 
             auto& fittedStates = *result.fittedStates;
 
-            // Mask for the track states. We don't need Smoothed and Filtered
-            TrackStatePropMask mask = TrackStatePropMask::Predicted |
-                                      TrackStatePropMask::Jacobian |
-                                      TrackStatePropMask::Calibrated;
-
-            ACTS_VERBOSE("    processSurface: addTrackState");
-
-            // Add a <mask> TrackState entry multi trajectory. This allocates
-            // storage for all components, which we will set later.
+            // Add a <trackStateMask> TrackState entry multi trajectory. This
+            // allocates storage for all components, which we will set later.
             typename traj_t::TrackStateProxy trackStateProxy =
-                fittedStates.makeTrackState(mask, result.lastTrackIndex);
-            std::size_t currentTrackIndex = trackStateProxy.index();
+                fittedStates.makeTrackState(Gx2fConstants::trackStateMask,
+                                            result.lastTrackIndex);
+            const std::size_t currentTrackIndex = trackStateProxy.index();
+
             {
               // Set the trackStateProxy components with the state from the
               // ongoing propagation
@@ -604,16 +588,6 @@ class Gx2Fitter {
               }
             }
 
-            ACTS_VERBOSE(
-                "Actor - indices after processing, before over writing:"
-                << "\n    "
-                << "result.lastMeasurementIndex: "
-                << result.lastMeasurementIndex << "\n    "
-                << "trackStateProxy.index(): " << trackStateProxy.index()
-                << "\n    "
-                << "result.lastTrackIndex: " << result.lastTrackIndex
-                << "\n    "
-                << "currentTrackIndex: " << currentTrackIndex)
             result.lastTrackIndex = currentTrackIndex;
 
             if (trackStateProxy.typeFlags().test(TrackStateFlag::HoleFlag)) {
@@ -623,7 +597,7 @@ class Gx2Fitter {
 
             ++result.processedStates;
           } else {
-            ACTS_VERBOSE("Ignoring hole, because no preceding measurements.");
+            ACTS_DEBUG("    Ignoring hole, because no preceding measurements.");
           }
 
           if (surface->surfaceMaterial() != nullptr) {
@@ -633,12 +607,12 @@ class Gx2Fitter {
             // MaterialUpdateStage::FullUpdate);
           }
         } else {
-          ACTS_INFO("Actor: This case is not implemented yet")
+          ACTS_INFO("Surface " << geoId << " has no measurement/material/hole.")
         }
       }
-      ACTS_DEBUG("result.processedMeasurements: "
-                 << result.processedMeasurements << "\n"
-                 << "inputMeasurements.size(): " << inputMeasurements->size())
+      ACTS_VERBOSE("result.processedMeasurements: "
+                   << result.processedMeasurements << "\n"
+                   << "inputMeasurements.size(): " << inputMeasurements->size())
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -700,7 +674,7 @@ class Gx2Fitter {
       const -> std::enable_if_t<
           !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                  holder_t>::TrackProxy>> {
-    // Preprocess Measurements (Sourcelinks -> map)
+    // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -792,6 +766,11 @@ class Gx2Fitter {
       auto result = m_propagator.template makeResult(std::move(propagatorState),
                                                      propagationResult,
                                                      propagatorOptions, false);
+
+      if (!result.ok()) {
+        ACTS_ERROR("Propagation failed: " << result.error());
+        return result.error();
+      }
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
