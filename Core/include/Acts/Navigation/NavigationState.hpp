@@ -32,8 +32,7 @@ class Portal;
 class Detector;
 class DetectorVolume;
 using BoundingBox =
-  Acts::AxisAlignedBoundingBox<DetectorVolume,
-                                Acts::ActsScalar, 3>;
+    Acts::AxisAlignedBoundingBox<DetectorVolume, Acts::ActsScalar, 3>;
 
 /// @brief A navigation state struct that is holding the current navigation information
 ///
