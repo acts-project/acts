@@ -26,6 +26,26 @@ type_list = [
 github = "GITHUB_ACTIONS" in os.environ
 
 
+def handle_file(file: Path, fix: bool, c_type: str) -> list[tuple[int, str]]:
+    ex = re.compile(rf"\b(?<!std::){c_type}\b")
+
+    content = file.read_text()
+    lines = content.splitlines()
+
+    changed_lines = []
+
+    for i, oline in enumerate(lines):
+        line, n_subs = ex.subn(rf"std::{c_type}", oline)
+        lines[i] = line
+        if n_subs > 0:
+            changed_lines.append((i, oline))
+
+    if fix and len(changed_lines) > 0:
+        file.write_text("\n".join(lines) + "\n")
+
+    return changed_lines
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("input")
@@ -72,26 +92,6 @@ def main():
                             )
 
     return exit_code
-
-
-def handle_file(file: Path, fix: bool, c_type: str) -> list[tuple[int, str]]:
-    ex = re.compile(rf"\b(?<!std::){c_type}\b")
-
-    content = file.read_text()
-    lines = content.splitlines()
-
-    changed_lines = []
-
-    for i, oline in enumerate(lines):
-        line, n_subs = ex.subn(rf"std::{c_type}", oline)
-        lines[i] = line
-        if n_subs > 0:
-            changed_lines.append((i, oline))
-
-    if fix and len(changed_lines) > 0:
-        file.write_text("\n".join(lines) + "\n")
-
-    return changed_lines
 
 
 if "__main__" == __name__:
