@@ -178,8 +178,9 @@ inline Acts::BoundaryCheck::BoundaryCheck(bool check)
 inline Acts::BoundaryCheck::BoundaryCheck(bool checkLocal0, bool checkLocal1,
                                           double tolerance0, double tolerance1)
     : m_weight(SquareMatrix2::Identity()),
-      m_tolerance(checkLocal0 ? tolerance0 : DBL_MAX,
-                  checkLocal1 ? tolerance1 : DBL_MAX),
+      m_tolerance(
+          checkLocal0 ? tolerance0 : std::numeric_limits<double>::max(),
+          checkLocal1 ? tolerance1 : std::numeric_limits<double>::max()),
       m_type(Type::eAbsolute) {}
 
 inline Acts::BoundaryCheck::BoundaryCheck(const SquareMatrix2& localCovariance,

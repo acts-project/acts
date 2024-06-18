@@ -55,7 +55,8 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
+  const std::uint32_t int_rnd = static_cast<std::uint32_t>(
+      std::numeric_limits<std::uint32_t>::max() * rnd);
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   std::size_t iBin = std::min(
@@ -77,7 +78,8 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
+  const std::uint32_t int_rnd = static_cast<std::uint32_t>(
+      std::numeric_limits<std::uint32_t>::max() * rnd);
   // Fast exit for non-normalised CDFs like interaction probability
   if (int_rnd > distribution.second.back()) {
     return std::numeric_limits<Scalar>::infinity();

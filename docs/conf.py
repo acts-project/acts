@@ -62,7 +62,7 @@ linkcheck_retries = 5
 linkcheck_ignore = [
     r"https://doi.org/.*",
     r"https://cernvm.cern.ch/.*",
-    r"http://eigen.tuxfamily.org.*",
+    r"https://eigen.tuxfamily.org.*",
     r"https://pythia.org.*",
     r"https://lcginfo.cern.ch/.*",
     r"https://.*\.?intel.com/.*",
@@ -112,7 +112,6 @@ nitpicky = True
 nitpick_ignore = [
     ("cpp:identifier", "Acts"),
     ("cpp:identifier", "detail"),
-    ("cpp:identifier", "SIZE_MAX"),
     ("cpp:identifier", "M_PI"),
     ("cpp:identifier", "eSize"),
     ("cpp:identifier", "eBoundSize"),
