@@ -181,13 +181,13 @@ struct Gx2FitterResult {
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  // Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
   std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This corresponds to the last state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  // Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
   std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // The optional Parameters at the provided surface
@@ -766,6 +766,11 @@ class Gx2Fitter {
       auto result = m_propagator.template makeResult(std::move(propagatorState),
                                                      propagationResult,
                                                      propagatorOptions, false);
+
+      if (!result.ok()) {
+        ACTS_ERROR("Propagation failed: " << result.error());
+        return result.error();
+      }
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
