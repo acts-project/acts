@@ -12,7 +12,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <any>
@@ -21,6 +23,7 @@
 
 namespace Acts {
 
+using Frustum3 = Acts::Frustum<Acts::ActsScalar, 3, 3>;
 class Surface;
 
 namespace Experimental {
@@ -28,6 +31,9 @@ namespace Experimental {
 class Portal;
 class Detector;
 class DetectorVolume;
+using BoundingBox =
+  Acts::AxisAlignedBoundingBox<DetectorVolume,
+                                Acts::ActsScalar, 3>;
 
 /// @brief A navigation state struct that is holding the current navigation information
 ///
