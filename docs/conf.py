@@ -60,8 +60,8 @@ myst_dmath_allow_labels = True
 
 linkcheck_retries = 5
 linkcheck_ignore = [
-    r"https://cbea.ms/.*",
-    r"https://eigen.tuxfamily.org.*",
+    r"https://cbea.ms/.*",  # no certificate on 2024-06-18
+    r"https://eigen.tuxfamily.org.*",  # frequently down
 ]
 
 # -- Options for HTML output --------------------------------------------------
