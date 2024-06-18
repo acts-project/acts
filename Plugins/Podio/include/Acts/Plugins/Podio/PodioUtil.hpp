@@ -27,7 +27,7 @@ class Surface;
 namespace Acts {
 namespace PodioUtil {
 
-using Identifier = uint64_t;
+using Identifier = std::uint64_t;
 constexpr Identifier kNoIdentifier = std::numeric_limits<Identifier>::max();
 constexpr int kNoSurface = -1;
 

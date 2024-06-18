@@ -54,7 +54,8 @@ namespace {
 ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
                             const G4StepPoint* postStepPoint,
                             ActsFatras::Barcode particleId,
-                            Acts::GeometryIdentifier geoId, int32_t index) {
+                            Acts::GeometryIdentifier geoId,
+                            std::int32_t index) {
   static constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;

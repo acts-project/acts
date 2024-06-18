@@ -51,7 +51,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType, deviceHint);
 
-  const int64_t numAllFeatures = inputValues.size() / numNodes;
+  const std::int64_t numAllFeatures = inputValues.size() / numNodes;
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information: " << [&]() {
