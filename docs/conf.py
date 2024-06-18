@@ -60,14 +60,8 @@ myst_dmath_allow_labels = True
 
 linkcheck_retries = 5
 linkcheck_ignore = [
-    r"https://doi.org/.*",
-    r"https://cernvm.cern.ch/.*",
+    r"https://cbea.ms/.*",
     r"https://eigen.tuxfamily.org.*",
-    r"https://pythia.org.*",
-    r"https://lcginfo.cern.ch/.*",
-    r"https://.*\.?intel.com/.*",
-    r"https://www.conventionalcommits.org/.*",
-    r"https://cds.cern.ch/record/.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------
