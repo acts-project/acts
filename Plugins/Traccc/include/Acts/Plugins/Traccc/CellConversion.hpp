@@ -34,24 +34,6 @@
 #include <tuple>
 #include <utility>
 
-namespace {
-
-/// Comparator used for sorting cells. This sorting is one of the assumptions
-/// made in the clusterization algorithm
-struct cell_order {
-  bool operator()(const traccc::cell& lhs, const traccc::cell& rhs) const {
-    if (lhs.module_link != rhs.module_link) {
-      return lhs.module_link < rhs.module_link;
-    } else if (lhs.channel1 != rhs.channel1) {
-      return (lhs.channel1 < rhs.channel1);
-    } else {
-      return (lhs.channel0 < rhs.channel0);
-    }
-  }
-};  // struct cell_order
-
-}  // namespace
-
 namespace Acts::TracccPlugin {
 
 /// @brief Converts a "geometry ID -> traccc cells" map to traccc cells and modules.
@@ -61,36 +43,10 @@ namespace Acts::TracccPlugin {
 /// @param dconfig The traccc digitization configuration.
 /// @param barcode_map A map from Acts geometry ID value to detray barcode.
 /// @return A tuple containing the traccc cells (first item) and traccc modules (second item).
-inline auto createCellsAndModules(
+inline std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_types::host> createCellsAndModules(
     vecmem::memory_resource* mr,
-    std::map<std::uint64_t, std::vector<traccc::cell>> cellsMap,
+    std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>> cellsMap,
     const traccc::geometry* geom, const traccc::digitization_config* dconfig,
-    const std::map<std::uint64_t, detray::geometry::barcode>* barcodeMap) {
-  traccc::io::cell_reader_output out(mr);
-
-  // Sort the cells.
-  for (auto& [_, cells] : cellsMap) {
-    std::sort(cells.begin(), cells.end(), cell_order());
-  }
-
-  // Fill the output containers with the ordered cells and modules.
-  for (const auto& [originalGeometryID, cells] : cellsMap) {
-    // Modify the geometry ID of the module if a barcode map is
-    // provided.
-    std::uint64_t geometryID = (barcodeMap != nullptr)
-                                   ? barcodeMap->at(originalGeometryID).value()
-                                   : originalGeometryID;
-
-    // Add the module and its cells to the output.
-    out.modules.push_back(
-        Detail::get_module(geometryID, geom, dconfig, originalGeometryID));
-    for (auto& cell : cells) {
-      out.cells.push_back(cell);
-      // Set the module link.
-      out.cells.back().module_link = out.modules.size() - 1;
-    }
-  }
-  return std::make_tuple(std::move(out.cells), std::move(out.modules));
-}
+    const std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>* barcodeMap);
 
 }  // namespace Acts::TracccPlugin

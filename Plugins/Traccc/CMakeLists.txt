@@ -1,9 +1,11 @@
 add_library(
-  ActsPluginTraccc INTERFACE)
+  ActsPluginTraccc SHARED
+  src/Detail/Module.cpp
+  src/CellConversion.cpp)
 
 target_include_directories(
   ActsPluginTraccc
-  INTERFACE
+  PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(

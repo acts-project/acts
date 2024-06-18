@@ -68,13 +68,13 @@ inline Acts::BoundIndices boundIndex(
 template <std::size_t dim>
 inline Acts::Measurement<Acts::BoundIndices, dim> measurement(
     const traccc::measurement& m, const Acts::SourceLink sl) {
-  auto params = Detail::newVector<dim>(m.local);
+  auto params = detail::toActsVector<dim>(m.local);
   std::array<Acts::BoundIndices, dim> indices;
   for (unsigned int i = 0; i < dim; i++) {
     indices[i] = boundIndex(traccc::bound_indices(m.subs.get_indices()[i]));
   }
   auto cov = Eigen::DiagonalMatrix<Acts::ActsScalar, static_cast<int>(dim)>(
-                 Detail::newVector<dim>(m.variance))
+                 detail::toActsVector<dim>(m.variance))
                  .toDenseMatrix();
   return Acts::Measurement<Acts::BoundIndices, dim>(std::move(sl), indices,
                                                     params, cov);
