@@ -74,15 +74,15 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   TFile* m_outputFile = nullptr;
   TTree* m_outputTree = nullptr;
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  uint64_t m_measurementId_1 = 0;
-  uint64_t m_measurementId_2 = 0;
-  uint64_t m_measurementId_3 = 0;
+  std::uint64_t m_measurementId_1 = 0;
+  std::uint64_t m_measurementId_2 = 0;
+  std::uint64_t m_measurementId_3 = 0;
   /// Space point surface identifier.
-  uint64_t m_geometryId_1 = 0;
-  uint64_t m_geometryId_2 = 0;
-  uint64_t m_geometryId_3 = 0;
+  std::uint64_t m_geometryId_1 = 0;
+  std::uint64_t m_geometryId_2 = 0;
+  std::uint64_t m_geometryId_3 = 0;
   /// Global space point position components in mm. init to NaN
   float m_x_1 = std::numeric_limits<float>::signaling_NaN();
   float m_x_2 = std::numeric_limits<float>::signaling_NaN();
