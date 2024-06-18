@@ -129,7 +129,7 @@ struct FrustumNavigation : public IInternalNavigation {
     if (nState.surfaceCandidates.empty()) {
       // Fill internal portals if existing
       auto topBoxCopy = nState.topBox;
-      while (topBoxCopy) {
+      while (topBoxCopy != nullptr) {
         if (topBoxCopy->intersect(*nState.frustum)) {
           if (topBoxCopy->hasEntity()) {
             const auto& portals = topBoxCopy->entity()->portals();

@@ -82,7 +82,7 @@ class DetectorNavigator {
                              std::shared_ptr<const Logger> _logger =
                                  getDefaultLogger("DetectorNavigator",
                                                   Logging::Level::INFO))
-      : m_cfg{cfg}, m_logger{std::move(_logger)} {}
+      : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
   State makeState(const Surface* startSurface,
                   const Surface* targetSurface) const {
@@ -158,14 +158,14 @@ class DetectorNavigator {
       ACTS_VERBOSE("Assigning detector from the config.");
       nState.currentDetector = m_cfg.detector;
       if (m_cfg.frustumNavigator) {
-        if (!m_cfg.topBox) {
+        if (m_cfg.topBox == nullptr) {
           throw std::invalid_argument(
               "DetectorNavigator: no octree assigned for frustum navigator");
         }
         ACTS_VERBOSE("Assigning top box of the octree for frustum navigator.");
         nState.topBox = m_cfg.topBox;
         nState.frustum = m_cfg.frustum;
-      } else if (m_cfg.topBox) {
+      } else if (m_cfg.topBox != nullptr) {
         throw std::invalid_argument(
             "DetectorNavigator: octree assigned but frustum navigator not "
             "enabled");
