@@ -83,9 +83,6 @@ if(PluginTraccc IN_LIST Acts_COMPONENTS)
   find_dependency(detray @detray_VERSION@ CONFIG EXACT)
   find_dependency(traccc @traccc_VERSION@ CONFIG EXACT)
 endif()
-if(PluginTraccc IN_LIST Acts_COMPONENTS)
-  find_dependency(traccc @traccc_VERSION@ CONFIG EXACT)
-endif()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake
