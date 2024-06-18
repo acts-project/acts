@@ -47,7 +47,7 @@ std::string joinPaths(const std::string& a, const std::string& b) {
   std::filesystem::path path_b(b);
 
   if (path_b.is_absolute() || path_a.empty()) {
-      return path_b.string();
+    return path_b.string();
   }
 
   return (path_a / path_b).string();
