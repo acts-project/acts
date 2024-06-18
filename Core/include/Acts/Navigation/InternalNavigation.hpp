@@ -110,35 +110,40 @@ struct FrustumNavigation : public IInternalNavigation {
     }
     // Create the frustum if it's not set
     if (nState.frustum == nullptr) {
-      nState.frustum = std::make_shared<Frustum3>(nState.position, nState.direction, M_PI/4);
+      nState.frustum = std::make_shared<Frustum3>(nState.position,
+                                                  nState.direction, M_PI / 4);
     }
-    //Check if we leave the frustum, reset candidates if so
+    // Check if we leave the frustum, reset candidates if so
     const auto& normals = nState.frustum->normals();
-    const bool outside = std::any_of(normals.begin(), normals.end(), [&nState](const auto& normal){
-      return (nState.position - nState.frustum->origin()).dot(normal) >= 0;});
-    if(outside){
+    const bool outside = std::any_of(
+        normals.begin(), normals.end(), [&nState](const auto& normal) {
+          return (nState.position - nState.frustum->origin()).dot(normal) >= 0;
+        });
+    if (outside) {
       nState.surfaceCandidates.clear();
-      nState.frustum = std::make_shared<Frustum3>(nState.position, nState.direction, M_PI/4);
+      nState.frustum = std::make_shared<Frustum3>(nState.position,
+                                                  nState.direction, M_PI / 4);
     }
-    // A volume switch has happened, or we left the frustum, update list of portals & surfaces
+    // A volume switch has happened, or we left the frustum, update list of
+    // portals & surfaces
     if (nState.surfaceCandidates.empty()) {
       // Fill internal portals if existing
       auto topBoxCopy = nState.topBox;
-      while(topBoxCopy){
-        if(topBoxCopy->intersect(*nState.frustum)){
-          if(topBoxCopy->hasEntity()){
+      while (topBoxCopy) {
+        if (topBoxCopy->intersect(*nState.frustum)) {
+          if (topBoxCopy->hasEntity()) {
             const auto& portals = topBoxCopy->entity()->portals();
             const auto& surfaces = topBoxCopy->entity()->surfaces();
             PortalsFiller::fill(nState, portals);
             SurfacesFiller::fill(nState, surfaces);
             topBoxCopy = topBoxCopy->getSkip();
           } else {
-              topBoxCopy = topBoxCopy->getLeftChild();
-            }  
-        } else {
-            topBoxCopy = topBoxCopy->getSkip();
+            topBoxCopy = topBoxCopy->getLeftChild();
           }
-      } 
+        } else {
+          topBoxCopy = topBoxCopy->getSkip();
+        }
+      }
     }
     // Assign the new volume
     const auto& portals = nState.currentVolume->portals();

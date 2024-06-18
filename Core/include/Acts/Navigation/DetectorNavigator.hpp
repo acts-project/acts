@@ -19,6 +19,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iomanip>
@@ -30,13 +32,16 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts::Experimental {
+using Frustum3 = Acts::Frustum<Acts::ActsScalar, 3, 3>;
+using BoundingBox =
+    Acts::AxisAlignedBoundingBox<DetectorVolume, Acts::ActsScalar, 3>;
 
 class DetectorNavigator {
  public:
   struct Config {
     /// Detector for this Navigation
     const Detector* detector = nullptr;
-     /// The octree for the world
+    /// The octree for the world
     const BoundingBox* topBox = nullptr;
     /// The current frustum
     std::shared_ptr<Frustum3> frustum = nullptr;
@@ -47,6 +52,8 @@ class DetectorNavigator {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
+    /// using the frustum navigator
+    bool frustumNavigator = false;
   };
 
   /// Nested State struct
@@ -150,6 +157,19 @@ class DetectorNavigator {
     if (nState.currentDetector == nullptr) {
       ACTS_VERBOSE("Assigning detector from the config.");
       nState.currentDetector = m_cfg.detector;
+      if (m_cfg.frustumNavigator) {
+        if (!m_cfg.topBox) {
+          throw std::invalid_argument(
+              "DetectorNavigator: no octree assigned for frustum navigator");
+        }
+        ACTS_VERBOSE("Assigning top box of the octree for frustum navigator.");
+        nState.topBox = m_cfg.topBox;
+        nState.frustum = m_cfg.frustum;
+      } else if (m_cfg.topBox) {
+        throw std::invalid_argument(
+            "DetectorNavigator: octree assigned but frustum navigator not "
+            "enabled");
+      }
     }
     if (nState.currentDetector == nullptr) {
       throw std::invalid_argument("DetectorNavigator: no detector assigned");
