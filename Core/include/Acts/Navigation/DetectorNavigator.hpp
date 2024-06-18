@@ -36,7 +36,10 @@ class DetectorNavigator {
   struct Config {
     /// Detector for this Navigation
     const Detector* detector = nullptr;
-
+     /// The octree for the world
+    const BoundingBox* topBox = nullptr;
+    /// The current frustum
+    std::shared_ptr<Frustum3> frustum = nullptr;
     /// Configuration for this Navigator
     /// stop at every sensitive surface (whether it has material or not)
     bool resolveSensitive = true;

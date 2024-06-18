@@ -80,6 +80,11 @@ struct NavigationState {
   /// The current portal, i.e the position is on portal
   const Portal* currentPortal = nullptr;
 
+  /// The octree for the world
+  const BoundingBox* topBox = nullptr;
+  /// The current frustum
+  std::shared_ptr<Frustum3> frustum = nullptr;
+
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
   std::size_t surfaceCandidateIndex = 0;
