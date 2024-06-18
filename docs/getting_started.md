@@ -126,7 +126,7 @@ continuous integration setup and come with all dependencies pre-installed.
 
 -   `centos7-lcg101-gcc11`: based on CentOS 7 with HEP-specific software from
     LCG 101 using the GCC 11 compiler
--   `ubuntu2204`: based on Ubuntu 22.04 with manual installation of HEP-specific
+-   `ubuntu2404`: based on Ubuntu 24.04 with manual installation of HEP-specific
     software
 
 :::{attention}

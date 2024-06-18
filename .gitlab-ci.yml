@@ -414,17 +414,6 @@ linux_ubuntu_2204_clang:
     - ctest --test-dir build -j$(nproc)
 
 
-lcg_102b:
-  <<: *lcg_base_job
-
-  variables:
-    LCG_VERSION: "102b"
-
-  parallel:
-    matrix:
-      - OS: [centos7]
-        COMPILER: [gcc11]
-
 lcg_104:
   <<: *lcg_base_job
 
