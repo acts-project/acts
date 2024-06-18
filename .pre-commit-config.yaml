@@ -15,6 +15,6 @@ repos:
     - id: check-added-large-files
 
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.4.2
     hooks:
-    - id: black
+    - id: black-jupyter
