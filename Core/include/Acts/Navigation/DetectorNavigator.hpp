@@ -82,7 +82,7 @@ class DetectorNavigator {
                              std::shared_ptr<const Logger> _logger =
                                  getDefaultLogger("DetectorNavigator",
                                                   Logging::Level::INFO))
-      : m_cfg{cfg}, m_logger{std::move(_logger)} {}
+      : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
   State makeState(const Surface* startSurface,
                   const Surface* targetSurface) const {
