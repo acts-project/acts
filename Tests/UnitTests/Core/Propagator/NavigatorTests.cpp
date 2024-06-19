@@ -991,7 +991,8 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
-int ntests = 500;
+const int nTestsSelfConsistency = 500;
+const int nTestsRefConsistency = 10;
 int skip = 0;
 bool debugMode = false;
 
@@ -1043,7 +1044,7 @@ Reference2StraightLinePropagator refslpropagator2(
     getDefaultLogger("ref2_sl_prop", Logging::INFO));
 
 BOOST_DATA_TEST_CASE(
-    Navigator_random,
+    NavigatorRandomSelfConsistency,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.5_GeV, 10_GeV))) ^
@@ -1058,7 +1059,7 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::xrange(ntests),
+        bdata::xrange(nTestsSelfConsistency),
     pT, phi, theta, charge, index) {
   if (index < skip) {
     return;
@@ -1084,6 +1085,41 @@ BOOST_DATA_TEST_CASE(
     std::cout << ">>> Test self consistency slpropagator" << std::endl;
   }
   runSelfConsistencyTest(slpropagator, start, debugMode);
+}
+
+BOOST_DATA_TEST_CASE(
+    NavigatorRandomRefConsistency,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 23,
+             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
+        bdata::xrange(nTestsRefConsistency),
+    pT, phi, theta, charge, index) {
+  if (index < skip) {
+    return;
+  }
+
+  double p = pT / std::sin(theta);
+  double q = -1 + 2 * charge;
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
+
+  if (debugMode) {
+    std::cout << ">>> Run navigation tests with pT = " << pT
+              << "; phi = " << phi << "; theta = " << theta
+              << "; charge = " << charge << "; index = " << index << ";"
+              << std::endl;
+  }
 
   if (debugMode) {
     std::cout << ">>> Test reference 1 consistency epropagator" << std::endl;
