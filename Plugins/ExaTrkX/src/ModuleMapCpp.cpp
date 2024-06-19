@@ -18,8 +18,9 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
                            std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
   m_graphCreator = std::make_unique<graph_creator<float>>(
-      m_cfg.moduleMapPath, 10, std::pair<float, float>{0.f, 10.f}, std::nullopt,
-      std::nullopt, false, false);
+      m_cfg.moduleMapPath, 10,
+      std::pair<float, float>{0.f, std::numeric_limits<float>::max()},
+      std::nullopt, std::nullopt, false, false);
 }
 
 ModuleMapCpp::~ModuleMapCpp() {}
