@@ -36,6 +36,8 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
 
   hits<float> hitsCollection(false, false);
 
+  ACTS_DEBUG("Start collecting hits...");
+
   for (auto i = 0ul; i < numNodes; ++i) {
     // TODO Use std::span when we move to C++20
     const float *hitFeatures = inputValues.data() + i * numFeatures;
@@ -65,10 +67,12 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
   TTree_particles<float> particlesTree;  // dummy, not needed currently
   std::string eventId = "no-id";
 
+  ACTS_DEBUG("Build graph...");
   auto [graph, _] =
       m_graphCreator->build_impl(hitsTree, particlesTree, eventId, false);
   const auto numEdges = boost::num_edges(graph.graph_impl());
 
+  ACTS_DEBUG("Got " << numEdges << " edges, put them in a vector...");
   std::vector<int32_t> edgeVector;
   edgeVector.reserve(2 * numEdges);
 
@@ -84,9 +88,11 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
   }
 
   // Build final tensors
+  ACTS_DEBUG("Construct final tensors...");
   auto featureTensor = detail::vectorToTensor2D(inputValues, numFeatures);
   auto edgeTensor = detail::vectorToTensor2D(edgeVector, numEdges);
 
+  ACTS_DEBUG("featureTensor: " << featureTensor.sizes() << ", edgeTensor: " << edgeTensor.sizes());
   return std::make_tuple(std::move(featureTensor), std::move(edgeTensor));
 }
 
