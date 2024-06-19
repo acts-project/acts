@@ -23,7 +23,7 @@ void Acts::TorchGraphStoreHook::operator()(const std::any&,
     return;
   }
 
-  m_storedGraph->first = detail::tensor2DToVector<int64_t>(
+  m_storedGraph->first = detail::tensor2DToVector<std::int64_t>(
       std::any_cast<torch::Tensor>(edges).t());
 
   auto cpuWeights = std::any_cast<torch::Tensor>(weights).to(torch::kCPU);

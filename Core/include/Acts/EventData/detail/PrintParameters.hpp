@@ -46,7 +46,7 @@ void printFreeParameters(std::ostream& os, const FreeVector& params,
 /// @param params Parameters vector data, must contain size elements
 /// @param cov Optional Covariance matrix data, must contain sizexsize elements
 void printMeasurement(std::ostream& os, BoundIndices size,
-                      const uint8_t* indices, const ActsScalar* params,
+                      const std::uint8_t* indices, const ActsScalar* params,
                       const ActsScalar* cov);
 
 /// Print free measurement content to the output stream.
@@ -57,7 +57,7 @@ void printMeasurement(std::ostream& os, BoundIndices size,
 /// @param params Parameters vector data, must contain size elements
 /// @param cov Optional Covariance matrix data, must contain sizexsize elements
 void printMeasurement(std::ostream& os, FreeIndices size,
-                      const uint8_t* indices, const ActsScalar* params,
+                      const std::uint8_t* indices, const ActsScalar* params,
                       const ActsScalar* cov);
 
 }  // namespace detail

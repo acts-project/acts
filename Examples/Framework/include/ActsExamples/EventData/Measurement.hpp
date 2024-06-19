@@ -108,7 +108,7 @@ class FixedSizeMeasurement {
 
   /// The measurement indices
   constexpr std::array<indices_t, kSize> indices() const {
-    std::array<uint8_t, kSize> subInds = m_subspace.indices();
+    std::array<std::uint8_t, kSize> subInds = m_subspace.indices();
     std::array<indices_t, kSize> inds{};
     for (std::size_t i = 0; i < kSize; i++) {
       inds[i] = static_cast<indices_t>(subInds[i]);

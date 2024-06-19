@@ -129,7 +129,7 @@ void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
 /// @param o The id to convert.
 /// @return The id as an unsigned integer.
 template <typename T>
-uint64_t podioObjectIDToInteger(T&& o) {
+std::uint64_t podioObjectIDToInteger(T&& o) {
   if constexpr (!std::is_same_v<T, podio::ObjectID>) {
     return o;
   } else {

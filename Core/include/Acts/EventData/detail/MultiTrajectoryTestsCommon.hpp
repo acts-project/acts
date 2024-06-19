@@ -843,21 +843,21 @@ class MultiTrajectoryTestsCommon {
   void testTrackStateCopyDynamicColumns() {
     // mutable source
     trajectory_t mtj = m_factory.create();
-    mtj.template addColumn<uint64_t>("counter");
-    mtj.template addColumn<uint8_t>("odd");
+    mtj.template addColumn<std::uint64_t>("counter");
+    mtj.template addColumn<std::uint8_t>("odd");
 
     trajectory_t mtj2 = m_factory.create();
     // doesn't have the dynamic column
 
     trajectory_t mtj3 = m_factory.create();
-    mtj3.template addColumn<uint64_t>("counter");
-    mtj3.template addColumn<uint8_t>("odd");
+    mtj3.template addColumn<std::uint64_t>("counter");
+    mtj3.template addColumn<std::uint8_t>("odd");
 
     for (MultiTrajectoryTraits::IndexType i = 0; i < 10; i++) {
       auto ts =
           mtj.getTrackState(mtj.addTrackState(TrackStatePropMask::All, i));
-      ts.template component<uint64_t>("counter") = i;
-      ts.template component<uint8_t>("odd") = i % 2 == 0;
+      ts.template component<std::uint64_t>("counter") = i;
+      ts.template component<std::uint8_t>("odd") = i % 2 == 0;
 
       auto ts2 =
           mtj2.getTrackState(mtj2.addTrackState(TrackStatePropMask::All, i));
@@ -870,10 +870,10 @@ class MultiTrajectoryTestsCommon {
 
       BOOST_CHECK_NE(ts3.index(), MultiTrajectoryTraits::kInvalid);
 
-      BOOST_CHECK_EQUAL(ts.template component<uint64_t>("counter"),
-                        ts3.template component<uint64_t>("counter"));
-      BOOST_CHECK_EQUAL(ts.template component<uint8_t>("odd"),
-                        ts3.template component<uint8_t>("odd"));
+      BOOST_CHECK_EQUAL(ts.template component<std::uint64_t>("counter"),
+                        ts3.template component<std::uint64_t>("counter"));
+      BOOST_CHECK_EQUAL(ts.template component<std::uint8_t>("odd"),
+                        ts3.template component<std::uint8_t>("odd"));
     }
 
     std::size_t before = mtj.size();
@@ -882,8 +882,8 @@ class MultiTrajectoryTestsCommon {
     BOOST_REQUIRE_EQUAL(cmtj.size(), before);
 
     VectorMultiTrajectory mtj5;
-    mtj5.addColumn<uint64_t>("counter");
-    mtj5.addColumn<uint8_t>("odd");
+    mtj5.addColumn<std::uint64_t>("counter");
+    mtj5.addColumn<std::uint8_t>("odd");
 
     for (std::size_t i = 0; i < 10; i++) {
       auto ts4 = cmtj.getTrackState(i);  // const source!
@@ -894,10 +894,10 @@ class MultiTrajectoryTestsCommon {
 
       BOOST_CHECK_NE(ts5.index(), MultiTrajectoryTraits::kInvalid);
 
-      BOOST_CHECK_EQUAL(ts4.template component<uint64_t>("counter"),
-                        ts5.template component<uint64_t>("counter"));
-      BOOST_CHECK_EQUAL(ts4.template component<uint8_t>("odd"),
-                        ts5.template component<uint8_t>("odd"));
+      BOOST_CHECK_EQUAL(ts4.template component<std::uint64_t>("counter"),
+                        ts5.template component<std::uint64_t>("counter"));
+      BOOST_CHECK_EQUAL(ts4.template component<std::uint8_t>("odd"),
+                        ts5.template component<std::uint8_t>("odd"));
     }
   }
 
@@ -1133,10 +1133,10 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(ts1.template component<T>(col), value);
     };
 
-    test("uint32_t", std::uint32_t{1});
-    test("uint64_t", std::uint64_t{2});
-    test("int32_t", std::int32_t{-3});
-    test("int64_t", std::int64_t{-4});
+    test("std::uint32_t", std::uint32_t{1});
+    test("std::uint64_t", std::uint64_t{2});
+    test("std::int32_t", std::int32_t{-3});
+    test("std::int64_t", std::int64_t{-4});
     test("float", float{8.9});
     test("double", double{656.2});
 
