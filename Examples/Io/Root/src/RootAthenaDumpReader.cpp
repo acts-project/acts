@@ -296,16 +296,20 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     const auto cl1Index = SPCL1_index[isp];
     assert(cl1Index >= 0 && cl1Index < nCL);
 
-    // NOTE This of course does not produce a valid Acts-stlye geometry id, but we can use it for the module map
-    IndexSourceLink first(Acts::GeometryIdentifier{CLmoduleID[cl1Index]}, cl1Index);
+    // NOTE This of course does not produce a valid Acts-stlye geometry id, but
+    // we can use it for the module map
+    IndexSourceLink first(Acts::GeometryIdentifier{CLmoduleID[cl1Index]},
+                          cl1Index);
     sLinks.emplace_back(first);
 
     if (type == eStrip) {
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
 
-    // NOTE This of course does not produce a valid Acts-stlye geometry id, but we can use it for the module map
-      IndexSourceLink second(Acts::GeometryIdentifier{CLmoduleID[cl2Index]}, cl2Index);
+      // NOTE This of course does not produce a valid Acts-stlye geometry id,
+      // but we can use it for the module map
+      IndexSourceLink second(Acts::GeometryIdentifier{CLmoduleID[cl2Index]},
+                             cl2Index);
       sLinks.emplace_back(second);
     }
 
