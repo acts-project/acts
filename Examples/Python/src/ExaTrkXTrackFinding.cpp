@@ -185,11 +185,11 @@ void addExaTrkXTrackFinding(Context &ctx) {
 
     auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
                    mex, "TorchTruthGraphMetricsHook")
-                   .def(py::init(
-                       [](const std::vector<int64_t> &g, Logging::Level lvl) {
-                         return std::make_shared<Class>(
-                             g, getDefaultLogger("PipelineHook", lvl));
-                       }));
+                   .def(py::init([](const std::vector<std::int64_t> &g,
+                                    Logging::Level lvl) {
+                     return std::make_shared<Class>(
+                         g, getDefaultLogger("PipelineHook", lvl));
+                   }));
   }
 
   {

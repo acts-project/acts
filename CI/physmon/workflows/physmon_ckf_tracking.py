@@ -107,13 +107,19 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
-            seedingAlgorithm=SeedingAlgorithm.TruthSmeared
-            if truthSmearedSeeded
-            else SeedingAlgorithm.TruthEstimated
-            if truthEstimatedSeeded
-            else SeedingAlgorithm.Default
-            if label == "seeded"
-            else SeedingAlgorithm.Orthogonal,
+            seedingAlgorithm=(
+                SeedingAlgorithm.TruthSmeared
+                if truthSmearedSeeded
+                else (
+                    SeedingAlgorithm.TruthEstimated
+                    if truthEstimatedSeeded
+                    else (
+                        SeedingAlgorithm.Default
+                        if label == "seeded"
+                        else SeedingAlgorithm.Orthogonal
+                    )
+                )
+            ),
             initialSigmas=[
                 1 * u.mm,
                 1 * u.mm,
@@ -235,9 +241,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             + (
                 ["performance_seeding", "performance_ambi"]
                 if label in ["seeded", "orthogonal"]
-                else ["performance_seeding"]
-                if label == "truth_estimated"
-                else []
+                else ["performance_seeding"] if label == "truth_estimated" else []
             )
         ):
             perf_file = tp / f"{stem}.root"
