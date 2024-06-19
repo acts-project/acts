@@ -76,7 +76,7 @@ io::surface_payload convertSurface(const GeometryContext& gctx,
                                    const Surface& surface, bool portal = false);
 /// Conversion method for Portal object to detray::portal payloads
 ///
-/// @param gctx the geomtry context
+/// @param gctx the geometry context
 /// @param portal the portal to be converted
 /// @param ip the portal index
 /// @param volume the volume to which the portal belongs

@@ -90,11 +90,7 @@ if "__main__" == __name__:
         [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
         "detector",
     )
-    
+
     acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
-    
-    #det_detector = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
-    
-    
 
-
+    # det_detector = acts.examples.DetrayConverter(geoContext, detector,"odd-detray")
