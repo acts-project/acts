@@ -70,168 +70,127 @@ ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
   DTTstTrack_subDetType = 0;
   DTTstCommon_subDetType = 0;
 
-  m_inputchain->SetBranchAddress("run_number", &run_number, &b_run_number);
-  m_inputchain->SetBranchAddress("event_number", &event_number,
-                                 &b_event_number);
-  m_inputchain->SetBranchAddress("nSE", &nSE, &b_nSE);
-  m_inputchain->SetBranchAddress("SEID", SEID, &b_SEID);
-  m_inputchain->SetBranchAddress("nCL", &nCL, &b_nCL);
-  m_inputchain->SetBranchAddress("CLindex", CLindex, &b_CLindex);
-  m_inputchain->SetBranchAddress("CLhardware", &CLhardware, &b_CLhardware);
-  m_inputchain->SetBranchAddress("CLx", CLx, &b_CLx);
-  m_inputchain->SetBranchAddress("CLy", CLy, &b_CLy);
-  m_inputchain->SetBranchAddress("CLz", CLz, &b_CLz);
-  m_inputchain->SetBranchAddress("CLbarrel_endcap", CLbarrel_endcap,
-                                 &b_CLbarrel_endcap);
-  m_inputchain->SetBranchAddress("CLlayer_disk", CLlayer_disk, &b_CLlayer_disk);
-  m_inputchain->SetBranchAddress("CLeta_module", CLeta_module, &b_CLeta_module);
-  m_inputchain->SetBranchAddress("CLphi_module", CLphi_module, &b_CLphi_module);
-  m_inputchain->SetBranchAddress("CLside", CLside, &b_CLside);
-  m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID, &b_CLmoduleID);
+  m_inputchain->SetBranchAddress("run_number", &run_number);
+  m_inputchain->SetBranchAddress("event_number", &event_number);
+  m_inputchain->SetBranchAddress("nSE", &nSE);
+  m_inputchain->SetBranchAddress("SEID", SEID);
+  m_inputchain->SetBranchAddress("nCL", &nCL);
+  m_inputchain->SetBranchAddress("CLindex", CLindex);
+  m_inputchain->SetBranchAddress("CLhardware", &CLhardware);
+  m_inputchain->SetBranchAddress("CLx", CLx);
+  m_inputchain->SetBranchAddress("CLy", CLy);
+  m_inputchain->SetBranchAddress("CLz", CLz);
+  m_inputchain->SetBranchAddress("CLbarrel_endcap", CLbarrel_endcap);
+  m_inputchain->SetBranchAddress("CLlayer_disk", CLlayer_disk);
+  m_inputchain->SetBranchAddress("CLeta_module", CLeta_module);
+  m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
+  m_inputchain->SetBranchAddress("CLside", CLside);
+  m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
   m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
-                                 &CLparticleLink_eventIndex,
-                                 &b_CLparticleLink_eventIndex);
+                                 &CLparticleLink_eventIndex);
   m_inputchain->SetBranchAddress("CLparticleLink_barcode",
-                                 &CLparticleLink_barcode,
-                                 &b_CLparticleLink_barcode);
-  m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked,
-                                 &b_CLbarcodesLinked);
-  m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge,
-                                 &b_CLparticle_charge);
-  m_inputchain->SetBranchAddress("CLphis", &CLphis, &b_CLphis);
-  m_inputchain->SetBranchAddress("CLetas", &CLetas, &b_CLetas);
-  m_inputchain->SetBranchAddress("CLtots", &CLtots, &b_CLtots);
-  m_inputchain->SetBranchAddress("CLloc_direction1", CLloc_direction1,
-                                 &b_CLloc_direction1);
-  m_inputchain->SetBranchAddress("CLloc_direction2", CLloc_direction2,
-                                 &b_CLloc_direction2);
-  m_inputchain->SetBranchAddress("CLloc_direction3", CLloc_direction3,
-                                 &b_CLloc_direction3);
-  m_inputchain->SetBranchAddress("CLJan_loc_direction1", CLJan_loc_direction1,
-                                 &b_CLJan_loc_direction1);
-  m_inputchain->SetBranchAddress("CLJan_loc_direction2", CLJan_loc_direction2,
-                                 &b_CLJan_loc_direction2);
-  m_inputchain->SetBranchAddress("CLJan_loc_direction3", CLJan_loc_direction3,
-                                 &b_CLJan_loc_direction3);
-  m_inputchain->SetBranchAddress("CLpixel_count", CLpixel_count,
-                                 &b_CLpixel_count);
-  m_inputchain->SetBranchAddress("CLcharge_count", CLcharge_count,
-                                 &b_CLcharge_count);
-  m_inputchain->SetBranchAddress("CLloc_eta", CLloc_eta, &b_CLloc_eta);
-  m_inputchain->SetBranchAddress("CLloc_phi", CLloc_phi, &b_CLloc_phi);
-  m_inputchain->SetBranchAddress("CLglob_eta", CLglob_eta, &b_CLglob_eta);
-  m_inputchain->SetBranchAddress("CLglob_phi", CLglob_phi, &b_CLglob_phi);
-  m_inputchain->SetBranchAddress("CLeta_angle", CLeta_angle, &b_CLeta_angle);
-  m_inputchain->SetBranchAddress("CLphi_angle", CLphi_angle, &b_CLphi_angle);
-  m_inputchain->SetBranchAddress("CLnorm_x", CLnorm_x, &b_CLnorm_x);
-  m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y, &b_CLnorm_y);
-  m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z, &b_CLnorm_z);
-  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov, &b_CLlocal_cov);
-  m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT, &b_nPartEVT);
-  m_inputchain->SetBranchAddress("Part_event_number", Part_event_number,
-                                 &b_Part_event_number);
-  m_inputchain->SetBranchAddress("Part_barcode", Part_barcode, &b_Part_barcode);
-  m_inputchain->SetBranchAddress("Part_px", Part_px, &b_Part_px);
-  m_inputchain->SetBranchAddress("Part_py", Part_py, &b_Part_py);
-  m_inputchain->SetBranchAddress("Part_pz", Part_pz, &b_Part_pz);
-  m_inputchain->SetBranchAddress("Part_pt", Part_pt, &b_Part_pt);
-  m_inputchain->SetBranchAddress("Part_eta", Part_eta, &b_Part_eta);
-  m_inputchain->SetBranchAddress("Part_vx", Part_vx, &b_Part_vx);
-  m_inputchain->SetBranchAddress("Part_vy", Part_vy, &b_Part_vy);
-  m_inputchain->SetBranchAddress("Part_vz", Part_vz, &b_Part_vz);
-  m_inputchain->SetBranchAddress("Part_radius", Part_radius, &b_Part_radius);
-  m_inputchain->SetBranchAddress("Part_status", Part_status, &b_Part_status);
-  m_inputchain->SetBranchAddress("Part_charge", Part_charge, &b_Part_charge);
-  m_inputchain->SetBranchAddress("Part_pdg_id", Part_pdg_id, &b_Part_pdg_id);
-  m_inputchain->SetBranchAddress("Part_passed", Part_passed, &b_Part_passed);
-  m_inputchain->SetBranchAddress("Part_vProdNin", Part_vProdNin,
-                                 &b_Part_vProdNin);
-  m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout,
-                                 &b_Part_vProdNout);
-  m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus,
-                                 &b_Part_vProdStatus);
-  m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode,
-                                 &b_Part_vProdBarcode);
-  m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID,
-                                 &b_Part_vParentID);
-  m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode,
-                                 &b_Part_vParentBarcode);
-  m_inputchain->SetBranchAddress("nSP", &nSP, &b_nSP);
-  m_inputchain->SetBranchAddress("SPindex", SPindex, &b_SPindex);
-  m_inputchain->SetBranchAddress("SPx", SPx, &b_SPx);
-  m_inputchain->SetBranchAddress("SPy", SPy, &b_SPy);
-  m_inputchain->SetBranchAddress("SPz", SPz, &b_SPz);
-  m_inputchain->SetBranchAddress("SPCL1_index", SPCL1_index, &b_SPCL1_index);
-  m_inputchain->SetBranchAddress("SPCL2_index", SPCL2_index, &b_SPCL2_index);
-  m_inputchain->SetBranchAddress("SPisOverlap", SPisOverlap, &b_SPisOverlap);
-  m_inputchain->SetBranchAddress("SPradius", SPradius, &b_SPradius);
-  m_inputchain->SetBranchAddress("SPcovr", SPcovr, &b_SPcovr);
-  m_inputchain->SetBranchAddress("SPcovz", SPcovz, &b_SPcovz);
-  m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip,
-                                 &b_SPhl_topstrip);
-  m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip,
-                                 &b_SPhl_botstrip);
-  m_inputchain->SetBranchAddress("SPtopStripDirection", SPtopStripDirection,
-                                 &b_SPtopStripDirection);
+                                 &CLparticleLink_barcode);
+  m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
+  m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
+  m_inputchain->SetBranchAddress("CLphis", &CLphis);
+  m_inputchain->SetBranchAddress("CLetas", &CLetas);
+  m_inputchain->SetBranchAddress("CLtots", &CLtots);
+  m_inputchain->SetBranchAddress("CLloc_direction1", CLloc_direction1);
+  m_inputchain->SetBranchAddress("CLloc_direction2", CLloc_direction2);
+  m_inputchain->SetBranchAddress("CLloc_direction3", CLloc_direction3);
+  m_inputchain->SetBranchAddress("CLJan_loc_direction1", CLJan_loc_direction1);
+  m_inputchain->SetBranchAddress("CLJan_loc_direction2", CLJan_loc_direction2);
+  m_inputchain->SetBranchAddress("CLJan_loc_direction3", CLJan_loc_direction3);
+  m_inputchain->SetBranchAddress("CLpixel_count", CLpixel_count);
+  m_inputchain->SetBranchAddress("CLcharge_count", CLcharge_count);
+  m_inputchain->SetBranchAddress("CLloc_eta", CLloc_eta);
+  m_inputchain->SetBranchAddress("CLloc_phi", CLloc_phi);
+  m_inputchain->SetBranchAddress("CLglob_eta", CLglob_eta);
+  m_inputchain->SetBranchAddress("CLglob_phi", CLglob_phi);
+  m_inputchain->SetBranchAddress("CLeta_angle", CLeta_angle);
+  m_inputchain->SetBranchAddress("CLphi_angle", CLphi_angle);
+  m_inputchain->SetBranchAddress("CLnorm_x", CLnorm_x);
+  m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y);
+  m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z);
+  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov);
+  m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT);
+  m_inputchain->SetBranchAddress("Part_event_number", Part_event_number);
+  m_inputchain->SetBranchAddress("Part_barcode", Part_barcode);
+  m_inputchain->SetBranchAddress("Part_px", Part_px);
+  m_inputchain->SetBranchAddress("Part_py", Part_py);
+  m_inputchain->SetBranchAddress("Part_pz", Part_pz);
+  m_inputchain->SetBranchAddress("Part_pt", Part_pt);
+  m_inputchain->SetBranchAddress("Part_eta", Part_eta);
+  m_inputchain->SetBranchAddress("Part_vx", Part_vx);
+  m_inputchain->SetBranchAddress("Part_vy", Part_vy);
+  m_inputchain->SetBranchAddress("Part_vz", Part_vz);
+  m_inputchain->SetBranchAddress("Part_radius", Part_radius);
+  m_inputchain->SetBranchAddress("Part_status", Part_status);
+  m_inputchain->SetBranchAddress("Part_charge", Part_charge);
+  m_inputchain->SetBranchAddress("Part_pdg_id", Part_pdg_id);
+  m_inputchain->SetBranchAddress("Part_passed", Part_passed);
+  m_inputchain->SetBranchAddress("Part_vProdNin", Part_vProdNin);
+  m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
+  m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
+  m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
+  m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
+  m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+  m_inputchain->SetBranchAddress("nSP", &nSP);
+  m_inputchain->SetBranchAddress("SPindex", SPindex);
+  m_inputchain->SetBranchAddress("SPx", SPx);
+  m_inputchain->SetBranchAddress("SPy", SPy);
+  m_inputchain->SetBranchAddress("SPz", SPz);
+  m_inputchain->SetBranchAddress("SPCL1_index", SPCL1_index);
+  m_inputchain->SetBranchAddress("SPCL2_index", SPCL2_index);
+  m_inputchain->SetBranchAddress("SPisOverlap", SPisOverlap);
+  m_inputchain->SetBranchAddress("SPradius", SPradius);
+  m_inputchain->SetBranchAddress("SPcovr", SPcovr);
+  m_inputchain->SetBranchAddress("SPcovz", SPcovz);
+  m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
+  m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
+  m_inputchain->SetBranchAddress("SPtopStripDirection", SPtopStripDirection);
   m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                 SPbottomStripDirection,
-                                 &b_SPbottomStripDirection);
-  m_inputchain->SetBranchAddress("SPstripCenterDistance", SPstripCenterDistance,
-                                 &b_SPstripCenterDistance);
+                                 SPbottomStripDirection);
+  m_inputchain->SetBranchAddress("SPstripCenterDistance",
+                                 SPstripCenterDistance);
   m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                 SPtopStripCenterPosition,
-                                 &b_SPtopStripCenterPosition);
+                                 SPtopStripCenterPosition);
 
-  m_inputchain->SetBranchAddress("nTRK", &nTRK, &b_nTRK);
-  m_inputchain->SetBranchAddress("TRKindex", TRKindex, &b_TRKindex);
-  m_inputchain->SetBranchAddress("TRKtrack_fitter", TRKtrack_fitter,
-                                 &b_TRKtrack_fitter);
+  m_inputchain->SetBranchAddress("nTRK", &nTRK);
+  m_inputchain->SetBranchAddress("TRKindex", TRKindex);
+  m_inputchain->SetBranchAddress("TRKtrack_fitter", TRKtrack_fitter);
   m_inputchain->SetBranchAddress("TRKparticle_hypothesis",
-                                 TRKparticle_hypothesis,
-                                 &b_TRKparticle_hypothesis);
-  m_inputchain->SetBranchAddress("TRKproperties", &TRKproperties,
-                                 &b_TRKproperties);
-  m_inputchain->SetBranchAddress("TRKpattern", &TRKpattern, &b_TRKpattern);
-  m_inputchain->SetBranchAddress("TRKndof", TRKndof, &b_TRKndof);
-  m_inputchain->SetBranchAddress("TRKmot", TRKmot, &b_TRKmot);
-  m_inputchain->SetBranchAddress("TRKoot", TRKoot, &b_TRKoot);
-  m_inputchain->SetBranchAddress("TRKchiSq", TRKchiSq, &b_TRKchiSq);
+                                 TRKparticle_hypothesis);
+  m_inputchain->SetBranchAddress("TRKproperties", &TRKproperties);
+  m_inputchain->SetBranchAddress("TRKpattern", &TRKpattern);
+  m_inputchain->SetBranchAddress("TRKndof", TRKndof);
+  m_inputchain->SetBranchAddress("TRKmot", TRKmot);
+  m_inputchain->SetBranchAddress("TRKoot", TRKoot);
+  m_inputchain->SetBranchAddress("TRKchiSq", TRKchiSq);
   m_inputchain->SetBranchAddress("TRKmeasurementsOnTrack_pixcl_sctcl_index",
-                                 &TRKmeasurementsOnTrack_pixcl_sctcl_index,
-                                 &b_TRKmeasurementsOnTrack_pixcl_sctcl_index);
+                                 &TRKmeasurementsOnTrack_pixcl_sctcl_index);
   m_inputchain->SetBranchAddress("TRKoutliersOnTrack_pixcl_sctcl_index",
-                                 &TRKoutliersOnTrack_pixcl_sctcl_index,
-                                 &b_TRKoutliersOnTrack_pixcl_sctcl_index);
-  m_inputchain->SetBranchAddress("TRKcharge", TRKcharge, &b_TRKcharge);
-  m_inputchain->SetBranchAddress("TRKperigee_position", &TRKperigee_position,
-                                 &b_TRKperigee_position);
-  m_inputchain->SetBranchAddress("TRKperigee_momentum", &TRKperigee_momentum,
-                                 &b_TRKperigee_momentum);
-  m_inputchain->SetBranchAddress("TTCindex", TTCindex, &b_TTCindex);
-  m_inputchain->SetBranchAddress("TTCevent_index", TTCevent_index,
-                                 &b_TTCevent_index);
-  m_inputchain->SetBranchAddress("TTCparticle_link", TTCparticle_link,
-                                 &b_TTCparticle_link);
-  m_inputchain->SetBranchAddress("TTCprobability", TTCprobability,
-                                 &b_TTCprobability);
-  m_inputchain->SetBranchAddress("nDTT", &nDTT, &b_nDTT);
-  m_inputchain->SetBranchAddress("DTTindex", DTTindex, &b_DTTindex);
-  m_inputchain->SetBranchAddress("DTTsize", DTTsize, &b_DTTsize);
+                                 &TRKoutliersOnTrack_pixcl_sctcl_index);
+  m_inputchain->SetBranchAddress("TRKcharge", TRKcharge);
+  m_inputchain->SetBranchAddress("TRKperigee_position", &TRKperigee_position);
+  m_inputchain->SetBranchAddress("TRKperigee_momentum", &TRKperigee_momentum);
+  m_inputchain->SetBranchAddress("TTCindex", TTCindex);
+  m_inputchain->SetBranchAddress("TTCevent_index", TTCevent_index);
+  m_inputchain->SetBranchAddress("TTCparticle_link", TTCparticle_link);
+  m_inputchain->SetBranchAddress("TTCprobability", TTCprobability);
+  m_inputchain->SetBranchAddress("nDTT", &nDTT);
+  m_inputchain->SetBranchAddress("DTTindex", DTTindex);
+  m_inputchain->SetBranchAddress("DTTsize", DTTsize);
   m_inputchain->SetBranchAddress("DTTtrajectory_eventindex",
-                                 &DTTtrajectory_eventindex,
-                                 &b_DTTtrajectory_eventindex);
+                                 &DTTtrajectory_eventindex);
   m_inputchain->SetBranchAddress("DTTtrajectory_barcode",
-                                 &DTTtrajectory_barcode,
-                                 &b_DTTtrajectory_barcode);
+                                 &DTTtrajectory_barcode);
   m_inputchain->SetBranchAddress("DTTstTruth_subDetType",
-                                 &DTTstTruth_subDetType,
-                                 &b_DTTstTruth_subDetType);
+                                 &DTTstTruth_subDetType);
   m_inputchain->SetBranchAddress("DTTstTrack_subDetType",
-                                 &DTTstTrack_subDetType,
-                                 &b_DTTstTrack_subDetType);
+                                 &DTTstTrack_subDetType);
   m_inputchain->SetBranchAddress("DTTstCommon_subDetType",
-                                 &DTTstCommon_subDetType,
-                                 &b_DTTstCommon_subDetType);
+                                 &DTTstCommon_subDetType);
 
   m_inputchain->Add(m_cfg.inputfile.c_str());
   ACTS_DEBUG("Adding file " << m_cfg.inputfile << " to tree" << m_cfg.treename);
