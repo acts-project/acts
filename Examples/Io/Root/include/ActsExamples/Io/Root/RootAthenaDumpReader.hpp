@@ -117,7 +117,7 @@ class RootAthenaDumpReader : public IReader {
 
   // Clusters
   std::vector<std::string> *CLhardware;
-  Double_t CLx[maxCL];             //[nCL]
+  Double_t CLx[maxCL];           //[nCL]
   Double_t CLy[maxCL];           //[nCL]
   Double_t CLz[maxCL];           //[nCL]
   Int_t CLbarrel_endcap[maxCL];  //[nCL]
