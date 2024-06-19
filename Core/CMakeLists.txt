@@ -24,7 +24,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsCore
-  PUBLIC Boost::boost Eigen3::Eigen std::filesystem)
+  PUBLIC Boost::boost Eigen3::Eigen)
 
 
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)
@@ -49,7 +49,7 @@ if(ACTS_LOG_FAILURE_THRESHOLD)
   message(STATUS "Enable log failure threshold, set to ${ACTS_LOG_FAILURE_THRESHOLD}")
   target_compile_definitions(
     ActsCore
-    PUBLIC
+    PUBLIC 
     -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD}
     -DACTS_ENABLE_LOG_FAILURE_THRESHOLD)
 
@@ -59,7 +59,7 @@ if(ACTS_ENABLE_LOG_FAILURE_THRESHOLD)
   message(STATUS "Enable log failure threshold")
   target_compile_definitions(
     ActsCore
-    PUBLIC
+    PUBLIC 
     -DACTS_ENABLE_LOG_FAILURE_THRESHOLD)
 endif()
 
