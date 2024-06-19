@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -257,7 +257,7 @@ struct PropagatorState {
   /// Give some options
   Options options;
 
-  /// The Stepper state - internal statew of the Stepper
+  /// The Stepper state - internal state of the Stepper
   Stepper::State stepping;
 
   /// Navigation state - internal state of the Navigator
@@ -329,7 +329,13 @@ auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 // the debug boolean
 bool debug = true;
 
+Acts::Logging::Level logLevel = Acts::Logging::DEBUG;
+std::unique_ptr<const Acts::Logger> navigatorTestLogger =
+    Acts::getDefaultLogger("NavigatorTest", logLevel);
+
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
@@ -455,6 +461,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   // create a navigator
   Navigator::Config navCfg;
   navCfg.trackingGeometry = tGeometry;
@@ -476,10 +484,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   state.stepping.dir = momentum.normalized();
 
   // forward navigation ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
+  ACTS_DEBUG("<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>");
 
   // Stepper
   PropagatorState::Stepper stepper;
@@ -508,10 +513,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
+
+  ACTS_DEBUG("<<< Test 1a >>> initialize at " << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1a >>> initialize at "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     // Clear the debug string for the next test
     state.options.debugString = "";
   }
@@ -532,10 +537,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1b >>> step to the BeamPipe at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 
@@ -548,10 +553,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1c >>> step to the Boundary at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1c >>> step to the Boundary at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 
@@ -563,10 +568,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1d >>> step to 1st layer at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1d >>> step to 1st layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 
@@ -579,10 +584,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
+    ACTS_DEBUG("<<< Test 1e-1i >>> step within 1st layer at  "
+               << toString(state.stepping.pos4));
     if (debug) {
-      std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
+      ACTS_DEBUG(state.options.debugString);
       state.options.debugString = "";
     }
   }
@@ -595,10 +600,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1j >>> step to 2nd layer at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1j >>> step to 2nd layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 
@@ -611,10 +616,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
+    ACTS_DEBUG("<<< Test 1k-1o >>> step within 2nd layer at  "
+               << toString(state.stepping.pos4));
     if (debug) {
-      std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
+      ACTS_DEBUG(state.options.debugString);
       state.options.debugString = "";
     }
   }
@@ -627,10 +632,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1p >>> step to 3rd layer at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1p >>> step to 3rd layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 
@@ -643,10 +648,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
+    ACTS_DEBUG("<<< Test 1q-1s >>> step within 3rd layer at  "
+               << toString(state.stepping.pos4));
     if (debug) {
-      std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
+      ACTS_DEBUG(state.options.debugString);
       state.options.debugString = "";
     }
   }
@@ -659,10 +664,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1t >>> step to 4th layer at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1t >>> step to 4th layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 
@@ -675,10 +680,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
+    ACTS_DEBUG("<<< Test 1t-1v >>> step within 4th layer at  "
+               << toString(state.stepping.pos4));
     if (debug) {
-      std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
+      ACTS_DEBUG(state.options.debugString);
       state.options.debugString = "";
     }
   }
@@ -691,10 +696,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
+  ACTS_DEBUG("<<< Test 1w >>> step to boundary at  "
+             << toString(state.stepping.pos4));
   if (debug) {
-    std::cout << "<<< Test 1w >>> step to boundary at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
+    ACTS_DEBUG(state.options.debugString);
     state.options.debugString = "";
   }
 }
@@ -726,7 +731,7 @@ std::vector<GeometryIdentifier> collectRelevantGeoIds(
 template <typename propagator_t>
 void runSelfConsistencyTest(const propagator_t& prop,
                             const CurvilinearTrackParameters& start,
-                            bool debugMode) {
+                            const Acts::Logger& logger) {
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
@@ -744,24 +749,18 @@ void runSelfConsistencyTest(const propagator_t& prop,
   fwdSurfaceCollector.selector.selectMaterial = true;
   fwdSurfaceCollector.selector.selectPassive = true;
 
-  if (debugMode) {
-    std::cout << ">>> Forward Propagation : start." << std::endl;
-  }
+  ACTS_DEBUG(">>> Forward Propagation : start.");
   auto fwdResult = prop.propagate(start, fwdOptions).value();
   auto fwdSurfaceHits =
       fwdResult.template get<SurfaceCollector::result_type>().collected;
   auto fwdSurfaces = collectRelevantGeoIds(
       fwdResult.template get<SurfaceCollector::result_type>());
 
-  // get the forward output to the screen
-  if (debugMode) {
-    // check if the surfaces are free
-    std::cout << ">>> Surface hits found on ..." << std::endl;
-    for (const auto& fwdSteps : fwdSurfaces) {
-      std::cout << "--> Surface with " << fwdSteps << std::endl;
-    }
-    std::cout << ">>> Forward Propagation : end." << std::endl;
+  ACTS_DEBUG(">>> Surface hits found on ...");
+  for (const auto& fwdSteps : fwdSurfaces) {
+    ACTS_DEBUG("--> Surface with " << fwdSteps);
   }
+  ACTS_DEBUG(">>> Forward Propagation : end.");
 
   // backward surface test
   Options bwdOptions(tgContext, mfContext);
@@ -778,9 +777,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   const auto& startSurface = start.referenceSurface();
 
-  if (debugMode) {
-    std::cout << ">>> Backward Propagation : start." << std::endl;
-  }
+  ACTS_DEBUG(">>> Backward Propagation : start.");
   auto bwdResult =
       prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
           .value();
@@ -789,15 +786,11 @@ void runSelfConsistencyTest(const propagator_t& prop,
   auto bwdSurfaces = collectRelevantGeoIds(
       bwdResult.template get<SurfaceCollector::result_type>());
 
-  // get the backward output to the screen
-  if (debugMode) {
-    // check if the surfaces are free
-    std::cout << ">>> Surface hits found on ..." << std::endl;
-    for (auto& bwdSteps : bwdSurfaces) {
-      std::cout << "--> Surface with " << bwdSteps << std::endl;
-    }
-    std::cout << ">>> Backward Propagation : end." << std::endl;
+  ACTS_DEBUG(">>> Surface hits found on ...");
+  for (auto& bwdSteps : bwdSurfaces) {
+    ACTS_DEBUG("--> Surface with " << bwdSteps);
   }
+  ACTS_DEBUG(">>> Backward Propagation : end.");
 
   // forward-backward compatibility test
   {
@@ -824,11 +817,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   BoundTrackParameters sParameters = start;
   std::vector<BoundTrackParameters> stepParameters;
   for (auto& fwdSteps : fwdSurfaceHits) {
-    if (debugMode) {
-      std::cout << ">>> Forward step : "
-                << sParameters.referenceSurface().geometryId() << " --> "
-                << fwdSteps.surface->geometryId() << std::endl;
-    }
+    ACTS_DEBUG(">>> Forward step : "
+               << sParameters.referenceSurface().geometryId() << " --> "
+               << fwdSteps.surface->geometryId());
 
     // make a forward step
     auto fwdStep =
@@ -847,11 +838,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   }
   // final destination surface
   const Surface& dSurface = fwdResult.endParameters->referenceSurface();
-  if (debugMode) {
-    std::cout << ">>> Forward step : "
-              << sParameters.referenceSurface().geometryId() << " --> "
-              << dSurface.geometryId() << std::endl;
-  }
+  ACTS_DEBUG(">>> Forward step : "
+             << sParameters.referenceSurface().geometryId() << " --> "
+             << dSurface.geometryId());
   auto fwdStepFinal =
       prop.propagate(sParameters, dSurface, fwdStepOptions).value();
   auto fwdStepSurfacesTmp = collectRelevantGeoIds(
@@ -879,11 +868,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // move forward step by step through the surfaces
   sParameters = *fwdResult.endParameters;
   for (auto& bwdSteps : bwdSurfaceHits) {
-    if (debugMode) {
-      std::cout << ">>> Backward step : "
-                << sParameters.referenceSurface().geometryId() << " --> "
-                << bwdSteps.surface->geometryId() << std::endl;
-    }
+    ACTS_DEBUG(">>> Backward step : "
+               << sParameters.referenceSurface().geometryId() << " --> "
+               << bwdSteps.surface->geometryId());
 
     // make a forward step
     auto bwdStep =
@@ -902,11 +889,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   }
   // final destination surface
   const Surface& dbSurface = start.referenceSurface();
-  if (debugMode) {
-    std::cout << ">>> Backward step : "
-              << sParameters.referenceSurface().geometryId() << " --> "
-              << dSurface.geometryId() << std::endl;
-  }
+  ACTS_DEBUG(">>> Backward step : "
+             << sParameters.referenceSurface().geometryId() << " --> "
+             << dSurface.geometryId());
   auto bwdStepFinal =
       prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
   auto bwdStepSurfacesTmp = collectRelevantGeoIds(
@@ -930,12 +915,12 @@ void runSelfConsistencyTest(const propagator_t& prop,
 /// @param propProbe is the probe propagator instance
 /// @param propRef is the reference propagator instance
 /// @param start start parameters for propagation
-/// @param debugMode toggle debug mode
+/// @param logger A logger instance
 template <typename propagator_probe_t, typename propagator_ref_t>
 void runConsistencyTest(const propagator_probe_t& propProbe,
                         const propagator_ref_t& propRef,
                         const CurvilinearTrackParameters& start,
-                        bool debugMode) {
+                        const Acts::Logger& logger) {
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
@@ -958,33 +943,21 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
     auto fwdSurfaces = collectRelevantGeoIds(
         fwdResult.template get<SurfaceCollector::result_type>());
 
-    // get the forward output to the screen
-    if (debugMode) {
-      // check if the surfaces are free
-      std::cout << ">>> Surface hits found on ..." << std::endl;
-      for (const auto& fwdSteps : fwdSurfaces) {
-        std::cout << "--> Surface with " << fwdSteps << std::endl;
-      }
+    ACTS_DEBUG(">>> Surface hits found on ...");
+    for (const auto& fwdSteps : fwdSurfaces) {
+      ACTS_DEBUG("--> Surface with " << fwdSteps);
     }
 
     return fwdSurfaces;
   };
 
-  if (debugMode) {
-    std::cout << ">>> Probe Propagation : start." << std::endl;
-  }
+  ACTS_DEBUG(">>> Probe Propagation : start.");
   const auto& probeSurfaces = run(propProbe);
-  if (debugMode) {
-    std::cout << ">>> Probe Propagation : end." << std::endl;
-  }
+  ACTS_DEBUG(">>> Probe Propagation : end.");
 
-  if (debugMode) {
-    std::cout << ">>> Reference Propagation : start." << std::endl;
-  }
+  ACTS_DEBUG(">>> Reference Propagation : start.");
   const auto& refSurfaces = run(propRef);
-  if (debugMode) {
-    std::cout << ">>> Reference Propagation : end." << std::endl;
-  }
+  ACTS_DEBUG(">>> Reference Propagation : end.");
 
   // probe-ref compatibility test
   BOOST_CHECK_EQUAL_COLLECTIONS(probeSurfaces.begin(), probeSurfaces.end(),
@@ -1061,6 +1034,8 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
         bdata::xrange(nTestsSelfConsistency),
     pT, phi, theta, charge, index) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   if (index < skip) {
     return;
   }
@@ -1070,21 +1045,15 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());
 
-  if (debugMode) {
-    std::cout << ">>> Run navigation tests with pT = " << pT
-              << "; phi = " << phi << "; theta = " << theta
-              << "; charge = " << charge << "; index = " << index << ";"
-              << std::endl;
-  }
+  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
+             << pT << "\n    phi = " << phi << "\n    theta = " << theta
+             << "\n    charge = " << charge << "\n    index = " << index);
 
-  if (debugMode) {
-    std::cout << ">>> Test self consistency epropagator" << std::endl;
-  }
-  runSelfConsistencyTest(epropagator, start, debugMode);
-  if (debugMode) {
-    std::cout << ">>> Test self consistency slpropagator" << std::endl;
-  }
-  runSelfConsistencyTest(slpropagator, start, debugMode);
+  ACTS_DEBUG(">>> Test self consistency epropagator");
+  runSelfConsistencyTest(epropagator, start, *navigatorTestLogger);
+
+  ACTS_DEBUG(">>> Test self consistency slpropagator");
+  runSelfConsistencyTest(slpropagator, start, *navigatorTestLogger);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -1105,6 +1074,8 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
         bdata::xrange(nTestsRefConsistency),
     pT, phi, theta, charge, index) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   if (index < skip) {
     return;
   }
@@ -1114,30 +1085,23 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
                                    std::nullopt, ParticleHypothesis::pion());
 
-  if (debugMode) {
-    std::cout << ">>> Run navigation tests with pT = " << pT
-              << "; phi = " << phi << "; theta = " << theta
-              << "; charge = " << charge << "; index = " << index << ";"
-              << std::endl;
-  }
+  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
+             << pT << "\n    phi = " << phi << "\n    theta = " << theta
+             << "\n    charge = " << charge << "\n    index = " << index);
 
-  if (debugMode) {
-    std::cout << ">>> Test reference 1 consistency epropagator" << std::endl;
-  }
-  runConsistencyTest(epropagator, refepropagator1, start, debugMode);
-  if (debugMode) {
-    std::cout << ">>> Test reference 1 consistency slpropagator" << std::endl;
-  }
-  runConsistencyTest(slpropagator, refslpropagator1, start, debugMode);
+  ACTS_DEBUG(">>> Test reference 1 consistency epropagator");
+  runConsistencyTest(epropagator, refepropagator1, start, *navigatorTestLogger);
 
-  if (debugMode) {
-    std::cout << ">>> Test reference 2 consistency epropagator" << std::endl;
-  }
-  runConsistencyTest(epropagator, refepropagator2, start, debugMode);
-  if (debugMode) {
-    std::cout << ">>> Test reference 2 consistency slpropagator" << std::endl;
-  }
-  runConsistencyTest(slpropagator, refslpropagator2, start, debugMode);
+  ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
+  runConsistencyTest(slpropagator, refslpropagator1, start,
+                     *navigatorTestLogger);
+
+  ACTS_DEBUG(">>> Test reference 2 consistency epropagator");
+  runConsistencyTest(epropagator, refepropagator2, start, *navigatorTestLogger);
+
+  ACTS_DEBUG(">>> Test reference 2 consistency slpropagator");
+  runConsistencyTest(slpropagator, refslpropagator2, start,
+                     *navigatorTestLogger);
 }
 
 }  // namespace Acts::Test
