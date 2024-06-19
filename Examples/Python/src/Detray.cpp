@@ -14,56 +14,55 @@
 #include "detray/io/frontend/implementation/json_readers.hpp"
 //#include "detray/io/frontend/utils/detector_components_reader.hpp"
 
-#include "Detray.hpp"
-
-#include <vecmem/memory/memory_resource.hpp>
-#include <vecmem/memory/host_memory_resource.hpp>
+#include "Acts/Plugins/Detray/DetrayConverter.hpp"
 
 #include <memory>
 #include <string>
+
 #include <pybind11/pybind11.h>
+#include <vecmem/memory/host_memory_resource.hpp>
+#include <vecmem/memory/memory_resource.hpp>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace Acts;
-using namespace ActsExamples;
 using namespace detray;
 using namespace detray::io::detail;
 
 using detector_t = detector<default_metadata>;
 
-
 namespace Acts::Python {
 
-    void addDetray(Context& ctx) {
+void addDetray(Context& ctx) {
+  auto [m, mex] = ctx.get("main", "examples");
 
-        auto [m, mex] = ctx.get("main", "examples");
+  {
+    py::class_<detector<default_metadata>,
+               std::shared_ptr<detector<default_metadata>>>(m,
+                                                            "detray_detector");
+  }
 
-        {
-            py::class_<detector<default_metadata>, std::shared_ptr<detector<default_metadata>>>(m, "detray_detector");     
-        }
-        
-        {
-            mex.def("DetrayPrinter", &DetrayConverter::converterPrint);
-        }
+  { mex.def("writeToJson", &DetrayConverter::writeToJson); }
+  /**
+          {
+              /// @brief Converts an Acts::Detector to a detray::detector
+              mex.def("convertDetectorToDetray",
+                      [](const Acts::GeometryContext& gctx,
+                      const Acts::Experimental::Detector& acts_detector,
+                      const std::string& name) -> auto {//detector_t
 
-        {
-            /// @brief Converts an Acts::Detector to a detray::detector
-            mex.def("DetrayConverter",
-                    [](const Acts::GeometryContext& gctx,
-                    const Acts::Experimental::Detector& acts_detector,
-                    const std::string& name) -> auto {//detector_t
-                        
-                        // Create a host memory resource
-                        vecmem::host_memory_resource host_mr;
-                        // Convert Acts detector to detray detector using the detray converter function
-                        auto det_tuple = DetrayConverter::detrayConvert(acts_detector, gctx, host_mr);   
-                        
-                        return true; //TO DO:: cannot return tuple
+                          // Create a host memory resource
+                          vecmem::host_memory_resource host_mr;
+                          // Convert Acts detector to detray detector using the
+     detray converter function auto det_tuple =
+     DetrayConverter::detrayConvert(acts_detector, gctx, host_mr);
 
-                    });
-        }
-    }
+                          return true; //TO DO:: cannot return tuple
+
+                      });
+          }
+
+          **/
 }
-
+}  // namespace Acts::Python
