@@ -1,7 +1,6 @@
 add_library(
   ActsPluginDetray SHARED
-  src/Detray.cpp)
-  #include/*.hpp
+  src/DetrayConverter.cpp)
 
 add_dependencies(ActsPluginDetray 
     detray::core
