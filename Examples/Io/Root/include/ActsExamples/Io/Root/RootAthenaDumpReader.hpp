@@ -72,7 +72,7 @@ class RootAthenaDumpReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext &context) override;
+  ProcessCode read(const ActsExamples::AlgorithmContext &ctx) override;
 
   /// Readonly access to the config
   const Config &config() const { return m_cfg; }
@@ -108,11 +108,11 @@ class RootAthenaDumpReader : public IReader {
   static constexpr unsigned int maxPart = 1500000;
 
   // Declaration of leaf types
-  unsigned int run_number;
-  long unsigned int event_number;
-  int nSE;
+  unsigned int run_number = 0;
+  long unsigned int event_number = 0;
+  int nSE = 0;
   int SEID[4] = {};  //[nSE]
-  int nCL;
+  int nCL = 0;
   int CLindex[maxCL] = {};  //[nCL]
 
   // Clusters
@@ -153,7 +153,7 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<double>> *CLlocal_cov;
 
   // Particles
-  Int_t nPartEVT;
+  Int_t nPartEVT = 0;
   Int_t Part_event_number[maxPart] = {};  //[nPartEVT]
   Int_t Part_barcode[maxPart] = {};       //[nPartEVT]
   Float_t Part_px[maxPart] = {};          //[nPartEVT]
@@ -177,7 +177,7 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<int>> *Part_vParentBarcode;
 
   // Spacepoints
-  Int_t nSP;
+  Int_t nSP = 0;
   Int_t SPindex[maxSP] = {};        //[nSP]
   Double_t SPx[maxSP] = {};         //[nSP]
   Double_t SPy[maxSP] = {};         //[nSP]
@@ -196,7 +196,7 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<float>> *SPtopStripCenterPosition;
 
   // Tracks
-  Int_t nTRK;
+  Int_t nTRK = 0;
   Int_t TRKindex[maxTRK] = {};                //[nTRK]
   Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
   Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
@@ -215,7 +215,9 @@ class RootAthenaDumpReader : public IReader {
   Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
   Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
   Float_t TTCprobability[maxTRK] = {};  //[nTRK]
-  Int_t nDTT;
+
+  // DDT
+  Int_t nDTT = 0;
   Int_t DTTindex[maxDTT] = {};  //[nDTT]
   Int_t DTTsize[maxDTT] = {};   //[nDTT]
   std::vector<std::vector<int>> *DTTtrajectory_eventindex;
