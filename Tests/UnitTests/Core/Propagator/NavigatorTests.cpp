@@ -229,14 +229,6 @@ struct PropagatorState {
 
   /// emulate the options template
   struct Options {
-    /// Debug output
-    /// the string where debug messages are stored (optionally)
-    bool debug = false;
-    std::string debugString = "";
-    /// buffer & formatting for consistent output
-    std::size_t debugPfxWidth = 30;
-    std::size_t debugMsgWidth = 50;
-
     Direction direction = Direction::Forward;
 
     const Acts::Logger& logger = Acts::getDummyLogger();
@@ -326,9 +318,6 @@ auto tGeometry = cGeometry();
 const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
-// the debug boolean
-bool debug = true;
-
 Acts::Logging::Level logLevel = Acts::Logging::DEBUG;
 std::unique_ptr<const Acts::Logger> navigatorTestLogger =
     Acts::getDefaultLogger("NavigatorTest", logLevel);
@@ -342,7 +331,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 
   // the propagator cache
   PropagatorState state;
-  state.options.debug = debug;
 
   // the stepper cache
   state.stepping.pos4 = position4;
@@ -477,7 +465,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // the propagator cache
   PropagatorState state;
-  state.options.debug = debug;
 
   // the stepper cache
   state.stepping.pos4 = position4;
@@ -515,11 +502,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
                   s_onSurfaceTolerance);
 
   ACTS_DEBUG("<<< Test 1a >>> initialize at " << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    // Clear the debug string for the next test
-    state.options.debugString = "";
-  }
 
   // Do the step towards the beam pipe
   step(state.stepping);
@@ -539,10 +521,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1b >>> step to the BeamPipe at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 
   // Do the step towards the boundary
   step(state.stepping);
@@ -555,10 +533,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1c >>> step to the Boundary at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 
   // positive return: do the step
   step(state.stepping);
@@ -570,10 +544,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1d >>> step to 1st layer at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 
   // Step through the surfaces on first layer
   for (std::size_t isf = 0; isf < 5; ++isf) {
@@ -586,10 +556,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
     ACTS_DEBUG("<<< Test 1e-1i >>> step within 1st layer at  "
                << toString(state.stepping.pos4));
-    if (debug) {
-      ACTS_DEBUG(state.options.debugString);
-      state.options.debugString = "";
-    }
   }
 
   // positive return: do the step
@@ -602,10 +568,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1j >>> step to 2nd layer at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 
   // Step through the surfaces on second layer
   for (std::size_t isf = 0; isf < 5; ++isf) {
@@ -618,10 +580,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
     ACTS_DEBUG("<<< Test 1k-1o >>> step within 2nd layer at  "
                << toString(state.stepping.pos4));
-    if (debug) {
-      ACTS_DEBUG(state.options.debugString);
-      state.options.debugString = "";
-    }
   }
 
   // positive return: do the step
@@ -634,10 +592,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1p >>> step to 3rd layer at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 
   // Step through the surfaces on third layer
   for (std::size_t isf = 0; isf < 3; ++isf) {
@@ -650,10 +604,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
     ACTS_DEBUG("<<< Test 1q-1s >>> step within 3rd layer at  "
                << toString(state.stepping.pos4));
-    if (debug) {
-      ACTS_DEBUG(state.options.debugString);
-      state.options.debugString = "";
-    }
   }
 
   // positive return: do the step
@@ -666,10 +616,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1t >>> step to 4th layer at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 
   // Step through the surfaces on second layer
   for (std::size_t isf = 0; isf < 3; ++isf) {
@@ -682,10 +628,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
     ACTS_DEBUG("<<< Test 1t-1v >>> step within 4th layer at  "
                << toString(state.stepping.pos4));
-    if (debug) {
-      ACTS_DEBUG(state.options.debugString);
-      state.options.debugString = "";
-    }
   }
 
   // positive return: do the step
@@ -698,10 +640,6 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   ACTS_DEBUG("<<< Test 1w >>> step to boundary at  "
              << toString(state.stepping.pos4));
-  if (debug) {
-    ACTS_DEBUG(state.options.debugString);
-    state.options.debugString = "";
-  }
 }
 
 using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
@@ -727,7 +665,7 @@ std::vector<GeometryIdentifier> collectRelevantGeoIds(
 ///
 /// @param prop is the propagator instance
 /// @param start start parameters for propagation
-/// @param debugMode toggle debug mode
+/// @param logger A logger instance
 template <typename propagator_t>
 void runSelfConsistencyTest(const propagator_t& prop,
                             const CurvilinearTrackParameters& start,
@@ -967,7 +905,6 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 const int nTestsSelfConsistency = 500;
 const int nTestsRefConsistency = 10;
 int skip = 0;
-bool debugMode = false;
 
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
