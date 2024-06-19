@@ -171,12 +171,14 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 /// Allow access to features with nice names
 enum feat : std::size_t {
   eR = 0,
-  ePhi,
-  eZ,
-  eCellCount,
-  eCellSum,
-  eClusterX,
-  eClusterY
+  ePhi = 1,
+  eX = 0,
+  eY = 1,
+  eZ = 2,
+  eCellCount = 3,
+  eCellSum = 4,
+  eClusterX = 5,
+  eClusterY = 6
 };
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
@@ -221,12 +223,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     // For now just take the first index since does require one single index
     // per spacepoint
+    // TODO does it work for the module map construction to use only the first sp?
     const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
     spacepointIDs.push_back(sl.index());
     moduleIds.push_back(sl.geometryId().value());
 
-    featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
-    featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
+    if( m_cfg.useXYZ ) {
+      featurePtr[eX] = sp.x() / m_cfg.xScale;
+      featurePtr[eY] = sp.y() / m_cfg.yScale;
+    } else {
+      featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
+      featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
+    }
     featurePtr[eZ] = sp.z() / m_cfg.zScale;
 
     if (clusters) {

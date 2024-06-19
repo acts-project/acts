@@ -65,11 +65,16 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// Scaling of the input features
     float rScale = 1.f;
     float phiScale = 1.f;
+    float xScale = 1.f;
+    float yScale = 1.f;
     float zScale = 1.f;
     float cellCountScale = 1.f;
     float cellSumScale = 1.f;
     float clusterXScale = 1.f;
     float clusterYScale = 1.f;
+
+    /// Hand over x,y,z-coordinates instead of r,phi,z
+    bool useXYZ = false;
 
     /// Remove track candidates with 2 or less hits
     bool filterShortTracks = false;
