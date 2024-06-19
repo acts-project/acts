@@ -10,15 +10,19 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
-#include "graph_creator.hpp"
+#include <graph_creator>
 
 namespace Acts {
 
-ModuleMapCpp::ModuleMapCpp(const Config &cfg) : m_cfg(cfg) {
+ModuleMapCpp::ModuleMapCpp(const Config &cfg,
+                           std::unique_ptr<const Acts::Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
   m_graphCreator = std::make_unique<graph_creator<float>>(
       m_cfg.moduleMapPath, 10, std::pair<float, float>{0.f, 10.f}, std::nullopt,
       std::nullopt, false, false);
 }
+
+ModuleMapCpp::~ModuleMapCpp() {}
 
 std::tuple<std::any, std::any> ModuleMapCpp::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
@@ -66,7 +70,7 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
   const auto numEdges = boost::num_edges(graph.graph_impl());
 
   std::vector<int32_t> edgeVector;
-  edgeVector.reserve(2*numEdges);
+  edgeVector.reserve(2 * numEdges);
 
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {

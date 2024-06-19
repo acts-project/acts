@@ -13,6 +13,7 @@
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
@@ -164,6 +165,27 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         py::arg("level"));
   }
 #endif
+
+  {
+    using Alg = Acts::ModuleMapCpp;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
+            mex, "ModuleMapCpp")
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("ModuleMap", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(moduleMapPath);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
