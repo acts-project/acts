@@ -68,8 +68,9 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
   std::string eventId = "no-id";
 
   ACTS_DEBUG("Build graph...");
+  bool print = logger().level() == Acts::Logging::VERBOSE;
   auto [graph, _] =
-      m_graphCreator->build_impl(hitsTree, particlesTree, eventId, false);
+      m_graphCreator->build_impl(hitsTree, particlesTree, eventId, print);
   const auto numEdges = boost::num_edges(graph.graph_impl());
 
   ACTS_DEBUG("Got " << numEdges << " edges, put them in a vector...");
@@ -92,7 +93,8 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
   auto featureTensor = detail::vectorToTensor2D(inputValues, numFeatures);
   auto edgeTensor = detail::vectorToTensor2D(edgeVector, numEdges);
 
-  ACTS_DEBUG("featureTensor: " << featureTensor.sizes() << ", edgeTensor: " << edgeTensor.sizes());
+  ACTS_DEBUG("featureTensor: " << featureTensor.sizes()
+                               << ", edgeTensor: " << edgeTensor.sizes());
   return std::make_tuple(std::move(featureTensor), std::move(edgeTensor));
 }
 
