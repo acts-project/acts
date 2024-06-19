@@ -9,11 +9,11 @@
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
-#include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
@@ -186,7 +186,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
@@ -229,8 +228,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
                      }),
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
                  py::arg("trackBuilder"), py::arg("level"))
-            .def("run", &ExaTrkXPipeline::run, py::arg("features"), py::arg("moduleIds"),
-                 py::arg("spacepoints"), py::arg("deviceHint") = -1,
+            .def("run", &ExaTrkXPipeline::run, py::arg("features"),
+                 py::arg("moduleIds"), py::arg("spacepoints"),
+                 py::arg("deviceHint") = -1,
                  py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }

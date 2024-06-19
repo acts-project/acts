@@ -223,12 +223,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     // For now just take the first index since does require one single index
     // per spacepoint
-    // TODO does it work for the module map construction to use only the first sp?
+    // TODO does it work for the module map construction to use only the first
+    // sp?
     const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
     spacepointIDs.push_back(sl.index());
     moduleIds.push_back(sl.geometryId().value());
 
-    if( m_cfg.useXYZ ) {
+    if (m_cfg.useXYZ) {
       featurePtr[eX] = sp.x() / m_cfg.xScale;
       featurePtr[eY] = sp.y() / m_cfg.yScale;
     } else {
@@ -265,8 +266,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     std::lock_guard<std::mutex> lock(m_mutex);
 
     Acts::ExaTrkXTiming timing;
-    auto res =
-        m_pipeline.run(features, moduleIds, spacepointIDs, deviceHint, *hook, &timing);
+    auto res = m_pipeline.run(features, moduleIds, spacepointIDs, deviceHint,
+                              *hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
