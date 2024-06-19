@@ -1,7 +1,17 @@
+
 set(SOURCES 
   src/buildEdges.cpp
   src/ExaTrkXPipeline.cpp
+  src/ModuleMapCpp.cpp
 )
+
+if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+  find_package(ModuleMapGraph REQUIRED COMPONENTS CPU)
+
+  list(APPEND SOURCES
+  src/ModuleMapCpp.cpp
+  )
+endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
   list(APPEND SOURCES 
@@ -69,8 +79,10 @@ if(CUDAToolkit_FOUND)
     PRIVATE
       frnn
   )
+  message(WARNING "Build with CUDA")
 else()
   target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
+  message(WARNING "Build CPUONLY")
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
@@ -102,6 +114,10 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
   )
 endif()
 
+
+if(ACTS_EXATRKX_ENABLE_MODULEMAP)
+  target_link_libraries(ActsPluginExaTrkX PRIVATE ModuleMapGraph::CPU)
+endif()
 
 install(
   TARGETS ActsPluginExaTrkX

@@ -38,7 +38,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
   ~TorchMetricLearning();
 
   std::tuple<std::any, std::any> operator()(std::vector<float> &inputValues,
-                                            std::size_t numNodes,
+                                            std::size_t numNodes, const std::vector<uint64_t> &moduleIds,
                                             int deviceHint = -1) override;
 
   Config config() const { return m_cfg; }

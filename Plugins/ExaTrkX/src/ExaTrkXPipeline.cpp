@@ -35,11 +35,11 @@ ExaTrkXPipeline::ExaTrkXPipeline(
 }
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
-    std::vector<float> &features, std::vector<int> &spacepointIDs,
+    std::vector<float> &features, const std::vector<uint64_t> &moduleIds, std::vector<int> &spacepointIDs,
     int deviceHint, const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
   auto t0 = std::chrono::high_resolution_clock::now();
   auto [nodes, edges] =
-      (*m_graphConstructor)(features, spacepointIDs.size(), deviceHint);
+      (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, deviceHint);
   auto t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {

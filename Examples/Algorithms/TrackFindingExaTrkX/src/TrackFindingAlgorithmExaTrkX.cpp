@@ -205,8 +205,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   std::vector<float> features(numSpacepoints * numFeatures);
   std::vector<int> spacepointIDs;
+  std::vector<uint64_t> moduleIds;
 
   spacepointIDs.reserve(spacepoints.size());
+  moduleIds.reserve(spacepoints.size());
 
   double sumCells = 0.0;
   double sumActivation = 0.0;
@@ -221,6 +223,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // per spacepoint
     const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
     spacepointIDs.push_back(sl.index());
+    moduleIds.push_back(sl.geometryId().value());
 
     featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
     featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
@@ -255,7 +258,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     Acts::ExaTrkXTiming timing;
     auto res =
-        m_pipeline.run(features, spacepointIDs, deviceHint, *hook, &timing);
+        m_pipeline.run(features, moduleIds, spacepointIDs, deviceHint, *hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 

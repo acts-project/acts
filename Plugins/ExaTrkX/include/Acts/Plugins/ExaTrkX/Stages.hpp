@@ -10,6 +10,7 @@
 
 #include <any>
 #include <vector>
+#include <cstdint>
 
 namespace Acts {
 
@@ -29,7 +30,7 @@ class GraphConstructionBase {
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues, std::size_t numNodes,
+      std::vector<float> &inputValues, std::size_t numNodes, const std::vector<uint64_t> &moduleIds,
       int deviceHint = -1) = 0;
 
   virtual ~GraphConstructionBase() = default;
