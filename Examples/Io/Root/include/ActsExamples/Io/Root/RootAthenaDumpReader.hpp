@@ -111,21 +111,21 @@ class RootAthenaDumpReader : public IReader {
   unsigned int run_number;
   long unsigned int event_number;
   int nSE;
-  int SEID[4];  //[nSE]
+  int SEID[4] = {};  //[nSE]
   int nCL;
-  int CLindex[maxCL];  //[nCL]
+  int CLindex[maxCL] = {};  //[nCL]
 
   // Clusters
   std::vector<std::string> *CLhardware;
-  Double_t CLx[maxCL];           //[nCL]
-  Double_t CLy[maxCL];           //[nCL]
-  Double_t CLz[maxCL];           //[nCL]
-  Int_t CLbarrel_endcap[maxCL];  //[nCL]
-  Int_t CLlayer_disk[maxCL];     //[nCL]
-  Int_t CLeta_module[maxCL];     //[nCL]
-  Int_t CLphi_module[maxCL];     //[nCL]
-  Int_t CLside[maxCL];           //[nCL]
-  ULong64_t CLmoduleID[maxCL];   //[nCL]
+  Double_t CLx[maxCL] = {};           //[nCL]
+  Double_t CLy[maxCL] = {};           //[nCL]
+  Double_t CLz[maxCL] = {};           //[nCL]
+  Int_t CLbarrel_endcap[maxCL] = {};  //[nCL]
+  Int_t CLlayer_disk[maxCL] = {};     //[nCL]
+  Int_t CLeta_module[maxCL] = {};     //[nCL]
+  Int_t CLphi_module[maxCL] = {};     //[nCL]
+  Int_t CLside[maxCL] = {};           //[nCL]
+  ULong64_t CLmoduleID[maxCL] = {};   //[nCL]
   std::vector<std::vector<int>> *CLparticleLink_eventIndex;
   std::vector<std::vector<int>> *CLparticleLink_barcode;
   std::vector<std::vector<bool>> *CLbarcodesLinked;
@@ -133,63 +133,63 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<int>> *CLphis;
   std::vector<std::vector<int>> *CLetas;
   std::vector<std::vector<int>> *CLtots;
-  Double_t CLloc_direction1[maxCL];      //[nCL]
-  Double_t CLloc_direction2[maxCL];      //[nCL]
-  Double_t CLloc_direction3[maxCL];      //[nCL]
-  Double_t CLJan_loc_direction1[maxCL];  //[nCL]
-  Double_t CLJan_loc_direction2[maxCL];  //[nCL]
-  Double_t CLJan_loc_direction3[maxCL];  //[nCL]
-  Int_t CLpixel_count[maxCL];            //[nCL]
-  Float_t CLcharge_count[maxCL];         //[nCL]
-  Float_t CLloc_eta[maxCL];              //[nCL]
-  Float_t CLloc_phi[maxCL];              //[nCL]
-  Float_t CLglob_eta[maxCL];             //[nCL]
-  Float_t CLglob_phi[maxCL];             //[nCL]
-  Double_t CLeta_angle[maxCL];           //[nCL]
-  Double_t CLphi_angle[maxCL];           //[nCL]
-  Float_t CLnorm_x[maxCL];               //[nCL]
-  Float_t CLnorm_y[maxCL];               //[nCL]
-  Float_t CLnorm_z[maxCL];               //[nCL]
+  Double_t CLloc_direction1[maxCL] = {};      //[nCL]
+  Double_t CLloc_direction2[maxCL] = {};      //[nCL]
+  Double_t CLloc_direction3[maxCL] = {};      //[nCL]
+  Double_t CLJan_loc_direction1[maxCL] = {};  //[nCL]
+  Double_t CLJan_loc_direction2[maxCL] = {};  //[nCL]
+  Double_t CLJan_loc_direction3[maxCL] = {};  //[nCL]
+  Int_t CLpixel_count[maxCL] = {};            //[nCL]
+  Float_t CLcharge_count[maxCL] = {};         //[nCL]
+  Float_t CLloc_eta[maxCL] = {};              //[nCL]
+  Float_t CLloc_phi[maxCL] = {};              //[nCL]
+  Float_t CLglob_eta[maxCL] = {};             //[nCL]
+  Float_t CLglob_phi[maxCL] = {};             //[nCL]
+  Double_t CLeta_angle[maxCL] = {};           //[nCL]
+  Double_t CLphi_angle[maxCL] = {};           //[nCL]
+  Float_t CLnorm_x[maxCL] = {};               //[nCL]
+  Float_t CLnorm_y[maxCL] = {};               //[nCL]
+  Float_t CLnorm_z[maxCL] = {};               //[nCL]
   std::vector<std::vector<double>> *CLlocal_cov;
 
   // Particles
   Int_t nPartEVT;
-  Int_t Part_event_number[maxPart];  //[nPartEVT]
-  Int_t Part_barcode[maxPart];       //[nPartEVT]
-  Float_t Part_px[maxPart];          //[nPartEVT]
-  Float_t Part_py[maxPart];          //[nPartEVT]
-  Float_t Part_pz[maxPart];          //[nPartEVT]
-  Float_t Part_pt[maxPart];          //[nPartEVT]
-  Float_t Part_eta[maxPart];         //[nPartEVT]
-  Float_t Part_vx[maxPart];          //[nPartEVT]
-  Float_t Part_vy[maxPart];          //[nPartEVT]
-  Float_t Part_vz[maxPart];          //[nPartEVT]
-  Float_t Part_radius[maxPart];      //[nPartEVT]
-  Float_t Part_status[maxPart];      //[nPartEVT]
-  Float_t Part_charge[maxPart];      //[nPartEVT]
-  Int_t Part_pdg_id[maxPart];        //[nPartEVT]
-  Int_t Part_passed[maxPart];        //[nPartEVT]
-  Int_t Part_vProdNin[maxPart];      //[nPartEVT]
-  Int_t Part_vProdNout[maxPart];     //[nPartEVT]
-  Int_t Part_vProdStatus[maxPart];   //[nPartEVT]
-  Int_t Part_vProdBarcode[maxPart];  //[nPartEVT]
+  Int_t Part_event_number[maxPart] = {};  //[nPartEVT]
+  Int_t Part_barcode[maxPart] = {};       //[nPartEVT]
+  Float_t Part_px[maxPart] = {};          //[nPartEVT]
+  Float_t Part_py[maxPart] = {};          //[nPartEVT]
+  Float_t Part_pz[maxPart] = {};          //[nPartEVT]
+  Float_t Part_pt[maxPart] = {};          //[nPartEVT]
+  Float_t Part_eta[maxPart] = {};         //[nPartEVT]
+  Float_t Part_vx[maxPart] = {};          //[nPartEVT]
+  Float_t Part_vy[maxPart] = {};          //[nPartEVT]
+  Float_t Part_vz[maxPart] = {};          //[nPartEVT]
+  Float_t Part_radius[maxPart] = {};      //[nPartEVT]
+  Float_t Part_status[maxPart] = {};      //[nPartEVT]
+  Float_t Part_charge[maxPart] = {};      //[nPartEVT]
+  Int_t Part_pdg_id[maxPart] = {};        //[nPartEVT]
+  Int_t Part_passed[maxPart] = {};        //[nPartEVT]
+  Int_t Part_vProdNin[maxPart] = {};      //[nPartEVT]
+  Int_t Part_vProdNout[maxPart] = {};     //[nPartEVT]
+  Int_t Part_vProdStatus[maxPart] = {};   //[nPartEVT]
+  Int_t Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
   std::vector<std::vector<int>> *Part_vParentID;
   std::vector<std::vector<int>> *Part_vParentBarcode;
 
   // Spacepoints
   Int_t nSP;
-  Int_t SPindex[maxSP];        //[nSP]
-  Double_t SPx[maxSP];         //[nSP]
-  Double_t SPy[maxSP];         //[nSP]
-  Double_t SPz[maxSP];         //[nSP]
-  Int_t SPCL1_index[maxSP];    //[nSP]
-  Int_t SPCL2_index[maxSP];    //[nSP]
-  Int_t SPisOverlap[maxSP];    //[nSP]
-  double SPradius[maxSP];      //[nSP]
-  double SPcovr[maxSP];        //[nSP]
-  double SPcovz[maxSP];        //[nSP]
-  float SPhl_topstrip[maxSP];  //[nSP]
-  float SPhl_botstrip[maxSP];  //[nSP]
+  Int_t SPindex[maxSP] = {};        //[nSP]
+  Double_t SPx[maxSP] = {};         //[nSP]
+  Double_t SPy[maxSP] = {};         //[nSP]
+  Double_t SPz[maxSP] = {};         //[nSP]
+  Int_t SPCL1_index[maxSP] = {};    //[nSP]
+  Int_t SPCL2_index[maxSP] = {};    //[nSP]
+  Int_t SPisOverlap[maxSP] = {};    //[nSP]
+  double SPradius[maxSP] = {};      //[nSP]
+  double SPcovr[maxSP] = {};        //[nSP]
+  double SPcovz[maxSP] = {};        //[nSP]
+  float SPhl_topstrip[maxSP] = {};  //[nSP]
+  float SPhl_botstrip[maxSP] = {};  //[nSP]
   std::vector<std::vector<float>> *SPtopStripDirection;
   std::vector<std::vector<float>> *SPbottomStripDirection;
   std::vector<std::vector<float>> *SPstripCenterDistance;
@@ -197,27 +197,27 @@ class RootAthenaDumpReader : public IReader {
 
   // Tracks
   Int_t nTRK;
-  Int_t TRKindex[maxTRK];                //[nTRK]
-  Int_t TRKtrack_fitter[maxTRK];         //[nTRK]
-  Int_t TRKparticle_hypothesis[maxTRK];  //[nTRK]
+  Int_t TRKindex[maxTRK] = {};                //[nTRK]
+  Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
+  Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
   std::vector<std::vector<int>> *TRKproperties;
   std::vector<std::vector<int>> *TRKpattern;
-  Int_t TRKndof[maxTRK];     //[nTRK]
-  Int_t TRKmot[maxTRK];      //[nTRK]
-  Int_t TRKoot[maxTRK];      //[nTRK]
-  Float_t TRKchiSq[maxTRK];  //[nTRK]
+  Int_t TRKndof[maxTRK] = {};     //[nTRK]
+  Int_t TRKmot[maxTRK] = {};      //[nTRK]
+  Int_t TRKoot[maxTRK] = {};      //[nTRK]
+  Float_t TRKchiSq[maxTRK] = {};  //[nTRK]
   std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index;
   std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index;
-  Int_t TRKcharge[maxTRK];  //[nTRK]
+  Int_t TRKcharge[maxTRK] = {};  //[nTRK]
   std::vector<std::vector<double>> *TRKperigee_position;
   std::vector<std::vector<double>> *TRKperigee_momentum;
-  Int_t TTCindex[maxTRK];          //[nTRK]
-  Int_t TTCevent_index[maxTRK];    //[nTRK]
-  Int_t TTCparticle_link[maxTRK];  //[nTRK]
-  Float_t TTCprobability[maxTRK];  //[nTRK]
+  Int_t TTCindex[maxTRK] = {};          //[nTRK]
+  Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
+  Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
+  Float_t TTCprobability[maxTRK] = {};  //[nTRK]
   Int_t nDTT;
-  Int_t DTTindex[maxDTT];  //[nDTT]
-  Int_t DTTsize[maxDTT];   //[nDTT]
+  Int_t DTTindex[maxDTT] = {};  //[nDTT]
+  Int_t DTTsize[maxDTT] = {};   //[nDTT]
   std::vector<std::vector<int>> *DTTtrajectory_eventindex;
   std::vector<std::vector<int>> *DTTtrajectory_barcode;
   std::vector<std::vector<int>> *DTTstTruth_subDetType;

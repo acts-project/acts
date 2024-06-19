@@ -43,32 +43,32 @@ ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
   // Set the branches
 
   // Set object pointer
-  CLhardware = 0;
-  CLparticleLink_eventIndex = 0;
-  CLparticleLink_barcode = 0;
-  CLbarcodesLinked = 0;
-  CLparticle_charge = 0;
-  CLphis = 0;
-  CLetas = 0;
-  CLtots = 0;
-  CLlocal_cov = 0;
-  Part_vParentID = 0;
-  Part_vParentBarcode = 0;
+  CLhardware = nullptr;
+  CLparticleLink_eventIndex = nullptr;
+  CLparticleLink_barcode = nullptr;
+  CLbarcodesLinked = nullptr;
+  CLparticle_charge = nullptr;
+  CLphis = nullptr;
+  CLetas = nullptr;
+  CLtots = nullptr;
+  CLlocal_cov = nullptr;
+  Part_vParentID = nullptr;
+  Part_vParentBarcode = nullptr;
   SPtopStripDirection = nullptr;
   SPbottomStripDirection = nullptr;
   SPstripCenterDistance = nullptr;
   SPtopStripCenterPosition = nullptr;
-  TRKproperties = 0;
-  TRKpattern = 0;
-  TRKmeasurementsOnTrack_pixcl_sctcl_index = 0;
-  TRKoutliersOnTrack_pixcl_sctcl_index = 0;
-  TRKperigee_position = 0;
-  TRKperigee_momentum = 0;
-  DTTtrajectory_eventindex = 0;
-  DTTtrajectory_barcode = 0;
-  DTTstTruth_subDetType = 0;
-  DTTstTrack_subDetType = 0;
-  DTTstCommon_subDetType = 0;
+  TRKproperties = nullptr;
+  TRKpattern = nullptr;
+  TRKmeasurementsOnTrack_pixcl_sctcl_index = nullptr;
+  TRKoutliersOnTrack_pixcl_sctcl_index = nullptr;
+  TRKperigee_position = nullptr;
+  TRKperigee_momentum = nullptr;
+  DTTtrajectory_eventindex = nullptr;
+  DTTtrajectory_barcode = nullptr;
+  DTTstTruth_subDetType = nullptr;
+  DTTstTrack_subDetType = nullptr;
+  DTTstCommon_subDetType = nullptr;
 
   m_inputchain->SetBranchAddress("run_number", &run_number);
   m_inputchain->SetBranchAddress("event_number", &event_number);
