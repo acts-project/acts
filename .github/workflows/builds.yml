@@ -52,11 +52,22 @@ jobs:
         # versions
         run: >
           ccache -z &&
-          cmake -B build -S . --preset linux_ubuntu
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
@@ -258,9 +269,21 @@ jobs:
         # versions
         run: >
           ccache -z &&
-          cmake -B build -S . --preset linux_ubuntu
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_FORCE_ASSERTIONS=OFF
+          -DACTS_BUILD_ANALYSIS_APPS=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
@@ -446,12 +469,22 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z &&
-          cmake -B build -S . --preset macos
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DPython_EXECUTABLE=/usr/local/acts/bin/python3.10
           -DDD4HEP_DEBUG_CMAKE=ON
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
