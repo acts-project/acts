@@ -49,31 +49,6 @@
       }
     },
     {
-      "name": "linux_nodeps",
-      "displayName": "Linux without dependencies",
-      "inherits": "ci",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
-        "ACTS_BUILD_UNITTESTS": true,
-        "ACTS_BUILD_INTEGRATIONTESTS": true,
-        "ACTS_FORCE_ASSERTIONS": true,
-        "ACTS_USE_SYSTEM_BOOST": false,
-        "ACTS_USE_SYSTEM_EIGEN3": false,
-        "ACTS_BUILD_PLUGIN_JSON": true
-      }
-    },
-    {
-      "name": "linux_nodeps_examples",
-      "displayName": "Linux without dependencies Examples build",
-      "inherits": "linux_nodeps",
-      "cacheVariables": {
-        "ACTS_BUILD_UNITTESTS": false,
-        "ACTS_BUILD_INTEGRATIONTESTS": false,
-        "ACTS_BUILD_PLUGIN_JSON": false,
-        "ACTS_BUILD_EXAMPLES": true
-      }
-    },
-    {
       "name": "macos",
       "displayName": "macOS build",
       "inherits": "ci",

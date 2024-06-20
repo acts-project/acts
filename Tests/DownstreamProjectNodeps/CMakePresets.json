@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "linux_nodeps",
+      "displayName": "Linux without dependencies",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": true,
+        "CMAKE_CXX_FLAGS": "-Werror",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "ACTS_BUILD_UNITTESTS": true,
+        "ACTS_BUILD_INTEGRATIONTESTS": true,
+        "ACTS_FORCE_ASSERTIONS": true,
+        "ACTS_USE_SYSTEM_BOOST": false,
+        "ACTS_USE_SYSTEM_EIGEN3": false,
+        "ACTS_BUILD_PLUGIN_JSON": true
+      }
+    },
+    {
+      "name": "linux_nodeps_examples",
+      "displayName": "Linux without dependencies Examples build",
+      "inherits": "linux_nodeps",
+      "cacheVariables": {
+        "ACTS_BUILD_UNITTESTS": false,
+        "ACTS_BUILD_INTEGRATIONTESTS": false,
+        "ACTS_BUILD_PLUGIN_JSON": false,
+        "ACTS_BUILD_EXAMPLES": true
+      }
+    }
+  ]
+}
