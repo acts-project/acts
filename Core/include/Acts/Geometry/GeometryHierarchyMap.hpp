@@ -93,10 +93,11 @@ class GeometryHierarchyMap {
   /// Return the number of stored elements.
   Size size() const { return m_values.size(); }
 
-  // Return the geometry identifier - value pairs (i.e., it reconstructs the input).
+  // Return the geometry identifier - value pairs (i.e., it reconstructs the
+  // input).
   const std::vector<InputElement> getElements() const {
     std::vector<InputElement> res;
-    for (std::size_t i = 0; i < size(); i++){
+    for (std::size_t i = 0; i < size(); i++) {
       res.push_back({m_ids[i], m_values[i]});
     }
     return res;

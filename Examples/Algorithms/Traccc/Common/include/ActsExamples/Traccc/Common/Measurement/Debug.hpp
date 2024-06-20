@@ -15,10 +15,11 @@
 #include <cstdint>
 #include <cstdlib>
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
 
-// This file is for debugging and for getting the matching between two collections of measurements as a string.
+// This file is for debugging and for getting the matching between two
+// collections of measurements as a string.
 
 namespace ActsExamples::Traccc::Common::Measurement {
 
@@ -26,8 +27,12 @@ namespace ActsExamples::Traccc::Common::Measurement {
 /// @param measurements1 the measurements (1).
 /// @param measurements2 the measurements (2).
 /// @param indexMap the index map: measurements1 indices -> measurement2 indices.
-/// The index map describes which elements are related in the two measurement collections.
+/// The index map describes which elements are related in the two measurement
+/// collections.
 /// @return a string formatted as a table.
-std::string pairingStatistics(const std::vector<Acts::BoundVariantMeasurement>& measurements1, const std::vector<Acts::BoundVariantMeasurement>& measurements2, const std::map<std::size_t, std::size_t>& indexMap);
+std::string pairingStatistics(
+    const std::vector<Acts::BoundVariantMeasurement>& measurements1,
+    const std::vector<Acts::BoundVariantMeasurement>& measurements2,
+    const std::map<std::size_t, std::size_t>& indexMap);
 
-}
+}  // namespace ActsExamples::Traccc::Common::Measurement

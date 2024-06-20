@@ -20,8 +20,8 @@
 // System include(s).
 #include <cstdint>
 #include <cstdlib>
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace ActsExamples::Traccc::Common::Conversion {
 
@@ -31,4 +31,4 @@ namespace ActsExamples::Traccc::Common::Conversion {
 std::map<std::uint64_t, std::vector<traccc::cell>> tracccCellsMap(
     const std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>& map);
 
-}
+}  // namespace ActsExamples::Traccc::Common::Conversion

@@ -20,8 +20,7 @@ namespace ActsExamples::Traccc::Common::Conversion {
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
-Acts::BoundIndices boundIndex(
-    const traccc::bound_indices tracccBoundIndex) {
+Acts::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex) {
   switch (tracccBoundIndex) {
     case traccc::bound_indices::e_bound_loc0:
       return Acts::BoundIndices::eBoundLoc0;
@@ -42,4 +41,4 @@ Acts::BoundIndices boundIndex(
   }
 }
 
-}
+}  // namespace ActsExamples::Traccc::Common::Conversion

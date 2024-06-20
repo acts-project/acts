@@ -26,4 +26,4 @@ namespace ActsExamples::Traccc::Common::Conversion {
 traccc::digitization_config tracccConfig(
     const Acts::GeometryHierarchyMap<DigiComponentsConfig>& config);
 
-}
+}  // namespace ActsExamples::Traccc::Common::Conversion

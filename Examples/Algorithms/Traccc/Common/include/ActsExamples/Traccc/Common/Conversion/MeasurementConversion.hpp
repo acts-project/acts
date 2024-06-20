@@ -32,10 +32,10 @@
 #include "traccc/edm/track_state.hpp"
 
 // System include(s)
-#include <memory>
-#include <variant>
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
+#include <variant>
 #include <vector>
 
 namespace ActsExamples::Traccc::Common::Conversion {
@@ -43,8 +43,7 @@ namespace ActsExamples::Traccc::Common::Conversion {
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
-Acts::BoundIndices boundIndex(
-    const traccc::bound_indices tracccBoundIndex);
+Acts::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
 
 /// @brief Creates an Acts measurement from a traccc measurement.
 /// @tparam the dimension of the Acts measurement (subspace size).
@@ -158,16 +157,19 @@ inline Acts::ActsVector<2> getVariance(
 /// @return A vector of Acts bound variant measurements.
 /// @note The type IndexSourceLink is used for the measurements' source links.
 template <typename detector_t, typename allocator_t>
-inline auto createActsMeasurements(const detector_t& detector, const std::vector<traccc::measurement, allocator_t>& measurements){
-    std::vector<Acts::BoundVariantMeasurement> measurementContainer;
-    for (const traccc::measurement& m : measurements)
-    {
-        Acts::GeometryIdentifier moduleGeoId(detector.surface(m.surface_link).source);
-        Index measurementIdx = measurementContainer.size();
-        IndexSourceLink idxSourceLink{moduleGeoId, measurementIdx};
-        measurementContainer.push_back(boundVariantMeasurement(m, Acts::SourceLink{idxSourceLink}));
-    }
-    return measurementContainer;
+inline auto createActsMeasurements(
+    const detector_t& detector,
+    const std::vector<traccc::measurement, allocator_t>& measurements) {
+  std::vector<Acts::BoundVariantMeasurement> measurementContainer;
+  for (const traccc::measurement& m : measurements) {
+    Acts::GeometryIdentifier moduleGeoId(
+        detector.surface(m.surface_link).source);
+    Index measurementIdx = measurementContainer.size();
+    IndexSourceLink idxSourceLink{moduleGeoId, measurementIdx};
+    measurementContainer.push_back(
+        boundVariantMeasurement(m, Acts::SourceLink{idxSourceLink}));
+  }
+  return measurementContainer;
 }
 
-}
+}  // namespace ActsExamples::Traccc::Common::Conversion

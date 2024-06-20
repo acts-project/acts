@@ -154,7 +154,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
   // Some statistics
   std::size_t skippedHits = 0;
-  
+
   // Some algorithms do the clusterization themselves such as the traccc chain.
   // Thus we need to store the cell data from the simulation.
   CellsMap cellsMap;
@@ -218,8 +218,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                   simHit, *surfacePtr, ctx.geoContext, driftDir,
                   cfg.segmentation, cfg.thickness);
 
-
-              
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
                     "Geometric channelization did not work, skipping this hit.")
@@ -267,7 +265,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
           // Store the data of the cells from the simulation.
           std::vector<Cluster::Cell> cells;
           for (auto& [dParameters, simhits] : digitizeParametersResult) {
-            for (auto cell : dParameters.cluster.channels){
+            for (auto cell : dParameters.cluster.channels) {
               cells.push_back(std::move(cell));
             }
           }

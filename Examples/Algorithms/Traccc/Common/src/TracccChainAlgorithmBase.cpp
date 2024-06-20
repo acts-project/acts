@@ -24,49 +24,52 @@
 #include <memory>
 #include <string>
 
-namespace{
+namespace {
 
-// Temporarily used to get the corresponding detray detector for the Acts geometry.
-// Will be replaced when the detray plugin containing geometry conversion is complete.
+// Temporarily used to get the corresponding detray detector for the Acts
+// geometry. Will be replaced when the detray plugin containing geometry
+// conversion is complete.
 template <typename detector_t>
-inline auto readDetector(vecmem::memory_resource* mr, const std::string& detectorFilePath, const std::string& materialFilePath = "", const std::string& gridFilePath = "")
-{
-    // Set up the detector reader configuration.
-    detray::io::detector_reader_config cfg;
-    cfg.add_file(detectorFilePath);
-    if (!materialFilePath.empty()) {
-        cfg.add_file(materialFilePath);
-    }
-    if (!gridFilePath.empty()) {
-        cfg.add_file(gridFilePath);
-    }
+inline auto readDetector(vecmem::memory_resource* mr,
+                         const std::string& detectorFilePath,
+                         const std::string& materialFilePath = "",
+                         const std::string& gridFilePath = "") {
+  // Set up the detector reader configuration.
+  detray::io::detector_reader_config cfg;
+  cfg.add_file(detectorFilePath);
+  if (!materialFilePath.empty()) {
+    cfg.add_file(materialFilePath);
+  }
+  if (!gridFilePath.empty()) {
+    cfg.add_file(gridFilePath);
+  }
 
-    // Read the detector.
-    auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
-    return std::move(det);
+  // Read the detector.
+  auto [det, names] = detray::io::read_detector<detector_t>(*mr, cfg);
+  return std::move(det);
 }
 
-}
+}  // namespace
 
 /// Construct the traccc algorithm.
 ///
 /// @param cfg is the algorithm configuration
 /// @param lvl is the logging level
-ActsExamples::Traccc::Common::TracccChainAlgorithmBase::TracccChainAlgorithmBase(
-    Config cfg, Acts::Logging::Level lvl)
+ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
+    TracccChainAlgorithmBase(Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("TracccChainAlgorithm", lvl),
       m_cfg(std::move(cfg)),
-      detector((TestValidConfig(), readDetector<DetectorHostType>(&hostMemoryResource, "/home/frederik/Desktop/CERN-TECH/input/odd-detray_geometry_detray.json"))),
+      detector((TestValidConfig(), readDetector<DetectorHostType>(
+                                       &hostMemoryResource,
+                                       "/home/frederik/Desktop/CERN-TECH/input/"
+                                       "odd-detray_geometry_detray.json"))),
       field(Acts::CovfiePlugin::covfieField(*m_cfg.field)),
-      converter{
-        *m_cfg.trackingGeometry,
-        detector,
-        Conversion::tracccConfig(m_cfg.digitizationConfigs),
-        traccc::io::alt_read_geometry(detector),
-        Acts::TracccPlugin::createBarcodeMap(detector),
-        logger()
-      }
-{
+      converter{*m_cfg.trackingGeometry,
+                detector,
+                Conversion::tracccConfig(m_cfg.digitizationConfigs),
+                traccc::io::alt_read_geometry(detector),
+                Acts::TracccPlugin::createBarcodeMap(detector),
+                logger()} {
   m_inputCells.initialize(m_cfg.inputCells);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputTracks.initialize(m_cfg.outputTracks);

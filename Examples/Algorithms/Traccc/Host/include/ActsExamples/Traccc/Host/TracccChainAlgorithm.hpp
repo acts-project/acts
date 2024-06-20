@@ -17,32 +17,34 @@
 
 namespace ActsExamples::Traccc::Host {
 
-
 class TracccChainAlgorithm final : public Common::TracccChainAlgorithmBase {
-public:
+ public:
+  /// Construct the traccc algorithm.
+  ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  TracccChainAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
-/// Construct the traccc algorithm.
-///
-/// @param cfg is the algorithm configuration
-/// @param lvl is the logging level
-TracccChainAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  /// Run the algorithm.
+  ///
+  /// @param ctx is the algorithm context with event information
+  /// @return a process code indication success or failure
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-/// Run the algorithm.
-///
-/// @param ctx is the algorithm context with event information
-/// @return a process code indication success or failure
-ProcessCode execute(const AlgorithmContext& ctx) const override;
+ private:
+  using HostTypes =
+      typename ActsExamples::Chain::Host::Types<typename FieldType::view_t>;
 
-private:
-    using HostTypes = typename ActsExamples::Chain::Host::Types<typename FieldType::view_t>;
-
-    typename HostTypes::ClusterizationAlgorithmType clusterizationAlgorithm;
-    typename HostTypes::SpacepointFormationAlgorithmType spacepointFormationAlgorithm;
-    typename HostTypes::SeedingAlgorithmType seedingAlgorithm;
-    typename HostTypes::TrackParametersEstimationAlgorithmType trackParametersEstimationAlgorithm;
-    typename HostTypes::FindingAlgorithmType findingAlgorithm;
-    typename HostTypes::FittingAlgorithmType fittingAlgorithm;
-    typename HostTypes::AmbiguityResolutionAlgorithmType ambiguityResolutionAlgorithm;
+  typename HostTypes::ClusterizationAlgorithmType clusterizationAlgorithm;
+  typename HostTypes::SpacepointFormationAlgorithmType
+      spacepointFormationAlgorithm;
+  typename HostTypes::SeedingAlgorithmType seedingAlgorithm;
+  typename HostTypes::TrackParametersEstimationAlgorithmType
+      trackParametersEstimationAlgorithm;
+  typename HostTypes::FindingAlgorithmType findingAlgorithm;
+  typename HostTypes::FittingAlgorithmType fittingAlgorithm;
+  typename HostTypes::AmbiguityResolutionAlgorithmType
+      ambiguityResolutionAlgorithm;
 };
 
 }  // namespace ActsExamples::Traccc::Host
