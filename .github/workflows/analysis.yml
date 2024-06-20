@@ -19,7 +19,7 @@ concurrency:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 5G
+  CCACHE_MAXSIZE: 1.25G
   CCACHE_KEY_SUFFIX: r1
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -31,15 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
-      # - name: Install dependencies
-      #   run: |
-      #     apt-get update
-      #     apt-get install -y git-lfs
 
       - uses: actions/checkout@v4
 
       - name: Cache build
-        uses: actions/cache/restore@v4
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -66,12 +62,11 @@ jobs:
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Build
-        run: cmake --build build -- ActsUnitTestEigenStepper
+        run: cmake --build build
       - name: ccache stats
         run: ccache -s
       - name: Unit tests
-        # run: ctest --test-dir build -j$(nproc)
-        run: build/bin/ActsUnitTestEigenStepper
+        run: ctest --test-dir build -j$(nproc)
 
       - name: Remove .o files
         run: >
@@ -100,31 +95,30 @@ jobs:
           name: PR_NUMBER
           path: PR_NUMBER.txt
 
-  #
-  # build_performance:
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/acts-project/ubuntu2204:v41
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install dependencies
-  #       run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
-  #     - name: Configure
-  #       run: >
-  #         cmake -B build -S .
-  #         -GNinja
-  #         -DCMAKE_BUILD_TYPE=RelWithDebInfo
-  #         -DCMAKE_CXX_FLAGS="-Werror"
-  #         -DACTS_BUILD_EVERYTHING=ON
-  #         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-  #     - name: Measure
-  #       run: cmakeperf collect build/compile_commands.json -o perf.csv
-  #     - name: Results
-  #       run: cmakeperf print perf.csv
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: cmakeperf
-  #         path: perf.csv
+  build_performance:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2204:v41
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DACTS_BUILD_EVERYTHING=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Measure
+        run: cmakeperf collect build/compile_commands.json -o perf.csv
+      - name: Results
+        run: cmakeperf print perf.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cmakeperf
+          path: perf.csv
 
   # metric_tracking:
   #   runs-on: ubuntu-latest
