@@ -35,8 +35,8 @@ OnnxMetricLearning::OnnxMetricLearning(const Config& cfg,
 OnnxMetricLearning::~OnnxMetricLearning() {}
 
 void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
-                                           std::vector<int64_t>& edgeList,
-                                           int64_t numSpacepoints,
+                                           std::vector<std::int64_t>& edgeList,
+                                           std::int64_t numSpacepoints,
                                            const Logger& logger) const {
   torch::Device device(torch::kCUDA);
   auto options =
@@ -51,8 +51,8 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
   ACTS_VERBOSE("copy edges to std::vector");
-  std::copy(stackedEdges.data_ptr<int64_t>(),
-            stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
+  std::copy(stackedEdges.data_ptr<std::int64_t>(),
+            stackedEdges.data_ptr<std::int64_t>() + stackedEdges.numel(),
             std::back_inserter(edgeList));
 }
 
@@ -66,8 +66,9 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   // Embedding
   // ************
 
-  int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
-  std::vector<int64_t> eInputShape{numSpacepoints, m_cfg.spacepointFeatures};
+  std::int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
+  std::vector<std::int64_t> eInputShape{numSpacepoints,
+                                        m_cfg.spacepointFeatures};
 
   std::vector<const char*> eInputNames{"sp_features"};
   std::vector<Ort::Value> eInputTensor;
@@ -77,7 +78,7 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
 
   std::vector<float> eOutputData(numSpacepoints * m_cfg.embeddingDim);
   std::vector<const char*> eOutputNames{"embedding_output"};
-  std::vector<int64_t> eOutputShape{numSpacepoints, m_cfg.embeddingDim};
+  std::vector<std::int64_t> eOutputShape{numSpacepoints, m_cfg.embeddingDim};
   std::vector<Ort::Value> eOutputTensor;
   eOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, eOutputData.data(), eOutputData.size(), eOutputShape.data(),
@@ -93,9 +94,9 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   // ************
   // Building Edges
   // ************
-  std::vector<int64_t> edgeList;
+  std::vector<std::int64_t> edgeList;
   buildEdgesWrapper(eOutputData, edgeList, numSpacepoints, logger());
-  int64_t numEdges = edgeList.size() / 2;
+  std::int64_t numEdges = edgeList.size() / 2;
   ACTS_DEBUG("Graph construction: built " << numEdges << " edges.");
 
   for (std::size_t i = 0; i < 10; i++) {

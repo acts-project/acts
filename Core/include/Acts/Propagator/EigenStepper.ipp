@@ -15,8 +15,7 @@
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
-    std::shared_ptr<const MagneticFieldProvider> bField,
-    double /*overstepLimit*/)
+    std::shared_ptr<const MagneticFieldProvider> bField)
     : m_bField(std::move(bField)) {}
 
 template <typename E, typename A>

@@ -115,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
   for (const auto& particle : particles) {
     m_particleId.push_back(particle.particleId().value());
     m_particleType.push_back(particle.pdg());
-    m_process.push_back(static_cast<uint32_t>(particle.process()));
+    m_process.push_back(static_cast<std::uint32_t>(particle.process()));
     // position
     m_vx.push_back(Acts::clampValue<float>(particle.fourPosition().x() /
                                            Acts::UnitConstants::mm));
