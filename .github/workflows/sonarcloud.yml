@@ -101,6 +101,7 @@ jobs:
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
           git fetch origin
           git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
+          git remote -v
           git status
 
       - name: Install sonar-scanner and build-wrapper
