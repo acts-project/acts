@@ -204,12 +204,13 @@ class AnyBase : public AnyBaseAll {
     if (m_handler == nullptr) {  // this object is empty
       m_handler = other.m_handler;
       copyConstruct(other);
-    } else {
-      // @TODO: Support assigning between different types
-      if (m_handler != other.m_handler) {
-        throw std::bad_any_cast{};
-      }
+    } else if (m_handler == other.m_handler) {
       copy(other);
+    } else {
+      // different types, destroy and copy constructor
+      destroy();
+      m_handler = other.m_handler;
+      copyConstruct(other);
     }
     return *this;
   }
@@ -237,12 +238,13 @@ class AnyBase : public AnyBaseAll {
     if (m_handler == nullptr) {  // this object is empty
       m_handler = other.m_handler;
       moveConstruct(std::move(other));
-    } else {
-      // @TODO: Support assigning between different types
-      if (m_handler != other.m_handler) {
-        throw std::bad_any_cast{};
-      }
+    } else if (m_handler == other.m_handler) {
       move(std::move(other));
+    } else {
+      // different types, destroy and move construct
+      destroy();
+      m_handler = other.m_handler;
+      moveConstruct(std::move(other));
     }
     return *this;
   }
@@ -496,8 +498,9 @@ class AnyBase : public AnyBaseAll {
 #elif defined(__SSE__)
                std::size_t{16}
 #else
-               std::size_t{0}  // Neutral element
-                               // for maximum
+               std::size_t{0}
+  // Neutral element
+  // for maximum
 #endif
       );
 
