@@ -17,7 +17,6 @@ string(REPLACE " " ";" user_flags "${ACTS_CXX_FLAGS}")
 
 list(APPEND extra_flags ${user_flags})
 
-message(STATUS "Extra flags: ${extra_flags}")
 string(REPLACE ";" " " ACTS_CXX_FLAGS "${extra_flags}")
 set(ACTS_CXX_FLAGS_DEBUG "")
 set(ACTS_CXX_FLAGS_MINSIZEREL "")
