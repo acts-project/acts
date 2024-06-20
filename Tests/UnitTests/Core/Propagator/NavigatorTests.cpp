@@ -27,6 +27,7 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/TryAllNavigator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -990,13 +991,21 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
-int ntests = 500;
+const int nTestsSelfConsistency = 500;
+const int nTestsRefConsistency = 10;
 int skip = 0;
 bool debugMode = false;
 
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
+using Reference1StraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllNavigator>;
+using Reference2EigenPropagator =
+    Propagator<EigenStepper, TryAllOverstepNavigator>;
+using Reference2StraightLinePropagator =
+    Propagator<StraightLineStepper, TryAllOverstepNavigator>;
 
 EigenStepper estepper(bField);
 StraightLineStepper slstepper;
@@ -1011,8 +1020,31 @@ StraightLinePropagator slpropagator(slstepper,
                                                                Logging::INFO)),
                                     getDefaultLogger("sl_prop", Logging::INFO));
 
+Reference1EigenPropagator refepropagator1(
+    estepper,
+    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
+                    getDefaultLogger("ref1_e_nav", Logging::INFO)),
+    getDefaultLogger("ref1_e_prop", Logging::INFO));
+Reference1StraightLinePropagator refslpropagator1(
+    slstepper,
+    TryAllNavigator({tGeometry, true, true, false},
+                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref1_sl_prop", Logging::INFO));
+
+Reference2EigenPropagator refepropagator2(
+    estepper,
+    TryAllOverstepNavigator({tGeometry, true, true, false,
+                             BoundaryCheck(false)},
+                            getDefaultLogger("ref2_e_nav", Logging::INFO)),
+    getDefaultLogger("ref2_e_prop", Logging::INFO));
+Reference2StraightLinePropagator refslpropagator2(
+    slstepper,
+    TryAllOverstepNavigator({tGeometry, true, true, false},
+                            getDefaultLogger("ref2_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref2_sl_prop", Logging::INFO));
+
 BOOST_DATA_TEST_CASE(
-    Navigator_random,
+    NavigatorRandomSelfConsistency,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.5_GeV, 10_GeV))) ^
@@ -1027,7 +1059,7 @@ BOOST_DATA_TEST_CASE(
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::xrange(ntests),
+        bdata::xrange(nTestsSelfConsistency),
     pT, phi, theta, charge, index) {
   if (index < skip) {
     return;
@@ -1053,6 +1085,59 @@ BOOST_DATA_TEST_CASE(
     std::cout << ">>> Test self consistency slpropagator" << std::endl;
   }
   runSelfConsistencyTest(slpropagator, start, debugMode);
+}
+
+BOOST_DATA_TEST_CASE(
+    NavigatorRandomRefConsistency,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 23,
+             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
+        bdata::xrange(nTestsRefConsistency),
+    pT, phi, theta, charge, index) {
+  if (index < skip) {
+    return;
+  }
+
+  double p = pT / std::sin(theta);
+  double q = -1 + 2 * charge;
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
+
+  if (debugMode) {
+    std::cout << ">>> Run navigation tests with pT = " << pT
+              << "; phi = " << phi << "; theta = " << theta
+              << "; charge = " << charge << "; index = " << index << ";"
+              << std::endl;
+  }
+
+  if (debugMode) {
+    std::cout << ">>> Test reference 1 consistency epropagator" << std::endl;
+  }
+  runConsistencyTest(epropagator, refepropagator1, start, debugMode);
+  if (debugMode) {
+    std::cout << ">>> Test reference 1 consistency slpropagator" << std::endl;
+  }
+  runConsistencyTest(slpropagator, refslpropagator1, start, debugMode);
+
+  if (debugMode) {
+    std::cout << ">>> Test reference 2 consistency epropagator" << std::endl;
+  }
+  runConsistencyTest(epropagator, refepropagator2, start, debugMode);
+  if (debugMode) {
+    std::cout << ">>> Test reference 2 consistency slpropagator" << std::endl;
+  }
+  runConsistencyTest(slpropagator, refslpropagator2, start, debugMode);
 }
 
 }  // namespace Acts::Test

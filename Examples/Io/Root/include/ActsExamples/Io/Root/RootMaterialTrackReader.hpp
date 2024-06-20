@@ -97,7 +97,7 @@ class RootMaterialTrackReader : public IReader {
   TChain* m_inputChain = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)

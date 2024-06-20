@@ -64,7 +64,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     return {};
   }
 
-  using vertex_t = int64_t;
+  using vertex_t = std::int64_t;
   using weight_t = float;
 
   boost::beast::span<vertex_t> rowIndices(edgeTensor.data_ptr<vertex_t>(),
