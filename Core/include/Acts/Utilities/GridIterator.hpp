@@ -300,8 +300,8 @@ class GridLocalIterator {
 };
 
 template <typename T, class... Axes>
-GridGlobalIterator(const Acts::Grid<T, Axes...>& grid, std::size_t idx)
-    -> GridGlobalIterator<T, Axes...>;
+GridGlobalIterator(const Acts::Grid<T, Axes...>& grid,
+                   std::size_t idx) -> GridGlobalIterator<T, Axes...>;
 
 }  // namespace Acts
 

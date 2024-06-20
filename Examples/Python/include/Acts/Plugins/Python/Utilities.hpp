@@ -34,10 +34,7 @@ template <typename T, typename Ur, typename Ut>
 void pythonRangeProperty(T& obj, const std::string& name, Ur Ut::*begin,
                          Ur Ut::*end) {
   obj.def_property(
-      name.c_str(),
-      [=](Ut& self) {
-        return std::pair{self.*begin, self.*end};
-      },
+      name.c_str(), [=](Ut& self) { return std::pair{self.*begin, self.*end}; },
       [=](Ut& self, std::pair<Ur, Ur> p) {
         self.*begin = p.first;
         self.*end = p.second;

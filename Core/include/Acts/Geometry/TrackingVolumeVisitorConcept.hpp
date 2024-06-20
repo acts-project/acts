@@ -17,7 +17,7 @@ class TrackingVolume;
 
 template <typename T>
 concept TrackingVolumeVisitor = requires(T v) {
-  {v(std::declval<const TrackingVolume*>())};
+  { v(std::declval<const TrackingVolume*>()) };
 };
 
 }  // namespace Acts

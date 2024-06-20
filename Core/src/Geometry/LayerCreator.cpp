@@ -376,9 +376,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3::Identity())) {
     addTranslation = Translation3(centerX, centerY, centerZ);
-    ACTS_VERBOSE(" - layer shift  = "
-                 << "(" << centerX << ", " << centerY << ", " << centerZ
-                 << ")");
+    ACTS_VERBOSE(" - layer shift  = " << "(" << centerX << ", " << centerY
+                                      << ", " << centerZ << ")");
   }
 
   std::unique_ptr<SurfaceArray> sArray;

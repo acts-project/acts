@@ -279,9 +279,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       std::cout << "----- True vertices -----" << std::endl;
       for (const auto& vertex : trueVertices) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". True Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
+        std::cout << count << ". True Vertex:\t Position:" << "(" << pos[eX]
+                  << "," << pos[eY] << "," << pos[eZ] << ")" << std::endl;
         std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
                   << std::endl;
         count++;
@@ -290,9 +289,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       count = 1;
       for (const auto& vertex : vertexCollection) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". Reco Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
+        std::cout << count << ". Reco Vertex:\t Position:" << "(" << pos[eX]
+                  << "," << pos[eY] << "," << pos[eZ] << ")" << std::endl;
         std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
                   << std::endl;
         count++;
@@ -500,9 +498,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       std::cout << "----- True vertices -----" << std::endl;
       for (const auto& vertex : trueVertices) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". True Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
+        std::cout << count << ". True Vertex:\t Position:" << "(" << pos[eX]
+                  << "," << pos[eY] << "," << pos[eZ] << ")" << std::endl;
         std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
                   << std::endl;
         count++;
@@ -511,9 +508,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       count = 1;
       for (const auto& vertex : vertexCollectionUT) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". Reco Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
+        std::cout << count << ". Reco Vertex:\t Position:" << "(" << pos[eX]
+                  << "," << pos[eY] << "," << pos[eZ] << ")" << std::endl;
         std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
                   << std::endl;
         count++;

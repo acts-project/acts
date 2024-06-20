@@ -148,8 +148,8 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 // subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,
-              const ActsVector<D> &mu, const subtract_t &sub = subtract_t{})
-    -> ActsSquareMatrix<D> {
+              const ActsVector<D> &mu,
+              const subtract_t &sub = subtract_t{}) -> ActsSquareMatrix<D> {
   ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {

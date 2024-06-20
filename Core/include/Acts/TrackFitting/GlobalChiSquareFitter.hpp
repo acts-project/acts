@@ -672,8 +672,8 @@ class Gx2Fitter {
            const Gx2FitterOptions<traj_t>& gx2fOptions,
            TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
       const -> std::enable_if_t<
-          !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                 holder_t>::TrackProxy>> {
+                !_isdn, Result<typename TrackContainer<
+                            track_container_t, traj_t, holder_t>::TrackProxy>> {
     // Preprocess Measurements (SourceLinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.

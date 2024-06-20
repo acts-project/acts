@@ -36,7 +36,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   { cs.bounds() } -> std::convertible_to<const SurfaceBounds&>;
   {
     cs.associatedDetectorElement()
-    } -> std::same_as<const DetectorElementBase*>;
+  } -> std::same_as<const DetectorElementBase*>;
 
   { cs.associatedLayer() } -> std::same_as<const Layer*>;
   { s.associateLayer(std::declval<const Layer&>()) } -> std::same_as<void>;
@@ -44,51 +44,51 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   { cs.surfaceMaterial() } -> std::same_as<const ISurfaceMaterial*>;
   {
     cs.surfaceMaterialSharedPtr()
-    } -> std::same_as<const std::shared_ptr<const ISurfaceMaterial>&>;
+  } -> std::same_as<const std::shared_ptr<const ISurfaceMaterial>&>;
   {
     s.assignSurfaceMaterial(
         std::declval<std::shared_ptr<const ISurfaceMaterial>>())
-    } -> std::same_as<void>;
+  } -> std::same_as<void>;
   {
     cs.isOnSurface(gctx, Vector3{}, Vector3{},
                    std::declval<const BoundaryCheck&>())
-    } -> std::same_as<bool>;
+  } -> std::same_as<bool>;
   {
     cs.insideBounds(Vector2{}, std::declval<const BoundaryCheck&>())
-    } -> std::same_as<bool>;
+  } -> std::same_as<bool>;
 
   { cs.localToGlobal(gctx, Vector2{}, Vector3{}) } -> std::same_as<Vector3>;
 
   {
     cs.globalToLocal(gctx, Vector3{}, Vector3{}, double{5})
-    } -> std::same_as<Result<Vector2>>;
+  } -> std::same_as<Result<Vector2>>;
 
   {
     cs.referenceFrame(gctx, Vector3{}, Vector3{})
-    } -> std::same_as<RotationMatrix3>;
+  } -> std::same_as<RotationMatrix3>;
 
   {
     cs.boundToFreeJacobian(gctx, Vector3{}, Vector3{})
-    } -> std::same_as<BoundToFreeMatrix>;
+  } -> std::same_as<BoundToFreeMatrix>;
 
   {
     cs.freeToBoundJacobian(gctx, Vector3{}, Vector3{})
-    } -> std::same_as<FreeToBoundMatrix>;
+  } -> std::same_as<FreeToBoundMatrix>;
 
   {
     cs.freeToPathDerivative(gctx, Vector3{}, Vector3{})
-    } -> std::same_as<FreeToPathMatrix>;
+  } -> std::same_as<FreeToPathMatrix>;
 
   { cs.pathCorrection(gctx, Vector3{}, Vector3{}) } -> std::same_as<double>;
 
   {
     cs.intersect(gctx, Vector3{}, Vector3{},
                  std::declval<const BoundaryCheck&>(), std::declval<double>())
-    } -> std::same_as<SurfaceMultiIntersection>;
+  } -> std::same_as<SurfaceMultiIntersection>;
 
   {
     cs.toStream(gctx, std::declval<std::ostream&>())
-    } -> std::same_as<std::ostream&>;
+  } -> std::same_as<std::ostream&>;
 
   { cs.toString(gctx) } -> std::same_as<std::string>;
 
@@ -96,34 +96,34 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.polyhedronRepresentation(gctx, std::declval<std::size_t>())
-    } -> std::same_as<Polyhedron>;
+  } -> std::same_as<Polyhedron>;
 
   {
     cs.alignmentToBoundDerivative(gctx, Vector3{}, Vector3{}, FreeVector{})
-    } -> std::same_as<AlignmentToBoundMatrix>;
+  } -> std::same_as<AlignmentToBoundMatrix>;
 
   {
     cs.alignmentToPathDerivative(gctx, Vector3{}, Vector3{})
-    } -> std::same_as<AlignmentToPathMatrix>;
+  } -> std::same_as<AlignmentToPathMatrix>;
 
   {
     cs.localCartesianToBoundLocalDerivative(gctx, Vector3{})
-    } -> std::same_as<ActsMatrix<2, 3>>;
+  } -> std::same_as<ActsMatrix<2, 3>>;
 };
 
 template <typename S>
-concept RegularSurfaceConcept = SurfaceConcept<S> &&
-    requires(S s, const S cs, GeometryContext gctx) {
-  { cs.normal(gctx, Vector2{}) } -> std::same_as<Vector3>;
+concept RegularSurfaceConcept =
+    SurfaceConcept<S> && requires(S s, const S cs, GeometryContext gctx) {
+      { cs.normal(gctx, Vector2{}) } -> std::same_as<Vector3>;
 
-  { cs.normal(gctx, Vector3{}) } -> std::same_as<Vector3>;
+      { cs.normal(gctx, Vector3{}) } -> std::same_as<Vector3>;
 
-  {
-    cs.globalToLocal(gctx, Vector3{}, Vector3{}, std::declval<double>())
-    } -> std::same_as<Result<Vector2>>;
+      {
+        cs.globalToLocal(gctx, Vector3{}, Vector3{}, std::declval<double>())
+      } -> std::same_as<Result<Vector2>>;
 
-  { cs.localToGlobal(gctx, Vector2{}) } -> std::same_as<Vector3>;
-};
+      { cs.localToGlobal(gctx, Vector2{}) } -> std::same_as<Vector3>;
+    };
 }  // namespace Acts
 
 #endif

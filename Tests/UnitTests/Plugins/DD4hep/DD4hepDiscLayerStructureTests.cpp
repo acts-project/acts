@@ -113,15 +113,15 @@ BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
     if (itest == 1u) {
       cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
       cxml << indent_12_xml
-           << "    <tubs rmin=\"20*mm\" rmax=\"120*mm\" dz=\"2*mm\" "
-           << "cz=\"" << rZ + 10. << "\" material=\"Air\"/>" << '\n';
+           << "    <tubs rmin=\"20*mm\" rmax=\"120*mm\" dz=\"2*mm\" " << "cz=\""
+           << rZ + 10. << "\" material=\"Air\"/>" << '\n';
       cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
       passiveAddon = 1u;
     } else if (itest == 2u) {
       cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
       cxml << indent_12_xml
-           << "    <tubs rmin=\"20*mm\" rmax=\"120*mm\" dz=\"2*mm\" "
-           << "cz=\"" << rZ + 10. << "\" material=\"Air\"/>" << '\n';
+           << "    <tubs rmin=\"20*mm\" rmax=\"120*mm\" dz=\"2*mm\" " << "cz=\""
+           << rZ + 10. << "\" material=\"Air\"/>" << '\n';
       cxml << "    <acts_proto_material/>" << '\n';
       cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
       passiveAddon = 1u;

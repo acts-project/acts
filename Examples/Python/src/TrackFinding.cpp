@@ -350,20 +350,21 @@ void addTrackFinding(Context& ctx) {
                                 outputTrackParameters);
 
   {
-    auto constructor = [](const std::vector<std::pair<
-                              GeometryIdentifier,
-                              std::tuple<std::vector<double>,
-                                         std::vector<double>,
-                                         std::vector<std::size_t>>>>& input) {
-      std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
-          converted;
-      converted.reserve(input.size());
-      for (const auto& [id, cuts] : input) {
-        const auto& [bins, chi2, num] = cuts;
-        converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
-      }
-      return std::make_unique<MeasurementSelector::Config>(converted);
-    };
+    auto constructor =
+        [](const std::vector<
+            std::pair<GeometryIdentifier,
+                      std::tuple<std::vector<double>, std::vector<double>,
+                                 std::vector<std::size_t>>>>& input) {
+          std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
+              converted;
+          converted.reserve(input.size());
+          for (const auto& [id, cuts] : input) {
+            const auto& [bins, chi2, num] = cuts;
+            converted.emplace_back(id,
+                                   MeasurementSelectorCuts{bins, chi2, num});
+          }
+          return std::make_unique<MeasurementSelector::Config>(converted);
+        };
 
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())

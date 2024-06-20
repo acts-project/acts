@@ -81,8 +81,8 @@ struct MaterialInteractor {
 
     // We only have material interactions if there is potential material
     if (surface && surface->surfaceMaterial()) {
-      ACTS_VERBOSE("MaterialInteractor | "
-                   << "Found material on surface " << surface->geometryId());
+      ACTS_VERBOSE("MaterialInteractor | " << "Found material on surface "
+                                           << surface->geometryId());
 
       // Prepare relevant input particle properties
       detail::PointwiseMaterialInteraction interaction(surface, state, stepper);
@@ -129,8 +129,8 @@ struct MaterialInteractor {
 
     // We only have material interactions if there is potential material
     if (volume && volume->volumeMaterial()) {
-      ACTS_VERBOSE("MaterialInteractor | "
-                   << "Found material in volume " << volume->geometryId());
+      ACTS_VERBOSE("MaterialInteractor | " << "Found material in volume "
+                                           << volume->geometryId());
 
       // Prepare relevant input particle properties
       detail::VolumeMaterialInteraction interaction(volume, state, stepper);

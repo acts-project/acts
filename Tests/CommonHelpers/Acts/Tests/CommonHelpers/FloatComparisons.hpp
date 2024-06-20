@@ -293,8 +293,7 @@ boost::test_tools::predicate_result checkCloseCovariance(
         boost::test_tools::predicate_result res(false);
         res.message() << "The difference between the covariance matrix term "
                       << val(row, col) << " and its reference " << ref(row, col)
-                      << ","
-                      << " at index (" << row << ", " << col << "),"
+                      << "," << " at index (" << row << ", " << col << "),"
                       << " is not within tolerance " << tol * orderOfMagnitude
                       << '.' << " The covariance matrix being tested was\n"
                       << val << '\n'

@@ -119,12 +119,12 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
-    -> Result<action_list_t_result_t<
-        StepperBoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                       const Surface& target,
+                                       const propagator_options_t& options)
+    const -> Result<action_list_t_result_t<
+              StepperBoundTrackParameters,
+              typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -270,12 +270,13 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
-auto Acts::Propagator<S, N>::makeResult(
-    propagator_state_t state, Result<void> propagationResult,
-    const Surface& target, const propagator_options_t& /*options*/) const
-    -> Result<action_list_t_result_t<
-        StepperBoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
+                                        Result<void> propagationResult,
+                                        const Surface& target,
+                                        const propagator_options_t& /*options*/)
+    const -> Result<action_list_t_result_t<
+              StepperBoundTrackParameters,
+              typename propagator_options_t::action_list_type>> {
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = StepperBoundTrackParameters;
 
