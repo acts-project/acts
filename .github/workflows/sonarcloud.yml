@@ -102,7 +102,7 @@ jobs:
         if: github.event.workflow_run.event == 'pull_request'
         run: |
           git config --global --add safe.directory $PWD
-          git remote add upstream ${{ github.event.repository.clone_url }}
+          # git remote add upstream ${{ github.event.repository.clone_url }}
           git remote rename origin upstream
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
