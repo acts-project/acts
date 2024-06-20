@@ -91,7 +91,10 @@ jobs:
 
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject --preset ci
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
@@ -283,7 +286,10 @@ jobs:
 
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject --preset ci
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
@@ -372,7 +378,10 @@ jobs:
       - name: Downstream configure
         run: >
           ${SETUP} &&
-          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps --preset ci
+          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
         run: cmake --build build-downstream-nodeps
@@ -446,7 +455,10 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject --preset ci
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR};/usr/local/acts"
       - name: Downstream build
