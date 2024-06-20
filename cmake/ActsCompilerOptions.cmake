@@ -4,24 +4,16 @@ if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(extra_flags "-Wall;-Wextra;-Wpedantic;-Wshadow;-Wno-unused-local-typedefs")
+set(cxx_flags "-Wall;-Wextra;-Wpedantic;-Wshadow;-Wno-unused-local-typedefs")
 
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
 # is much more aggressive and also triggers on e.g., double-to-float
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
-  list(APPEND extra_flags "-Wfloat-conversion")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  list(APPEND cxx_flags "-Wfloat-conversion")
 endif()
 
-string(REPLACE " " ";" user_flags "${ACTS_CXX_FLAGS}")
-
-list(APPEND extra_flags ${user_flags})
-
-string(REPLACE ";" " " ACTS_CXX_FLAGS "${extra_flags}")
-set(ACTS_CXX_FLAGS_DEBUG "")
-set(ACTS_CXX_FLAGS_MINSIZEREL "")
-set(ACTS_CXX_FLAGS_RELEASE "")
-set(ACTS_CXX_FLAGS_RELWITHDEBINFO "")
+# set(ACTS_CXX_FLAGS "${extra_flags}" CACHE STRING "Extra C++ compiler flags")
 
 set(ACTS_CXX_STANDARD 17)
 set(ACTS_CXX_STANDARD_FEATURE cxx_std_17)
@@ -37,18 +29,16 @@ endif()
 
 if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
   message(STATUS "Added -g compile flag")
-  set(ACTS_CXX_FLAGS "${ACTS_CXX_FLAGS} -g")
+  list(APPEND cxx_flags "-g")
 endif()
 
-# Acts linker flags
+string(REPLACE " " ";" explicit_flags "${CMAKE_CXX_FLAGS}")
+list(APPEND cxx_flags "${explicit_flags}")
+list(REMOVE_DUPLICATES cxx_flags)
 
 # assign to global CXX flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ACTS_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${ACTS_CXX_FLAGS_DEBUG}")
-set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} ${ACTS_CXX_FLAGS_MINSIZEREL}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${ACTS_CXX_FLAGS_RELEASE}")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${ACTS_CXX_FLAGS_RELWITHDEBINFO}")
-
+string(REPLACE ";" " " CMAKE_CXX_FLAGS "${cxx_flags}")
+message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
