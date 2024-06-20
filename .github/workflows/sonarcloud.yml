@@ -107,8 +107,9 @@ jobs:
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
           git fetch origin
-          git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head_branch }}
           git clean -ffdx && git reset --hard HEAD
+          git status
 
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v2
