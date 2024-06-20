@@ -339,8 +339,19 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
-          cmake -B build -S . --preset linux_nodeps
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_BUILD_UNITTESTS=ON
+          -DACTS_BUILD_INTEGRATIONTESTS=ON
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_USE_SYSTEM_BOOST=OFF
+          -DACTS_USE_SYSTEM_EIGEN3=OFF
+          -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
@@ -365,8 +376,16 @@ jobs:
       - name: Configure Examples
         run: >
           ${SETUP} &&
-          cmake -B build -S . --preset linux_nodeps_examples
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_USE_SYSTEM_BOOST=OFF
+          -DACTS_USE_SYSTEM_EIGEN3=OFF
+          -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
         run: ${SETUP} && ${PRELOAD} && cmake --build build
       - name: Install Examples
