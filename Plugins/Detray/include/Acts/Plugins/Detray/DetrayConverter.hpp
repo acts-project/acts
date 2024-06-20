@@ -17,15 +17,9 @@
 #include "detray/core/detector.hpp"
 #include "detray/io/frontend/payloads.hpp"
 
-// #include "detray/builders/detector_builder.hpp"
-// #include "detray/io/common/geometry_reader.hpp"
-// #include "detray/io/common/geometry_writer.hpp"
-// #include "detray/io/frontend/detector_reader.hpp"
-// #include "detray/io/frontend/detector_reader_config.hpp"
-// #include "detray/io/frontend/detector_writer.hpp"
-// #include "detray/io/frontend/implementation/json_readers.hpp"
-// #include "detray/navigation/volume_graph.hpp"
-// #include "detray/utils/consistency_checker.hpp"
+#include "detray/builders/detector_builder.hpp"
+#include "detray/io/common/geometry_reader.hpp"
+#include "detray/utils/consistency_checker.hpp"
 
 namespace Acts {
 

@@ -87,7 +87,7 @@ detray::io::surface_payload Acts::DetrayConverter::convertSurface(
 
   surfacePayload.transform = convertTransform(surface.transform(gctx));
   surfacePayload.source = surface.geometryId().value();
-  surfacePayload.barcode = std::nullopt;  //(long unsigned int)0;
+  surfacePayload.barcode = std::nullopt;
   surfacePayload.type = static_cast<detray::surface_id>(
       portal ? 0 : (surface.geometryId().sensitive() > 0 ? 1u : 2u));
   surfacePayload.mask = convertMask(surface.bounds());
@@ -183,7 +183,7 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
         throw std::runtime_error(
-            "PortalJsonConverter: surface type not (yet) supported for detray "
+            "PortalDetrayConverter: surface type not (yet) supported for detray "
             "conversion, only cylinder and disc are currently supported.");
       }
 
@@ -264,8 +264,10 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
       // End of world portal
       // Write surface with invalid link
       auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
-      portalPayload.mask.volume_link.link =
-          std::numeric_limits<std::uint_least16_t>::max();
+      using NavigationLink = typename DetrayDetector::surface_type::navigation_link;  
+      portalPayload.mask.volume_link.link =  
+          std::numeric_limits<NavigationLink>::max();  
+          
       portals.push_back(portalPayload);
     }
   }
