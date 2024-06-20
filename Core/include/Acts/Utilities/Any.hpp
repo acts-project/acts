@@ -201,16 +201,17 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == nullptr) {  // this object is empty
-      m_handler = other.m_handler;
-      copyConstruct(other);
-    } else if (m_handler == other.m_handler) {
-      copy(other);
+    if (m_handler == other.m_handler) {
+      // same type, but checked before they're not both nullptr
+      copy(std::move(other));
     } else {
-      // different types, destroy and copy constructor
-      destroy();
+      if (m_handler != nullptr) {
+        // this object is not empty, but have different types => destroy
+        destroy();
+      }
+      assert(m_handler == nullptr);
       m_handler = other.m_handler;
-      copyConstruct(other);
+      copyConstruct(std::move(other));
     }
     return *this;
   }
@@ -235,17 +236,19 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == nullptr) {  // this object is empty
-      m_handler = other.m_handler;
-      moveConstruct(std::move(other));
-    } else if (m_handler == other.m_handler) {
+    if (m_handler == other.m_handler) {
+      // same type, but checked before they're not both nullptr
       move(std::move(other));
     } else {
-      // different types, destroy and move construct
-      destroy();
+      if (m_handler != nullptr) {
+        // this object is not empty, but have different types => destroy
+        destroy();
+      }
+      assert(m_handler == nullptr);
       m_handler = other.m_handler;
       moveConstruct(std::move(other));
     }
+
     return *this;
   }
 
@@ -333,8 +336,8 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
       m_handler->destroy(dataPtr());
-      m_handler = nullptr;
     }
+    m_handler = nullptr;
   }
 
   void moveConstruct(AnyBase&& fromAny) {
