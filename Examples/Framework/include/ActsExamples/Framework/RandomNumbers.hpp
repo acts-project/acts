@@ -41,7 +41,7 @@ using RandomEngine = std::mt19937;  ///< Mersenne Twister
 class RandomNumbers {
  public:
   struct Config {
-    uint64_t seed = 1234567890u;  ///< random seed
+    std::uint64_t seed = 1234567890u;  ///< random seed
   };
 
   RandomNumbers(const Config& cfg);
@@ -59,7 +59,7 @@ class RandomNumbers {
   ///
   /// This should only be used in special cases e.g. where a custom
   /// random engine is used and `spawnGenerator` can not be used.
-  uint64_t generateSeed(const AlgorithmContext& context) const;
+  std::uint64_t generateSeed(const AlgorithmContext& context) const;
 
  private:
   Config m_cfg;

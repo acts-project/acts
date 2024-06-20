@@ -68,7 +68,7 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
 #ifndef ACTS_EXATRKX_CPUONLY
   const auto device = embedFeatures.device();
 
-  const int64_t numSpacepoints = embedFeatures.size(0);
+  const std::int64_t numSpacepoints = embedFeatures.size(0);
   const int dim = embedFeatures.size(1);
 
   const int grid_params_size = 8;
@@ -229,7 +229,7 @@ struct BuildEdgesKDTree {
     /////////////////
     // Search tree //
     /////////////////
-    std::vector<int32_t> edges;
+    std::vector<std::int32_t> edges;
     edges.reserve(2 * kVal * embedFeatures.size(0));
 
     for (int iself = 0; iself < embedFeatures.size(0); ++iself) {
