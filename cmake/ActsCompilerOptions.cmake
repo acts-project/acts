@@ -4,13 +4,13 @@ if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif()
 
-set(cxx_flags "-Wall;-Wextra;-Wpedantic;-Wshadow;-Wno-unused-local-typedefs")
+set(cxx_flags "-Wall -Wextra -Wpedantic -Wshadow -Wno-unused-local-typedefs")
 
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
 # is much more aggressive and also triggers on e.g., double-to-float
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  list(APPEND cxx_flags "-Wfloat-conversion")
+  set(cxx_flags "${cxx_flags} -Wfloat-conversion")
 endif()
 
 # set(ACTS_CXX_FLAGS "${extra_flags}" CACHE STRING "Extra C++ compiler flags")
@@ -28,16 +28,12 @@ endif()
 
 
 if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
-  message(STATUS "Added -g compile flag")
-  list(APPEND cxx_flags "-g")
+  message(STATUS "Added debug symbol compile flag")
+  set(cxx_flags "${cxx_flags} ${CMAKE_CXX_FLAGS_DEBUG_INIT}")
 endif()
 
-string(REPLACE " " ";" explicit_flags "${CMAKE_CXX_FLAGS}")
-list(APPEND cxx_flags "${explicit_flags}")
-list(REMOVE_DUPLICATES cxx_flags)
-
 # assign to global CXX flags
-string(REPLACE ";" " " CMAKE_CXX_FLAGS "${cxx_flags}")
+set(CMAKE_CXX_FLAGS "${cxx_flags} ${CMAKE_CXX_FLAGS}")
 message(STATUS "Using compiler flags: ${CMAKE_CXX_FLAGS}")
 
 # silence warning about missing RPATH on Mac OSX
