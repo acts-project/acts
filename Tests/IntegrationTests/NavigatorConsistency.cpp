@@ -146,7 +146,6 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next
   // now go from surface to surface and check
   Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 1_m;
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
@@ -201,7 +200,6 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.maxStepSize = 1_m;
   bwdStepOptions.direction = Direction::Backward;
 
   // get the surface collector and configure it
@@ -282,7 +280,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
     fwdOptions.pathLimit = 25_cm;
-    fwdOptions.maxStepSize = 1_m;
+    fwdOptions.maxStepSize = 1_cm;
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =
@@ -380,24 +378,23 @@ Reference2StraightLinePropagator refslpropagator2(
                             getDefaultLogger("ref2_sl_nav", Logging::INFO)),
     getDefaultLogger("ref2_sl_prop", Logging::INFO));
 
-BOOST_DATA_TEST_CASE(
-    NavigatorRandomSelfConsistency,
+auto eventGen =
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::xrange(nTestsSelfConsistency),
-    pT, phi, theta, charge, index) {
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       1.0, M_PI - 1.0))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 23,
+         bdata::distribution = std::uniform_int_distribution<int>(0, 1)));
+
+BOOST_DATA_TEST_CASE(NavigatorSelfConsistency,
+                     eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
+                     theta, charge, index) {
   if (index < skip) {
     return;
   }
@@ -424,24 +421,9 @@ BOOST_DATA_TEST_CASE(
   runSelfConsistencyTest(slpropagator, start, debugMode);
 }
 
-BOOST_DATA_TEST_CASE(
-    NavigatorRandomRefConsistency,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::xrange(nTestsRefConsistency),
-    pT, phi, theta, charge, index) {
+BOOST_DATA_TEST_CASE(NavigatorRef1Consistency,
+                     eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
+                     theta, charge, index) {
   if (index < skip) {
     return;
   }
@@ -466,6 +448,26 @@ BOOST_DATA_TEST_CASE(
     std::cout << ">>> Test reference 1 consistency slpropagator" << std::endl;
   }
   runConsistencyTest(slpropagator, refslpropagator1, start, debugMode);
+}
+
+BOOST_DATA_TEST_CASE(NavigatorRef2Consistency,
+                     eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
+                     theta, charge, index) {
+  if (index < skip) {
+    return;
+  }
+
+  double p = pT / std::sin(theta);
+  double q = -1 + 2 * charge;
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
+
+  if (debugMode) {
+    std::cout << ">>> Run navigation tests with pT = " << pT
+              << "; phi = " << phi << "; theta = " << theta
+              << "; charge = " << charge << "; index = " << index << ";"
+              << std::endl;
+  }
 
   if (debugMode) {
     std::cout << ">>> Test reference 2 consistency epropagator" << std::endl;
