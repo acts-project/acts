@@ -21,6 +21,9 @@ jobs:
           apt-get update
           apt-get install -y unzip
 
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
       - name: 'Download artifact'
         uses: actions/github-script@v7
         id: dl-af
@@ -76,9 +79,6 @@ jobs:
           number: ${{ steps.pr_number.outputs.content }}
           full_name: ${{ github.event.repository.full_name }}
 
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-
       - name: Get upcoming version from milestones
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,23 +92,15 @@ jobs:
         with:
           path: ./next_version.txt
 
-      # - uses: actions/checkout@v3
-      #   with:
-      #       repository: ${{ github.event.workflow_run.head_repository.full_name }}
-      #       ref: ${{ github.event.workflow_run.head_branch }}
-      #       fetch-depth: 0
-
       - name: Checkout base branch
         if: github.event.workflow_run.event == 'pull_request'
         run: |
           git config --global --add safe.directory $PWD
-          # git remote add upstream ${{ github.event.repository.clone_url }}
           git remote rename origin upstream
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
           git fetch origin
           git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
-          # git clean -ffdx && git reset --hard HEAD
           git status
 
       - name: Install sonar-scanner and build-wrapper
