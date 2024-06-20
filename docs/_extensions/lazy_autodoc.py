@@ -85,6 +85,7 @@ def run() -> None:
         "Acts::BinningData",
         "Acts::Direction",
         "Acts::ConstrainedStep",
+        "Acts::Axis",
         "Acts::IAxis",
         "Acts::SeedFilter",
         "Acts::BoundaryCheck",
@@ -137,6 +138,8 @@ def run() -> None:
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
         "Acts::TrackStatePropMask",
+        "Acts::AxisType",
+        "Acts::AxisBoundaryType",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")

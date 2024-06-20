@@ -9,18 +9,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 
 #include <cstddef>
 #include <vector>
 
-using namespace Acts::detail;
-
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(equidistant_axis) {
-  EquidistantAxis a(0.0, 10.0, 10u);
+  Axis a(0.0, 10.0, 10u);
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 10u);
@@ -99,7 +97,7 @@ BOOST_AUTO_TEST_CASE(equidistant_axis) {
 }
 
 BOOST_AUTO_TEST_CASE(variable_axis) {
-  VariableAxis a({0, 0.5, 3, 4.5, 6});
+  Axis a({0, 0.5, 3, 4.5, 6});
 
   // general binning properties
   BOOST_CHECK_EQUAL(a.getNBins(), 4u);
@@ -370,6 +368,34 @@ BOOST_AUTO_TEST_CASE(wrapBin) {
   BOOST_CHECK_EQUAL(a6.wrapBin(5), 5u);
   BOOST_CHECK_EQUAL(a6.wrapBin(6), 1u);
   BOOST_CHECK_EQUAL(a6.wrapBin(7), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(AxisTypeDeduction) {
+  auto eqOpen = Axis{0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqOpen),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Open>>);
+  auto eqBound = Axis{AxisBound, 0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqBound),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>);
+  auto eqClosed = Axis{AxisClosed, 0.0, 10., 10};
+  static_assert(
+      std::is_same_v<decltype(eqClosed),
+                     Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>);
+
+  auto varOpen = Axis{{0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varOpen),
+                     Axis<AxisType::Variable, AxisBoundaryType::Open>>);
+  auto varBound = Axis{AxisBound, {0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varBound),
+                     Axis<AxisType::Variable, AxisBoundaryType::Bound>>);
+  auto varClosed = Axis{AxisClosed, {0, 1, 2., 3, 4}};
+  static_assert(
+      std::is_same_v<decltype(varClosed),
+                     Axis<AxisType::Variable, AxisBoundaryType::Closed>>);
 }
 
 }  // namespace Acts::Test
