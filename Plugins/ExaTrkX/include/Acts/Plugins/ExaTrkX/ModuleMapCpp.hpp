@@ -30,6 +30,8 @@ class ModuleMapCpp : public GraphConstructionBase {
   std::unique_ptr<graph_creator<float>> m_graphCreator;
   std::unique_ptr<const Acts::Logger> m_logger;
 
+  std::vector<uint64_t> m_uniqueDoupletModuleIds;
+
   const auto &logger() const { return *m_logger; }
 
  public:
