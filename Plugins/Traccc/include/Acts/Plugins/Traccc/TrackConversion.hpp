@@ -13,11 +13,15 @@
 
 // Acts include(s)
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/detail/ParameterTraits.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/detail/Subspace.hpp"
 
 // Detray include(s)
 #include "detray/core/detector.hpp"
@@ -45,10 +49,11 @@ template <typename algebra_t, typename metadata_t, typename container_t>
 inline auto newParams(const detray::bound_track_parameters<algebra_t>& dparams,
                       const detray::detector<metadata_t, container_t>& detector,
                       const Acts::TrackingGeometry& trackingGeometry) {
-  Acts::ActsVector<6U> parameterVector =
-      detail::toActsVector<6U>(dparams.vector()[0]);
+  constexpr std::size_t kFullSize = Acts::detail::kParametersSize<Acts::BoundIndices>;
+  Acts::ActsVector<kFullSize> parameterVector =
+      detail::toActsVector<kFullSize>(dparams.vector()[0]);
   typename Acts::BoundTrackParameters::CovarianceMatrix cov =
-      detail::toActsSquareMatrix<6U>(dparams.covariance());
+      detail::toActsSquareMatrix<kFullSize>(dparams.covariance());
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
 
@@ -86,7 +91,6 @@ inline void copyFittingResult(
     const detray::detector<metadata_t, container_t>& detector,
     const Acts::TrackingGeometry& trackingGeometry) {
   const auto params = newParams(source.fit_params, detector, trackingGeometry);
-  // track.tipIndex() = kalmanResult.lastMeasurementIndex;
   destination.parameters() = params.parameters();
   destination.covariance() = params.covariance().value();
   destination.setReferenceSurface(params.referenceSurface().getSharedPtr());
@@ -97,7 +101,7 @@ inline void copyFittingResult(
 /// @param destination the Acts track state proxy to copy to.
 /// @param detector the detray detector of the traccc track track state.
 /// @param trackingGeometry the Acts tracking geometry.
-/// @note Sets the uncalibrated source link and calibrated measurement the traccc measurement.
+/// @note Sets the uncalibrated source link and calibrated measurement to the traccc measurement.
 template <typename algebra_t, typename metadata_t, typename container_t,
           typename trajectory_t, std::size_t M>
 inline void copyTrackState(
@@ -105,6 +109,10 @@ inline void copyTrackState(
     Acts::TrackStateProxy<trajectory_t, M, false>& destination,
     const detray::detector<metadata_t, container_t>& detector,
     const Acts::TrackingGeometry& trackingGeometry) {
+
+  constexpr std::size_t kFullSize = Acts::detail::kParametersSize<Acts::BoundIndices>;
+  constexpr std::size_t kSize = 2UL;
+
   auto geoID =
       Acts::GeometryIdentifier(detector.surface(source.surface_link()).source);
   auto surface = trackingGeometry.findSurface(geoID)->getSharedPtr();
@@ -116,22 +124,22 @@ inline void copyTrackState(
       typename Acts::TrackStateProxy<trajectory_t, M, false>::Covariance;
 
   destination.predicted() =
-      Parameters(detail::toActsVector<6U>(source.predicted().vector()[0]).data());
+      Parameters(detail::toActsVector<kFullSize>(source.predicted().vector()[0]).data());
   destination.predictedCovariance() = Covariance(
-      detail::toActsSquareMatrix<6U>(source.predicted().covariance()).data());
+      detail::toActsSquareMatrix<kFullSize>(source.predicted().covariance()).data());
 
   destination.smoothed() =
-      Parameters(detail::toActsVector<6U>(source.smoothed().vector()[0]).data());
+      Parameters(detail::toActsVector<kFullSize>(source.smoothed().vector()[0]).data());
   destination.smoothedCovariance() = Covariance(
-      detail::toActsSquareMatrix<6U>(source.smoothed().covariance()).data());
+      detail::toActsSquareMatrix<kFullSize>(source.smoothed().covariance()).data());
 
   destination.filtered() =
-      Parameters(detail::toActsVector<6U>(source.filtered().vector()[0]).data());
+      Parameters(detail::toActsVector<kFullSize>(source.filtered().vector()[0]).data());
   destination.filteredCovariance() = Covariance(
-      detail::toActsSquareMatrix<6U>(source.filtered().covariance()).data());
+      detail::toActsSquareMatrix<kFullSize>(source.filtered().covariance()).data());
 
   destination.jacobian() =
-      Covariance(detail::toActsSquareMatrix<6U>(source.jacobian()).data());
+      Covariance(detail::toActsSquareMatrix<kFullSize>(source.jacobian()).data());
 
   destination.chi2() = source.smoothed_chi2();
 
@@ -145,18 +153,31 @@ inline void copyTrackState(
   }
   typeFlags.set(TrackStateFlag::MeasurementFlag);
 
-  //destination.setUncalibratedSourceLink(m.sourceLink());
-  //destination.setCalibrated(m);
+  const traccc::measurement& measurement = source.get_measurement();
+
+  destination.setUncalibratedSourceLink(Acts::SourceLink{measurement});
+
+  destination.allocateCalibrated(kSize);
+  
+  destination.template calibrated<kSize>() = detail::toActsVector<kSize>(measurement.local);
+
+  auto cov = Eigen::DiagonalMatrix<Acts::ActsScalar, kSize>(
+                 detail::toActsVector<kSize>(measurement.variance))
+                 .toDenseMatrix();
+  destination.template calibratedCovariance<kSize>() = cov;
+
+  Acts::detail::FixedSizeSubspace<kFullSize, kSize> subspace(measurement.subs.get_indices());
+  destination.setProjector(subspace.template projector<Acts::ActsScalar>());
 }
 
 /// @brief Creates a new track in the Acts track container.
 /// This new track will contain data copied from the traccc track container
 /// element (track and track state data).
 /// @param tracccTrack The traccc container element to copy from.
-/// @param actsTrackContainer The Acts track container. This is the new track will be made in this container.
+/// @param trackContainer The Acts track container. The new tracks will be added to this container.
 /// @param detector The detray detector.
 /// @param trackingGeometry The Acts tracking geometry.
-/// @note Sets the uncalibrated source link and calibrated measurement the traccc measurement.
+/// @note Sets the uncalibrated source link and calibrated measurement to the traccc measurement.
 template <typename fitting_result_t, typename track_state_vector_t,
           typename track_container_t, typename trajectory_t,
           template <typename> class holder_t, typename metadata_t,
@@ -183,6 +204,25 @@ inline auto makeTrack(
   track.linkForward();
 
   return track;
+}
+
+/// @brief Creates a new track in the Acts track container for each track in the traccc track container.
+/// The new tracks will contain data copied from the traccc track container
+/// element (track and track state data).
+/// @param tracccTrackContainer The traccc container containing the traccc tracks.
+/// @param trackContainer The Acts track container. The new tracks will be added to this container.
+/// @param detector The detray detector.
+/// @param trackingGeometry The Acts tracking geometry.
+/// @note Sets the uncalibrated source link and calibrated measurement to the traccc measurement.
+template <typename traccc_track_container_t, typename track_container_t, typename trajectory_t, template <typename> class holder_t, typename metadata_t, typename container_t>
+inline void makeTracks(
+    const traccc_track_container_t& tracccTrackContainer, 
+    Acts::TrackContainer<track_container_t, trajectory_t, holder_t>& trackContainer, 
+    const detray::detector<metadata_t, container_t>& detector, 
+    const Acts::TrackingGeometry& trackingGeometry) {
+    for (std::size_t i = 0; i < tracccTrackContainer.size(); i++) {
+        makeTrack(tracccTrackContainer[i], trackContainer, detector, trackingGeometry);
+    }
 }
 
 }  // namespace Acts::TracccPlugin

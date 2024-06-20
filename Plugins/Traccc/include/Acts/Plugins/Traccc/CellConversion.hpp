@@ -43,7 +43,7 @@ namespace Acts::TracccPlugin {
 /// @param dconfig The traccc digitization configuration.
 /// @param barcode_map A map from Acts geometry ID value to detray barcode.
 /// @return A tuple containing the traccc cells (first item) and traccc modules (second item).
-inline std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_types::host> createCellsAndModules(
+std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_types::host> createCellsAndModules(
     vecmem::memory_resource* mr,
     std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>> cellsMap,
     const traccc::geometry* geom, const traccc::digitization_config* dconfig,

@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
 // Acts include(s)
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -57,7 +55,7 @@ struct CellOrder {
 
 namespace Acts::TracccPlugin {
 
-inline std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_types::host> createCellsAndModules(
+std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_types::host> createCellsAndModules(
     vecmem::memory_resource* mr,
     std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>> cellsMap,
     const traccc::geometry* geom, const traccc::digitization_config* dconfig,

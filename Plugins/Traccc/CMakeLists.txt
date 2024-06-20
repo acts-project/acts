@@ -10,7 +10,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsPluginTraccc
-  INTERFACE
+  PUBLIC
     ActsCore
     traccc::core
     traccc::io
