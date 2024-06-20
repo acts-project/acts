@@ -42,7 +42,8 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
 
  private:
   void buildEdgesWrapper(std::vector<float>& embedFeatures,
-                         std::vector<int64_t>& edgeList, int64_t numSpacepoints,
+                         std::vector<std::int64_t>& edgeList,
+                         std::int64_t numSpacepoints,
                          const Logger& logger) const;
 
   std::unique_ptr<const Acts::Logger> m_logger;

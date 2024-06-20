@@ -344,9 +344,6 @@ Gx2FitterOptions() = delete;
 /// Max number of iterations during the fit (abort condition)
 size_t nUpdateMax = 5;
 
-/// Disables the QoP fit in case of missing B-field
-bool zeroField = false;
-
 /// Check for convergence (abort condition). Set to 0 to skip.
 double relChi2changeCutOff = 1e-7;
 };
@@ -356,11 +353,7 @@ Common options like the geometry context or toggling of the energy loss are simi
 For now there are three *GX2F* specific options:
 1. `nUpdateMax` sets an abort condition for the parameter update as a maximum number of iterations allowed.
 We do not really want to use this condition, but it stops the fit in case of poor convergence.
-2. `zeroField` toggles the q/p-fit.
-If there is no magnetic field, we get no q/p-information.
-This would crash the fitter when needing matrix inverses.
-When this option is set to `true`, most of the matrices will omit the q/p-rows and -columns.
-3. `relChi2changeCutOff` is the desired convergence criterion.
+2. `relChi2changeCutOff` is the desired convergence criterion.
 We compare at each step of the iteration the current to the previous $\chi^2$.
 If the relative change is small enough, we finish the fit.
 

@@ -18,7 +18,7 @@ class Module;
 }
 
 namespace c10 {
-enum class DeviceType : int8_t;
+enum class DeviceType : std::int8_t;
 }
 
 namespace Acts {

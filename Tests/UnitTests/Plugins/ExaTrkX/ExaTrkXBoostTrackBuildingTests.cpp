@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
   }
 
   // Make edges
-  std::vector<int64_t> edges;
+  std::vector<std::int64_t> edges;
   for (const auto &track : refTracks) {
     for (auto it = track.begin(); it != track.end() - 1; ++it) {
       // edges must be 0 based, so subtract 100 again
