@@ -41,8 +41,10 @@ using DetrayDetector = detector<default_metadata>;
 ///
 /// @param dDetector is the detray detector (converted)
 /// @param names a name map for the detector volumes
+/// @param writer_cfg the writer configuration
 void writeToJson(const DetrayDetector& dDetector,
-                 const typename DetrayDetector::name_map& names = {});
+                 const typename DetrayDetector::name_map& names = {},
+                 detray::io::detector_writer_config writer_cfg = {});
 
 /// Conversion method for transform objects to detray::transform payloads
 ///
@@ -133,7 +135,7 @@ std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
   detray::detail::check_consistency(detrayDetector);
   converterPrint(detrayDetector, names);
 
-  return {std::move(det_tuple), mr};
+  return {std::move(detrayDetector), mr};
 }
 
 }  // namespace DetrayConverter

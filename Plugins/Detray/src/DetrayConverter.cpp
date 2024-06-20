@@ -45,11 +45,10 @@ int findVolume(
 /// detray geometry writer function, debug purposes
 void Acts::DetrayConverter::writeToJson(
     const DetrayDetector& dDetector,
-    const typename DetrayDetector::name_map& names) {
-  auto writer_cfg = detray::io::detector_writer_config{}
-                        .format(detray::io::format::json)
-                        .replace_files(true);
-  detray::io::write_detector(dDetector, names, writer_cfg);
+    const typename DetrayDetector::name_map& names,
+    detray::io::detector_writer_config writer_cfg = {}) {
+    writer_cfg.format(detray::io::format::json);
+    detray::io::write_detector(dDetector, names, writer_cfg);
 }
 
 detray::io::transform_payload Acts::DetrayConverter::convertTransform(
@@ -267,7 +266,7 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
       using NavigationLink = typename DetrayDetector::surface_type::navigation_link;  
       portalPayload.mask.volume_link.link =  
           std::numeric_limits<NavigationLink>::max();  
-          
+
       portals.push_back(portalPayload);
     }
   }
