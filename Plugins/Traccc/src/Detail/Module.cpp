@@ -33,10 +33,10 @@
 
 namespace Acts::TracccPlugin::detail {
 
-traccc::cell_module getModule(const Acts::GeometryIdentifier::Value geometryID,
-                               const traccc::geometry* geom,
-                               const traccc::digitization_config* dconfig,
-                               const Acts::GeometryIdentifier::Value originalGeometryID) {
+traccc::cell_module getModule(
+    const Acts::GeometryIdentifier::Value geometryID,
+    const traccc::geometry* geom, const traccc::digitization_config* dconfig,
+    const Acts::GeometryIdentifier::Value originalGeometryID) {
   traccc::cell_module result;
   result.surface_link = detray::geometry::barcode{geometryID};
 

@@ -55,12 +55,15 @@ struct CellOrder {
 
 namespace Acts::TracccPlugin {
 
-std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_types::host> createCellsAndModules(
+std::tuple<traccc::cell_collection_types::host,
+           traccc::cell_module_collection_types::host>
+createCellsAndModules(
     vecmem::memory_resource* mr,
-    std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>> cellsMap,
+    std::map<Acts::GeometryIdentifier::Value, std::vector<traccc::cell>>
+        cellsMap,
     const traccc::geometry* geom, const traccc::digitization_config* dconfig,
-    const std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>* barcodeMap) {
-      
+    const std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>*
+        barcodeMap) {
   traccc::io::cell_reader_output out(mr);
 
   // Sort the cells.
@@ -72,9 +75,9 @@ std::tuple<traccc::cell_collection_types::host, traccc::cell_module_collection_t
   for (const auto& [originalGeometryID, cells] : cellsMap) {
     // Modify the geometry ID of the module if a barcode map is
     // provided.
-    Acts::GeometryIdentifier::Value geometryID = (barcodeMap != nullptr)
-                                                 ? barcodeMap->at(originalGeometryID).value()
-                                                 : originalGeometryID;
+    Acts::GeometryIdentifier::Value geometryID =
+        (barcodeMap != nullptr) ? barcodeMap->at(originalGeometryID).value()
+                                : originalGeometryID;
 
     // Add the module and its cells to the output.
     out.modules.push_back(

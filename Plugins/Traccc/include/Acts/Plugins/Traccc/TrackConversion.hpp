@@ -14,12 +14,12 @@
 // Acts include(s)
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/detail/ParameterTraits.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/detail/Subspace.hpp"
 
@@ -49,7 +49,8 @@ template <typename algebra_t, typename metadata_t, typename container_t>
 inline auto newParams(const detray::bound_track_parameters<algebra_t>& dparams,
                       const detray::detector<metadata_t, container_t>& detector,
                       const Acts::TrackingGeometry& trackingGeometry) {
-  constexpr std::size_t kFullSize = Acts::detail::kParametersSize<Acts::BoundIndices>;
+  constexpr std::size_t kFullSize =
+      Acts::detail::kParametersSize<Acts::BoundIndices>;
   Acts::ActsVector<kFullSize> parameterVector =
       detail::toActsVector<kFullSize>(dparams.vector()[0]);
   typename Acts::BoundTrackParameters::CovarianceMatrix cov =
@@ -109,8 +110,8 @@ inline void copyTrackState(
     Acts::TrackStateProxy<trajectory_t, M, false>& destination,
     const detray::detector<metadata_t, container_t>& detector,
     const Acts::TrackingGeometry& trackingGeometry) {
-
-  constexpr std::size_t kFullSize = Acts::detail::kParametersSize<Acts::BoundIndices>;
+  constexpr std::size_t kFullSize =
+      Acts::detail::kParametersSize<Acts::BoundIndices>;
   constexpr std::size_t kSize = 2UL;
 
   auto geoID =
@@ -123,23 +124,26 @@ inline void copyTrackState(
   using Covariance =
       typename Acts::TrackStateProxy<trajectory_t, M, false>::Covariance;
 
-  destination.predicted() =
-      Parameters(detail::toActsVector<kFullSize>(source.predicted().vector()[0]).data());
+  destination.predicted() = Parameters(
+      detail::toActsVector<kFullSize>(source.predicted().vector()[0]).data());
   destination.predictedCovariance() = Covariance(
-      detail::toActsSquareMatrix<kFullSize>(source.predicted().covariance()).data());
+      detail::toActsSquareMatrix<kFullSize>(source.predicted().covariance())
+          .data());
 
-  destination.smoothed() =
-      Parameters(detail::toActsVector<kFullSize>(source.smoothed().vector()[0]).data());
+  destination.smoothed() = Parameters(
+      detail::toActsVector<kFullSize>(source.smoothed().vector()[0]).data());
   destination.smoothedCovariance() = Covariance(
-      detail::toActsSquareMatrix<kFullSize>(source.smoothed().covariance()).data());
+      detail::toActsSquareMatrix<kFullSize>(source.smoothed().covariance())
+          .data());
 
-  destination.filtered() =
-      Parameters(detail::toActsVector<kFullSize>(source.filtered().vector()[0]).data());
+  destination.filtered() = Parameters(
+      detail::toActsVector<kFullSize>(source.filtered().vector()[0]).data());
   destination.filteredCovariance() = Covariance(
-      detail::toActsSquareMatrix<kFullSize>(source.filtered().covariance()).data());
+      detail::toActsSquareMatrix<kFullSize>(source.filtered().covariance())
+          .data());
 
-  destination.jacobian() =
-      Covariance(detail::toActsSquareMatrix<kFullSize>(source.jacobian()).data());
+  destination.jacobian() = Covariance(
+      detail::toActsSquareMatrix<kFullSize>(source.jacobian()).data());
 
   destination.chi2() = source.smoothed_chi2();
 
@@ -158,15 +162,17 @@ inline void copyTrackState(
   destination.setUncalibratedSourceLink(Acts::SourceLink{measurement});
 
   destination.allocateCalibrated(kSize);
-  
-  destination.template calibrated<kSize>() = detail::toActsVector<kSize>(measurement.local);
+
+  destination.template calibrated<kSize>() =
+      detail::toActsVector<kSize>(measurement.local);
 
   auto cov = Eigen::DiagonalMatrix<Acts::ActsScalar, kSize>(
                  detail::toActsVector<kSize>(measurement.variance))
                  .toDenseMatrix();
   destination.template calibratedCovariance<kSize>() = cov;
 
-  Acts::detail::FixedSizeSubspace<kFullSize, kSize> subspace(measurement.subs.get_indices());
+  Acts::detail::FixedSizeSubspace<kFullSize, kSize> subspace(
+      measurement.subs.get_indices());
   destination.setProjector(subspace.template projector<Acts::ActsScalar>());
 }
 
@@ -214,15 +220,19 @@ inline auto makeTrack(
 /// @param detector The detray detector.
 /// @param trackingGeometry The Acts tracking geometry.
 /// @note Sets the uncalibrated source link and calibrated measurement to the traccc measurement.
-template <typename traccc_track_container_t, typename track_container_t, typename trajectory_t, template <typename> class holder_t, typename metadata_t, typename container_t>
+template <typename traccc_track_container_t, typename track_container_t,
+          typename trajectory_t, template <typename> class holder_t,
+          typename metadata_t, typename container_t>
 inline void makeTracks(
-    const traccc_track_container_t& tracccTrackContainer, 
-    Acts::TrackContainer<track_container_t, trajectory_t, holder_t>& trackContainer, 
-    const detray::detector<metadata_t, container_t>& detector, 
+    const traccc_track_container_t& tracccTrackContainer,
+    Acts::TrackContainer<track_container_t, trajectory_t, holder_t>&
+        trackContainer,
+    const detray::detector<metadata_t, container_t>& detector,
     const Acts::TrackingGeometry& trackingGeometry) {
-    for (std::size_t i = 0; i < tracccTrackContainer.size(); i++) {
-        makeTrack(tracccTrackContainer[i], trackContainer, detector, trackingGeometry);
-    }
+  for (std::size_t i = 0; i < tracccTrackContainer.size(); i++) {
+    makeTrack(tracccTrackContainer[i], trackContainer, detector,
+              trackingGeometry);
+  }
 }
 
 }  // namespace Acts::TracccPlugin

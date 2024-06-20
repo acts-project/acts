@@ -21,9 +21,9 @@ namespace Acts::TracccPlugin::detail {
 /// @brief Helper function which finds module from csv::cell in the geometry and
 /// digitization config, and initializes the modules limits with the cell's
 /// properties.
-traccc::cell_module getModule(const Acts::GeometryIdentifier::Value geometryID,
-                               const traccc::geometry* geom,
-                               const traccc::digitization_config* dconfig,
-                               const Acts::GeometryIdentifier::Value originalGeometryID);
+traccc::cell_module getModule(
+    const Acts::GeometryIdentifier::Value geometryID,
+    const traccc::geometry* geom, const traccc::digitization_config* dconfig,
+    const Acts::GeometryIdentifier::Value originalGeometryID);
 
 }  // namespace Acts::TracccPlugin::detail

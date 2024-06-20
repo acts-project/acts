@@ -28,10 +28,11 @@ namespace Acts::TracccPlugin {
 /// @param detector the detray detector.
 /// @return A map (key = geometry ID value, value = detray geometry barcode).
 template <typename metadata_t, typename container_t>
-inline std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode> createBarcodeMap(
-    const detray::detector<metadata_t, container_t>& detector) {
+inline std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>
+createBarcodeMap(const detray::detector<metadata_t, container_t>& detector) {
   // Construct a map from Acts surface identifiers to Detray barcodes.
-  std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode> barcodeMap;
+  std::map<Acts::GeometryIdentifier::Value, detray::geometry::barcode>
+      barcodeMap;
   for (const auto& surface : detector.surfaces()) {
     barcodeMap[surface.source] = surface.barcode();
   }
