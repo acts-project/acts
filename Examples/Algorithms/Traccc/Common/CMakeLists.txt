@@ -1,6 +1,10 @@
 add_library(
   ActsExamplesTracccCommon SHARED
   src/TracccChainAlgorithmBase.cpp
+  src/Conversion/CellMapConversion.cpp
+  src/Conversion/DigitizationConversion.cpp
+  src/Conversion/MeasurementConversion.cpp
+  src/Debug/Debug.cpp
 )
 
 target_include_directories(

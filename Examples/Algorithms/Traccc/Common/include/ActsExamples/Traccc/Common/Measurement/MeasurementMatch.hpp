@@ -45,7 +45,7 @@ inline Acts::GeometryIdentifier getGeometryID(const Acts::BoundVariantMeasuremen
 inline bool measurementEqual(const Acts::BoundVariantMeasurement& measurement1, const Acts::BoundVariantMeasurement& measurement2, const double maxDistance = .001){
     auto gidEq = getGeometryID(measurement1) == getGeometryID(measurement2);
     
-    auto sqNorm = (Acts::TracccPlugin::getLocal(measurement1) - Acts::TracccPlugin::getLocal(measurement2)).squaredNorm();
+    auto sqNorm = (Conversion::getLocal(measurement1) - Conversion::getLocal(measurement2)).squaredNorm();
     auto locEq = sqNorm <= maxDistance * maxDistance;
 
     return gidEq && locEq;

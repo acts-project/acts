@@ -11,7 +11,6 @@
 // Traccc Plugin include(s)
 #include "Acts/Plugins/Traccc/CellConversion.hpp"
 #include "Acts/Plugins/Traccc/TrackConversion.hpp"
-#include "Acts/Plugins/Traccc/MeasurementConversion.hpp"
 
 // Acts Examples include(s)
 #include "ActsExamples/Traccc/Common/Conversion/CellMapConversion.hpp"
@@ -66,24 +65,24 @@ const Acts::Logger& actsLogger;
 /// @brief Writes the number of traccc measurements and Acts measurements to the logger.
 /// If the number of measurements do not matching a warning is shown.
 /// @param tracccMeasurements the traccc measurements.
-/// @param actsMeasurements the Acts measurements.
+/// @param measurements the Acts measurements.
 template <typename allocator_t>
 void logMeasurementCountComparison(
     const std::vector<traccc::measurement, allocator_t>& tracccMeasurements, 
-    const std::vector<Acts::BoundVariantMeasurement>& actsMeasurements) const {
+    const std::vector<Acts::BoundVariantMeasurement>& measurements) const {
 
-    if (tracccMeasurements.size() != actsMeasurements.size()){
+    if (tracccMeasurements.size() != measurements.size()){
         std::stringstream ss;
         ss << "Number of measurements do not match (traccc: "
             << tracccMeasurements.size() 
-            << ", acts: " << actsMeasurements.size() 
+            << ", acts: " << measurements.size() 
             << ")\n"
             << "Perhaps mergeCommonCorner or doMerge is false in the digitization algorithm config?";
         ACTS_WARNING(ss.str());
     }else{
         std::stringstream ss;
         ss << "Number of Acts and Traccc measurements match (count: "
-        << actsMeasurements.size() << ")";
+        << measurements.size() << ")";
         ACTS_INFO(ss.str());
     }
 
@@ -93,21 +92,37 @@ void logMeasurementCountComparison(
 /// The traccc elements will map to an acts measurement that it is equivalent to.
 /// The resulting map is assumed to be bijective, thus if any element is unable to find a match an error is thrown.
 /// @param tracccMeasurements the traccc measurements.
-/// @param actsMeasurements the acts measurements.
+/// @param measurements the acts measurements.
 /// @return A map from traccc measurement to acts bound variant measurement.
 template <typename allocator_t>
 std::map<traccc::measurement, Acts::BoundVariantMeasurement> measurementConversionMap(
     const std::vector<traccc::measurement, allocator_t>& tracccMeasurements, 
-    const std::vector<Acts::BoundVariantMeasurement>& actsMeasurements) const{
+    const std::vector<Acts::BoundVariantMeasurement>& measurements) const{
 
-    logMeasurementCountComparison(tracccMeasurements, actsMeasurements);
+    logMeasurementCountComparison(tracccMeasurements, measurements);
 
     auto convertedMeasurements = Conversion::createActsMeasurements(detector, tracccMeasurements);
-    auto indexMap = Measurement::matchMap(convertedMeasurements, actsMeasurements);
+    auto indexMap = Measurement::matchMap(convertedMeasurements, measurements);
 
-    ACTS_DEBUG(std::string("Traccc (1) and Acts (2) measurement index pairing information:\n") + Measurement::pairingStatistics(convertedMeasurements, actsMeasurements, indexMap));
+    ACTS_DEBUG(std::string("Traccc (1) and Acts (2) measurement index pairing information:\n") + Measurement::pairingStatistics(convertedMeasurements, measurements, indexMap));
 
-    return Util::referenceMap(tracccMeasurements, actsMeasurements, indexMap);
+    return Util::referenceMap(tracccMeasurements, measurements, indexMap);
+}
+
+template <typename track_container_t, typename trajectory_t, template <typename> class holder_t>
+void mapMeasurements(Acts::TrackContainer<track_container_t, trajectory_t, holder_t>& trackContainer, const std::map<traccc::measurement, Acts::BoundVariantMeasurement> map) const {
+    for (auto track : trackContainer){
+        for (auto trackState : track.trackStates()){
+            const auto tracccMeasurement = trackState.getUncalibratedSourceLink().template get<traccc::measurement>();
+            const Acts::BoundVariantMeasurement& measurement = map.at(tracccMeasurement);
+            std::visit(
+                [&trackState](auto& m) {
+                    trackState.setUncalibratedSourceLink(m.sourceLink());
+                    trackState.setCalibrated(m);
+                },
+                measurement);
+        }
+    }
 }
 
 protected:
@@ -154,34 +169,32 @@ auto convertCells(const std::map<Acts::GeometryIdentifier, std::vector<Cluster::
 /// The newly created Acts tracks will use measurements from the acts measurement container.
 /// The Acts measurements provided will be used for setting both the calibrated and uncalibrated measurements/sourcelinks.
 /// @param tracccTrackContainer The traccc tracks.
-/// @param tracccMeasurements the traccc measurements
-/// @param actsMeasurements the Acts measurements
+/// @param tracccMeasurements the traccc measurements.
+/// @param measurements the Acts measurements.
 /// @return An Acts const track container.
 template <typename traccc_track_container_t, typename allocator_t>
 auto convertTracks(
     traccc_track_container_t& tracccTrackContainer,
     const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-    const std::vector<Acts::BoundVariantMeasurement>& actsMeasurements
+    const std::vector<Acts::BoundVariantMeasurement>& measurements
 ) const {
     auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
     auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
     TrackContainer tracks(trackContainer, trackStateContainer);
 
-    auto mcm = measurementConversionMap(tracccMeasurements, actsMeasurements);
+    Acts::TracccPlugin::makeTracks(tracccTrackContainer, tracks, detector, trackingGeometry);
+
+    std::stringstream ss;
+    ss << "Converted " << tracccTrackContainer.size() << " traccc tracks";
+    ACTS_INFO(ss.str())
+
+    auto mcm = measurementConversionMap(tracccMeasurements, measurements);
 
     ACTS_INFO("Found a 1:1 mapping of indexes between traccc and Acts measurements");
 
-    std::size_t i;
-    for (i = 0; i < tracccTrackContainer.size(); i++) {
-        const auto& ttrack = tracccTrackContainer[i];
-        auto atrack = Acts::TracccPlugin::makeTrack(ttrack, tracks, detector, trackingGeometry);
-        auto trackStatePairs = Acts::TracccPlugin::trackStateZipView(ttrack, atrack);
-        Acts::TracccPlugin::setSourceAndMeasurements(trackStatePairs, mcm);
-    }
+    mapMeasurements(tracks, mcm);
 
-    std::stringstream ss;
-    ss << "Converted " << i << " traccc tracks";
-    ACTS_INFO(ss.str())
+    ACTS_INFO("Updated track state measurements");
 
     ConstTrackContainer constTracks{
         std::make_shared<Acts::ConstVectorTrackContainer>(std::move(*trackContainer)),

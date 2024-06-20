@@ -46,7 +46,7 @@ class TracccChainAlgorithmBase : public IAlgorithm {
 public:
 
 using DetectorHostType = detray::detector<detray::default_metadata, detray::host_container_types>;
-using FieldType = Acts::CovfiePlugin::constant_field_t;
+using FieldType = Acts::CovfiePlugin::ConstantField;
 using CellsMapType = std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
 
 struct Config {
