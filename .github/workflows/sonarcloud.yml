@@ -122,11 +122,11 @@ jobs:
           sonar-scanner \
             --define sonar.cfamily.compile-commands="build/compile_commands.json" \
             --define sonar.coverageReportPaths=build/coverage/cov.xml \
-            --define sonar.projectVersion=${{ steps.next_version.outputs.content }} \
-            --define sonar.scm.revision=${{ github.event.workflow_run.head_sha }} \
-            --define sonar.pullrequest.key=${{ steps.pr_number.outputs.content }} \
-            --define sonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }} \
-            --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}" \
+            --define sonar.scm.revision="${{ github.event.workflow_run.head_sha }}" \
+            --define sonar.pullrequest.key="${{ steps.pr_number.outputs.content }}" \
+            --define sonar.pullrequest.branch="${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}" \
+            --define sonar.pullrequest.base="${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}"
 
       - name: Run sonar-scanner (push mode)
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
@@ -137,5 +137,5 @@ jobs:
           sonar-scanner \
             --define sonar.cfamily.compile-commands="build/compile_commands.json" \
             --define sonar.coverageReportPaths=build/coverage/cov.xml \
-            --define sonar.projectVersion=$(cat next_version.txt) \
+            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}" \
             --define sonar.branch.name=main
