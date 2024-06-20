@@ -44,13 +44,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
-          -DACTS_BUILD_UNITTESTS=on
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          cmake -B build -S . --preset coverage
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -84,12 +78,7 @@ jobs:
         run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
       - name: Configure
         run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          -DCMAKE_CXX_FLAGS="-Werror"
-          -DACTS_BUILD_EVERYTHING=ON
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake -B build -S . --preset build_performance
       - name: Measure
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results

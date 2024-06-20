@@ -1,0 +1,90 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "ci",
+      "displayName": "CI base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": true,
+        "CMAKE_CXX_FLAGS": "-Werror",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "coverage",
+      "displayName": "Coverage",
+      "inherits": "ci",
+      "cacheVariables": {
+        "ACTS_CXX_FLAGS": "--coverage -gz -g1",
+        "CMAKE_EXE_LINKER_FLAGS": "--coverage",
+        "CMAKE_SHARED_LINKER_FLAGS": "--coverage",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ACTS_BUILD_UNITTESTS": true,
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+      }
+    },
+    {
+      "name": "build_performance",
+      "displayName": "Build Performance",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ACTS_BUILD_EVERYTHING": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
+    },
+    {
+      "name": "linux_ubuntu",
+      "displayName": "Linux Ubuntu",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "ACTS_BUILD_EVERYTHING": true,
+        "ACTS_BUILD_ODD": true,
+        "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": true,
+        "ACTS_BUILD_EXAMPLES_EDM4HEP": true,
+        "ACTS_BUILD_ANALYSIS_APPS": true,
+        "ACTS_BUILD_PLUGIN_ACTSVG": true
+      }
+    },
+    {
+      "name": "linux_nodeps",
+      "displayName": "Linux without dependencies",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "ACTS_BUILD_UNITTESTS": true,
+        "ACTS_BUILD_INTEGRATIONTESTS": true,
+        "ACTS_FORCE_ASSERTIONS": true,
+        "ACTS_USE_SYSTEM_BOOST": false,
+        "ACTS_USE_SYSTEM_EIGEN3": false,
+        "ACTS_BUILD_PLUGIN_JSON": true
+      }
+    },
+    {
+      "name": "linux_nodeps_examples",
+      "displayName": "Linux without dependencies Examples build",
+      "inherits": "linux_nodeps",
+      "cacheVariables": {
+        "ACTS_BUILD_UNITTESTS": false,
+        "ACTS_BUILD_INTEGRATIONTESTS": false,
+        "ACTS_BUILD_PLUGIN_JSON": false,
+        "ACTS_BUILD_EXAMPLES": true
+      }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS build",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "ACTS_BUILD_EVERYTHING": true,
+        "ACTS_BUILD_ODD": true,
+        "ACTS_FORCE_ASSERTIONS": true,
+        "ACTS_BUILD_EXAMPLES_EDM4HEP": true,
+        "ACTS_BUILD_PLUGIN_ACTSVG": true
+      }
+    }
+  ]
+}

@@ -52,22 +52,11 @@ jobs:
         # versions
         run: >
           ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build -S . --preset linux_ubuntu
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
@@ -102,10 +91,7 @@ jobs:
 
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build-downstream -S Tests/DownstreamProject --preset ci
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
@@ -269,21 +255,9 @@ jobs:
         # versions
         run: >
           ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build -S . --preset linux_ubuntu
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_FORCE_ASSERTIONS=OFF
-          -DACTS_BUILD_ANALYSIS_APPS=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
@@ -309,10 +283,7 @@ jobs:
 
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build-downstream -S Tests/DownstreamProject --preset ci
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
@@ -362,19 +333,8 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build -S . --preset linux_nodeps
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_UNITTESTS=ON
-          -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
@@ -399,16 +359,8 @@ jobs:
       - name: Configure Examples
         run: >
           ${SETUP} &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build -S . --preset linux_nodeps_examples
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
         run: ${SETUP} && ${PRELOAD} && cmake --build build
       - name: Install Examples
@@ -420,10 +372,7 @@ jobs:
       - name: Downstream configure
         run: >
           ${SETUP} &&
-          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps --preset ci
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
         run: cmake --build build-downstream-nodeps
@@ -469,22 +418,12 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake -B build -S . --preset macos
           -DPython_EXECUTABLE=/usr/local/acts/bin/python3.10
           -DDD4HEP_DEBUG_CMAKE=ON
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
-          -DACTS_BUILD_EVERYTHING=ON
-          -DACTS_BUILD_ODD=ON
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_BUILD_PLUGIN_ACTSVG=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -507,10 +446,7 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
+          cmake -B build-downstream -S Tests/DownstreamProject --preset ci
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR};/usr/local/acts"
       - name: Downstream build

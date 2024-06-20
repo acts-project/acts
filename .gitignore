@@ -35,3 +35,4 @@ build*
 !.gitlab-ci.yml
 !.clang-tidy
 !.oclint
+!CMakePresets.json

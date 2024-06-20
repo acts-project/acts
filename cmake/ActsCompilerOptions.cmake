@@ -2,10 +2,24 @@
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type configuration" FORCE)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
-endif() 
+endif()
 
-set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wno-unused-local-typedefs")
-set(ACTS_CXX_FLAGS_DEBUG "--coverage")
+set(extra_flags "-Wall;-Wextra;-Wpedantic;-Wshadow;-Wno-unused-local-typedefs")
+
+# This adds some useful conversion checks like float-to-bool, float-to-int, etc.
+# However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
+# is much more aggressive and also triggers on e.g., double-to-float
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+  list(APPEND extra_flags "-Wfloat-conversion")
+endif()
+
+string(REPLACE " " ";" user_flags "${ACTS_CXX_FLAGS}")
+
+list(APPEND extra_flags ${user_flags})
+
+message(STATUS "Extra flags: ${extra_flags}")
+string(REPLACE ";" " " ACTS_CXX_FLAGS "${extra_flags}")
+set(ACTS_CXX_FLAGS_DEBUG "")
 set(ACTS_CXX_FLAGS_MINSIZEREL "")
 set(ACTS_CXX_FLAGS_RELEASE "")
 set(ACTS_CXX_FLAGS_RELWITHDEBINFO "")
@@ -21,12 +35,6 @@ if(DEFINED CMAKE_CXX_STANDARD)
   endif()
 endif()
 
-# This adds some useful conversion checks like float-to-bool, float-to-int, etc.
-# However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion 
-# is much more aggressive and also triggers on e.g., double-to-float
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang") 
- set(ACTS_CXX_FLAGS "${ACTS_CXX_FLAGS} -Wfloat-conversion")
-endif()
 
 if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
   message(STATUS "Added -g compile flag")
@@ -34,8 +42,6 @@ if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
 endif()
 
 # Acts linker flags
-set(ACTS_EXE_LINKER_FLAGS_DEBUG "--coverage")
-set(ACTS_SHARED_LINKER_FLAGS_DEBUG "--coverage ")
 
 # assign to global CXX flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ACTS_CXX_FLAGS}")
@@ -44,9 +50,6 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} ${ACTS_CXX_FLAGS_M
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${ACTS_CXX_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${ACTS_CXX_FLAGS_RELWITHDEBINFO}")
 
-# assign to global linker flags
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ACTS_EXE_LINKER_FLAGS_DEBUG}")
-set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ACTS_SHARED_LINKER_FLAGS_DEBUG}")
 
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
