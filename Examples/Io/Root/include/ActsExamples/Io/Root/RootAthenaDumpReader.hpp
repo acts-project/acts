@@ -97,7 +97,7 @@ class RootAthenaDumpReader : public IReader {
   std::mutex m_read_mutex;
 
   /// Vector of {eventNr, entryMin, entryMax}
-  std::vector<std::tuple<uint32_t, std::size_t, std::size_t>> m_eventMap;
+  std::vector<std::tuple<std::uint32_t, std::size_t, std::size_t>> m_eventMap;
   std::shared_ptr<TChain> m_inputchain;
   long unsigned int m_events;
 
@@ -109,7 +109,7 @@ class RootAthenaDumpReader : public IReader {
 
   // Declaration of leaf types
   unsigned int run_number = 0;
-  long unsigned int event_number = 0;
+  ULong64_t event_number = 0;
   int nSE = 0;
   int SEID[4] = {};  //[nSE]
   int nCL = 0;
