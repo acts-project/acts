@@ -11,9 +11,6 @@
 
 #include "detray/builders/detector_builder.hpp"
 #include "detray/io/frontend/detector_reader_config.hpp"
-#include "detray/io/frontend/implementation/json_readers.hpp"
-//#include "detray/io/frontend/utils/detector_components_reader.hpp"
-
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
 
 #include <memory>
@@ -29,8 +26,6 @@ using namespace pybind11::literals;
 using namespace Acts;
 using namespace detray;
 using namespace detray::io::detail;
-
-using detector_t = detector<default_metadata>;
 
 namespace Acts::Python {
 
@@ -50,7 +45,7 @@ void addDetray(Context& ctx) {
               mex.def("convertDetectorToDetray",
                       [](const Acts::GeometryContext& gctx,
                       const Acts::Experimental::Detector& acts_detector,
-                      const std::string& name) -> auto {//detector_t
+                      const std::string& name) -> auto {//detector<default_metadata>
 
                           // Create a host memory resource
                           vecmem::host_memory_resource host_mr;
