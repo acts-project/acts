@@ -25,8 +25,6 @@ This section shows some screenshots of the provided views:
 
 ![gsf_debugger_2](figures/gsf_debugger/gsf_debugger_2.jpg)
 
-![gsf_debugger_3](figures/gsf_debugger/gsf_debugger_3.jpg)
-
 ![gsf_debugger_4](figures/gsf_debugger/gsf_debugger_4.jpg)
 
 ![gsf_debugger_5](figures/gsf_debugger/gsf_debugger_5.jpg)
