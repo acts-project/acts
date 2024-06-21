@@ -261,9 +261,8 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
         const auto &curvilinear_parameters = result.value().endParameters;
         if (curvilinear_parameters.has_value() &&
             curvilinear_parameters.value().covariance().has_value()) {
-          MSG_DEBUG(i << " | "
-                      << "limit: " << null_propagation_options.pathLimit
-                      << " tolerance: "
+          MSG_DEBUG(i << " | " << "limit: "
+                      << null_propagation_options.pathLimit << " tolerance: "
                       << null_propagation_options.stepTolerance << std::endl);
 
           Acts::BoundSquareMatrix curvi_cov =

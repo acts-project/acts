@@ -309,14 +309,14 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
                       triplets.push_back(tr);
                     }
                   }  // loop over far spacepoints
-                }    // loop over middle spacepoints
-              }      // loop over near spacepoints
-            }        // loop over far phi slices
-          }          // loop over middle phi slices
-        }            // loop over near phi slices
-      }              // loop over far Z slices
-    }                // loop over near Z slices
-  }                  // loop over middle Z slices
+                }  // loop over middle spacepoints
+              }  // loop over near spacepoints
+            }  // loop over far phi slices
+          }  // loop over middle phi slices
+        }  // loop over near phi slices
+      }  // loop over far Z slices
+    }  // loop over near Z slices
+  }  // loop over middle Z slices
 
   return triplets;
 }

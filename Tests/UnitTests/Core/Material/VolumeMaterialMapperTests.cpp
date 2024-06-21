@@ -236,9 +236,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Build the material grid
   Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
   std::function<Vector3(Vector3)> transfoGlobalToLocal =
-      [](Vector3 pos) -> Vector3 {
-    return {pos.x(), pos.y(), pos.z()};
-  };
+      [](Vector3 pos) -> Vector3 { return {pos.x(), pos.y(), pos.z()}; };
 
   // Walk over each property
   for (const auto& rm : matRecord) {

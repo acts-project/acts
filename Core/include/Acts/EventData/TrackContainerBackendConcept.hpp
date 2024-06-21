@@ -32,66 +32,72 @@ using ConstCovariance = Eigen::Map<const BoundMatrix>;
 }  // namespace detail
 
 template <typename T>
-concept ConstTrackContainerBackend = requires(const T& cv, HashedString key,
-                                              TrackIndexType itrack) {
-  { cv.size_impl() } -> std::same_as<std::size_t>;
+concept ConstTrackContainerBackend =
+    requires(const T& cv, HashedString key, TrackIndexType itrack) {
+      { cv.size_impl() } -> std::same_as<std::size_t>;
 
-  { cv.component_impl(key, itrack) } -> std::same_as<std::any>;
+      { cv.component_impl(key, itrack) } -> std::same_as<std::any>;
 
-  { cv.parameters(itrack) } -> std::same_as<detail::ConstParameters>;
+      { cv.parameters(itrack) } -> std::same_as<detail::ConstParameters>;
 
-  { cv.covariance(itrack) } -> std::same_as<detail::ConstCovariance>;
+      { cv.covariance(itrack) } -> std::same_as<detail::ConstCovariance>;
 
-  { cv.hasColumn_impl(key) } -> std::same_as<bool>;
+      { cv.hasColumn_impl(key) } -> std::same_as<bool>;
 
-  { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
+      { cv.referenceSurface_impl(itrack) } -> std::same_as<const Surface*>;
 
-  { cv.particleHypothesis_impl(itrack) } -> std::same_as<ParticleHypothesis>;
+      {
+        cv.particleHypothesis_impl(itrack)
+      } -> std::same_as<ParticleHypothesis>;
 
-  {cv.dynamicKeys_impl()};
-  requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
-};
+      { cv.dynamicKeys_impl() };
+      requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
+    };
 
 template <typename T>
-concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
+concept MutableTrackContainerBackend =
+    ConstTrackContainerBackend<T> &&
     requires(T v, HashedString key, TrackIndexType itrack, std::string col,
              const T& other, std::shared_ptr<const Surface> sharedSurface) {
-  { v.parameters(itrack) } -> std::same_as<detail::Parameters>;
+      { v.parameters(itrack) } -> std::same_as<detail::Parameters>;
 
-  { v.covariance(itrack) } -> std::same_as<detail::Covariance>;
+      { v.covariance(itrack) } -> std::same_as<detail::Covariance>;
 
-  { v.addTrack_impl() } -> std::same_as<TrackIndexType>;
+      { v.addTrack_impl() } -> std::same_as<TrackIndexType>;
 
-  {v.removeTrack_impl(itrack)};
+      { v.removeTrack_impl(itrack) };
 
-  // As far as I know there's no good way to assert that there's a
-  // generic template function
-  {v.template addColumn_impl<std::uint32_t>(col)};
-  {v.template addColumn_impl<std::uint64_t>(col)};
-  {v.template addColumn_impl<std::int32_t>(col)};
-  {v.template addColumn_impl<std::int64_t>(col)};
-  {v.template addColumn_impl<float>(col)};
-  {v.template addColumn_impl<double>(col)};
+      // As far as I know there's no good way to assert that there's a
+      // generic template function
+      { v.template addColumn_impl<std::uint32_t>(col) };
+      { v.template addColumn_impl<std::uint64_t>(col) };
+      { v.template addColumn_impl<std::int32_t>(col) };
+      { v.template addColumn_impl<std::int64_t>(col) };
+      { v.template addColumn_impl<float>(col) };
+      { v.template addColumn_impl<double>(col) };
 
-  {v.copyDynamicFrom_impl(itrack, key, std::declval<const std::any&>())};
+      { v.copyDynamicFrom_impl(itrack, key, std::declval<const std::any&>()) };
 
-  {v.ensureDynamicColumns_impl(other)};
+      { v.ensureDynamicColumns_impl(other) };
 
-  {v.reserve(itrack)};
+      { v.reserve(itrack) };
 
-  {v.setReferenceSurface_impl(itrack, sharedSurface)};
+      { v.setReferenceSurface_impl(itrack, sharedSurface) };
 
-  {v.setParticleHypothesis_impl(
-      itrack, std::declval<const Acts::ParticleHypothesis&>())};
+      {
+        v.setParticleHypothesis_impl(
+            itrack, std::declval<const Acts::ParticleHypothesis&>())
+      };
 
-  {v.clear()};
-};
+      { v.clear() };
+    };
 
 template <typename T>
 struct IsReadOnlyTrackContainer;
 
 template <typename T>
-concept TrackContainerBackend = ConstTrackContainerBackend<T> &&
+concept TrackContainerBackend =
+    ConstTrackContainerBackend<T> &&
     (IsReadOnlyTrackContainer<T>::value || MutableTrackContainerBackend<T>);
 }  // namespace Acts
 

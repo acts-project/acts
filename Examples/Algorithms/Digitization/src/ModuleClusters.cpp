@@ -219,7 +219,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
         thisvec.push_back(std::move(values.at(j)));
       }
     }  // Loop on `j'
-  }    // Loop on `i'
+  }  // Loop on `i'
   return retv;
 }
 

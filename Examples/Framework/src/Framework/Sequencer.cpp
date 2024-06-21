@@ -204,10 +204,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
         ACTS_ERROR("Adding "
                    << elementType << " " << element->name() << ":"
                    << "\n-> white board will contain key '" << handle->key()
-                   << "'"
-                   << "\nat this point in the sequence (source: "
-                   << source.fullName() << "),"
-                   << "\nbut the type will be\n"
+                   << "'" << "\nat this point in the sequence (source: "
+                   << source.fullName() << ")," << "\nbut the type will be\n"
                    << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
                    << "\nand not\n"
                    << "'" << demangleAndShorten(handle->typeInfo().name())
@@ -216,8 +214,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
       }
     } else {
       ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
-                           << "\n-> white board will not contain key"
-                           << " '" << handle->key()
+                           << "\n-> white board will not contain key" << " '"
+                           << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
                            << handle->name() << "'")
@@ -627,10 +625,9 @@ void Sequencer::fpeReport() const {
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
         sorted;
-    std::transform(
-        merged.stackTraces().begin(), merged.stackTraces().end(),
-        std::back_inserter(sorted),
-        [](const auto& f) -> const auto& { return f; });
+    std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
+                   std::back_inserter(sorted),
+                   [](const auto& f) -> const auto& { return f; });
     std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
       return a.get().count > b.get().count;
     });

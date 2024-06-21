@@ -262,11 +262,11 @@ ActsAlignment::Alignment<fitter_t>::align(
         alignOptions.deltaAverageChi2ONdfCutOff.first) {
       if (std::abs(recentChi2ONdf.front() - alignResult.averageChi2ONdf) <=
           alignOptions.deltaAverageChi2ONdfCutOff.second) {
-        ACTS_INFO(
-            "Alignment has converged with change of chi2/ndf < "
-            << alignOptions.deltaAverageChi2ONdfCutOff.second << " in the last "
-            << alignOptions.deltaAverageChi2ONdfCutOff.first << " iterations"
-            << " after " << iIter << " iteration(s)");
+        ACTS_INFO("Alignment has converged with change of chi2/ndf < "
+                  << alignOptions.deltaAverageChi2ONdfCutOff.second
+                  << " in the last "
+                  << alignOptions.deltaAverageChi2ONdfCutOff.first
+                  << " iterations" << " after " << iIter << " iteration(s)");
         converged = true;
         break;
       }

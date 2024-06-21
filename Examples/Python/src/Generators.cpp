@@ -159,28 +159,21 @@ void addGenerators(Context& ctx) {
         .def_readwrite("mass", &Config::mass)
         .def_readwrite("charge", &Config::charge)
         .def_property(
-            "p",
-            [](Config& cfg) {
-              return std::pair{cfg.pMin, cfg.pMax};
-            },
+            "p", [](Config& cfg) { return std::pair{cfg.pMin, cfg.pMax}; },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.pMin = value.first;
               cfg.pMax = value.second;
             })
         .def_property(
             "phi",
-            [](Config& cfg) {
-              return std::pair{cfg.phiMin, cfg.phiMax};
-            },
+            [](Config& cfg) { return std::pair{cfg.phiMin, cfg.phiMax}; },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.phiMin = value.first;
               cfg.phiMax = value.second;
             })
         .def_property(
             "theta",
-            [](Config& cfg) {
-              return std::pair{cfg.thetaMin, cfg.thetaMax};
-            },
+            [](Config& cfg) { return std::pair{cfg.thetaMin, cfg.thetaMax}; },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.thetaMin = value.first;
               cfg.thetaMax = value.second;

@@ -314,12 +314,12 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   nEdges++;
                 }
               }  // loop over n2 (outer) nodes
-            }    // loop over n1 (inner) nodes
-          }      // loop over source eta bins
-        }        // loop over dst eta bins
-      }          // loop over L2(L1) layers
-    }            // loop over dst layers
-  }              // loop over the stages of doublet making
+            }  // loop over n1 (inner) nodes
+          }  // loop over source eta bins
+        }  // loop over dst eta bins
+      }  // loop over L2(L1) layers
+    }  // loop over dst layers
+  }  // loop over the stages of doublet making
 
   std::vector<const GbtsNode<external_spacepoint_t>*> vNodes;
 

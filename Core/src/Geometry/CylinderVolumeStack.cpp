@@ -295,15 +295,15 @@ void CylinderVolumeStack::overlapPrint(
     ss << std::setfill(' ');
     ACTS_VERBOSE("Checking overlap between");
     int w = 9;
-    ss << " - "
-       << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
-       << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
+    ss << " - " << " z: [ " << std::setw(w) << a.minZ() << " <- "
+       << std::setw(w) << a.midZ() << " -> " << std::setw(w) << a.maxZ()
+       << " ]";
     ACTS_VERBOSE(ss.str());
 
     ss.str("");
-    ss << " - "
-       << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
-       << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
+    ss << " - " << " z: [ " << std::setw(w) << b.minZ() << " <- "
+       << std::setw(w) << b.midZ() << " -> " << std::setw(w) << b.maxZ()
+       << " ]";
     ACTS_VERBOSE(ss.str());
   }
 }

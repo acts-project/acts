@@ -30,8 +30,8 @@ const Acts::RectangleBounds& Acts::RectangleBounds::boundingBox() const {
 std::ostream& Acts::RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::RectangleBounds:  (hlX, hlY) = "
-     << "(" << 0.5 * (get(eMaxX) - get(eMinX)) << ", "
+  sl << "Acts::RectangleBounds:  (hlX, hlY) = " << "("
+     << 0.5 * (get(eMaxX) - get(eMinX)) << ", "
      << 0.5 * (get(eMaxY) - get(eMinY)) << ")";
   sl << "\n(lower left, upper right):\n";
   sl << min().transpose() << "\n" << max().transpose();

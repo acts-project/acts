@@ -63,9 +63,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
 }
 
 template <typename E, typename R, typename A>
-auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
-                                                      bool transportCov) const
-    -> CurvilinearState {
+auto MultiEigenStepperLoop<E, R, A>::curvilinearState(
+    State& state, bool transportCov) const -> CurvilinearState {
   assert(!state.components.empty());
 
   std::vector<

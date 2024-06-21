@@ -179,11 +179,8 @@ ProcessCode CsvTrackWriter::writeT(const AlgorithmContext& context,
   // write csv header
   mos << "track_id,seed_id,particleId,"
       << "nStates,nMajorityHits,nMeasurements,nOutliers,nHoles,nSharedHits,"
-      << "chi2,ndf,chi2/ndf,"
-      << "pT,eta,phi,"
-      << "truthMatchProbability,"
-      << "good/duplicate/fake,"
-      << "Hits_ID";
+      << "chi2,ndf,chi2/ndf," << "pT,eta,phi," << "truthMatchProbability,"
+      << "good/duplicate/fake," << "Hits_ID";
 
   mos << '\n';
   mos << std::setprecision(m_cfg.outputPrecision);

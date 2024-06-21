@@ -159,8 +159,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
             }
           }
         }  // End for loop over range of associated vertices
-      }    // End loop over trackLinks
-    }      // End loop over lastIterAddedVertices
+      }  // End loop over trackLinks
+    }  // End loop over lastIterAddedVertices
 
     lastIterAddedVertices = currentIterAddedVertices;
     currentIterAddedVertices.clear();
