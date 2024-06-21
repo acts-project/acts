@@ -191,8 +191,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
       inputParticles, inputClusters, inputMeasurementSimhitsMap,
       outputProtoTracks, outputGraph, graphConstructor, edgeClassifiers,
-      trackBuilder, xScale, yScale, rScale, phiScale, zScale, cellCountScale,
-      cellSumScale, useXYZ, clusterXScale, clusterYScale, filterShortTracks,
+      trackBuilder, nodeFeatures, featureScales, filterShortTracks,
       targetMinHits, targetMinPT);
 
   {
