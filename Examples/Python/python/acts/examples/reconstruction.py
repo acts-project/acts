@@ -173,12 +173,6 @@ AmbiguityResolutionMLConfig = namedtuple(
     defaults=[None] * 3,
 )
 
-AmbiguityResolutionMLDBScanConfig = namedtuple(
-    "AmbiguityResolutionMLDBScanConfig",
-    ["nMeasurementsMin", "epsilonDBScan", "minPointsDBScan"],
-    defaults=[None] * 3,
-)
-
 SeedFilterMLDBScanConfig = namedtuple(
     "SeedFilterMLDBScanConfig",
     ["epsilonDBScan", "minPointsDBScan", "minSeedScore"],
@@ -1778,7 +1772,6 @@ def addAmbiguityResolutionML(
     from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
     algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
@@ -1809,50 +1802,6 @@ def addAmbiguityResolutionML(
         tracks=algGreedy.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeStates=writeTrajectories,
-        writeSummary=writeTrajectories,
-        writeCKFperformance=True,
-        logLevel=logLevel,
-    )
-
-    return s
-
-
-@acts.examples.NamedTypeArgs(
-    config=AmbiguityResolutionMLDBScanConfig,
-)
-def addAmbiguityResolutionMLDBScan(
-    s,
-    config: AmbiguityResolutionMLDBScanConfig = AmbiguityResolutionMLDBScanConfig(),
-    onnxModelFile: Optional[Union[Path, str]] = None,
-    outputDirCsv: Optional[Union[Path, str]] = None,
-    outputDirRoot: Optional[Union[Path, str]] = None,
-    writeTrajectories: bool = True,
-    logLevel: Optional[acts.logging.Level] = None,
-) -> None:
-    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm
-
-    customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    alg = AmbiguityResolutionMLDBScanAlgorithm(
-        level=customLogLevel(),
-        inputTracks="tracks",
-        inputDuplicateNN=onnxModelFile,
-        outputTracks="ambiTracksMLDBScan",
-        **acts.examples.defaultKWArgs(
-            nMeasurementsMin=config.nMeasurementsMin,
-            epsilonDBScan=config.epsilonDBScan,
-            minPointsDBScan=config.minPointsDBScan,
-        ),
-    )
-    s.addAlgorithm(alg)
-
-    addTrackWriters(
-        s,
-        name="ambiMLDBScan",
-        trajectories=alg.config.outputTracks,
-        outputDirRoot=outputDirRoot,
-        outputDirCsv=outputDirCsv,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
         writeCKFperformance=True,

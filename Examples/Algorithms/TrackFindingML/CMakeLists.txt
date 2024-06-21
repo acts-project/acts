@@ -1,7 +1,5 @@
 set(SOURCES 
-  src/AmbiguityResolutionML.cpp
   src/AmbiguityResolutionMLAlgorithm.cpp
-  src/AmbiguityResolutionMLDBScanAlgorithm.cpp   
   src/SeedFilterMLAlgorithm.cpp
 )
 

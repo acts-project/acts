@@ -35,7 +35,7 @@ namespace ActsExamples {
 ///     ...
 ///
 /// Intrinsically thread-safe as one file per event.
-class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
+class CsvSpacePointWriter final : public WriterT<SimSpacePointContainer> {
  public:
   struct Config {
     /// Which measurement collection to write.
@@ -49,10 +49,10 @@ class CsvSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// Constructor with
   /// @param config configuration struct
   /// @param level logging level
-  CsvSpacepointWriter(const Config& config, Acts::Logging::Level level);
+  CsvSpacePointWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~CsvSpacepointWriter() override;
+  ~CsvSpacePointWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;
