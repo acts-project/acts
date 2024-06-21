@@ -19,7 +19,7 @@ concurrency:
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
-  CCACHE_MAXSIZE: 500M
+  CCACHE_MAXSIZE: 1.25G
   CCACHE_KEY_SUFFIX: r1
   ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
+
       - uses: actions/checkout@v4
 
       - name: Cache build
@@ -50,13 +51,23 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=off
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=OFF
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_BUILD_ANALYSIS_APPS=ON
+          -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
       - name: Unit tests
-        run: cmake --build build --target test
+        run: ctest --test-dir build -j$(nproc)
+
       - name: Remove .o files
         run: >
           du -sh build
@@ -67,12 +78,22 @@ jobs:
           pip3 install gcovr==7.2
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
+
+      - uses: actions/upload-artifact@v4
         with:
-          files: ./build/coverage/cov.xml
-          disable_search: true
-          token: ${{ secrets.CODECOV_TOKEN }} # required
+          name: coverage-build
+          path: build
+
+      - name: Save PR number to file
+        if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+
+      - name: Persist PR number
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PR_NUMBER
+          path: PR_NUMBER.txt
 
   build_performance:
     runs-on: ubuntu-latest
@@ -81,7 +102,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a409b5
       - name: Configure
         run: >
           cmake -B build -S .
