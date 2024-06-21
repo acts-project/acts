@@ -112,7 +112,7 @@ function(add_non_compile_test name src)
 endfunction()
 
 add_subdirectory(Core)
-add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
+add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES AND ACTS_BUILD_EXAMPLES_UNITTESTS)
 add_subdirectory_if(Benchmarks ACTS_BUILD_BENCHMARKS)
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory(Plugins)
