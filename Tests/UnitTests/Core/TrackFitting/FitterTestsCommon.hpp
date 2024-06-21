@@ -127,7 +127,7 @@ struct FitterTester {
   std::shared_ptr<const Acts::TrackingGeometry> geometry = geometryStore();
 
   Acts::detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor{
-      *geometry};
+      geometry.get()};
 
   // expected number of measurements for the given detector
   constexpr static std::size_t nMeasurements = 6u;
