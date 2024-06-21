@@ -84,7 +84,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
                                      bField_xyz, 1, 1, false);
   Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
 
-  Acts::CovfiePlugin::InterpolatedField field = Acts::CovfiePlugin::covfieField(actsField);
+  Acts::CovfiePlugin::InterpolatedField field =
+      Acts::CovfiePlugin::covfieField(actsField);
   typename Acts::CovfiePlugin::InterpolatedField::view_t view(field);
 
   std::array<std::array<float, 3>, 14> points = {{
@@ -128,7 +129,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField2) {
                                      bField_xyz, 1, 1, false);
   Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
 
-  Acts::CovfiePlugin::InterpolatedField field = Acts::CovfiePlugin::covfieField(actsField);
+  Acts::CovfiePlugin::InterpolatedField field =
+      Acts::CovfiePlugin::covfieField(actsField);
   typename Acts::CovfiePlugin::InterpolatedField::view_t view(field);
 
   std::array<std::array<float, 3>, 14> points = {{
@@ -156,7 +158,8 @@ BOOST_AUTO_TEST_CASE(ConstantMagneticField1) {
   Acts::MagneticFieldContext ctx;
   Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(ctx);
 
-  Acts::CovfiePlugin::ConstantField field = Acts::CovfiePlugin::covfieField(actsField);
+  Acts::CovfiePlugin::ConstantField field =
+      Acts::CovfiePlugin::covfieField(actsField);
   typename Acts::CovfiePlugin::ConstantField::view_t view(field);
 
   std::array<std::array<float, 3>, 13> points = {{

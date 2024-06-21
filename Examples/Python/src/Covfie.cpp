@@ -38,8 +38,7 @@ void declareCovfieField(py::module& m, const std::string& fieldName) {
 }  // namespace
 void addCovfie(Context& ctx) {
   auto main = ctx.get("main");
-  auto m = main.def_submodule("covfie",
-                              "Submodule for covfie conversion");
+  auto m = main.def_submodule("covfie", "Submodule for covfie conversion");
 
   declareCovfieField<Acts::CovfiePlugin::ConstantField>(m,
                                                         "CovfieConstantField");

@@ -43,9 +43,9 @@ Acts::Vector3 getFieldEdgeInclusive(
 /// @param cache the magnetic field cache.
 /// @param position the position of the field to look up.
 /// @return the field value at the given position.
-Acts::Vector3 getFieldEdgeInclusive(const Acts::MagneticFieldProvider& magneticField,
-                           Acts::MagneticFieldProvider::Cache& cache,
-                           const Acts::Vector3& position) {
+Acts::Vector3 getFieldEdgeInclusive(
+    const Acts::MagneticFieldProvider& magneticField,
+    Acts::MagneticFieldProvider::Cache& cache, const Acts::Vector3& position) {
   auto lookupResult = magneticField.getField(position, cache);
   if (!lookupResult.ok()) {
     throw std::runtime_error{"Field lookup failure"};
@@ -104,9 +104,10 @@ auto newBuilder(const magnetic_field_t& magneticField,
 /// @param max (max_x, max_y, max_z)
 /// @return The affine field configuration.
 template <typename backend_t>
-typename backend_t::configuration_t affineConfiguration(const std::vector<std::size_t>& nBins,
-                                                        const std::vector<Acts::ActsScalar>& min,
-                                                        const std::vector<Acts::ActsScalar>& max) {
+typename backend_t::configuration_t affineConfiguration(
+    const std::vector<std::size_t>& nBins,
+    const std::vector<Acts::ActsScalar>& min,
+    const std::vector<Acts::ActsScalar>& max) {
   auto scaling = covfie::algebra::affine<3>::scaling(
       static_cast<float>((nBins[0] - 1) / (max[0] - min[0])),
       static_cast<float>((nBins[1] - 1) / (max[1] - min[1])),
