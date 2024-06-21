@@ -20,7 +20,7 @@ namespace {
 /// @param cache the magnetic field cache.
 /// @param position the position of the field to look up.
 /// @return the field value at the given position.
-auto getFieldEdgeInclusive(
+Acts::Vector3 getFieldEdgeInclusive(
     const Acts::InterpolatedMagneticField& magneticField,
     [[maybe_unused]] Acts::InterpolatedMagneticField::Cache& cache,
     const Acts::Vector3& position) {
@@ -43,7 +43,7 @@ auto getFieldEdgeInclusive(
 /// @param cache the magnetic field cache.
 /// @param position the position of the field to look up.
 /// @return the field value at the given position.
-auto getFieldEdgeInclusive(const Acts::MagneticFieldProvider& magneticField,
+Acts::Vector3 getFieldEdgeInclusive(const Acts::MagneticFieldProvider& magneticField,
                            Acts::MagneticFieldProvider::Cache& cache,
                            const Acts::Vector3& position) {
   auto lookupResult = magneticField.getField(position, cache);
@@ -62,12 +62,12 @@ auto getFieldEdgeInclusive(const Acts::MagneticFieldProvider& magneticField,
 /// @param min (min_x, min_y, min_z)
 /// @param max (max_x, max_y, max_z)
 /// @return A strided covfie field.
-template <typename magnetic_field_t, typename point3_1_t, typename point3_2_t,
-          typename point3_3_t>
+template <typename magnetic_field_t>
 auto newBuilder(const magnetic_field_t& magneticField,
                 typename magnetic_field_t::Cache& cache,
-                const point3_1_t& nBins, const point3_2_t& min,
-                const point3_3_t& max) {
+                const std::vector<std::size_t>& nBins,
+                const std::vector<Acts::ActsScalar>& min,
+                const std::vector<Acts::ActsScalar>& max) {
   using Field = covfie::field<BuilderBackend>;
 
   Field field(covfie::make_parameter_pack(
@@ -103,11 +103,10 @@ auto newBuilder(const magnetic_field_t& magneticField,
 /// @param min (min_x, min_y, min_z)
 /// @param max (max_x, max_y, max_z)
 /// @return The affine field configuration.
-template <typename backend_t, typename point3_1_t, typename point3_2_t,
-          typename point3_3_t>
-typename backend_t::configuration_t affineConfiguration(const point3_1_t& nBins,
-                                                        const point3_2_t& min,
-                                                        const point3_3_t& max) {
+template <typename backend_t>
+typename backend_t::configuration_t affineConfiguration(const std::vector<std::size_t>& nBins,
+                                                        const std::vector<Acts::ActsScalar>& min,
+                                                        const std::vector<Acts::ActsScalar>& max) {
   auto scaling = covfie::algebra::affine<3>::scaling(
       static_cast<float>((nBins[0] - 1) / (max[0] - min[0])),
       static_cast<float>((nBins[1] - 1) / (max[1] - min[1])),
@@ -125,9 +124,10 @@ typename backend_t::configuration_t affineConfiguration(const point3_1_t& nBins,
 /// @param min (min_x, min_y, min_z)
 /// @param max (max_x, max_y, max_z)
 /// @return The clamp field configuration.
-template <typename backend_t, typename point3_1_t, typename point3_2_t>
+template <typename backend_t>
 typename backend_t::configuration_t clampConfigurationFloat(
-    const point3_1_t& min, const point3_2_t& max) {
+    const std::vector<Acts::ActsScalar>& min,
+    const std::vector<Acts::ActsScalar>& max) {
   return {{std::nextafter(static_cast<float>(min[0]),
                           std::numeric_limits<float>::infinity()),
            std::nextafter(static_cast<float>(min[1]),
@@ -149,13 +149,12 @@ typename backend_t::configuration_t clampConfigurationFloat(
 /// @param min (min_x, min_y, min_z)
 /// @param max (max_x, max_y, max_z)
 /// @return A clamp affine linear strided covfie field.
-template <typename magnetic_field_t, typename point3_1_t, typename point3_2_t,
-          typename point3_3_t>
+template <typename magnetic_field_t>
 InterpolatedField covfieFieldLinear(const magnetic_field_t& magneticField,
                                     typename magnetic_field_t::Cache& cache,
-                                    const point3_1_t& nBins,
-                                    const point3_2_t& min,
-                                    const point3_3_t& max) {
+                                    const std::vector<std::size_t>& nBins,
+                                    const std::vector<Acts::ActsScalar>& min,
+                                    const std::vector<Acts::ActsScalar>& max) {
   auto builder = newBuilder(magneticField, cache, nBins, min, max);
   InterpolatedField field(covfie::make_parameter_pack(
       clampConfigurationFloat<InterpolatedField::backend_t>(min, max),
@@ -177,8 +176,8 @@ InterpolatedField covfieFieldLinear(const magnetic_field_t& magneticField,
 InterpolatedField covfieField(const Acts::MagneticFieldProvider& magneticField,
                               Acts::MagneticFieldProvider::Cache& cache,
                               const std::vector<std::size_t>& nBins,
-                              const std::vector<double>& min,
-                              const std::vector<double>& max) {
+                              const std::vector<Acts::ActsScalar>& min,
+                              const std::vector<Acts::ActsScalar>& max) {
   return covfieFieldLinear(magneticField, cache, nBins, min, max);
 }
 

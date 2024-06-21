@@ -1,12 +1,12 @@
 import pathlib, acts, acts.examples
-from acts import covfie_conversion as cc
+from acts import covfie
 
 
 def test_constant_field_conversion():
     v = acts.Vector3(1, 2, 3)
     af = acts.ConstantBField(v)
-    cf = cc.covfieField(af)
-    view = cc.newView(cf)
+    cf = covfie.covfieField(af)
+    view = covfie.newView(cf)
     points = [(0, 0, 1), (1, 1, 1), (1, 0, 2)]
     for x, y, z in points:
         assert view.at(x, y, z) == [1, 2, 3]
@@ -23,8 +23,8 @@ def test_root_field_conversion():
     )
 
     af = acts.examples.MagneticFieldMapXyz(str(p))
-    cf = cc.covfieField(af)
-    view = cc.newView(cf)
+    cf = covfie.covfieField(af)
+    view = covfie.newView(cf)
     points = [
         (9300.0, 4700.0, 11200.0),
         (9999.0, 9999.0, 14300.0),
