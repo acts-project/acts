@@ -89,7 +89,7 @@ class Navigator {
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
 
-  using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
+  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
 
   /// The navigation stage
   enum struct Stage : int {
@@ -244,7 +244,7 @@ class Navigator {
 
   void insertExternalSurface(State& state, GeometryIdentifier geoid) const {
     state.externalSurfaces.insert(
-        std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+        std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
   }
 
   /// @brief Initialize call - start of navigation

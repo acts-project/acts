@@ -102,8 +102,8 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   TTree* m_matchingTree{nullptr};
 
   /// Variables to fill in the TTree
-  uint32_t m_treeEventNr{};
-  uint64_t m_treeParticleId{};
+  std::uint32_t m_treeEventNr{};
+  std::uint64_t m_treeParticleId{};
   bool m_treeIsMatched{};
 
   // Adding numbers for efficiency, fake, duplicate calculations

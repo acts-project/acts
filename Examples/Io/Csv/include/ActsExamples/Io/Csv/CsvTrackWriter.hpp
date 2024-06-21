@@ -90,7 +90,7 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
     std::string trackType;
     double truthMatchProb = 0;
     std::optional<TrackParameters> fittedParameters;
-    std::vector<uint64_t> measurementsID;
+    std::vector<std::uint64_t> measurementsID;
   };  // TrackInfo struct
 };
 

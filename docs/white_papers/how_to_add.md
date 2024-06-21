@@ -41,7 +41,7 @@ LaTeX installations. `latexmk` is configured to use LuaLatex by default.
 
 ## Integrate with Overleaf
 
-[Overleaf](https://overleaf.com) is a convenient web-based LaTeX authoring tool. It has GitHub integration 🎉!
+[Overleaf](https://www.overleaf.com) is a convenient web-based LaTeX authoring tool. It has GitHub integration 🎉!
 
 :::{image} figures/overleaf_import_github.png
 :align: center

@@ -81,12 +81,13 @@ Acts::MaterialInteractionAssignment::assign(
       }
     }
 
-    // Assign the material interaction
+    // Assign the material interaction - position stays, but intersection is
+    // updated
     MaterialInteraction assignedMaterialInteraction = materialInteraction;
     assignedMaterialInteraction.pathCorrection = pathCorrection;
     assignedMaterialInteraction.surface = surface;
-    assignedMaterialInteraction.position = position;
     assignedMaterialInteraction.direction = direction;
+    assignedMaterialInteraction.intersection = position;
     assignedMaterialInteraction.intersectionID = intersectionID;
     // Check for possible reassignment
     if (is + 1u < intersectedSurfaces.size() &&

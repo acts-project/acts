@@ -70,11 +70,10 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   mlCfg.name = "Multi_Layer_With_Wires";
   mlCfg.mlSurfaces = strawSurfaces;
   mlCfg.mlBounds = vBounds;
-  mlCfg.mlBinning = {
-      ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound,
-                   -vBounds[0], vBounds[0], nSurfacesX, 1u),
-      ProtoBinning(Acts::binY, Acts::detail::AxisBoundaryType::Bound,
-                   -vBounds[1], vBounds[1], nSurfacesY, 0u)};
+  mlCfg.mlBinning = {ProtoBinning(Acts::binX, Acts::AxisBoundaryType::Bound,
+                                  -vBounds[0], vBounds[0], nSurfacesX, 1u),
+                     ProtoBinning(Acts::binY, Acts::AxisBoundaryType::Bound,
+                                  -vBounds[1], vBounds[1], nSurfacesY, 0u)};
 
   MultiWireStructureBuilder mlBuilder(mlCfg);
   auto [volumes, portals, roots] = mlBuilder.construct(tContext);
