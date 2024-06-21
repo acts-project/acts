@@ -147,7 +147,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
                                    dummyInput.data() + dummyInput.size());
   std::vector<int> spacepointIDs;
   std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
-  
+
   runPipeline(dummyInputVec, spacepointIDs);
   }
 #endif
@@ -166,20 +166,23 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_timing.classifierTimes.resize(
       m_cfg.edgeClassifiers.size(),
       decltype(m_timing.classifierTimes)::value_type{0.f});
+
+  // Check if we want cluster features but do not have them
+  const static std::array clFeatures = {
+      NodeFeature::eClusterX, NodeFeature::eClusterY, NodeFeature::eCellCount,
+      NodeFeature::eCellSum};
+  auto wantClFeatures = std::any_of(
+      m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
+        return std::find(clFeatures.begin(), clFeatures.end(), f) !=
+               clFeatures.end();
+      });
+
+  if (wantClFeatures && !m_inputClusters.isInitialized()) {
+    throw std::invalid_argument("Cluster features requested, but not provided");
+  }
 }
 
 /// Allow access to features with nice names
-enum feat : std::size_t {
-  eR = 0,
-  ePhi = 1,
-  eX = 0,
-  eY = 1,
-  eZ = 2,
-  eCellCount = 3,
-  eCellSum = 4,
-  eClusterX = 5,
-  eClusterY = 6
-};
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
@@ -202,7 +205,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
   const std::size_t numSpacepoints = spacepoints.size();
-  const std::size_t numFeatures = clusters ? 7 : 3;
+  const std::size_t numFeatures = m_cfg.nodeFeatures.size();
   ACTS_INFO("Received " << numSpacepoints << " spacepoints");
 
   std::vector<float> features(numSpacepoints * numFeatures);
@@ -212,14 +215,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   spacepointIDs.reserve(spacepoints.size());
   moduleIds.reserve(spacepoints.size());
 
-  double sumCells = 0.0;
-  double sumActivation = 0.0;
-
-  for (auto i = 0ul; i < numSpacepoints; ++i) {
-    const auto& sp = spacepoints[i];
-
-    // I would prefer to use a std::span or boost::span here once available
-    float* featurePtr = features.data() + i * numFeatures;
+  for (auto isp = 0ul; isp < numSpacepoints; ++isp) {
+    const auto& sp = spacepoints[isp];
 
     // For now just take the first index since does require one single index
     // per spacepoint
@@ -229,36 +226,30 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     spacepointIDs.push_back(sl.index());
     moduleIds.push_back(sl.geometryId().value());
 
-    if (m_cfg.useXYZ) {
-      featurePtr[eX] = sp.x() / m_cfg.xScale;
-      featurePtr[eY] = sp.y() / m_cfg.yScale;
-    } else {
-      featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
-      featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
-    }
-    featurePtr[eZ] = sp.z() / m_cfg.zScale;
+    // This should be fine, because check in constructor
+    const Cluster* cl = clusters ? &clusters->at(sl.index()) : nullptr;
 
-    if (clusters) {
-      const auto& cluster = clusters->at(sl.index());
-      const auto& chnls = cluster.channels;
+    // I would prefer to use a std::span or boost::span here once available
+    float* f = features.data() + isp * numFeatures;
 
-      featurePtr[eCellCount] = cluster.channels.size() / m_cfg.cellCountScale;
-      featurePtr[eCellSum] =
-          std::accumulate(chnls.begin(), chnls.end(), 0.0,
-                          [](double s, const Cluster::Cell& c) {
-                            return s + c.activation;
-                          }) /
-          m_cfg.cellSumScale;
-      featurePtr[eClusterX] = cluster.sizeLoc0 / m_cfg.clusterXScale;
-      featurePtr[eClusterY] = cluster.sizeLoc1 / m_cfg.clusterYScale;
+    for (auto ift = 0ul; ift < numFeatures; ++ift) {
+      // clang-format off
+      switch(m_cfg.nodeFeatures[ift]) {
+        break; case NodeFeature::eR:   f[ift] = std::hypot(sp.x(), sp.y());
+        break; case NodeFeature::ePhi: f[ift] = std::atan2(sp.y(), sp.x());
+        break; case NodeFeature::eZ:   f[ift] = sp.z();
+        break; case NodeFeature::eX:   f[ift] = sp.x();
+        break; case NodeFeature::eY:   f[ift] = sp.y();
+        break; case NodeFeature::eClusterX:  f[ift] = cl->sizeLoc0;
+        break; case NodeFeature::eClusterY:  f[ift] = cl->sizeLoc1;
+        break; case NodeFeature::eCellSum:   f[ift] = cl->sumActivations();
+        break; case NodeFeature::eCellCount: f[ift] = cl->channels.size();
+      }
+      // clang-format on
 
-      sumCells += featurePtr[eCellCount];
-      sumActivation += featurePtr[eCellSum];
+      f[ift] /= m_cfg.featureScales[ift];
     }
   }
-
-  ACTS_DEBUG("Avg cell count: " << sumCells / spacepoints.size());
-  ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
   const auto trackCandidates = [&]() {

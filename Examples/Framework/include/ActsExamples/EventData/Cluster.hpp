@@ -20,6 +20,12 @@ struct Cluster {
   std::size_t sizeLoc0 = 0;
   std::size_t sizeLoc1 = 0;
   std::vector<Cell> channels;
+
+  double sumActivations() const {
+    return std::accumulate(
+        channels.begin(), channels.end(), 0.0,
+        [](double s, const Cluster::Cell& c) { return s + c.activation; });
+  }
 };
 
 /// Clusters have a one-to-one relation with measurements
