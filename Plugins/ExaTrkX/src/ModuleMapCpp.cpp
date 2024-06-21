@@ -10,8 +10,10 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
+#define NDEBUG
 #include <graph_creator>
 #include <module_map_triplet>
+#undef NDEBUG
 
 namespace Acts {
 
@@ -38,7 +40,7 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
 
 ModuleMapCpp::~ModuleMapCpp() {}
 
-std::tuple<std::any, std::any> ModuleMapCpp::operator()(
+std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
     const std::vector<uint64_t> &moduleIds, int /*deviceHint*/) {
   if (numNodes != moduleIds.size()) {
@@ -78,10 +80,12 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
 
     uint64_t hitId = i;
 
-    // Make sure that the features are provided as x,y,z and not r,phi,z
-    float x = hitFeatures[0];
-    float y = hitFeatures[1];
+    float r = hitFeatures[0];
+    float phi = hitFeatures[1];
     float z = hitFeatures[2];
+
+    float x = r*std::cos(phi);
+    float y = r*std::sin(phi);
 
     uint64_t particleId = 0;  // We do not know
     uint64_t moduleId = moduleIds[i];
@@ -112,39 +116,56 @@ std::tuple<std::any, std::any> ModuleMapCpp::operator()(
   }
 
   ACTS_DEBUG("Got " << numEdges << " edges, put them in a vector...");
-  std::vector<int32_t> edgeVector;
-  edgeVector.reserve(2 * numEdges);
+  std::vector<int32_t> edgeIndexVector;
+  edgeIndexVector.reserve(2 * numEdges);
+
+  std::vector<float> edgeFeatureVector;
 
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {
     const auto &edge = *it;
 
-    auto source = boost::source(edge, graph.graph_impl());
-    auto target = boost::target(edge, graph.graph_impl());
+    auto src = graph.graph_impl()[boost::source(edge, graph.graph_impl())];
+    auto tgt = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
 
-    auto sid = graph.graph_impl()[source].hit_id();
-    auto tid = graph.graph_impl()[target].hit_id();
+    // Edge index
+    assert(src.hit_id() >= 0 && src.hit_id() < static_cast<int>(numNodes));
+    assert(tgt.hit_id() >= 0 && tgt.hit_id() < static_cast<int>(numNodes));
 
-    assert(sid >= 0 && sid < static_cast<int>(numNodes));
-    assert(tid >= 0 && tid < static_cast<int>(numNodes));
+    edgeIndexVector.push_back(src.hit_id());
+    edgeIndexVector.push_back(tgt.hit_id());
 
-    edgeVector.push_back(sid);
-    edgeVector.push_back(tid);
+    // Edge features
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dr());
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dPhi());
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dz());
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dEta());
+
+    const auto deltaR = tgt.r() - src.r();
+    const auto deltaPhi = tgt.phi() - src.phi();
+    const auto phiSlope = deltaPhi / deltaR;
+    edgeFeatureVector.push_back(phiSlope);
+
+    const auto deltaRPhi = tgt.r()*tgt.phi() - src.r()*src.phi();
+    const float rPhiSlope = deltaRPhi / deltaR;
+    edgeFeatureVector.push_back(rPhiSlope);
   }
 
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
-  auto featureTensor = detail::vectorToTensor2D(inputValues, numFeatures);
-  auto edgeTensor = detail::vectorToTensor2D(edgeVector, numEdges);
+  auto nodeFeatures = detail::vectorToTensor2D(inputValues, numFeatures);
+  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, numEdges);
 
-  ACTS_DEBUG(
-      "All edges < numNodes: "
-      << std::boolalpha
-      << (edgeTensor < static_cast<int32_t>(numNodes)).all().item<bool>());
+  constexpr std::size_t numEdgeFeatures = 6;
+  auto edgeFeatures =
+      detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures);
 
-  ACTS_DEBUG("featureTensor: " << featureTensor.sizes()
-                               << ", edgeTensor: " << edgeTensor.sizes());
-  return std::make_tuple(std::move(featureTensor), std::move(edgeTensor));
+  ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes()
+                              << ", edgeIndex: " << edgeIndex.sizes()
+                              << ", edgeFeatures: " << edgeFeatures.sizes());
+
+  return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
+                         std::move(edgeFeatures));
 }
 
 }  // namespace Acts

@@ -42,19 +42,25 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, int deviceHint) {
+std::tuple<std::any, std::any, std::any, std::any>
+TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
+                                std::any inEdgeFeatures, int deviceHint) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType, deviceHint);
 
-  auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
-  auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
+  auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
+  auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
+
+  std::optional<torch::Tensor> edgeFeatures;
+  if (inEdgeFeatures.has_value()) {
+    edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(device);
+  }
 
   auto model = m_model->clone();
   model.to(device);
 
-  if (m_cfg.numFeatures > nodes.size(1)) {
+  if (m_cfg.numFeatures > nodeFeatures.size(1)) {
     throw std::runtime_error("requested more features then available");
   }
 
@@ -62,21 +68,25 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
 
   // Scope this to keep inference objects separate
   {
-    auto edgeListTmp = m_cfg.undirected
-                           ? torch::cat({edgeList, edgeList.flip(0)}, 1)
-                           : edgeList;
+    auto edgeIndexTmp = m_cfg.undirected
+                            ? torch::cat({edgeIndex, edgeIndex.flip(0)}, 1)
+                            : edgeIndex;
 
     std::vector<torch::jit::IValue> inputTensors(2);
     inputTensors[0] =
-        m_cfg.numFeatures < nodes.size(1)
-            ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}})
-            : nodes;
+        m_cfg.numFeatures < nodeFeatures.size(1)
+            ? nodeFeatures.index({Slice{}, Slice{None, m_cfg.numFeatures}})
+            : nodeFeatures;
+
+    if (edgeFeatures) {
+      inputTensors.push_back(*edgeFeatures);
+    }
 
     if (m_cfg.nChunks > 1) {
       std::vector<at::Tensor> results;
       results.reserve(m_cfg.nChunks);
 
-      auto chunks = at::chunk(edgeListTmp, m_cfg.nChunks, 1);
+      auto chunks = at::chunk(edgeIndexTmp, m_cfg.nChunks, 1);
       for (auto& chunk : chunks) {
         ACTS_VERBOSE("Process chunk with shape" << chunk.sizes());
         inputTensors[1] = chunk;
@@ -87,7 +97,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
 
       output = torch::cat(results);
     } else {
-      inputTensors[1] = edgeListTmp;
+      inputTensors[1] = edgeIndexTmp;
       output = model.forward(inputTensors).toTensor();
       output.squeeze_();
     }
@@ -106,14 +116,14 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   printCudaMemInfo(logger());
 
   torch::Tensor mask = output > m_cfg.cut;
-  torch::Tensor edgesAfterCut = edgeList.index({Slice(), mask});
+  torch::Tensor edgesAfterCut = edgeIndex.index({Slice(), mask});
   edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
 
-  return {std::move(nodes), std::move(edgesAfterCut),
-          output.masked_select(mask)};
+  return {std::move(nodeFeatures), std::move(edgesAfterCut),
+          std::move(inEdgeFeatures), output.masked_select(mask)};
 }
 
 }  // namespace Acts

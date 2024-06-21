@@ -43,14 +43,16 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, int) {
+std::tuple<std::any, std::any, std::any, std::any>
+OnnxEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
+                               std::any inEdgeFeatures, int deviceHint) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
-  auto eInputTensor = std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
-  auto edgeList = std::any_cast<std::vector<std::int64_t>>(inputEdges);
+  auto eInputTensor =
+      std::any_cast<std::shared_ptr<Ort::Value>>(inNodeFeatures);
+  auto edgeList = std::any_cast<std::vector<std::int64_t>>(inEdgeIndex);
   const int numEdges = edgeList.size() / 2;
 
   std::vector<const char *> fInputNames{m_inputNameNodes.c_str(),
@@ -98,7 +100,7 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
                                                          << " edges.");
 
   return {std::make_shared<Ort::Value>(std::move(fInputTensor[0])),
-          edgesAfterFiltering, fOutputCTen};
+          edgesAfterFiltering, std::move(inEdgeFeatures), fOutputCTen};
 }
 
 }  // namespace Acts

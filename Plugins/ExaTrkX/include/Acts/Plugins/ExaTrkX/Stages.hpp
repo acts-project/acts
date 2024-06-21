@@ -28,8 +28,8 @@ class GraphConstructionBase {
   /// then gives the number of features
   /// @param deviceHint Which GPU to pick. Not relevant for CPU-only builds
   ///
-  /// @return (node_tensor, edge_tensore)
-  virtual std::tuple<std::any, std::any> operator()(
+  /// @return (node_features, edge_features, edge_index)
+  virtual std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
       const std::vector<uint64_t> &moduleIds, int deviceHint = -1) = 0;
 
@@ -44,9 +44,10 @@ class EdgeClassificationBase {
   /// @param edges Edge-index tensor with shape (2, n_edges)
   /// @param deviceHint Which GPU to pick. Not relevant for CPU-only builds
   ///
-  /// @return (node_tensor, edge_tensor, score_tensor)
-  virtual std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, int deviceHint = -1) = 0;
+  /// @return (node_features, edge_features, edge_index, edge_scores)
+  virtual std::tuple<std::any, std::any, std::any, std::any> operator()(
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
+      int deviceHint = -1) = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -57,13 +58,13 @@ class TrackBuildingBase {
   ///
   /// @param nodes Node tensor with shape (n_nodes, n_node_features)
   /// @param edges Edge-index tensor with shape (2, n_edges)
-  /// @param edgeWeights Edge-weights of the previous edge classification phase
+  /// @param edgeScores Scores of the previous edge classification phase
   /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
   /// @param deviceHint Which GPU to pick. Not relevant for CPU-only builds
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-      std::any nodes, std::any edges, std::any edgeWeights,
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeScores,
       std::vector<int> &spacepointIDs, int deviceHint = -1) = 0;
 
   virtual ~TrackBuildingBase() = default;

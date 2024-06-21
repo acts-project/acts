@@ -39,40 +39,42 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     std::vector<int> &spacepointIDs, int deviceHint, const ExaTrkXHook &hook,
     ExaTrkXTiming *timing) const {
   auto t0 = std::chrono::high_resolution_clock::now();
-  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size(),
-                                              moduleIds, deviceHint);
+  auto [nodeFeatures, edgeFeatures, edgeIndex] = (*m_graphConstructor)(
+      features, spacepointIDs.size(), moduleIds, deviceHint);
   auto t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {
     timing->graphBuildingTime = t1 - t0;
   }
 
-  hook(nodes, edges, {});
+  hook(nodeFeatures, edgeIndex, {});
 
-  std::any edge_weights;
+  std::any edgeScores;
   timing->classifierTimes.clear();
 
   for (auto edgeClassifier : m_edgeClassifiers) {
     t0 = std::chrono::high_resolution_clock::now();
-    auto [newNodes, newEdges, newWeights] =
-        (*edgeClassifier)(std::move(nodes), std::move(edges), deviceHint);
+    auto [newNodeFeatures, newEdgeFeatures, newEdgeIndex, newEdgeScores] =
+        (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeFeatures),
+                          std::move(edgeIndex), deviceHint);
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
       timing->classifierTimes.push_back(t1 - t0);
     }
 
-    nodes = std::move(newNodes);
-    edges = std::move(newEdges);
-    edge_weights = std::move(newWeights);
+    nodeFeatures = std::move(newNodeFeatures);
+    edgeFeatures = std::move(newEdgeFeatures);
+    edgeIndex = std::move(newEdgeIndex);
+    edgeScores = std::move(newEdgeScores);
 
-    hook(nodes, edges, edge_weights);
+    hook(nodeFeatures, edgeFeatures, edgeScores);
   }
 
   t0 = std::chrono::high_resolution_clock::now();
   auto res =
-      (*m_trackBuilder)(std::move(nodes), std::move(edges),
-                        std::move(edge_weights), spacepointIDs, deviceHint);
+      (*m_trackBuilder)(std::move(nodeFeatures), std::move(edgeIndex),
+                        std::move(edgeScores), spacepointIDs, deviceHint);
   t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {

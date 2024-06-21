@@ -45,9 +45,9 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 
 TorchMetricLearning::~TorchMetricLearning() {}
 
-std::tuple<std::any, std::any> TorchMetricLearning::operator()(
+std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    const std::vector<uint64_t> &moduleIds, int deviceHint) {
+    const std::vector<uint64_t> & /*moduleIds*/, int deviceHint) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType, deviceHint);
@@ -114,6 +114,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList)};
+  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList),
+          std::any{}};
 }
 }  // namespace Acts
