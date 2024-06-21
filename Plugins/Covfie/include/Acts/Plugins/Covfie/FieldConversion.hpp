@@ -48,6 +48,7 @@ InterpolatedField covfieField(
 ConstantField covfieField(const Acts::ConstantBField& magneticField);
 
 /// @brief Creates a covfie field from a magnetic field provider by sampling it.
+/// The field must be defined within min (inclusive) and max (inclusive).
 /// @param magneticField The acts magnetic field provider.
 /// @param cache The acts cache.
 /// @param nBins 3D array of containing the number of bins for each axis.

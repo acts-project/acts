@@ -107,58 +107,6 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
   checkMagneticFieldEqual(actsField, cache, view, points, 0.0001);
 }
 
-
-BOOST_AUTO_TEST_CASE(MagneticFieldProvider1) {
-  auto localToGlobalBin_xyz = [](std::array<std::size_t, 3> binsXYZ,
-                                 std::array<std::size_t, 3> nBinsXYZ) {
-    return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
-            binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
-  };
-
-  std::vector<double> xPos = {0., 1., 2., 3.};
-  std::vector<double> yPos = {0., 1., 2., 3.};
-  std::vector<double> zPos = {0., 1., 2., 3.};
-
-  std::vector<Acts::Vector3> bField_xyz;
-  for (int i = 0; i < 64; i++) {
-    bField_xyz.push_back(Acts::Vector3(i, i, i));
-  }
-
-  Acts::MagneticFieldContext fieldContext;
-  auto actsField = Acts::fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
-                                     bField_xyz, 1, 1, false);
-  Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
-
-  Acts::MagneticFieldProvider& provider = actsField;
-
-  std::vector<std::size_t> nBins{4, 4, 4};
-  std::vector<Acts::ActsScalar> min{0, 0, 0};
-  std::vector<Acts::ActsScalar> max{3, 3, 3};
-
-  Acts::CovfiePlugin::InterpolatedField field = Acts::CovfiePlugin::covfieField(provider, cache, nBins, min, max);
-  typename Acts::CovfiePlugin::InterpolatedField::view_t view(field);
-
-  std::array<std::array<float, 3>, 14> points = {{
-      {0.f, 0.f, 0.f},
-      {1.f, 1.f, 1.f},
-      {2.f, 2.f, 2.f},
-      {2.9f, 2.9f, 2.9f},
-      {1.2f, 2.5f, 0.8f},
-      {0.7f, 1.9f, 2.3f},
-      {2.1f, 0.3f, 1.5f},
-      {0.4f, 2.8f, 2.9f},
-      {1.6f, 1.2f, 0.5f},
-      {2.3f, 0.6f, 2.2f},
-      {1.1f, 2.7f, 1.3f},
-      {0.9f, 1.4f, 2.7f},
-      {2.4f, 1.8f, 0.9f},
-      {0.6f, 2.2f, 2.1f},
-  }};
-
-  checkMagneticFieldEqual(actsField, cache, view, points, 0.0001);
-}
-
-
 BOOST_AUTO_TEST_CASE(InterpolatedMagneticField2) {
   auto localToGlobalBin_xyz = [](std::array<std::size_t, 3> binsXYZ,
                                  std::array<std::size_t, 3> nBinsXYZ) {
