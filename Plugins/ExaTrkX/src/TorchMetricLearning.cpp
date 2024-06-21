@@ -28,14 +28,19 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
       m_device(torch::Device(torch::kCPU)) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
-  if (m_deviceType == torch::kCUDA && cfg.deviceID >= 0 &&
-      static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
-    ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
-    m_device = torch::Device(torch::kCUDA, cfg.deviceID);
+
+  if (m_deviceType == torch::kCPU) {
+    ACTS_INFO("Running on CPU...");
   } else {
-    ACTS_WARNING("GPU device " << cfg.deviceID
-                               << " not available. Using CPU instead.");
+    if (cfg.deviceID >= 0 &&
+        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
+      m_device = torch::Device(torch::kCUDA, cfg.deviceID);
+    } else {
+      ACTS_FATAL("GPU device " << cfg.deviceID << " not available. ");
+    }
   }
+
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
