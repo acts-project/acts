@@ -23,8 +23,8 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Volumes)
 
 BOOST_AUTO_TEST_CASE(bounding_box_creation) {
@@ -104,5 +104,5 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

@@ -9,13 +9,10 @@ that inherit from {class}`Acts::SurfaceBounds`, which every surface must provide
 In case of boundless surfaces, a special {class}`Acts::InfiniteBounds` class is
 available.
 
-
-
 Each {class}`Acts::Surface` instance reports its type from {func}`Acts::Surface::type()`:
 
 :::{doxygenenum} Acts::Surface::SurfaceType
 :::
-
 
 | Surface Type                                                   | Local Coordinates | Bound Types available                                                                                                           |
 |:---------------------------------------------------------------|-------------------|:--------------------------------------------------------------------------------------------------------------------------------|
@@ -40,8 +37,10 @@ transformations.
 
 :::{doxygenclass} Acts::PlaneSurface
 ---
+
 members: globalToLocal,localToGlobal,intersect,normal
 ---
+
 :::
 
 ## Disc surface
@@ -50,26 +49,32 @@ members: globalToLocal,localToGlobal,intersect,normal
 
 :::{doxygenclass} Acts::DiscSurface
 ---
-members: globalToLocal,localToGlobal,intersect,normal
+
+members: globalToLocal,localToGlobal,intersect,normal,mergedWith
 ---
+
 :::
- 
+
 ## Cylinder surface
 
 ![CylinderBounds](figures/CylinderBounds.png)
 
 :::{doxygenclass} Acts::CylinderSurface
 ---
-members: globalToLocal,localToGlobal,intersect,normal
+
+members: globalToLocal,localToGlobal,intersect,normal,mergedWith
 ---
+
 :::
 
 ## Cone surface
 
 :::{doxygenclass} Acts::ConeSurface
 ---
+
 members: globalToLocal,localToGlobal,intersect,normal
 ---
+
 :::
 
 ## Line surface
@@ -84,26 +89,31 @@ It is pure-virtual, meaning that it can not be instantiated on its own.
 
 :::{doxygenclass} Acts::LineSurface
 ---
+
 members: globalToLocal,localToGlobal,intersect,normal
 ---
+
 :::
 
 ### Straw surface
 
 :::{doxygenclass} Acts::StrawSurface
 ---
+
 members: false
 ---
+
 :::
 
 ### Perigee surface
 
 :::{doxygenclass} Acts::PerigeeSurface
 ---
+
 members: false
 ---
-:::
 
+:::
 
 ## API listings
 

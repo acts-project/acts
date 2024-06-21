@@ -61,7 +61,8 @@ namespace Acts::detail {
 /// @tparam kSize Size of the subspace
 template <std::size_t kFullSize, std::size_t kSize>
 class FixedSizeSubspace {
-  static_assert(kFullSize <= static_cast<std::size_t>(UINT8_MAX),
+  static_assert(kFullSize <= static_cast<std::size_t>(
+                                 std::numeric_limits<std::uint8_t>::max()),
                 "Full vector space size is larger than the supported range");
   static_assert(1u <= kSize, "Subspace size must be at least 1");
   static_assert(kSize <= kFullSize,
@@ -84,12 +85,12 @@ class FixedSizeSubspace {
   // indices of the subspace. storing the subspace indices directly requires a
   // bit more memory but is easier to work with. for our typical use cases with
   // n<=8, this still takes only 64bit of memory.
-  std::array<uint8_t, kSize> m_axes;
+  std::array<std::uint8_t, kSize> m_axes;
 
  public:
   /// Construct from a container of axis indices.
   ///
-  /// @tparam index_t Input index type, must be convertible to uint8_t
+  /// @tparam index_t Input index type, must be convertible to std::uint8_t
   /// @param indices Unique, ordered indices
   template <typename index_t>
   constexpr FixedSizeSubspace(const std::array<index_t, kSize>& indices) {
@@ -102,7 +103,7 @@ class FixedSizeSubspace {
       }
     }
     for (std::size_t i = 0; i < kSize; ++i) {
-      m_axes[i] = static_cast<uint8_t>(indices[i]);
+      m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
   // The subset can not be constructed w/o defining its axis indices.
@@ -122,7 +123,9 @@ class FixedSizeSubspace {
   /// The specific container and index type should be considered an
   /// implementation detail. Users should treat the return type as a generic
   /// container whose elements are convertible to `std::size_t`.
-  constexpr const std::array<uint8_t, kSize>& indices() const { return m_axes; }
+  constexpr const std::array<std::uint8_t, kSize>& indices() const {
+    return m_axes;
+  }
 
   /// Check if the given axis index in the full space is part of the subspace.
   constexpr bool contains(std::size_t index) const {

@@ -83,7 +83,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   TTree* m_outputTree = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Event-unique particle identifier a.k.a barcode.
   std::vector<std::uint64_t> m_particleId;
   /// Particle type a.k.a. PDG particle number

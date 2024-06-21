@@ -185,8 +185,8 @@ class InteractionList {
         std::numeric_limits<Particle::Scalar>::infinity();
     Particle::Scalar l0Limit =
         std::numeric_limits<Particle::Scalar>::infinity();
-    std::size_t x0Process = SIZE_MAX;
-    std::size_t l0Process = SIZE_MAX;
+    std::size_t x0Process = std::numeric_limits<std::size_t>::max();
+    std::size_t l0Process = std::numeric_limits<std::size_t>::max();
   };
 
   /// Disable a specific process identified by index.

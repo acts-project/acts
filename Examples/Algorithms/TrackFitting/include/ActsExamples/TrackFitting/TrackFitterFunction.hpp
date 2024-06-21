@@ -105,7 +105,6 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
 /// @param energyLoss bool
 /// @param freeToBoundCorrection bool
 /// @param nUpdateMax max number of iterations during the fit
-/// @param zerofield Disables the QoP fit in case of missing B-field.
 /// @param relChi2changeCutOff Check for convergence (abort condition). Set to 0 to skip.
 /// @param logger a logger instance
 std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
@@ -114,8 +113,7 @@ std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
     bool multipleScattering = true, bool energyLoss = true,
     Acts::FreeToBoundCorrection freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
-    std::size_t nUpdateMax = 5, bool zeroField = false,
-    double relChi2changeCutOff = 1e-7,
+    std::size_t nUpdateMax = 5, double relChi2changeCutOff = 1e-7,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Gx2f",
                                                          Acts::Logging::INFO));
 

@@ -16,14 +16,14 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     env:
-        DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
-        DOXYGEN_VERSION: 1.9.8
+      DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
+      DOXYGEN_VERSION: 1.9.8
     steps:
       - uses: actions/checkout@v4
 
       - name: Cache doxygen
         id: cache-doxygen
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /usr/local/bin/doxygen
           key: doxygen_${{ env.DOXYGEN_VERSION }}

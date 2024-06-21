@@ -267,8 +267,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   if (m_cfg.rootVolumeFinderBuilder) {
     // Return the container
     return Acts::Experimental::DetectorComponent{
-        {},
-        portalContainer,
+        volumes, portalContainer,
         RootDetectorVolumes{
             rootVolumes,
             m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
@@ -276,5 +275,6 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
 
   // Return the container
   return Acts::Experimental::DetectorComponent{
-      {}, portalContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
+      volumes, portalContainer,
+      RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
 }

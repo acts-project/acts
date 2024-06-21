@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <tuple>
@@ -137,7 +138,7 @@ buildNotNormalisedMap(TH1F const* hist) {
 /// @param [in, out] histoBorders The borders of the bins
 /// @param [in, out] histoContents The content of each bin
 void reduceMap(std::vector<float>& histoBorders,
-               std::vector<uint32_t>& histoContents) {
+               std::vector<std::uint32_t>& histoContents) {
   for (auto cit = histoContents.cbegin(); cit != histoContents.cend(); cit++) {
     while (std::next(cit, 1) != histoContents.end() &&
            *cit == *std::next(cit, 1)) {
@@ -158,7 +159,7 @@ void reduceMap(std::vector<float>& histoBorders,
 /// @param [in] hist The probability distribution
 ///
 /// @return Pair containing the bin borders and the bin content
-std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
+std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
     TH1F const* hist) {
   // Build the components
   std::tuple<std::vector<float>, std::vector<double>, double> map =
@@ -168,15 +169,16 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
 
   // Fast exit if the histogram is empty
   if (histoContents.empty()) {
-    return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+    return std::make_pair(std::get<0>(map), std::vector<std::uint32_t>());
   }
 
   // Set the bin content
-  std::vector<uint32_t> normalisedHistoContents(nBins);
+  std::vector<std::uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::get<2>(map);
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] = static_cast<unsigned int>(
-        UINT32_MAX * (histoContents[iBin] * invIntegral));
+    normalisedHistoContents[iBin] =
+        static_cast<unsigned int>(std::numeric_limits<std::uint32_t>::max() *
+                                  (histoContents[iBin] * invIntegral));
   }
 
   auto histoBorders = std::get<0>(map);
@@ -195,8 +197,8 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
 /// the latter is used.
 ///
 /// @return Pair containing the bin borders and the bin content
-std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
-                                                              double integral) {
+std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
+    TH1F const* hist, double integral) {
   // Build the components
   std::tuple<std::vector<float>, std::vector<double>, double> map =
       buildNotNormalisedMap(hist);
@@ -206,15 +208,16 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
 
   // Fast exit if the histogram is empty
   if (histoContents.empty()) {
-    return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+    return std::make_pair(std::get<0>(map), std::vector<std::uint32_t>());
   }
 
   // Set the bin content
-  std::vector<uint32_t> normalisedHistoContents(nBins);
+  std::vector<std::uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::max(integral, std::get<2>(map));
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] = static_cast<unsigned int>(
-        UINT32_MAX * (histoContents[iBin] * invIntegral));
+    normalisedHistoContents[iBin] =
+        static_cast<unsigned int>(std::numeric_limits<std::uint32_t>::max() *
+                                  (histoContents[iBin] * invIntegral));
   }
 
   std::vector<float> histoBorders = std::get<0>(map);
@@ -230,9 +233,9 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
 ///
 /// @return Vector containing the decomposed cumulative probability
 /// distributions
-std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>> buildMaps(
-    const std::vector<TH1F*>& histos) {
-  std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>> maps;
+std::vector<std::pair<std::vector<float>, std::vector<std::uint32_t>>>
+buildMaps(const std::vector<TH1F*>& histos) {
+  std::vector<std::pair<std::vector<float>, std::vector<std::uint32_t>>> maps;
   for (auto& h : histos) {
     maps.push_back(buildMap(h));
   }

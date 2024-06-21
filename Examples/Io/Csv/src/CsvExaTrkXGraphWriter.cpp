@@ -22,8 +22,8 @@
 #include <dfe/dfe_namedtuple.hpp>
 
 struct GraphData {
-  int64_t edge0;
-  int64_t edge1;
+  std::int64_t edge0;
+  std::int64_t edge1;
   float weight;
   DFE_NAMEDTUPLE(GraphData, edge0, edge1, weight);
 };
@@ -36,7 +36,7 @@ ActsExamples::CsvExaTrkXGraphWriter::CsvExaTrkXGraphWriter(
 
 ActsExamples::ProcessCode ActsExamples::CsvExaTrkXGraphWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
-    const std::pair<std::vector<int64_t>, std::vector<float>>& graph) {
+    const std::pair<std::vector<std::int64_t>, std::vector<float>>& graph) {
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 

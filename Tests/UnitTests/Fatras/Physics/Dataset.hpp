@@ -39,7 +39,7 @@ const auto momentumAbs = data::xrange(500_MeV, 10_GeV, 500_MeV);
 
 // seeds for the random number generator
 const auto rngSeed =
-    data::xrange<uint32_t>((data::begin = 2u, data::step = 3u));
+    data::xrange<std::uint32_t>((data::begin = 2u, data::step = 3u));
 
 // combined parameter set
 const auto parameters =

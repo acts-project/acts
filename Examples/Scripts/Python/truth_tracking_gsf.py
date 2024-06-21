@@ -158,19 +158,26 @@ def runTruthTrackingGsf(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # ODD
+    from acts.examples.odd import getOpenDataDetector
+
+    detector, trackingGeometry, _ = getOpenDataDetector()
+    digiConfigFile = (
+        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    )
+
+    ## GenericDetector
+    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # digiConfigFile = (
+    #     srcdir
+    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    inputParticlePath = Path("particles.root")
-    if not inputParticlePath.exists():
-        inputParticlePath = None
 
     runTruthTrackingGsf(
         trackingGeometry=trackingGeometry,
         field=field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        inputParticlePath=inputParticlePath,
+        digiConfigFile=digiConfigFile,
         outputDir=Path.cwd(),
     ).run()

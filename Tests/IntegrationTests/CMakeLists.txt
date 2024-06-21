@@ -31,6 +31,7 @@ macro(add_integrationtest _name)
 endmacro()
 
 add_integrationtest(InterpolatedSolenoidBField InterpolatedSolenoidBFieldTest.cpp)
+add_integrationtest(NavigatorConsistency NavigatorConsistency.cpp)
 add_integrationtest(PrintDataDirectory PrintDataDirectory.cpp)
 add_integrationtest(PropagationAtlasConstant PropagationAtlasConstant.cpp)
 add_integrationtest(PropagationDenseConstant PropagationDenseConstant.cpp)

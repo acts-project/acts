@@ -10,8 +10,8 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include <actsvg/core.hpp>
 #include <actsvg/meta.hpp>
 
@@ -71,7 +71,7 @@ ProtoGrid convert(const grid_type& grid,
   // 1D case (more to be filled in later)
   if constexpr (grid_type::DIM == 1u) {
     if (bValues[0u] == binPhi &&
-        axes[0]->getBoundaryType() == detail::AxisBoundaryType::Closed) {
+        axes[0]->getBoundaryType() == AxisBoundaryType::Closed) {
       // swap     needed
       edges1 = axes[0]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;

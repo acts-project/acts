@@ -217,6 +217,10 @@ class ObjectMultiIntersection {
     return {m_intersections[index], m_object, index};
   }
 
+  constexpr const MultiIntersection3D& intersections() const {
+    return m_intersections;
+  }
+
   constexpr std::size_t size() const { return m_intersections.size(); }
 
   constexpr const object_t* object() const { return m_object; }
@@ -274,7 +278,7 @@ bool checkIntersection(const intersection_t& intersection, double nearLimit,
                << nearLimit << ", " << farLimit << ", " << distance);
 
   const bool coCriterion = distance > nearLimit;
-  const bool cpCriterion = std::abs(distance) < std::abs(farLimit) + tolerance;
+  const bool cpCriterion = distance < farLimit + tolerance;
 
   const bool accept = coCriterion && cpCriterion;
 
@@ -288,9 +292,9 @@ bool checkIntersection(const intersection_t& intersection, double nearLimit,
     }
     if (!cpCriterion) {
       ACTS_VERBOSE("- intersection path length "
-                   << std::abs(distance) << " is over the far limit "
-                   << (std::abs(farLimit) + tolerance)
-                   << " (including tolerance of " << tolerance << ")");
+                   << distance << " is over the far limit "
+                   << (farLimit + tolerance) << " (including tolerance of "
+                   << tolerance << ")");
     }
   }
 

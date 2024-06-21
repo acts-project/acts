@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <optional>
 #include <stdexcept>

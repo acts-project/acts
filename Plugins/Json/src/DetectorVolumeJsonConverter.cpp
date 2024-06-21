@@ -23,25 +23,6 @@
 
 #include <ctime>
 
-namespace {
-
-/// Find the position of the volume to point to
-///
-/// @param volume the volume to find
-/// @param the collection of volumes
-///
-/// @note return -1 if not found, to be interpreted by the caller
-int findVolume(
-    const Acts::Experimental::DetectorVolume* volume,
-    const std::vector<const Acts::Experimental::DetectorVolume*>& volumes) {
-  auto candidate = std::find(volumes.begin(), volumes.end(), volume);
-  if (candidate != volumes.end()) {
-    return std::distance(volumes.begin(), candidate);
-  }
-  return -1;
-}
-}  // namespace
-
 nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
@@ -94,62 +75,6 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
     }
     jVolume["portals"] = jPortals;
   }
-  return jVolume;
-}
-
-nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
-    const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
-    const std::vector<const Experimental::DetectorVolume*>& detectorVolumes,
-    const Options& options) {
-  nlohmann::json jVolume;
-  jVolume["name"] = volume.name();
-
-  // Write the transform - path them with defaults
-  jVolume["transform"] = Transform3JsonConverter::toJson(
-      volume.transform(gctx), options.transformOptions);
-  jVolume["bounds"] = VolumeBoundsJsonConverter::toJson(volume.volumeBounds());
-  auto volumeBoundsType = volume.volumeBounds().type();
-  if (volumeBoundsType == VolumeBounds::BoundsType::eCylinder) {
-    jVolume["type"] = 0u;
-  } else if (volumeBoundsType == VolumeBounds::BoundsType::eCuboid) {
-    jVolume["type"] = 4u;
-  } else {
-    throw std::runtime_error("Unsupported volume bounds type");
-  }
-
-  // Get the index
-  int vIndex = findVolume(&volume, detectorVolumes);
-  jVolume["index"] = vIndex;
-
-  std::size_t sIndex = 0;
-  // Write the surfaces - patch bounds & augment with self links
-  nlohmann::json jSurfaces;
-  for (const auto& s : volume.surfaces()) {
-    auto jSurface =
-        SurfaceJsonConverter::toJsonDetray(gctx, *s, options.surfaceOptions);
-    DetrayJsonHelper::addVolumeLink(jSurface["mask"], vIndex);
-    jSurface["index_in_coll"] = sIndex++;
-    jSurfaces.push_back(jSurface);
-  }
-
-  // Create the oriented surfaces, they could potentially be one-to-one
-  // translated
-  auto orientedSurfaces =
-      volume.volumeBounds().orientedSurfaces(volume.transform(gctx));
-
-  // Write the portals - they will end up in the surface container
-  for (const auto& [ip, p] : enumerate(volume.portals())) {
-    auto jPortalSurfaces =
-        (toJsonDetray(gctx, *p, ip, volume, orientedSurfaces, detectorVolumes,
-                      options.portalOptions));
-    std::for_each(jPortalSurfaces.begin(), jPortalSurfaces.end(),
-                  [&](auto& jSurface) {
-                    jSurface["index_in_coll"] = sIndex++;
-                    jSurfaces.push_back(jSurface);
-                  });
-  }
-  jVolume["surfaces"] = jSurfaces;
-
   return jVolume;
 }
 

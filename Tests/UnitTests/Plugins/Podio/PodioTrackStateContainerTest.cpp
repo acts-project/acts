@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   MutablePodioTrackStateContainer c{helper};
   BOOST_CHECK(!c.hasColumn("int_column"_hash));
   BOOST_CHECK(!c.hasColumn("float_column"_hash));
-  c.addColumn<int32_t>("int_column");
+  c.addColumn<std::int32_t>("int_column");
   c.addColumn<float>("float_column");
   BOOST_CHECK(c.hasColumn("int_column"_hash));
   BOOST_CHECK(c.hasColumn("float_column"_hash));
@@ -267,9 +266,9 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
     auto t3 = c.makeTrackState();
     t3.setReferenceSurface(reg);
 
-    t1.component<int32_t, "int_column"_hash>() = -11;
-    t2.component<int32_t, "int_column"_hash>() = 42;
-    t3.component<int32_t, "int_column"_hash>() = -98;
+    t1.component<std::int32_t, "int_column"_hash>() = -11;
+    t2.component<std::int32_t, "int_column"_hash>() = 42;
+    t3.component<std::int32_t, "int_column"_hash>() = -98;
 
     t1.component<float, "float_column"_hash>() = -11.2f;
     t2.component<float, "float_column"_hash>() = 42.4f;
@@ -326,9 +325,9 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   BOOST_CHECK_EQUAL(&t3.referenceSurface(), reg.get());
 
-  BOOST_CHECK_EQUAL((t1.component<int32_t, "int_column"_hash>()), -11);
-  BOOST_CHECK_EQUAL((t2.component<int32_t, "int_column"_hash>()), 42);
-  BOOST_CHECK_EQUAL((t3.component<int32_t, "int_column"_hash>()), -98);
+  BOOST_CHECK_EQUAL((t1.component<std::int32_t, "int_column"_hash>()), -11);
+  BOOST_CHECK_EQUAL((t2.component<std::int32_t, "int_column"_hash>()), 42);
+  BOOST_CHECK_EQUAL((t3.component<std::int32_t, "int_column"_hash>()), -98);
 
   BOOST_CHECK_EQUAL((t1.component<float, "float_column"_hash>()), -11.2f);
   BOOST_CHECK_EQUAL((t2.component<float, "float_column"_hash>()), 42.4f);

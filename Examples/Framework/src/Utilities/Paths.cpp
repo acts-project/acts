@@ -77,7 +77,7 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
   }
 
   // invalid default range that allows simple restriction later on
-  std::size_t eventMin = SIZE_MAX;
+  std::size_t eventMin = std::numeric_limits<std::size_t>::max();
   std::size_t eventMax = 0;
 
   // filter matching event files from the directory listing

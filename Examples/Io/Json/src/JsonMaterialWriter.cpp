@@ -39,7 +39,7 @@ void ActsExamples::JsonMaterialWriter::writeMaterial(
     ofj << std::setw(4) << jOut << std::endl;
   }
   if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Cbor)) {
-    std::vector<uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
+    std::vector<std::uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
     std::string fileName = m_cfg.fileName + ".cbor";
     ACTS_VERBOSE("Writing to file: " << fileName);
     std::ofstream ofj(fileName, std::ios::out | std::ios::binary);
@@ -57,7 +57,7 @@ void ActsExamples::JsonMaterialWriter::write(
     ofj << std::setw(4) << jOut << std::endl;
   }
   if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Cbor)) {
-    std::vector<uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
+    std::vector<std::uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
     std::ofstream ofj(m_cfg.fileName + ".cbor",
                       std::ios::out | std::ios::binary);
     ofj.write(reinterpret_cast<char*>(cborOut.data()), cborOut.size());

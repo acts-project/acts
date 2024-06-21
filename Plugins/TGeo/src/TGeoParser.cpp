@@ -106,3 +106,22 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
   }
   return;
 }
+
+// Function to recursively find the node by volume name
+TGeoNode* Acts::TGeoParser::findNodeRecursive(TGeoNode* currentNode,
+                                              const char* volumeName) {
+  // Check if the current node's volume matches the name
+  if (std::strcmp(currentNode->GetVolume()->GetName(), volumeName) == 0) {
+    return currentNode;
+  }
+  // Recursively search in the daughter nodes
+  int nDaughters = currentNode->GetNdaughters();
+  for (int i = 0; i < nDaughters; ++i) {
+    TGeoNode* daughterNode = currentNode->GetDaughter(i);
+    TGeoNode* foundNode = findNodeRecursive(daughterNode, volumeName);
+    if (foundNode != nullptr) {
+      return foundNode;
+    }
+  }
+  return nullptr;  // Not found in this branch
+}

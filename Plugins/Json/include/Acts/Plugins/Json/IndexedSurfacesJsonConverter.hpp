@@ -17,12 +17,12 @@
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeList.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <climits>
 #include <vector>

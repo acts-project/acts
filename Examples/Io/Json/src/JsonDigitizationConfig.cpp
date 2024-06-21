@@ -114,12 +114,16 @@ void from_json(
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::ParameterSmearingConfig& psc) {
   j["index"] = psc.index;
+  j["forcePositiveValues"] = psc.forcePositiveValues;
   to_json(j, psc.smearFunction);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::ParameterSmearingConfig& psc) {
   psc.index = static_cast<Acts::BoundIndices>(j["index"]);
+  if (j.find("forcePositiveValues") != j.end()) {
+    psc.forcePositiveValues = j["forcePositiveValues"];
+  }
   from_json(j, psc.smearFunction);
 }
 

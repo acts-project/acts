@@ -30,6 +30,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -308,9 +309,9 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
   Acts::ActsScalar totalWeight = 0.;
   Acts::Vector2 m(0., 0.);
-  std::size_t b0min = SIZE_MAX;
+  std::size_t b0min = std::numeric_limits<std::size_t>::max();
   std::size_t b0max = 0;
-  std::size_t b1min = SIZE_MAX;
+  std::size_t b1min = std::numeric_limits<std::size_t>::max();
   std::size_t b1max = 0;
   // Combine the channels
   for (const auto& ch : channels) {

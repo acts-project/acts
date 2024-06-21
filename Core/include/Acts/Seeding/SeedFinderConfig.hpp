@@ -71,11 +71,6 @@ struct SeedFinderConfig {
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
-  /// Vector containing minimum and maximum z boundaries for cutting middle
-  /// space-points
-  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
-                                           2700 * Acts::UnitConstants::mm};
-
   /// Seeding parameters used to define the cuts on space-point doublets
 
   /// Minimum radial distance between two doublet components (prefer

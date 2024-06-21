@@ -467,6 +467,49 @@ class Propagator final
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
+  /// @brief Builds the propagator state object
+  ///
+  /// This function creates the propagator state object from the initial track
+  /// parameters and the propagation options.
+  ///
+  /// @note This will also initialize the state
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] options Propagation options
+  ///
+  /// @return Propagator state object
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start,
+                 const propagator_options_t& options) const;
+
+  /// @brief Builds the propagator state object
+  ///
+  /// This function creates the propagator state object from the initial track
+  /// parameters, the target surface, and the propagation options.
+  ///
+  /// @note This will also initialize the state
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  ///
+  /// @return Propagator state object
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  auto makeState(const parameters_t& start, const Surface& target,
+                 const propagator_options_t& options) const;
+
   /// @brief Propagate track parameters
   ///
   /// This function performs the propagation of the track parameters according
@@ -484,17 +527,23 @@ class Propagator final
   template <typename propagator_state_t>
   Result<void> propagate(propagator_state_t& state) const;
 
-  template <typename parameters_t, typename propagator_options_t,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start,
-                 const propagator_options_t& options) const;
-
-  template <typename parameters_t, typename propagator_options_t,
-            typename target_aborter_t = SurfaceReached,
-            typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start, const Surface& target,
-                 const propagator_options_t& options) const;
-
+  /// @brief Builds the propagator result object
+  ///
+  /// This function creates the propagator result object from the propagator
+  /// state object. The `result` is passed to pipe a potential error from the
+  /// propagation call. The `options` are used to determine the type of the
+  /// result object. The `makeCurvilinear` flag is used to determine if the
+  /// result should contain curvilinear track parameters.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state object
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] state Propagator state object
+  /// @param [in] result Result of the propagation
+  /// @param [in] options Propagation options
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
+  ///
+  /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
   Result<
       action_list_t_result_t<StepperCurvilinearTrackParameters,
@@ -502,6 +551,22 @@ class Propagator final
   makeResult(propagator_state_t state, Result<void> result,
              const propagator_options_t& options, bool makeCurvilinear) const;
 
+  /// @brief Builds the propagator result object
+  ///
+  /// This function creates the propagator result object from the propagator
+  /// state object. The `result` is passed to pipe a potential error from the
+  /// propagation call. The `options` are used to determine the type of the
+  /// result object.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state object
+  /// @tparam propagator_options_t Type of the propagator options
+  ///
+  /// @param [in] state Propagator state object
+  /// @param [in] result Result of the propagation
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  ///
+  /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
   Result<
       action_list_t_result_t<StepperBoundTrackParameters,
@@ -515,6 +580,9 @@ class Propagator final
 
  private:
   const Logger& logger() const { return *m_logger; }
+
+  template <typename propagator_state_t, typename path_aborter_t>
+  void initialize(propagator_state_t& state) const;
 
   template <typename propagator_state_t, typename result_t>
   void moveStateToResult(propagator_state_t& state, result_t& result) const;

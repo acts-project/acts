@@ -38,7 +38,7 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
 
   struct HitInfo {
     std::size_t spacePointIndex;
-    int32_t hitIndex;
+    std::int32_t hitIndex;
   };
 
  public:
@@ -69,8 +69,8 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
     }
 
     // Collect edges for truth graph and target graph
-    std::vector<int64_t> truthGraph;
-    std::vector<int64_t> targetGraph;
+    std::vector<std::int64_t> truthGraph;
+    std::vector<std::int64_t> targetGraph;
 
     for (auto& [pid, track] : tracks) {
       // Sort by hit index, so the edges are connected correctly
@@ -301,7 +301,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     auto graph = dhook->storedGraph();
     std::transform(
         graph.first.begin(), graph.first.end(), graph.first.begin(),
-        [&](const auto& a) -> int64_t { return spacepointIDs.at(a); });
+        [&](const auto& a) -> std::int64_t { return spacepointIDs.at(a); });
     m_outputGraph(ctx, std::move(graph));
   }
 

@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_kdtree) {
 
 BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,1,
     2,3,
     2,2,
@@ -177,12 +177,12 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
           .transpose(1, 0)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      withoutSelfLoops.data_ptr<int64_t>(),
-      withoutSelfLoops.data_ptr<int64_t>() + withoutSelfLoops.numel());
+  const std::vector<std::int64_t> postEdges(
+      withoutSelfLoops.data_ptr<std::int64_t>(),
+      withoutSelfLoops.data_ptr<std::int64_t>() + withoutSelfLoops.numel());
 
   // clang-format off
-  const std::vector<int64_t> ref = {
+  const std::vector<std::int64_t> ref = {
     2,3,
     5,4,
   };
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
 
 BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,2,
     2,1,   // duplicate, flipped
     3,2,
@@ -213,12 +213,12 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
           .transpose(1, 0)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      withoutDups.data_ptr<int64_t>(),
-      withoutDups.data_ptr<int64_t>() + withoutDups.numel());
+  const std::vector<std::int64_t> postEdges(
+      withoutDups.data_ptr<std::int64_t>(),
+      withoutDups.data_ptr<std::int64_t>() + withoutDups.numel());
 
   // clang-format off
-  const std::vector<int64_t> ref = {
+  const std::vector<std::int64_t> ref = {
     1,2,
     2,3,
     6,7,
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
   torch::manual_seed(seed);
 
   // clang-format off
-  std::vector<int64_t> edges = {
+  std::vector<std::int64_t> edges = {
     1,2,
     2,3,
     3,4,
@@ -251,9 +251,9 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
           .transpose(0, 1)
           .flatten();
 
-  const std::vector<int64_t> postEdges(
-      flipped.data_ptr<int64_t>(),
-      flipped.data_ptr<int64_t>() + flipped.numel());
+  const std::vector<std::int64_t> postEdges(
+      flipped.data_ptr<std::int64_t>(),
+      flipped.data_ptr<std::int64_t>() + flipped.numel());
 
   BOOST_CHECK_EQUAL(postEdges.size(), edges.size());
   for (auto preIt = edges.begin(); preIt != edges.end(); preIt += 2) {

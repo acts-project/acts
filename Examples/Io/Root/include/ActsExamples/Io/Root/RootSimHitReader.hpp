@@ -79,7 +79,7 @@ class RootSimHitReader : public IReader {
   std::mutex m_read_mutex;
 
   /// Vector of {eventNr, entryMin, entryMax}
-  std::vector<std::tuple<uint32_t, std::size_t, std::size_t>> m_eventMap;
+  std::vector<std::tuple<std::uint32_t, std::size_t, std::size_t>> m_eventMap;
 
   /// The input tree name
   TChain *m_inputChain = nullptr;
@@ -100,7 +100,7 @@ class RootSimHitReader : public IReader {
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
 
   // For some reason I need to use here `unsigned long long` instead of
-  // `uint64_t` to prevent an internal ROOT type mismatch...
+  // `std::uint64_t` to prevent an internal ROOT type mismatch...
   std::unordered_map<std::string_view, unsigned long long> m_uint64Columns;
 };
 

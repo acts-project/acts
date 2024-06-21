@@ -25,7 +25,7 @@ ActsExamples::RandomEngine ActsExamples::RandomNumbers::spawnGenerator(
   return RandomEngine(generateSeed(context));
 }
 
-uint64_t ActsExamples::RandomNumbers::generateSeed(
+std::uint64_t ActsExamples::RandomNumbers::generateSeed(
     const AlgorithmContext& context) const {
   return m_cfg.seed + context.eventNumber;
 }

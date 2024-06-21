@@ -105,11 +105,15 @@ def runCKFTracks(
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
-        seedingAlgorithm=SeedingAlgorithm.TruthSmeared
-        if truthSmearedSeeded
-        else SeedingAlgorithm.TruthEstimated
-        if truthEstimatedSeeded
-        else SeedingAlgorithm.Default,
+        seedingAlgorithm=(
+            SeedingAlgorithm.TruthSmeared
+            if truthSmearedSeeded
+            else (
+                SeedingAlgorithm.TruthEstimated
+                if truthEstimatedSeeded
+                else SeedingAlgorithm.Default
+            )
+        ),
         geoSelectionConfigFile=geometrySelection,
         outputDirRoot=outputDir,
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared

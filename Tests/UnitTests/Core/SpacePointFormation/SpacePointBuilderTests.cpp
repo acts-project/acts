@@ -46,10 +46,9 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
-
-using namespace UnitLiterals;
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;

@@ -159,25 +159,4 @@ inline bool CylinderBounds::coversFullAzimuth() const {
   return m_closed;
 }
 
-inline void CylinderBounds::checkConsistency() noexcept(false) {
-  if (get(eR) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid length setup.");
-  }
-  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
-  }
-  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
-  }
-  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
-  }
-}
-
 }  // namespace Acts

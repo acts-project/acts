@@ -50,15 +50,15 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
   auto eInputTensor = std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
-  auto edgeList = std::any_cast<std::vector<int64_t>>(inputEdges);
+  auto edgeList = std::any_cast<std::vector<std::int64_t>>(inputEdges);
   const int numEdges = edgeList.size() / 2;
 
   std::vector<const char *> fInputNames{m_inputNameNodes.c_str(),
                                         m_inputNameEdges.c_str()};
   std::vector<Ort::Value> fInputTensor;
   fInputTensor.push_back(std::move(*eInputTensor));
-  std::vector<int64_t> fEdgeShape{2, numEdges};
-  fInputTensor.push_back(Ort::Value::CreateTensor<int64_t>(
+  std::vector<std::int64_t> fEdgeShape{2, numEdges};
+  fInputTensor.push_back(Ort::Value::CreateTensor<std::int64_t>(
       memoryInfo, edgeList.data(), edgeList.size(), fEdgeShape.data(),
       fEdgeShape.size()));
 
@@ -69,7 +69,7 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
   auto outputDims = m_model->GetOutputTypeInfo(0)
                         .GetTensorTypeAndShapeInfo()
                         .GetDimensionsCount();
-  using Shape = std::vector<int64_t>;
+  using Shape = std::vector<std::int64_t>;
   Shape fOutputShape = outputDims == 2 ? Shape{numEdges, 1} : Shape{numEdges};
   std::vector<Ort::Value> fOutputTensor;
   fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
@@ -88,12 +88,12 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
   torch::Tensor filterMask = fOutputCTen > m_cfg.cut;
   torch::Tensor edgesAfterFCTen = edgeListCTen.index({Slice(), filterMask});
 
-  std::vector<int64_t> edgesAfterFiltering;
-  std::copy(edgesAfterFCTen.data_ptr<int64_t>(),
-            edgesAfterFCTen.data_ptr<int64_t>() + edgesAfterFCTen.numel(),
+  std::vector<std::int64_t> edgesAfterFiltering;
+  std::copy(edgesAfterFCTen.data_ptr<std::int64_t>(),
+            edgesAfterFCTen.data_ptr<std::int64_t>() + edgesAfterFCTen.numel(),
             std::back_inserter(edgesAfterFiltering));
 
-  int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
+  std::int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
   ACTS_DEBUG("Finished edge classification, after cut: " << numEdgesAfterF
                                                          << " edges.");
 

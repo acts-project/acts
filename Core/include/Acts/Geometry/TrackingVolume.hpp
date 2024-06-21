@@ -13,25 +13,20 @@
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Concepts.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Ray.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -126,12 +121,9 @@ class TrackingVolume : public Volume {
   /// @param transform is the global 3D transform to position the volume in
   /// space
   /// @param volbounds is the description of the volume boundaries
-  /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
                  std::shared_ptr<const VolumeBounds> volbounds,
-                 const std::shared_ptr<const TrackingVolumeArray>&
-                     containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
@@ -428,8 +420,7 @@ class TrackingVolume : public Volume {
   ///  - positiveFaceXY
   ///
   /// @param gvd register a new GlueVolumeDescriptor
-  /// @todo update to shared/unique ptr
-  void registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd);
+  void registerGlueVolumeDescriptor(std::unique_ptr<GlueVolumesDescriptor> gvd);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
@@ -468,7 +459,7 @@ class TrackingVolume : public Volume {
   MutableTrackingVolumeVector m_confinedDenseVolumes;
 
   /// Volumes to glue Volumes from the outside
-  GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};
+  std::unique_ptr<GlueVolumesDescriptor> m_glueVolumeDescriptor{nullptr};
 
   /// @}
 

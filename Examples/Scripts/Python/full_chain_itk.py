@@ -61,15 +61,17 @@ addFatras(
     trackingGeometry,
     field,
     rnd=rnd,
-    preSelectParticles=ParticleSelectorConfig(
-        rho=(0.0 * u.mm, 28.0 * u.mm),
-        absZ=(0.0 * u.mm, 1.0 * u.m),
-        eta=(-4.0, 4.0),
-        pt=(150 * u.MeV, None),
-        removeNeutral=True,
-    )
-    if ttbar_pu200
-    else ParticleSelectorConfig(),
+    preSelectParticles=(
+        ParticleSelectorConfig(
+            rho=(0.0 * u.mm, 28.0 * u.mm),
+            absZ=(0.0 * u.mm, 1.0 * u.m),
+            eta=(-4.0, 4.0),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        )
+        if ttbar_pu200
+        else ParticleSelectorConfig()
+    ),
     outputDirRoot=outputDir,
 )
 
@@ -86,9 +88,11 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
-    if ttbar_pu200
-    else TruthSeedRanges(),
+    (
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
+        if ttbar_pu200
+        else TruthSeedRanges()
+    ),
     seedingAlgorithm=SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints

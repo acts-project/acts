@@ -140,8 +140,8 @@ struct AdditionalSurfacesNavigation : public IInternalNavigation {
 /// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
 using IndexedSurfacesNavigation =
-    IndexedUpdaterImpl<IInternalNavigation, grid_type, IndexedSurfacesExtractor,
-                       SurfacesFiller>;
+    IndexedGridNavigation<IInternalNavigation, grid_type,
+                          IndexedSurfacesExtractor, SurfacesFiller>;
 
 /// @brief  An indexed multi layer surface implementation access
 ///
@@ -155,7 +155,7 @@ using MultiLayerSurfacesNavigation =
 ///@tparam inexed_updator is the updator for the indexed surfaces
 template <typename grid_type, template <typename> class indexed_updator>
 using IndexedSurfacesAllPortalsNavigation =
-    ChainedUpdaterImpl<IInternalNavigation, AllPortalsNavigation,
-                       indexed_updator<grid_type>>;
+    ChainedNavigation<IInternalNavigation, AllPortalsNavigation,
+                      indexed_updator<grid_type>>;
 
 }  // namespace Acts::Experimental

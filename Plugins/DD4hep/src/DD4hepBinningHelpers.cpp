@@ -19,11 +19,10 @@ Acts::DD4hepBinningHelpers::convertBinning(
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
     if (!type.empty()) {
       // Default binning is bound
-      auto bType = Acts::detail::AxisBoundaryType::Bound;
+      auto bType = Acts::AxisBoundaryType::Bound;
       // Equidistant or variable binning
-      detail::AxisType aType = type == "equidistant"
-                                   ? detail::AxisType::Equidistant
-                                   : detail::AxisType::Variable;
+      AxisType aType =
+          type == "equidistant" ? AxisType::Equidistant : AxisType::Variable;
       int nBins = getParamOr<int>(bname + "_" + ab + "_n", dd4hepElement, 0);
       int nExpansion =
           getParamOr<int>(bname + "_" + ab + "_exp", dd4hepElement, 0);
@@ -31,7 +30,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
       bool autoRange = getParamOr<bool>(bname + "_" + ab + "_autorange",
                                         dd4hepElement, false);
       // Equidistant binning
-      if (aType == detail::AxisType::Equidistant) {
+      if (aType == AxisType::Equidistant) {
         if (autoRange) {
           protoBinnings.push_back(
               Experimental::ProtoBinning(bVal, bType, nBins, nExpansion));
@@ -45,7 +44,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
                                             dd4hepElement, maxDefault);
           // Check for closed phi binning
           if (bVal == binPhi && (max - min) > 1.9 * M_PI) {
-            bType = Acts::detail::AxisBoundaryType::Closed;
+            bType = Acts::AxisBoundaryType::Closed;
           }
           protoBinnings.push_back(Experimental::ProtoBinning(
               bVal, bType, min, max, nBins, nExpansion));
@@ -59,7 +58,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
         }
         // Check for closed phi binning
         if (bVal == binPhi && (edges.back() - edges.front()) > 1.9 * M_PI) {
-          bType = Acts::detail::AxisBoundaryType::Closed;
+          bType = Acts::AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(
             Experimental::ProtoBinning(bVal, bType, edges, nExpansion));

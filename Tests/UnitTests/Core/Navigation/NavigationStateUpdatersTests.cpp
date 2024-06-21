@@ -13,9 +13,9 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
 #include <array>
@@ -115,8 +115,10 @@ class TestAxis : public IAxis {
 
   bool isVariable() const final { return false; }
 
-  detail::AxisBoundaryType getBoundaryType() const final {
-    return detail::AxisBoundaryType::Closed;
+  AxisType getType() const final { return AxisType::Equidistant; }
+
+  AxisBoundaryType getBoundaryType() const final {
+    return AxisBoundaryType::Closed;
   }
 
   std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }
@@ -239,7 +241,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
 
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
-  auto allPortalsAllSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsAllSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       AllSurfacesProvider>(std::tie(allPortals, allSurfaces));
 
@@ -259,13 +261,13 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid1D grid;
-  using Grid1DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
+  using Grid1DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::binR});
 
-  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       Grid1DSurfacesProvider>(std::tie(allPortals, grid1DSurfaces));
 
@@ -285,14 +287,14 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid2D grid;
-  using Grid2DSurfacesProvider = Acts::Experimental::IndexedUpdaterImpl<
+  using Grid2DSurfacesProvider = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid2DSurfaces =
       Grid2DSurfacesProvider(std::move(grid), {Acts::binR, Acts::binZ});
 
-  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedUpdaterImpl<
+  auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
       Grid2DSurfacesProvider>(std::tie(allPortals, grid2DSurfaces));
 

@@ -22,7 +22,7 @@ namespace ActsAlignment {
 /// alignment for geometry object center x and y
 /// The enum is used as a strong type wrapper around the bits to prevent
 /// autoconversion from integer
-enum struct AlignmentMask : uint8_t {
+enum struct AlignmentMask : std::uint8_t {
   None = 0,
   Center0 = 1 << 0,
   Center1 = 1 << 1,
@@ -31,7 +31,7 @@ enum struct AlignmentMask : uint8_t {
   Rotation1 = 1 << 4,
   Rotation2 = 1 << 5,
 
-  All = std::numeric_limits<uint8_t>::max(),  // should be all ones
+  All = std::numeric_limits<std::uint8_t>::max(),  // should be all ones
 };
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(AlignmentMask)

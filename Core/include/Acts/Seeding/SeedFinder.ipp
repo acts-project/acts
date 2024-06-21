@@ -78,17 +78,29 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   // Fill
   // bottoms
   for (const std::size_t idx : bottomSPsIdx) {
+    // Only add an entry if the bin has entries
+    if (grid.at(idx).size() == 0) {
+      continue;
+    }
     state.bottomNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
   }
+  // if no bottom candidates, then no need to proceed
+  if (state.bottomNeighbours.size() == 0) {
+    return;
+  }
+
   // tops
   for (const std::size_t idx : topSPsIdx) {
+    // Only add an entry if the bin has entries
+    if (grid.at(idx).size() == 0) {
+      continue;
+    }
     state.topNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
-
-  // Return if there are no bottom or top candidates
-  if (state.bottomNeighbours.size() == 0 || state.topNeighbours.size() == 0) {
+  // if no top candidates, then no need to proceed
+  if (state.topNeighbours.size() == 0) {
     return;
   }
 
@@ -128,14 +140,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    // remove middle SPs on the last layer since there would be no outer SPs to
-    // complete a seed
-    float zM = spM->z();
-    if (zM < m_config.zOutermostLayers.first ||
-        zM > m_config.zOutermostLayers.second) {
-      continue;
-    }
-
+    const float zM = spM->z();
     const float uIP = -1. / rM;
     const float cosPhiM = -spM->x() * uIP;
     const float sinPhiM = -spM->y() * uIP;

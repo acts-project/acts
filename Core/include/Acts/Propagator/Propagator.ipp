@@ -24,8 +24,6 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
   state.stage = PropagatorStage::prePropagation;
 
-  // Navigator initialize state call
-  m_navigator.initialize(state, m_stepper);
   // Pre-Stepping call to the action list
   state.options.actionList(state, m_stepper, m_navigator, logger());
   // assume negative outcome, only set to true later if we actually have
@@ -178,10 +176,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  // Apply the loop protection - it resets the internal path limit
-  detail::setupLoopProtection(
-      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
-      false, logger());
+  initialize<StateType, path_aborter_t>(state);
 
   return state;
 }
@@ -222,10 +217,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  // Apply the loop protection, it resets the internal path limit
-  detail::setupLoopProtection(
-      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
-      false, logger());
+  initialize<StateType, path_aborter_t>(state);
 
   return state;
 }
@@ -316,6 +308,18 @@ auto Acts::Propagator<S, N>::makeResult(
     result.transportJacobian = std::get<Jacobian>(bs);
   }
   return Result<ResultType>::success(std::move(result));
+}
+
+template <typename S, typename N>
+template <typename propagator_state_t, typename path_aborter_t>
+void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
+  // Navigator initialize state call
+  m_navigator.initialize(state, m_stepper);
+
+  // Apply the loop protection - it resets the internal path limit
+  detail::setupLoopProtection(
+      state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
+      false, logger());
 }
 
 template <typename S, typename N>

@@ -6,15 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
 #include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
-#include <algorithm>
-#include <array>
-#include <stdexcept>
-#include <vector>
-// clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
@@ -22,9 +14,13 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-namespace Acts {
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 double minRadius = 7.2;
@@ -124,6 +120,4 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

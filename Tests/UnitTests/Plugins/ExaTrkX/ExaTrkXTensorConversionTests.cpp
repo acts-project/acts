@@ -15,7 +15,7 @@
 #include <torch/torch.h>
 
 BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_int_2cols) {
-  std::vector<int64_t> start_vec = {
+  std::vector<std::int64_t> start_vec = {
       // clang-format off
     0, 1,
     1, 2,
@@ -31,19 +31,19 @@ BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_int_2cols) {
   BOOST_CHECK_EQUAL(tensor.size(0), 4);
   BOOST_CHECK_EQUAL(tensor.size(1), 2);
 
-  BOOST_CHECK_EQUAL(tensor[0][0].item<int64_t>(), 0);
-  BOOST_CHECK_EQUAL(tensor[0][1].item<int64_t>(), 1);
+  BOOST_CHECK_EQUAL(tensor[0][0].item<std::int64_t>(), 0);
+  BOOST_CHECK_EQUAL(tensor[0][1].item<std::int64_t>(), 1);
 
-  BOOST_CHECK_EQUAL(tensor[1][0].item<int64_t>(), 1);
-  BOOST_CHECK_EQUAL(tensor[1][1].item<int64_t>(), 2);
+  BOOST_CHECK_EQUAL(tensor[1][0].item<std::int64_t>(), 1);
+  BOOST_CHECK_EQUAL(tensor[1][1].item<std::int64_t>(), 2);
 
-  BOOST_CHECK_EQUAL(tensor[2][0].item<int64_t>(), 2);
-  BOOST_CHECK_EQUAL(tensor[2][1].item<int64_t>(), 3);
+  BOOST_CHECK_EQUAL(tensor[2][0].item<std::int64_t>(), 2);
+  BOOST_CHECK_EQUAL(tensor[2][1].item<std::int64_t>(), 3);
 
-  BOOST_CHECK_EQUAL(tensor[3][0].item<int64_t>(), 3);
-  BOOST_CHECK_EQUAL(tensor[3][1].item<int64_t>(), 4);
+  BOOST_CHECK_EQUAL(tensor[3][0].item<std::int64_t>(), 3);
+  BOOST_CHECK_EQUAL(tensor[3][1].item<std::int64_t>(), 4);
 
-  auto test_vec = Acts::detail::tensor2DToVector<int64_t>(tensor);
+  auto test_vec = Acts::detail::tensor2DToVector<std::int64_t>(tensor);
 
   BOOST_CHECK_EQUAL(test_vec, start_vec);
 }
@@ -66,9 +66,9 @@ BOOST_AUTO_TEST_CASE(test_vector_tensor_conversion_float_3cols) {
   BOOST_CHECK_EQUAL(tensor.size(1), 3);
 
   for (auto i : {0, 1, 2, 3}) {
-    BOOST_CHECK_EQUAL(tensor[i][0].item<int64_t>(), static_cast<float>(i));
-    BOOST_CHECK_EQUAL(tensor[i][1].item<int64_t>(), static_cast<float>(i));
-    BOOST_CHECK_EQUAL(tensor[i][2].item<int64_t>(), static_cast<float>(i));
+    BOOST_CHECK_EQUAL(tensor[i][0].item<std::int64_t>(), static_cast<float>(i));
+    BOOST_CHECK_EQUAL(tensor[i][1].item<std::int64_t>(), static_cast<float>(i));
+    BOOST_CHECK_EQUAL(tensor[i][2].item<std::int64_t>(), static_cast<float>(i));
   }
 
   auto test_vec = Acts::detail::tensor2DToVector<float>(tensor);

@@ -19,14 +19,11 @@
 #include <utility>
 #include <vector>
 
-using boost::test_tools::output_test_stream;
-
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(frustum_construction) {
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   using Vector2F = Eigen::Matrix<float, 2, 1>;
 
@@ -70,5 +67,4 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

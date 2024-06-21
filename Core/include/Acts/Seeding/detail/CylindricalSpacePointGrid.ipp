@@ -99,9 +99,8 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     }
   }
 
-  Acts::detail::Axis<detail::AxisType::Equidistant,
-                     detail::AxisBoundaryType::Closed>
-      phiAxis(config.phiMin, config.phiMax, phiBins);
+  Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<AxisScalar> zValues;
@@ -131,8 +130,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     }
   }
 
-  detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
-      zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
   return Acts::CylindricalSpacePointGrid<SpacePoint>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }

@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -28,11 +27,11 @@
 #include "LayerStub.hpp"
 
 namespace Acts::Test {
-
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+}  // namespace Acts::Test
 
-namespace Layers {
+namespace Acts::Test::Layers {
 
 BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -100,5 +99,5 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Layers
-}  // namespace Acts::Test
+
+}  // namespace Acts::Test::Layers

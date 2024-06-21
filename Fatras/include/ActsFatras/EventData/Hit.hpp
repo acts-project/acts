@@ -46,7 +46,7 @@ class Hit {
   /// position on the given surface.
   Hit(Acts::GeometryIdentifier geometryId, Barcode particleId,
       const Vector4& pos4, const Vector4& before4, const Vector4& after4,
-      int32_t index_ = -1)
+      std::int32_t index_ = -1)
       : m_geometryId(geometryId),
         m_particleId(particleId),
         m_index(index_),
@@ -65,7 +65,7 @@ class Hit {
   /// Hit index along the particle trajectory.
   ///
   /// @retval negative if the hit index is undefined.
-  constexpr int32_t index() const { return m_index; }
+  constexpr std::int32_t index() const { return m_index; }
 
   /// Space-time position four-vector.
   const Vector4& fourPosition() const { return m_pos4; }
@@ -106,7 +106,7 @@ class Hit {
   /// Identifier of the generating particle.
   Barcode m_particleId;
   /// Index of the hit along the particle trajectory.
-  int32_t m_index = -1;
+  std::int32_t m_index = -1;
   /// Global space-time position four-vector.
   Vector4 m_pos4 = Vector4::Zero();
   /// Global particle energy-momentum four-vector before the hit.

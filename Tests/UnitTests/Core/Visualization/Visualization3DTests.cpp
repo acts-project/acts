@@ -20,10 +20,7 @@
 
 #include "Visualization3DTester.hpp"
 
-using boost::test_tools::output_test_stream;
-
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
@@ -175,7 +172,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DConstruction) {
 
 BOOST_AUTO_TEST_CASE(PlyOutputTest) {
   PlyVisualization3D ply;
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   ply.vertex({0, 0, 0});
 
@@ -295,7 +292,7 @@ end_header
 BOOST_AUTO_TEST_CASE(ObjOutputTest) {
   ObjVisualization3D obj;
 
-  output_test_stream output;
+  boost::test_tools::output_test_stream output;
 
   obj.vertex({1, 0, 0});
 
@@ -320,5 +317,5 @@ f 1 2 3
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

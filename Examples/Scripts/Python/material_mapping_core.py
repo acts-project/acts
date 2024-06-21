@@ -8,6 +8,10 @@ from acts import (
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulater,
     MaterialMapJsonConverter,
+    logging,
+    GeometryContext,
+    DetectorBuilder,
+    GeometryIdGenerator,
 )
 
 from acts.examples import (
@@ -28,6 +32,7 @@ from acts.examples.dd4hep import (
     DD4hepGeometryService,
 )
 
+from acts import geomodel as gm
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
@@ -151,26 +156,121 @@ if "__main__" == __name__:
         help="Construct experimental geometry",
     )
 
+    p.add_argument(
+        "--geomodel-input",
+        type=str,
+        default="",
+        help="Construct experimental geometry from GeoModel",
+    )
+
+    p.add_argument(
+        "--geomodel-top-node",
+        type=str,
+        default="",
+        help="Top node definition of the GeoModel tree",
+    )
+
+    p.add_argument(
+        "--geomodel-table-name",
+        type=str,
+        default="ActsBlueprint",
+        help="Name of the blueprint table",
+    )
+
+    p.add_argument(
+        "--geomodel-queries",
+        nargs="+",
+        type=str,
+        default=[],
+        help="Queries for published GeoModel nodes",
+    )
+
     args = p.parse_args()
+    gContext = GeometryContext()
+    logLevel = logging.INFO
 
     if args.experimental:
-        odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
+        if len(args.geomodel_input) > 0:
+            # Read the geometry model from the database
+            gmTree = acts.geomodel.readFromDb(args.geomodel_input)
 
-        # Create the dd4hep geometry service and detector
-        dd4hepConfig = DD4hepGeometryService.Config()
-        dd4hepConfig.logLevel = acts.logging.INFO
-        dd4hepConfig.xmlFileNames = [str(odd_xml)]
-        dd4hepGeometryService = DD4hepGeometryService(dd4hepConfig)
-        dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
+            gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
+            gmFactoryConfig.shapeConverters = [
+                gm.GeoBoxConverter(),
+                gm.GeoTrdConverter(),
+                gm.GeoIntersectionAnnulusConverter(),
+            ]
 
-        cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
+            gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
+            # The options
+            gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
+            gmFactoryOptions.queries = args.geomodel_queries
+            # The Cache & construct call
+            gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
+            gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
 
-        # Context and options
-        geoContext = acts.GeometryContext()
-        [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
+            # All surfaces from GeoModel
+            gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
 
-        materialSurfaces = detector.extractMaterialSurfaces()
+            # Construct the building hierarchy
+            gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
+            gmBlueprintConfig.detectorSurfaces = gmSurfaces
+            gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
 
+            gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
+            gmBlueprintOptions.table = args.geomodel_table_name
+            gmBlueprintOptions.topEntry = args.geomodel_top_node
+            gmBlueprintCreater = gm.GeoModelBlueprintCreater(
+                gmBlueprintConfig, logLevel
+            )
+            gmBlueprint = gmBlueprintCreater.create(
+                gContext, gmTree, gmBlueprintOptions
+            )
+
+            gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
+
+            # Top level geo id generator
+            gmGeoIdConfig = GeometryIdGenerator.Config()
+            gmGeoIdGenerator = GeometryIdGenerator(
+                gmGeoIdConfig, "GeoModelGeoIdGenerator", logging.INFO
+            )
+
+            # Create the detector builder
+            gmDetectorConfig = DetectorBuilder.Config()
+            gmDetectorConfig.name = args.geomodel_top_node + "_DetectorBuilder"
+            gmDetectorConfig.builder = gmCylindricalBuilder
+            gmDetectorConfig.geoIdGenerator = gmGeoIdGenerator
+            gmDetectorConfig.auxiliary = (
+                "GeoModel based Acts::Detector from '" + args.geomodel_input + "'"
+            )
+
+            gmDetectorBuilder = DetectorBuilder(
+                gmDetectorConfig, args.geomodel_top_node, logLevel
+            )
+            detector = gmDetectorBuilder.construct(gContext)
+
+            materialSurfaces = detector.extractMaterialSurfaces()
+        else:
+            odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
+
+            # Create the dd4hep geometry service and detector
+            dd4hepConfig = DD4hepGeometryService.Config()
+            dd4hepConfig.logLevel = acts.logging.INFO
+            dd4hepConfig.xmlFileNames = [str(odd_xml)]
+            dd4hepGeometryService = DD4hepGeometryService(dd4hepConfig)
+            dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
+
+            cOptions = DD4hepDetectorOptions(
+                logLevel=acts.logging.INFO, emulateToGraph=""
+            )
+
+            # Context and options
+            geoContext = acts.GeometryContext()
+            [detector, contextors, store] = dd4hepDetector.finalize(
+                geoContext, cOptions
+            )
+
+            materialSurfaces = detector.extractMaterialSurfaces()
     else:
         matDeco = None
         if args.matconfig != "":
@@ -181,5 +281,5 @@ if "__main__" == __name__:
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
     runMaterialMapping(
-        materialSurfaces, args.input, args.output, args.map, acts.logging.INFO
+        materialSurfaces, args.input, args.output, args.map, logLevel
     ).run()

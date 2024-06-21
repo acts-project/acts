@@ -16,11 +16,9 @@
 #include <array>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(interpolation_1d) {
   using Point = std::array<double, 1u>;
@@ -123,6 +121,5 @@ BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values) {
   CHECK_CLOSE_REL(interpolate((p << 2.).finished(), low, high, v), 20., 1e-6);
   CHECK_CLOSE_REL(interpolate((p << 2.3).finished(), low, high, v), 23., 1e-6);
 }
-}  // namespace Test
 
-}  // namespace Acts
+}  // namespace Acts::Test

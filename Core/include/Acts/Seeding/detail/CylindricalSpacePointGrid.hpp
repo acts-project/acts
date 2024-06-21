@@ -21,13 +21,11 @@ namespace Acts {
 /// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
 /// It stores a vector of internal space points to external space points
 template <typename external_spacepoint_t>
-using CylindricalSpacePointGrid =
-    Acts::Grid<std::vector<std::unique_ptr<
-                   Acts::InternalSpacePoint<external_spacepoint_t>>>,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Closed>,
-               Acts::detail::Axis<Acts::detail::AxisType::Variable,
-                                  Acts::detail::AxisBoundaryType::Bound>>;
+using CylindricalSpacePointGrid = Acts::Grid<
+    std::vector<
+        std::unique_ptr<Acts::InternalSpacePoint<external_spacepoint_t>>>,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
 
 /// Cylindrical Binned Group
 template <typename external_spacepoint_t>

@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
 
   auto casts = std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR};
 
-  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
+  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IExternalNavigation, GridType,
       Acts::Experimental::IndexedDetectorVolumeExtractor,
       Acts::Experimental::DetectorVolumeFiller>;

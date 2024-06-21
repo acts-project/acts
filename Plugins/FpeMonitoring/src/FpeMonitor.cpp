@@ -126,7 +126,7 @@ void FpeMonitor::consumeRecorded() {
 }
 
 unsigned int FpeMonitor::Result::count(FpeType type) const {
-  return m_counts.at(static_cast<uint32_t>(type));
+  return m_counts.at(static_cast<std::uint32_t>(type));
 }
 
 unsigned int FpeMonitor::Result::numStackTraces() const {

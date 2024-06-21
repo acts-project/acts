@@ -16,7 +16,7 @@ namespace Acts {
 
 class TorchGraphStoreHook : public ExaTrkXHook {
  public:
-  using Graph = std::pair<std::vector<int64_t>, std::vector<float>>;
+  using Graph = std::pair<std::vector<std::int64_t>, std::vector<float>>;
 
  private:
   std::unique_ptr<Graph> m_storedGraph;

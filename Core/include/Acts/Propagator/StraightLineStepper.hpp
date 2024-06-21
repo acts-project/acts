@@ -218,11 +218,6 @@ class StraightLineStepper {
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
-  /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
-    return -m_overstepLimit;
-  }
-
   /// Update surface status
   ///
   /// This method intersects the provided surface and update the navigation
@@ -451,9 +446,6 @@ class StraightLineStepper {
     // return h
     return h;
   }
-
- private:
-  double m_overstepLimit = s_onSurfaceTolerance;
 };
 
 template <typename navigator_t>

@@ -44,8 +44,8 @@ struct SimulationResult {
   Particle::Scalar x0Limit = std::numeric_limits<Particle::Scalar>::quiet_NaN();
   Particle::Scalar l0Limit = std::numeric_limits<Particle::Scalar>::quiet_NaN();
   // Process selection for the next interaction.
-  std::size_t x0Process = SIZE_MAX;
-  std::size_t l0Process = SIZE_MAX;
+  std::size_t x0Process = std::numeric_limits<std::size_t>::max();
+  std::size_t l0Process = std::numeric_limits<std::size_t>::max();
 };
 
 }  // namespace ActsFatras
