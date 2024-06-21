@@ -90,7 +90,7 @@ void convertIndexedGridMaterial(
 
   if (indexedMaterial != nullptr) {
     // It is a grid type material
-    jMaterial[Acts::jsonKey().typekey] = "grid";
+    jMaterial[Acts::JsonKey::kType] = "grid";
     nlohmann::json jMaterialAccessor;
     // Assume globally indexed first
     jMaterialAccessor["type"] = "globally_indexed";
@@ -420,7 +420,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
 
   unrollIndexedGridConversion(jMaterial, *material, IndexedSurfaceGrids{});
   if (!jMaterial.empty()) {
-    j[Acts::jsonKey().materialkey] = jMaterial;
+    j[Acts::JsonKey::kMaterial] = jMaterial;
     return;
   }
 
@@ -435,7 +435,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
   unrollIndexedGridConversion(jMaterial, *material,
                               GloballyIndexedSurfaceGrids{});
   if (!jMaterial.empty()) {
-    j[Acts::jsonKey().materialkey] = jMaterial;
+    j[Acts::JsonKey::kMaterial] = jMaterial;
     return;
   }
 
@@ -464,7 +464,7 @@ void Acts::from_json(const nlohmann::json& j,
   }
 
   // Grid based material maps
-  if (jMaterial[Acts::jsonKey().typekey] == "grid") {
+  if (jMaterial[Acts::JsonKey::kType] == "grid") {
     material =
         indexedMaterialFromJson<Acts::IndexedMaterialAccessor>(jMaterial);
     return;
