@@ -8,12 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -23,10 +20,8 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
@@ -48,30 +43,25 @@ struct AlgorithmContext;
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     /// Input (found) tracks collection.
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
+    /// Input track-particle matching.
+    std::string inputParticleTrackMatching;
     /// Output filename.
     std::string filePath = "performance_ckf.root";
     /// Output filemode
     std::string fileMode = "RECREATE";
+
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     FakeRatePlotTool::Config fakeRatePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
-
-    /// Whether to do double matching or not
-    bool doubleMatching = false;
-
-    /// Min reco-truth matching probability
-    double truthMatchProbMin = 0.5;
 
     /// Write additional matching details to a TTree
     bool writeMatchingDetails = false;
@@ -112,8 +102,8 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   TTree* m_matchingTree{nullptr};
 
   /// Variables to fill in the TTree
-  uint32_t m_treeEventNr{};
-  uint64_t m_treeParticleId{};
+  std::uint32_t m_treeEventNr{};
+  std::uint64_t m_treeParticleId{};
   bool m_treeIsMatched{};
 
   // Adding numbers for efficiency, fake, duplicate calculations
@@ -127,8 +117,10 @@ class CKFPerformanceWriter final : public WriterT<ConstTrackContainer> {
   std::size_t m_nTotalFakeParticles = 0;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
+  ReadDataHandle<ParticleTrackMatching> m_inputParticleTrackMatching{
+      this, "InputParticleTrackMatching"};
 };
 
 }  // namespace ActsExamples

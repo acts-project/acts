@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -55,8 +54,6 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct two parallel plane surfaces with normal in x direction
   ActsScalar distance = 10_mm;
-  auto sSurface =
-      Surface::makeShared<PlaneSurface>(Vector3(0, 0, 0), Vector3::UnitX());
   auto eSurface = Surface::makeShared<PlaneSurface>(Vector3(distance, 0, 0),
                                                     Vector3::UnitX());
 
@@ -93,7 +90,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the jacobian from local to global at the starting position
   BoundToFreeMatrix boundToFreeJac =
-      sSurface->boundToFreeJacobian(geoCtx, sBoundParams);
+      eSurface->boundToFreeJacobian(geoCtx, tpos, dir);
 
   // the transport jacobian without B field
   FreeMatrix transportJac = FreeMatrix::Identity();

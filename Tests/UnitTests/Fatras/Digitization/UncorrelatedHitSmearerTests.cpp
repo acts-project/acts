@@ -13,8 +13,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -33,7 +33,6 @@
 #include <iterator>
 #include <limits>
 #include <memory>
-#include <ostream>
 #include <random>
 #include <utility>
 
@@ -69,8 +68,9 @@ struct InvalidSmearer {
   }
 };
 
+template <typename generator_t>
 struct Fixture {
-  RandomGenerator rng;
+  generator_t rng;
   // identifiers
   Acts::GeometryIdentifier gid;
   ActsFatras::Barcode pid;
@@ -83,13 +83,12 @@ struct Fixture {
   // hit information
   ActsFatras::Hit hit;
 
-  Fixture(uint64_t rngSeed)
+  Fixture(std::uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
       : rng(rngSeed),
         gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
             3)),
         pid(ActsFatras::Barcode().setVertexPrimary(12).setParticle(23)),
-        surface(Acts::Surface::makeShared<Acts::PlaneSurface>(
-            Acts::Transform3(Acts::Translation3(3, 2, 1)))) {
+        surface(std::move(surf)) {
     using namespace Acts::UnitLiterals;
     using Acts::VectorHelpers::makeVector4;
 
@@ -99,8 +98,9 @@ struct Fixture {
     auto [par, cov] =
         Acts::detail::Test::generateBoundParametersCovariance(rng);
     boundParams = par;
-    freeParams = Acts::detail::transformBoundToFreeParameters(*surface, geoCtx,
-                                                              boundParams);
+
+    freeParams =
+        Acts::transformBoundToFreeParameters(*surface, geoCtx, boundParams);
 
     // construct hit from free parameters
     Acts::Vector4 r4;
@@ -135,7 +135,9 @@ constexpr auto tol = 128 * std::numeric_limits<double>::epsilon();
 BOOST_AUTO_TEST_SUITE(FatrasUncorrelatedHitSmearer)
 
 BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
-  Fixture f(123);
+  Fixture<RandomGenerator> f(
+      123, Acts::Surface::makeShared<Acts::PlaneSurface>(
+               Acts::Transform3(Acts::Translation3(3, 2, 1))));
   ActsFatras::BoundParametersSmearer<RandomGenerator, 1u> s;
   s.indices = {index};
 
@@ -165,7 +167,9 @@ BOOST_DATA_TEST_CASE(Bound1, bd::make(boundIndices), index) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundAll) {
-  Fixture f(12356);
+  Fixture<RandomGenerator> f(
+      12356, Acts::Surface::makeShared<Acts::PlaneSurface>(
+                 Acts::Transform3(Acts::Translation3(3, 2, 1))));
   // without q/p
   ActsFatras::BoundParametersSmearer<RandomGenerator, std::size(boundIndices)>
       s;
@@ -209,7 +213,9 @@ BOOST_AUTO_TEST_CASE(BoundAll) {
 }
 
 BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
-  Fixture f(1234);
+  Fixture<RandomGenerator> f(
+      1234, Acts::Surface::makeShared<Acts::PlaneSurface>(
+                Acts::Transform3(Acts::Translation3(3, 2, 1))));
   ActsFatras::FreeParametersSmearer<RandomGenerator, 1u> s;
   s.indices = {index};
 
@@ -239,7 +245,9 @@ BOOST_DATA_TEST_CASE(Free1, bd::make(freeIndices), index) {
 }
 
 BOOST_AUTO_TEST_CASE(FreeAll) {
-  Fixture f(123567);
+  Fixture<RandomGenerator> f(
+      123567, Acts::Surface::makeShared<Acts::PlaneSurface>(
+                  Acts::Transform3(Acts::Translation3(3, 2, 1))));
   // without q/p
   ActsFatras::FreeParametersSmearer<RandomGenerator, std::size(freeIndices)> s;
   std::copy(std::begin(freeIndices), std::end(freeIndices), s.indices.begin());

@@ -34,6 +34,7 @@ using SurfaceMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 using VolumeMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -123,6 +124,11 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
     if (vMaterial != m_volumeMaterialMap.end()) {
       volume.assignVolumeMaterial(vMaterial->second);
     }
+  }
+
+  /// Return the maps
+  const Acts::DetectorMaterialMaps materialMaps() const {
+    return std::make_pair(m_surfaceMaterialMap, m_volumeMaterialMap);
   }
 
   /// Get readonly access to the config parameters

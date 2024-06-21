@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
@@ -27,8 +26,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Some randomness & number crunching
 unsigned int ntests = 10;
@@ -123,5 +121,4 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

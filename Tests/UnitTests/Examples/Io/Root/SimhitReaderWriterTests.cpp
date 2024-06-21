@@ -12,6 +12,7 @@
 #include "Acts/Tests/CommonHelpers/WhiteBoardUtilities.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 
@@ -26,7 +27,7 @@ std::mt19937 gen(23);
 
 auto makeTestSimhits(std::size_t nSimHits) {
   std::uniform_int_distribution<std::uint64_t> distIds(
-      1, std::numeric_limits<uint64_t>::max());
+      1, std::numeric_limits<std::uint64_t>::max());
   std::uniform_int_distribution<std::int32_t> distIndex(1, 20);
 
   SimHitContainer simhits;
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTest) {
   // Read //
   //////////
   RootSimHitReader::Config readerConfig;
-  readerConfig.simHitCollection = "hits";
+  readerConfig.outputSimHits = "hits";
   readerConfig.filePath = "./testhits.root";
 
   RootSimHitReader reader(readerConfig, Acts::Logging::WARNING);

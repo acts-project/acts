@@ -23,6 +23,8 @@
 #include <thread>
 #include <utility>
 
+/// @defgroup Logging Logging
+
 // clang-format off
 /// @brief macro to use a local Acts::Logger object
 /// @ingroup Logging
@@ -231,6 +233,19 @@ void setFailureThreshold(Level level);
 /// Custom exception class so threshold failures can be caught
 class ThresholdFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
+};
+
+/// Helper class that changes the failure threshold for the duration of its
+/// lifetime.
+class ScopedFailureThreshold {
+ public:
+  ScopedFailureThreshold(Level level) : m_previousLevel(getFailureThreshold()) {
+    setFailureThreshold(level);
+  }
+  ~ScopedFailureThreshold() { setFailureThreshold(m_previousLevel); }
+
+ private:
+  Level m_previousLevel;
 };
 
 /// @brief abstract base class for printing debug output
@@ -590,11 +605,9 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   };
 
   /// Make a copy of this print policy with a new name
-  /// @param name the new name
   /// @return the copy
   std::unique_ptr<OutputPrintPolicy> clone(
-      const std::string& name) const override {
-    (void)name;
+      const std::string& /*name*/) const override {
     return std::make_unique<DefaultPrintPolicy>(m_out);
   };
 

@@ -20,7 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -179,9 +179,8 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
-      {ProtoBinning(binZ, Acts::detail::AxisBoundaryType::Bound, 50),
-       ProtoBinning(binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI,
-                    12)}};
+      {ProtoBinning(binZ, Acts::AxisBoundaryType::Bound, 50),
+       ProtoBinning(binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 12)}};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;

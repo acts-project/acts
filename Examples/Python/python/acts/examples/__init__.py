@@ -288,11 +288,11 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
         found.add(mod)
         for name, obj in sorted(
             vars(mod).items(),
-            key=lambda m: (2, m[0])
-            if m[0] == "ActsPythonBindings"
-            else (1, m[0])
-            if m[0].startswith("_")
-            else (0, m[0]),
+            key=lambda m: (
+                (2, m[0])
+                if m[0] == "ActsPythonBindings"
+                else (1, m[0]) if m[0].startswith("_") else (0, m[0])
+            ),
         ):
             if (
                 not name.startswith("__")
@@ -345,8 +345,7 @@ class CustomLogLevel(Protocol):
         self,
         minLevel: acts.logging.Level = acts.logging.VERBOSE,
         maxLevel: acts.logging.Level = acts.logging.FATAL,
-    ) -> acts.logging.Level:
-        ...
+    ) -> acts.logging.Level: ...
 
 
 def defaultLogging(
@@ -402,7 +401,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
         cfg = self.Config()
         if len(args) == 1 and isinstance(args[0], self.Config):
             cfg = args[0]
-            args = args[1:]
         if "config" in kwargs:
             cfg = kwargs.pop("config")
 

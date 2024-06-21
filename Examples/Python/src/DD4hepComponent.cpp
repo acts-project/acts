@@ -111,6 +111,8 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_STRUCT_BEGIN(o, Options);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(emulateToGraph);
+    ACTS_PYTHON_MEMBER(geoIdGenerator);
+    ACTS_PYTHON_MEMBER(materialDecorator);
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(o);

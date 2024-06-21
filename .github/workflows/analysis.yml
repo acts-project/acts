@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - "docs/**"
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -21,6 +21,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r1
+  ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
 # NOTE this only builds core unittests to reduce the output size. if we
 #      found a way to have Github actions not fail regularly with this job
@@ -30,10 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_ubuntu_debug_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -49,7 +50,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
-          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
@@ -63,22 +64,24 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==6.0
+          pip3 install gcovr==7.2
           && cd build
           && /usr/bin/python3 ../CI/test_coverage.py
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./build/coverage/cov.xml
+          disable_search: true
+          token: ${{ secrets.CODECOV_TOKEN }} # required
 
   build_performance:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@ece8fc8
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@2a409b5
       - name: Configure
         run: >
           cmake -B build -S .
@@ -91,33 +94,33 @@ jobs:
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results
         run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: cmakeperf
           path: perf.csv
-  
-  metric_tracking:
-    runs-on: ubuntu-latest
-    needs: build_performance
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
-      - uses: actions/download-artifact@v2
-        with:
-          name: cmakeperf
-      - name: Run collection
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
-          git clone git@github.com:acts-project/metrics.git
-          hdw collect CI/headwind.yml --commit $(git log --pretty=format:'%H' -1)
-          cd metrics
-          git add -A
-          git commit -m"update metrics"
-          git push
+
+  # metric_tracking:
+  #   runs-on: ubuntu-latest
+  #   needs: build_performance
+  #   if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install dependencies
+  #       run: pip3 install git+https://github.com/paulgessinger/headwind.git@eeeaa80
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: cmakeperf
+  #     - name: Run collection
+  #       env:
+  #         SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+  #       run: |
+  #         ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+  #         ssh-add - <<< "${{ secrets.METRIC_DEPLOY_SSH_KEY }}"
+  #         git config --global user.email "action@github.com"
+  #         git config --global user.name "GitHub Action"
+  #         git clone git@github.com:acts-project/metrics.git
+  #         hdw collect CI/headwind.yml --commit $(git log --pretty=format:'%H' -1)
+  #         cd metrics
+  #         git add -A
+  #         git commit -m"update metrics"
+  #         git push

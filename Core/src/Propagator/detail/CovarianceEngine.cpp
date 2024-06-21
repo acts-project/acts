@@ -13,9 +13,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
@@ -42,8 +41,8 @@ Result<BoundState> detail::boundState(
     double accumulatedPath,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Create the bound parameters
-  Result<BoundVector> bv = detail::transformFreeToBoundParameters(
-      freeParameters, surface, geoContext);
+  Result<BoundVector> bv =
+      transformFreeToBoundParameters(freeParameters, surface, geoContext);
   if (!bv.ok()) {
     return bv.error();
   }
@@ -51,8 +50,6 @@ Result<BoundState> detail::boundState(
   // Covariance transport
   std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
-    // Initialize the jacobian from start local to final local
-    fullTransportJacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
@@ -60,8 +57,6 @@ Result<BoundState> detail::boundState(
                                fullTransportJacobian, freeTransportJacobian,
                                freeToPathDerivatives, boundToFreeJacobian,
                                freeParameters, freeToBoundCorrection);
-  }
-  if (boundCovariance != BoundSquareMatrix::Zero()) {
     cov = boundCovariance;
   }
 
@@ -83,16 +78,12 @@ CurvilinearState detail::curvilinearState(
   // Covariance transport
   std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
-    // Initialize the jacobian from start local to final local
-    fullTransportJacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
     transportCovarianceToCurvilinear(
         boundCovariance, fullTransportJacobian, freeTransportJacobian,
         freeToPathDerivatives, boundToFreeJacobian, direction);
-  }
-  if (boundCovariance != BoundSquareMatrix::Zero()) {
     cov = boundCovariance;
   }
 
@@ -139,8 +130,8 @@ void detail::transportCovarianceToBound(
       auto correctedValue = correctedRes.value();
       BoundVector boundParams = std::get<BoundVector>(correctedValue);
       // 1. Update the free parameters with the corrected bound parameters
-      freeParameters = detail::transformBoundToFreeParameters(
-          surface, geoContext, boundParams);
+      freeParameters =
+          transformBoundToFreeParameters(surface, geoContext, boundParams);
 
       // 2. Update the bound covariance
       boundCovariance = std::get<BoundSquareMatrix>(correctedValue);
@@ -194,11 +185,11 @@ Acts::Result<Acts::BoundTrackParameters> detail::boundToBoundConversion(
     const Surface& targetSurface, const Vector3& bField) {
   const auto& sourceSurface = boundParameters.referenceSurface();
 
-  Acts::FreeVector freePars = Acts::detail::transformBoundToFreeParameters(
+  Acts::FreeVector freePars = Acts::transformBoundToFreeParameters(
       sourceSurface, gctx, boundParameters.parameters());
 
-  auto res = Acts::detail::transformFreeToBoundParameters(freePars,
-                                                          targetSurface, gctx);
+  auto res =
+      Acts::transformFreeToBoundParameters(freePars, targetSurface, gctx);
 
   if (!res.ok()) {
     return res.error();
@@ -209,7 +200,8 @@ Acts::Result<Acts::BoundTrackParameters> detail::boundToBoundConversion(
 
   if (boundParameters.covariance().has_value()) {
     Acts::BoundToFreeMatrix boundToFreeJacobian =
-        sourceSurface.boundToFreeJacobian(gctx, boundParameters.parameters());
+        sourceSurface.boundToFreeJacobian(gctx, freePars.segment<3>(eFreePos0),
+                                          freePars.segment<3>(eFreeDir0));
 
     Acts::FreeMatrix freeTransportJacobian = FreeMatrix::Identity();
 

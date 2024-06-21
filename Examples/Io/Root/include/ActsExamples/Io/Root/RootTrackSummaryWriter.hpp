@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -26,12 +26,8 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootTrackSummaryWriter
 ///
@@ -50,15 +46,13 @@ struct AlgorithmContext;
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     /// Input (fitted) tracks collection
     std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
-    /// Input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
+    /// Input track-particle matching.
+    std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "tracksummary.root";
     /// Name of the output tree.
@@ -98,8 +92,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
 
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;
@@ -108,9 +102,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// The output tree
   TTree* m_outputTree{nullptr};
   /// The event number
-  uint32_t m_eventNr{0};
+  std::uint32_t m_eventNr{0};
   /// The track number in event
-  std::vector<uint32_t> m_trackNr;
+  std::vector<std::uint32_t> m_trackNr;
 
   /// The number of states
   std::vector<unsigned int> m_nStates;
@@ -143,7 +137,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// The number of hits from majority particle
   std::vector<unsigned int> m_nMajorityHits;
   /// The particle Id of the majority particle
-  std::vector<uint64_t> m_majorityParticleId;
+  std::vector<std::uint64_t> m_majorityParticleId;
+  /// The classification of the reconstructed track
+  std::vector<int> m_trackClassification;
   /// Charge of majority particle
   std::vector<int> m_t_charge;
   /// Time of majority particle

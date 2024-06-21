@@ -29,7 +29,6 @@
 class TChain;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootTrackSummaryReader
 ///
@@ -47,9 +46,6 @@ class RootTrackSummaryReader : public IReader {
     std::string treeName = "tracksummary";
     /// The name of the input file
     std::string filePath;
-
-    /// Whether the events are ordered or not
-    bool orderedEvents = true;
   };
 
   /// Constructor
@@ -100,9 +96,9 @@ class RootTrackSummaryReader : public IReader {
   TChain* m_inputChain = nullptr;
 
   /// the event number
-  uint32_t m_eventNr{0};
+  std::uint32_t m_eventNr{0};
   /// the multi-trajectory number
-  std::vector<uint32_t>* m_multiTrajNr = new std::vector<uint32_t>;
+  std::vector<std::uint32_t>* m_multiTrajNr = new std::vector<std::uint32_t>;
   /// the multi-trajectory sub-trajectory number
   std::vector<unsigned int>* m_subTrajNr = new std::vector<unsigned int>;
 
@@ -145,7 +141,8 @@ class RootTrackSummaryReader : public IReader {
   /// The number of hits from majority particle
   std::vector<unsigned int>* m_nMajorityHits = new std::vector<unsigned int>;
   /// The particle Id of the majority particle
-  std::vector<uint64_t>* m_majorityParticleId = new std::vector<uint64_t>;
+  std::vector<std::uint64_t>* m_majorityParticleId =
+      new std::vector<std::uint64_t>;
   /// Charge of majority particle
   std::vector<int>* m_t_charge = new std::vector<int>;
   /// Time of majority particle

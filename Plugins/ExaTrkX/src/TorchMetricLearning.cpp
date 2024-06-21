@@ -73,7 +73,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
     c10::cuda::CUDAGuard device_guard(device.index());
   }
 
-  const int64_t numAllFeatures = inputValues.size() / numNodes;
+  const std::int64_t numAllFeatures = inputValues.size() / numNodes;
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information: " << [&]() {

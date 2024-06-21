@@ -11,12 +11,7 @@
 #include "Acts/Detector/Blueprint.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
-namespace Acts {
-
-namespace Experimental {
-
-namespace detail {
-namespace BlueprintHelper {
+namespace Acts::Experimental::detail::BlueprintHelper {
 
 /// @brief Sort the nodes in the blueprint container node
 ///
@@ -42,7 +37,4 @@ void fillGapsCylindrical(Blueprint::Node& node, bool adjustToParent = true);
 /// @param adjustToParent nodes, if nodes should be adjusted to parent
 void fillGapsCuboidal(Blueprint::Node& node, bool adjustToParent = true);
 
-}  // namespace BlueprintHelper
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail::BlueprintHelper

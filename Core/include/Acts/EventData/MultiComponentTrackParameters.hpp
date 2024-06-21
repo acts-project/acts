@@ -275,7 +275,7 @@ class MultiComponentCurvilinearTrackParameters
                            .position();
 
       BoundVector bv =
-          detail::transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
+          transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
 
       // Because of the projection this should never fail
       bv.template segment<2>(eBoundLoc0) =

@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
+import argparse
+
 from pathlib import Path
 
 import acts
 import acts.examples
 from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
-from acts.examples.odd import getOpenDataDetector
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+
+from acts.examples.dd4hep import (
+    DD4hepDetector,
+    DD4hepDetectorOptions,
+    DD4hepGeometryService,
+)
 
 u = acts.UnitConstants
 
@@ -39,10 +46,35 @@ def runGeant4(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
+    p = argparse.ArgumentParser()
+
+    p.add_argument(
+        "--experimental",
+        action=argparse.BooleanOptionalAction,
+        help="Construct experimental geometry",
     )
+
+    args = p.parse_args()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runGeant4(detector, trackingGeometry, field, Path.cwd()).run()
+    if args.experimental:
+        print(">>> Running experimental geometry <<<")
+        odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
+
+        # Create the dd4hep geometry service and detector
+        dd4hepConfig = DD4hepGeometryService.Config()
+        dd4hepConfig.logLevel = acts.logging.INFO
+        dd4hepConfig.xmlFileNames = [str(odd_xml)]
+        dd4hepGeometryService = DD4hepGeometryService(dd4hepConfig)
+        dd4hepDetector = DD4hepDetector(dd4hepGeometryService)
+
+        cOptions = DD4hepDetectorOptions(logLevel=acts.logging.INFO, emulateToGraph="")
+
+        # Context and options
+        geoContext = acts.GeometryContext()
+        [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
+        runGeant4(dd4hepDetector, detector, field, Path.cwd()).run()
+    else:
+        dd4hepDetector, trackingGeometry, decorators = getOpenDataDetector()
+        runGeant4(dd4hepDetector, trackingGeometry, field, Path.cwd()).run()

@@ -23,7 +23,7 @@ Bug reports and feature requests
 --------------------------------
 
 To report an issue and before starting work, please create an issue in the
-`GitHub issue tracker <https://github.com/acts-project/acts-core/issues>`_. A
+`GitHub issue tracker <https://github.com/acts-project/acts/issues>`_. A
 comprehensive explanation will help the development team to respond in a timely
 manner. Verbalising the issue before starting work allows the other contributors
 to chime in and avoids disagreements how to progress.
@@ -76,10 +76,10 @@ be merged in, request a review from the `reviewers team
 request is reviewed, it can be merged in.
 
 To get started with git, please refer to the `short introduction
-<http://git-scm.com/docs/gittutorial>`_ as well as the `full git documentation
+<https://git-scm.com/docs/gittutorial>`_ as well as the `full git documentation
 <https://git-scm.com/doc>`_. Tutorials as well as explanations of concepts and
 workflows with git can also be found on `Atlassian
-<http://www.atlassian.com/git/>`_.
+<https://www.atlassian.com/git/>`_.
 
 Checklist for pull requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -138,8 +138,8 @@ familiar with development process in the Acts project.
    Well-written commit messages are key
    to understand your changes. There are many guidelines available on
    how to write proper commit logs (e.g.
-   `here <http://alistapart.com/article/the-art-of-the-commit>`__,
-   `here <http://chris.beams.io/posts/git-commit/>`__, or
+   `here <https://alistapart.com/article/the-art-of-the-commit>`__,
+   `here <https://cbea.ms/git-commit/>`__, or
    `here <https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages>`__).
    As a short summary:
 
@@ -154,7 +154,7 @@ familiar with development process in the Acts project.
 #. **Prefer git pull --rebase!**
 
    If you work with a colleague on a new
-   development, you may want to include his latest changes. This is
+   development, you may want to include their latest changes. This is
    usually done by calling ``git pull`` which will synchronise your
    local working copy with the remote repository (which may have been
    updated by your colleague). By default, this action creates a merge
@@ -162,9 +162,9 @@ familiar with development process in the Acts project.
    remote repository. These merge commits are considered to contribute
    little information to the development process of the feature and they
    clutter the history (read more e.g.
-   `here <https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/>`__
+   `here <https://www.atlassian.com/blog/it-teams/stop-foxtrots-now>`__
    or
-   `here <http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history>`__).
+   `here <https://fangpenlin.com/posts/2013/09/30/keep-a-readable-git-history/>`__).
    This problem can be avoided by using ``git pull --rebase`` which
    replays your local (un-pushed) commits on the tip of the remote
    branch. You can make this the default behaviour by running
@@ -182,7 +182,7 @@ Coding style and guidelines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Acts project uses
-`clang-format <http://clang.llvm.org/docs/ClangFormat.html>`_ for
+`clang-format <https://clang.llvm.org/docs/ClangFormat.html>`_ for
 formatting its source code. A ``.clang-format`` configuration file comes
 with the project and should be used to automatically format the code.
 Developers can use the provided Docker image to format their project or
@@ -192,7 +192,7 @@ installing `the same clang version as used in the
 CI <https://github.com/acts-project/machines/blob/master/format10/Dockerfile>`_
 is recommended. There are several instructions available on how to
 integrate clang-format with your favourite IDE (e.g. `Xcode <https://github.com/travisjeffery/ClangFormat-Xcode>`_,
-`emacs <http://clang.llvm.org/docs/ClangFormat.html#emacs-integration>`_).
+`emacs <https://clang.llvm.org/docs/ClangFormat.html#emacs-integration>`_).
 The Acts CI system will automatically check code formatting using the
 provided clang-format configuration and will notify incompatible formatting.
 
@@ -269,7 +269,7 @@ member of the reviewers team before being merged but anyone is welcome
 to contribute by commenting on code changes. You can help reviewing
 proposed contributions by going to `the "pull requests" section of the
 Acts (core) GitHub
-repository <https://github.com/acts-project/acts-core/pulls>`_.
+repository <https://github.com/acts-project/acts/pulls>`_.
 
 As some of the guidelines recommended here require rights granted to the
 reviewers team, this guide specifically addresses the people in this

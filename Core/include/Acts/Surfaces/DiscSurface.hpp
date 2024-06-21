@@ -234,21 +234,25 @@ class DiscSurface : public RegularSurface {
   /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from local to global
-  BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const final;
+  BoundToFreeMatrix boundToFreeJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from global to local
-  FreeToBoundMatrix freeToBoundJacobian(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+  FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -327,10 +331,23 @@ class DiscSurface : public RegularSurface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
+  /// Merge two disc surfaces into a single one.
+  /// @image html Disc_Merging.svg
+  /// @note The surfaces need to be *compatible*, i.e. have disc bounds
+  ///       that align
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other The other disc surface to merge with
+  /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @param logger The logger to use
+  /// @return The merged disc surface
+  std::shared_ptr<DiscSurface> mergedWith(
+      const GeometryContext& gctx, const DiscSurface& other,
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
+
  protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
 
 ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, DiscSurface);
 
-}  // end of namespace Acts
+}  // namespace Acts

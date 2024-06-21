@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -228,11 +229,13 @@ class CylinderSurface : public RegularSurface {
   /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -244,6 +247,19 @@ class CylinderSurface : public RegularSurface {
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
+
+  /// Merge two cylinder surfaces into a single one.
+  /// @image html Cylinder_Merging.svg
+  /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
+  ///       that align, and have the same radius
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other The other cylinder surface to merge with
+  /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param logger The logger to use
+  /// @return The merged cylinder surface
+  std::shared_ptr<CylinderSurface> mergedWith(
+      const GeometryContext& gctx, const CylinderSurface& other,
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)

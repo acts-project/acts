@@ -75,6 +75,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     // track as compatible to vertex. If useTime is set to true, the time
     // coordinate also contributes to the significance and tracksMaxSignificance
     // needs to be increased.
+    // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
     double tracksMaxSignificance = 5.;
 
     // Max chi2 value for which tracks are considered compatible with
@@ -98,6 +99,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
     // Maximum significance on the distance between two vertices
     // to allow merging of two vertices.
+    // 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
     double maxMergeVertexSignificance = 3.;
 
     // Minimum weight a track has to have to be considered a compatible

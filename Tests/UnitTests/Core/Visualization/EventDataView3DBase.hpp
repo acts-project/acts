@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -47,8 +46,7 @@
 
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace EventDataView3DTest {
+namespace Acts::EventDataView3DTest {
 
 using Covariance = BoundSquareMatrix;
 
@@ -216,7 +214,8 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
 /// @param helper The visualization helper
 ///
 /// @return an overall string including all written output
-static inline std::string testMeasurement(IVisualization3D& helper) {
+static inline std::string testMeasurement(IVisualization3D& helper,
+                                          const double localErrorScale = 100.) {
   using namespace UnitLiterals;
   std::stringstream ss;
 
@@ -246,7 +245,6 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
         eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
-  double localErrorScale = 100.;
   ViewConfig mcolor({255, 145, 48});
   mcolor.offset = 0.01;
 
@@ -400,5 +398,4 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   return ss.str();
 }
 
-}  // namespace EventDataView3DTest
-}  // namespace Acts
+}  // namespace Acts::EventDataView3DTest

@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 namespace Acts {
@@ -37,8 +38,9 @@ class ElementFraction {
   /// @param e is the atomic number of the element
   /// @param f is the relative fraction and must be a value in [0,1]
   constexpr ElementFraction(unsigned int e, float f)
-      : m_element(static_cast<uint8_t>(e)),
-        m_fraction(static_cast<uint8_t>(f * UINT8_MAX)) {
+      : m_element(static_cast<std::uint8_t>(e)),
+        m_fraction(static_cast<std::uint8_t>(
+            f * std::numeric_limits<std::uint8_t>::max())) {
     assert((0u < e) && ("The atomic number must be positive"));
     assert((0.0f <= f) && (f <= 1.0f) && "Relative fraction must be in [0,1]");
   }
@@ -47,8 +49,8 @@ class ElementFraction {
   /// @param e is the atomic number of the element
   /// @param w is the integer weight and must be a value in [0,256)
   constexpr explicit ElementFraction(unsigned int e, unsigned int w)
-      : m_element(static_cast<uint8_t>(e)),
-        m_fraction(static_cast<uint8_t>(w)) {
+      : m_element(static_cast<std::uint8_t>(e)),
+        m_fraction(static_cast<std::uint8_t>(w)) {
     assert((0u < e) && ("The atomic number must be positive"));
     assert((w < 256u) && "Integer weight must be in [0,256)");
   }
@@ -62,17 +64,18 @@ class ElementFraction {
   ElementFraction& operator=(const ElementFraction&) = default;
 
   /// The element atomic number.
-  constexpr uint8_t element() const { return m_element; }
+  constexpr std::uint8_t element() const { return m_element; }
   /// The relative fraction of this element.
   constexpr float fraction() const {
-    return static_cast<float>(m_fraction) / UINT8_MAX;
+    return static_cast<float>(m_fraction) /
+           std::numeric_limits<std::uint8_t>::max();
   }
 
  private:
   // element atomic number
-  uint8_t m_element;
+  std::uint8_t m_element;
   // element fraction in the compound scaled to the [0,256) range.
-  uint8_t m_fraction;
+  std::uint8_t m_fraction;
 
   friend constexpr bool operator==(ElementFraction lhs, ElementFraction rhs) {
     return (lhs.m_fraction == rhs.m_fraction) &&
@@ -104,9 +107,10 @@ class MaterialComposition {
       total += element.m_fraction;
     }
     // compute scale factor into the [0, 256) range
-    float scale = float(UINT8_MAX) / float(total);
+    float scale = float{std::numeric_limits<std::uint8_t>::max()} / total;
     for (auto& element : m_elements) {
-      element.m_fraction = static_cast<uint8_t>(element.m_fraction * scale);
+      element.m_fraction =
+          static_cast<std::uint8_t>(element.m_fraction * scale);
     }
   }
 

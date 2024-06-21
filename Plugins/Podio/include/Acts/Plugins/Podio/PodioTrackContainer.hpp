@@ -223,7 +223,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   void removeTrack_impl(IndexType itrack);
 
   template <typename T>
-  constexpr void addColumn_impl(const std::string& key) {
+  constexpr void addColumn_impl(std::string_view key) {
     Acts::HashedString hashedKey = hashString(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});

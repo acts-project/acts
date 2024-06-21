@@ -16,8 +16,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
@@ -124,5 +123,4 @@ struct VolumeMaterialInteraction {
   }
 };
 
-}  // namespace detail
-}  // end of namespace Acts
+}  // namespace Acts::detail

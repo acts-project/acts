@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
@@ -22,9 +23,7 @@
 #include <TH1F.h>
 #include <TVectorFfwd.h>
 
-namespace ActsExamples {
-namespace detail {
-namespace NuclearInteractionParametrisation {
+namespace ActsExamples::detail::NuclearInteractionParametrisation {
 
 /// This struct stores a fraction of an event around a nuclear
 /// interaction.
@@ -55,7 +54,8 @@ struct EventFraction {
   float initialMomentum = 0.;
 };
 
-static constexpr uint32_t s_MaxValue = UINT32_MAX;
+static constexpr std::uint32_t s_MaxValue =
+    std::numeric_limits<std::uint32_t>::max();
 using EventCollection = std::vector<EventFraction>;
 using EventProperties = std::vector<std::vector<float>>;
 using ProbabilityDistributions = std::vector<TH1F*>;
@@ -192,6 +192,4 @@ TVectorF softProbability(const EventCollection& events);
 /// @return The cumulative distribution for the nuclear interaction
 CumulativeDistribution cumulativeNuclearInteractionProbability(
     const EventCollection& events, unsigned int interactionProbabilityBins);
-}  // namespace NuclearInteractionParametrisation
-}  // namespace detail
-}  // namespace ActsExamples
+}  // namespace ActsExamples::detail::NuclearInteractionParametrisation

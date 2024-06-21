@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -20,8 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class IGeometryIdGenerator;
 class IInternalStructureBuilder;
@@ -49,15 +49,17 @@ struct Node final {
   /// @param bv the boundary values
   /// @param bss the binning values
   /// @param cs the children of the node
+  /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
        const std::vector<ActsScalar>& bv, const std::vector<BinningValue>& bss,
-       std::vector<std::unique_ptr<Node>> cs = {})
+       std::vector<std::unique_ptr<Node>> cs = {}, const Extent& e = Extent())
       : name(n),
         transform(t),
         boundsType(bt),
         boundaryValues(bv),
         children(std::move(cs)),
-        binning(bss) {
+        binning(bss),
+        extent(e) {
     for_each(children.begin(), children.end(),
              [this](std::unique_ptr<Node>& c) { c->parent = this; });
   }
@@ -69,22 +71,25 @@ struct Node final {
   /// @param bt the boundary type
   /// @param bv the boundary values
   /// @param isb the internal structure builder (optional)
+  /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
        const std::vector<ActsScalar>& bv,
-       std::shared_ptr<const IInternalStructureBuilder> isb = nullptr)
+       std::shared_ptr<const IInternalStructureBuilder> isb = nullptr,
+       const Extent& e = Extent())
       : name(n),
         transform(t),
         boundsType(bt),
         boundaryValues(bv),
-        internalsBuilder(std::move(isb)) {}
+        internalsBuilder(std::move(isb)),
+        extent(e) {}
 
   /// Name identification of this node
   std::string name = "";
   /// Transform definition of this node
   Transform3 transform = Transform3::Identity();
-  /// Boundary definition of this node
-  VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
   /// The boundary type
+  VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
+  /// The associated values
   std::vector<ActsScalar> boundaryValues = {};
   /// Parent node - nullptr for root only
   const Node* parent = nullptr;
@@ -107,6 +112,9 @@ struct Node final {
   /// Internal structure builder - for leaf nodes
   std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
 
+  /// An optional extent object
+  Extent extent = Extent();
+
   /// @brief Check if it is a leaf node
   bool isLeaf() const { return children.empty(); }
 
@@ -122,5 +130,4 @@ struct Node final {
 };
 
 }  // namespace Blueprint
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

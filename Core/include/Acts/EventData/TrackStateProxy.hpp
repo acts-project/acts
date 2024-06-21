@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
@@ -296,6 +295,14 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void unset(TrackStatePropMask target) {
     m_traj->self().unset(target, m_istate);
+  }
+
+  /// Add additional components to the track state
+  /// @note Only available if the track state proxy is not read-only
+  /// @param mask The bitmask that instructs which components to allocate
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void addComponents(TrackStatePropMask mask) {
+    m_traj->self().addTrackStateComponents_impl(m_istate, mask);
   }
 
   /// Reference surface.
@@ -775,40 +782,6 @@ class TrackStateProxy {
   ///       memory range of the measurement vector and covariance.
   /// @return The number of dimensions
   IndexType calibratedSize() const { return m_traj->calibratedSize(m_istate); }
-
-  /// Set the calibrated measurement of this track state from a measurement
-  /// object. This is a convenience function to set the calibrated measurement
-  /// from the @c Acts::Measurement object. In general, you should implement this
-  /// functionality specifically for an (experiment-specific) uncalibrated
-  /// measurement EDM.
-  ///
-  /// @tparam kMeasurementSize Size of the calibrated measurement
-  /// @param meas The measurement object to set
-  ///
-  /// @warning This assumes this TrackState stores it's own calibrated
-  ///       measurement. **If storage is shared with another TrackState, both
-  ///       will be overwritten!**. Also assumes none of the calibrated
-  ///       components is *invalid* (i.e. unset) for this TrackState.
-  /// @note This does not set the reference surface.
-  template <std::size_t kMeasurementSize, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  void setCalibrated(
-      const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
-    static_assert(kMeasurementSize <= M,
-                  "Input measurement must be within the allowed size");
-
-    allocateCalibrated(kMeasurementSize);
-    assert(hasCalibrated());
-
-    calibrated<kMeasurementSize>().setZero();
-    calibrated<kMeasurementSize>().template head<kMeasurementSize>() =
-        meas.parameters();
-    calibratedCovariance<kMeasurementSize>().setZero();
-    calibratedCovariance<kMeasurementSize>()
-        .template topLeftCorner<kMeasurementSize, kMeasurementSize>() =
-        meas.covariance();
-    setProjector(meas.projector());
-  }
 
   /// Allocate storage to be able to store a measurement of size @p measdim.
   /// This must be called **before** setting the measurement content.

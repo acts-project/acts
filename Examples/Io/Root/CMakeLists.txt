@@ -5,10 +5,10 @@ add_library(
   src/RootMaterialWriter.cpp
   src/RootMaterialTrackReader.cpp
   src/RootMaterialTrackWriter.cpp
-  src/RootPlanarClusterWriter.cpp
   src/RootParticleWriter.cpp
   src/RootParticleReader.cpp
   src/RootPropagationStepsWriter.cpp
+  src/RootSeedWriter.cpp
   src/RootSimHitWriter.cpp
   src/RootSimHitReader.cpp
   src/RootSpacepointWriter.cpp
@@ -18,6 +18,8 @@ add_library(
   src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
+  src/RootVertexReader.cpp
+  src/RootVertexWriter.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot
@@ -25,7 +27,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginIdentification ActsExamplesDigitization
+    ActsCore ActsExamplesDigitization
     ActsExamplesFramework ActsExamplesPropagation
     ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads

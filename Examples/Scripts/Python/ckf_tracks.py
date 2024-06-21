@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-from pathlib import Path
-from typing import Optional, Union
-from collections import namedtuple
 
-from acts.examples import Sequencer, GenericDetector, RootParticleReader
+from pathlib import Path
+from typing import Optional
 
 import acts
-
 from acts import UnitConstants as u
+from acts.examples import GenericDetector, RootParticleReader
 
 
 def runCKFTracks(
@@ -69,8 +67,7 @@ def runCKFTracks(
             RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection="particles_input",
-                orderedEvents=False,
+                outputParticles="particles_input",
             )
         )
 
@@ -108,11 +105,15 @@ def runCKFTracks(
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
-        seedingAlgorithm=SeedingAlgorithm.TruthSmeared
-        if truthSmearedSeeded
-        else SeedingAlgorithm.TruthEstimated
-        if truthEstimatedSeeded
-        else SeedingAlgorithm.Default,
+        seedingAlgorithm=(
+            SeedingAlgorithm.TruthSmeared
+            if truthSmearedSeeded
+            else (
+                SeedingAlgorithm.TruthEstimated
+                if truthEstimatedSeeded
+                else SeedingAlgorithm.Default
+            )
+        ),
         geoSelectionConfigFile=geometrySelection,
         outputDirRoot=outputDir,
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared

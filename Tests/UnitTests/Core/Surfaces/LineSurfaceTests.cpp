@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -46,8 +44,9 @@
 
 namespace Acts {
 class AssertionFailureException;
+}  // namespace Acts
 
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -223,14 +222,10 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Vector3 globalPosition{1, 2, 4};
   Vector3 momentum{-1, 1, 1};
   Vector3 direction = momentum.normalized();
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      line.alignmentToPathDerivative(tgContext, parameters);
+      line.alignmentToPathDerivative(tgContext, globalPosition, direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   const double value = std::sqrt(3) / 2;
@@ -358,5 +353,4 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

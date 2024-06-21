@@ -17,7 +17,7 @@ authors = [ "Felix Russo",]
 title = "Gaussian Track Densities"
 description = "Given the impact parameters $(d_0, z_0, t_0)$ of a track in Perigee parametrization, one can model the probability of the particle passing exactly through a point $(d, z, t)$ using a multivariate Gaussian distribution. In this white paper, we derive the maximum and the width of such a distribution for $d = 0$. This is useful in vertex seed finding, where we only consider the track density along the beam axis. We use the analytical results from this white paper in the unit test of the Acts module AdaptiveGridTrackDensity."
 [[white_papers]]
-repository = "https://github.com/beomki-yeo/path-correction-term-from-momentum-variation"
+repository = "https://github.com/acts-project/path-correction-term-from-momentum-variation"
 slug = "correction-for-transport-jacobian"
 pdf_url = "https://github.com/acts-project/path-correction-term-from-momentum-variation/releases/download/v2.0/main.pdf"
 

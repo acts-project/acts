@@ -91,8 +91,8 @@ namespace ActsFatras {
 /// easily solved by renumbering the sub-particle identifier within each
 /// generation to contain unique values. However, this can only be done when all
 /// particles are known.
-class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
-  using Base = Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16>;
+class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
+  using Base = Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16>;
 
  public:
   using Base::Base;
@@ -147,6 +147,14 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   /// @param sub sub-particle index of the new barcode.
   Barcode makeDescendant(Value sub = 0u) const {
     return Barcode(*this).setGeneration(generation() + 1).setSubParticle(sub);
+  }
+
+  /// Reduce the barcode to the vertex identifier.
+  constexpr Barcode vertexId() const {
+    // The vertex is identified by primary vertex, secondary vertex, and
+    // generation. The other components are set to 0 so two particle originating
+    // from the same vertex will have the same vertex ID.
+    return Barcode(*this).setParticle(0).setSubParticle(0);
   }
 };
 

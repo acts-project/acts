@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
+// #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -33,8 +34,9 @@
 #include <string>
 #include <utility>
 
-namespace Acts {
-namespace Test {
+using namespace Acts::UnitLiterals;
+
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -265,6 +267,29 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
                   s_onSurfaceTolerance);
 }
 
+BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
+  double shortHalfX{100.};
+  double longHalfX{200.};
+  double halfY{300.};
+  double rotAngle{45._degree};
+
+  Vector2 edgePoint{longHalfX - 10., halfY};
+
+  std::shared_ptr<TrapezoidBounds> bounds =
+      std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY);
+
+  BOOST_CHECK(bounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(!bounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
+                              BoundaryCheck(true)));
+
+  std::shared_ptr<TrapezoidBounds> rotatedBounds =
+      std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY, rotAngle);
+
+  BOOST_CHECK(!rotatedBounds->inside(edgePoint, BoundaryCheck(true)));
+  BOOST_CHECK(rotatedBounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
+                                    BoundaryCheck(true)));
+}
+
 /// Unit test for testing PlaneSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // bounds object, rectangle type
@@ -275,7 +300,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
   RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 
-  auto pTransform = Transform3(translation * rotationMat);
+  auto pTransform = Transform3{translation * rotationMat};
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
 
@@ -292,14 +317,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
 
-  // Construct a free parameters
-  FreeVector parameters = FreeVector::Zero();
-  parameters.head<3>() = globalPosition;
-  parameters.segment<3>(eFreeDir0) = direction;
-
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
+                                                    direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 1, 0, 0, 2, -1, -2;
@@ -320,8 +341,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   FreeVector derivatives = FreeVector::Zero();
   derivatives.head<3>() = direction;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
-                                                     derivatives);
+      planeSurfaceObject->alignmentToBoundDerivative(tgContext, globalPosition,
+                                                     direction, derivatives);
   const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
   const AlignmentToPathMatrix alignToloc1 =
@@ -338,6 +359,4 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

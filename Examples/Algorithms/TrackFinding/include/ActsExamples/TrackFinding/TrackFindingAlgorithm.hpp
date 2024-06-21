@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,12 +17,13 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
-#include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -86,23 +87,41 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::string inputSourceLinks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
+    /// Input seeds. These are optional and allow for seed deduplication.
+    /// The seeds must match the initial track parameters.
+    std::string inputSeeds;
     /// Output find trajectories collection.
     std::string outputTracks;
+
+    /// The tracking geometry that should be used.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+    /// The magnetic field that should be used.
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
 
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
-    /// Compute shared hit information
-    bool computeSharedHits = false;
     /// Track selector config
     std::optional<std::variant<Acts::TrackSelector::Config,
                                Acts::TrackSelector::EtaBinnedConfig>>
         trackSelectorCfg = std::nullopt;
-    /// Run backward finding
-    bool backward = false;
+
     /// Maximum number of propagation steps
     unsigned int maxSteps = 100000;
+    /// Extrapolation strategy
+    Acts::TrackExtrapolationStrategy extrapolationStrategy =
+        Acts::TrackExtrapolationStrategy::firstOrLast;
+    /// Run finding in two directions
+    bool twoWay = true;
+    /// Whether to use seed deduplication
+    /// This is only available if `inputSeeds` is set.
+    bool seedDeduplication = false;
+    /// Whether to stick on the seed measurements during track finding.
+    /// This is only available if `inputSeeds` is set.
+    bool stayOnSeed = false;
+    /// Compute shared hit information
+    bool computeSharedHits = false;
   };
 
   /// Constructor of the track finding algorithm
@@ -136,14 +155,20 @@ class TrackFindingAlgorithm final : public IAlgorithm {
                                                            "InputMeasurements"};
   ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
       this, "InputSourceLinks"};
-
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
+  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
   mutable std::atomic<std::size_t> m_nTotalSeeds{0};
+  mutable std::atomic<std::size_t> m_nDeduplicatedSeeds{0};
   mutable std::atomic<std::size_t> m_nFailedSeeds{0};
+  mutable std::atomic<std::size_t> m_nFailedSmoothing{0};
+  mutable std::atomic<std::size_t> m_nFailedExtrapolation{0};
+  mutable std::atomic<std::size_t> m_nFoundTracks{0};
+  mutable std::atomic<std::size_t> m_nSelectedTracks{0};
+  mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {

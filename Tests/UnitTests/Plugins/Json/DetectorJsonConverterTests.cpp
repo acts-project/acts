@@ -21,7 +21,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -169,8 +169,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
     lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
     lsConfig.surfacesProvider = endcapSurfaces;
     lsConfig.binnings = {Acts::Experimental::ProtoBinning(
-        Acts::binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI, 22u,
-        1u)};
+        Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 22u, 1u)};
 
     auto layerBuilder =
         std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -178,9 +177,10 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
                                              Acts::Logging::VERBOSE));
 
     Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
-    shapeConfig.boundValues = {20, 100, 10., M_PI, 0.};
-    shapeConfig.transform = Acts::Transform3(Acts::Transform3::Identity())
-                                .pretranslate(Acts::Vector3(0., 0., ep));
+    shapeConfig.boundValues = {18, 100, 10., M_PI, 0.};
+    shapeConfig.transform =
+        Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
+            Acts::Vector3(0., 0., ep));
     shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
     auto shapeBuilder =
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
 
   // Central barrel
   Acts::Experimental::VolumeStructureBuilder::Config innerShapeConfig;
-  innerShapeConfig.boundValues = {20., 60., 700., M_PI, 0.};
+  innerShapeConfig.boundValues = {18., 60., 700., M_PI, 0.};
   innerShapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto innerShapeBuilder =
@@ -229,12 +229,11 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
-  lsConfig.binnings = {Acts::Experimental::ProtoBinning{
-                           Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
-                           -480., 480., 14u, 1u},
-                       Acts::Experimental::ProtoBinning(
-                           Acts::binPhi, Acts::detail::AxisBoundaryType::Closed,
-                           -M_PI, M_PI, 32u, 1u)};
+  lsConfig.binnings = {
+      Acts::Experimental::ProtoBinning{
+          Acts::binZ, Acts::AxisBoundaryType::Bound, -480., 480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(
+          Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 32u, 1u)};
 
   auto barrelBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -298,7 +297,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
 
   // Beam Pipe
   Acts::Experimental::VolumeStructureBuilder::Config bpShapeConfig;
-  bpShapeConfig.boundValues = {0., 20., 720., M_PI, 0.};
+  bpShapeConfig.boundValues = {0., 18., 720., M_PI, 0.};
   bpShapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto bpShapeBuilder =

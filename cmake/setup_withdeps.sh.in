@@ -20,14 +20,22 @@ else
 fi
 
 # source the python and ODD environment
-. $script_dir/python/setup.sh
+# first check if python bindings are enabled
+# then check if the setup.sh file exists
+if [ "@ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS@" = "ON" ]; then
+    if [[ -f "$script_dir/python/setup.sh" ]]; then
+      . "$script_dir/python/setup.sh"
+    else
+      echo "ERROR:   setup.sh for python and ODD is missing."
+      exit 1
+    fi
+else
+  echo "INFO:    Python bindings are disabled."
+fi
 
 # set ACTS and ODD environment variables
-ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
-ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
-
-# modify python environment to include some ACTS helpers
-export PYTHONPATH="$ACTS_SOURCE_DIR/Examples/Scripts/Python:${PYTHONPATH}"
+export ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
+export ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
 
 # make ACTS binaries available
 export PATH="$script_dir/bin:${PATH}"

@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
@@ -157,20 +156,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
           m_cfg.zBinNeighborsBottom.size() &&
       m_cfg.zBinNeighborsBottom.empty() == false) {
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
-  }
-
-  if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
-    // check if zBinsCustomLooping contains numbers from 1 to the total number
-    // of bin in zBinEdges
-    for (std::size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
-      if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
-                    m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
-                    i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
-        throw std::invalid_argument(
-            "Inconsistent config zBinsCustomLooping does not contain the same "
-            "bins as zBinEdges");
-      }
-    }
   }
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {

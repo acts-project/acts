@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-import os
+
+import json
+
 import acts
-from acts import examples, logging, Binning, svg, GeometryContext, Extent
 from acts.examples.dd4hep import (
     DD4hepDetector,
     DD4hepDetectorOptions,
     DD4hepGeometryService,
 )
-
-import json
-
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 if "__main__" == __name__:
@@ -49,6 +47,17 @@ if "__main__" == __name__:
     geoContext = acts.GeometryContext()
     [detector, contextors, store] = dd4hepDetector.finalize(geoContext, cOptions)
 
+    # OBJ style output
+    surfaces = []
+    for vol in detector.volumePtrs():
+        for surf in vol.surfacePtrs():
+            if surf.geometryId().sensitive() > 0:
+                surfaces.append(surf)
+    acts.examples.writeSurfacesObj(
+        surfaces, geoContext, [0, 120, 120], "odd-surfaces.obj"
+    )
+
+    # SVG style output
     surfaceStyle = acts.svg.Style()
     surfaceStyle.fillColor = [5, 150, 245]
     surfaceStyle.fillOpacity = 0.5
@@ -60,7 +69,7 @@ if "__main__" == __name__:
     volumeOptions = acts.svg.DetectorVolumeOptions()
     volumeOptions.surfaceOptions = surfaceOptions
 
-    for ivol in range(detector.number_volumes()):
+    for ivol in range(detector.numberVolumes()):
         acts.svg.viewDetector(
             geoContext,
             detector,
@@ -77,9 +86,9 @@ if "__main__" == __name__:
         geoContext,
         detector,
         "odd",
-        [[ivol, volumeOptions] for ivol in range(detector.number_volumes())],
+        [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
         [["xy", ["sensitives"], xyRange], ["zr", ["materials"], zrRange]],
         "detector",
     )
 
-    # acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")
+    acts.examples.writeDetectorToJsonDetray(geoContext, detector, "odd-detray")

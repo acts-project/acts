@@ -11,13 +11,16 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
 
+namespace ActsExamples {
+
 namespace {
+
 /// @brief Converts an SimParticle into HepMC3::GenParticle
 /// @note The conversion ignores HepMC status codes
 /// @param actsParticle Acts particle that will be converted
 /// @return converted particle
 HepMC3::GenParticlePtr actsParticleToGen(
-    const std::shared_ptr<ActsExamples::SimParticle>& actsParticle) {
+    const std::shared_ptr<SimParticle>& actsParticle) {
   // Extract momentum and energy from Acts particle for HepMC3::FourVector
   const auto mom4 = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom4[0], mom4[1], mom4[2], mom4[3]);
@@ -34,7 +37,7 @@ HepMC3::GenParticlePtr actsParticleToGen(
 /// @param actsVertex Acts vertex that will be converted
 /// @return Converted Acts vertex to HepMC3::GenVertexPtr
 HepMC3::GenVertexPtr createGenVertex(
-    const std::shared_ptr<ActsExamples::SimVertex>& actsVertex) {
+    const std::shared_ptr<SimVertex>& actsVertex) {
   const HepMC3::FourVector vec(
       actsVertex->position4[0], actsVertex->position4[1],
       actsVertex->position4[2], actsVertex->position4[3]);
@@ -42,18 +45,6 @@ HepMC3::GenVertexPtr createGenVertex(
   // Create vertex
   auto genVertex = std::make_shared<HepMC3::GenVertex>(vec);
 
-  // Store incoming particles
-  for (auto& particle : actsVertex->incoming) {
-    HepMC3::GenParticlePtr genParticle = actsParticleToGen(
-        std::make_shared<ActsExamples::SimParticle>(particle));
-    genVertex->add_particle_in(genParticle);
-  }
-  // Store outgoing particles
-  for (auto& particle : actsVertex->outgoing) {
-    HepMC3::GenParticlePtr genParticle = actsParticleToGen(
-        std::make_shared<ActsExamples::SimParticle>(particle));
-    genVertex->add_particle_out(genParticle);
-  }
   return genVertex;
 }
 
@@ -67,7 +58,7 @@ HepMC3::GenVertexPtr createGenVertex(
 /// @param actsVertex Acts vertex
 /// @param genVertex HepMC3::GenVertex
 /// @return boolean result if both vertices are identical
-bool compareVertices(const std::shared_ptr<ActsExamples::SimVertex>& actsVertex,
+bool compareVertices(const std::shared_ptr<SimVertex>& actsVertex,
                      const HepMC3::GenVertexPtr& genVertex) {
   // Compare position, time, number of incoming and outgoing particles between
   // both vertices. Return false if one criterium does not match, else true.
@@ -98,8 +89,8 @@ bool compareVertices(const std::shared_ptr<ActsExamples::SimVertex>& actsVertex,
 /// Setter
 ///
 
-void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
-                                             const double momentumUnit) {
+void HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
+                               const double momentumUnit) {
   // Check, if the momentum unit fits Acts::UnitConstants::MeV or _GeV
   HepMC3::Units::MomentumUnit mom = HepMC3::Units::MomentumUnit::GEV;
   if (momentumUnit == Acts::UnitConstants::MeV) {
@@ -115,8 +106,7 @@ void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
   event.set_units(mom, event.length_unit());
 }
 
-void ActsExamples::HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
-                                           const double lengthUnit) {
+void HepMC3Event::lengthUnit(HepMC3::GenEvent& event, const double lengthUnit) {
   // Check, if the length unit fits Acts::UnitConstants::mm or _cm
   HepMC3::Units::LengthUnit len = HepMC3::Units::LengthUnit::MM;
   if (lengthUnit == Acts::UnitConstants::mm) {
@@ -133,32 +123,30 @@ void ActsExamples::HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
   event.set_units(event.momentum_unit(), len);
 }
 
-void ActsExamples::HepMC3Event::shiftPositionBy(HepMC3::GenEvent& event,
-                                                const Acts::Vector3& deltaPos,
-                                                const double deltaTime) {
+void HepMC3Event::shiftPositionBy(HepMC3::GenEvent& event,
+                                  const Acts::Vector3& deltaPos,
+                                  const double deltaTime) {
   // Create HepMC3::FourVector from position and time for shift
   const HepMC3::FourVector vec(deltaPos(0), deltaPos(1), deltaPos(2),
                                deltaTime);
   event.shift_position_by(vec);
 }
 
-void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
-                                                const Acts::Vector3& pos,
-                                                const double time) {
+void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
+                                  const Acts::Vector3& pos, const double time) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(pos(0), pos(1), pos(2), time);
   event.shift_position_to(vec);
 }
 
-void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
-                                                const Acts::Vector3& pos) {
+void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
+                                  const Acts::Vector3& pos) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(pos(0), pos(1), pos(2), event.event_pos().t());
   event.shift_position_to(vec);
 }
 
-void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
-                                                const double time) {
+void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event, const double time) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(event.event_pos().x(), event.event_pos().y(),
                                event.event_pos().z(), time);
@@ -169,14 +157,14 @@ void ActsExamples::HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
 /// Adder
 ///
 
-void ActsExamples::HepMC3Event::addParticle(
-    HepMC3::GenEvent& event, const std::shared_ptr<SimParticle>& particle) {
+void HepMC3Event::addParticle(HepMC3::GenEvent& event,
+                              const std::shared_ptr<SimParticle>& particle) {
   // Add new particle
   event.add_particle(actsParticleToGen(particle));
 }
 
-void ActsExamples::HepMC3Event::addVertex(
-    HepMC3::GenEvent& event, const std::shared_ptr<SimVertex>& vertex) {
+void HepMC3Event::addVertex(HepMC3::GenEvent& event,
+                            const std::shared_ptr<SimVertex>& vertex) {
   // Add new vertex
   event.add_vertex(createGenVertex(vertex));
 }
@@ -185,8 +173,8 @@ void ActsExamples::HepMC3Event::addVertex(
 /// Remover
 ///
 
-void ActsExamples::HepMC3Event::removeParticle(
-    HepMC3::GenEvent& event, const std::shared_ptr<SimParticle>& particle) {
+void HepMC3Event::removeParticle(HepMC3::GenEvent& event,
+                                 const std::shared_ptr<SimParticle>& particle) {
   const std::vector<HepMC3::GenParticlePtr> genParticles = event.particles();
   const auto id = particle->particleId();
   // Search HepMC3::GenParticle with the same id as the Acts particle
@@ -199,8 +187,8 @@ void ActsExamples::HepMC3Event::removeParticle(
   }
 }
 
-void ActsExamples::HepMC3Event::removeVertex(
-    HepMC3::GenEvent& event, const std::shared_ptr<SimVertex>& vertex) {
+void HepMC3Event::removeVertex(HepMC3::GenEvent& event,
+                               const std::shared_ptr<SimVertex>& vertex) {
   const std::vector<HepMC3::GenVertexPtr> genVertices = event.vertices();
   // Walk over every recorded vertex
   for (auto& genVertex : genVertices) {
@@ -216,22 +204,21 @@ void ActsExamples::HepMC3Event::removeVertex(
 /// Getter
 ///
 
-double ActsExamples::HepMC3Event::momentumUnit(const HepMC3::GenEvent& event) {
+double HepMC3Event::momentumUnit(const HepMC3::GenEvent& event) {
   // HepMC allows only MEV and GEV. This allows an easy identification.
   return (event.momentum_unit() == HepMC3::Units::MomentumUnit::MEV
               ? Acts::UnitConstants::MeV
               : Acts::UnitConstants::GeV);
 }
 
-double ActsExamples::HepMC3Event::lengthUnit(const HepMC3::GenEvent& event) {
+double HepMC3Event::lengthUnit(const HepMC3::GenEvent& event) {
   // HepMC allows only MM and CM. This allows an easy identification.
   return (event.length_unit() == HepMC3::Units::LengthUnit::MM
               ? Acts::UnitConstants::mm
               : Acts::UnitConstants::cm);
 }
 
-Acts::Vector3 ActsExamples::HepMC3Event::eventPos(
-    const HepMC3::GenEvent& event) {
+Acts::Vector3 HepMC3Event::eventPos(const HepMC3::GenEvent& event) {
   // Extract the position from HepMC3::FourVector
   Acts::Vector3 vec;
   vec(0) = event.event_pos().x();
@@ -240,13 +227,12 @@ Acts::Vector3 ActsExamples::HepMC3Event::eventPos(
   return vec;
 }
 
-double ActsExamples::HepMC3Event::eventTime(const HepMC3::GenEvent& event) {
+double HepMC3Event::eventTime(const HepMC3::GenEvent& event) {
   // Extract the time from HepMC3::FourVector
   return event.event_pos().t();
 }
 
-std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::particles(
-    const HepMC3::GenEvent& event) {
+std::vector<SimParticle> HepMC3Event::particles(const HepMC3::GenEvent& event) {
   std::vector<SimParticle> actsParticles;
   const std::vector<HepMC3::ConstGenParticlePtr> genParticles =
       event.particles();
@@ -260,8 +246,8 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::particles(
   return actsParticles;
 }
 
-std::vector<std::unique_ptr<ActsExamples::SimVertex>>
-ActsExamples::HepMC3Event::vertices(const HepMC3::GenEvent& event) {
+std::vector<std::unique_ptr<SimVertex>> HepMC3Event::vertices(
+    const HepMC3::GenEvent& event) {
   std::vector<std::unique_ptr<SimVertex>> actsVertices;
   const std::vector<HepMC3::ConstGenVertexPtr> genVertices = event.vertices();
 
@@ -273,8 +259,7 @@ ActsExamples::HepMC3Event::vertices(const HepMC3::GenEvent& event) {
   return actsVertices;
 }
 
-std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::beams(
-    const HepMC3::GenEvent& event) {
+std::vector<SimParticle> HepMC3Event::beams(const HepMC3::GenEvent& event) {
   std::vector<SimParticle> actsBeams;
   const std::vector<HepMC3::ConstGenParticlePtr> genBeams = event.beams();
 
@@ -286,7 +271,7 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::beams(
   return actsBeams;
 }
 
-std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::finalState(
+std::vector<SimParticle> HepMC3Event::finalState(
     const HepMC3::GenEvent& event) {
   std::vector<HepMC3::ConstGenParticlePtr> particles = event.particles();
   std::vector<SimParticle> fState;
@@ -301,3 +286,5 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Event::finalState(
   }
   return fState;
 }
+
+}  // namespace ActsExamples

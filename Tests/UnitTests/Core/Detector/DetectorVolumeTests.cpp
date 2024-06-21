@@ -21,10 +21,12 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -52,6 +54,75 @@ using namespace Acts::Experimental;
 Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Detector)
+
+BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
+  // Create a surface that is placed way off
+  auto surfaceOutOfBounds = Acts::Surface::makeShared<Acts::CylinderSurface>(
+      Acts::Transform3::Identity() * Acts::Translation3(-1000, 0., 0.),
+      std::make_shared<Acts::CylinderBounds>(1, 1));
+
+  auto vBounds = Acts::CuboidVolumeBounds(10.0, 10.0, 10.0);
+  auto portalGenerator =
+      Acts::Experimental::defaultPortalAndSubPortalGenerator();
+  BOOST_CHECK_THROW(
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, Acts::GeometryContext(),
+          "CubeWithOutofBoundsSurface", Acts::Transform3::Identity(),
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds),
+          {surfaceOutOfBounds}, {}, Acts::Experimental::tryAllSubVolumes(),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      std::invalid_argument);
+
+  // Create a surface that is too big
+  auto surfaceTooBig = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Transform3::Identity() * Acts::Translation3(0, 0., 0.),
+      std::make_shared<Acts::RectangleBounds>(1, 100));
+
+  BOOST_CHECK_THROW(
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, Acts::GeometryContext(), "CubeWithSurfaceTooBig",
+          Acts::Transform3::Identity(),
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {surfaceTooBig},
+          {}, Acts::Experimental::tryAllSubVolumes(),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      std::invalid_argument);
+
+  // Envelope a bigger volume into a smaller one
+  auto bigVolume = Acts::Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, Acts::GeometryContext(), "BigCube",
+      Acts::Transform3::Identity(),
+      std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {}, {},
+      Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortalsAndSurfaces(), 1000);
+
+  auto smallBounds = Acts::CuboidVolumeBounds(1.0, 1.0, 1.0);
+  BOOST_CHECK_THROW(
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, Acts::GeometryContext(),
+          "SmallCubeWithBigCubeInside", Acts::Transform3::Identity(),
+          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {},
+          {bigVolume}, Acts::Experimental::tryAllSubVolumes(),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      std::invalid_argument);
+
+  // Envelope a misaligned subvolume
+  auto smallVolumeMisaligned =
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, Acts::GeometryContext(), "SmallCubeMisaligned",
+          Acts::Transform3::Identity() * Acts::Translation3(9.5, 0., 0.),
+          std::make_shared<Acts::CuboidVolumeBounds>(smallBounds), {}, {},
+          Acts::Experimental::tryAllSubVolumes(),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000);
+
+  BOOST_CHECK_THROW(
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, Acts::GeometryContext(), "CubeWithMisalignedVolume",
+          Acts::Transform3::Identity(),
+          std::make_shared<Acts::CuboidVolumeBounds>(vBounds), {},
+          {smallVolumeMisaligned}, Acts::Experimental::tryAllSubVolumes(),
+          Acts::Experimental::tryAllPortalsAndSurfaces(), 1000),
+      std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   Acts::ActsScalar rInner = 10.;

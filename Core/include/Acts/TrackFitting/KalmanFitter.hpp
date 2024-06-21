@@ -195,14 +195,14 @@ struct KalmanFitterResult {
   /// This is the index of the 'tip' of the track stored in multitrajectory.
   /// This corresponds to the last measurement state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// SIZE_MAX is the start of a trajectory.
-  std::size_t lastMeasurementIndex = SIZE_MAX;
+  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   /// This is the index of the 'tip' of the states stored in multitrajectory.
   /// This corresponds to the last state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// SIZE_MAX is the start of a trajectory.
-  std::size_t lastTrackIndex = SIZE_MAX;
+  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -528,7 +528,8 @@ class KalmanFitter {
                          const navigator_t& navigator,
                          result_type& result) const {
       // Check if there is a measurement on track
-      if (result.lastMeasurementIndex == SIZE_MAX) {
+      if (result.lastMeasurementIndex ==
+          Acts::MultiTrajectoryTraits::kInvalid) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
         return KalmanFitterError::ReverseNavigationFailed;
       }
@@ -726,7 +727,10 @@ class KalmanFitter {
 
         // Add a <mask> TrackState entry multi trajectory. This allocates
         // storage for all components, which we will set later.
-        TrackStatePropMask mask = TrackStatePropMask::All;
+        TrackStatePropMask mask =
+            TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+            TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
+            TrackStatePropMask::Calibrated;
         const std::size_t currentTrackIndex = fittedStates.addTrackState(
             mask, Acts::MultiTrajectoryTraits::kInvalid);
 
@@ -744,17 +748,14 @@ class KalmanFitter {
           if (!res.ok()) {
             return res.error();
           }
-          auto& [boundParams, jacobian, pathLength] = *res;
+          const auto& [boundParams, jacobian, pathLength] = *res;
 
           // Fill the track state
-          trackStateProxy.predicted() = std::move(boundParams.parameters());
-          if (boundParams.covariance().has_value()) {
-            trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
-          }
+          trackStateProxy.predicted() = boundParams.parameters();
+          trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-          trackStateProxy.jacobian() = std::move(jacobian);
-          trackStateProxy.pathLength() = std::move(pathLength);
+          trackStateProxy.jacobian() = jacobian;
+          trackStateProxy.pathLength() = pathLength;
         }
 
         // We have predicted parameters, so calibrate the uncalibrated input
@@ -1261,7 +1262,7 @@ class KalmanFitter {
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template propagate(propagatorState);
+    auto result = m_propagator.propagate(propagatorState);
 
     if (!result.ok()) {
       ACTS_ERROR("Propagation failed: " << result.error());
@@ -1281,7 +1282,7 @@ class KalmanFitter {
       return kalmanResult.result.error();
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    auto track = trackContainer.makeTrack();
     track.tipIndex() = kalmanResult.lastMeasurementIndex;
     if (kalmanResult.fittedParameters) {
       const auto& params = kalmanResult.fittedParameters.value();

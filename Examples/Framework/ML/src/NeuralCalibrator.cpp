@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/NeuralCalibrator.hpp"
+
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include <ActsExamples/EventData/NeuralCalibrator.hpp>
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <TFile.h>
 
@@ -48,7 +50,8 @@ std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
     // Translate each pixel
     int iMat = cell.bin[0] - offset0;
     int jMat = cell.bin[1] - offset1;
-    if (iMat >= 0 && iMat < (int)size0 && jMat >= 0 && jMat < (int)size1) {
+    if (iMat >= 0 && iMat < static_cast<int>(size0) && jMat >= 0 &&
+        jMat < static_cast<int>(size1)) {
       typename Array::Index index = iMat * size0 + jMat;
       if (index < arr.size()) {
         arr(index) = cell.activation;
@@ -167,17 +170,13 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
         constexpr std::size_t kSize =
             std::remove_reference_t<decltype(measurement)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::SourceLink sl{idxSourceLink};
-
-        Acts::Measurement<Acts::BoundIndices, kSize> calibrated(
-            std::move(sl), indices, cpar, ccov);
-
-        trackState.allocateCalibrated(calibrated.size());
-        trackState.setCalibrated(calibrated);
+        trackState.allocateCalibrated(kSize);
+        trackState.template calibrated<kSize>() = cpar;
+        trackState.template calibratedCovariance<kSize>() = ccov;
+        trackState.setProjector(measurement.projector());
       },
       measurements[idxSourceLink.index()]);
 }

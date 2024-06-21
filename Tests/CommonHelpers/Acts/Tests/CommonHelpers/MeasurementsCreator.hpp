@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -23,8 +22,7 @@
 #include <random>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 /// All supported simulated measurement types.
 enum class MeasurementType {
@@ -172,5 +170,4 @@ Measurements createMeasurements(const propagator_t& propagator,
   return std::move(result.template get<Measurements>());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

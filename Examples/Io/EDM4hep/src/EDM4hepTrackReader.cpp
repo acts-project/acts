@@ -51,7 +51,7 @@ ProcessCode EDM4hepTrackReader::read(const AlgorithmContext& ctx) {
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   for (const auto& inputTrack : trackCollection) {
-    auto track = tracks.getTrack(tracks.addTrack());
+    auto track = tracks.makeTrack();
     Acts::EDM4hepUtil::readTrack(inputTrack, track, m_cfg.Bz);
   }
 
