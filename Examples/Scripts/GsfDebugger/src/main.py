@@ -31,6 +31,7 @@ def main():
         with open(args["logfile"], "r") as f:
             lines = f.readlines()
     else:
+        print("Read from standard input...")
         lines = sys.stdin.readlines()
 
     # Group the log into steps to forward it to the processors
