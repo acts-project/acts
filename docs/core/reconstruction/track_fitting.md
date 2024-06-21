@@ -306,24 +306,21 @@ The implementation is in some points similar to the KF, since the KF interface w
 This makes it easier to replace both fitters with each other.
 The structure of the *GX2F* implementation follows coarsely the mathematical outline given above.
 It is best to start reading the implementation from `fit()`:
+
 1. Set up the fitter:
-   - Actor
-   - Aborter
-   - Propagator
-   - Variables we need longer than one iteration
+    - Actor
+    - Aborter
+    - Propagator
+    - Variables we need longer than one iteration
 2. Iterate
-   1. Update parameters
-   2. Propagate through geometry
-   3. Collect:
-       - Residuals
-       - Covariances
-       - Projected Jacobians
-   4. Loop over collection and calculate and sum over:
-       - $\chi^2$
-       - $[a_{kl}]$
-       - $\vec b$
-   5. Solve $[a_{kl}] \vec{\delta\alpha}_n = \vec b$
-   6. Check for convergence
+    1. Update parameters
+    2. Propagate through geometry
+    3. Loop over track and calculate and sum over:
+        - $\chi^2$
+        - $[a_{kl}]$
+        - $\vec b$
+    4. Solve $[a_{kl}] \vec{\delta\alpha}_n = \vec b$
+    5. Check for convergence
 3. Calculate covariance of the final parameters
 4. Prepare and return the final track
 
