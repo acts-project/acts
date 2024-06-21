@@ -9,7 +9,7 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success' && github.repository == "acts-project"
     steps:
       - name: Dump job context
         env:
@@ -114,7 +114,7 @@ jobs:
           ls -al build/coverage
 
       - name: Run sonar-scanner (PR mode)
-        if: github.event.workflow_run.event == 'pull_request' && github.repository == "acts-project"
+        if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
@@ -129,7 +129,7 @@ jobs:
             --define sonar.pullrequest.base="${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}"
 
       - name: Run sonar-scanner (push mode)
-        if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main' && github.repository == "acts-project"
+        if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
