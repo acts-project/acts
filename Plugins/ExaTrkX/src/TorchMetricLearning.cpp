@@ -30,14 +30,15 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
   if (m_deviceType == torch::kCPU) {
-    ACTS_INFO("Running on CPU...");
+    ACTS_DEBUG("Running on CPU...");
   } else {
     if (cfg.deviceID >= 0 &&
         static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
       ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
       m_device = torch::Device(torch::kCUDA, cfg.deviceID);
     } else {
-      ACTS_FATAL("GPU device " << cfg.deviceID << " not available. ");
+      ACTS_WARNING("GPU device " << cfg.deviceID
+                                 << " not available, falling back to CPU.");
     }
   }
 
@@ -66,7 +67,11 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
     torch::Device device) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
-  c10::cuda::CUDAGuard device_guard(device.index());
+
+  // add a protection to avoid calling for kCPU
+  if (device.is_cuda()) {
+    c10::cuda::CUDAGuard device_guard(device.index());
+  }
 
   const int64_t numAllFeatures = inputValues.size() / numNodes;
 

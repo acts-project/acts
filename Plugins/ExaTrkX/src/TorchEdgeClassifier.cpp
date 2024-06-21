@@ -26,14 +26,15 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
   if (m_deviceType == torch::kCPU) {
-    ACTS_INFO("Running on CPU...");
+    ACTS_DEBUG("Running on CPU...");
   } else {
     if (cfg.deviceID >= 0 &&
         static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
       ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
       m_device = torch::Device(torch::kCUDA, cfg.deviceID);
     } else {
-      ACTS_FATAL("GPU device " << cfg.deviceID << " not available. ");
+      ACTS_WARNING("GPU device " << cfg.deviceID
+                                 << " not available, falling back to CPU.");
     }
   }
 
@@ -61,7 +62,11 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges, torch::Device device) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
-  c10::cuda::CUDAGuard device_guard(device.index());
+
+  // add a protection to avoid calling for kCPU
+  if (device.is_cuda()) {
+    c10::cuda::CUDAGuard device_guard(device.index());
+  }
 
   auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
