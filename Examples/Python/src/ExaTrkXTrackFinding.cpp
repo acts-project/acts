@@ -186,6 +186,17 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
+  py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(m, "NodeFeature")
+      .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
+      .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
+      .value("Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eZ)
+      .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
+      .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
+      .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterX)
+      .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterY)
+      .value("CellCount", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
+      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellSum);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
