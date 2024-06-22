@@ -301,7 +301,6 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 const int nTestsSelfConsistency = 500;
 const int nTestsRefConsistency = 500;
 int skip = 0;
-bool debugMode = false;
 
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
