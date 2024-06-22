@@ -201,15 +201,17 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == nullptr) {  // this object is empty
-      m_handler = other.m_handler;
-      copyConstruct(other);
+    if (m_handler == other.m_handler) {
+      // same type, but checked before they're not both nullptr
+      copy(std::move(other));
     } else {
-      // @TODO: Support assigning between different types
-      if (m_handler != other.m_handler) {
-        throw std::bad_any_cast{};
+      if (m_handler != nullptr) {
+        // this object is not empty, but have different types => destroy
+        destroy();
       }
-      copy(other);
+      assert(m_handler == nullptr);
+      m_handler = other.m_handler;
+      copyConstruct(std::move(other));
     }
     return *this;
   }
@@ -234,16 +236,19 @@ class AnyBase : public AnyBaseAll {
       return *this;
     }
 
-    if (m_handler == nullptr) {  // this object is empty
+    if (m_handler == other.m_handler) {
+      // same type, but checked before they're not both nullptr
+      move(std::move(other));
+    } else {
+      if (m_handler != nullptr) {
+        // this object is not empty, but have different types => destroy
+        destroy();
+      }
+      assert(m_handler == nullptr);
       m_handler = other.m_handler;
       moveConstruct(std::move(other));
-    } else {
-      // @TODO: Support assigning between different types
-      if (m_handler != other.m_handler) {
-        throw std::bad_any_cast{};
-      }
-      move(std::move(other));
     }
+
     return *this;
   }
 
@@ -331,8 +336,8 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
       m_handler->destroy(dataPtr());
-      m_handler = nullptr;
     }
+    m_handler = nullptr;
   }
 
   void moveConstruct(AnyBase&& fromAny) {
@@ -496,8 +501,9 @@ class AnyBase : public AnyBaseAll {
 #elif defined(__SSE__)
                std::size_t{16}
 #else
-               std::size_t{0}  // Neutral element
-                               // for maximum
+               std::size_t{0}
+  // Neutral element
+  // for maximum
 #endif
       );
 

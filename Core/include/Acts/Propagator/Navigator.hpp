@@ -420,15 +420,9 @@ class Navigator {
           // this was the last surface, check if we have layers
           if (!state.navigation.navLayers.empty()) {
             ++state.navigation.navLayerIndex;
-          } else if (state.navigation.startLayer != nullptr &&
-                     state.navigation.currentSurface->associatedLayer() ==
-                         state.navigation.startLayer) {
-            // this was the start layer, switch to layer target next
-            state.navigation.navigationStage = Stage::layerTarget;
-            return;
           } else {
-            // no layers, go to boundary
-            state.navigation.navigationStage = Stage::boundaryTarget;
+            state.navigation.navigationStage = Stage::layerTarget;
+            ACTS_VERBOSE(volInfo(state) << "Target layers.");
             return;
           }
         }

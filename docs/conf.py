@@ -60,6 +60,8 @@ myst_dmath_allow_labels = True
 
 linkcheck_retries = 5
 linkcheck_ignore = [
+    r"https://doi.org/.*",  # frequently unreachable
+    r"https://pythia.org.*",  # frequently unreachable
     r"https://eigen.tuxfamily.org.*",  # frequently down
 ]
 
