@@ -28,11 +28,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
 
   // For Closed Boundary: out-of-bounds lookups wrap-around to the other side of
   // the axis.
-  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                     Acts::detail::AxisBoundaryType::Closed>
-      xAxisClosed(0, 100, nBins);
-  Acts::Grid<double, decltype(xAxisClosed)> gridClosed(
-      std::make_tuple(std::move(xAxisClosed)));
+  Acts::Axis xAxisClosed(AxisClosed, 0, 100, nBins);
+  Acts::Grid gridClosed(Type<double>, std::move(xAxisClosed));
 
   auto lowerClosedNeighbours = binFinder.findBins(lowerBound, gridClosed);
   BOOST_CHECK_EQUAL(lowerClosedNeighbours.size(), 3ul);
@@ -48,11 +45,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
 
   // For Open Boundary [default]: out-of-bounds lookups resolve to dedicated
   // underflow and overflow bins.
-  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                     Acts::detail::AxisBoundaryType::Open>
-      xAxisOpen(0, 100, nBins);
-  Acts::Grid<double, decltype(xAxisOpen)> gridOpen(
-      std::make_tuple(std::move(xAxisOpen)));
+  Acts::Axis xAxisOpen(AxisOpen, 0, 100, nBins);
+  Acts::Grid gridOpen(Type<double>, std::move(xAxisOpen));
 
   auto lowerOpenNeighbours = binFinder.findBins(lowerBound, gridOpen);
   BOOST_CHECK_EQUAL(lowerOpenNeighbours.size(), 3ul);
@@ -67,11 +61,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_boundTypes) {
   BOOST_CHECK_EQUAL(upperOpenNeighbours[2ul], 11ul);
 
   // For Bound Boundary: out-of-bounds lookups resolve to the closest valid bin.
-  Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                     Acts::detail::AxisBoundaryType::Bound>
-      xAxisBound(0, 100, nBins);
-  Acts::Grid<double, decltype(xAxisBound)> gridBound(
-      std::make_tuple(std::move(xAxisBound)));
+  Acts::Axis xAxisBound(AxisBound, 0, 100, nBins);
+  Acts::Grid gridBound(Type<double>, std::move(xAxisBound));
 
   auto lowerBoundNeighbours = binFinder.findBins(lowerBound, gridBound);
   BOOST_CHECK_EQUAL(lowerBoundNeighbours.size(), 2ul);
@@ -104,9 +95,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_constructor) {
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_ints) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
-      std::make_tuple(std::move(xAxis)));
+  Acts::Axis xAxis(0, 100, nBins);
+  Acts::Grid grid(Type<double>, std::move(xAxis));
 
   std::array<std::size_t, 1ul> locPosition({3ul});
 
@@ -140,11 +130,9 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_ints) {
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_ints) {
   const std::size_t nBinsX = 10ul;
   const std::size_t nBinsY = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::Axis xAxis(0, 100, nBinsX);
+  Acts::Axis yAxis(0, 100, nBinsY);
+  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
 
   std::array<std::size_t, 2ul> locPosition({3ul, 6ul});
 
@@ -185,13 +173,11 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_3d_ints) {
   const std::size_t nBinsX = 10ul;
   const std::size_t nBinsY = 10ul;
   const std::size_t nBinsZ = 3ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::detail::EquidistantAxis zAxis(0, 100, nBinsZ);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis),
-                           std::move(zAxis)));
+  Acts::Axis xAxis(0, 100, nBinsX);
+  Acts::Axis yAxis(0, 100, nBinsY);
+  Acts::Axis zAxis(0, 100, nBinsZ);
+  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis),
+                  std::move(zAxis));
 
   std::array<std::size_t, 3ul> locPosition({3ul, 6ul, 2ul});
 
@@ -214,9 +200,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_3d_ints) {
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
-      std::make_tuple(std::move(xAxis)));
+  Acts::Axis xAxis(0, 100, nBins);
+  Acts::Grid grid(Type<double>, std::move(xAxis));
 
   std::array<std::size_t, 1ul> locPosition({3ul});
 
@@ -249,9 +234,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair) {
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair_asymmetric) {
   const std::size_t nBins = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
-      std::make_tuple(std::move(xAxis)));
+  Acts::Axis xAxis(0, 100, nBins);
+  Acts::Grid grid(Type<double>, std::move(xAxis));
 
   std::array<std::size_t, 1ul> locPosition({3ul});
 
@@ -268,11 +252,9 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pair_asymmetric) {
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pair) {
   const std::size_t nBinsX = 10ul;
   const std::size_t nBinsY = 10ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::Axis xAxis(0, 100, nBinsX);
+  Acts::Axis yAxis(0, 100, nBinsY);
+  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
 
   std::array<std::size_t, 2ul> locPosition({3ul, 6ul});
 
@@ -313,9 +295,8 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pair) {
 
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pattern) {
   const std::size_t nBins = 5ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBins);
-  Acts::Grid<double, Acts::detail::EquidistantAxis> grid(
-      std::make_tuple(std::move(xAxis)));
+  Acts::Axis xAxis(0, 100, nBins);
+  Acts::Grid grid(Type<double>, std::move(xAxis));
 
   std::array<std::vector<std::size_t>, 1ul> navigation;
   navigation[0ul].resize(nBins);
@@ -371,11 +352,9 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_1d_pattern) {
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pattern) {
   const std::size_t nBinsX = 5ul;
   const std::size_t nBinsY = 3ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::Axis xAxis(0, 100, nBinsX);
+  Acts::Axis yAxis(0, 100, nBinsY);
+  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[0ul].resize(nBinsX);
@@ -421,11 +400,9 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_pattern) {
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_empty_pattern) {
   const std::size_t nBinsX = 5ul;
   const std::size_t nBinsY = 3ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::Axis xAxis(0, 100, nBinsX);
+  Acts::Axis yAxis(0, 100, nBinsY);
+  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[0ul].resize(nBinsX);
@@ -452,11 +429,9 @@ BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_empty_pattern) {
 BOOST_AUTO_TEST_CASE(grid_binfinder_test_2d_mixed) {
   const std::size_t nBinsX = 5ul;
   const std::size_t nBinsY = 3ul;
-  Acts::detail::EquidistantAxis xAxis(0, 100, nBinsX);
-  Acts::detail::EquidistantAxis yAxis(0, 100, nBinsY);
-  Acts::Grid<double, Acts::detail::EquidistantAxis,
-             Acts::detail::EquidistantAxis>
-      grid(std::make_tuple(std::move(xAxis), std::move(yAxis)));
+  Acts::Axis xAxis(0, 100, nBinsX);
+  Acts::Axis yAxis(0, 100, nBinsY);
+  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[0ul].resize(nBinsX);
