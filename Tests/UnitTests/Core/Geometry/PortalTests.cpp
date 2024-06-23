@@ -36,6 +36,8 @@ struct Fixture {
   ~Fixture() { Acts::Logging::setFailureThreshold(m_level); }
 };
 
+GeometryContext gctx;
+
 BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
 
 BOOST_AUTO_TEST_SUITE(GridMerging)
@@ -43,6 +45,8 @@ BOOST_AUTO_TEST_SUITE(GridMerging)
 BOOST_AUTO_TEST_CASE(Merging1dCylinder) {
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
                                                   100_mm);
+
+  std::cout << cyl->toStream(gctx) << std::endl;
 
   BOOST_TEST_CONTEXT("z Binning") {
     BOOST_CHECK_THROW(
@@ -56,8 +60,8 @@ BOOST_AUTO_TEST_CASE(Merging1dCylinder) {
 
     // Another cylinder, shifted in z
     auto cyl2 = Surface::makeShared<CylinderSurface>(
-
         Transform3{Translation3{Vector3::UnitZ() * 200_mm}}, 30_mm, 100_mm);
+    std::cout << cyl2->toStream(gctx) << std::endl;
 
     std::unique_ptr<GridPortalLink> grid1dCyl2 =
         GridPortalLink::make(*cyl, GridPortalLink::Direction::loc1,
