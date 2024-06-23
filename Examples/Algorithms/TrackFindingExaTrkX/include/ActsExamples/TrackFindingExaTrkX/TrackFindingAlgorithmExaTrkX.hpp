@@ -37,10 +37,19 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     eX,
     eY,
     eZ,
+    eEta,
     eCellCount,
     eCellSum,
     eClusterX,
-    eClusterY
+    eClusterY,
+    eCluster1R,
+    eCluster2R,
+    eCluster1Phi,
+    eCluster2Phi,
+    eCluster1Z,
+    eCluster2Z,
+    eCluster1Eta,
+    eCluster2Eta,
   };
 
   struct Config {

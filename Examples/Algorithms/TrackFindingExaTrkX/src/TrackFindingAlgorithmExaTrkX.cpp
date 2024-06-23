@@ -119,6 +119,14 @@ class ExamplesEdmHook : public Acts::ExaTrkXHook {
   }
 };
 
+// TODO do we have these function in the repo somewhere?
+float theta(float r, float z) {
+  return std::atan2(r, z);
+}
+float eta(float r, float z) {
+  return -std::log(std::tan(0.5 * theta(r, z)));
+}
+
 }  // namespace
 
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
@@ -222,28 +230,37 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // per spacepoint
     // TODO does it work for the module map construction to use only the first
     // sp?
-    const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
-    spacepointIDs.push_back(sl.index());
-    moduleIds.push_back(sl.geometryId().value());
+    const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
+    spacepointIDs.push_back(sl1.index());
+    moduleIds.push_back(sl1.geometryId().value());
 
     // This should be fine, because check in constructor
-    const Cluster* cl = clusters ? &clusters->at(sl.index()) : nullptr;
+    Cluster* cl1 = clusters ? &clusters->at(sl1.index()) : nullptr;
+    Cluster* cl2 = cl1;
+
+    if (sp.sourceLinks().size() == 2) {
+      const auto& sl2 = sp.sourceLinks()[1].template get<IndexSourceLink>();
+      cl2 = clusters ? &clusters->at(sl2.index()) : nullptr;
+    }
 
     // I would prefer to use a std::span or boost::span here once available
     float* f = features.data() + isp * numFeatures;
 
+    using NF = NodeFeature;
+
     for (auto ift = 0ul; ift < numFeatures; ++ift) {
       // clang-format off
       switch(m_cfg.nodeFeatures[ift]) {
-        break; case NodeFeature::eR:   f[ift] = std::hypot(sp.x(), sp.y());
-        break; case NodeFeature::ePhi: f[ift] = std::atan2(sp.y(), sp.x());
-        break; case NodeFeature::eZ:   f[ift] = sp.z();
-        break; case NodeFeature::eX:   f[ift] = sp.x();
-        break; case NodeFeature::eY:   f[ift] = sp.y();
-        break; case NodeFeature::eClusterX:  f[ift] = cl->sizeLoc0;
-        break; case NodeFeature::eClusterY:  f[ift] = cl->sizeLoc1;
-        break; case NodeFeature::eCellSum:   f[ift] = cl->sumActivations();
-        break; case NodeFeature::eCellCount: f[ift] = cl->channels.size();
+        break; case NF::eR:         f[ift] = std::hypot(sp.x(), sp.y());
+        break; case NF::ePhi:       f[ift] = std::atan2(sp.y(), sp.x());
+        break; case NF::eZ:         f[ift] = sp.z();
+        break; case NF::eX:         f[ift] = sp.x();
+        break; case NF::eY:         f[ift] = sp.y();
+        break; case NF::eEta:       f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
+        break; case NF::eClusterX:  f[ift] = cl1->sizeLoc0;
+        break; case NF::eClusterY:  f[ift] = cl1->sizeLoc1;
+        break; case NF::eCellSum:   f[ift] = cl1->sumActivations();
+        break; case NF::eCellCount: f[ift] = cl1->channels.size();
       }
       // clang-format on
 
