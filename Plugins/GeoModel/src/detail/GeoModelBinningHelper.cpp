@@ -24,10 +24,10 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
         "GeoModelBinningHelper: Invalid number of binning details, at least "
         "the axis boundary type and the number of bins are needed.");
   }
-  detail::AxisBoundaryType boundaryType = detail::AxisBoundaryType::Bound;
+  AxisBoundaryType boundaryType = AxisBoundaryType::Bound;
   std::string axisBoundaryToken = binningDetails[0];
   if (axisBoundaryToken == "closed") {
-    boundaryType = detail::AxisBoundaryType::Closed;
+    boundaryType = AxisBoundaryType::Closed;
   } else if (axisBoundaryToken != "bound") {
     throw std::invalid_argument(
         "GeoModelBinningHelper: Axis boundary type needs to be closed or "
@@ -46,7 +46,7 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   ActsScalar rangeMin = 0.;
   ActsScalar rangeMax = 0.;
   if (bValue == BinningValue::binPhi &&
-      boundaryType == detail::AxisBoundaryType::Closed) {
+      boundaryType == AxisBoundaryType::Closed) {
     rangeMin = -M_PI;
     rangeMax = M_PI;
   } else {

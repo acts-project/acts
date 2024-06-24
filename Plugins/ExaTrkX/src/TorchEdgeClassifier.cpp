@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
+#include <c10/cuda/CUDAGuard.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -19,9 +20,24 @@ namespace Acts {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                          std::unique_ptr<const Logger> _logger)
-    : m_logger(std::move(_logger)), m_cfg(cfg) {
+    : m_logger(std::move(_logger)),
+      m_cfg(cfg),
+      m_device(torch::Device(torch::kCPU)) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  if (m_deviceType == torch::kCPU) {
+    ACTS_DEBUG("Running on CPU...");
+  } else {
+    if (cfg.deviceID >= 0 &&
+        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
+      m_device = torch::Device(torch::kCUDA, cfg.deviceID);
+    } else {
+      ACTS_WARNING("GPU device " << cfg.deviceID
+                                 << " not available, falling back to CPU.");
+    }
+  }
+
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
@@ -33,7 +49,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_deviceType);
+    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_device);
     m_model->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -42,12 +58,21 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
 
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
+<<<<<<< HEAD
 std::tuple<std::any, std::any, std::any, std::any>
 TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
                                 std::any inEdgeFeatures, int deviceHint) {
+=======
+std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
+    std::any inputNodes, std::any inputEdges, torch::Device device) {
+>>>>>>> main
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
-  const torch::Device device(m_deviceType, deviceHint);
+
+  // add a protection to avoid calling for kCPU
+  if (device.is_cuda()) {
+    c10::cuda::CUDAGuard device_guard(device.index());
+  }
 
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
   auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);

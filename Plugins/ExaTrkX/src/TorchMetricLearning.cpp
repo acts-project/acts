@@ -11,6 +11,7 @@
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
+#include <c10/cuda/CUDAGuard.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -22,9 +23,25 @@ namespace Acts {
 
 TorchMetricLearning::TorchMetricLearning(const Config &cfg,
                                          std::unique_ptr<const Logger> _logger)
-    : m_logger(std::move(_logger)), m_cfg(cfg) {
+    : m_logger(std::move(_logger)),
+      m_cfg(cfg),
+      m_device(torch::Device(torch::kCPU)) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+
+  if (m_deviceType == torch::kCPU) {
+    ACTS_DEBUG("Running on CPU...");
+  } else {
+    if (cfg.deviceID >= 0 &&
+        static_cast<std::size_t>(cfg.deviceID) < torch::cuda::device_count()) {
+      ACTS_DEBUG("GPU device " << cfg.deviceID << " is being used.");
+      m_device = torch::Device(torch::kCUDA, cfg.deviceID);
+    } else {
+      ACTS_WARNING("GPU device " << cfg.deviceID
+                                 << " not available, falling back to CPU.");
+    }
+  }
+
   ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
                                     << TORCH_VERSION_MINOR << "."
                                     << TORCH_VERSION_PATCH);
@@ -36,7 +53,7 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath, m_deviceType);
+    *m_model = torch::jit::load(m_cfg.modelPath, m_device);
     m_model->eval();
   } catch (const c10::Error &e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -45,12 +62,22 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 
 TorchMetricLearning::~TorchMetricLearning() {}
 
+<<<<<<< HEAD
 std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
     const std::vector<uint64_t> & /*moduleIds*/, int deviceHint) {
+=======
+std::tuple<std::any, std::any> TorchMetricLearning::operator()(
+    std::vector<float> &inputValues, std::size_t numNodes,
+    torch::Device device) {
+>>>>>>> main
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
-  const torch::Device device(m_deviceType, deviceHint);
+
+  // add a protection to avoid calling for kCPU
+  if (device.is_cuda()) {
+    c10::cuda::CUDAGuard device_guard(device.index());
+  }
 
   const std::int64_t numAllFeatures = inputValues.size() / numNodes;
 

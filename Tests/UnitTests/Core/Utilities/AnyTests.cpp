@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
     BOOST_CHECK_NE(a.as<int>(), v + 1);
 
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
-    BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
   CHECK_ANY_ALLOCATIONS();
 
@@ -62,7 +61,6 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
                                   a.as<decltype(v)>().end(), v.begin(),
                                   v.end());
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
-    BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
   CHECK_ANY_ALLOCATIONS();
 
@@ -79,7 +77,6 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
                                   a.as<decltype(v)>().end(), v.begin(),
                                   v.end());
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
-    BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
   CHECK_ANY_ALLOCATIONS();
 }
@@ -189,6 +186,62 @@ struct D2 {
 
   ~D2() { *destroyed = true; }
 };
+
+BOOST_AUTO_TEST_CASE(AnyMoveTypeChange) {
+  BOOST_TEST_CONTEXT("Small type") {
+    bool destroyed = false;
+    D d{&destroyed};
+    Any a{std::move(d)};
+    BOOST_CHECK(!destroyed);
+
+    int value = 5;
+    Any b{value};
+    a = std::move(b);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(a.as<int>(), value);
+  }
+
+  bool destroyed = false;
+  BOOST_TEST_CONTEXT("Large type") {
+    D2 d{&destroyed};
+    Any a{std::move(d)};
+    BOOST_CHECK(!destroyed);
+
+    int value = 5;
+    Any b{value};
+    a = std::move(b);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(a.as<int>(), value);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(AnyCopyTypeChange) {
+  BOOST_TEST_CONTEXT("Small type") {
+    bool destroyed = false;
+    D d{&destroyed};
+    Any a{std::move(d)};
+    BOOST_CHECK(!destroyed);
+
+    int value = 5;
+    Any b{value};
+    a = b;
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(a.as<int>(), value);
+  }
+
+  bool destroyed = false;
+  BOOST_TEST_CONTEXT("Large type") {
+    D2 d{&destroyed};
+    Any a{std::move(d)};
+    BOOST_CHECK(!destroyed);
+
+    int value = 5;
+    Any b{value};
+    a = b;
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(a.as<int>(), value);
+  }
+}
 
 BOOST_AUTO_TEST_CASE(AnyDestroy) {
   {  // small type

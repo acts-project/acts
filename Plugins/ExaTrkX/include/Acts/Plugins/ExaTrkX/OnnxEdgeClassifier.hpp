@@ -13,6 +13,8 @@
 
 #include <memory>
 
+#include <torch/script.h>
+
 namespace Ort {
 class Env;
 class Session;
@@ -33,16 +35,17 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
 
   std::tuple<std::any, std::any, std::any, std::any> operator()(
       std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      int deviceHint = -1) override;
+      torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }
+  torch::Device device() const override { return m_device; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;
   const auto &logger() const { return *m_logger; }
 
   Config m_cfg;
-
+  torch::Device m_device;
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
 

@@ -9,32 +9,26 @@
 #pragma once
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <iostream>
 
 // Custom Json encoder/decoders.
 namespace Acts {
 
-namespace detail {
-
 /// @cond
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisBoundaryType,
-                             {{Acts::detail::AxisBoundaryType::Bound, "Bound"},
-                              {Acts::detail::AxisBoundaryType::Open, "Open"},
-                              {Acts::detail::AxisBoundaryType::Closed,
-                               "Closed"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisBoundaryType,
+                             {{Acts::AxisBoundaryType::Bound, "Bound"},
+                              {Acts::AxisBoundaryType::Open, "Open"},
+                              {Acts::AxisBoundaryType::Closed, "Closed"}})
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisType,
-                             {{Acts::detail::AxisType::Equidistant,
-                               "Equidistant"},
-                              {Acts::detail::AxisType::Variable, "Variable"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::AxisType,
+                             {{Acts::AxisType::Equidistant, "Equidistant"},
+                              {Acts::AxisType::Variable, "Variable"}})
 
 /// @endcond
-
-}  // namespace detail
 
 namespace AxisJsonConverter {
 
@@ -195,7 +189,7 @@ template <typename grid_type>
 nlohmann::json toJsonDetray(const grid_type& grid, bool swapAxis = false) {
   nlohmann::json jGrid;
   // Get the grid axes & potentially swap them
-  std::array<const Acts::IAxis*, grid_type::DIM> axes = grid.axes();
+  auto axes = grid.axes();
   if (swapAxis && grid_type::DIM == 2u) {
     std::swap(axes[0u], axes[1u]);
   }

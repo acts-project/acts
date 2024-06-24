@@ -35,12 +35,20 @@ ExaTrkXPipeline::ExaTrkXPipeline(
 }
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
+<<<<<<< HEAD
     std::vector<float> &features, const std::vector<uint64_t> &moduleIds,
     std::vector<int> &spacepointIDs, int deviceHint, const ExaTrkXHook &hook,
     ExaTrkXTiming *timing) const {
   auto t0 = std::chrono::high_resolution_clock::now();
   auto [nodeFeatures, edgeFeatures, edgeIndex] = (*m_graphConstructor)(
       features, spacepointIDs.size(), moduleIds, deviceHint);
+=======
+    std::vector<float> &features, std::vector<int> &spacepointIDs,
+    const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
+  auto t0 = std::chrono::high_resolution_clock::now();
+  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size(),
+                                              m_graphConstructor->device());
+>>>>>>> main
   auto t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {
@@ -49,6 +57,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
   hook(nodeFeatures, edgeIndex, {});
 
+<<<<<<< HEAD
   std::any edgeScores;
   timing->classifierTimes.clear();
 
@@ -57,6 +66,17 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     auto [newNodeFeatures, newEdgeFeatures, newEdgeIndex, newEdgeScores] =
         (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeFeatures),
                           std::move(edgeIndex), deviceHint);
+=======
+  std::any edge_weights;
+  if (timing != nullptr) {
+    timing->classifierTimes.clear();
+  }
+
+  for (auto edgeClassifier : m_edgeClassifiers) {
+    t0 = std::chrono::high_resolution_clock::now();
+    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(
+        std::move(nodes), std::move(edges), edgeClassifier->device());
+>>>>>>> main
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
@@ -72,9 +92,15 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
   }
 
   t0 = std::chrono::high_resolution_clock::now();
+<<<<<<< HEAD
   auto res =
       (*m_trackBuilder)(std::move(nodeFeatures), std::move(edgeIndex),
                         std::move(edgeScores), spacepointIDs, deviceHint);
+=======
+  auto res = (*m_trackBuilder)(std::move(nodes), std::move(edges),
+                               std::move(edge_weights), spacepointIDs,
+                               m_trackBuilder->device());
+>>>>>>> main
   t1 = std::chrono::high_resolution_clock::now();
 
   if (timing != nullptr) {
