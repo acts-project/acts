@@ -138,7 +138,7 @@ class StaticAccessNavigation : public navigation_type {
 ///
 template <typename navigation_type, typename grid_t, typename extractor_type,
           typename filler_type>
-class IndexedUpdaterImpl : public navigation_type {
+class IndexedGridNavigation : public navigation_type {
  public:
   /// Broadcast the grid type
   using grid_type = grid_t;
@@ -159,12 +159,12 @@ class IndexedUpdaterImpl : public navigation_type {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
-  IndexedUpdaterImpl(grid_type&& igrid,
-                     const std::array<BinningValue, grid_type::DIM>& icasts,
-                     const Transform3& itr = Transform3::Identity())
+  IndexedGridNavigation(grid_type&& igrid,
+                        const std::array<BinningValue, grid_type::DIM>& icasts,
+                        const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
-  IndexedUpdaterImpl() = delete;
+  IndexedGridNavigation() = delete;
 
   /// @brief updates the navigation state with objects from the grid according
   /// to the filling type AFTER applying `p3loc = transform * p3`
@@ -197,7 +197,7 @@ class IndexedUpdaterImpl : public navigation_type {
 /// @tparam updators_t the updators that will be called in sequence
 ///
 template <typename navigation_type, typename... updators_t>
-class ChainedUpdaterImpl : public navigation_type {
+class ChainedNavigation : public navigation_type {
  public:
   /// The stored updators
   std::tuple<updators_t...> updators;
@@ -206,7 +206,7 @@ class ChainedUpdaterImpl : public navigation_type {
   /// the tuple and call them in sequence
   ///
   /// @param upts the updators to be called in chain
-  ChainedUpdaterImpl(const std::tuple<updators_t...>&& upts)
+  ChainedNavigation(const std::tuple<updators_t...>&& upts)
       : updators(std::move(upts)) {}
 
   /// A combined navigation state updator w/o intersection specifics

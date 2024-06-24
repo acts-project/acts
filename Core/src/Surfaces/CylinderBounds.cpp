@@ -63,7 +63,7 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
   // \|______|/ r/phi
   // -Z   0  Z
   ///////////////////////////////////
-  float localx =
+  double localx =
       lposition[0] > radius ? 2 * radius - lposition[0] : lposition[0];
   Vector2 shiftedlposition = shifted(lposition);
   if ((std::fabs(shiftedlposition[0]) <= halfPhi &&
@@ -190,4 +190,26 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
     }
   }
   return vertices;
+}
+
+void Acts::CylinderBounds::checkConsistency() noexcept(false) {
+  if (get(eR) <= 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+  }
+  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi)) &&
+      std::abs(std::abs(get(eAveragePhi)) - M_PI) > s_epsilon) {
+    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+  }
+  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
+  }
+  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
+  }
 }
