@@ -168,13 +168,14 @@ class FixedSizeMeasurement {
 
 template <typename indices_t>
 class VariableSizeMeasurement {
-  static constexpr std::size_t kFullSize = detail::kParametersSize<indices_t>;
+  static constexpr std::size_t kFullSize =
+      Acts::detail::kParametersSize<indices_t>;
 
   // TODO variable size
-  using Subspace = detail::VariableSizeSubspace<kFullSize>;
+  using Subspace = Acts::detail::VariableSizeSubspace<kFullSize>;
 
  public:
-  using Scalar = ActsScalar;
+  using Scalar = Acts::ActsScalar;
   /// Vector type containing for measured parameter values.
   using ParametersVector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
   using ParametersVectorMap = Eigen::Map<ParametersVector>;
@@ -185,8 +186,8 @@ class VariableSizeMeasurement {
   using CovarianceMatrixMap = Eigen::Map<CovarianceMatrix>;
   using ConstCovarianceMatrixMap = Eigen::Map<const CovarianceMatrix>;
 
-  using FullParametersVector = ActsVector<kFullSize>;
-  using FullCovarianceMatrix = ActsSquareMatrix<kFullSize>;
+  using FullParametersVector = Acts::ActsVector<kFullSize>;
+  using FullCovarianceMatrix = Acts::ActsSquareMatrix<kFullSize>;
 
   using ProjectionMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, kFullSize>;
   using ExpansionMatrix = Eigen::Matrix<Scalar, kFullSize, Eigen::Dynamic>;
@@ -203,7 +204,7 @@ class VariableSizeMeasurement {
   /// @note The indices must be ordered and must describe/match the content
   ///   of parameters and covariance.
   template <std::size_t kSize, typename parameters_t, typename covariance_t>
-  VariableSizeMeasurement(SourceLink source,
+  VariableSizeMeasurement(Acts::SourceLink source,
                           const std::array<indices_t, kSize>& indices,
                           const parameters_t& params, const covariance_t& cov)
       : m_source(std::move(source)), m_subspace(indices) {
@@ -235,7 +236,7 @@ class VariableSizeMeasurement {
   constexpr std::size_t size() const { return m_subspace.size(); }
 
   /// Source link that connects to the underlying detector readout.
-  const SourceLink& sourceLink() const { return m_source; }
+  const Acts::SourceLink& sourceLink() const { return m_source; }
 
   const Subspace& subspace() const { return m_subspace; }
 
@@ -292,7 +293,7 @@ class VariableSizeMeasurement {
   }
 
  private:
-  SourceLink m_source;
+  Acts::SourceLink m_source;
   Subspace m_subspace;
   std::array<Scalar, kFullSize> m_params{};
   std::array<Scalar, kFullSize * kFullSize> m_cov{};

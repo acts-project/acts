@@ -159,7 +159,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
   measCopy.covariance()(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
   measCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
   trackState.allocateCalibrated(meas.size());
-  trackState.calibrated<kSize>() = measCopy.parameters();
-  trackState.calibratedCovariance<kSize>() = measCopy.covariance();
-  trackState.setProjector(measCopy.projector());
+  trackState.effectiveCalibrated() = measCopy.parameters();
+  trackState.effectiveCalibratedCovariance() = measCopy.covariance();
+  trackState.setProjectorBitset(measCopy.subspace().fullProjectorBits());
 }

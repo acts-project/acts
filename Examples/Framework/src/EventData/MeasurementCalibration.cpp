@@ -33,9 +33,9 @@ void ActsExamples::PassThroughCalibrator::calibrate(
 
   const auto& meas = measurements[idxSourceLink.index()];
 
-  trackState.calibrated() = meas.parameters();
-  trackState.calibratedCovariance() = meas.covariance();
-  trackState.setProjector(meas.projector());
+  trackState.effectiveCalibrated() = meas.parameters();
+  trackState.effectiveCalibratedCovariance() = meas.covariance();
+  trackState.setProjectorBitset(meas.subspace().fullProjectorBits());
 }
 
 ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
