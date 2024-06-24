@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Dump job context
         env:
-          PAYLOAD: ${{ toJson(github.event.workflow_run) }}
+          PAYLOAD: ${{ toJson(github) }}
         run: echo "${PAYLOAD}"
 
       - name: Install dependencies
