@@ -239,10 +239,16 @@ class ThresholdFailure : public std::runtime_error {
 /// lifetime.
 class ScopedFailureThreshold {
  public:
-  ScopedFailureThreshold(Level level) : m_previousLevel(getFailureThreshold()) {
+  explicit ScopedFailureThreshold(Level level)
+      : m_previousLevel(getFailureThreshold()) {
     setFailureThreshold(level);
   }
-  ~ScopedFailureThreshold() { setFailureThreshold(m_previousLevel); }
+  ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
+  ScopedFailureThreshold& operator=(ScopedFailureThreshold&&) = delete;
+
+  ~ScopedFailureThreshold() noexcept { setFailureThreshold(m_previousLevel); }
 
  private:
   Level m_previousLevel;
