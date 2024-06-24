@@ -16,7 +16,7 @@ namespace ActsFatras {
 /// Process type identifier.
 ///
 /// Encodes the type of process that generated a particle.
-enum class ProcessType : uint32_t {
+enum class ProcessType : std::uint32_t {
   eUndefined = 0,
   eDecay = 1,
   ePhotonConversion = 2,

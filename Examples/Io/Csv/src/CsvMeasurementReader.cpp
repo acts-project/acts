@@ -87,11 +87,11 @@ struct CompareHitId {
     return left.hit_id < right.hit_id;
   }
   template <typename T>
-  constexpr bool operator()(uint64_t left_id, const T& right) const {
+  constexpr bool operator()(std::uint64_t left_id, const T& right) const {
     return left_id < right.hit_id;
   }
   template <typename T>
-  constexpr bool operator()(const T& left, uint64_t right_id) const {
+  constexpr bool operator()(const T& left, std::uint64_t right_id) const {
     return left.hit_id < right_id;
   }
 };

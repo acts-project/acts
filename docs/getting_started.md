@@ -4,7 +4,7 @@
 
 ACTS is developed in C++ and is built using [CMake](https://cmake.org). Building
 the core library requires a C++17 compatible compiler,
-[Boost](http://boost.org), and [Eigen](http://eigen.tuxfamily.org). The
+[Boost](https://www.boost.org), and [Eigen](https://eigen.tuxfamily.org). The
 following commands will clone the repository, configure, and build the core
 library:
 
@@ -25,8 +25,8 @@ The following dependencies are required to build the ACTS core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.14
--   [Boost](http://boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](http://eigen.tuxfamily.org) >= 3.3.7
+-   [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+-   [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
 components:
@@ -34,7 +34,7 @@ components:
 -   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
 -   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
--   [Geant4](http://geant4.org/) for some examples
+-   [Geant4](https://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
@@ -267,6 +267,9 @@ components.
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                             |
+| ACTS_BUILD_PLUGIN_COVFIE            | Build Covfie plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_DETRAY            | Build Detray plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_TRACCC            | Build Traccc plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_USE_SYSTEM_GEOMODEL            | Use a system-provided GeoModel<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
@@ -276,8 +279,18 @@ components.
 | ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_SETUP_COVFIE                   | Explicitly set up covfie for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_USE_SYSTEM_COVFIE              | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_SETUP_DETRAY                   | Explicitly set up detray for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_USE_SYSTEM_DETRAY              | Use a system-provided detray<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_SETUP_TRACCC                   | Explicitly set up traccc for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_USE_SYSTEM_TRACCC              | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_SETUP_DFELIBS                  | Explicitly set up dfelibs for the<br>project<br> type: `bool`, default: `ON`                                                                                                                                                       |
+| ACTS_USE_SYSTEM_DFELIBS             | Use a system-provided dfelibs<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                             |
 | ACTS_SETUP_VECMEM                   | Explicitly set up vecmem for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
+| ACTS_SETUP_ALGEBRAPLUGINS           | Explicitly set up algebra-plugins for<br>the project<br> type: `bool`, default: `OFF`                                                                                                                                              |
+| ACTS_USE_SYSTEM_ALGEBRAPLUGINS      | Use a system-provided algebra-plugins<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                     |
 | ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
@@ -296,6 +309,7 @@ components.
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_UNITTESTS                | Build unit tests<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
+| ACTS_BUILD_EXAMPLES_UNITTESTS       | Build unit tests<br> type: `bool`, default: `ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES`                                                                                                                                         |
 | ACTS_BUILD_NONCOMPILE_TESTS         | Build tests that check build failure<br>invariants<br> type: `bool`, default: `OFF`                                                                                                                                                |
 | ACTS_RUN_CLANG_TIDY                 | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
 | ACTS_BUILD_DOCS                     | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
@@ -322,7 +336,7 @@ want and it will figure out the rest.
 In addition to the ACTS-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the
 most common ones. For more details, have a look at the annotated list of [useful
-CMake variables](https://cmake.org/Wiki/CMake_Useful_Variables) or at the [CMake
+CMake variables](https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/Useful-Variables) or at the [CMake
 documentation](https://cmake.org/documentation/).
 
 | Option               | Description                                                                                                                       |
@@ -349,7 +363,7 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
-It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
+It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.com/) need to be installed on your machine):
 
 ```console
 $ git submodule init

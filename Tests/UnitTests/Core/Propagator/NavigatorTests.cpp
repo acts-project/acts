@@ -1,13 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -21,15 +20,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -37,7 +35,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -49,6 +46,7 @@ class Layer;
 struct FreeToBoundCorrection;
 }  // namespace Acts
 
+namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::perp;
 
@@ -56,6 +54,7 @@ namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// This is a simple cache struct to mimic the
 /// Propagator cache
@@ -318,6 +317,9 @@ bool testNavigatorStatePointers(
 
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
+
+const double Bz = 2_T;
+auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
 // the debug boolean
 bool debug = true;

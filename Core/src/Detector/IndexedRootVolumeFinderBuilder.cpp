@@ -77,8 +77,9 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =
-      IndexedUpdaterImpl<IExternalNavigation, GridType,
-                         IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
+      IndexedGridNavigation<IExternalNavigation, GridType,
+                            IndexedDetectorVolumeExtractor,
+                            DetectorVolumeFiller>;
 
   auto indexedDetectorVolumeImpl =
       std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid),
