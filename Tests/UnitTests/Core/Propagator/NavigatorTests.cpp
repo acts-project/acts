@@ -24,16 +24,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-<<<<<<< HEAD
-#include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/TryAllNavigator.hpp"
-#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-=======
-#include "Acts/Surfaces/BoundaryCheck.hpp"
->>>>>>> fad61a0af268308d8e99a4116a11ae3d33369b2b
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
