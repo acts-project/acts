@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Install git lfs
         # TODO: Bring sqlite to image
-        run: apt-get update && apt-get install -y git-lfs sqlite3
+        run: apt-get update && apt-get install -y git-lfs libsqlite3-dev
 
       - uses: actions/checkout@v4
         with:
