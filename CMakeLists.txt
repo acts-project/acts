@@ -83,6 +83,12 @@ option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OF
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
+  set(_default_examples_unit_tests ON)
+else()
+  set(_default_examples_unit_tests OFF)
+endif()
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_BUILD_NONCOMPILE_TESTS "Build tests that check build failure invariants" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
@@ -128,7 +134,6 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-  OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 
@@ -167,7 +172,7 @@ function(check_root_compatibility)
   get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
   set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
   #yolo
-  #check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  #check_cxx_source_compiles(" #include <string>\n #include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
   #if(NOT ROOT_COMPATIBILITY_CHECK)
   #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
   #endif()
@@ -221,8 +226,7 @@ if (ACTS_SETUP_BOOST)
 
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
-    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
-        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+    if( ACTS_BUILD_ANALYSIS_APPS OR ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
     else()
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)

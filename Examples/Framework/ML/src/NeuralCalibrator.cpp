@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "ActsExamples/EventData/NeuralCalibrator.hpp"
+
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include <ActsExamples/EventData/NeuralCalibrator.hpp>
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <TFile.h>
 
@@ -164,5 +165,9 @@ void ActsExamples::NeuralCalibrator::calibrate(
       output[iVar0];
   measurementCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) =
       output[iVar0 + 1];
-  trackState.setCalibrated(measurementCopy);
+
+  trackState.allocateCalibrated(kSize);
+  trackState.template calibrated() = measurementCopy.parameters();
+  trackState.template calibratedCovariance() = measurementCopy.covariance();
+  trackState.setProjector(measurement.projector());
 }

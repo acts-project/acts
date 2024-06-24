@@ -144,6 +144,8 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
       ActsExamplesGeant4)
     add_dependencies(ActsPythonBindings ActsPythonBindingsGeoModelG4)
     install(TARGETS ActsPythonBindingsGeoModelG4 DESTINATION ${_python_install_dir})
+    set_target_properties(ActsPythonBindingsGeoModelG4 PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(ActsPythonBindingsGeoModelG4 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts)
 
     list(APPEND py_files examples/geant4/geomodel.py)
   endif()

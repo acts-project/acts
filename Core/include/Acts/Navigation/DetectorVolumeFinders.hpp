@@ -15,8 +15,8 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <stdexcept>
 
@@ -116,7 +116,7 @@ struct IndexedDetectorVolumeExtractor {
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
 using IndexedDetectorVolumesImpl =
-    IndexedUpdaterImpl<IExternalNavigation, grid_type,
-                       IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
+    IndexedGridNavigation<IExternalNavigation, grid_type,
+                          IndexedDetectorVolumeExtractor, DetectorVolumeFiller>;
 
 }  // namespace Acts::Experimental

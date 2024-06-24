@@ -102,9 +102,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// The output tree
   TTree* m_outputTree{nullptr};
   /// The event number
-  uint32_t m_eventNr{0};
+  std::uint32_t m_eventNr{0};
   /// The track number in event
-  std::vector<uint32_t> m_trackNr;
+  std::vector<std::uint32_t> m_trackNr;
 
   /// The number of states
   std::vector<unsigned int> m_nStates;
@@ -137,7 +137,7 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// The number of hits from majority particle
   std::vector<unsigned int> m_nMajorityHits;
   /// The particle Id of the majority particle
-  std::vector<uint64_t> m_majorityParticleId;
+  std::vector<std::uint64_t> m_majorityParticleId;
   /// The classification of the reconstructed track
   std::vector<int> m_trackClassification;
   /// Charge of majority particle

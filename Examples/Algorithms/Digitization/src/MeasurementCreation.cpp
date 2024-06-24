@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 

@@ -50,8 +50,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     Acts::Vector2 p = Acts::Vector2::Random();
     Acts::SquareMatrix2 c = Acts::SquareMatrix2::Random();
 
-    auto m = Measurement(Acts::SourceLink{sl},
-                         std::array{Acts::eBoundLoc0, Acts::eBoundLoc1}, p, c);
+    // NOTE this fails:
+    // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
+    // because we don't support non-consecutive parameters here for now
+    auto m = makeFixedSizeMeasurement(Acts::SourceLink{sl}, p, c,
+                                      Acts::eBoundLoc0, Acts::eBoundLoc1);
 
     measOriginal.push_back(m);
 

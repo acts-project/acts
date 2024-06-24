@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
 #include <array>
@@ -107,9 +107,8 @@ inline std::ostream& operator<<(std::ostream& os,
 ///
 /// @param gctx Unused
 /// @param trackState TrackState to calibrated
-/// @return The measurement used
 template <typename trajectory_t>
-Acts::BoundVariableMeasurement testSourceLinkCalibratorReturn(
+void testSourceLinkCalibratorReturn(
     const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
     const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
@@ -119,19 +118,20 @@ Acts::BoundVariableMeasurement testSourceLinkCalibratorReturn(
 
   if ((sl.indices[0] != Acts::eBoundSize) &&
       (sl.indices[1] != Acts::eBoundSize)) {
-    auto meas = Acts::BoundVariableMeasurement(
-        trackState.getUncalibratedSourceLink(),
-        std::array{sl.indices[0], sl.indices[1]}, sl.parameters, sl.covariance);
     trackState.allocateCalibrated(2);
-    trackState.setCalibrated(meas);
-    return meas;
+    trackState.template calibrated<2>() = sl.parameters;
+    trackState.template calibratedCovariance<2>() = sl.covariance;
+    trackState.setProjector(FixedSizeSubspace<BoundIndices::eBoundSize, 2>(
+                                std::array{sl.indices[0], sl.indices[1]})
+                                .projector<double>());
   } else if (sl.indices[0] != Acts::eBoundSize) {
-    auto meas = Acts::BoundVariableMeasurement(
-        trackState.getUncalibratedSourceLink(), std::array{sl.indices[0]},
-        sl.parameters.head<1>(), sl.covariance.topLeftCorner<1, 1>());
     trackState.allocateCalibrated(1);
-    trackState.setCalibrated(meas);
-    return meas;
+    trackState.template calibrated<1>() = sl.parameters.head<1>();
+    trackState.template calibratedCovariance<1>() =
+        sl.covariance.topLeftCorner<1, 1>();
+    trackState.setProjector(FixedSizeSubspace<BoundIndices::eBoundSize, 1>(
+                                std::array{sl.indices[0]})
+                                .projector<double>());
   } else {
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");

@@ -67,7 +67,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
     constexpr Scalar convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
     Acts::Vector3 amgMom(mom.x(), mom.y(), mom.z());
     amgMom *= convertEnergy;
-    const int32_t pdg = prod->GetPDGcode();
+    const std::int32_t pdg = prod->GetPDGcode();
 
     Particle childParticle(parent.particleId().makeDescendant(i),
                            static_cast<Acts::PdgParticle>(pdg));
