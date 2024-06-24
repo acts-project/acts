@@ -13,8 +13,8 @@
 #include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <vector>
 

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -37,6 +38,8 @@
 #include <string>
 #include <utility>
 
+using namespace Acts::UnitLiterals;
+
 namespace Acts {
 class AssertionFailureException;
 }  // namespace Acts
@@ -44,6 +47,7 @@ class AssertionFailureException;
 namespace Acts::Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit tests for creating DiscSurface object
@@ -371,6 +375,222 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
     }
   }
 }
+
+BOOST_AUTO_TEST_SUITE(DiscSurfaceMerging)
+
+namespace {
+std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rmin,
+                                      double rmax, double halfPhi = M_PI,
+                                      double avgPhi = 0) {
+  return Surface::makeShared<DiscSurface>(
+      transform, std::make_shared<RadialBounds>(rmin, rmax, halfPhi, avgPhi));
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(IncompatibleBounds) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
+  Transform3 base = Transform3::Identity();
+  auto discRadial = makeDisc(base, 30_mm, 100_mm);
+  auto discTrap =
+      Surface::makeShared<DiscSurface>(base, 20_mm, 40_mm, 100_mm, 150_mm);
+  auto discTrap2 =
+      Surface::makeShared<DiscSurface>(base, 20_mm, 40_mm, 30_mm, 100_mm);
+
+  BOOST_CHECK_THROW(discRadial->mergedWith(tgContext, *discTrap, binR, *logger),
+                    std::invalid_argument);
+
+  BOOST_CHECK_THROW(discTrap2->mergedWith(tgContext, *discTrap, binR, *logger),
+                    std::invalid_argument);
+}
+
+BOOST_DATA_TEST_CASE(IncompatibleRDirection,
+                     (boost::unit_test::data::xrange(-135, 180, 45) *
+                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
+                                                   Vector3{20_mm, 0_mm, 0_mm},
+                                                   Vector3{0_mm, 20_mm, 0_mm},
+                                                   Vector3{20_mm, 20_mm, 0_mm},
+                                                   Vector3{0_mm, 0_mm, 20_mm})),
+                     angle, offset) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
+
+  Transform3 base =
+      AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
+
+  auto disc = makeDisc(base, 30_mm, 100_mm);
+
+  // Disc with overlap in r
+  auto discOverlap = makeDisc(base, 90_mm, 150_mm);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(tgContext, *discOverlap, Acts::binR, *logger),
+      std::invalid_argument);
+
+  // Disc with gap in r
+  auto discGap = makeDisc(base, 110_mm, 150_mm);
+  BOOST_CHECK_THROW(disc->mergedWith(tgContext, *discGap, Acts::binR, *logger),
+                    std::invalid_argument);
+
+  auto discShiftedZ = Surface::makeShared<DiscSurface>(
+      base * Translation3{Vector3::UnitZ() * 10_mm}, 100_mm, 150_mm);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(tgContext, *discShiftedZ, Acts::binR, *logger),
+      std::invalid_argument);
+
+  auto discShiftedXy = makeDisc(
+      base * Translation3{Vector3{1_mm, 2_mm, 200_mm}}, 100_mm, 150_mm);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(tgContext, *discShiftedXy, Acts::binZ, *logger),
+      std::invalid_argument);
+
+  auto discRotatedZ =
+      makeDisc(base * AngleAxis3{10_degree, Vector3::UnitZ()}, 100_mm, 150_mm);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(tgContext, *discRotatedZ, Acts::binR, *logger),
+      std::invalid_argument);
+  auto discRotatedX =
+      makeDisc(base * AngleAxis3{10_degree, Vector3::UnitX()}, 100_mm, 150_mm);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(tgContext, *discRotatedX, Acts::binR, *logger),
+      std::invalid_argument);
+}
+
+BOOST_DATA_TEST_CASE(RDirection,
+                     (boost::unit_test::data::xrange(-135, 180, 45) *
+                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
+                                                   Vector3{20_mm, 0_mm, 0_mm},
+                                                   Vector3{0_mm, 20_mm, 0_mm},
+                                                   Vector3{20_mm, 20_mm, 0_mm},
+                                                   Vector3{0_mm, 0_mm, 20_mm})),
+                     angle, offset) {
+  Transform3 base =
+      AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
+
+  auto disc = makeDisc(base, 30_mm, 100_mm);
+
+  auto disc2 = makeDisc(base, 100_mm, 150_mm);
+
+  auto disc3 = disc->mergedWith(tgContext, *disc2, Acts::binR, *logger);
+  BOOST_REQUIRE_NE(disc3, nullptr);
+
+  auto disc3Reversed = disc2->mergedWith(tgContext, *disc, Acts::binR, *logger);
+  BOOST_REQUIRE_NE(disc3Reversed, nullptr);
+  BOOST_CHECK(*disc3 == *disc3Reversed);
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(&disc3->bounds());
+  BOOST_REQUIRE_NE(bounds, nullptr);
+
+  BOOST_CHECK_EQUAL(bounds->get(RadialBounds::eMinR), 30_mm);
+  BOOST_CHECK_EQUAL(bounds->get(RadialBounds::eMaxR), 150_mm);
+
+  // Disc did not move
+  BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+}
+
+BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
+                     (boost::unit_test::data::xrange(-135, 180, 45) *
+                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
+                                                   Vector3{20_mm, 0_mm, 0_mm},
+                                                   Vector3{0_mm, 20_mm, 0_mm},
+                                                   Vector3{20_mm, 20_mm, 0_mm},
+                                                   Vector3{0_mm, 0_mm, 20_mm}) *
+                      boost::unit_test::data::xrange(-1300, 1300, 104)),
+                     angle, offset, phiShift) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
+  Transform3 base =
+      AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
+
+  auto a = [phiShift](ActsScalar v) {
+    return detail::radian_sym(v + phiShift * 1_degree);
+  };
+
+  auto discPhi = makeDisc(base, 30_mm, 100_mm, 10_degree, a(40_degree));
+
+  // Disc with overlap in phi
+  auto discPhi2 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(85_degree));
+  BOOST_CHECK_THROW(
+      discPhi->mergedWith(tgContext, *discPhi2, Acts::binPhi, *logger),
+      std::invalid_argument);
+
+  // Disc with gap in phi
+  auto discPhi3 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(105_degree));
+  BOOST_CHECK_THROW(
+      discPhi->mergedWith(tgContext, *discPhi3, Acts::binPhi, *logger),
+      std::invalid_argument);
+
+  // Disc with a z shift
+  auto discPhi4 = makeDisc(base * Translation3{Vector3::UnitZ() * 20_mm}, 30_mm,
+                           100_mm, 45_degree, a(95_degree));
+  BOOST_CHECK_THROW(
+      discPhi->mergedWith(tgContext, *discPhi4, Acts::binPhi, *logger),
+      std::invalid_argument);
+
+  // Disc with different r bounds: could be merged in r but not in phi
+  auto discPhi5 = makeDisc(base, 100_mm, 150_mm, 45_degree, a(95_degree));
+  BOOST_CHECK_THROW(
+      discPhi->mergedWith(tgContext, *discPhi5, Acts::binPhi, *logger),
+      std::invalid_argument);
+}
+
+BOOST_DATA_TEST_CASE(PhiDirection,
+                     (boost::unit_test::data::xrange(-135, 180, 45) *
+                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
+                                                   Vector3{20_mm, 0_mm, 0_mm},
+                                                   Vector3{0_mm, 20_mm, 0_mm},
+                                                   Vector3{20_mm, 20_mm, 0_mm},
+                                                   Vector3{0_mm, 0_mm, 20_mm}) *
+                      boost::unit_test::data::xrange(-1300, 1300, 104)),
+                     angle, offset, phiShift) {
+  Transform3 base =
+      AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
+
+  auto a = [phiShift](ActsScalar v) {
+    return detail::radian_sym(v + phiShift * 1_degree);
+  };
+
+  auto disc = makeDisc(base, 30_mm, 100_mm, 10_degree, a(40_degree));
+  auto disc2 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(95_degree));
+
+  auto disc3 = disc->mergedWith(tgContext, *disc2, Acts::binPhi, *logger);
+  BOOST_REQUIRE_NE(disc3, nullptr);
+  BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+
+  auto disc3Reversed =
+      disc2->mergedWith(tgContext, *disc, Acts::binPhi, *logger);
+  BOOST_REQUIRE_NE(disc3Reversed, nullptr);
+  BOOST_CHECK(*disc3 == *disc3Reversed);
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(&disc3->bounds());
+  BOOST_REQUIRE_NE(bounds, nullptr);
+
+  BOOST_CHECK_SMALL(
+      detail::difference_periodic(bounds->get(RadialBounds::eAveragePhi),
+                                  a(85_degree), 2 * M_PI),
+      1e-6);
+  BOOST_CHECK_CLOSE(bounds->get(RadialBounds::eHalfPhiSector), 55_degree, 0.1);
+
+  auto disc4 = makeDisc(base, 30_mm, 100_mm, 20_degree, a(170_degree));
+  auto disc5 = makeDisc(base, 30_mm, 100_mm, 10_degree, a(-160_degree));
+  auto disc45 = disc4->mergedWith(tgContext, *disc5, Acts::binPhi, *logger);
+  BOOST_REQUIRE_NE(disc45, nullptr);
+  BOOST_CHECK_EQUAL(base.matrix(), disc45->transform(tgContext).matrix());
+
+  auto disc54 = disc5->mergedWith(tgContext, *disc4, Acts::binPhi, *logger);
+  BOOST_REQUIRE_NE(disc54, nullptr);
+
+  BOOST_CHECK(*disc54 == *disc45);
+
+  const auto* bounds45 = dynamic_cast<const RadialBounds*>(&disc45->bounds());
+  BOOST_REQUIRE_NE(bounds, nullptr);
+
+  BOOST_CHECK_SMALL(
+      detail::difference_periodic(bounds45->get(RadialBounds::eAveragePhi),
+                                  a(180_degree), 2 * M_PI),
+      1e-6);
+  BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
+                    0.1);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
 

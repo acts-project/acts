@@ -235,6 +235,19 @@ class ThresholdFailure : public std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
+/// Helper class that changes the failure threshold for the duration of its
+/// lifetime.
+class ScopedFailureThreshold {
+ public:
+  ScopedFailureThreshold(Level level) : m_previousLevel(getFailureThreshold()) {
+    setFailureThreshold(level);
+  }
+  ~ScopedFailureThreshold() { setFailureThreshold(m_previousLevel); }
+
+ private:
+  Level m_previousLevel;
+};
+
 /// @brief abstract base class for printing debug output
 ///
 /// Implementations of this interface need to define how and where to @a print

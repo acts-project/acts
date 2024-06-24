@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
@@ -18,7 +19,9 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/MergeHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -373,4 +376,123 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
                                          const Vector3& direction) const {
   /// we can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
+}
+
+std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
+    const GeometryContext& gctx, const DiscSurface& other,
+    BinningValue direction, const Logger& logger) const {
+  using namespace Acts::UnitLiterals;
+
+  ACTS_DEBUG("Merging disc surfaces in " << binningValueNames()[direction]
+                                         << " direction")
+
+  Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
+
+  constexpr auto tolerance = s_onSurfaceTolerance;
+
+  // surface cannot have any relative rotation
+  if (!otherLocal.linear().isApprox(RotationMatrix3::Identity())) {
+    ACTS_ERROR("DiscSurface::merge: surfaces have relative rotation");
+    throw std::invalid_argument(
+        "DiscSurface::merge: surfaces have relative rotation");
+  }
+
+  Vector3 translation = otherLocal.translation();
+
+  if (std::abs(translation[0]) > tolerance ||
+      std::abs(translation[1]) > tolerance ||
+      std::abs(translation[2]) > tolerance) {
+    ACTS_ERROR(
+        "DiscSurface::merge: surfaces have relative translation in x/y/z");
+    throw std::invalid_argument(
+        "DiscSurface::merge: surfaces have relative translation in x/y/z");
+  }
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(m_bounds.get());
+  const auto* otherBounds =
+      dynamic_cast<const RadialBounds*>(other.m_bounds.get());
+
+  if (bounds == nullptr || otherBounds == nullptr) {
+    ACTS_ERROR("DiscSurface::merge: surfaces have bounds other than radial");
+    throw std::invalid_argument(
+        "DiscSurface::merge: surfaces have bounds other than radial");
+  }
+
+  ActsScalar minR = bounds->get(RadialBounds::eMinR);
+  ActsScalar maxR = bounds->get(RadialBounds::eMaxR);
+
+  ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+  ActsScalar avgPhi = bounds->get(RadialBounds::eAveragePhi);
+  ActsScalar minPhi = detail::radian_sym(-hlPhi + avgPhi);
+  ActsScalar maxPhi = detail::radian_sym(hlPhi + avgPhi);
+
+  ACTS_VERBOSE(" this: r =   [" << minR << ", " << maxR << "]");
+  ACTS_VERBOSE("       phi = ["
+               << minPhi / 1_degree << ", " << maxPhi / 1_degree << "] ~> "
+               << avgPhi / 1_degree << " +- " << hlPhi / 1_degree);
+
+  ActsScalar otherMinR = otherBounds->get(RadialBounds::eMinR);
+  ActsScalar otherMaxR = otherBounds->get(RadialBounds::eMaxR);
+  ActsScalar otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
+  ActsScalar otherHlPhi = otherBounds->get(RadialBounds::eHalfPhiSector);
+  ActsScalar otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
+  ActsScalar otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
+
+  ACTS_VERBOSE("other: r =   [" << otherMinR << ", " << otherMaxR << "]");
+  ACTS_VERBOSE("       phi = [" << otherMinPhi / 1_degree << ", "
+                                << otherMaxPhi / 1_degree << "] ~> "
+                                << otherAvgPhi / 1_degree << " +- "
+                                << otherHlPhi / 1_degree);
+
+  if (direction == Acts::binR) {
+    if (std::abs(minR - otherMaxR) > tolerance &&
+        std::abs(maxR - otherMinR) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces are not touching r");
+      throw std::invalid_argument(
+          "DiscSurface::merge: surfaces are not touching in r");
+    }
+
+    if (std::abs(avgPhi - otherAvgPhi) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces have different average phi");
+      throw std::invalid_argument(
+          "DiscSurface::merge: surfaces have different average phi");
+    }
+
+    if (std::abs(hlPhi - otherHlPhi) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces have different half phi sector");
+      throw std::invalid_argument(
+          "DiscSurface::merge: surfaces have different half phi sector");
+    }
+
+    ActsScalar newMinR = std::min(minR, otherMinR);
+    ActsScalar newMaxR = std::max(maxR, otherMaxR);
+    ACTS_VERBOSE("  new: r =   [" << newMinR << ", " << newMaxR << "]");
+
+    auto newBounds =
+        std::make_shared<RadialBounds>(newMinR, newMaxR, hlPhi, avgPhi);
+
+    return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
+
+  } else if (direction == Acts::binPhi) {
+    if (std::abs(maxR - otherMaxR) > tolerance ||
+        std::abs(minR - otherMinR) > tolerance) {
+      ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
+      throw std::invalid_argument(
+          "DiscSurface::merge: surfaces don't have same r bounds");
+    }
+
+    auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
+        hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
+
+    auto newBounds =
+        std::make_shared<RadialBounds>(minR, maxR, newHlPhi, newAvgPhi);
+
+    return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
+
+  } else {
+    ACTS_ERROR("DiscSurface::merge: invalid direction "
+               << binningValueNames()[direction]);
+    throw std::invalid_argument("DiscSurface::merge: invalid direction " +
+                                binningValueNames()[direction]);
+  }
 }

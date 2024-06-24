@@ -23,16 +23,11 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Concepts.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Ray.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -127,12 +122,9 @@ class TrackingVolume : public Volume {
   /// @param transform is the global 3D transform to position the volume in
   /// space
   /// @param volbounds is the description of the volume boundaries
-  /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   TrackingVolume(const Transform3& transform,
                  std::shared_ptr<const VolumeBounds> volbounds,
-                 const std::shared_ptr<const TrackingVolumeArray>&
-                     containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume

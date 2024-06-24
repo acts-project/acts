@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <sstream>
 #include <stdexcept>
@@ -30,10 +30,9 @@ struct ProtoBinning {
   /// The binning value of this
   BinningValue binValue = BinningValue::binValues;
   /// The axis type: equidistant or variable
-  Acts::detail::AxisType axisType = Acts::detail::AxisType::Equidistant;
+  Acts::AxisType axisType = Acts::AxisType::Equidistant;
   /// The axis boundary type: Open, Bound or Closed
-  Acts::detail::AxisBoundaryType boundaryType =
-      Acts::detail::AxisBoundaryType::Bound;
+  Acts::AxisBoundaryType boundaryType = Acts::AxisBoundaryType::Bound;
   /// The binning edges
   std::vector<ActsScalar> edges = {};
   /// An expansion for the filling (in bins)
@@ -47,10 +46,10 @@ struct ProtoBinning {
   /// @param bType the axis boundary type
   /// @param e the bin edges (variable binning)
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
+  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
                const std::vector<ActsScalar>& e, std::size_t exp = 0u)
       : binValue(bValue),
-        axisType(Acts::detail::AxisType::Variable),
+        axisType(Acts::AxisType::Variable),
         boundaryType(bType),
         edges(e),
         expansion(exp) {
@@ -68,7 +67,7 @@ struct ProtoBinning {
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
+  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
                ActsScalar minE, ActsScalar maxE, std::size_t nbins,
                std::size_t exp = 0u)
       : binValue(bValue), boundaryType(bType), expansion(exp) {
@@ -102,7 +101,7 @@ struct ProtoBinning {
   /// @param bType the axis boundary type
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
+  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
                std::size_t nbins, std::size_t exp = 0u)
       : binValue(bValue),
         boundaryType(bType),
@@ -118,8 +117,8 @@ struct ProtoBinning {
     std::stringstream ss;
     ss << "ProtoBinning: " << bins() << " bins in "
        << binningValueNames()[binValue];
-    ss << (axisType == Acts::detail::AxisType::Variable ? ", variable "
-                                                        : ", equidistant ");
+    ss << (axisType == Acts::AxisType::Variable ? ", variable "
+                                                : ", equidistant ");
     if (!autorange) {
       ss << "within [" << edges.front() << ", " << edges.back() << "] ";
     } else {
@@ -138,9 +137,9 @@ struct BinningDescription {
     BinningDescription bDesc;
     for (const auto& bData : binUtility.binningData()) {
       // One proto binning per binning data
-      Acts::detail::AxisBoundaryType boundaryType =
-          bData.option == open ? Acts::detail::AxisBoundaryType::Bound
-                               : Acts::detail::AxisBoundaryType::Closed;
+      Acts::AxisBoundaryType boundaryType =
+          bData.option == open ? Acts::AxisBoundaryType::Bound
+                               : Acts::AxisBoundaryType::Closed;
       std::vector<ActsScalar> edges;
       if (bData.type == equidistant) {
         bDesc.binning.push_back(ProtoBinning(bData.binvalue, boundaryType,
@@ -163,10 +162,9 @@ struct BinningDescription {
     BinUtility binUtility;
     for (const auto& b : binning) {
       Acts::BinningOption bOption =
-          b.boundaryType == Acts::detail::AxisBoundaryType::Bound
-              ? Acts::open
-              : Acts::closed;
-      if (b.axisType == Acts::detail::AxisType::Equidistant) {
+          b.boundaryType == Acts::AxisBoundaryType::Bound ? Acts::open
+                                                          : Acts::closed;
+      if (b.axisType == Acts::AxisType::Equidistant) {
         binUtility += BinUtility(b.bins(), b.edges.front(), b.edges.back(),
                                  bOption, b.binValue);
       } else {

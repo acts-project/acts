@@ -17,7 +17,7 @@ std::ostream &operator<<(std::ostream &os, ProcessType processType) {
     case ProcessType::eUndefined:
       return (os << "undefined");
     default:
-      return (os << static_cast<uint32_t>(processType));
+      return (os << static_cast<std::uint32_t>(processType));
   }
 }
 
