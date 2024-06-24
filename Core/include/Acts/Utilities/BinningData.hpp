@@ -244,9 +244,6 @@ class BinningData {
         binvalue == binH) {
       return lposition[0];
     }
-    if (binvalue == binPhi) {
-      return lposition[1];
-    }
     return lposition[1];
   }
 
