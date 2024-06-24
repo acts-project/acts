@@ -10,8 +10,8 @@ add_library(
   src/detail/GeoBoxConverter.cpp
   src/detail/GeoTrdConverter.cpp
   src/detail/GeoTubeConverter.cpp
-  src/detail//GeoShiftConverter.cpp
-  src/detail//GeoIntersectionAnnulusConverter.cpp
+  src/detail/GeoShiftConverter.cpp
+  src/detail/GeoIntersectionAnnulusConverter.cpp
   src/detail/GeoModelBinningHelper.cpp
   src/detail/GeoModelExtentHelper.cpp
   src/detail/GeoUnionDoubleTrdConverter.cpp)
