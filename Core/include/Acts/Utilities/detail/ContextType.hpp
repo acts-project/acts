@@ -30,7 +30,7 @@ class ContextType {
   /// @tparam T The type of the value to construct from
   /// @param value The value to construct from
   template <typename T>
-  explicit ContextType(T&& value) : m_data{std::move(value)} {}
+  explicit ContextType(T&& value) : m_data{std::forward(value)} {}
 
   /// Copy construct a new Context Type object from anything. Must be explicit.
   ///
