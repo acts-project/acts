@@ -74,17 +74,17 @@ class Delegate<R(Args...), H, O> {
  public:
   Delegate() = default;
 
-  Delegate(Delegate &&) = default;
-  Delegate &operator=(Delegate &&) = default;
-  Delegate(const Delegate &) = default;
-  Delegate &operator=(const Delegate &) = default;
+  Delegate(Delegate &&) noexcept = default;
+  Delegate &operator=(Delegate &&) noexcept = default;
+  Delegate(const Delegate &) noexcept = default;
+  Delegate &operator=(const Delegate &) noexcept = default;
 
   /// Constructor with an explicit runtime callable
   /// @param callable The runtime value of the callable
   /// @note The function signature requires the first argument of the callable is `const void*`.
   ///       i.e. if the signature of the delegate is `void(int)`, the
   ///       callable's signature has to be `void(const void*, int)`.
-  Delegate(function_type callable) { connect(callable); }
+  explicit Delegate(function_type callable) { connect(callable); }
 
   /// Constructor with a possibly stateful function object.
   /// @tparam Callable Type of the callable
@@ -92,7 +92,7 @@ class Delegate<R(Args...), H, O> {
   /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
   ///       it's lifetime is longer than that of @c Delegate.
   template <typename Callable, typename = isNoFunPtr<Callable>>
-  Delegate(Callable &callable) {
+  explicit Delegate(Callable &callable) {
     connect(callable);
   }
 
@@ -100,7 +100,7 @@ class Delegate<R(Args...), H, O> {
   /// @tparam Callable The compile-time free function pointer
   /// @note @c DelegateFuncTag is used to communicate the callable type
   template <auto Callable>
-  Delegate(DelegateFuncTag<Callable> /*tag*/) {
+  explicit Delegate(DelegateFuncTag<Callable> /*tag*/) {
     connect<Callable>();
   }
 
@@ -157,7 +157,7 @@ class Delegate<R(Args...), H, O> {
         "signature");
 
     m_function = [](const holder_type * /*payload*/,
-                    Args... args) -> return_type {
+                    Args &&...args) -> return_type {
       return std::invoke(Callable, std::forward<Args>(args)...);
     };
   }
@@ -223,7 +223,7 @@ class Delegate<R(Args...), H, O> {
   template <auto Callable, typename Type, DelegateType T = kOwnership,
             typename = std::enable_if_t<T == DelegateType::Owning>>
   void connect(std::unique_ptr<const Type> instance) {
-    using member_ptr_type = return_type (Type::*)(Args...) const;
+    using member_ptr_type = return_type (Type::*)(Args && ...) const;
     static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
                                         decltype(Callable)>::value,
                   "Callable given does not correspond exactly to required call "
@@ -235,7 +235,7 @@ class Delegate<R(Args...), H, O> {
           delete concretePayload;
         });
 
-    m_function = [](const holder_type *payload, Args... args) -> return_type {
+    m_function = [](const holder_type *payload, Args &&...args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
       const auto *concretePayload = static_cast<const Type *>(payload);
       return std::invoke(Callable, concretePayload,
@@ -246,10 +246,10 @@ class Delegate<R(Args...), H, O> {
   /// The call operator that exposes the functionality of the @c Delegate type.
   /// @param args The arguments to call the contained function with
   /// @return Return value of the contained function
-  return_type operator()(Args... args) const {
+  template <typename... Ts>
+  return_type operator()(Ts &&...args) const {
     assert(connected() && "Delegate is not connected");
-    return std::invoke(m_function, m_payload.ptr(),
-                       std::forward<Args>(args)...);
+    return std::invoke(m_function, m_payload.ptr(), std::forward<Ts>(args)...);
   }
 
   /// Return whether this delegate is currently connected
@@ -258,7 +258,7 @@ class Delegate<R(Args...), H, O> {
 
   /// Return whether this delegate is currently connected
   /// @return True if this delegate is connected
-  operator bool() const { return connected(); }
+  explicit operator bool() const { return connected(); }
 
   /// Disconnect this delegate, meaning it cannot be called anymore
   void disconnect() {
@@ -274,7 +274,9 @@ class Delegate<R(Args...), H, O> {
 
  private:
   // Deleter that does not do anything
-  static void noopDeleter(const holder_type * /*unused*/) {}
+  static void noopDeleter(const holder_type * /*unused*/) {
+    // we do not own the payload
+  }
 
   /// @cond
 
