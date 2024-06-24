@@ -212,8 +212,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   // create the layer r/z positions
   std::vector<double> layerPositions;
   if (materialLayers > 1) {
-    double step = cylinder ? (max - min) / (materialLayers - 1)
-                           : (max - min) / (materialLayers - 1);
+    double step = (max - min) / (materialLayers - 1);
     for (unsigned int il = 0; il < materialLayers; ++il) {
       layerPositions.push_back(min + il * step);
     }
