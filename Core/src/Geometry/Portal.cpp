@@ -60,6 +60,16 @@ std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
   return os;
 }
 
+std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
+    const PortalLinkBase& other, const Logger& logger) const {
+  ACTS_DEBUG("Merging tro portals");
+
+  ACTS_VERBOSE(" - this: " << *this);
+  ACTS_VERBOSE(" - other: " << other);
+
+  return nullptr;
+}
+
 #if 0
 std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
     const GridPortalLink1& other, const Vector2& offset,

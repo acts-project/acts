@@ -66,6 +66,9 @@ BOOST_AUTO_TEST_CASE(Merging1dCylinder) {
     std::unique_ptr<GridPortalLink> grid1dCyl2 =
         GridPortalLink::make(*cyl, GridPortalLink::Direction::loc1,
                              Axis{AxisBound, -100_mm, 100_mm, 5});
+
+    // Merge the two grids
+    auto mergedPtr = grid1dCyl->merge(*grid1dCyl2, *logger);
   }
 
   BOOST_TEST_CONTEXT("rPhi Binning") {

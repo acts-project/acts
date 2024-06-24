@@ -70,9 +70,9 @@ class PortalLinkBase {
 
   // virtual bool inside(const Vector2& position) const = 0;
 
-  // std::unique_ptr<PortalLinkBase> merge(
-  //     const PortalLinkBase& other, const Vector2& offset,
-  //     const Logger& logger = getDummyLogger()) const;
+  std::unique_ptr<PortalLinkBase> merge(
+      const PortalLinkBase& other,
+      const Logger& logger = getDummyLogger()) const;
 
   virtual void toStream(std::ostream& os) const = 0;
 
