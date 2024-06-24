@@ -68,6 +68,7 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
           -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
 
       - name: Build
         run: cmake --build build
