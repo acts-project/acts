@@ -44,7 +44,7 @@ class SourceLink final {
                   "Cannot wrap SourceLink in SourceLink");
 
     if constexpr (std::is_same_v<T, std::decay_t<T>>) {
-      m_upstream = any_type{std::forward(upstream)};
+      m_upstream = any_type{std::forward<T>(upstream)};
     } else {
       m_upstream = any_type{static_cast<std::decay_t<T>>(upstream)};
     }

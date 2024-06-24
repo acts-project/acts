@@ -45,7 +45,9 @@ class GridBinFinder {
                     std::is_same<std::pair<int, int>, std::decay_t<args>>,
                     std::is_same<std::vector<std::pair<int, int>>,
                                  std::decay_t<args>>>...>::value>>
-  explicit GridBinFinder(args&&... vals);
+  explicit GridBinFinder(args&&... vals) {
+    storeValue(std::forward<args>(vals)...);
+  }
 
   /// @brief Retrieve the neighbouring bins given a local position in the grid
   ///

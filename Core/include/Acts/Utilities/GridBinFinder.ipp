@@ -7,12 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <std::size_t DIM>
-template <typename... args>
-Acts::GridBinFinder<DIM>::GridBinFinder(args&&... vals) {
-  storeValue(std::forward<args>(vals)...);
-}
-
-template <std::size_t DIM>
 template <typename first_value_t, typename... vals>
 void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
                                           vals&&... others) {
