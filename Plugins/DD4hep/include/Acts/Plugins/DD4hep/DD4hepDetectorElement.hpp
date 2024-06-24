@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <map>
 #include <memory>
@@ -92,4 +93,19 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// DD4hep segmentation
   dd4hep::Segmentation m_segmentation;
 };
+
+/// This extension holds an ACTS detector element belonging to a DD4hep detector
+/// element, and synchronizes ownership
+struct DD4hepDetectorElementExtension {
+  explicit DD4hepDetectorElementExtension(
+      std::shared_ptr<DD4hepDetectorElement> de)
+      : detectorElement(std::move(de)) {
+    throw_assert(detectorElement != nullptr,
+                 "DD4hepDetectorElement is nullptr");
+  }
+
+ private:
+  std::shared_ptr<DD4hepDetectorElement> detectorElement;
+};
+
 }  // namespace Acts

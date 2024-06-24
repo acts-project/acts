@@ -197,8 +197,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         // Create the sensitive surface
         auto sensitiveSurf = createSensitiveSurface(detElement, true);
         // Create the surfaceArray
-        std::unique_ptr<Acts::SurfaceArray> sArray =
-            std::make_unique<SurfaceArray>(sensitiveSurf);
+        auto sArray = std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the share disc bounds
         auto dBounds = std::make_shared<const RadialBounds>(pl.min(Acts::binR),
@@ -342,8 +341,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         // create the layer
         double layerR = (pl.min(Acts::binR) + pl.max(Acts::binR)) * 0.5;
         double thickness = std::fabs(pl.max(Acts::binR) - pl.min(Acts::binR));
-        std::shared_ptr<const CylinderBounds> cBounds(
-            new CylinderBounds(layerR, halfZ));
+        auto cBounds = std::make_shared<CylinderBounds>(layerR, halfZ);
         // Create the layer containing the sensitive surface
         centralLayer =
             CylinderLayer::create(transform, cBounds, std::move(sArray),
@@ -390,9 +388,12 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", detElement, "XYZ");
   // Create the corresponding detector element !- memory leak --!
-  Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr);
+  auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
+      detElement, detAxis, UnitConstants::cm, isDisc, nullptr);
+
+  detElement.addExtension<DD4hepDetectorElementExtension>(
+      new dd4hep::rec::StructExtension(
+          DD4hepDetectorElementExtension(dd4hepDetElement)));
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();
