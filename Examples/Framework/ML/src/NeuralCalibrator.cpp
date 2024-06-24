@@ -166,8 +166,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
   measurementCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) =
       output[iVar0 + 1];
 
-  trackState.allocateCalibrated(kSize);
-  trackState.template calibrated() = measurementCopy.parameters();
-  trackState.template calibratedCovariance() = measurementCopy.covariance();
-  trackState.setProjector(measurement.projector());
+  trackState.allocateCalibrated(measurementCopy.size());
+  trackState.effectiveCalibrated() = measurementCopy.parameters();
+  trackState.effectiveCalibratedCovariance() = measurementCopy.covariance();
+  trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
 }

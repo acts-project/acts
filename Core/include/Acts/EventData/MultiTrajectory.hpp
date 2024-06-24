@@ -431,18 +431,18 @@ class MultiTrajectory {
   }
 
   /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param istate Index into the parameter column
+  /// @param parIdx Index into the parameter column
   /// @return Mutable proxy
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Parameters parameters(IndexType istate) {
-    return self().parameters_impl(istate);
+  typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
+    return self().parameters_impl(parIdx);
   }
 
   /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param istate Index into the parameter column
+  /// @param parIdx Index into the parameter column
   /// @return Const proxy
-  typename ConstTrackStateProxy::Parameters parameters(IndexType istate) const {
-    return self().parameters_impl(istate);
+  typename ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
+    return self().parameters_impl(parIdx);
   }
 
   /// Retrieve a covariance proxy instance for a covariance at a given index
@@ -461,61 +461,61 @@ class MultiTrajectory {
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
-  /// @param istate Index into the parameter column
+  /// @param jacIdx Index into the jacobian column
   /// @return Mutable proxy
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Covariance jacobian(IndexType istate) {
-    return self().jacobian_impl(istate);
+  typename TrackStateProxy::Covariance jacobian(IndexType jacIdx) {
+    return self().jacobian_impl(jacIdx);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
-  /// @param istate Index into the parameter column
+  /// @param jacIdx Index into the jacobian column
   /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance jacobian(IndexType istate) const {
-    return self().jacobian_impl(istate);
+  typename ConstTrackStateProxy::Covariance jacobian(IndexType jacIdx) const {
+    return self().jacobian_impl(jacIdx);
   }
 
   /// Retrieve a measurement proxy instance for a measurement at a given index
   /// @tparam measdim the measurement dimension
-  /// @param istate The track state index
+  /// @param measIdx Index into the measurement column
   /// @return Mutable proxy
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   typename TrackStateProxy::template Measurement<measdim> measurement(
-      IndexType istate) {
-    return self().template measurement_impl<measdim>(istate);
+      IndexType measIdx) {
+    return self().template measurement_impl<measdim>(measIdx);
   }
 
   /// Retrieve a measurement proxy instance for a measurement at a given index
   /// @tparam measdim the measurement dimension
-  /// @param istate The track state index
+  /// @param measIdx Index into the measurement column
   /// @return Const proxy
   template <std::size_t measdim>
   typename ConstTrackStateProxy::template Measurement<measdim> measurement(
-      IndexType istate) const {
-    return self().template measurement_impl<measdim>(istate);
+      IndexType measIdx) const {
+    return self().template measurement_impl<measdim>(measIdx);
   }
 
   /// Retrieve a measurement covariance proxy instance for a measurement at a
   /// given index
   /// @tparam measdim the measurement dimension
-  /// @param istate The track state index
+  /// @param covIdx Index into the measurement covariance column
   /// @return Mutable proxy
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   typename TrackStateProxy::template MeasurementCovariance<measdim>
-  measurementCovariance(IndexType istate) {
-    return self().template measurementCovariance_impl<measdim>(istate);
+  measurementCovariance(IndexType covIdx) {
+    return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
   /// Retrieve a measurement covariance proxy instance for a measurement at a
   /// given index
-  /// @param istate The track state index
+  /// @param covIdx Index into the measurement covariance column
   /// @return Const proxy
   template <std::size_t measdim>
   typename ConstTrackStateProxy::template MeasurementCovariance<measdim>
-  measurementCovariance(IndexType istate) const {
-    return self().template measurementCovariance_impl<measdim>(istate);
+  measurementCovariance(IndexType covIdx) const {
+    return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
