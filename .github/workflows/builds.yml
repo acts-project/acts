@@ -24,14 +24,13 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2204:v49
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        # TODO: Bring sqlite to image
-        run: apt-get update && apt-get install -y git-lfs libsqlite3-dev
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v4
         with:
