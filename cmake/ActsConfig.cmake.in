@@ -76,8 +76,8 @@ endif()
 if(PluginPodio IN_LIST Acts_COMPONENTS)
   find_dependency(podio @podio_VERSION@ CONFIG EXACT)
 endif()
-if(PluginGeomodel IN_LIST Acts_COMPONENTS)
-  find_dependency(GeoModel @geomodel_VERSION@ CONFIG EXACT)
+if(PluginGeoModel IN_LIST Acts_COMPONENTS)
+  find_dependency(GeoModel @GeoModel_VERSION@ CONFIG EXACT)
 endif()
 
 # dependencies that we have built ourselves but cannot be
