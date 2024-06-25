@@ -1972,13 +1972,15 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             seedFinder=seeder,
-            useTime=useTime,
-            spatialBinExtent=spatialBinExtent,
-            temporalBinExtent=temporalBinExtent,
             bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
+            **acts.examples.defaultKWArgs(
+                useTime=useTime,
+                spatialBinExtent=spatialBinExtent,
+                temporalBinExtent=temporalBinExtent,
+            ),
         )
         s.addAlgorithm(findVertices)
     else:
