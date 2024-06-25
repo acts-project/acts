@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(safeInverseBadLargeMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
-  Eigen::Matrix<double, 4, 4> m = Eigen::MatrixXd::Identity(4, 4) * SIZE_MAX;
+  Eigen::Matrix<double, 4, 4> m =
+      Eigen::MatrixXd::Identity(4, 4) * std::numeric_limits<std::size_t>::max();
   m(1, 1) = 1;
 
   auto mInv = Acts::safeInverse(m);
@@ -88,7 +89,8 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
-  Eigen::Matrix<double, 5, 5> m = Eigen::MatrixXd::Identity(5, 5) * SIZE_MAX;
+  Eigen::Matrix<double, 5, 5> m =
+      Eigen::MatrixXd::Identity(5, 5) * std::numeric_limits<std::size_t>::max();
   m(1, 1) = 1;
 
   auto mInv = Acts::safeInverse(m);

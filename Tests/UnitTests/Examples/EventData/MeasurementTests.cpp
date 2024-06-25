@@ -11,11 +11,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <algorithm>
 #include <array>
@@ -29,6 +29,7 @@
 
 using namespace Acts;
 using namespace Acts::detail::Test;
+using namespace ActsExamples;
 using SourceLink = Acts::detail::Test::TestSourceLink;
 namespace bd = boost::unit_test::data;
 
@@ -54,7 +55,7 @@ BOOST_AUTO_TEST_SUITE(EventDataMeasurement)
 
 BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  auto meas = makeMeasurement(source, params, cov, index);
+  auto meas = makeFixedSizeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
   for (auto i : boundIndices) {
@@ -72,8 +73,9 @@ BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
 
 BOOST_AUTO_TEST_CASE(FixedBoundAll) {
   auto [params, cov] = generateBoundParametersCovariance(rng);
-  auto meas = makeMeasurement(source, params, cov, eBoundLoc0, eBoundLoc1,
-                              eBoundPhi, eBoundTheta, eBoundQOverP, eBoundTime);
+  auto meas = makeFixedSizeMeasurement(source, params, cov, eBoundLoc0,
+                                       eBoundLoc1, eBoundPhi, eBoundTheta,
+                                       eBoundQOverP, eBoundTime);
 
   BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
   for (auto i : boundIndices) {
@@ -115,7 +117,7 @@ BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
   MeasurementVector params = MeasurementVector::Zero();
   MeasurementCovariance cov = MeasurementCovariance::Zero();
   params[0] = phiMea;
-  auto measurement = makeMeasurement(source, params, cov, eBoundPhi);
+  auto measurement = makeFixedSizeMeasurement(source, params, cov, eBoundPhi);
   // prepare reference parameters
   Acts::BoundVector reference = Acts::BoundVector::Zero();
   reference[eBoundPhi] = phiRef;
@@ -127,7 +129,7 @@ BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
 
 BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  auto meas = makeMeasurement(source, params, cov, index);
+  auto meas = makeFixedSizeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
   for (auto i : freeIndices) {
@@ -151,9 +153,9 @@ BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
 
 BOOST_AUTO_TEST_CASE(FixedFreeAll) {
   auto [params, cov] = generateFreeParametersCovariance(rng);
-  auto meas =
-      makeMeasurement(source, params, cov, eFreePos0, eFreePos1, eFreePos2,
-                      eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP);
+  auto meas = makeFixedSizeMeasurement(
+      source, params, cov, eFreePos0, eFreePos1, eFreePos2, eFreeTime,
+      eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP);
 
   BOOST_CHECK_EQUAL(meas.size(), eFreeSize);
   for (auto i : freeIndices) {
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
   // generate w/ a single parameter
   auto [par1, cov1] = generateParametersCovariance<ActsScalar, 1u>(rng);
   BoundVariantMeasurement meas =
-      makeMeasurement(source, par1, cov1, eBoundTheta);
+      makeFixedSizeMeasurement(source, par1, cov1, eBoundTheta);
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), 1);
@@ -188,8 +190,9 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
 
   // reassign w/ all parameters
   auto [parN, covN] = generateBoundParametersCovariance(rng);
-  meas = makeMeasurement(source, parN, covN, eBoundLoc0, eBoundLoc1, eBoundPhi,
-                         eBoundTheta, eBoundQOverP, eBoundTime);
+  meas = makeFixedSizeMeasurement(source, parN, covN, eBoundLoc0, eBoundLoc1,
+                                  eBoundPhi, eBoundTheta, eBoundQOverP,
+                                  eBoundTime);
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), eBoundSize);
@@ -207,7 +210,7 @@ BOOST_AUTO_TEST_CASE(VariantFree) {
   // generate w/ two parameters
   auto [par2, cov2] = generateParametersCovariance<ActsScalar, 2u>(rng);
   FreeVariantMeasurement meas =
-      makeMeasurement(source, par2, cov2, eFreePos2, eFreeTime);
+      makeFixedSizeMeasurement(source, par2, cov2, eFreePos2, eFreeTime);
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), 2);
@@ -224,9 +227,9 @@ BOOST_AUTO_TEST_CASE(VariantFree) {
 
   // reassign w/ all parameters
   auto [parN, covN] = generateFreeParametersCovariance(rng);
-  meas =
-      makeMeasurement(source, parN, covN, eFreePos0, eFreePos1, eFreePos2,
-                      eFreeTime, eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP);
+  meas = makeFixedSizeMeasurement(source, parN, covN, eFreePos0, eFreePos1,
+                                  eFreePos2, eFreeTime, eFreeDir0, eFreeDir1,
+                                  eFreeDir2, eFreeQOverP);
   std::visit(
       [](const auto& m) {
         BOOST_CHECK_EQUAL(m.size(), eFreeSize);
