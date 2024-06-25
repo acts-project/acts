@@ -159,10 +159,10 @@ void Initialise_hist(std::vector<TH1F*>& surface_hist,
 
   /// Fill the two 1D histograms for each surfaces.
 
-void Fill(std::map<uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<uint64_t,sinfo>& surface_info,
+void Fill(std::map<std::uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<std::uint64_t,sinfo>& surface_info,
   const std::string& input_file, const int& nbprocess){
   std::map<std::string,std::string> surface_name;
-  std::map<uint64_t,float> surface_weight;
+  std::map<std::uint64_t,float> surface_weight;
 
   //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
@@ -174,8 +174,8 @@ void Fill(std::map<uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<uint64_
   std::vector<float> *mat_L0   = 0;
   std::vector<float> *mat_step_length = 0;
 
-  std::vector<uint64_t> *sur_id = 0;
-  std::vector<int32_t> *sur_type = 0;
+  std::vector<std::uint64_t> *sur_id = 0;
+  std::vector<std::int32_t> *sur_type = 0;
   std::vector<float> *sur_x = 0;
   std::vector<float> *sur_y = 0;
   std::vector<float> *sur_z = 0;
@@ -267,8 +267,8 @@ void Mat_map_surface_plot_1D(std::string input_file = "", int nbprocess = -1, st
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  std::map<uint64_t,std::vector<TH1F*>> surface_hist;
-  std::map<uint64_t,sinfo> surface_info;
+  std::map<std::uint64_t,std::vector<TH1F*>> surface_hist;
+  std::map<std::uint64_t,sinfo> surface_info;
 
   Fill(surface_hist, surface_info, input_file, nbprocess);
   for (auto hist_it = surface_hist.begin(); hist_it != surface_hist.end(); hist_it++){

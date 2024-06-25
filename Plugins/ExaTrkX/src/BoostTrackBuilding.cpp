@@ -47,7 +47,7 @@ namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     std::any nodes, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, int) {
+    std::vector<int>& spacepointIDs, torch::Device) {
   ACTS_DEBUG("Start track building");
   const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
   const auto edgeWeightTensor =
@@ -64,7 +64,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     return {};
   }
 
-  using vertex_t = int64_t;
+  using vertex_t = std::int64_t;
   using weight_t = float;
 
   boost::beast::span<vertex_t> rowIndices(edgeTensor.data_ptr<vertex_t>(),

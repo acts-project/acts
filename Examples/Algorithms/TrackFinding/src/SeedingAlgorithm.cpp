@@ -159,15 +159,14 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
-    // check if zBinsCustomLooping contains numbers from 1 to the total number
-    // of bin in zBinEdges
-    for (std::size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
-      if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
-                    m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
-                    i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
+    // check that the bins required in the custom bin looping
+    // are contained in the bins defined by the total number of edges
+
+    for (std::size_t i : m_cfg.seedFinderConfig.zBinsCustomLooping) {
+      if (i >= m_cfg.gridConfig.zBinEdges.size()) {
         throw std::invalid_argument(
-            "Inconsistent config zBinsCustomLooping does not contain the same "
-            "bins as zBinEdges");
+            "Inconsistent config zBinsCustomLooping does not contain a subset "
+            "of bins defined by zBinEdges");
       }
     }
   }

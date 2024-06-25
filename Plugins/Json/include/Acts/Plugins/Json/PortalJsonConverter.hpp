@@ -15,9 +15,15 @@
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 // Custom Json encoder/decoders
 
 namespace Acts {
+
+class Surface;
 
 namespace Experimental {
 class DetectorVolume;
@@ -60,8 +66,9 @@ nlohmann::json toJson(
 ///
 /// @note detray also only has outside pointing links
 ///
-/// @return a json object
-std::vector<nlohmann::json> toJsonDetray(
+/// @return a tuple of json object
+std::tuple<std::vector<nlohmann::json>, std::vector<std::shared_ptr<Surface>>>
+toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
     const std::vector<OrientedSurface>& orientedSurfaces,

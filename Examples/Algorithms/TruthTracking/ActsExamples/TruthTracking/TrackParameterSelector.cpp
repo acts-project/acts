@@ -61,7 +61,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
   outputTrackParameters.reserve(inputTrackParameters.size());
 
   // copy selected tracks and record initial track index
-  for (uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
+  for (std::uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
     const auto& trk = inputTrackParameters[i];
     if (isValidTrack(trk)) {
       outputTrackParameters.push_back(trk);

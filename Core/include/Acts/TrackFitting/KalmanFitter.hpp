@@ -195,14 +195,14 @@ struct KalmanFitterResult {
   /// This is the index of the 'tip' of the track stored in multitrajectory.
   /// This corresponds to the last measurement state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// SIZE_MAX is the start of a trajectory.
-  std::size_t lastMeasurementIndex = SIZE_MAX;
+  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   /// This is the index of the 'tip' of the states stored in multitrajectory.
   /// This corresponds to the last state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
-  /// SIZE_MAX is the start of a trajectory.
-  std::size_t lastTrackIndex = SIZE_MAX;
+  /// Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
+  std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -528,7 +528,8 @@ class KalmanFitter {
                          const navigator_t& navigator,
                          result_type& result) const {
       // Check if there is a measurement on track
-      if (result.lastMeasurementIndex == SIZE_MAX) {
+      if (result.lastMeasurementIndex ==
+          Acts::MultiTrajectoryTraits::kInvalid) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
         return KalmanFitterError::ReverseNavigationFailed;
       }

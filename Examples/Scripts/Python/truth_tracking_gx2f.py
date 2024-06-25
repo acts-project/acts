@@ -45,7 +45,7 @@ def runTruthTrackingGx2f(
             s,
             ParticleConfig(num=1, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
             EtaConfig(-2.5, 2.5, uniform=True),
-            MomentumConfig(100.0 * u.GeV, 100.0 * u.GeV, transverse=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
@@ -157,16 +157,26 @@ def runTruthTrackingGx2f(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # detector, trackingGeometry, _ = getOpenDataDetector()
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # ODD
+    from acts.examples.odd import getOpenDataDetector
+
+    detector, trackingGeometry, _ = getOpenDataDetector()
+    digiConfigFile = (
+        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    )
+
+    ## GenericDetector
+    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # digiConfigFile = (
+    #     srcdir
+    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runTruthTrackingGx2f(
         trackingGeometry=trackingGeometry,
         field=field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        digiConfigFile=digiConfigFile,
         outputDir=Path.cwd(),
     ).run()

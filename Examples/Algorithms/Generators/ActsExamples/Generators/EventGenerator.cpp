@@ -13,7 +13,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
-#include <cstdint>
+#include <limits>
 #include <ostream>
 #include <stdexcept>
 
@@ -43,7 +43,7 @@ std::string ActsExamples::EventGenerator::name() const {
 
 std::pair<std::size_t, std::size_t>
 ActsExamples::EventGenerator::availableEvents() const {
-  return {0u, SIZE_MAX};
+  return {0u, std::numeric_limits<std::size_t>::max()};
 }
 
 ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
