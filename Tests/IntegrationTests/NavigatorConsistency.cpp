@@ -38,9 +38,7 @@ auto tGeometry = cGeometry();
 const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
-Acts::Logging::Level logLevel = Acts::Logging::DEBUG;
-std::unique_ptr<const Acts::Logger> navigatorTestLogger =
-    Acts::getDefaultLogger("NavigatorTest", logLevel);
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
 using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
 
@@ -382,10 +380,10 @@ BOOST_DATA_TEST_CASE(NavigatorSelfConsistency,
              << "\n    charge = " << charge << "\n    index = " << index);
 
   ACTS_DEBUG(">>> Test self consistency epropagator");
-  runSelfConsistencyTest(epropagator, start, *navigatorTestLogger);
+  runSelfConsistencyTest(epropagator, start, logger());
 
   ACTS_DEBUG(">>> Test self consistency slpropagator");
-  runSelfConsistencyTest(slpropagator, start, *navigatorTestLogger);
+  runSelfConsistencyTest(slpropagator, start, logger());
 }
 
 BOOST_DATA_TEST_CASE(NavigatorRef1Consistency,
@@ -407,11 +405,10 @@ BOOST_DATA_TEST_CASE(NavigatorRef1Consistency,
              << "\n    charge = " << charge << "\n    index = " << index);
 
   ACTS_DEBUG(">>> Test reference 1 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator1, start, *navigatorTestLogger);
+  runConsistencyTest(epropagator, refepropagator1, start, logger());
 
   ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator1, start,
-                     *navigatorTestLogger);
+  runConsistencyTest(slpropagator, refslpropagator1, start, logger());
 }
 
 BOOST_DATA_TEST_CASE(NavigatorRef2Consistency,
@@ -433,18 +430,16 @@ BOOST_DATA_TEST_CASE(NavigatorRef2Consistency,
              << "\n    charge = " << charge << "\n    index = " << index);
 
   ACTS_DEBUG(">>> Test reference 1 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator1, start, *navigatorTestLogger);
+  runConsistencyTest(epropagator, refepropagator1, start, logger());
 
   ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator1, start,
-                     *navigatorTestLogger);
+  runConsistencyTest(slpropagator, refslpropagator1, start, logger());
 
   ACTS_DEBUG(">>> Test reference 2 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator2, start, *navigatorTestLogger);
+  runConsistencyTest(epropagator, refepropagator2, start, logger());
 
   ACTS_DEBUG(">>> Test reference 2 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator2, start,
-                     *navigatorTestLogger);
+  runConsistencyTest(slpropagator, refslpropagator2, start, logger());
 }
 
 }  // namespace Acts::Test
