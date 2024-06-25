@@ -1002,8 +1002,15 @@ class CombinatorialKalmanFilter {
             storeLastActiveBranch(result);
           }
 
-          result.activeBranches.pop_back();
+          // Pushing the pop in case it is still the first branch
+          if (nBranchesOnSurface > 0) {
+            result.activeBranches.pop_back();
+          }
         }
+      }
+      // Finally pop the current branch if there are no branches on surface
+      if (nBranchesOnSurface == 0) {
+        result.activeBranches.pop_back();
       }
       return std::make_tuple(nBranchesOnSurface, isOutlier);
     }
