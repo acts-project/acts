@@ -1875,6 +1875,8 @@ def addVertexFitting(
     seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     vertexFinder: VertexFinder = VertexFinder.Truth,
     useTime: Optional[bool] = False,
+    spatialBinExtent: Optional[float] = None,
+    temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1894,10 +1896,14 @@ def addVertexFitting(
         acts.seeder.AdaptiveGridSeeder
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
-    useTime : bool
+    useTime : bool, False
         determines whether time information is used in vertex seeder, finder,
         and fitter
         only implemented for the AMVF and the AdaptiveGridSeeder
+    spatialBinExtent : float, None
+        spatial bin extent for the AdaptiveGridSeeder
+    temporalBinExtent : float, None
+        temporal bin extent for the AdaptiveGridSeeder
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
@@ -1967,6 +1973,8 @@ def addVertexFitting(
             level=customLogLevel(),
             seedFinder=seeder,
             useTime=useTime,
+            spatialBinExtent=spatialBinExtent,
+            temporalBinExtent=temporalBinExtent,
             bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
