@@ -197,7 +197,7 @@ class TrackStateProxy {
   using EffectiveCalibrated =
       typename TrackStateTraits<M, ReadOnly>::EffectiveCalibrated;
 
-  /// Same as @c EffectiveMeasurement, but with const semantics
+  /// Same as @c EffectiveCalibrated, but with const semantics
   using ConstEffectiveCalibrated =
       typename TrackStateTraits<M, true>::EffectiveCalibrated;
 
@@ -206,7 +206,7 @@ class TrackStateProxy {
   using EffectiveCalibratedCovariance =
       typename TrackStateTraits<M, ReadOnly>::EffectiveCalibratedCovariance;
 
-  /// Same as @ref EffectiveMeasurementCovariance, but with const semantics
+  /// Same as @ref EffectiveCalibratedCovariance, but with const semantics
   using ConstEffectiveCalibratedCovariance =
       typename TrackStateTraits<M, true>::EffectiveCalibratedCovariance;
 
