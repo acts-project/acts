@@ -33,13 +33,10 @@ class GraphConstructionBase {
   /// @return (node_features, edge_features, edge_index)
   virtual std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
-<<<<<<< HEAD
-      const std::vector<uint64_t> &moduleIds, int deviceHint = -1) = 0;
-=======
+      const std::vector<uint64_t> &moduleIds,
       torch::Device device = torch::Device(torch::kCPU)) = 0;
 
   virtual torch::Device device() const = 0;
->>>>>>> main
 
   virtual ~GraphConstructionBase() = default;
 };
@@ -52,19 +49,12 @@ class EdgeClassificationBase {
   /// @param edges Edge-index tensor with shape (2, n_edges)
   /// @param device Which GPU device to pick. Not relevant for CPU-only builds
   ///
-<<<<<<< HEAD
   /// @return (node_features, edge_features, edge_index, edge_scores)
   virtual std::tuple<std::any, std::any, std::any, std::any> operator()(
       std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
-      int deviceHint = -1) = 0;
-=======
-  /// @return (node_tensor, edge_tensor, score_tensor)
-  virtual std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges,
       torch::Device device = torch::Device(torch::kCPU)) = 0;
 
   virtual torch::Device device() const = 0;
->>>>>>> main
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -81,16 +71,11 @@ class TrackBuildingBase {
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-<<<<<<< HEAD
       std::any nodeFeatures, std::any edgeIndex, std::any edgeScores,
-      std::vector<int> &spacepointIDs, int deviceHint = -1) = 0;
-=======
-      std::any nodes, std::any edges, std::any edgeWeights,
       std::vector<int> &spacepointIDs,
       torch::Device device = torch::Device(torch::kCPU)) = 0;
 
   virtual torch::Device device() const = 0;
->>>>>>> main
 
   virtual ~TrackBuildingBase() = default;
 };

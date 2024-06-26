@@ -9,7 +9,7 @@ if(ACTS_EXATRKX_ENABLE_MODULEMAP)
   find_package(ModuleMapGraph REQUIRED COMPONENTS CPU)
 
   list(APPEND SOURCES
-  src/ModuleMapCpp.cpp
+    src/ModuleMapCpp.cpp
   )
 endif()
 

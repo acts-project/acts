@@ -10,10 +10,8 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
-#define NDEBUG
 #include <graph_creator>
 #include <module_map_triplet>
-#undef NDEBUG
 
 namespace Acts {
 
@@ -42,7 +40,7 @@ ModuleMapCpp::~ModuleMapCpp() {}
 
 std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    const std::vector<uint64_t> &moduleIds, int /*deviceHint*/) {
+    const std::vector<uint64_t> &moduleIds, torch::Device /*device*/) {
   if (numNodes != moduleIds.size()) {
     throw std::invalid_argument(
         "Module Ids do not match number of graph nodes");

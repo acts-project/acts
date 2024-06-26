@@ -11,7 +11,10 @@
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
+#ifndef ACTS_EXATRKX_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
+#endif
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -62,22 +65,18 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 
 TorchMetricLearning::~TorchMetricLearning() {}
 
-<<<<<<< HEAD
 std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    const std::vector<uint64_t> & /*moduleIds*/, int deviceHint) {
-=======
-std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    std::vector<float> &inputValues, std::size_t numNodes,
-    torch::Device device) {
->>>>>>> main
+    const std::vector<uint64_t> & /*moduleIds*/, torch::Device device) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
+#ifndef ACTS_EXATRKX_CPUONLY
   if (device.is_cuda()) {
     c10::cuda::CUDAGuard device_guard(device.index());
   }
+#endif
 
   const std::int64_t numAllFeatures = inputValues.size() / numNodes;
 
