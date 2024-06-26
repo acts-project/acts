@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
                                           {-4.54747e-13, -427.981, 225.541}};
   std::vector<float> driftRadius{14.5202, 1.66237, 12.3176,
                                  1.5412,  12.3937, 3.77967};
-  std::vector<std::vector<int8_t>> stationInfo{
+  std::vector<std::vector<std::int8_t>> stationInfo{
       {5, -1, 4, 1, 1, 39}, {5, -1, 4, 1, 2, 38}, {5, -1, 4, 1, 3, 39},
       {5, -1, 4, 2, 1, 39}, {5, -1, 4, 2, 2, 39}, {5, -1, 4, 2, 3, 39}};
 
