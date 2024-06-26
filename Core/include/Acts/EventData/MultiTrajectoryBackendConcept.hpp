@@ -59,11 +59,11 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
   { cv.jacobian_impl(istate) } -> std::same_as<detail::ConstCovariance>;
 
   {
-    cv.template measurement_impl<2>(istate)
+    cv.template calibrated_impl<2>(istate)
     } -> std::same_as<Eigen::Map<const ActsVector<2>>>;
 
   {
-    cv.template measurementCovariance_impl<2>(istate)
+    cv.template calibratedCovariance_impl<2>(istate)
     } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 
   { cv.has_impl(key, istate) } -> std::same_as<bool>;
