@@ -43,6 +43,9 @@ class ModuleMapCpp : public GraphConstructionBase {
   std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
       const std::vector<uint64_t> &moduleIds, torch::Device device = torch::Device(torch::kCPU)) override;
+
+
+  torch::Device device() const override { return torch::Device(torch::kCPU); }
 };
 
 }  // namespace Acts

@@ -68,7 +68,7 @@ target_link_libraries(
   PUBLIC
     ActsCore
     Boost::boost
-  PRIVATE
+  # PRIVATE   -- TODO make torch private again
     ${TORCH_LIBRARIES}
     std::filesystem
 )
