@@ -13,6 +13,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <cmath>
 #include <vector>
