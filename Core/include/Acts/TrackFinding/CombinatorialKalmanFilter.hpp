@@ -235,7 +235,7 @@ struct CombinatorialKalmanFilterOptions {
           const GeometryContext& geoContext,
           const CalibrationContext& calibrationContext, const Surface& surface,
           const BoundState& boundState, source_link_iterator_t slBegin,
-          source_link_iterator_t slEnd, std::size_t prevTip,
+          source_link_iterator_t slEnd, TrackIndexType prevTip,
           typename track_container_t::TrackStateBackendContainer&
               bufferTrajectory,
           std::vector<typename track_container_t::TrackStateProxy>&
@@ -364,7 +364,7 @@ class CombinatorialKalmanFilter {
         const CalibrationContext& calibrationContext,
         [[maybe_unused]] const Surface& surface, const BoundState& boundState,
         source_link_iterator_t slBegin, source_link_iterator_t slEnd,
-        std::size_t prevTip,
+        TrackIndexType prevTip,
         typename track_container_t::TrackStateBackendContainer&
             bufferTrajectory,
         std::vector<typename track_container_t::TrackStateProxy>&
@@ -767,7 +767,7 @@ class CombinatorialKalmanFilter {
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
         const auto& currentBranch = result.activeBranches.back();
-        std::size_t prevTip = currentBranch.tipIndex();
+        TrackIndexType prevTip = currentBranch.tipIndex();
         const TipState& prevTipState = tipStateAccessor(currentBranch);
 
         // Create trackstates for all source links (will be filtered later)
@@ -825,7 +825,7 @@ class CombinatorialKalmanFilter {
 
         // Retrieve the previous tip and its state
         auto currentBranch = result.activeBranches.back();
-        std::size_t prevTip = currentBranch.tipIndex();
+        TrackIndexType prevTip = currentBranch.tipIndex();
         TipState& tipState = tipStateAccessor(currentBranch);
 
         // The surface could be either sensitive or passive
@@ -870,7 +870,7 @@ class CombinatorialKalmanFilter {
           boundParams.covariance() = state.stepping.cov;
 
           // Add a hole or material track state to the multitrajectory
-          std::size_t currentTip = addNonSourcelinkState(
+          TrackIndexType currentTip = addNonSourcelinkState(
               stateMask, boundState, result, isSensitive, prevTip);
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
@@ -1024,10 +1024,10 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    std::size_t addNonSourcelinkState(TrackStatePropMask stateMask,
-                                      const BoundState& boundState,
-                                      result_type& result, bool isSensitive,
-                                      std::size_t prevTip) const {
+    TrackIndexType addNonSourcelinkState(TrackStatePropMask stateMask,
+                                         const BoundState& boundState,
+                                         result_type& result, bool isSensitive,
+                                         TrackIndexType prevTip) const {
       // Add a track state
       auto trackStateProxy =
           result.trackStates->makeTrackState(stateMask, prevTip);
@@ -1128,7 +1128,7 @@ class CombinatorialKalmanFilter {
 
     void storeLastActiveBranch(result_type& result) const {
       auto currentBranch = result.activeBranches.back();
-      std::size_t currentTip = currentBranch.tipIndex();
+      TrackIndexType currentTip = currentBranch.tipIndex();
       const TipState& tipState = tipStateAccessor(currentBranch);
 
       // @TODO: Keep information on tip state around so we don't have to
