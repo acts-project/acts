@@ -1,37 +1,67 @@
 'Infrastructure':
-  - .github/**
-  - CI/**
-  - cmake/**
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/**
+      - CI/**
+      - cmake/**
 'Component - Core':
-  - Core/**
-  - Tests/UnitTests/Core/**
+  - changed-files:
+    - any-glob-to-any-file:
+      - Core/**
+      - Tests/UnitTests/Core/**
 'Component - Examples':
-  - Examples/**
-  - Tests/UnitTests/Examples/**
+  - changed-files:
+    - any-glob-to-any-file:
+      - Examples/**
+      - Tests/UnitTests/Examples/**
 'Component - Fatras':
-  - Fatras/**
-  - Tests/UnitTests/Fatras/**
+  - changed-files:
+    - any-glob-to-any-file:
+      - Fatras/**
+      - Tests/UnitTests/Fatras/**
 'Component - Plugins':
-  - Plugins/**
-  - Tests/UnitTests/Plugins/**
+  - changed-files:
+    - any-glob-to-any-file:
+      - Plugins/**
+      - Tests/UnitTests/Plugins/**
 'Component - Documentation':
-  - docs/**
+  - changed-files:
+    - any-glob-to-any-file:
+      - docs/**
 'Changes Performance':
-  - CI/physmon/reference/**
-  - Examples/Python/tests/root_file_hashes.txt
+  - changed-files:
+    - any-glob-to-any-file:
+      - CI/physmon/reference/**
+      - Examples/Python/tests/root_file_hashes.txt
 'Event Data Model':
-  - '**/*EventData*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*EventData*/**'
 'Clustering':
-  - '**/*Clusterization*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*Clusterization*/**'
 'SP formation':
-  - '**/*SpacePointFormation*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*SpacePointFormation*/**'
 'Seeding':
-  - '**/*Seeding*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*Seeding*/**'
 'Track Finding':
-  - '**/*TrackFinding*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*TrackFinding*/**'
 'Track Fitting':
-  - '**/*TrackFitting*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*TrackFitting*/**'
 'Vertexing':
-  - '**/*Vertexing*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*Vertexing*/**'
 'Ambiguity Resolution':
-  - '**/*AmbiguityResolution*/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*AmbiguityResolution*/**'
