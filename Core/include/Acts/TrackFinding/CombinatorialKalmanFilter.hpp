@@ -1224,6 +1224,14 @@ class CombinatorialKalmanFilter {
   };
 
  public:
+  /// Prepare the track container for the CombinatorialKalmanFilter
+  ///
+  /// @param trackContainer The track container to be prepared
+  static void prepareContainer(track_container_t& trackContainer) {
+    trackContainer.template addColumn<CombinatorialKalmanFilterTipState>(
+        s_combinatorialKalmanFilterTipStateColumn);
+  }
+
   /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   ///
   /// @tparam source_link_iterator_t Type of the source link iterator
@@ -1308,8 +1316,7 @@ class CombinatorialKalmanFilter {
     if (!trackContainer.hasColumn(tipStateAccessor.key)) {
       ACTS_ERROR(
           "Track container does not have the tip state column \"CkfTipState\"");
-      trackContainer.template addColumn<CombinatorialKalmanFilterTipState>(
-          s_combinatorialKalmanFilterTipStateColumn);
+      prepareContainer(trackContainer);
     }
 
     auto rootBranch = trackContainer.makeTrack();
