@@ -118,6 +118,12 @@ class FixedSizeSubspace {
   /// Size of the full vector space.
   static constexpr std::size_t fullSize() { return kFullSize; }
 
+  /// Access axis index by position.
+  ///
+  /// @param i Position in the subspace
+  /// @return Axis index in the full space
+  constexpr std::size_t operator[](std::size_t i) const { return m_axes[i]; }
+
   /// Axis indices that comprise the subspace.
   ///
   /// The specific container and index type should be considered an
@@ -133,7 +139,7 @@ class FixedSizeSubspace {
     // always iterate over all elements to avoid branching and hope the compiler
     // can optimise this for us.
     for (auto a : m_axes) {
-      isContained = (isContained || (a == index));
+      isContained |= (a == index);
     }
     return isContained;
   }
@@ -201,6 +207,175 @@ class FixedSizeSubspace {
       expn(m_axes[i], i) = 1;
     }
     return expn;
+  }
+};
+
+/// Variable-size subspace representation.
+///
+/// @tparam kFullSize Size of the full vector space
+/// @tparam kSize Size of the subspace
+template <std::size_t kFullSize>
+class VariableSizeSubspace {
+  static_assert(kFullSize <= static_cast<std::size_t>(UINT8_MAX),
+                "Full vector space size is larger than the supported range");
+
+  template <typename scalar_t>
+  using ProjectionMatrix = Eigen::Matrix<scalar_t, Eigen::Dynamic, kFullSize>;
+  template <typename scalar_t>
+  using ExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, Eigen::Dynamic>;
+
+  template <typename scalar_t>
+  using FullProjectionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
+  template <typename scalar_t>
+  using FullExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
+
+  std::size_t m_size{};
+
+  // the functionality could also be implemented using a std::bitset where each
+  // bit corresponds to an axis in the fullspace and set bits indicate which
+  // bits make up the subspace. this would be a more compact representation but
+  // complicates the implementation since we can not easily iterate over the
+  // indices of the subspace. storing the subspace indices directly requires a
+  // bit more memory but is easier to work with. for our typical use cases with
+  // n<=8, this still takes only 64bit of memory.
+  std::array<std::uint8_t, kFullSize> m_axes{};
+
+ public:
+  /// Construct from a container of axis indices.
+  ///
+  /// @tparam index_t Input index type, must be convertible to std::uint8_t
+  /// @param indices Unique, ordered indices
+  template <typename index_t, std::size_t kSize>
+  constexpr VariableSizeSubspace(const std::array<index_t, kSize>& indices) {
+    m_size = kSize;
+    for (std::size_t i = 0u; i < kSize; ++i) {
+      assert((indices[i] < kFullSize) &&
+             "Axis indices must be within the full space");
+      if (0u < i) {
+        assert((indices[i - 1u] < indices[i]) &&
+               "Axis indices must be unique and ordered");
+      }
+    }
+    for (std::size_t i = 0; i < kSize; ++i) {
+      m_axes[i] = static_cast<std::uint8_t>(indices[i]);
+    }
+  }
+  // The subset can not be constructed w/o defining its axis indices.
+  VariableSizeSubspace() = delete;
+  VariableSizeSubspace(const VariableSizeSubspace&) = default;
+  VariableSizeSubspace(VariableSizeSubspace&&) = default;
+  VariableSizeSubspace& operator=(const VariableSizeSubspace&) = default;
+  VariableSizeSubspace& operator=(VariableSizeSubspace&&) = default;
+
+  /// Size of the subspace.
+  constexpr std::size_t size() const { return m_size; }
+  /// Size of the full vector space.
+  static constexpr std::size_t fullSize() { return kFullSize; }
+
+  /// Access axis index by position.
+  ///
+  /// @param i Position in the subspace
+  /// @return Axis index in the full space
+  constexpr std::size_t operator[](std::size_t i) const {
+    assert(i < m_size);
+    return m_axes[i];
+  }
+
+  /// Check if the given axis index in the full space is part of the subspace.
+  constexpr bool contains(std::size_t index) const {
+    bool isContained = false;
+    // always iterate over all elements to avoid branching and hope the compiler
+    // can optimise this for us.
+    for (std::size_t i = 0; i < kFullSize; ++i) {
+      isContained |= ((i < m_size) & (m_axes[i] == index));
+    }
+    return isContained;
+  }
+
+  /// Projection matrix that maps from the full space into the subspace.
+  ///
+  /// @tparam scalar_t Scalar type for the projection matrix
+  template <typename scalar_t>
+  auto projector() const -> ProjectionMatrix<scalar_t> {
+    ProjectionMatrix<scalar_t> proj(m_size, kFullSize);
+    proj.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      proj(i, m_axes[i]) = 1;
+    }
+    return proj;
+  }
+
+  /// Expansion matrix that maps from the subspace into the full space.
+  ///
+  /// @tparam scalar_t Scalar type of the generated expansion matrix
+  template <typename scalar_t>
+  auto expander() const -> ExpansionMatrix<scalar_t> {
+    ExpansionMatrix<scalar_t> expn(kFullSize, m_size);
+    expn.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      expn(m_axes[i], i) = 1;
+    }
+    return expn;
+  }
+
+  /// Projection matrix that maps from the full space into the subspace.
+  ///
+  /// @tparam scalar_t Scalar type for the projection matrix
+  template <typename scalar_t>
+  auto fullProjector() const -> FullProjectionMatrix<scalar_t> {
+    FullProjectionMatrix<scalar_t> proj;
+    proj.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      proj(i, m_axes[i]) = 1;
+    }
+    return proj;
+  }
+
+  /// Expansion matrix that maps from the subspace into the full space.
+  ///
+  /// @tparam scalar_t Scalar type of the generated expansion matrix
+  template <typename scalar_t>
+  auto fullExpander() const -> FullExpansionMatrix<scalar_t> {
+    FullExpansionMatrix<scalar_t> expn;
+    expn.setZero();
+    for (auto i = 0u; i < m_size; ++i) {
+      expn(m_axes[i], i) = 1;
+    }
+    return expn;
+  }
+
+  std::uint64_t projectorBits() const {
+    std::uint64_t result = 0;
+
+    for (std::size_t i = 0; i < m_size; ++i) {
+      for (std::size_t j = 0; j < kFullSize; ++j) {
+        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
+        // in `matrixToBitset`
+        std::size_t index = m_size * kFullSize - 1 - (i + j * m_size);
+        if (m_axes[i] == j) {
+          result |= (1ull << index);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  std::uint64_t fullProjectorBits() const {
+    std::uint64_t result = 0;
+
+    for (std::size_t i = 0; i < kFullSize; ++i) {
+      for (std::size_t j = 0; j < kFullSize; ++j) {
+        // the bit order is defined in `Acts/Utilities/AlgebraHelpers.hpp`
+        // in `matrixToBitset`
+        std::size_t index = kFullSize * kFullSize - 1 - (i + j * kFullSize);
+        if (i < m_size && m_axes[i] == j) {
+          result |= (1ull << index);
+        }
+      }
+    }
+
+    return result;
   }
 };
 
