@@ -10,8 +10,8 @@
 
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "ActsExamples/EventData/DriftCircle.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/MuonSimHit.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <array>
 #include <memory>
@@ -19,49 +19,44 @@
 
 namespace Acts::Test {
 
-BOOST_AUTO_TEST_CASE(hough_transform_seeder){
-
-  //we are using the slope on yz plane with the y coordinate (hardcoded from the csv MuonSimHit data)
-  std::vector<std::pair<double,double>> simHits = {{-0.0401472/0.994974,-422.612}};
-  //The drift circles info (hardcoded from the csv file)
-   std::vector<std::vector<float>> tubePos{{-4.54747e-13,-427.981,-225.541},
-                                            {0,-412.964,-199.53},
-                                            {1.36424e-12,-427.981,-173.519},
-                                            {-9.09495e-13,-427.981,173.519}, 
-                                            {0,-442.999,199.53}, 
-                                            {-4.54747e-13,-427.981,225.541}};
-   std::vector<float> driftRadius{14.5202, 1.66237, 12.3176, 1.5412, 12.3937, 3.77967};
-   std::vector<std::vector<int8_t>> stationInfo{{5,-1,4,1,1,39},
-                                                {5,-1,4,1,2,38},
-                                                {5,-1,4,1,3,39},
-                                                {5,-1,4,2,1,39},
-                                                {5,-1,4,2,2,39},
-                                                {5,-1,4,2,3,39}};
+BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
+  // we are using the slope on yz plane with the y coordinate (hardcoded from
+  // the csv MuonSimHit data)
+  std::vector<std::pair<double, double>> simHits = {
+      {-0.0401472 / 0.994974, -422.612}};
+  // The drift circles info (hardcoded from the csv file)
+  std::vector<std::vector<float>> tubePos{{-4.54747e-13, -427.981, -225.541},
+                                          {0, -412.964, -199.53},
+                                          {1.36424e-12, -427.981, -173.519},
+                                          {-9.09495e-13, -427.981, 173.519},
+                                          {0, -442.999, 199.53},
+                                          {-4.54747e-13, -427.981, 225.541}};
+  std::vector<float> driftRadius{14.5202, 1.66237, 12.3176,
+                                 1.5412,  12.3937, 3.77967};
+  std::vector<std::vector<int8_t>> stationInfo{
+      {5, -1, 4, 1, 1, 39}, {5, -1, 4, 1, 2, 38}, {5, -1, 4, 1, 3, 39},
+      {5, -1, 4, 2, 1, 39}, {5, -1, 4, 2, 2, 39}, {5, -1, 4, 2, 3, 39}};
 
   BOOST_CHECK_EQUAL(tubePos.size(), driftRadius.size());
   BOOST_CHECK_EQUAL(stationInfo.size(), tubePos.size());
-  //Define the drift Circles
+  // Define the drift Circles
   std::vector<ActsExamples::DriftCircle> driftCircles;
-  for(std::size_t i = 0; i < tubePos.size(); i++){
-     ActsFatras::Hit::Vector3 tube_pos{
-      tubePos[i][0] * Acts::UnitConstants::mm,
-      tubePos[i][1] * Acts::UnitConstants::mm,
-      tubePos[i][2] * Acts::UnitConstants::mm
-     };
-    driftCircles.push_back(ActsExamples::DriftCircle(std::move(tube_pos), driftRadius[i], 0.0f, 
-                                                    stationInfo[i][0], stationInfo[i][1], stationInfo[i][2],
-                                                    stationInfo[i][3], stationInfo[i][4], stationInfo[i][5]));
-
+  for (std::size_t i = 0; i < tubePos.size(); i++) {
+    ActsFatras::Hit::Vector3 tube_pos{tubePos[i][0] * Acts::UnitConstants::mm,
+                                      tubePos[i][1] * Acts::UnitConstants::mm,
+                                      tubePos[i][2] * Acts::UnitConstants::mm};
+    driftCircles.push_back(ActsExamples::DriftCircle(
+        std::move(tube_pos), driftRadius[i], 0.0f, stationInfo[i][0],
+        stationInfo[i][1], stationInfo[i][2], stationInfo[i][3],
+        stationInfo[i][4], stationInfo[i][5]));
   }
-  
-  
 
   // configure the binning of the hough plane
   Acts::HoughTransformUtils::HoughPlaneConfig planeCfg;
   planeCfg.nBinsX = 1000;
   planeCfg.nBinsY = 1000;
 
-    // instantiate the peak finder
+  // instantiate the peak finder
   Acts::HoughTransformUtils::PeakFinders::IslandsAroundMaxConfig peakFinderCfg;
   peakFinderCfg.fractionCutoff = 0.7;
   peakFinderCfg.threshold = 3.;
@@ -75,12 +70,14 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder){
   // Note that there are two solutions for each drift circle and angle
 
   // left solution
-  auto houghParam_fromDC_left = [](double tanTheta, const ActsExamples::DriftCircle& DC) {
+  auto houghParam_fromDC_left = [](double tanTheta,
+                                   const ActsExamples::DriftCircle& DC) {
     return DC.y() - tanTheta * DC.z() -
            DC.rDrift() / std::cos(std::atan(tanTheta));
   };
   // right solution
-  auto houghParam_fromDC_right = [](double tanTheta, const ActsExamples::DriftCircle& DC) {
+  auto houghParam_fromDC_right = [](double tanTheta,
+                                    const ActsExamples::DriftCircle& DC) {
     return DC.y() - tanTheta * DC.z() +
            DC.rDrift() / std::cos(std::atan(tanTheta));
   };
@@ -94,7 +91,7 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder){
   };
 
   // store the true parameters
-  //std::vector<PatternSeed> truePatterns;
+  // std::vector<PatternSeed> truePatterns;
 
   // instantiate the hough plane
   Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
@@ -104,13 +101,12 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder){
       Acts::GeometryIdentifier::Value>
       peakFinder(peakFinderCfg);
 
-  //loop over the true hits
-  for(auto& sh : simHits){
-
+  // loop over the true hits
+  for (auto& sh : simHits) {
     houghPlane.reset();
 
-    for(ActsExamples::DriftCircle& dc : driftCircles){
-     ActsExamples::muonMdtIdentifierFields idf;
+    for (ActsExamples::DriftCircle& dc : driftCircles) {
+      ActsExamples::muonMdtIdentifierFields idf;
       idf.multilayer = dc.multilayer();
       idf.stationEta = dc.stationEta();
       idf.stationPhi = dc.stationPhi();
@@ -120,27 +116,23 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder){
       auto identifier = compressId(idf);
       auto effectiveLayer = 3 * (dc.multilayer() - 1) + (dc.tubeLayer() - 1);
 
-      houghPlane.fill<ActsExamples::DriftCircle>(dc, axisRanges, houghParam_fromDC_left,
-                                     houghWidth_fromDC, identifier,
-                                     effectiveLayer, 1.0);
-      houghPlane.fill<ActsExamples::DriftCircle>(dc, axisRanges, houghParam_fromDC_right,
-                                     houghWidth_fromDC, identifier,
-                                     effectiveLayer, 1.0);
-
-
+      houghPlane.fill<ActsExamples::DriftCircle>(
+          dc, axisRanges, houghParam_fromDC_left, houghWidth_fromDC, identifier,
+          effectiveLayer, 1.0);
+      houghPlane.fill<ActsExamples::DriftCircle>(
+          dc, axisRanges, houghParam_fromDC_right, houghWidth_fromDC,
+          identifier, effectiveLayer, 1.0);
     }
 
-      // now get the peaks
+    // now get the peaks
     auto maxima = peakFinder.findPeaks(houghPlane, axisRanges);
 
-    for(auto& max : maxima){
-    //check the Hough Transforms results
-    BOOST_CHECK_CLOSE(max.x, sh.first, 5.);
-    BOOST_CHECK_CLOSE(max.y, sh.second, 1.);
+    for (auto& max : maxima) {
+      // check the Hough Transforms results
+      BOOST_CHECK_CLOSE(max.x, sh.first, 5.);
+      BOOST_CHECK_CLOSE(max.y, sh.second, 1.);
     }
-
   }
-
 }
 
-}// namespace Acts:Test
+}  // namespace Acts::Test
