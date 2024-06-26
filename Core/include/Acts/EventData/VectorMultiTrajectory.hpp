@@ -315,15 +315,16 @@ class VectorMultiTrajectoryBase {
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
   std::vector<IndexType> m_next;
-  std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
-  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
+      m_params;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
 
   std::vector<double> m_meas;
   std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
   std::vector<double> m_measCov;
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
-  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_jac;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
   std::vector<std::optional<SourceLink>> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
@@ -438,9 +439,7 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   void clear_impl();
 
@@ -565,9 +564,7 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const {
-    return m_index.size();
-  }
+  IndexType size_impl() const { return m_index.size(); }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(

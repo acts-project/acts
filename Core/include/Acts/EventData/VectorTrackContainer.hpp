@@ -44,14 +44,14 @@ class VectorTrackContainerBase {
       MultiTrajectoryTraits::MeasurementSizeMax;
 
   using Parameters =
-      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
  protected:
   VectorTrackContainerBase() = default;
@@ -174,8 +174,9 @@ class VectorTrackContainerBase {
   std::vector<IndexType> m_tipIndex;
   std::vector<IndexType> m_stemIndex;
   std::vector<ParticleHypothesis> m_particleHypothesis;
-  std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
-  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
+      m_params;
+  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
   std::vector<unsigned int> m_nMeasurements;

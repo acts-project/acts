@@ -62,19 +62,11 @@ MeasurementSelector::select(
   for (std::size_t i(0ul); i < candidates.size(); ++i) {
     auto& trackState = candidates[i];
 
-    // This abuses an incorrectly sized vector / matrix to access the
-    // data pointer! This works (don't use the matrix as is!), but be
-    // careful!
-    double chi2 = calculateChi2(
-        trackState
-            .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
-            .data(),
-        trackState
-            .template calibratedCovariance<
-                MultiTrajectoryTraits::MeasurementSizeMax>()
-            .data(),
-        trackState.predicted(), trackState.predictedCovariance(),
-        trackState.projector(), trackState.calibratedSize());
+    double chi2 =
+        calculateChi2(trackState.effectiveCalibrated().data(),
+                      trackState.effectiveCalibratedCovariance().data(),
+                      trackState.predicted(), trackState.predictedCovariance(),
+                      trackState.projector(), trackState.calibratedSize());
     trackState.chi2() = chi2;
 
     if (chi2 < minChi2) {
