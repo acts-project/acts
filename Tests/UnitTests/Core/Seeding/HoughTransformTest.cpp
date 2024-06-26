@@ -10,8 +10,9 @@
 
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "ActsExamples/EventData/DriftCircle.hpp"
-#include "ActsExamples/EventData/MuonSimHit.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/MuonSimHit.hpp"
+
 
 #include <array>
 #include <memory>
