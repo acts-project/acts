@@ -1,5 +1,6 @@
 add_executable(ActsUnitTestSeedFinder SeedFinderTest.cpp)
-target_link_libraries(ActsUnitTestSeedFinder PRIVATE ActsCore Boost::boost)
-
+target_link_libraries(ActsUnitTestSeedFinder PRIVATE ActsCore  Boost::boost)
+set(unittest_extra_libraries ActsExamplesFramework)
 add_unittest(EstimateTrackParamsFromSeed EstimateTrackParamsFromSeedTest.cpp)
 add_unittest(BinnedGroupTest BinnedGroupTest.cpp)
+add_unittest(HoughTransformTest HoughTransformTest.cpp)
