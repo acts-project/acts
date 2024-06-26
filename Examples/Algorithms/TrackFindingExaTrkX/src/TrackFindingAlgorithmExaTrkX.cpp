@@ -273,7 +273,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     std::lock_guard<std::mutex> lock(m_mutex);
 
     Acts::ExaTrkXTiming timing;
-    auto res = m_pipeline.run(features, moduleIds, spacepointIDs, *hook, &timing);
+    auto res =
+        m_pipeline.run(features, moduleIds, spacepointIDs, *hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 

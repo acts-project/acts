@@ -82,8 +82,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     float phi = hitFeatures[1];
     float z = hitFeatures[2];
 
-    float x = r*std::cos(phi);
-    float y = r*std::sin(phi);
+    float x = r * std::cos(phi);
+    float y = r * std::sin(phi);
 
     uint64_t particleId = 0;  // We do not know
     uint64_t moduleId = moduleIds[i];
@@ -144,7 +144,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     const auto phiSlope = deltaPhi / deltaR;
     edgeFeatureVector.push_back(phiSlope);
 
-    const auto deltaRPhi = tgt.r()*tgt.phi() - src.r()*src.phi();
+    const auto deltaRPhi = tgt.r() * tgt.phi() - src.r() * src.phi();
     const float rPhiSlope = deltaRPhi / deltaR;
     edgeFeatureVector.push_back(rPhiSlope);
   }

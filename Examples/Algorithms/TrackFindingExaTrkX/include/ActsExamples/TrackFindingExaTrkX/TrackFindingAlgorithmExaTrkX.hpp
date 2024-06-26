@@ -84,10 +84,11 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
 
     /// Node features
-    std::vector<NodeFeature> nodeFeatures = { NodeFeature::eR, NodeFeature::ePhi, NodeFeature::eZ };
+    std::vector<NodeFeature> nodeFeatures = {NodeFeature::eR, NodeFeature::ePhi,
+                                             NodeFeature::eZ};
 
     /// Feature scales
-    std::vector<float> featureScales = { 1.f, 1.f, 1.f };
+    std::vector<float> featureScales = {1.f, 1.f, 1.f};
 
     /// Remove track candidates with 2 or less hits
     bool filterShortTracks = false;

@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
-
 #ifndef ACTS_EXATRKX_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
 #endif
