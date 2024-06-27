@@ -26,6 +26,7 @@ Level& getFailureThresholdMutable() {
     if (envvar == nullptr) {
       return level;
     }
+
     std::string slevel = envvar;
     if (slevel == "VERBOSE") {
       level = std::min(level, Level::VERBOSE);
@@ -60,7 +61,14 @@ void setFailureThreshold(Level level) {
 }
 
 ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
-  setFailureThreshold(m_previousLevel);
+  try {
+    setFailureThreshold(m_previousLevel);
+  } catch (const std::bad_alloc&) {
+    // bad alloc can be thrown when initializing the global static variable
+    std::cerr << "Failed to reset log failure threshold (bad_alloc)"
+              << std::endl;
+    std::terminate();
+  }
 }
 
 #else
