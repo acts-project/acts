@@ -13,7 +13,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(cxx_flags "${cxx_flags} -Wfloat-conversion")
 endif()
 
-# set(ACTS_CXX_FLAGS "${extra_flags}" CACHE STRING "Extra C++ compiler flags")
 
 set(ACTS_CXX_STANDARD 17)
 set(ACTS_CXX_STANDARD_FEATURE cxx_std_17)
