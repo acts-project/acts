@@ -296,7 +296,7 @@ class VariableSizeSubspace {
   ///
   /// @tparam scalar_t Scalar type for the projection matrix
   template <typename scalar_t>
-  auto projector() const -> ProjectionMatrix<scalar_t> {
+  ProjectionMatrix<scalar_t> projector() const  {
     ProjectionMatrix<scalar_t> proj(m_size, kFullSize);
     proj.setZero();
     for (auto i = 0u; i < m_size; ++i) {
