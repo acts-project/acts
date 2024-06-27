@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -15,6 +16,7 @@
 // #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -71,8 +73,8 @@ class PortalLinkBase {
   // virtual bool inside(const Vector2& position) const = 0;
 
   std::unique_ptr<PortalLinkBase> merge(
-      const PortalLinkBase& other,
-      const Logger& logger = getDummyLogger()) const;
+      const GeometryContext& gctx, const PortalLinkBase& other,
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
 
   virtual void toStream(std::ostream& os) const = 0;
 
@@ -81,6 +83,10 @@ class PortalLinkBase {
   const RegularSurface& surface() const { return *m_surface; }
 
  protected:
+  std::unique_ptr<PortalLinkBase> mergeImpl(const PortalLinkBase& other,
+                                            const RegularSurface& mergedSurface,
+                                            BinningValue direction,
+                                            const Logger& logger);
   const RegularSurface* m_surface;
 };
 
@@ -96,8 +102,7 @@ concept RegularSurfaceConcept =
 #endif
 }  // namespace detail
 
-template <ACTS_CONCEPT(detail::RegularSurfaceConcept) surface_t,
-          typename... Axes>
+template <typename... Axes>
 class GridPortalLinkT;
 
 class GridPortalLink : public PortalLinkBase {
@@ -107,18 +112,16 @@ class GridPortalLink : public PortalLinkBase {
   GridPortalLink(const RegularSurface& surface, Direction direction)
       : PortalLinkBase(surface), m_direction(direction) {}
 
-  template <ACTS_CONCEPT(detail::RegularSurfaceConcept) surface_t,
-            typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
-  static auto make(const surface_t& surface, Direction direction,
+  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
+  static auto make(const RegularSurface& surface, Direction direction,
                    Axes&&... axes) {
-    return std::make_unique<GridPortalLinkT<surface_t, Axes...>>(
+    return std::make_unique<GridPortalLinkT<Axes...>>(
         surface, direction, std::forward<Axes>(axes)...);
   }
 
-  template <ACTS_CONCEPT(detail::RegularSurfaceConcept) surface_t,
-            typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
-  static auto make(const surface_t& surface, Axes&&... axes) {
-    return std::make_unique<GridPortalLinkT<surface_t, Axes...>>(
+  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
+  static auto make(const RegularSurface& surface, Axes&&... axes) {
+    return std::make_unique<GridPortalLinkT<Axes...>>(
         surface, Direction::loc0, std::forward<Axes>(axes)...);
   }
 
@@ -130,8 +133,7 @@ class GridPortalLink : public PortalLinkBase {
   Direction m_direction;
 };
 
-template <ACTS_CONCEPT(detail::RegularSurfaceConcept) surface_t,
-          typename... Axes>
+template <typename... Axes>
 class GridPortalLinkT : public GridPortalLink {
  public:
   using GridType = Grid<const Volume*, Axes...>;
@@ -144,7 +146,11 @@ class GridPortalLinkT : public GridPortalLink {
                   Axes&&... axes)
       : GridPortalLink(surface, direction),
         m_grid(std::tuple{std::move(axes)...}) {
-    checkConsistency(this->surface());
+    if (const auto* cylinder = dynamic_cast<const CylinderSurface*>(&surface)) {
+      checkConsistency(*cylinder);
+    } else {
+      throw std::logic_error{"Surface type is not supported"};
+    }
   }
 
   const GridType& grid() const override { return m_grid; }
@@ -152,10 +158,6 @@ class GridPortalLinkT : public GridPortalLink {
   void toStream(std::ostream& os) const override { os << m_grid; }
 
  private:
-  const surface_t& surface() const {
-    return static_cast<const surface_t&>(*m_surface);
-  }
-
   void checkConsistency(const CylinderSurface& cyl) const {
     auto checkZ = [&](const auto& axis) {
       ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);

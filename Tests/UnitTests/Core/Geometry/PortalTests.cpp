@@ -15,7 +15,9 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -64,11 +66,19 @@ BOOST_AUTO_TEST_CASE(Merging1dCylinder) {
     std::cout << cyl2->toStream(gctx) << std::endl;
 
     std::unique_ptr<GridPortalLink> grid1dCyl2 =
-        GridPortalLink::make(*cyl, GridPortalLink::Direction::loc1,
+        GridPortalLink::make(*cyl2, GridPortalLink::Direction::loc1,
                              Axis{AxisBound, -100_mm, 100_mm, 5});
 
+    // Completely invalid
+    BOOST_CHECK_THROW(grid1dCyl->merge(gctx, *grid1dCyl2, binPhi, *logger),
+                      AssertionFailureException);
+    // Invalid direction, as the cylinders are shifted in z, and can't be merged
+    // in r x phi
+    BOOST_CHECK_THROW(grid1dCyl->merge(gctx, *grid1dCyl2, binRPhi, *logger),
+                      SurfaceMergingException);
+
     // Merge the two grids
-    auto mergedPtr = grid1dCyl->merge(*grid1dCyl2, *logger);
+    auto mergedPtr = grid1dCyl->merge(gctx, *grid1dCyl2, binZ, *logger);
   }
 
   BOOST_TEST_CONTEXT("rPhi Binning") {
