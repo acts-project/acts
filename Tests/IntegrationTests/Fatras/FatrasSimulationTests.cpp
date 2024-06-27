@@ -152,8 +152,6 @@ bool containsParticleId(const Container& sortedByParticleId,
 
 BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
                      numParticles) {
-  using namespace Acts::UnitLiterals;
-
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
   Acts::Logging::Level logLevel = Acts::Logging::Level::DEBUG;

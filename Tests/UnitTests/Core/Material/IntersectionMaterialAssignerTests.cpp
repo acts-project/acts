@@ -17,14 +17,13 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <limits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 auto tContext = GeometryContext();
 auto mContext = MagneticFieldContext();
@@ -94,5 +93,4 @@ BOOST_AUTO_TEST_CASE(FindDetectorVolumeIntersections) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

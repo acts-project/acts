@@ -64,15 +64,13 @@ std::string getWorkingDirectory() {
 
 }  // namespace
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
 ViewConfig s_viewPassive = ViewConfig({240, 280, 0});
 ViewConfig s_viewVolume = ViewConfig({220, 220, 0});
 ViewConfig s_viewGrid = ViewConfig({220, 0, 0});
 ViewConfig s_viewLine = ViewConfig({0, 0, 220});
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
@@ -206,7 +204,7 @@ void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
   // color the portal based on if it contains two links(green)
   // or one link(red)
   auto surface = &(portal.surface());
-  auto links = &(portal.detectorVolumeUpdaters());
+  auto links = &(portal.portalNavigation());
   if (links->size() == 2) {
     drawSurface(helper, *surface, gctx, transform, connected);
   } else {

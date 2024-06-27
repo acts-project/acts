@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
@@ -17,11 +18,11 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
   jAxis["boundary_type"] = ia.getBoundaryType();
   // type, range, bins or boundaries
   if (ia.isEquidistant()) {
-    jAxis["type"] = detail::AxisType::Equidistant;
+    jAxis["type"] = AxisType::Equidistant;
     jAxis["range"] = std::array<ActsScalar, 2u>({ia.getMin(), ia.getMax()});
     jAxis["bins"] = ia.getNBins();
   } else {
-    jAxis["type"] = detail::AxisType::Variable;
+    jAxis["type"] = AxisType::Variable;
     jAxis["boundaries"] = ia.getBinEdges();
   }
   return jAxis;
@@ -30,7 +31,7 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
 nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
   nlohmann::json jAxis;
   jAxis["bounds"] =
-      ia.getBoundaryType() == Acts::detail::AxisBoundaryType::Bound ? 1 : 2;
+      ia.getBoundaryType() == Acts::AxisBoundaryType::Bound ? 1 : 2;
   jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
   jAxis["bins"] = ia.getNBins();
   if (ia.isEquidistant()) {
@@ -50,7 +51,7 @@ template <typename Subspace>
 void encodeSubspace(
     nlohmann::json& jGlobalToGridLocal,
     const Acts::GridAccess::IGlobalToGridLocal& globalToGridLocal,
-    const Subspace& /*unused*/) {
+    const Subspace& /*subspace*/) {
   const Subspace* subspace = dynamic_cast<const Subspace*>(&globalToGridLocal);
   if (subspace != nullptr) {
     jGlobalToGridLocal["type"] = "subspace";
@@ -97,7 +98,7 @@ void encodeSubspaces(
 
 template <Acts::BinningValue... Args>
 std::unique_ptr<const Acts::GridAccess::GlobalSubspace<Args...>> decodeSubspace(
-    const nlohmann::json& /*unused*/) {
+    const nlohmann::json& /*j*/) {
   return std::make_unique<const Acts::GridAccess::GlobalSubspace<Args...>>();
 }
 

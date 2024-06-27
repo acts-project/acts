@@ -56,8 +56,7 @@
 
 // The relevant infrastructure is implemented below
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 namespace float_compare_internal {
 
 // Under the hood, various scalar comparison logics may be used
@@ -307,5 +306,4 @@ boost::test_tools::predicate_result checkCloseCovariance(
   }
   return true;
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

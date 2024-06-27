@@ -8,7 +8,7 @@ To build the plugin, enable the appropriate CMake options:
 
 ```bash
 cmake -B <build> -S <source> \
-  -D ACTS_BUILD_EXATRKX_PLUGIN=ON \
+  -D ACTS_BUILD_PLUGIN_EXATRKX=ON \
   -D ACTS_EXATRKX_ENABLE_TORCH=ON/OFF \
   -D ACTS_EXATRKX_ENABLE_ONNX=ON/OFF \
   -D ACTS_BUILD_EXAMPLES_EXATRKX=ON \

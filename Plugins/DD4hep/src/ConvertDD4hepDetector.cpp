@@ -167,8 +167,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                << (subDetector.type() == "compound" ? "yes" : "no"));
 
   if (subDetector.type() == "compound") {
-    ACTS_VERBOSE("Subdetector : '" << subDetector.name()
-                                   << "' has type compound ");
+    ACTS_VERBOSE("Subdetector: '" << subDetector.name()
+                                  << "' has type compound ");
     ACTS_VERBOSE(
         "handling as a compound volume (a hierarchy of a "
         "barrel-endcap structure) and resolving the "
@@ -196,7 +196,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     bool pEndCap = false;
     bool barrel = false;
     for (auto& volumeDetElement : compounds) {
-      ACTS_VERBOSE("Volume : '"
+      ACTS_VERBOSE("Volume: '"
                    << subDetector.name()
                    << "' is a compound volume -> resolve the sub volumes");
 
@@ -219,8 +219,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       dd4hep::DetType type{volumeDetElement.typeFlag()};
 
       if (type.is(dd4hep::DetType::ENDCAP)) {
-        ACTS_VERBOSE(std::string("Subvolume : '") + volumeDetElement.name() +
-                     std::string("' is marked ENDCAP"));
+        ACTS_VERBOSE("Subvolume: '" << volumeDetElement.name()
+                                    << "' is marked ENDCAP");
         if (zPos < 0.) {
           if (nEndCap) {
             throw std::logic_error(
@@ -293,8 +293,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
               "hierarchy.");
         }
         barrel = true;
-        ACTS_VERBOSE("Subvolume : " << volumeDetElement.name()
-                                    << " is marked as BARREL");
+        ACTS_VERBOSE("Subvolume: " << volumeDetElement.name()
+                                   << " is marked as BARREL");
         ACTS_VERBOSE("-> collecting layers");
         collectLayers_dd4hep(volumeDetElement, centralLayers, logger);
         // Fill the volume material for barrel case
@@ -391,8 +391,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     return cylinderVolumeBuilder;
   } else if (subDetType.is(dd4hep::DetType::BEAMPIPE) ||
              getParamOr<bool>("passive_layer", subDetector, false)) {
-    ACTS_VERBOSE("Subdetector : " << subDetector.name()
-                                  << " - building a passive cylinder.");
+    ACTS_VERBOSE("Subdetector: " << subDetector.name()
+                                 << " - building a passive cylinder.");
 
     if (subDetType.is(dd4hep::DetType::BEAMPIPE)) {
       ACTS_VERBOSE("This is the beam pipe - will be built to r -> 0.");
@@ -529,8 +529,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             logger.clone(std::string("D2A_V:") + subDetector.name()));
     return cylinderVolumeBuilder;
   } else {
-    ACTS_INFO(
-        "Subdetector with name : '"
+    ACTS_WARNING(
+        "Subdetector with name: '"
         << subDetector.name()
         << "' has inconsistent information for translation and is not of type "
            "'compound'. If you want to have this DetElement be translated "
@@ -634,4 +634,4 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-}  // End of namespace Acts
+}  // namespace Acts

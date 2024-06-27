@@ -9,11 +9,14 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Utilities/QuickMath.hpp"
+
+#include <limits>
 
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
-    std::shared_ptr<const MagneticFieldProvider> bField, double overstepLimit)
-    : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
+    std::shared_ptr<const MagneticFieldProvider> bField)
+    : m_bField(std::move(bField)) {}
 
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::makeState(
@@ -151,12 +154,12 @@ template <typename E, typename A>
 template <typename propagator_state_t, typename navigator_t>
 Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state, const navigator_t& navigator) const {
-  using namespace UnitLiterals;
-
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
-  double error_estimate = 0.;
-  double h2 = 0, half_h = 0;
+
+  double errorEstimate = 0;
+  double h2 = 0;
+  double half_h = 0;
 
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
@@ -173,6 +176,38 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                                    sd.kQoP)) {
     return 0.;
   }
+
+  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
+    // For details about these values see ATL-SOFT-PUB-2009-001
+    constexpr double lower = 0.25;
+    constexpr double upper = 4.0;
+    // This is given by the order of the Runge-Kutta method
+    constexpr double exponent = 0.25;
+
+    // Whether to use fast power function if available
+    constexpr bool tryUseFastPow{false};
+
+    double x = state.options.stepTolerance / errorEstimate_;
+
+    if constexpr (exponent == 0.25 && !tryUseFastPow) {
+      // This is 3x faster than std::pow
+      x = std::sqrt(std::sqrt(x));
+    } else if constexpr (std::numeric_limits<double>::is_iec559 &&
+                         tryUseFastPow) {
+      x = fastPow(x, exponent);
+    } else {
+      x = std::pow(x, exponent);
+    }
+
+    return std::clamp(x, lower, upper);
+  };
+
+  const auto isErrorTolerable = [&](const double errorEstimate_) {
+    // For details about these values see ATL-SOFT-PUB-2009-001
+    constexpr double marginFactor = 4.0;
+
+    return errorEstimate_ <= marginFactor * state.options.stepTolerance;
+  };
 
   // The following functor starts to perform a Runge-Kutta step of a certain
   // size, going up to the point where it can return an estimate of the local
@@ -219,12 +254,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
 
     // Compute and check the local integration error estimate
-    error_estimate =
+    errorEstimate =
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
-    error_estimate = std::max(error_estimate, 1e-20);
+    // Protect against division by zero
+    errorEstimate = std::max(1e-20, errorEstimate);
 
-    return success(error_estimate <= state.options.stepTolerance);
+    return success(isErrorTolerable(errorEstimate));
   };
 
   const double initialH =
@@ -234,6 +270,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (true) {
+    nStepTrials++;
     auto res = tryRungeKuttaStep(h);
     if (!res.ok()) {
       return res.error();
@@ -242,11 +279,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       break;
     }
 
-    const double stepSizeScaling =
-        std::min(std::max(0.25f, std::sqrt(std::sqrt(static_cast<float>(
-                                     state.options.stepTolerance /
-                                     std::abs(2. * error_estimate))))),
-                 4.0f);
+    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
@@ -262,11 +295,12 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       // Too many trials, have to abort
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
-    nStepTrials++;
   }
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
+    // using the direction before updated below
+
     // The step transport matrix in global coordinates
     FreeMatrix D;
     if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
@@ -318,23 +352,23 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   (state.stepping.pars.template segment<3>(eFreeDir0)).normalize();
 
   if (state.stepping.covTransport) {
+    // using the updated direction
     state.stepping.derivative.template head<3>() =
         state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
+
   state.stepping.pathAccumulated += h;
-  const double stepSizeScaling = std::min(
-      std::max(0.25f,
-               std::sqrt(std::sqrt(static_cast<float>(
-                   state.options.stepTolerance / std::abs(error_estimate))))),
-      4.0f);
+  ++state.stepping.nSteps;
+  state.stepping.nStepTrials += nStepTrials;
+
+  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
   const double previousAccuracy = std::abs(state.stepping.stepSize.accuracy());
   const double initialStepLength = std::abs(initialH);
   if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
     state.stepping.stepSize.setAccuracy(nextAccuracy);
   }
-  state.stepping.stepSize.nStepTrials = nStepTrials;
 
   return h;
 }

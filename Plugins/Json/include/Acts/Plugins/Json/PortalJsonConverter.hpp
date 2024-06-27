@@ -10,14 +10,20 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 // Custom Json encoder/decoders
 
 namespace Acts {
+
+class Surface;
 
 namespace Experimental {
 class DetectorVolume;
@@ -60,8 +66,9 @@ nlohmann::json toJson(
 ///
 /// @note detray also only has outside pointing links
 ///
-/// @return a json object
-std::vector<nlohmann::json> toJsonDetray(
+/// @return a tuple of json object
+std::tuple<std::vector<nlohmann::json>, std::vector<std::shared_ptr<Surface>>>
+toJsonDetray(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
     const std::vector<OrientedSurface>& orientedSurfaces,
@@ -74,7 +81,7 @@ std::vector<nlohmann::json> toJsonDetray(
 ///
 /// @return a json object
 nlohmann::json toJson(
-    const Experimental::DetectorVolumeUpdater& updator,
+    const Experimental::ExternalNavigationDelegate& updator,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes);
 
 /// @brief convert from json format

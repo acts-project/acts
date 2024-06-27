@@ -34,7 +34,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : Acts::IdentifiedDetectorElement(),
+    : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_identifier(identifier) {
   // Create temporary local non const surface (to allow setting the
@@ -91,7 +91,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
-    : Acts::IdentifiedDetectorElement(),
+    : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),
@@ -104,7 +104,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
     const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
-    : Acts::IdentifiedDetectorElement(),
+    : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
       m_identifier(identifier),

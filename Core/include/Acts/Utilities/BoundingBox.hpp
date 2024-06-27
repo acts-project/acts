@@ -182,7 +182,7 @@ class AxisAlignedBoundingBox {
    *
    * @note This implementation may treat parallel rays on any of the slabs
    *       as **outside** due to how @c NaNs are handled by Eigen.
-   *       See http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+   *       See https://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
    * @param ray The ray to intersect with
    * @return Whether the ray intersects this AABB
    */

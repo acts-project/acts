@@ -100,6 +100,20 @@ void Acts::Extent::set(BinningValue bValue, ActsScalar min, ActsScalar max) {
   m_constrains.set(bValue);
 }
 
+void Acts::Extent::setMin(BinningValue bValue, ActsScalar min) {
+  ActsScalar minval = min;
+  if (bValue == binR && minval < 0.) {
+    minval = 0.;
+  }
+  m_range[bValue].setMin(0u, minval);
+  m_constrains.set(bValue);
+}
+
+void Acts::Extent::setMax(BinningValue bValue, ActsScalar max) {
+  m_range[bValue].setMax(0u, max);
+  m_constrains.set(bValue);
+}
+
 void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
   m_envelope = envelope;
 }
@@ -163,7 +177,7 @@ bool Acts::Extent::constrains(BinningValue bValue) const {
   if (bValue == binValues) {
     return (m_constrains.count() > 0);
   }
-  return m_constrains.test(std::size_t(bValue));
+  return m_constrains.test(static_cast<std::size_t>(bValue));
 }
 
 bool Acts::Extent::operator==(const Extent& e) const {

@@ -67,7 +67,8 @@ std::string_view getAlgorithmType(const SequenceElement& element) {
   return "Algorithm";
 }
 
-// Saturated addition that does not overflow and exceed SIZE_MAX.
+// Saturated addition that does not overflow and exceed
+// std::numeric_limits<std::size_t>::max().
 //
 // From http://locklessinc.com/articles/sat_arithmetic/
 std::size_t saturatedAdd(std::size_t a, std::size_t b) {
@@ -290,7 +291,9 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
 }
 
 std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
-  constexpr auto kInvalidEventsRange = std::make_pair(SIZE_MAX, SIZE_MAX);
+  constexpr auto kInvalidEventsRange =
+      std::make_pair(std::numeric_limits<std::size_t>::max(),
+                     std::numeric_limits<std::size_t>::max());
 
   // Note on skipping events:
   //
@@ -303,7 +306,7 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
 
   // determine intersection of event ranges available from readers
   std::size_t beg = 0u;
-  std::size_t end = SIZE_MAX;
+  std::size_t end = std::numeric_limits<std::size_t>::max();
   for (const auto& reader : m_readers) {
     auto available = reader->availableEvents();
     beg = std::max(beg, available.first);
@@ -313,7 +316,8 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
   // since we use event ranges (and not just num events) they might not
   // overlap
   if (end < beg) {
-    ACTS_ERROR("Available events ranges from readers do not overlap");
+    ACTS_ERROR("Available events ranges from readers do not overlap (beg="
+               << beg << ", end=" << end << ")");
     return kInvalidEventsRange;
   }
   // configured readers without available events makes no sense
@@ -328,7 +332,8 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
     return kInvalidEventsRange;
   }
   // events range was not defined by either the readers or user command line.
-  if ((beg == 0u) && (end == SIZE_MAX) && (!m_cfg.events.has_value())) {
+  if ((beg == 0u) && (end == std::numeric_limits<std::size_t>::max()) &&
+      (!m_cfg.events.has_value())) {
     ACTS_ERROR("Could not determine number of events");
     return kInvalidEventsRange;
   }
@@ -420,7 +425,8 @@ int Sequencer::run() {
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
   std::pair<std::size_t, std::size_t> eventsRange = determineEventsRange();
-  if ((eventsRange.first == SIZE_MAX) && (eventsRange.second == SIZE_MAX)) {
+  if ((eventsRange.first == std::numeric_limits<std::size_t>::max()) &&
+      (eventsRange.second == std::numeric_limits<std::size_t>::max())) {
     return EXIT_FAILURE;
   }
 

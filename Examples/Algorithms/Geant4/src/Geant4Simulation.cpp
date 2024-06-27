@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -215,6 +215,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
   }
 
   // Stepping actions
+  SensitiveSteppingAction* sensitiveSteppingActionAccess = nullptr;
   {
     // Clear stepping action if it exists
     if (runManager().GetUserSteppingAction() != nullptr) {
@@ -222,6 +223,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     }
 
     ParticleKillAction::Config particleKillCfg;
+    particleKillCfg.eventStore = m_eventStore;
     particleKillCfg.volume = cfg.killVolume;
     particleKillCfg.maxTime = cfg.killAfterTime;
     particleKillCfg.secondaries = cfg.killSecondaries;
@@ -236,8 +238,12 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     SteppingActionList::Config steppingCfg;
     steppingCfg.actions.push_back(std::make_unique<ParticleKillAction>(
         particleKillCfg, m_logger->cloneWithSuffix("Killer")));
-    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
-        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
+
+    auto sensitiveSteppingAction = std::make_unique<SensitiveSteppingAction>(
+        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping"));
+    sensitiveSteppingActionAccess = sensitiveSteppingAction.get();
+
+    steppingCfg.actions.push_back(std::move(sensitiveSteppingAction));
 
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);
@@ -268,24 +274,18 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     g4World->GetLogicalVolume()->SetFieldManager(m_fieldManager.get(), true);
   }
 
-  // An ACTS TrackingGeometry is provided, so simulation for sensitive
-  // detectors is turned on - they need to get matched first
-  if (cfg.trackingGeometry) {
+  // ACTS sensitive surfaces are provided, so hit creation is turned on
+  if (cfg.sensitiveSurfaceMapper != nullptr) {
+    SensitiveSurfaceMapper::State sState;
     ACTS_INFO(
         "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
+    cfg.sensitiveSurfaceMapper->remapSensitiveNames(
+        sState, Acts::GeometryContext{}, g4World, Acts::Transform3::Identity());
+    ACTS_INFO("Remapping successful for " << sState.g4VolumeToSurfaces.size()
+                                          << " selected volumes.");
 
-    SensitiveSurfaceMapper::Config ssmCfg;
-    ssmCfg.trackingGeometry = cfg.trackingGeometry;
-    ssmCfg.volumeMappings = cfg.volumeMappings;
-    ssmCfg.materialMappings = cfg.materialMappings;
-
-    SensitiveSurfaceMapper sensitiveSurfaceMapper(
-        ssmCfg, m_logger->cloneWithSuffix("SensitiveSurfaceMapper"));
-    int sCounter = 0;
-    sensitiveSurfaceMapper.remapSensitiveNames(
-        g4World, Acts::Transform3::Identity(), sCounter);
-
-    ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
+    sensitiveSteppingActionAccess->assignSurfaceMapping(
+        sState.g4VolumeToSurfaces);
   }
 
   m_inputParticles.initialize(cfg.inputParticles);

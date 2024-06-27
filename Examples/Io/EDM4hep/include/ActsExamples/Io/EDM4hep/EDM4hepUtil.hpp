@@ -27,8 +27,7 @@
 #include "edm4hep/TrackerHitCollection.h"
 #include "edm4hep/TrackerHitPlane.h"
 
-namespace ActsExamples {
-namespace EDM4hepUtil {
+namespace ActsExamples::EDM4hepUtil {
 
 using MapParticleIdFrom =
     std::function<ActsFatras::Barcode(const edm4hep::MCParticle& particle)>;
@@ -130,7 +129,7 @@ void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
 /// @param o The id to convert.
 /// @return The id as an unsigned integer.
 template <typename T>
-uint64_t podioObjectIDToInteger(T&& o) {
+std::uint64_t podioObjectIDToInteger(T&& o) {
   if constexpr (!std::is_same_v<T, podio::ObjectID>) {
     return o;
   } else {
@@ -138,5 +137,4 @@ uint64_t podioObjectIDToInteger(T&& o) {
   }
 }
 
-}  // namespace EDM4hepUtil
-}  // namespace ActsExamples
+}  // namespace ActsExamples::EDM4hepUtil

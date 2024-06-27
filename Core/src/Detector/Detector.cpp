@@ -21,14 +21,14 @@
 
 Acts::Experimental::Detector::Detector(
     std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdater detectorVolumeUpdater)
+    ExternalNavigationDelegate detectorVolumeFinder)
     : m_name(std::move(name)),
       m_rootVolumes(std::move(rootVolumes)),
-      m_detectorVolumeUpdater(std::move(detectorVolumeUpdater)) {
+      m_volumeFinder(std::move(detectorVolumeFinder)) {
   if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
-  if (!m_detectorVolumeUpdater.connected()) {
+  if (!m_volumeFinder.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
@@ -128,10 +128,10 @@ Acts::Experimental::Detector::Detector(
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::makeShared(
     std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdater detectorVolumeUpdater) {
+    ExternalNavigationDelegate detectorVolumeFinder) {
   return std::shared_ptr<Detector>(
       new Detector(std::move(name), std::move(rootVolumes),
-                   std::move(detectorVolumeUpdater)));
+                   std::move(detectorVolumeFinder)));
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
@@ -155,13 +155,13 @@ Acts::Experimental::Detector::volumes() const {
 }
 
 void Acts::Experimental::Detector::updateDetectorVolumeFinder(
-    DetectorVolumeUpdater detectorVolumeUpdater) {
-  m_detectorVolumeUpdater = std::move(detectorVolumeUpdater);
+    ExternalNavigationDelegate detectorVolumeFinder) {
+  m_volumeFinder = std::move(detectorVolumeFinder);
 }
 
-const Acts::Experimental::DetectorVolumeUpdater&
+const Acts::Experimental::ExternalNavigationDelegate&
 Acts::Experimental::Detector::detectorVolumeFinder() const {
-  return m_detectorVolumeUpdater;
+  return m_volumeFinder;
 }
 
 const std::string& Acts::Experimental::Detector::name() const {
@@ -180,7 +180,7 @@ Acts::Experimental::Detector::getSharedPtr() const {
 
 void Acts::Experimental::Detector::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
-  m_detectorVolumeUpdater(gctx, nState);
+  m_volumeFinder(gctx, nState);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -189,7 +189,7 @@ Acts::Experimental::Detector::findDetectorVolume(
   NavigationState nState;
   nState.currentDetector = this;
   nState.position = position;
-  m_detectorVolumeUpdater(gctx, nState);
+  m_volumeFinder(gctx, nState);
   return nState.currentVolume;
 }
 

@@ -55,10 +55,11 @@ print('* Conversion yielded', len(ssurfaces))
 drawContext = acts.GeometryContext()
 sensitiveRgb = [ 0, 150, 150 ]
 passiveRgb = [ 150, 150, 0]
+segments = 64 # how many segments to approximate a full circle
 # Draw the sensitive surfaces
-acts.examples.writeSurfacesObj(ssurfaces, drawContext, sensitiveRgb, 'detector-sensitives.obj')
+acts.examples.writeSurfacesObj(ssurfaces, drawContext, sensitiveRgb, segments, 'detector-sensitives.obj')
 # Draw the passive surfaces
-acts.examples.writeSurfacesObj(psurfaces, drawContext, passiveRgb, 'detector-passives.obj')
+acts.examples.writeSurfacesObj(psurfaces, drawContext, passiveRgb, segments, 'detector-passives.obj')
 ```
 
 ## Building a Detector from Geant4 input

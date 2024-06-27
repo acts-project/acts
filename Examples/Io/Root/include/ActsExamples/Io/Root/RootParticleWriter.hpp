@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -84,7 +83,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   TTree* m_outputTree = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Event-unique particle identifier a.k.a barcode.
   std::vector<std::uint64_t> m_particleId;
   /// Particle type a.k.a. PDG particle number
@@ -129,6 +128,8 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<float> m_pathInL0;
   /// Number of hits.
   std::vector<std::int32_t> m_numberOfHits;
+  /// Particle outcome
+  std::vector<std::uint32_t> m_outcome;
 };
 
 }  // namespace ActsExamples

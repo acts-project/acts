@@ -13,8 +13,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -33,8 +31,7 @@
 #include <functional>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 struct CubicTrackingGeometry {
   /// Default constructor for the Cubic tracking geometry
@@ -188,7 +185,8 @@ struct CubicTrackingGeometry {
         new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
     MutableTrackingVolumePtr mtvpWorld(std::make_shared<TrackingVolume>(
-        trafoWorld, worldVolBds, trVolArr, "World"));
+        trafoWorld, worldVolBds, nullptr, nullptr, trVolArr,
+        MutableTrackingVolumeVector{}, "World"));
 
     // Build and return tracking geometry
     return std::make_shared<TrackingGeometry>(mtvpWorld);
@@ -202,5 +200,4 @@ struct CubicTrackingGeometry {
 
   std::reference_wrapper<const GeometryContext> geoContext;
 };
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

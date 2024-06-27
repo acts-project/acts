@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -16,8 +15,6 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 using namespace Acts;
-
-namespace bd = boost::unit_test::data;
 
 BOOST_AUTO_TEST_SUITE(GridAccessHelpersTests)
 
@@ -106,8 +103,8 @@ BOOST_AUTO_TEST_CASE(GlobalToGridLocalTests) {
   BOOST_CHECK_EQUAL(z[0], 3.);
 
   Acts::GridAccess::Affine3Transformed<Acts::GridAccess::GlobalSubspace<binZ>>
-      gssZT(gssZ, Acts::Transform3(Acts::Transform3::Identity())
-                      .pretranslate(Vector3{0., 0., 100.}));
+      gssZT(gssZ, Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
+                      Vector3{0., 0., 100.}));
 
   auto zt = gssZT.toGridLocal(Vector3{1., 2., 3.});
   BOOST_CHECK_EQUAL(zt[0], 103.);

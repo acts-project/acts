@@ -38,8 +38,7 @@
 
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -150,8 +149,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(sls.absoluteMomentum(slsState), absMom, 1e-6);
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   BOOST_CHECK_EQUAL(sls.time(slsState), time);
-
-  //~ BOOST_CHECK_EQUAL(sls.overstepLimit(slsState), tolerance);
 
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
@@ -392,5 +389,4 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

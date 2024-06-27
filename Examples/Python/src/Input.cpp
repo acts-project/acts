@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,10 +12,10 @@
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMuonSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
+#include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
@@ -45,7 +45,7 @@ void addInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootVertexReader, mex,
                              "RootVertexReader", outputVertices, treeName,
-                             filePath, orderedEvents);
+                             filePath);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootMaterialTrackReader, mex,
                              "RootMaterialTrackReader", outputMaterialTracks,
@@ -64,11 +64,6 @@ void addInput(Context& ctx) {
       ActsExamples::CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,
       outputMeasurements, outputMeasurementSimHitsMap, outputSourceLinks,
       outputClusters, outputMeasurementParticlesMap, inputSimHits);
-
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvPlanarClusterReader, mex,
-                             "CsvPlanarClusterReader", inputDir, outputClusters,
-                             outputHitIds, outputMeasurementParticlesMap,
-                             outputSimHits, trackingGeometry);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvSimHitReader, mex,
                              "CsvSimHitReader", inputDir, inputStem,
@@ -93,6 +88,11 @@ void addInput(Context& ctx) {
                              inputFilePath, outputTrackParameters,
                              outputTruthVtxParameters, outputRecoVtxParameters,
                              outputBeamspotConstraint);
+
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::RootAthenaDumpReader, mex, "RootAthenaDumpReader", treename,
+      inputfile, outputMeasurements, outputPixelSpacePoints,
+      outputStripSpacePoints, outputSpacePoints, outputClusters);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,

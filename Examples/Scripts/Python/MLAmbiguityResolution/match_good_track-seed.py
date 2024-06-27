@@ -1,7 +1,6 @@
 import glob
 
 import pandas as pd
-import numpy as np
 
 
 def matchGood(seed_files: list[str], ckf_files: list[str]):
@@ -36,9 +35,9 @@ def matchGood(seed_files: list[str], ckf_files: list[str]):
             if (
                 data_seed.loc[data_seed["particleId"] == ID, "goodSeed"] == False
             ).all():
-                data_seed.loc[
-                    data_seed["particleId"] == ID, "good/duplicate/fake"
-                ] = "fake"
+                data_seed.loc[data_seed["particleId"] == ID, "good/duplicate/fake"] = (
+                    "fake"
+                )
             else:
                 cleanedData = pd.concat(
                     [data_seed.loc[data_seed["particleId"] == ID], cleanedData]

@@ -37,12 +37,14 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
+  /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/,
-                  const Logger& logger) const {
+                  const navigator_t& navigator, const Logger& logger) const {
+    (void)navigator;
+
     // Check if the maximum allowed step size has to be updated
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
@@ -72,10 +74,10 @@ struct SurfaceReached {
   /// Distance limit to discard intersections "behind us"
   /// @note this is only necessary because some surfaces have more than one
   ///       intersection
-  std::optional<double> overrideNearLimit;
+  double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  SurfaceReached(double nearLimit) : overrideNearLimit(nearLimit) {}
+  SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -101,14 +103,11 @@ struct SurfaceReached {
       return true;
     }
 
-    // not blindly using the stepper overstep limit here because it does not
-    // always work for perigee surfaces.
+    // not using the stepper overstep limit here because it does not always work
+    // for perigee surfaces
     // note: the near limit is necessary for surfaces with more than one
-    // intersections in order to discard the ones which are behind us.
-    const double nearLimit =
-        overrideNearLimit.value_or(stepper.overstepLimit(state.stepping));
-    const double farLimit =
-        state.stepping.stepSize.value(ConstrainedStep::aborter);
+    // intersection in order to discard the ones which are behind us
+    const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = surface->intersect(
@@ -181,6 +180,30 @@ struct EndOfWorldReached {
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
     return endOfWorld;
+  }
+};
+
+/// Aborter that checks if the propagation has reached any surface
+struct AnySurfaceReached {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const Logger& logger) const {
+    (void)stepper;
+    (void)logger;
+
+    const Surface* startSurface = navigator.startSurface(state.navigation);
+    const Surface* targetSurface = navigator.targetSurface(state.navigation);
+    const Surface* currentSurface = navigator.currentSurface(state.navigation);
+
+    // `startSurface` is excluded because we want to reach a new surface
+    // `targetSurface` is excluded because another aborter should handle it
+    if (currentSurface != nullptr && currentSurface != startSurface &&
+        currentSurface != targetSurface) {
+      return true;
+    }
+
+    return false;
   }
 };
 

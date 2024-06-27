@@ -12,8 +12,8 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
@@ -188,14 +188,14 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 template <typename surface_container, typename instance_type>
 void convert(const GeometryContext& gctx, const surface_container& surfaces,
              const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-             const Experimental::SurfaceCandidatesUpdater& delegate,
+             const Experimental::InternalNavigationDelegate& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
-      GridType, Experimental::IndexedSurfacesImpl>;
-  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsNavigation<
+      GridType, Experimental::IndexedSurfacesNavigation>;
+  using SubDelegateType = Experimental::IndexedSurfacesNavigation<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();
@@ -218,7 +218,7 @@ template <typename surface_container, typename... Args>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
-                   const Experimental::SurfaceCandidatesUpdater& delegate,
+                   const Experimental::InternalNavigationDelegate& delegate,
                    TypeList<Args...> /*unused*/) {
   (convert(gctx, surfaces, cOptions, sgi, delegate, Args{}), ...);
 }
@@ -237,7 +237,7 @@ void unrollConvert(const GeometryContext& gctx,
 template <typename surface_container>
 ProtoIndexedSurfaceGrid convert(
     const GeometryContext& gctx, const surface_container& surfaces,
-    const Experimental::SurfaceCandidatesUpdater& delegate,
+    const Experimental::InternalNavigationDelegate& delegate,
     const Options& cOptions) {
   // Prep work what is to be filled
   std::vector<ProtoSurface> pSurfaces;

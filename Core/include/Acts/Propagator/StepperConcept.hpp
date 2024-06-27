@@ -21,8 +21,7 @@
 namespace Acts {
 class Surface;
 
-namespace Concepts {
-namespace Stepper {
+namespace Concepts::Stepper {
 
 template <typename T>
 using state_t = typename T::State;
@@ -45,7 +44,6 @@ METHOD_TRAIT(absolute_momentum_t, absoluteMomentum);
 METHOD_TRAIT(momentum_t, momentum);
 METHOD_TRAIT(charge_t, charge);
 METHOD_TRAIT(time_t, time);
-METHOD_TRAIT(overstep_t, overstepLimit);
 METHOD_TRAIT(bound_state_method_t, boundState);
 METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
 METHOD_TRAIT(update_t, update);
@@ -115,8 +113,6 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(charge_exists, "charge method not found");
         constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
         static_assert(time_exists, "time method not found");
-        constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
-        static_assert(overstep_exists, "overstepLimit method not found");
         constexpr static bool bound_state_method_exists= has_method<const S, Result<typename S::BoundState>, bound_state_method_t, state&, const Surface&, bool, const FreeToBoundCorrection&>;
         static_assert(bound_state_method_exists, "boundState method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
@@ -214,8 +210,7 @@ constexpr bool MultiStepperStateConcept= require<
         };
 // clang-format on
 
-}  // namespace Stepper
-}  // namespace Concepts
+}  // namespace Concepts::Stepper
 
 template <typename stepper, typename state = typename stepper::State>
 constexpr bool StepperConcept =

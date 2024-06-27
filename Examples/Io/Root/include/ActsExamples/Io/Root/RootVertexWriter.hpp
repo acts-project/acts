@@ -77,7 +77,7 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   TTree* m_outputTree = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Event-unique particle identifier a.k.a barcode.
   std::vector<std::uint64_t> m_vertexId;
   /// Production process type, i.e. what generated the vertex.
@@ -88,7 +88,7 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   std::vector<float> m_vz;
   std::vector<float> m_vt;
   /// Outgoing particles from the vertex.
-  std::vector<std::vector<double>> m_outgoingParticles;
+  std::vector<std::vector<std::uint64_t>> m_outgoingParticles;
   // Decoded vertex identifier; see Barcode definition for details.
   std::vector<std::uint32_t> m_vertexPrimary;
   std::vector<std::uint32_t> m_vertexSecondary;

@@ -102,19 +102,19 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param bounds the volume bounds
   /// @param surfaces are the contained surfaces of this volume
   /// @param volumes are the contains volumes of this volume
-  /// @param detectorVolumeUpdater is a Delegate to find the associated volume
-  /// @param surfaceCandidateUpdater the navigation state updator for surfaces/portals
+  /// @param externalNavigation is a Delegate to find the associated volume
+  /// @param internalNavigation the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(
-      const GeometryContext& gctx, std::string name,
-      const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      std::vector<std::shared_ptr<Surface>> surfaces,
-      std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdater detectorVolumeUpdater,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater) noexcept(false);
+  DetectorVolume(const GeometryContext& gctx, std::string name,
+                 const Transform3& transform,
+                 std::shared_ptr<VolumeBounds> bounds,
+                 std::vector<std::shared_ptr<Surface>> surfaces,
+                 std::vector<std::shared_ptr<DetectorVolume>> volumes,
+                 ExternalNavigationDelegate externalNavigation,
+                 InternalNavigationDelegate internalNavigation) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -122,15 +122,15 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param surfaceCandidateUpdater the navigation state updator for surfaces/portals
+  /// @param internalNavigation the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(
-      const GeometryContext& gctx, std::string name,
-      const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater) noexcept(false);
+  DetectorVolume(const GeometryContext& gctx, std::string name,
+                 const Transform3& transform,
+                 std::shared_ptr<VolumeBounds> bounds,
+                 InternalNavigationDelegate internalNavigation) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
@@ -140,8 +140,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdater detectorVolumeUpdater,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater);
+      ExternalNavigationDelegate externalNavigation,
+      InternalNavigationDelegate internalNavigation);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
@@ -149,7 +149,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater);
+      InternalNavigationDelegate internalNavigation);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -283,7 +283,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   const std::vector<const DetectorVolume*>& volumes() const;
 
   /// Const access to the detector volume updator
-  const DetectorVolumeUpdater& detectorVolumeUpdater() const;
+  const ExternalNavigationDelegate& externalNavigation() const;
 
   /// @brief Visit all reachable surfaces of the detector
   ///
@@ -362,17 +362,17 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// This method allows to udate the navigation state updator
   /// module.
   ///
-  /// @param surfaceCandidateUpdater the new navigation state updator for surfaces
+  /// @param internalNavigation the new navigation state updator for surfaces
   /// @param surfaces the surfaces the new navigation state updator points to
   /// @param volumes the volumes the new navigation state updator points to
   ///
-  void assignSurfaceCandidatesUpdater(
-      SurfaceCandidatesUpdater surfaceCandidateUpdater,
+  void assignInternalNavigation(
+      InternalNavigationDelegate internalNavigation,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const SurfaceCandidatesUpdater& surfaceCandidatesUpdater() const;
+  const InternalNavigationDelegate& internalNavigation() const;
 
   /// Update a portal given a portal index
   ///
@@ -393,10 +393,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// times to detector volumes.
   ///
   /// @param material Material description associated to this volumw
-  void assignVolumeMaterial(std::shared_ptr<IVolumeMaterial> material);
-
-  /// Non-const access to the voume material (for scaling, e.g.)
-  std::shared_ptr<IVolumeMaterial> volumeMaterialPtr();
+  void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
 
   /// Const access to the volume amterial
   const IVolumeMaterial* volumeMaterial() const;
@@ -466,13 +463,13 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// BoundingBox
   std::shared_ptr<const BoundingBox> m_boundingBox;
 
-  DetectorVolumeUpdater m_detectorVolumeUpdater;
+  ExternalNavigationDelegate m_externalNavigation;
 
   /// The navigation state updator
-  SurfaceCandidatesUpdater m_surfaceCandidatesUpdater;
+  InternalNavigationDelegate m_internalNavigation;
 
   /// Volume material (optional)
-  std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
+  std::shared_ptr<const IVolumeMaterial> m_volumeMaterial = nullptr;
 
   /// GeometryIdentifier of this volume
   GeometryIdentifier m_geometryId{0};
@@ -496,11 +493,11 @@ class DetectorVolumeFactory {
       std::shared_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-      DetectorVolumeUpdater detectorVolumeUpdater,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater, int nSeg = -1) {
+      ExternalNavigationDelegate externalNavigation,
+      InternalNavigationDelegate internalNavigation, int nSeg = -1) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
-        std::move(detectorVolumeUpdater), std::move(surfaceCandidateUpdater));
+        std::move(externalNavigation), std::move(internalNavigation));
     dVolume->construct(gctx, portalGenerator);
 
     /// Volume extent is constructed from the portals
@@ -518,10 +515,10 @@ class DetectorVolumeFactory {
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdater surfaceCandidateUpdater) {
-    auto dVolume = DetectorVolume::makeShared(
-        gctx, std::move(name), transform, std::move(bounds),
-        std::move(surfaceCandidateUpdater));
+      InternalNavigationDelegate internalNavigation) {
+    auto dVolume = DetectorVolume::makeShared(gctx, std::move(name), transform,
+                                              std::move(bounds),
+                                              std::move(internalNavigation));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
   }

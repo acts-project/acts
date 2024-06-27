@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -22,9 +21,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant CylinderBounds object
 
@@ -39,13 +37,11 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
                     SurfaceBounds::eCylinder);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, halfphi, averagePhi).type(),
                     SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(
-      CylinderBounds(radius, halfz, (double)M_PI, (double)0., minBevelZ).type(),
-      SurfaceBounds::eCylinder);
-  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, (double)M_PI, (double)0.,
-                                   minBevelZ, maxBevelZ)
-                        .type(),
+  BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz, M_PI, 0., minBevelZ).type(),
                     SurfaceBounds::eCylinder);
+  BOOST_CHECK_EQUAL(
+      CylinderBounds(radius, halfz, M_PI, 0., minBevelZ, maxBevelZ).type(),
+      SurfaceBounds::eCylinder);
   //
   /// test copy construction;
   CylinderBounds cylinderBounds(radius, halfz);
@@ -134,11 +130,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   BOOST_CHECK(!cylinderBoundsBeveledObject.inside(
       outsideBevelMin, trueBoundaryCheckWithLessTolerance));
 
-  /// test for inside3D() with Vector3 argument
-  const Vector3 origin3D{0., 0., 0.};
-  BOOST_CHECK(
-      !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
-
   /// test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,
                   1e-6);
@@ -184,6 +175,4 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

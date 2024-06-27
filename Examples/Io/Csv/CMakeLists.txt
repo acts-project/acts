@@ -6,8 +6,6 @@ add_library(
   src/CsvMeasurementWriter.cpp
   src/CsvParticleReader.cpp
   src/CsvParticleWriter.cpp
-  src/CsvPlanarClusterReader.cpp
-  src/CsvPlanarClusterWriter.cpp
   src/CsvSimHitReader.cpp
   src/CsvSimHitWriter.cpp
   src/CsvSpacePointReader.cpp
@@ -28,7 +26,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoCsv
   PRIVATE
-    ActsCore ActsPluginIdentification
+    ActsCore
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads)
 acts_target_link_libraries_system(

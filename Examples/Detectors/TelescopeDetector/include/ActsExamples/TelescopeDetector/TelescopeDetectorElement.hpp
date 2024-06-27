@@ -24,8 +24,7 @@ class DiscBounds;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples {
-namespace Telescope {
+namespace ActsExamples::Telescope {
 
 /// @class TelescopeDetectorElement
 ///
@@ -160,5 +159,4 @@ TelescopeDetectorElement::alignedTransforms() const {
   return m_alignedTransforms;
 }
 
-}  // namespace Telescope
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Telescope

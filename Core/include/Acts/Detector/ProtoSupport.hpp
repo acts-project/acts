@@ -12,16 +12,14 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <optional>
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 /// @brief Support surface building instructions
 ///
 /// There are two ways to build a support surface:
@@ -78,5 +76,4 @@ struct ProtoSupport {
   bool assignToAll = true;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -12,6 +12,7 @@ pybind11_add_module(ActsPythonBindings
   src/Framework.cpp
   src/Base.cpp
   src/Detector.cpp
+  src/Digitization.cpp
   src/Material.cpp
   src/Geometry.cpp
   src/ExampleAlgorithms.cpp
@@ -49,11 +50,11 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesIoJson
   ActsExamplesIoPerformance
   ActsExamplesGenerators
+  ActsExamplesPrinters
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
   ActsExamplesVertexing
   ActsExamplesFatras
-  ActsExamplesPrinters
   ActsExamplesDetectorTelescope
   ActsExamplesUtilities
   ActsExamplesAmbiguityResolution
@@ -74,6 +75,13 @@ if(ACTS_BUILD_PLUGIN_JSON)
   target_sources(ActsPythonBindings PRIVATE src/Json.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_GEOMODEL)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsPluginGeoModel)
+  target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_ACTSVG)
@@ -103,13 +111,6 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/Pythia8Stub.cpp)
 endif()
 
-if(ACTS_BUILD_PLUGIN_IDENTIFICATION)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesDigitization)
-  target_sources(ActsPythonBindings PRIVATE src/Digitization.cpp)
-else()
-  target_sources(ActsPythonBindings PRIVATE src/DigitizationStub.cpp)
-endif()
-
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC
@@ -134,6 +135,19 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     set_target_properties(ActsPythonBindingsDDG4 PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}")
     set_target_properties(ActsPythonBindingsDDG4 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts)
     list(APPEND py_files examples/geant4/dd4hep.py)
+  endif()
+
+  if(ACTS_BUILD_PLUGIN_GEOMODEL)
+    pybind11_add_module(ActsPythonBindingsGeoModelG4 src/Geant4GeoModelComponent.cpp)
+    target_link_libraries(ActsPythonBindingsGeoModelG4 PUBLIC
+      ActsPythonUtilities
+      ActsExamplesGeant4)
+    add_dependencies(ActsPythonBindings ActsPythonBindingsGeoModelG4)
+    install(TARGETS ActsPythonBindingsGeoModelG4 DESTINATION ${_python_install_dir})
+    set_target_properties(ActsPythonBindingsGeoModelG4 PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}")
+    set_target_properties(ActsPythonBindingsGeoModelG4 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts)
+
+    list(APPEND py_files examples/geant4/geomodel.py)
   endif()
 
   if(ACTS_BUILD_EXAMPLES_HEPMC3)

@@ -30,8 +30,7 @@
 
 #include "edm4hep/MutableTrack.h"
 
-namespace Acts {
-namespace EDM4hepUtil {
+namespace Acts::EDM4hepUtil {
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
@@ -248,5 +247,4 @@ void readTrack(const edm4hep::Track& from,
   track.nMeasurements() = track.nTrackStates();
 }
 
-}  // namespace EDM4hepUtil
-}  // namespace Acts
+}  // namespace Acts::EDM4hepUtil

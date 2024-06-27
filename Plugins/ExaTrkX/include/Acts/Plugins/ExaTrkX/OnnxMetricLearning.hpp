@@ -13,6 +13,8 @@
 
 #include <memory>
 
+#include <torch/script.h>
+
 namespace Ort {
 class Env;
 class Session;
@@ -34,21 +36,24 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
   OnnxMetricLearning(const Config& cfg, std::unique_ptr<const Logger> logger);
   ~OnnxMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(std::vector<float>& inputValues,
-                                            std::size_t numNodes,
-                                            int deviceHint = -1) override;
+  std::tuple<std::any, std::any> operator()(
+      std::vector<float>& inputValues, std::size_t numNodes,
+      torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }
+  torch::Device device() const override { return m_device; };
 
  private:
   void buildEdgesWrapper(std::vector<float>& embedFeatures,
-                         std::vector<int64_t>& edgeList, int64_t numSpacepoints,
+                         std::vector<std::int64_t>& edgeList,
+                         std::int64_t numSpacepoints,
                          const Logger& logger) const;
 
   std::unique_ptr<const Acts::Logger> m_logger;
   const auto& logger() const { return *m_logger; }
 
   Config m_cfg;
+  torch::Device m_device;
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
 };

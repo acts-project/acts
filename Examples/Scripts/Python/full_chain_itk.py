@@ -15,6 +15,7 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
+    CkfConfig,
     TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -60,15 +61,17 @@ addFatras(
     trackingGeometry,
     field,
     rnd=rnd,
-    preSelectParticles=ParticleSelectorConfig(
-        rho=(0.0 * u.mm, 28.0 * u.mm),
-        absZ=(0.0 * u.mm, 1.0 * u.m),
-        eta=(-4.0, 4.0),
-        pt=(150 * u.MeV, None),
-        removeNeutral=True,
-    )
-    if ttbar_pu200
-    else ParticleSelectorConfig(),
+    preSelectParticles=(
+        ParticleSelectorConfig(
+            rho=(0.0 * u.mm, 28.0 * u.mm),
+            absZ=(0.0 * u.mm, 1.0 * u.m),
+            eta=(-4.0, 4.0),
+            pt=(150 * u.MeV, None),
+            removeNeutral=True,
+        )
+        if ttbar_pu200
+        else ParticleSelectorConfig()
+    ),
     outputDirRoot=outputDir,
 )
 
@@ -85,9 +88,11 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
-    if ttbar_pu200
-    else TruthSeedRanges(),
+    (
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
+        if ttbar_pu200
+        else TruthSeedRanges()
+    ),
     seedingAlgorithm=SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
@@ -111,10 +116,14 @@ addCKFTracks(
     field,
     trackSelectorConfig=(
         # fmt: off
-        TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxSharedHits=2),
-        TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxSharedHits=2),
-        TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 2.0), pt=(0.9 * u.GeV, None), nMeasurementsMin=9, maxHoles=2, maxOutliers=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 2.6), pt=(0.4 * u.GeV, None), nMeasurementsMin=8, maxHoles=2, maxOutliers=2, maxSharedHits=2),
+        TrackSelectorConfig(absEta=(None, 4.0), pt=(0.4 * u.GeV, None), nMeasurementsMin=7, maxHoles=2, maxOutliers=2, maxSharedHits=2),
         # fmt: on
+    ),
+    ckfConfig=CkfConfig(
+        seedDeduplication=True,
+        stayOnSeed=True,
     ),
     outputDirRoot=outputDir,
 )
@@ -132,7 +141,7 @@ addAmbiguityResolution(
 addVertexFitting(
     s,
     field,
-    vertexFinder=VertexFinder.Iterative,
+    vertexFinder=VertexFinder.AMVF,
     outputDirRoot=outputDir,
 )
 

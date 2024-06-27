@@ -38,6 +38,8 @@ struct Step {
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
   GeometryIdentifier geoID = 0;
+  /// Note that this is the total number of trials including the previous steps
+  std::size_t nTotalTrials = 0;
 };
 
 /// @brief a step length logger for debugging the stepping
@@ -80,6 +82,7 @@ struct SteppingLogger {
     step.navDir = state.options.direction;
     step.position = stepper.position(state.stepping);
     step.momentum = stepper.momentum(state.stepping);
+    step.nTotalTrials = state.stepping.nStepTrials;
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {

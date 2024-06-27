@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file
-/// @date 2018-03-13
-/// @author Moritz Kiehn <msmk@cern.ch>
-
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -109,7 +105,8 @@ class EventGenerator final : public ActsExamples::IReader {
 
   /// Name of the reader.
   std::string name() const final;
-  /// Available events range. Always return [0,SIZE_MAX) since we generate them.
+  /// Available events range. Always return
+  /// [0,std::numeric_limits<std::size_t>::max()) since we generate them.
   std::pair<std::size_t, std::size_t> availableEvents() const final;
   /// Generate an event.
   ProcessCode read(const AlgorithmContext& ctx) final;

@@ -200,13 +200,26 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     }
 
     // Either pick the configured volume or take the top level volume
+    // and retrieve its global transformation.
     TGeoVolume* tVolume =
         gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
+    TGeoHMatrix gmatrix = TGeoIdentity((layerCfg.volumeName + "ID").c_str());
+
     if (tVolume == nullptr) {
       tVolume = gGeoManager->GetTopVolume();
       ACTS_DEBUG("- search volume is TGeo top volume");
     } else {
       ACTS_DEBUG("- setting search volume to " << tVolume->GetName());
+
+      auto node = TGeoParser::findNodeRecursive(gGeoManager->GetTopNode(),
+                                                tVolume->GetName());
+
+      if (node == nullptr) {
+        std::string volname(tVolume->GetName());
+        throw std::invalid_argument("Could not locate node for " + volname);
+      }
+
+      gmatrix = *(node->GetMatrix());
     }
 
     if (tVolume != nullptr) {
@@ -226,7 +239,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                                  << prange.second.second << "]");
       }
 
-      TGeoParser::select(tgpState, tgpOptions);
+      TGeoParser::select(tgpState, tgpOptions, gmatrix);
 
       ACTS_DEBUG("- number of selected nodes found : "
                  << tgpState.selectedNodes.size());
@@ -235,7 +248,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         auto identifier =
             m_cfg.identifierProvider != nullptr
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
-                : Identifier();
+                : TGeoDetectorElement::Identifier();
 
         auto tgElement =
             m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
@@ -300,7 +313,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
 std::shared_ptr<Acts::TGeoDetectorElement>
 Acts::TGeoLayerBuilder::defaultElementFactory(
-    const Identifier& identifier, const TGeoNode& tGeoNode,
+    const TGeoDetectorElement::Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<TGeoDetectorElement>(

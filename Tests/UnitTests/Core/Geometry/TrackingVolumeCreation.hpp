@@ -54,8 +54,8 @@ TrackingVolumePtr constructCylinderVolume(
   std::vector<const Surface*> surfaces_only_raw = {
       {sfn.get(), sfc.get(), sfp.get()}};
 
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-      axis(bUmin, bUmax, surfaces_only.size());
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axis(
+      bUmin, bUmax, surfaces_only.size());
   auto g2l = [](const Vector3& glob) {
     return std::array<double, 1>({{glob.z()}});
   };
@@ -107,8 +107,9 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
       std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
           volumes, std::move(vUtility));
   ///  create the container volume
-  auto hVolume = std::make_shared<TrackingVolume>(Transform3::Identity(),
-                                                  hVolumeBounds, vArray, name);
+  auto hVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), hVolumeBounds, nullptr, nullptr, vArray,
+      MutableTrackingVolumeVector{}, name);
   // return the container
   return hVolume;
 }

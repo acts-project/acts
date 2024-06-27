@@ -75,7 +75,6 @@ def run() -> None:
 
     role_instances["struct"] |= {
         "Acts::DenseStepperPropagatorOptions",
-        "Acts::Experimental::DetectorNavigator::State",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
@@ -86,6 +85,7 @@ def run() -> None:
         "Acts::BinningData",
         "Acts::Direction",
         "Acts::ConstrainedStep",
+        "Acts::Axis",
         "Acts::IAxis",
         "Acts::SeedFilter",
         "Acts::BoundaryCheck",
@@ -95,11 +95,11 @@ def run() -> None:
         "Acts::CutoutCylinderVolumeBounds",
         "Acts::GenericCuboidVolumeBounds",
         "Acts::TrapezoidVolumeBounds",
+        "Acts::CylinderVolumeStack",
         "Acts::GeometryObject",
         "Acts::TrackContainer",
         "Acts::ConeLayer",
         "Acts::CylinderLayer",
-        "Acts::IdentifiedDetectorElement",
         "Acts::DiscLayer",
         "Acts::PlaneLayer",
         "Acts::NullBField",
@@ -116,7 +116,6 @@ def run() -> None:
         "Acts::Logging::TimedOutputDecorator",
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
-        "Acts::Measurement",
         "Acts::SourceLink",
     }
 
@@ -138,6 +137,8 @@ def run() -> None:
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
         "Acts::TrackStatePropMask",
+        "Acts::AxisType",
+        "Acts::AxisBoundaryType",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")

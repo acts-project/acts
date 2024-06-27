@@ -89,7 +89,7 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
   m_eventId = ctx.eventNumber;
   for (const auto& vertex : vertices) {
     m_vertexId.push_back(vertex.vertexId().value());
-    m_process.push_back(static_cast<uint32_t>(vertex.process));
+    m_process.push_back(static_cast<std::uint32_t>(vertex.process));
     // position
     m_vx.push_back(Acts::clampValue<float>(vertex.position4.x() /
                                            Acts::UnitConstants::mm));
@@ -101,9 +101,9 @@ ProcessCode RootVertexWriter::writeT(const AlgorithmContext& ctx,
                                            Acts::UnitConstants::mm));
     // TODO ingoing particles
     // outgoing particles
-    std::vector<double> outgoing;
+    std::vector<std::uint64_t> outgoing;
     for (const auto& particle : vertex.outgoing) {
-      outgoing.push_back(static_cast<double>(particle.value()));
+      outgoing.push_back(particle.value());
     }
     m_outgoingParticles.push_back(std::move(outgoing));
     // decoded barcode components
