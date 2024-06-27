@@ -369,7 +369,7 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
   using namespace Acts::UnitLiterals;
 
   ACTS_DEBUG("Merging cylinder surfaces in " << binningValueNames()[direction]
-                                             << " direction")
+                                             << " direction");
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
 

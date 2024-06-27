@@ -73,7 +73,7 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
 void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
 
   ACTS_VERBOSE("- boundary surfaces ...");
   // Check the boundary surfaces
@@ -170,7 +170,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
 void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
   ACTS_VERBOSE("- Insert Volume ...");
   if (tVolume.volumeMaterial() != nullptr) {
     mState.volumeMaterial[tVolume.geometryId()] =
@@ -207,7 +207,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
-                            << " recorded material steps to map.")
+                            << " recorded material steps to map.");
 
   // Check if the material interactions are associated with a surface. If yes we
   // simply need to loop over them and accumulate the material
@@ -258,7 +258,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // These should be mapped onto the mapping surfaces found
   ACTS_VERBOSE("Found     " << mappingSurfaces.size()
                             << " mapping surfaces for this track.");
-  ACTS_VERBOSE("Mapping surfaces are :")
+  ACTS_VERBOSE("Mapping surfaces are :");
   for (auto& mSurface : mappingSurfaces) {
     ACTS_VERBOSE(" - Surface : " << mSurface.surface->geometryId()
                                  << " at position = (" << mSurface.position.x()
@@ -416,7 +416,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     ++rmIter;
   }
 
-  ACTS_VERBOSE("Surfaces have following number of assigned hits :")
+  ACTS_VERBOSE("Surfaces have following number of assigned hits :");
   for (auto& [key, value] : assignedMaterial) {
     ACTS_VERBOSE(" + Surface : " << key << " has " << value << " hits.");
   }

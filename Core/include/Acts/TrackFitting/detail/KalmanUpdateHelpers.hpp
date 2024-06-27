@@ -105,7 +105,7 @@ auto kalmanHandleMeasurement(
     } else {
       ACTS_VERBOSE(
           "Filtering step successful. But measurement is determined "
-          "to be an outlier. Stepping state is not updated.")
+          "to be an outlier. Stepping state is not updated.");
       // Set the outlier type flag
       typeFlags.set(TrackStateFlag::OutlierFlag);
       trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,

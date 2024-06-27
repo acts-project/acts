@@ -295,7 +295,7 @@ class DirectNavigator {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
         ACTS_VERBOSE("Current surface set to  "
-                     << state.navigation.currentSurface->geometryId())
+                     << state.navigation.currentSurface->geometryId());
         // Move the sequence to the next surface
         ++state.navigation.navSurfaceIter;
         if (state.navigation.navSurfaceIter !=

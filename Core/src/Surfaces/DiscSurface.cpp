@@ -383,7 +383,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
   using namespace Acts::UnitLiterals;
 
   ACTS_DEBUG("Merging disc surfaces in " << binningValueNames()[direction]
-                                         << " direction")
+                                         << " direction");
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
 

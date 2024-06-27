@@ -95,7 +95,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   if (paramVec(eLinTheta) + m_cfg.delta > M_PI) {
     ACTS_ERROR(
         "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)! "
-        "You might need to decrease targetTolerance as well.")
+        "You might need to decrease targetTolerance as well.");
   }
 
   // Wiggling each of the parameters at the PCA and computing the Perigee

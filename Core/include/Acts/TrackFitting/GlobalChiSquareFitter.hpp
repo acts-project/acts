@@ -606,12 +606,14 @@ class Gx2Fitter {
             // MaterialUpdateStage::FullUpdate);
           }
         } else {
-          ACTS_INFO("Surface " << geoId << " has no measurement/material/hole.")
+          ACTS_INFO("Surface " << geoId
+                               << " has no measurement/material/hole.");
         }
       }
       ACTS_VERBOSE("result.processedMeasurements: "
                    << result.processedMeasurements << "\n"
-                   << "inputMeasurements.size(): " << inputMeasurements->size())
+                   << "inputMeasurements.size(): "
+                   << inputMeasurements->size());
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -831,7 +833,7 @@ class Gx2Fitter {
                              trackState, *m_addToSumLogger);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
-                       << measDim << " dimensions.")
+                       << measDim << " dimensions.");
             throw std::domain_error(
                 "Found measurement with less than 1 or more than 6 "
                 "dimension(s).");
@@ -839,9 +841,9 @@ class Gx2Fitter {
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
           // TODO: write hole handling
-          ACTS_VERBOSE("Placeholder: Handle hole.")
+          ACTS_VERBOSE("Placeholder: Handle hole.");
         } else {
-          ACTS_WARNING("Unknown state encountered")
+          ACTS_WARNING("Unknown state encountered");
         }
         // TODO: Material handling. Should be there for hole and measurement
       }
@@ -1005,7 +1007,7 @@ class Gx2Fitter {
 
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      ACTS_DEBUG("Add nUpdate to track")
+      ACTS_DEBUG("Add nUpdate to track");
       track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
     }
 

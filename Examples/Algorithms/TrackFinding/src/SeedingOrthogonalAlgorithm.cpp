@@ -105,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 }
 
 void ActsExamples::SeedingOrthogonalAlgorithm::printOptions() const {
-  ACTS_DEBUG("SeedFinderOptions")
+  ACTS_DEBUG("SeedFinderOptions");
   ACTS_DEBUG("beamPos           " << m_cfg.seedFinderOptions.beamPos);
   // field induction
   ACTS_DEBUG("bFieldInZ         " << m_cfg.seedFinderOptions.bFieldInZ);
@@ -114,12 +114,12 @@ void ActsExamples::SeedingOrthogonalAlgorithm::printOptions() const {
   ACTS_DEBUG("minHelixDiameter2 " << m_cfg.seedFinderOptions.minHelixDiameter2);
   ACTS_DEBUG("pT2perRadius      " << m_cfg.seedFinderOptions.pT2perRadius);
   ACTS_DEBUG("sigmapT2perRadius " << m_cfg.seedFinderOptions.sigmapT2perRadius);
-  ACTS_DEBUG("...\n")
+  ACTS_DEBUG("...\n");
 }
 
 template <typename sp>
 void ActsExamples::SeedingOrthogonalAlgorithm::printConfig() const {
-  ACTS_DEBUG("SeedFinderOrthogonalConfig")
+  ACTS_DEBUG("SeedFinderOrthogonalConfig");
   ACTS_DEBUG("minPt                 " << m_cfg.seedFinderConfig.minPt);
   ACTS_DEBUG("deltaRMinTopSP        " << m_cfg.seedFinderConfig.deltaRMinTopSP);
   ACTS_DEBUG("deltaRMaxTopSP        " << m_cfg.seedFinderConfig.deltaRMaxTopSP);
@@ -141,5 +141,5 @@ void ActsExamples::SeedingOrthogonalAlgorithm::printConfig() const {
   ACTS_DEBUG("highland              " << m_cfg.seedFinderConfig.highland);
   ACTS_DEBUG("maxScatteringAngle2   "
              << m_cfg.seedFinderConfig.maxScatteringAngle2);
-  ACTS_DEBUG("...\n")
+  ACTS_DEBUG("...\n");
 }

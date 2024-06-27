@@ -75,7 +75,7 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
       dTrees.push_back({geoID, std::move(dTree)});
     }
   } else {
-    ACTS_DEBUG("Bound indices are not declared, no reco setup.")
+    ACTS_DEBUG("Bound indices are not declared, no reco setup.");
   }
 
   m_outputTrees = Acts::GeometryHierarchyMap<std::unique_ptr<DigitizationTree>>(
