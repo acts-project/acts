@@ -240,7 +240,7 @@ jobs:
             std: 20
           - image: ubuntu2204_clang
             std: 17
-    container: ghcr.io/acts-project/${{ matrix.image }}:v50
+    container: ghcr.io/acts-project/${{ matrix.image }}:50
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING

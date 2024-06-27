@@ -6,7 +6,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204:v50
+  image: ghcr.io/acts-project/ubuntu2204:50
   tags:
     - large
   artifacts:
@@ -308,7 +308,7 @@ linux_ubuntu_2404_cpp17:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 17
-  image: ghcr.io/acts-project/ubuntu2404:v50
+  image: ghcr.io/acts-project/ubuntu2404:50
 
 linux_ubuntu_2204_cpp20:
   <<: *linux_ubuntu_extra
