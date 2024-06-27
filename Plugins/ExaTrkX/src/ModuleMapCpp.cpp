@@ -23,7 +23,7 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
 
   for (const auto &[doublet, _] :
-       m_graphCreator->module_map_triplet().map_doublet()) {
+       m_graphCreator->get_module_map_triplet().map_doublet()) {
     m_uniqueDoupletModuleIds.push_back(doublet[0]);
     m_uniqueDoupletModuleIds.push_back(doublet[1]);
   }
