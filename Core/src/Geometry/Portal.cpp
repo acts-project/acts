@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <stdexcept>
 #include <type_traits>
@@ -61,11 +62,51 @@ std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
-    const PortalLinkBase& other, const Logger& logger) const {
+    const GeometryContext& gctx, const PortalLinkBase& other,
+    BinningValue direction, const Logger& logger) const {
   ACTS_DEBUG("Merging tro portals");
 
   ACTS_VERBOSE(" - this: " << *this);
   ACTS_VERBOSE(" - other: " << other);
+
+  const auto& surfaceA = this->surface();
+  const auto& surfaceB = other.surface();
+
+  throw_assert(&surfaceA != &surfaceB,
+               "Cannot merge portals to the same surface");
+
+  throw_assert(surfaceA.type() == surfaceB.type(),
+               "Cannot merge portals of different surface types");
+
+  throw_assert(surfaceA.bounds().type() == surfaceB.bounds().type(),
+               "Cannot merge portals of different surface bounds");
+
+  if (const auto* cylA = dynamic_cast<const CylinderSurface*>(&surfaceA);
+      cylA != nullptr) {
+    const auto* cylB = dynamic_cast<const CylinderSurface*>(&surfaceB);
+    throw_assert(cylB != nullptr,
+                 "Cannot merge CylinderSurface with "
+                 "non-CylinderSurface");
+    throw_assert(
+        direction == binZ || direction == binRPhi,
+        "Invalid binning direction: " + binningValueNames()[direction]);
+
+    auto mergedSurface = cylA->mergedWith(gctx, *cylB, direction);
+
+    // mergeImpl(*cylB, other, direction, logger);
+  } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&surfaceA);
+             discA != nullptr) {
+    const auto* discB = dynamic_cast<const DiscSurface*>(&surfaceB);
+    throw_assert(discB != nullptr,
+                 "Cannot merge DiscSurface with non-DiscSurface");
+    throw_assert(
+        direction == binR || direction == binPhi,
+        "Invalid binning direction: " + binningValueNames()[direction]);
+
+    auto mergedSurface = discA->mergedWith(gctx, *discB, direction);
+  } else {
+    throw std::logic_error{"Surface type is not supported"};
+  }
 
   return nullptr;
 }
