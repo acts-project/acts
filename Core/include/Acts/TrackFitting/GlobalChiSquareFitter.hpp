@@ -709,8 +709,8 @@ class Gx2Fitter {
     // new track and delete it after updating the parameters. However, if we
     // would work on the externally provided track container, it would be
     // difficult to remove the correct track, if it contains more than one.
-    Acts::VectorTrackContainer trackContainerTempBackend;
-    Acts::VectorMultiTrajectory trajectoryTempBackend;
+    track_container_t trackContainerTempBackend;
+    traj_t trajectoryTempBackend;
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
 
