@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
     // NOTE this fails:
     // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
     // because we don't support non-consecutive parameters here for now
-    auto m = Acts::makeMeasurement(Acts::SourceLink{sl}, p, c, Acts::eBoundLoc0,
-                                   Acts::eBoundLoc1);
+    auto m = makeFixedSizeMeasurement(Acts::SourceLink{sl}, p, c,
+                                      Acts::eBoundLoc0, Acts::eBoundLoc1);
 
     measOriginal.push_back(m);
 

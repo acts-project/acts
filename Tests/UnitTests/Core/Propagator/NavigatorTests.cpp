@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,11 +24,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/TryAllNavigator.hpp"
-#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -229,14 +224,6 @@ struct PropagatorState {
 
   /// emulate the options template
   struct Options {
-    /// Debug output
-    /// the string where debug messages are stored (optionally)
-    bool debug = false;
-    std::string debugString = "";
-    /// buffer & formatting for consistent output
-    std::size_t debugPfxWidth = 30;
-    std::size_t debugMsgWidth = 50;
-
     Direction direction = Direction::Forward;
 
     const Acts::Logger& logger = Acts::getDummyLogger();
@@ -257,7 +244,7 @@ struct PropagatorState {
   /// Give some options
   Options options;
 
-  /// The Stepper state - internal statew of the Stepper
+  /// The Stepper state - internal state of the Stepper
   Stepper::State stepping;
 
   /// Navigation state - internal state of the Navigator
@@ -326,17 +313,17 @@ auto tGeometry = cGeometry();
 const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
-// the debug boolean
-bool debug = true;
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
 BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   // position and direction vector
   Vector4 position4(0., 0., 0, 0);
   Vector3 momentum(1., 1., 0);
 
   // the propagator cache
   PropagatorState state;
-  state.options.debug = debug;
 
   // the stepper cache
   state.stepping.pos4 = position4;
@@ -345,10 +332,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   // Stepper
   PropagatorState::Stepper stepper;
 
-  //
-  // (1) Test for inactivity
-  //
-  // Run without anything present
+  ACTS_INFO("(1) Test for inactivity");
+  ACTS_INFO("    a) Run without anything present");
   {
     Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
@@ -363,7 +348,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            nullptr, nullptr, nullptr));
   }
 
-  // Run with geometry but without resolving
+  ACTS_INFO("    b) Run with geometry but without resolving");
   {
     Navigator::Config navCfg;
     navCfg.resolveSensitive = false;
@@ -379,7 +364,9 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            nullptr, nullptr, nullptr));
   }
 
-  // Run with geometry and resolving but broken navigation for various reasons
+  ACTS_INFO(
+      "    c) Run with geometry and resolving but broken navigation for "
+      "various reasons");
   {
     Navigator::Config navCfg;
     navCfg.resolveSensitive = true;
@@ -389,7 +376,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     Navigator navigator{navCfg};
 
     state.navigation.navigationBreak = true;
-    // a) Because target is reached
+    ACTS_INFO("        i) Because target is reached");
     state.navigation.targetReached = true;
     navigator.postStep(state, stepper);
     BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u, 0u));
@@ -397,7 +384,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
 
-    // b) Because of no target surface
+    ACTS_INFO("        ii) Because of no target surface");
     state.navigation.targetReached = false;
     state.navigation.targetSurface = nullptr;
     navigator.postStep(state, stepper);
@@ -405,7 +392,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
-    // c) Because the target surface is reached
+    ACTS_INFO("        iii) Because the target surface is reached");
     const Surface* startSurf = tGeometry->getBeamline();
     state.stepping.pos4.segment<3>(Acts::ePos0) =
         startSurf->center(state.geoContext);
@@ -417,10 +404,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
         state.navigation, nullptr, nullptr, nullptr, nullptr, targetSurf,
         nullptr, nullptr, nullptr, targetSurf));
 
-    //
-    // (2) Test the initialisation
-    //
-    // a) Initialise without additional information
+    ACTS_INFO("(2) Test the initialisation");
+    ACTS_INFO("    a) Initialise without additional information");
     state.navigation = Navigator::State();
     state.stepping.pos4 << 0., 0., 0., 0.;
     const TrackingVolume* worldVol = tGeometry->highestTrackingVolume();
@@ -434,7 +419,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            startLay, nullptr, nullptr, startVol,
                                            nullptr, nullptr, nullptr));
 
-    // b) Initialise having a start surface
+    ACTS_INFO("    b) Initialise having a start surface");
     state.navigation = Navigator::State();
     state.navigation.startSurface = startSurf;
     navigator.initialize(state, stepper);
@@ -443,7 +428,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
         state.navigation, worldVol, startVol, startLay, startSurf, startSurf,
         startVol, nullptr, nullptr, nullptr));
 
-    // c) Initialise having a start volume
+    ACTS_INFO("    c) Initialise having a start volume");
     state.navigation = Navigator::State();
     state.navigation.startVolume = startVol;
     navigator.initialize(state, stepper);
@@ -455,6 +440,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+
   // create a navigator
   Navigator::Config navCfg;
   navCfg.trackingGeometry = tGeometry;
@@ -469,17 +456,13 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // the propagator cache
   PropagatorState state;
-  state.options.debug = debug;
 
   // the stepper cache
   state.stepping.pos4 = position4;
   state.stepping.dir = momentum.normalized();
 
   // forward navigation ----------------------------------------------
-  if (debug) {
-    std::cout << "<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>"
-              << std::endl;
-  }
+  ACTS_INFO("<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>");
 
   // Stepper
   PropagatorState::Stepper stepper;
@@ -508,13 +491,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
-  if (debug) {
-    std::cout << "<<< Test 1a >>> initialize at "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    // Clear the debug string for the next test
-    state.options.debugString = "";
-  }
+
+  ACTS_INFO("<<< Test 1a >>> initialize at " << toString(state.stepping.pos4));
 
   // Do the step towards the beam pipe
   step(state.stepping);
@@ -532,12 +510,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1b >>> step to the BeamPipe at  "
+            << toString(state.stepping.pos4));
 
   // Do the step towards the boundary
   step(state.stepping);
@@ -548,12 +522,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1c >>> step to the Boundary at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1c >>> step to the Boundary at  "
+            << toString(state.stepping.pos4));
 
   // positive return: do the step
   step(state.stepping);
@@ -563,12 +533,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1d >>> step to 1st layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1d >>> step to 1st layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on first layer
   for (std::size_t isf = 0; isf < 5; ++isf) {
@@ -579,12 +545,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1e-1i >>> step within 1st layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -595,12 +557,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1j >>> step to 2nd layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1j >>> step to 2nd layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on second layer
   for (std::size_t isf = 0; isf < 5; ++isf) {
@@ -611,12 +569,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1k-1o >>> step within 2nd layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -627,12 +581,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1p >>> step to 3rd layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1p >>> step to 3rd layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on third layer
   for (std::size_t isf = 0; isf < 3; ++isf) {
@@ -643,12 +593,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1q-1s >>> step within 3rd layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -659,12 +605,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1t >>> step to 4th layer at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
+  ACTS_INFO("<<< Test 1t >>> step to 4th layer at  "
+            << toString(state.stepping.pos4));
 
   // Step through the surfaces on second layer
   for (std::size_t isf = 0; isf < 3; ++isf) {
@@ -675,12 +617,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     // ACTORS - ABORTERS - PRE STEP
     navigator.preStep(state, stepper);
 
-    if (debug) {
-      std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
-                << toString(state.stepping.pos4) << std::endl;
-      std::cout << state.options.debugString << std::endl;
-      state.options.debugString = "";
-    }
+    ACTS_INFO("<<< Test 1t-1v >>> step within 4th layer at  "
+              << toString(state.stepping.pos4));
   }
 
   // positive return: do the step
@@ -691,453 +629,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // ACTORS - ABORTERS - PRE STEP
   navigator.preStep(state, stepper);
 
-  if (debug) {
-    std::cout << "<<< Test 1w >>> step to boundary at  "
-              << toString(state.stepping.pos4) << std::endl;
-    std::cout << state.options.debugString << std::endl;
-    state.options.debugString = "";
-  }
-}
-
-using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
-
-std::vector<GeometryIdentifier> collectRelevantGeoIds(
-    const SurfaceCollector::result_type& surfaceHits) {
-  std::vector<GeometryIdentifier> geoIds;
-  for (const auto& surfaceHit : surfaceHits.collected) {
-    auto geoId = surfaceHit.surface->geometryId();
-    auto material = surfaceHit.surface->surfaceMaterial();
-    if (geoId.sensitive() == 0 && material == nullptr) {
-      continue;
-    }
-    geoIds.push_back(geoId);
-  }
-  return geoIds;
-}
-
-/// the actual test method that runs the test can be used with several
-/// propagator types
-///
-/// @tparam propagator_t is the actual propagator type
-///
-/// @param prop is the propagator instance
-/// @param start start parameters for propagation
-/// @param debugMode toggle debug mode
-template <typename propagator_t>
-void runSelfConsistencyTest(const propagator_t& prop,
-                            const CurvilinearTrackParameters& start,
-                            bool debugMode) {
-  // Action list and abort list
-  using ActionListType = ActionList<SurfaceCollector>;
-  using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
-
-  // forward surface test
-  Options fwdOptions(tgContext, mfContext);
-  fwdOptions.pathLimit = 25_cm;
-  fwdOptions.maxStepSize = 1_cm;
-
-  // get the surface collector and configure it
-  auto& fwdSurfaceCollector =
-      fwdOptions.actionList.template get<SurfaceCollector>();
-  fwdSurfaceCollector.selector.selectSensitive = true;
-  fwdSurfaceCollector.selector.selectMaterial = true;
-  fwdSurfaceCollector.selector.selectPassive = true;
-
-  if (debugMode) {
-    std::cout << ">>> Forward Propagation : start." << std::endl;
-  }
-  auto fwdResult = prop.propagate(start, fwdOptions).value();
-  auto fwdSurfaceHits =
-      fwdResult.template get<SurfaceCollector::result_type>().collected;
-  auto fwdSurfaces = collectRelevantGeoIds(
-      fwdResult.template get<SurfaceCollector::result_type>());
-
-  // get the forward output to the screen
-  if (debugMode) {
-    // check if the surfaces are free
-    std::cout << ">>> Surface hits found on ..." << std::endl;
-    for (const auto& fwdSteps : fwdSurfaces) {
-      std::cout << "--> Surface with " << fwdSteps << std::endl;
-    }
-    std::cout << ">>> Forward Propagation : end." << std::endl;
-  }
-
-  // backward surface test
-  Options bwdOptions(tgContext, mfContext);
-  bwdOptions.pathLimit = 25_cm;
-  bwdOptions.maxStepSize = 1_cm;
-  bwdOptions.direction = Direction::Backward;
-
-  // get the surface collector and configure it
-  auto& bwdMSurfaceCollector =
-      bwdOptions.actionList.template get<SurfaceCollector>();
-  bwdMSurfaceCollector.selector.selectSensitive = true;
-  bwdMSurfaceCollector.selector.selectMaterial = true;
-  bwdMSurfaceCollector.selector.selectPassive = true;
-
-  const auto& startSurface = start.referenceSurface();
-
-  if (debugMode) {
-    std::cout << ">>> Backward Propagation : start." << std::endl;
-  }
-  auto bwdResult =
-      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
-          .value();
-  auto bwdSurfaceHits =
-      bwdResult.template get<SurfaceCollector::result_type>().collected;
-  auto bwdSurfaces = collectRelevantGeoIds(
-      bwdResult.template get<SurfaceCollector::result_type>());
-
-  // get the backward output to the screen
-  if (debugMode) {
-    // check if the surfaces are free
-    std::cout << ">>> Surface hits found on ..." << std::endl;
-    for (auto& bwdSteps : bwdSurfaces) {
-      std::cout << "--> Surface with " << bwdSteps << std::endl;
-    }
-    std::cout << ">>> Backward Propagation : end." << std::endl;
-  }
-
-  // forward-backward compatibility test
-  {
-    std::reverse(bwdSurfaces.begin(), bwdSurfaces.end());
-    BOOST_CHECK_EQUAL_COLLECTIONS(bwdSurfaces.begin(), bwdSurfaces.end(),
-                                  fwdSurfaces.begin(), fwdSurfaces.end());
-  }
-
-  // stepping from one surface to the next
-  // now go from surface to surface and check
-  Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 1_cm;
-
-  // get the surface collector and configure it
-  auto& fwdStepSurfaceCollector =
-      fwdOptions.actionList.template get<SurfaceCollector>();
-  fwdStepSurfaceCollector.selector.selectSensitive = true;
-  fwdStepSurfaceCollector.selector.selectMaterial = true;
-  fwdStepSurfaceCollector.selector.selectPassive = true;
-
-  std::vector<GeometryIdentifier> fwdStepSurfaces;
-
-  // move forward step by step through the surfaces
-  BoundTrackParameters sParameters = start;
-  std::vector<BoundTrackParameters> stepParameters;
-  for (auto& fwdSteps : fwdSurfaceHits) {
-    if (debugMode) {
-      std::cout << ">>> Forward step : "
-                << sParameters.referenceSurface().geometryId() << " --> "
-                << fwdSteps.surface->geometryId() << std::endl;
-    }
-
-    // make a forward step
-    auto fwdStep =
-        prop.propagate(sParameters, *fwdSteps.surface, fwdStepOptions).value();
-
-    auto fwdStepSurfacesTmp = collectRelevantGeoIds(
-        fwdStep.template get<SurfaceCollector::result_type>());
-    fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
-                           fwdStepSurfacesTmp.end());
-
-    if (fwdStep.endParameters.has_value()) {
-      // make sure the parameters do not run out of scope
-      stepParameters.push_back(*fwdStep.endParameters);
-      sParameters = stepParameters.back();
-    }
-  }
-  // final destination surface
-  const Surface& dSurface = fwdResult.endParameters->referenceSurface();
-  if (debugMode) {
-    std::cout << ">>> Forward step : "
-              << sParameters.referenceSurface().geometryId() << " --> "
-              << dSurface.geometryId() << std::endl;
-  }
-  auto fwdStepFinal =
-      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
-  auto fwdStepSurfacesTmp = collectRelevantGeoIds(
-      fwdStepFinal.template get<SurfaceCollector::result_type>());
-  fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
-                         fwdStepSurfacesTmp.end());
-
-  // TODO forward-forward step compatibility test
-
-  // stepping from one surface to the next : backwards
-  // now go from surface to surface and check
-  Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.maxStepSize = 1_cm;
-  bwdStepOptions.direction = Direction::Backward;
-
-  // get the surface collector and configure it
-  auto& bwdStepSurfaceCollector =
-      bwdOptions.actionList.template get<SurfaceCollector>();
-  bwdStepSurfaceCollector.selector.selectSensitive = true;
-  bwdStepSurfaceCollector.selector.selectMaterial = true;
-  bwdStepSurfaceCollector.selector.selectPassive = true;
-
-  std::vector<GeometryIdentifier> bwdStepSurfaces;
-
-  // move forward step by step through the surfaces
-  sParameters = *fwdResult.endParameters;
-  for (auto& bwdSteps : bwdSurfaceHits) {
-    if (debugMode) {
-      std::cout << ">>> Backward step : "
-                << sParameters.referenceSurface().geometryId() << " --> "
-                << bwdSteps.surface->geometryId() << std::endl;
-    }
-
-    // make a forward step
-    auto bwdStep =
-        prop.propagate(sParameters, *bwdSteps.surface, bwdStepOptions).value();
-
-    auto bwdStepSurfacesTmp = collectRelevantGeoIds(
-        bwdStep.template get<SurfaceCollector::result_type>());
-    bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
-                           bwdStepSurfacesTmp.end());
-
-    if (bwdStep.endParameters.has_value()) {
-      // make sure the parameters do not run out of scope
-      stepParameters.push_back(*bwdStep.endParameters);
-      sParameters = stepParameters.back();
-    }
-  }
-  // final destination surface
-  const Surface& dbSurface = start.referenceSurface();
-  if (debugMode) {
-    std::cout << ">>> Backward step : "
-              << sParameters.referenceSurface().geometryId() << " --> "
-              << dSurface.geometryId() << std::endl;
-  }
-  auto bwdStepFinal =
-      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
-  auto bwdStepSurfacesTmp = collectRelevantGeoIds(
-      bwdStepFinal.template get<SurfaceCollector::result_type>());
-  bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
-                         bwdStepSurfacesTmp.end());
-
-  // TODO backward-backward step compatibility test
-
-  std::reverse(bwdStepSurfaces.begin(), bwdStepSurfaces.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(bwdStepSurfaces.begin(), bwdStepSurfaces.end(),
-                                fwdStepSurfaces.begin(), fwdStepSurfaces.end());
-}
-
-/// the actual test method that runs the test can be used with several
-/// propagator types
-///
-/// @tparam propagator_probe_t is the probe propagator type
-/// @tparam propagator_ref_t is the reference propagator type
-///
-/// @param propProbe is the probe propagator instance
-/// @param propRef is the reference propagator instance
-/// @param start start parameters for propagation
-/// @param debugMode toggle debug mode
-template <typename propagator_probe_t, typename propagator_ref_t>
-void runConsistencyTest(const propagator_probe_t& propProbe,
-                        const propagator_ref_t& propRef,
-                        const CurvilinearTrackParameters& start,
-                        bool debugMode) {
-  // Action list and abort list
-  using ActionListType = ActionList<SurfaceCollector>;
-  using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
-
-  auto run = [&](const auto& prop) {
-    // forward surface test
-    Options fwdOptions(tgContext, mfContext);
-    fwdOptions.pathLimit = 25_cm;
-    fwdOptions.maxStepSize = 1_cm;
-
-    // get the surface collector and configure it
-    auto& fwdSurfaceCollector =
-        fwdOptions.actionList.template get<SurfaceCollector>();
-    fwdSurfaceCollector.selector.selectSensitive = true;
-    fwdSurfaceCollector.selector.selectMaterial = true;
-    fwdSurfaceCollector.selector.selectPassive = true;
-
-    auto fwdResult = prop.propagate(start, fwdOptions).value();
-    auto fwdSurfaces = collectRelevantGeoIds(
-        fwdResult.template get<SurfaceCollector::result_type>());
-
-    // get the forward output to the screen
-    if (debugMode) {
-      // check if the surfaces are free
-      std::cout << ">>> Surface hits found on ..." << std::endl;
-      for (const auto& fwdSteps : fwdSurfaces) {
-        std::cout << "--> Surface with " << fwdSteps << std::endl;
-      }
-    }
-
-    return fwdSurfaces;
-  };
-
-  if (debugMode) {
-    std::cout << ">>> Probe Propagation : start." << std::endl;
-  }
-  const auto& probeSurfaces = run(propProbe);
-  if (debugMode) {
-    std::cout << ">>> Probe Propagation : end." << std::endl;
-  }
-
-  if (debugMode) {
-    std::cout << ">>> Reference Propagation : start." << std::endl;
-  }
-  const auto& refSurfaces = run(propRef);
-  if (debugMode) {
-    std::cout << ">>> Reference Propagation : end." << std::endl;
-  }
-
-  // probe-ref compatibility test
-  BOOST_CHECK_EQUAL_COLLECTIONS(probeSurfaces.begin(), probeSurfaces.end(),
-                                refSurfaces.begin(), refSurfaces.end());
-}
-
-const int nTestsSelfConsistency = 500;
-const int nTestsRefConsistency = 10;
-int skip = 0;
-bool debugMode = false;
-
-using EigenStepper = Acts::EigenStepper<>;
-using EigenPropagator = Propagator<EigenStepper, Navigator>;
-using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
-using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
-using Reference1StraightLinePropagator =
-    Propagator<StraightLineStepper, TryAllNavigator>;
-using Reference2EigenPropagator =
-    Propagator<EigenStepper, TryAllOverstepNavigator>;
-using Reference2StraightLinePropagator =
-    Propagator<StraightLineStepper, TryAllOverstepNavigator>;
-
-EigenStepper estepper(bField);
-StraightLineStepper slstepper;
-
-EigenPropagator epropagator(estepper,
-                            Navigator({tGeometry, true, true, false},
-                                      getDefaultLogger("e_nav", Logging::INFO)),
-                            getDefaultLogger("e_prop", Logging::INFO));
-StraightLinePropagator slpropagator(slstepper,
-                                    Navigator({tGeometry, true, true, false},
-                                              getDefaultLogger("sl_nav",
-                                                               Logging::INFO)),
-                                    getDefaultLogger("sl_prop", Logging::INFO));
-
-Reference1EigenPropagator refepropagator1(
-    estepper,
-    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
-                    getDefaultLogger("ref1_e_nav", Logging::INFO)),
-    getDefaultLogger("ref1_e_prop", Logging::INFO));
-Reference1StraightLinePropagator refslpropagator1(
-    slstepper,
-    TryAllNavigator({tGeometry, true, true, false},
-                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
-    getDefaultLogger("ref1_sl_prop", Logging::INFO));
-
-Reference2EigenPropagator refepropagator2(
-    estepper,
-    TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryCheck(false)},
-                            getDefaultLogger("ref2_e_nav", Logging::INFO)),
-    getDefaultLogger("ref2_e_prop", Logging::INFO));
-Reference2StraightLinePropagator refslpropagator2(
-    slstepper,
-    TryAllOverstepNavigator({tGeometry, true, true, false},
-                            getDefaultLogger("ref2_sl_nav", Logging::INFO)),
-    getDefaultLogger("ref2_sl_prop", Logging::INFO));
-
-BOOST_DATA_TEST_CASE(
-    NavigatorRandomSelfConsistency,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::xrange(nTestsSelfConsistency),
-    pT, phi, theta, charge, index) {
-  if (index < skip) {
-    return;
-  }
-
-  double p = pT / std::sin(theta);
-  double q = -1 + 2 * charge;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
-
-  if (debugMode) {
-    std::cout << ">>> Run navigation tests with pT = " << pT
-              << "; phi = " << phi << "; theta = " << theta
-              << "; charge = " << charge << "; index = " << index << ";"
-              << std::endl;
-  }
-
-  if (debugMode) {
-    std::cout << ">>> Test self consistency epropagator" << std::endl;
-  }
-  runSelfConsistencyTest(epropagator, start, debugMode);
-  if (debugMode) {
-    std::cout << ">>> Test self consistency slpropagator" << std::endl;
-  }
-  runSelfConsistencyTest(slpropagator, start, debugMode);
-}
-
-BOOST_DATA_TEST_CASE(
-    NavigatorRandomRefConsistency,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::engine = std::mt19937(), bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<int>(0, 1))) ^
-        bdata::xrange(nTestsRefConsistency),
-    pT, phi, theta, charge, index) {
-  if (index < skip) {
-    return;
-  }
-
-  double p = pT / std::sin(theta);
-  double q = -1 + 2 * charge;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
-
-  if (debugMode) {
-    std::cout << ">>> Run navigation tests with pT = " << pT
-              << "; phi = " << phi << "; theta = " << theta
-              << "; charge = " << charge << "; index = " << index << ";"
-              << std::endl;
-  }
-
-  if (debugMode) {
-    std::cout << ">>> Test reference 1 consistency epropagator" << std::endl;
-  }
-  runConsistencyTest(epropagator, refepropagator1, start, debugMode);
-  if (debugMode) {
-    std::cout << ">>> Test reference 1 consistency slpropagator" << std::endl;
-  }
-  runConsistencyTest(slpropagator, refslpropagator1, start, debugMode);
-
-  if (debugMode) {
-    std::cout << ">>> Test reference 2 consistency epropagator" << std::endl;
-  }
-  runConsistencyTest(epropagator, refepropagator2, start, debugMode);
-  if (debugMode) {
-    std::cout << ">>> Test reference 2 consistency slpropagator" << std::endl;
-  }
-  runConsistencyTest(slpropagator, refslpropagator2, start, debugMode);
+  ACTS_INFO("<<< Test 1w >>> step to boundary at  "
+            << toString(state.stepping.pos4));
 }
 
 }  // namespace Acts::Test
