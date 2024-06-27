@@ -40,11 +40,11 @@ class GridBinFinder {
   template <typename... args,
             typename = std::enable_if_t<
                 sizeof...(args) == DIM &&
-                std::conjunction<std::disjunction<
+                std::conjunction_v<std::disjunction<
                     std::is_same<int, std::decay_t<args>>,
                     std::is_same<std::pair<int, int>, std::decay_t<args>>,
                     std::is_same<std::vector<std::pair<int, int>>,
-                                 std::decay_t<args>>>...>::value>>
+                                 std::decay_t<args>>>...>>>
   explicit GridBinFinder(args&&... vals) {
     storeValue(std::forward<args>(vals)...);
   }
