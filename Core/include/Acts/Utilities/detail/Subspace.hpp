@@ -107,12 +107,6 @@ class FixedSizeSubspace {
       m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
-  // The subset can not be constructed w/o defining its axis indices.
-  FixedSizeSubspace() = delete;
-  FixedSizeSubspace(const FixedSizeSubspace&) = default;
-  FixedSizeSubspace(FixedSizeSubspace&&) = default;
-  FixedSizeSubspace& operator=(const FixedSizeSubspace&) = default;
-  FixedSizeSubspace& operator=(FixedSizeSubspace&&) = default;
 
   /// Size of the subspace.
   static constexpr std::size_t size() { return kSize; }
@@ -262,12 +256,6 @@ class VariableSizeSubspace {
       m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
-  // The subset can not be constructed w/o defining its axis indices.
-  VariableSizeSubspace() = delete;
-  VariableSizeSubspace(const VariableSizeSubspace&) = default;
-  VariableSizeSubspace(VariableSizeSubspace&&) = default;
-  VariableSizeSubspace& operator=(const VariableSizeSubspace&) = default;
-  VariableSizeSubspace& operator=(VariableSizeSubspace&&) = default;
 
   /// Size of the subspace.
   constexpr std::size_t size() const { return m_size; }
