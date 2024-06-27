@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   BOOST_CHECK_EQUAL(tubePos.size(), driftRadius.size());
   BOOST_CHECK_EQUAL(stationInfo.size(), tubePos.size());
   // Define the drift Circles
-  std::vector<ActsExamples::DriftCircle> driftCircles;
+  ActsExamples::DriftCircleContainer driftCircles;
   for (std::size_t i = 0; i < tubePos.size(); i++) {
     ActsFatras::Hit::Vector3 tube_pos{tubePos[i][0] * Acts::UnitConstants::mm,
                                       tubePos[i][1] * Acts::UnitConstants::mm,
@@ -89,12 +89,10 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
                            // fully reliable at this stage
   };
 
-  // store the true parameters
-  // std::vector<PatternSeed> truePatterns;
-
   // instantiate the hough plane
   Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
       houghPlane(planeCfg);
+
   // also insantiate the peak finder
   Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       Acts::GeometryIdentifier::Value>

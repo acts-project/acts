@@ -28,12 +28,12 @@ class MultiIndexedVector2D {
 
  public:
   MultiIndexedVector2D() : m_d1(0), m_d2(0) {
-    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
+    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::WARNING);
   }
 
   MultiIndexedVector2D(std::size_t d1, std::size_t d2, T const& t = T())
       : m_d1(d1), m_d2(d2), m_data(d1 * d2, t) {
-    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
+    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::WARNING);
   }
 
   std::size_t size(int dim) const {
@@ -43,7 +43,7 @@ class MultiIndexedVector2D {
     if (dim == 1) {
       return m_d2;
     } else {
-      ACTS_ERROR("MultiIndexedVector2D: Argument to size() must be 0 or 1");
+      ACTS_WARNING("MultiIndexedVector2D: Argument to size() must be 0 or 1");
       return 0;
     }
   }
@@ -59,7 +59,7 @@ class MultiIndexedVector2D {
       std::stringstream s;
       s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j
         << ") size (" << m_d1 << "," << m_d2 << ")";
-      ACTS_ERROR(s.str());
+      ACTS_WARNING(s.str());
     }
     return m_data[i * m_d2 + j];
   }
@@ -72,7 +72,7 @@ class MultiIndexedVector2D {
       std::stringstream s;
       s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j
         << ") size (" << m_d1 << "," << m_d2 << ")";
-      ACTS_ERROR(s.str());
+      ACTS_WARNING(s.str());
     }
     return m_data[i * m_d2 + j];
   }
@@ -86,7 +86,7 @@ class MultiIndexedVector2D {
       std::stringstream s;
       s << "MultiIndexedVector2D out of bounds: request " << i << " size ("
         << m_d1 << "," << m_d2 << ")";
-      ACTS_ERROR(s.str());
+      ACTS_WARNING(s.str());
     }
     return m_data.data() + (i * m_d2);
   }
@@ -96,7 +96,7 @@ class MultiIndexedVector2D {
       std::stringstream s;
       s << "MultiIndexedVector2D out of bounds: request " << i << " size ("
         << m_d1 << "," << m_d2 << ")";
-      ACTS_ERROR(s.str());
+      ACTS_WARNING(s.str());
     }
     return m_data.data() + (i * m_d2);
   }
@@ -121,13 +121,13 @@ class MultiIndexedVector3D {
 
  public:
   MultiIndexedVector3D() : m_d1(0), m_d2(0), m_d3(0) {
-    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
+    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::WARNING);
   }
 
   MultiIndexedVector3D(std::size_t d1, std::size_t d2, std::size_t d3,
                        T const& t = T())
       : m_d1(d1), m_d2(d2), m_d3(d3), m_data(d1 * d2 * d3, t) {
-    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
+    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::WARNING);
   }
 
   T& operator()(std::size_t i, std::size_t j, std::size_t k) {
@@ -135,7 +135,7 @@ class MultiIndexedVector3D {
       std::stringstream s;
       s << "MultiIndexedVector3D out of bounds: request (" << i << "," << j
         << "," << k << ") size (" << m_d1 << "," << m_d2 << "," << m_d3 << ")";
-      ACTS_ERROR(s.str());
+      ACTS_WARNING(s.str());
     }
     return m_data[i * m_d2 * m_d3 + j * m_d3 + k];
   }
@@ -145,7 +145,7 @@ class MultiIndexedVector3D {
       std::stringstream s;
       s << "MultiIndexedVector3D out of bounds: request (" << i << "," << j
         << "," << k << ") size (" << m_d1 << "," << m_d2 << "," << m_d3 << ")";
-      ACTS_ERROR(s.str());
+      ACTS_WARNING(s.str());
     }
     return m_data[i * m_d2 * m_d3 + j * m_d3 + k];
   }
