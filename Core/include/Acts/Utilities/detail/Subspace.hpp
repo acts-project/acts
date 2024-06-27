@@ -289,7 +289,7 @@ class VariableSizeSubspace {
     // always iterate over all elements to avoid branching and hope the compiler
     // can optimise this for us.
     for (std::size_t i = 0; i < kFullSize; ++i) {
-      isContained = isContained || ((i < m_size) & (m_axes[i] == index));
+      isContained = isContained || ((i < m_size) && (m_axes[i] == index));
     }
     return isContained;
   }
