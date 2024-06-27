@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:48
+    container: ghcr.io/acts-project/ubuntu2404:50
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -117,7 +117,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:48
+    container: ghcr.io/acts-project/ubuntu2404:50
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -154,7 +154,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:48
+    container: ghcr.io/acts-project/ubuntu2404:50
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -234,13 +234,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2004
+          - image: ubuntu2404
             std: 17
           - image: ubuntu2204_cpp20
             std: 20
           - image: ubuntu2204_clang
             std: 17
-    container: ghcr.io/acts-project/${{ matrix.image }}:v41
+    container: ghcr.io/acts-project/${{ matrix.image }}:v50
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
