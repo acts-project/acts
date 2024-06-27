@@ -59,6 +59,10 @@ void setFailureThreshold(Level level) {
   getFailureThresholdMutable() = level;
 }
 
+ScopedFailureThreshold::~ScopedFailureThreshold() noexcept {
+  setFailureThreshold(m_previousLevel);
+}
+
 #else
 
 void setFailureThreshold(Level /*lvl*/) {
@@ -69,6 +73,8 @@ void setFailureThreshold(Level /*lvl*/) {
       "https://acts.readthedocs.io/en/latest/core/misc/"
       "logging.html#logging-thresholds"};
 }
+
+ScopedFailureThreshold::~ScopedFailureThreshold() noexcept = default;
 
 #endif
 

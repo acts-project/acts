@@ -251,7 +251,7 @@ class ScopedFailureThreshold {
   ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
   ScopedFailureThreshold& operator=(ScopedFailureThreshold&&) = delete;
 
-  ~ScopedFailureThreshold() noexcept { setFailureThreshold(m_previousLevel); }
+  ~ScopedFailureThreshold() noexcept;
 
  private:
   Level m_previousLevel;
