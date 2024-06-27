@@ -1,12 +1,14 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -18,6 +20,119 @@ using namespace Acts::HashedStringLiteral;
 using MultiTrajectoryTraits::IndexType;
 
 BOOST_AUTO_TEST_SUITE(EventDataTrack)
+
+BOOST_AUTO_TEST_CASE(AppendTrackState) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.makeTrack();
+
+  std::vector<VectorMultiTrajectory::TrackStateProxy> trackStates;
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+
+  BOOST_CHECK_EQUAL(trackStates.size(), t.nTrackStates());
+
+  for (std::size_t i = trackStates.size() - 1; i > 0; i--) {
+    BOOST_CHECK_EQUAL(trackStates.at(i).index(), i);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ForwardIteration) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  {
+    // let's create an unrelated track first
+    auto t = tc.makeTrack();
+    for (std::size_t i = 0; i < 10; i++) {
+      t.appendTrackState();
+    }
+  }
+
+  auto t = tc.makeTrack();
+
+  auto stem = t.appendTrackState();
+  t.appendTrackState();
+  t.appendTrackState();
+  t.appendTrackState();
+  t.appendTrackState();
+
+  BOOST_CHECK_THROW(t.trackStates(), std::invalid_argument);
+  BOOST_CHECK(!t.innermostTrackState().has_value());
+
+  t.linkForward();
+
+  BOOST_CHECK_EQUAL(t.stemIndex(), stem.index());
+  BOOST_CHECK_EQUAL(t.innermostTrackState().value().index(), stem.index());
+  t.innermostTrackState()->predicted().setRandom();
+
+  std::vector<IndexType> indices;
+  for (const auto& ts : t.trackStatesReversed()) {
+    indices.push_back(ts.index());
+  }
+
+  std::reverse(indices.begin(), indices.end());
+
+  std::vector<IndexType> act;
+  for (auto ts : t.trackStates()) {
+    act.push_back(ts.index());
+    ts.predicted().setRandom();
+  }
+
+  BOOST_CHECK_EQUAL_COLLECTIONS(indices.begin(), indices.end(), act.begin(),
+                                act.end());
+
+  t.reverseTrackStates();
+  BOOST_CHECK_EQUAL(t.innermostTrackState().value().index(), indices.back());
+  t.innermostTrackState()->predicted().setRandom();
+
+  act.clear();
+  for (const auto& ts : t.trackStates()) {
+    act.push_back(ts.index());
+  }
+
+  BOOST_CHECK_EQUAL_COLLECTIONS(indices.rbegin(), indices.rend(), act.begin(),
+                                act.end());
+}
+
+BOOST_AUTO_TEST_CASE(CalculateQuantities) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.makeTrack();
+
+  auto ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().set(SharedHitFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(HoleFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(HoleFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().set(SharedHitFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  calculateTrackQuantities(t);
+
+  BOOST_CHECK_EQUAL(t.nHoles(), 2);
+  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
+  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
+}
 
 BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
   // mutable source
