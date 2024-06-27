@@ -12,6 +12,7 @@
 
 #include <numeric>
 #include <vector>
+#include <optional>
 
 namespace ActsExamples {
 
@@ -21,6 +22,9 @@ struct Cluster {
   std::size_t sizeLoc0 = 0;
   std::size_t sizeLoc1 = 0;
   std::vector<Cell> channels;
+
+  // TODO make this be provided by Fatras?
+  Acts::Vector3 globalPosition = Acts::Vector3::Zero();
 
   double sumActivations() const {
     return std::accumulate(

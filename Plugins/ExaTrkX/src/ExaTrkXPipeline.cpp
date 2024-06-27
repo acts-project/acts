@@ -54,9 +54,9 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
   for (auto edgeClassifier : m_edgeClassifiers) {
     t0 = std::chrono::high_resolution_clock::now();
-    auto [newNodeFeatures, newEdgeFeatures, newEdgeIndex, newEdgeScores] =
-        (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeFeatures),
-                          std::move(edgeIndex), edgeClassifier->device());
+    auto [newNodeFeatures, newEdgeIndex, newEdgeFeatures, newEdgeScores] =
+        (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeIndex),
+                          std::move(edgeFeatures), edgeClassifier->device());
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
@@ -68,7 +68,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     edgeIndex = std::move(newEdgeIndex);
     edgeScores = std::move(newEdgeScores);
 
-    hook(nodeFeatures, edgeFeatures, edgeScores);
+    hook(nodeFeatures, edgeIndex, edgeScores);
   }
 
   t0 = std::chrono::high_resolution_clock::now();

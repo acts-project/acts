@@ -178,7 +178,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   // Check if we want cluster features but do not have them
   const static std::array clFeatures = {
       NodeFeature::eClusterX, NodeFeature::eClusterY, NodeFeature::eCellCount,
-      NodeFeature::eCellSum};
+      NodeFeature::eCellSum, NodeFeature::eCluster1R, NodeFeature::eCluster2R};
+
   auto wantClFeatures = std::any_of(
       m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
         return std::find(clFeatures.begin(), clFeatures.end(), f) !=
@@ -187,6 +188,10 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
   if (wantClFeatures && !m_inputClusters.isInitialized()) {
     throw std::invalid_argument("Cluster features requested, but not provided");
+  }
+
+  if ( m_cfg.nodeFeatures.size() != m_cfg.featureScales.size()) {
+    throw std::invalid_argument("Number of features mismatches number of scale parameters.");
   }
 }
 
@@ -214,7 +219,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // measurement_features]
   const std::size_t numSpacepoints = spacepoints.size();
   const std::size_t numFeatures = m_cfg.nodeFeatures.size();
-  ACTS_INFO("Received " << numSpacepoints << " spacepoints");
+  ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
+  ACTS_DEBUG("Construct " << numFeatures << " node features");
 
   std::vector<float> features(numSpacepoints * numFeatures);
   std::vector<int> spacepointIDs;
@@ -251,16 +257,24 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     for (auto ift = 0ul; ift < numFeatures; ++ift) {
       // clang-format off
       switch(m_cfg.nodeFeatures[ift]) {
-        break; case NF::eR:         f[ift] = std::hypot(sp.x(), sp.y());
-        break; case NF::ePhi:       f[ift] = std::atan2(sp.y(), sp.x());
-        break; case NF::eZ:         f[ift] = sp.z();
-        break; case NF::eX:         f[ift] = sp.x();
-        break; case NF::eY:         f[ift] = sp.y();
-        break; case NF::eEta:       f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
-        break; case NF::eClusterX:  f[ift] = cl1->sizeLoc0;
-        break; case NF::eClusterY:  f[ift] = cl1->sizeLoc1;
-        break; case NF::eCellSum:   f[ift] = cl1->sumActivations();
-        break; case NF::eCellCount: f[ift] = cl1->channels.size();
+        break; case NF::eR:           f[ift] = std::hypot(sp.x(), sp.y());
+        break; case NF::ePhi:         f[ift] = std::atan2(sp.y(), sp.x());
+        break; case NF::eZ:           f[ift] = sp.z();
+        break; case NF::eX:           f[ift] = sp.x();
+        break; case NF::eY:           f[ift] = sp.y();
+        break; case NF::eEta:         f[ift] = eta(std::hypot(sp.x(), sp.y()), sp.z());
+        break; case NF::eClusterX:    f[ift] = cl1->sizeLoc0;
+        break; case NF::eClusterY:    f[ift] = cl1->sizeLoc1;
+        break; case NF::eCellSum:     f[ift] = cl1->sumActivations();
+        break; case NF::eCellCount:   f[ift] = cl1->channels.size();
+        break; case NF::eCluster1R:   f[ift] = std::hypot(cl1->globalPosition[Acts::ePos0], cl1->globalPosition[Acts::ePos1]);
+        break; case NF::eCluster2R:   f[ift] = std::hypot(cl2->globalPosition[Acts::ePos0], cl2->globalPosition[Acts::ePos1]);
+        break; case NF::eCluster1Phi: f[ift] = std::atan2(cl1->globalPosition[Acts::ePos1], cl1->globalPosition[Acts::ePos0]);
+        break; case NF::eCluster2Phi: f[ift] = std::atan2(cl2->globalPosition[Acts::ePos1], cl2->globalPosition[Acts::ePos0]);
+        break; case NF::eCluster1Z:   f[ift] = cl1->globalPosition[Acts::ePos2];
+        break; case NF::eCluster2Z:   f[ift] = cl2->globalPosition[Acts::ePos2];
+        break; case NF::eCluster1Eta: f[ift] = eta(std::hypot(cl1->globalPosition[Acts::ePos0], cl1->globalPosition[Acts::ePos1]), cl1->globalPosition[Acts::ePos2]);
+        break; case NF::eCluster2Eta: f[ift] = eta(std::hypot(cl2->globalPosition[Acts::ePos0], cl2->globalPosition[Acts::ePos1]), cl2->globalPosition[Acts::ePos2]);
       }
       // clang-format on
 

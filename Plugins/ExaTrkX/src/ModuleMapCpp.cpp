@@ -158,9 +158,9 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   auto edgeFeatures =
       detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures);
 
-  ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes()
-                              << ", edgeIndex: " << edgeIndex.sizes()
-                              << ", edgeFeatures: " << edgeFeatures.sizes());
+  ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes() << " | " << nodeFeatures.dtype()
+                              << ", edgeIndex: " << edgeIndex.sizes() << " | " << edgeIndex.dtype()
+                              << ", edgeFeatures: " << edgeFeatures.sizes() << " | "  << edgeFeatures.dtype());
 
   return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
                          std::move(edgeFeatures));

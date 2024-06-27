@@ -265,6 +265,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
                                     activation);
     }
 
+    cluster.globalPosition = { CLx[im], CLy[im], CLz[im] };
+
     ACTS_VERBOSE("Cluster " << im << ": " << cluster.channels.size()
                             << "cells, dimensions: " << cluster.sizeLoc0 << ", "
                             << cluster.sizeLoc1);

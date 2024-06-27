@@ -77,9 +77,13 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
   auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
 
+  ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes() << " [" << nodeFeatures.dtype() << "]"
+                            << ", edgeIndex: " << edgeIndex.sizes() << " [" << edgeIndex.dtype() << "]");
+
   std::optional<torch::Tensor> edgeFeatures;
   if (inEdgeFeatures.has_value()) {
     edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(device);
+    ACTS_DEBUG("edgeFeatures: " << edgeFeatures->sizes() << " ["  << edgeFeatures->dtype() << "]");
   }
 
   auto model = m_model->clone();
