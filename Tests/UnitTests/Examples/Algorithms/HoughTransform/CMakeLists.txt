@@ -1,2 +1,0 @@
-set(unittest_extra_libraries ActsExamplesFramework)
-add_unittest(HoughTransformTest HoughTransformTest.cpp)
