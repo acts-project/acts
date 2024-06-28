@@ -69,9 +69,9 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
 
   // add a protection to avoid calling for kCPU
 #ifndef ACTS_EXATRKX_CPUONLY
-  if (device.is_cuda()) {
-    c10::cuda::CUDAGuard device_guard(device.index());
-  }
+//  if (device.is_cuda()) {
+//    c10::cuda::CUDAGuard device_guard(device.index());
+//  }
 #endif
 
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);

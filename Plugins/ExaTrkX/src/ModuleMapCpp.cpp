@@ -151,12 +151,12 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
-  auto nodeFeatures = detail::vectorToTensor2D(inputValues, numFeatures);
-  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, numEdges);
+  auto nodeFeatures = detail::vectorToTensor2D(inputValues, numFeatures).clone();
+  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, numEdges).clone().to(torch::kInt64);
 
   constexpr std::size_t numEdgeFeatures = 6;
   auto edgeFeatures =
-      detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures);
+      detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures).clone();
 
   ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes() << " | " << nodeFeatures.dtype()
                               << ", edgeIndex: " << edgeIndex.sizes() << " | " << edgeIndex.dtype()
