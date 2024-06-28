@@ -83,14 +83,17 @@ class PortalLinkBase {
   const RegularSurface& surface() const { return *m_surface; }
 
  protected:
-  std::unique_ptr<PortalLinkBase> mergeImpl(const PortalLinkBase& other,
-                                            const RegularSurface& mergedSurface,
-                                            BinningValue direction,
-                                            const Logger& logger);
+  virtual std::unique_ptr<PortalLinkBase> mergeImpl(
+      const GeometryContext& gctx, const PortalLinkBase& other,
+      const RegularSurface& surfaceA, const RegularSurface& surfaceB,
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
+
   const RegularSurface* m_surface;
 };
 
 class BinaryPortalLink : public PortalLinkBase {};
+
+class TrivialPortalLink : public PortalLinkBase {};
 
 namespace detail {
 #if defined(__cpp_concepts)
@@ -106,31 +109,58 @@ template <typename... Axes>
 class GridPortalLinkT;
 
 class GridPortalLink : public PortalLinkBase {
- public:
-  enum class Direction { loc0, loc1 };
-
-  GridPortalLink(const RegularSurface& surface, Direction direction)
+ protected:
+  GridPortalLink(const RegularSurface& surface, BinningValue direction)
       : PortalLinkBase(surface), m_direction(direction) {}
 
+ public:
   template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
-  static auto make(const RegularSurface& surface, Direction direction,
+  static auto make(const CylinderSurface& surface, BinningValue direction,
                    Axes&&... axes) {
+    if (direction != binZ && direction != binRPhi) {
+      throw std::invalid_argument{"Invalid binning direction"};
+    }
+
+    return std::make_unique<GridPortalLinkT<Axes...>>(
+        surface, direction, std::forward<Axes>(axes)...);
+  }
+
+  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
+  static auto make(const DiscSurface& surface, BinningValue direction,
+                   Axes&&... axes) {
+    if (direction != binR && direction != binPhi) {
+      throw std::invalid_argument{"Invalid binning direction"};
+    }
+
     return std::make_unique<GridPortalLinkT<Axes...>>(
         surface, direction, std::forward<Axes>(axes)...);
   }
 
   template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
-  static auto make(const RegularSurface& surface, Axes&&... axes) {
+  static auto make(const CylinderSurface& surface, Axes&&... axes) {
     return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, Direction::loc0, std::forward<Axes>(axes)...);
+        surface, binRPhi, std::forward<Axes>(axes)...);
   }
 
-  virtual const IGrid& grid() const = 0;
+  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
+  static auto make(const DiscSurface& surface, Axes&&... axes) {
+    return std::make_unique<GridPortalLinkT<Axes...>>(
+        surface, binR, std::forward<Axes>(axes)...);
+  }
 
-  Direction direction() const { return m_direction; }
+  std::unique_ptr<PortalLinkBase> mergeImpl(
+      const GeometryContext& gctx, const PortalLinkBase& other,
+      const RegularSurface& surfaceA, const RegularSurface& surfaceB,
+      BinningValue direction,
+      const Logger& logger = getDummyLogger()) const override;
+
+  virtual const IGrid& grid() const = 0;
+  virtual unsigned int dim() const = 0;
+
+  BinningValue direction() const { return m_direction; }
 
  private:
-  Direction m_direction;
+  BinningValue m_direction;
 };
 
 template <typename... Axes>
@@ -142,7 +172,7 @@ class GridPortalLinkT : public GridPortalLink {
   static_assert(DIM == 1 || DIM == 2,
                 "GridPortalLinks only support 1D or 2D grids");
 
-  GridPortalLinkT(const RegularSurface& surface, Direction direction,
+  GridPortalLinkT(const RegularSurface& surface, BinningValue direction,
                   Axes&&... axes)
       : GridPortalLink(surface, direction),
         m_grid(std::tuple{std::move(axes)...}) {
@@ -154,8 +184,11 @@ class GridPortalLinkT : public GridPortalLink {
   }
 
   const GridType& grid() const override { return m_grid; }
+  unsigned int dim() const override { return DIM; }
 
-  void toStream(std::ostream& os) const override { os << m_grid; }
+  void toStream(std::ostream& os) const override {
+    os << "GridPortalLink<dim=" << dim() << ">";
+  }
 
  private:
   void checkConsistency(const CylinderSurface& cyl) const {
@@ -178,7 +211,7 @@ class GridPortalLinkT : public GridPortalLink {
 
     if constexpr (DIM == 1) {
       auto [axisLoc0] = m_grid.axesTuple();
-      if (direction() == Direction::loc0) {
+      if (direction() == binRPhi) {
         checkRPhi(axisLoc0);
       } else {
         checkZ(axisLoc0);
@@ -192,7 +225,5 @@ class GridPortalLinkT : public GridPortalLink {
 
   GridType m_grid;
 };
-
-std::ostream& operator<<(std::ostream& os, GridPortalLink::Direction direction);
 
 }  // namespace Acts

@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/Portal.hpp"
 
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -41,19 +43,6 @@ const Volume* Portal::resolveVolume(const GeometryContext& gctx,
   }
 }
 
-std::ostream& operator<<(std::ostream& os,
-                         GridPortalLink::Direction direction) {
-  switch (direction) {
-    case GridPortalLink::Direction::loc0:
-      os << "loc0";
-      break;
-    case GridPortalLink::Direction::loc1:
-      os << "loc1";
-      break;
-  }
-  return os;
-}
-
 // MARK: - PortalLinkBase
 
 std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
@@ -64,7 +53,7 @@ std::ostream& operator<<(std::ostream& os, const PortalLinkBase& link) {
 std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     const GeometryContext& gctx, const PortalLinkBase& other,
     BinningValue direction, const Logger& logger) const {
-  ACTS_DEBUG("Merging tro portals");
+  ACTS_DEBUG("Merging two arbitrary portals");
 
   ACTS_VERBOSE(" - this: " << *this);
   ACTS_VERBOSE(" - other: " << other);
@@ -91,9 +80,8 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
         direction == binZ || direction == binRPhi,
         "Invalid binning direction: " + binningValueNames()[direction]);
 
-    auto mergedSurface = cylA->mergedWith(gctx, *cylB, direction);
+    mergeImpl(gctx, other, surfaceA, surfaceB, direction, logger);
 
-    // mergeImpl(*cylB, other, direction, logger);
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&surfaceA);
              discA != nullptr) {
     const auto* discB = dynamic_cast<const DiscSurface*>(&surfaceB);
@@ -103,7 +91,8 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
         direction == binR || direction == binPhi,
         "Invalid binning direction: " + binningValueNames()[direction]);
 
-    auto mergedSurface = discA->mergedWith(gctx, *discB, direction);
+    mergeImpl(gctx, other, surfaceA, surfaceB, direction, logger);
+
   } else {
     throw std::logic_error{"Surface type is not supported"};
   }
@@ -111,162 +100,220 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
   return nullptr;
 }
 
-#if 0
-std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
-    const GridPortalLink1& other, const Vector2& offset,
-    const Logger& logger) const {
-  ACTS_DEBUG("Merge GridPortalLink1 + GridPortalLink1 with offset: "
-             << offset.transpose());
+std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
+    const GeometryContext& gctx, const PortalLinkBase& other,
+    const RegularSurface& surfaceA, const RegularSurface& surfaceB,
+    BinningValue direction, const Logger& logger) const {
+  ACTS_VERBOSE("Binary portal merging");
+  throw std::logic_error{"Not implemented"};
+}
 
-  const auto& a = *this;
-  const auto& b = other;
+// MARK: - GridPortalLinks
 
-  assert(a.grid().axes().size() == 1);
-  assert(b.grid().axes().size() == 1);
-  ACTS_VERBOSE("Axis counts are good");
+// @TODO: Revisit if WARNING messages are the way to go here
 
-  if (a.direction() != b.direction()) {
-    // 1D axes are not aligned, we cannot merge them
-    throw std::logic_error{"Cannot merge 1D grids with different directions"};
-  }
+namespace {
 
-  const auto commonDirection = a.direction();
-  ACTS_VERBOSE("Directions are consistent: " << commonDirection);
+std::unique_ptr<GridPortalLink> mergeGridPortals(
+    const GeometryContext& gctx, const GridPortalLink* a,
+    const GridPortalLink* b, const CylinderSurface* surfaceA,
+    const CylinderSurface* surfaceB, BinningValue direction,
+    const Logger& logger) {
+  assert(surfaceA != nullptr);
+  assert(surfaceB != nullptr);
+  assert(a->dim() == 2 || a->dim() == 1);
+  assert(a->dim() == b->dim());
 
-  const IAxis& axisA = *a.grid().axes().at(0);
-  const IAxis& axisB = *b.grid().axes().at(0);
+  constexpr auto tolerance = s_onSurfaceTolerance;
 
-  const auto bdtA = axisA.getBoundaryType();
-  const auto bdtB = axisB.getBoundaryType();
-
-  if (bdtA == AxisBoundaryType::Open || bdtB == AxisBoundaryType::Open) {
-    // Rejecting Open axes outright, so we don't have to handle overflow bins
-    // for now
-    ACTS_ERROR("Cannot merge 1D grids with Open axes");
-    throw std::logic_error{"Cannot merge 1D grids with Open axes"};
-  }
-
-  ACTS_VERBOSE("Boundary types are consistent: " << bdtA << " + " << bdtB)
-
-  ACTS_VERBOSE("- grid offset is " << offset.transpose());
-  PortalDirection direction = PortalDirection::loc0;
-  if (offset[0] != 0 && offset[1] != 0) {
-    ACTS_ERROR("Offset is not aligned with either loc0 or loc1");
-    throw std::logic_error{"Cannot merge 1D grids with diagonal offsets"};
-  } else if (offset[0] != 0) {
-    direction = PortalDirection::loc0;
-  } else if (offset[1] != 0) {
-    direction = PortalDirection::loc1;
-  } else {
-    ACTS_ERROR("Offset is zero");
-    throw std::logic_error{"Cannot merge 1D grids with zero offset"};
-  }
-  ACTS_VERBOSE("=> merging along " << direction);
-  ActsScalar localOffset = offset[0] != 0 ? offset[0] : offset[1];
-
-  if (commonDirection == direction) {
-    ACTS_VERBOSE("Merging along the common direction (" << commonDirection
-                                                        << ") was requested");
-    // Merging axes along the single binning direction, so we extend binnings
-    if (bdtA != AxisBoundaryType::Bound || bdtB != AxisBoundaryType::Bound) {
-      // one of the axes is not bound, cannot merge
-      ACTS_ERROR("Axes are not bound, refusing to merge them");
-      throw std::logic_error{
-          "Cannot merge 1D grids with axes != Bound along common direction"};
+  if (a->dim() == 1) {
+    ACTS_VERBOSE("Merge two 1D GridPortalLinks on CylinderSurfaces in "
+                 << binningValueNames()[direction]);
+    if (a->direction() != b->direction()) {
+      ACTS_WARNING("GridPortalLinks have different directions");
+      return nullptr;
     }
 
-    ACTS_VERBOSE("Are they both equidistant and have same bin width?");
-    if (axisA.isEquidistant() == axisB.isEquidistant()) {
-      ActsScalar binWidthA =
-          (axisA.getMax() - axisA.getMin()) / axisA.getNBins();
-      ActsScalar binWidthB =
-          (axisB.getMax() - axisB.getMin()) / axisB.getNBins();
+    auto [mergedSurface, reversed] =
+        surfaceA->mergedWith(gctx, *surfaceB, direction);
 
-      ActsScalar aMin = axisA.getMin();
-      ActsScalar aMax = axisA.getMax();
-      ActsScalar bMin = axisB.getMin() + localOffset;
-      ActsScalar bMax = axisB.getMax() + localOffset;
+    // Normalize ordering of grid portals and surfaces: a is always at lower
+    // range than b
+    if (reversed) {
+      std::swap(surfaceA, surfaceB);
+      std::swap(a, b);
+    }
 
-      ACTS_VERBOSE("  - axis a: [" << aMin << " -> " << aMax << "] with "
-                                   << axisA.getNBins() << " bins of "
-                                   << binWidthA);
-      ACTS_VERBOSE("  - axis b: [" << bMin << " -> " << bMax << "] with "
-                                   << axisB.getNBins() << " bins of "
-                                   << binWidthB);
+    if (direction == binZ) {
+      ACTS_VERBOSE("Grids are binned along "
+                   << binningValueNames()[a->direction()]);
+      if (a->direction() == binZ) {
+        ACTS_VERBOSE("=> colinear merge");
 
-      if (binWidthA == binWidthB) {
-        ACTS_VERBOSE("  => yes!");
+        const auto& axisA = *a->grid().axes().front();
+        const auto& axisB = *b->grid().axes().front();
 
-        ACTS_VERBOSE("Do their edges line up?");
-
-        constexpr auto tolerance = s_onSurfaceTolerance;
-
-        if (std::abs(aMax - bMin) > tolerance) {
-          ACTS_ERROR(
-              "=> no! Axes edges overlap or have gaps, refusing to merge");
-          throw std::logic_error{
-              "Cannot merge 1D grids with non-matching "
-              "axes along common direction"};
+        if (axisA.getBoundaryType() != axisB.getBoundaryType()) {
+          ACTS_WARNING("AxisBoundaryTypes are different");
+          return nullptr;
         }
 
-        ACTS_VERBOSE("=> yes!")
+        if (axisA.getBoundaryType() != AxisBoundaryType::Bound) {
+          ACTS_WARNING(
+              "AxisBoundaryType is not Bound, cannot do colinear merge");
+          return nullptr;
+        }
 
-        // ActsScalar width =
-        //     axisA.getMax() - axisA.getMin() + axisB.getMax() -
-        //     axisB.getMin();
-        ActsScalar max = axisB.getMax() + localOffset;
-        ACTS_VERBOSE("New axis will be [" << aMin << " -> " << bMax << "]");
+        AxisType aType = axisA.getType();
+        AxisType bType = axisB.getType();
+        if (aType == AxisType::Equidistant && bType == AxisType::Equidistant) {
+          ACTS_VERBOSE(
+              "==> potentially equidistant merge: checking bin widths");
 
-        return GridPortalLink::make(
-            Axis{AxisBound{}, aMin, bMax, axisA.getNBins() + axisB.getNBins()});
+          ActsScalar binsWidthA =
+              (axisA.getMax() - axisA.getMin()) / axisA.getNBins();
+          ActsScalar binsWidthB =
+              (axisB.getMax() - axisB.getMin()) / axisB.getNBins();
+
+          if (std::abs(binsWidthA - binsWidthB) < tolerance) {
+            ACTS_VERBOSE("==> binWidths same: " << binsWidthA);
+
+            Axis merged{AxisBound, axisA.getMin(),
+                        axisA.getMax() + (axisB.getMax() - axisB.getMin()),
+                        axisA.getNBins() + axisB.getNBins()};
+
+            ACTS_VERBOSE("    ~> merged axis: " << merged);
+            // @TODO: Sync bin contents
+
+          } else {
+            ACTS_VERBOSE("==> binWidths differ: " << binsWidthA << " vs "
+                                                  << binsWidthB
+                                                  << " ~> variable merge");
+          }
+
+        } else if (aType == AxisType::Variable && bType == AxisType::Variable) {
+          ACTS_VERBOSE("==> variable merge");
+        } else if (aType == AxisType::Equidistant &&
+                   bType == AxisType::Variable) {
+          ACTS_WARNING("=> mixed merged");
+        } else {
+          ACTS_WARNING("=> mixed merged");
+        }
+
+        return nullptr;
+
       } else {
-        ACTS_VERBOSE("  => no!");
+        ACTS_VERBOSE("=> perpendicular merge");
+        return nullptr;
       }
+
+      // AxisBoundaryType aBoundaryType =
+      //     a.grid().axes().front()->getBoundaryType();
+      // AxisBoundaryType bBoundaryType =
+      //     b.grid().axes().front()->getBoundaryType();
+      // ACTS_VERBOSE("AxisBoundaryTypes are:");
+      // ACTS_VERBOSE(" - a: " << aBoundaryType);
+      // ACTS_VERBOSE(" - b: " << bBoundaryType);
+      //
+      // if(aBoundaryType != bBoundaryType) {
+      //   ACTS_WARNING("AxisBoundaryTypes are different");
+      //   return nullptr;
+      // }
+      // else if(aBoundaryType )
+      //
+      // }
+    } else if (direction == binRPhi) {
+      ACTS_VERBOSE("BINRPHI");
+      // Linear merge along rphi will NOT wrap around (doesn't make sense)
+      // Cross merge might have wrap around
+      throw std::logic_error{"Not implemented"};
+    } else {
+      ACTS_ERROR(
+          "Invalid binning direction: " << binningValueNames()[direction]);
+      throw std::invalid_argument{"Invalid binning direction"};
     }
   } else {
-    ACTS_VERBOSE("Merging across the common direction (" << commonDirection
-                                                         << ") was requested");
-    // Merging axes across the common direction, we don't care about the
-    // boundary type, as long as they're the same
-    throw std::domain_error{"NotImplemented"};
+    ACTS_WARNING("2D grid merging is not implemented");
+    return nullptr;
   }
+}
 
+std::unique_ptr<GridPortalLink> mergeGridPortals(
+    const GeometryContext& gctx, const GridPortalLink* a,
+    const GridPortalLink* b, const DiscSurface* surfaceA,
+    const DiscSurface* surfaceB, BinningValue direction, const Logger& logger) {
+  assert(surfaceA != nullptr);
+  assert(surfaceB != nullptr);
+  ACTS_WARNING("Disc grid portal merging is not implemented");
   return nullptr;
 }
 
-  std::unique_ptr<PortalLinkBase> GridPortalLink1::merge(
-      const GridPortalLink2& other, const Vector2& offset, const Logger& logger)
-      const {
-    ACTS_DEBUG("Merge GridPortalLink1 + GridPortalLink2 with offset: "
-               << offset.transpose());
-    return nullptr;
+std::unique_ptr<GridPortalLink> mergeGridPortals(const GeometryContext& gctx,
+                                                 const GridPortalLink* a,
+                                                 const GridPortalLink* b,
+                                                 const RegularSurface& surfaceA,
+                                                 const RegularSurface& surfaceB,
+                                                 BinningValue direction,
+                                                 const Logger& logger) {
+  assert(a->dim() == 2 || a->dim() == 1);
+  assert(b -.dim() == 2 || b -.dim() == 1);
+
+  if (a->dim() < b->dim()) {
+    return mergeGridPortals(gctx, b, a, surfaceB, surfaceA, direction, logger);
   }
 
-  // MARK : -GridPortalLink2
+  ACTS_VERBOSE("Merging GridPortalLinks along "
+               << binningValueNames()[direction] << ":");
+  ACTS_VERBOSE(" - a: " << a->grid()
+                        << " along: " << binningValueNames()[a->direction()]);
+  ACTS_VERBOSE(" - b: " << b->grid()
+                        << " along: " << binningValueNames()[b->direction()]);
 
-  std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
-      const PortalLinkBase& other, const Vector2& offset, const Logger& logger)
-      const {
-    ACTS_DEBUG("Merge GridPortalLink2 + PortalLinkBase with offset: "
-               << offset.transpose());
+  if (a->dim() == b->dim()) {
+    ACTS_VERBOSE("Grid both have same dimension: " << a->dim());
+
+    if (const auto* cylinder = dynamic_cast<const CylinderSurface*>(&surfaceA);
+        cylinder != nullptr) {
+      return mergeGridPortals(gctx, a, b, cylinder,
+                              &dynamic_cast<const CylinderSurface&>(surfaceB),
+                              direction, logger);
+    } else if (const auto* disc = dynamic_cast<const DiscSurface*>(&surfaceA);
+               disc != nullptr) {
+      return mergeGridPortals(gctx, a, b, disc,
+                              &dynamic_cast<const DiscSurface&>(surfaceB),
+                              direction, logger);
+    } else {
+      ACTS_VERBOSE("Surface type is not supported here, falling back");
+      return nullptr;
+    }
+  } else {
+    ACTS_VERBOSE("Grids have different dimension, falling back");
     return nullptr;
   }
+}
+}  // namespace
 
-  std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
-      const GridPortalLink2& other, const Vector2& offset, const Logger& logger)
-      const {
-    ACTS_DEBUG("Merge GridPortalLink2 + GridPortalLink2 with offset: "
-               << offset.transpose());
-    return nullptr;
-  }
+std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
+    const GeometryContext& gctx, const PortalLinkBase& other,
+    const RegularSurface& surfaceA, const RegularSurface& surfaceB,
+    BinningValue direction, const Logger& logger) const {
+  ACTS_VERBOSE("this: GridPortalLink<" << dim() << ">");
+  ACTS_VERBOSE("Is other also GridPortalLink?");
+  if (const auto* gridPortalLink =
+          dynamic_cast<const GridPortalLink*>(&other)) {
+    ACTS_VERBOSE("-> yes!");
+    auto merged = mergeGridPortals(gctx, this, gridPortalLink, surfaceA,
+                                   surfaceB, direction, logger);
 
-  std::unique_ptr<PortalLinkBase> GridPortalLink2::merge(
-      const GridPortalLink1& other, const Vector2& offset, const Logger& logger)
-      const {
-    ACTS_DEBUG("Merge GridPortalLink2 + GridPortalLink1 with offset: "
-               << offset.transpose());
-    return nullptr;
+    if (merged != nullptr) {
+      return merged;
+    }
+    ACTS_VERBOSE("Grid merging failed, falling back to binary merging");
+  } else {
+    ACTS_VERBOSE("-> no! Falling back to binary merging");
   }
-#endif
+  return PortalLinkBase::mergeImpl(gctx, other, surfaceA, surfaceB, direction,
+                                   logger);
+}
 
 }  // namespace Acts
