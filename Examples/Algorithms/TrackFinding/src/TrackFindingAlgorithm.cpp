@@ -195,7 +195,7 @@ class BranchStopper {
 
   BranchStopperResult operator()(
       const Acts::CombinatorialKalmanFilterTipState& tipState,
-      const TrackContainer::TrackProxy& /*track*/,
+      const TrackContainer::TrackProxy& track,
       const TrackContainer::TrackStateProxy& trackState) const {
     if (!m_cfg.trackSelectorCfg.has_value()) {
       return BranchStopperResult::Continue;
@@ -396,7 +396,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::prepareTrackContainerForCombinatorialKalmanFilter(tracksTemp);
 
   tracks.addColumn<unsigned int>("trackGroup");
+  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
   tracksTemp.addColumn<unsigned int>("trackGroup");
+  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
