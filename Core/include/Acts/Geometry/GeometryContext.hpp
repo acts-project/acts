@@ -25,6 +25,35 @@ namespace Acts {
 
 using GeometryContext = ContextType;
 
+/// Helper struct that stores an object and a context, and will print it to
+/// an outstream.
+/// This allows you to write
+/// ```cpp
+/// std::cout << surface->toStream(geoContext) << std::endl;
+/// ```
+template <typename T>
+struct GeometryContextOstreamWrapper {
+  GeometryContextOstreamWrapper(const T& object, const GeometryContext& gctx)
+      : m_object(object), m_gctx(gctx) {}
+
+  GeometryContextOstreamWrapper(const GeometryContextOstreamWrapper&) = delete;
+  GeometryContextOstreamWrapper(GeometryContextOstreamWrapper&&) = delete;
+  GeometryContextOstreamWrapper& operator=(
+      const GeometryContextOstreamWrapper&) = delete;
+  GeometryContextOstreamWrapper& operator=(GeometryContextOstreamWrapper&&) =
+      delete;
+
+  friend std::ostream& operator<<(
+      std::ostream& os, const GeometryContextOstreamWrapper& osWrapper) {
+    osWrapper.m_object.toStream(osWrapper.m_gctx, os);
+    return os;
+  }
+
+ private:
+  const T& m_object;
+  const GeometryContext& m_gctx;
+};
+
 }  // namespace Acts
 
 #endif

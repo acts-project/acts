@@ -406,6 +406,15 @@ class Surface : public virtual GeometryObject,
   virtual std::ostream& toStream(const GeometryContext& gctx,
                                  std::ostream& sl) const;
 
+  /// Helper method for printing: the returned object captures the
+  /// surface and the geometry context and will print the surface
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The wrapper object for printing
+  GeometryContextOstreamWrapper<Surface> toStream(
+      const GeometryContext& gctx) const {
+    return {*this, gctx};
+  }
+
   /// Output into a std::string
   ///
   /// @param gctx The current geometry context object, e.g. alignment
