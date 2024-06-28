@@ -78,9 +78,9 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
     uint64_t hitId = i;
 
-    float r = hitFeatures[0];
-    float phi = hitFeatures[1];
-    float z = hitFeatures[2];
+    float r = hitFeatures[0] * m_cfg.rScale;
+    float phi = hitFeatures[1] * m_cfg.phiScale;
+    float z = hitFeatures[2] * m_cfg.zScale;
 
     float x = r * std::cos(phi);
     float y = r * std::sin(phi);

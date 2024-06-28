@@ -23,6 +23,9 @@ class ModuleMapCpp : public GraphConstructionBase {
  public:
   struct Config {
     std::string moduleMapPath;
+    float rScale = 1.0;
+    float phiScale = 1.0;
+    float zScale = 1.0;
   };
 
  private:

@@ -185,6 +185,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(moduleMapPath);
+    ACTS_PYTHON_MEMBER(rScale);
+    ACTS_PYTHON_MEMBER(phiScale);
+    ACTS_PYTHON_MEMBER(zScale);
     ACTS_PYTHON_STRUCT_END();
   }
 
