@@ -64,7 +64,7 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 std::tuple<std::any, std::any, std::any, std::any>
 TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
                                 std::any inEdgeFeatures, torch::Device device) {
-  ACTS_DEBUG("Start edge classification");
+  ACTS_DEBUG("Start edge classification, use " << device);
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
