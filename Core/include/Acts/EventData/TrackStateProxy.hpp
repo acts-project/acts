@@ -137,10 +137,8 @@ struct TrackStateTraits {
 
   constexpr static auto ProjectorFlags = Eigen::ColMajor | Eigen::AutoAlign;
   using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
-  using EffectiveProjector =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic,
-                    TrackStateTraits<M, ReadOnly>::ProjectorFlags, M,
-                    eBoundSize>;
+  using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
+                                           ProjectorFlags, M, eBoundSize>;
 };
 
 /// Proxy object to access a single point on the trajectory.
