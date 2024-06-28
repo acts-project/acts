@@ -80,7 +80,7 @@ using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
                                             Acts::VectorMultiTrajectory,
                                             Acts::detail::ValueHolder>;
 using TrackStateBackendContainer =
-    typename TrackContainer::TrackStateBackendContainer;
+    typename TrackContainer::TrackStateContainerBackend;
 
 struct Detector {
   // expected number of measurements for the given detector

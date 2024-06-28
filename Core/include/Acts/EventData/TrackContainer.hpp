@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -70,8 +70,8 @@ class TrackContainer {
   using ConstTrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, true>;
 
-  using TrackBackendContainer = track_container_t;
-  using TrackStateBackendContainer = traj_t;
+  using TrackContainerBackend = track_container_t;
+  using TrackStateContainerBackend = traj_t;
 
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
   using ConstTrackStateProxy =
@@ -140,9 +140,7 @@ class TrackContainer {
   /// Get a const track proxy for a track index
   /// @param itrack the track index in the container
   /// @return A const track proxy for the index
-  ConstTrackProxy getTrack(IndexType itrack) const {
-    return {*this, itrack};
-  }
+  ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
 
   /// Get a mutable track proxy for a track index
   /// @note Only available if the track container is not read-only
@@ -275,9 +273,7 @@ class TrackContainer {
 
   /// Get a const reference to the track container backend
   /// @return a const reference to the backend
-  const auto& container() const {
-    return *m_container;
-  }
+  const auto& container() const { return *m_container; }
 
   /// Get a mutable reference to the track state container backend
   /// @note Only available if the track container is not read-only
@@ -297,23 +293,17 @@ class TrackContainer {
 
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
-  const auto& trackStateContainer() const {
-    return *m_traj;
-  }
+  const auto& trackStateContainer() const { return *m_traj; }
 
   /// Retrieve the holder of the track state container
   /// @return The track state container including it's holder
-  const auto& trackStateContainerHolder() const {
-    return m_traj;
-  }
+  const auto& trackStateContainerHolder() const { return m_traj; }
 
   /// @}
 
   /// Get the size (number of tracks) of the track container
   /// @return the sixe
-  constexpr IndexType size() const {
-    return m_container->size_impl();
-  }
+  constexpr IndexType size() const { return m_container->size_impl(); }
 
   /// Clear the content of the track container
   /// @note Only available if the track container is not read-only

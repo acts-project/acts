@@ -36,6 +36,7 @@
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -79,7 +80,7 @@ enum class CombinatorialKalmanFilterBranchStopperResult {
 /// Extension struct which holds the delegates to customize the CKF behavior
 template <typename track_container_t>
 struct CombinatorialKalmanFilterExtensions {
-  using traj_t = typename track_container_t::TrackStateBackendContainer;
+  using traj_t = typename track_container_t::TrackStateContainerBackend;
   using candidate_container_t =
       typename std::vector<typename track_container_t::TrackStateProxy>;
 
@@ -236,11 +237,11 @@ struct CombinatorialKalmanFilterOptions {
           const CalibrationContext& calibrationContext, const Surface& surface,
           const BoundState& boundState, source_link_iterator_t slBegin,
           source_link_iterator_t slEnd, TrackIndexType prevTip,
-          typename track_container_t::TrackStateBackendContainer&
+          typename track_container_t::TrackStateContainerBackend&
               bufferTrajectory,
           std::vector<typename track_container_t::TrackStateProxy>&
               trackStateCandidates,
-          typename track_container_t::TrackStateBackendContainer& trajectory,
+          typename track_container_t::TrackStateContainerBackend& trajectory,
           const Logger& logger)>;
 
   /// The delegate to create new track states.
@@ -259,7 +260,7 @@ struct CombinatorialKalmanFilterResult {
   track_container_t* tracks{nullptr};
 
   /// Fitted states that the actor has handled.
-  typename track_container_t::TrackStateBackendContainer* trackStates{nullptr};
+  typename track_container_t::TrackStateContainerBackend* trackStates{nullptr};
 
   /// Indices into `tracks` which mark active branches
   std::vector<typename track_container_t::TrackProxy> activeBranches;
@@ -268,7 +269,7 @@ struct CombinatorialKalmanFilterResult {
   std::vector<typename track_container_t::TrackProxy> collectedTracks;
 
   /// This is used internally to store candidate trackstates
-  std::shared_ptr<typename track_container_t::TrackStateBackendContainer>
+  std::shared_ptr<typename track_container_t::TrackStateContainerBackend>
       stateBuffer;
 
   /// Track state candidates buffer
@@ -329,9 +330,9 @@ class CombinatorialKalmanFilter {
         m_updaterLogger{m_logger->cloneWithSuffix("Updater")} {}
 
  private:
-  using KalmanNavigator = typename propagator_t::Navigator;
-
   using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+
+  using IndexType = typename track_container_t::TrackStateProxy::IndexType;
 
   /// The propagator for the transport and material update
   propagator_t m_propagator;
@@ -366,27 +367,23 @@ class CombinatorialKalmanFilter {
     /// @param trajectory the trajectory to which new track states for selected measurements will be added
     /// @param logger the logger for messages.
     template <typename source_link_iterator_t>
-    Result<boost::container::small_vector<
-        typename track_container_t::TrackStateProxy::IndexType,
-        s_maxBranchesPerSurface>>
+    Result<boost::container::small_vector<IndexType, s_maxBranchesPerSurface>>
     createSourceLinkTrackStates(
         const GeometryContext& gctx,
         const CalibrationContext& calibrationContext,
         [[maybe_unused]] const Surface& surface, const BoundState& boundState,
         source_link_iterator_t slBegin, source_link_iterator_t slEnd,
-        TrackIndexType prevTip,
-        typename track_container_t::TrackStateBackendContainer&
+        IndexType prevTip,
+        typename track_container_t::TrackStateContainerBackend&
             bufferTrajectory,
         std::vector<typename track_container_t::TrackStateProxy>&
             trackStateCandidates,
-        typename track_container_t::TrackStateBackendContainer& trajectory,
+        typename track_container_t::TrackStateContainerBackend& trajectory,
         const Logger& logger) const {
-      using ResultTrackStateList = Acts::Result<boost::container::small_vector<
-          typename track_container_t::TrackStateProxy::IndexType,
-          s_maxBranchesPerSurface>>;
-      ResultTrackStateList resultTrackStateList{boost::container::small_vector<
-          typename track_container_t::TrackStateProxy::IndexType,
-          s_maxBranchesPerSurface>()};
+      using ResultTrackStateList = Acts::Result<
+          boost::container::small_vector<IndexType, s_maxBranchesPerSurface>>;
+      ResultTrackStateList resultTrackStateList{
+          boost::container::small_vector<IndexType, s_maxBranchesPerSurface>()};
       const auto& [boundParams, jacobian, pathLength] = boundState;
 
       trackStateCandidates.clear();
@@ -475,25 +472,21 @@ class CombinatorialKalmanFilter {
     /// @param trackStates the trajectory to which the new track states are added
     /// @param isOutlier true if the candidate(s) is(are) an outlier(s).
     /// @param logger the logger for messages
-    Result<boost::container::small_vector<
-        typename track_container_t::TrackStateProxy::IndexType,
-        s_maxBranchesPerSurface>>
+    Result<boost::container::small_vector<IndexType, s_maxBranchesPerSurface>>
     processSelectedTrackStates(
         typename std::vector<
             typename track_container_t::TrackStateProxy>::const_iterator begin,
         typename std::vector<
             typename track_container_t::TrackStateProxy>::const_iterator end,
-        typename track_container_t::TrackStateBackendContainer& trackStates,
+        typename track_container_t::TrackStateContainerBackend& trackStates,
         bool isOutlier, const Logger& logger) const {
-      Acts::Result<boost::container::small_vector<
-          typename track_container_t::TrackStateProxy::IndexType,
-          s_maxBranchesPerSurface>>
-          resultTrackStateList{boost::container::small_vector<
-              typename track_container_t::TrackStateProxy::IndexType,
-              s_maxBranchesPerSurface>()};
-      boost::container::small_vector<
-          typename track_container_t::TrackStateProxy::IndexType,
-          s_maxBranchesPerSurface>& trackStateList = *resultTrackStateList;
+      Acts::Result<
+          boost::container::small_vector<IndexType, s_maxBranchesPerSurface>>
+          resultTrackStateList{
+              boost::container::small_vector<IndexType,
+                                             s_maxBranchesPerSurface>()};
+      boost::container::small_vector<IndexType, s_maxBranchesPerSurface>&
+          trackStateList = *resultTrackStateList;
       trackStateList.reserve(end - begin);
       using PM = TrackStatePropMask;
 
@@ -516,7 +509,7 @@ class CombinatorialKalmanFilter {
         }
 
         // copy this trackstate into fitted states MultiTrajectory
-        typename track_container_t::TrackStateProxy trackState =
+        auto trackState =
             trackStates.makeTrackState(mask, candidateTrackState.previous());
         ACTS_VERBOSE("Create SourceLink output track state #"
                      << trackState.index() << " with mask: " << mask);
@@ -658,8 +651,8 @@ class CombinatorialKalmanFilter {
                        << res.error() << " " << res.error().message());
             result.lastError = res.error();
           } else {
-            auto& [boundParams, jacobian, pathLength] = *res;
-            auto& currentBranch = result.activeBranches.back();
+            const auto& [boundParams, jacobian, pathLength] = *res;
+            auto currentBranch = result.activeBranches.back();
             // Assign the fitted parameters
             currentBranch.parameters() = boundParams.parameters();
             currentBranch.covariance() = *boundParams.covariance();
@@ -777,15 +770,14 @@ class CombinatorialKalmanFilter {
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
         const auto& currentBranch = result.activeBranches.back();
-        TrackIndexType prevTip = currentBranch.tipIndex();
+        IndexType prevTip = currentBranch.tipIndex();
         const TipState& prevTipState = tipStateAccessor(currentBranch);
 
         // Create trackstates for all source links (will be filtered later)
         // Results are stored in result => no return value
 
-        using TrackStatesResult = Acts::Result<boost::container::small_vector<
-            typename track_container_t::TrackStateProxy::IndexType,
-            s_maxBranchesPerSurface>>;
+        using TrackStatesResult = Acts::Result<
+            boost::container::small_vector<IndexType, s_maxBranchesPerSurface>>;
 
         TrackStatesResult tsRes = trackStateCandidateCreator(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
@@ -835,7 +827,7 @@ class CombinatorialKalmanFilter {
 
         // Retrieve the previous tip and its state
         auto currentBranch = result.activeBranches.back();
-        TrackIndexType prevTip = currentBranch.tipIndex();
+        IndexType prevTip = currentBranch.tipIndex();
         TipState& tipState = tipStateAccessor(currentBranch);
 
         // The surface could be either sensitive or passive
@@ -880,7 +872,7 @@ class CombinatorialKalmanFilter {
           boundParams.covariance() = state.stepping.cov;
 
           // Add a hole or material track state to the multitrajectory
-          TrackIndexType currentTip = addNonSourcelinkState(
+          IndexType currentTip = addNonSourcelinkState(
               stateMask, boundState, result, isSensitive, prevTip);
           auto nonSourcelinkState =
               result.trackStates->getTrackState(currentTip);
@@ -947,13 +939,11 @@ class CombinatorialKalmanFilter {
     Result<std::tuple<unsigned int, bool>> processNewTrackStates(
         const Acts::GeometryContext& gctx, const TipState& prevTipState,
         const boost::container::small_vector<
-            typename track_container_t::TrackStateProxy::IndexType,
-            s_maxBranchesPerSurface>& newTrackStateList,
+            IndexType, s_maxBranchesPerSurface>& newTrackStateList,
         result_type& result) const {
       unsigned int nBranchesOnSurface = 0;
       bool isOutlier = false;
-      for (typename track_container_t::TrackStateProxy::IndexType tipIndex :
-           newTrackStateList) {
+      for (IndexType tipIndex : newTrackStateList) {
         // Inherit the tip state from the previous and will be updated
         // later
         typename track_container_t::TrackStateProxy trackState(
@@ -1034,10 +1024,10 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    TrackIndexType addNonSourcelinkState(TrackStatePropMask stateMask,
-                                         const BoundState& boundState,
-                                         result_type& result, bool isSensitive,
-                                         TrackIndexType prevTip) const {
+    IndexType addNonSourcelinkState(TrackStatePropMask stateMask,
+                                    const BoundState& boundState,
+                                    result_type& result, bool isSensitive,
+                                    IndexType prevTip) const {
       // Add a track state
       auto trackStateProxy =
           result.trackStates->makeTrackState(stateMask, prevTip);
@@ -1138,7 +1128,7 @@ class CombinatorialKalmanFilter {
 
     void storeLastActiveBranch(result_type& result) const {
       auto currentBranch = result.activeBranches.back();
-      TrackIndexType currentTip = currentBranch.tipIndex();
+      IndexType currentTip = currentBranch.tipIndex();
       const TipState& tipState = tipStateAccessor(currentBranch);
 
       // @TODO: Keep information on tip state around so we don't have to
@@ -1313,7 +1303,7 @@ class CombinatorialKalmanFilter {
     r.tracks = &trackContainer;
     r.trackStates = &trackContainer.trackStateContainer();
     r.stateBuffer = std::make_shared<
-        typename track_container_t::TrackStateBackendContainer>();
+        typename track_container_t::TrackStateContainerBackend>();
 
     if (!trackContainer.hasColumn(tipStateAccessor.key)) {
       ACTS_ERROR(
