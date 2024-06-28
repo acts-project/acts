@@ -993,7 +993,7 @@ class Gx2Fitter {
 
     if (!trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
+      trackContainer.template addColumn<std::uint32_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return
@@ -1006,7 +1006,7 @@ class Gx2Fitter {
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
       ACTS_DEBUG("Add nUpdate to track")
-      track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
+      track.template component<std::uint32_t>("Gx2fnUpdateColumn") = nUpdate;
     }
 
     // TODO write test for calculateTrackQuantities

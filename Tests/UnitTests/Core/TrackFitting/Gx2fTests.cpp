@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       0);
 
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
@@ -664,7 +664,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   // Convergence
   BOOST_CHECK_LT(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       10);
 
@@ -1027,7 +1027,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
