@@ -552,6 +552,19 @@ class TrackProxy {
   /// Methods that give access to the track states of a track represented by @c TrackProxy.
   /// @{
 
+  /// Return a const track state proxy to the outermost track state
+  /// @return The outermost track state proxy
+  ConstTrackStateProxy outermostTrackState() const {
+    return m_container->trackStateContainer().getTrackState(tipIndex());
+  }
+
+  /// Return a mutable track state proxy to the outermost track state
+  /// @return The outermost track state proxy
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackStateProxy outermostTrackState() const {
+    return m_container->trackStateContainer().getTrackState(tipIndex());
+  }
+
   /// Return a const track state proxy to the innermost track state
   /// @note This is only available, if the track is forward linked
   /// @return The innermost track state proxy

@@ -698,8 +698,7 @@ class CombinatorialKalmanFilter {
               typename navigator_t>
     void reset(propagator_state_t& state, const stepper_t& stepper,
                const navigator_t& navigator, result_type& result) const {
-      auto currentState = result.trackStates->getTrackState(
-          result.activeBranches.back().tipIndex());
+      auto currentState = result.activeBranches.back().outermostTrackState();
 
       // Reset the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
@@ -805,8 +804,7 @@ class CombinatorialKalmanFilter {
                                                          << " branches");
           // Update stepping state using filtered parameters of last track
           // state on this surface
-          auto ts = result.trackStates->getTrackState(
-              result.activeBranches.back().tipIndex());
+          auto ts = result.activeBranches.back().outermostTrackState();
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
