@@ -394,10 +394,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::prepareTrackContainerForCombinatorialKalmanFilter(tracks);
   Acts::prepareTrackContainerForCombinatorialKalmanFilter(tracksTemp);
 
-  tracks.addColumn<unsigned int>("trackGroup");
   tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
-  tracksTemp.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
+
+  tracks.addColumn<unsigned int>("trackGroup");
+  tracksTemp.addColumn<unsigned int>("trackGroup");
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
