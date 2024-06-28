@@ -215,11 +215,6 @@ class VariableSizeSubspace {
                 "Full vector space size is larger than the supported range");
 
   template <typename scalar_t>
-  using ProjectionMatrix = Eigen::Matrix<scalar_t, Eigen::Dynamic, kFullSize>;
-  template <typename scalar_t>
-  using ExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, Eigen::Dynamic>;
-
-  template <typename scalar_t>
   using FullProjectionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
   template <typename scalar_t>
   using FullExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
@@ -280,32 +275,6 @@ class VariableSizeSubspace {
       isContained = isContained || ((i < m_size) && (m_axes[i] == index));
     }
     return isContained;
-  }
-
-  /// Projection matrix that maps from the full space into the subspace.
-  ///
-  /// @tparam scalar_t Scalar type for the projection matrix
-  template <typename scalar_t>
-  ProjectionMatrix<scalar_t> projector() const {
-    ProjectionMatrix<scalar_t> proj(m_size, kFullSize);
-    proj.setZero();
-    for (std::size_t i = 0u; i < m_size; ++i) {
-      proj(i, m_axes[i]) = 1;
-    }
-    return proj;
-  }
-
-  /// Expansion matrix that maps from the subspace into the full space.
-  ///
-  /// @tparam scalar_t Scalar type of the generated expansion matrix
-  template <typename scalar_t>
-  ExpansionMatrix<scalar_t> expander() const {
-    ExpansionMatrix<scalar_t> expn(kFullSize, m_size);
-    expn.setZero();
-    for (std::size_t i = 0u; i < m_size; ++i) {
-      expn(m_axes[i], i) = 1;
-    }
-    return expn;
   }
 
   /// Projection matrix that maps from the full space into the subspace.
