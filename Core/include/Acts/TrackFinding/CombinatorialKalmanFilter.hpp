@@ -68,9 +68,6 @@ struct CombinatorialKalmanFilterTipState {
   std::size_t nHoles = 0;
 };
 
-static constexpr std::string_view s_combinatorialKalmanFilterTipStateColumn =
-    "CkfTipState";
-
 enum class CombinatorialKalmanFilterBranchStopperResult {
   Continue,
   StopAndDrop,
@@ -265,6 +262,9 @@ struct CombinatorialKalmanFilterResult {
   /// Indices into `tracks` which mark active branches
   std::vector<typename track_container_t::TrackProxy> activeBranches;
 
+  /// Tip states for each active branch
+  std::vector<CombinatorialKalmanFilterTipState> tipStates;
+
   /// Indices into `tracks` which mark active branches
   std::vector<typename track_container_t::TrackProxy> collectedTracks;
 
@@ -284,16 +284,6 @@ struct CombinatorialKalmanFilterResult {
   /// Path limit aborter
   PathLimitReached pathLimitReached;
 };
-
-/// Prepare the track container for the CombinatorialKalmanFilter
-///
-/// @param trackContainer The track container to be prepared
-template <typename track_container_t>
-static void prepareTrackContainerForCombinatorialKalmanFilter(
-    track_container_t& trackContainer) {
-  trackContainer.template addColumn<CombinatorialKalmanFilterTipState>(
-      s_combinatorialKalmanFilterTipStateColumn);
-}
 
 /// Combinatorial Kalman filter to find tracks.
 ///
@@ -342,10 +332,6 @@ class CombinatorialKalmanFilter {
   std::shared_ptr<const Logger> m_updaterLogger;
 
   const Logger& logger() const { return *m_logger; }
-
-  static constexpr ProxyAccessor<CombinatorialKalmanFilterTipState>
-      tipStateAccessor = ProxyAccessor<CombinatorialKalmanFilterTipState>(
-          hashString(s_combinatorialKalmanFilterTipStateColumn));
 
   struct DefaultTrackStateCreator {
     typename CombinatorialKalmanFilterExtensions<track_container_t>::Calibrator
@@ -669,6 +655,7 @@ class CombinatorialKalmanFilter {
           storeLastActiveBranch(result);
           // Remove the tip from list of active tips
           result.activeBranches.pop_back();
+          result.tipStates.pop_back();
         }
         // If no more active tip, done with filtering; Otherwise, reset
         // propagation state to track state at last tip of active tips
@@ -769,8 +756,8 @@ class CombinatorialKalmanFilter {
         // Retrieve the previous tip and its state
         // The states created on this surface will have the common previous tip
         const auto& currentBranch = result.activeBranches.back();
+        const TipState& prevTipState = result.tipStates.back();
         IndexType prevTip = currentBranch.tipIndex();
-        const TipState& prevTipState = tipStateAccessor(currentBranch);
 
         // Create trackstates for all source links (will be filtered later)
         // Results are stored in result => no return value
@@ -825,8 +812,8 @@ class CombinatorialKalmanFilter {
 
         // Retrieve the previous tip and its state
         auto currentBranch = result.activeBranches.back();
+        TipState& tipState = result.tipStates.back();
         IndexType prevTip = currentBranch.tipIndex();
-        TipState& tipState = tipStateAccessor(currentBranch);
 
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
@@ -894,6 +881,7 @@ class CombinatorialKalmanFilter {
 
             // Remove the tip from list of active tips
             result.activeBranches.pop_back();
+            result.tipStates.pop_back();
           }
 
           // Update state and stepper with post material effects
@@ -982,9 +970,9 @@ class CombinatorialKalmanFilter {
         if (nBranchesOnSurface > 0) {
           newBranch = result.tracks->makeTrack();
           result.activeBranches.push_back(newBranch);
+          result.tipStates.push_back(tipState);
         }
         newBranch.tipIndex() = trackState.index();
-        tipStateAccessor(newBranch) = tipState;
 
         using BranchStopperResult =
             CombinatorialKalmanFilterBranchStopperResult;
@@ -1003,12 +991,14 @@ class CombinatorialKalmanFilter {
           // Pushing the pop in case it is still the first branch
           if (nBranchesOnSurface > 0) {
             result.activeBranches.pop_back();
+            result.tipStates.pop_back();
           }
         }
       }
       // Finally pop the current branch if there are no branches on surface
       if (nBranchesOnSurface == 0) {
         result.activeBranches.pop_back();
+        result.tipStates.pop_back();
       }
       return std::make_tuple(nBranchesOnSurface, isOutlier);
     }
@@ -1126,8 +1116,8 @@ class CombinatorialKalmanFilter {
 
     void storeLastActiveBranch(result_type& result) const {
       auto currentBranch = result.activeBranches.back();
+      const TipState& tipState = result.tipStates.back();
       IndexType currentTip = currentBranch.tipIndex();
-      const TipState& tipState = tipStateAccessor(currentBranch);
 
       // @TODO: Keep information on tip state around so we don't have to
       //        recalculate it later
@@ -1303,17 +1293,9 @@ class CombinatorialKalmanFilter {
     r.stateBuffer = std::make_shared<
         typename track_container_t::TrackStateContainerBackend>();
 
-    if (!trackContainer.hasColumn(tipStateAccessor.key)) {
-      ACTS_ERROR(
-          "Track container does not have the tip state column \"CkfTipState\"");
-      prepareTrackContainerForCombinatorialKalmanFilter(trackContainer);
-    }
-
     auto rootBranch = trackContainer.makeTrack();
-    rootBranch.template component<CombinatorialKalmanFilterTipState,
-                                  tipStateAccessor.key>() = {};
-
     r.activeBranches.push_back(rootBranch);
+    r.tipStates.push_back({});
 
     auto propagationResult = m_propagator.propagate(propState);
 

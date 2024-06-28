@@ -389,9 +389,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracks(trackContainer, trackStateContainer);
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
-  Acts::prepareTrackContainerForCombinatorialKalmanFilter(tracks);
-  Acts::prepareTrackContainerForCombinatorialKalmanFilter(tracksTemp);
-
+  // Note that not all backends support PODs as column types
   tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
   tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
 
