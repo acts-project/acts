@@ -214,7 +214,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   //
   /// Test dump
   boost::test_tools::output_test_stream dumpOutput;
-  cylinderSurfaceObject->toStream(testContext, dumpOutput);
   std::string expected =
       "Acts::CylinderSurface\n\
      Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n\
@@ -222,9 +221,6 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                            colY = (0.000000, 1.000000, 0.000000)\n\
                            colZ = (0.000000, 0.000000, 1.000000)\n\
      Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi, bevelMinZ, bevelMaxZ) = (1.0000000, 10.0000000, 3.1415927, 0.0000000, 0.0000000, 0.0000000)";
-  BOOST_CHECK(dumpOutput.is_equal(expected));
-
-  dumpOutput.flush();
   dumpOutput << cylinderSurfaceObject->toStream(testContext);
   BOOST_CHECK(dumpOutput.is_equal(expected));
 }

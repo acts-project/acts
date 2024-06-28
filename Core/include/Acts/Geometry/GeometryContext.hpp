@@ -47,11 +47,13 @@ struct GeometryContextOstreamWrapper {
 
   friend std::ostream& operator<<(
       std::ostream& os, const GeometryContextOstreamWrapper& osWrapper) {
-    osWrapper.m_object.toStreamImpl(osWrapper.m_gctx, os);
+    osWrapper.toStream(os);
     return os;
   }
 
  private:
+  void toStream(std::ostream& os) const { m_object.toStreamImpl(m_gctx, os); }
+
   const T& m_object;
   const GeometryContext& m_gctx;
 };

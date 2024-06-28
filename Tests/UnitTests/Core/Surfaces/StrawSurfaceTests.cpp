@@ -91,10 +91,10 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceProperties) {
                     std::string("Acts::StrawSurface"));
   //
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  strawSurfaceObject->toStream(tgContext, dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << strawSurfaceObject->toStream(tgContext);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::StrawSurface\n\
+      dumpOutput.is_equal("Acts::StrawSurface\n\
      Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n\
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\
                            colY = (0.000000, 1.000000, 0.000000)\n\

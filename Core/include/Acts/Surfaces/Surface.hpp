@@ -63,6 +63,8 @@ using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 class Surface : public virtual GeometryObject,
                 public std::enable_shared_from_this<Surface> {
  public:
+  friend GeometryContextOstreamWrapper<Surface>;
+
   /// @enum SurfaceType
   ///
   /// This enumerator simplifies the persistency & calculations,
@@ -479,7 +481,6 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
  protected:
-  friend GeometryContextOstreamWrapper<Surface>;
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param gctx The current geometry context object, e.g. alignment
