@@ -220,9 +220,7 @@ class BranchStopper {
     }
 
     bool tooManyHolesPS = false;
-    if (!(m_cfg.pixelVolumes.empty() && m_cfg.stripVolumes.empty()) &&
-        !(m_cfg.maxPixelHoles == std::numeric_limits<std::size_t>::max() &&
-          m_cfg.maxStripHoles == std::numeric_limits<std::size_t>::max())) {
+    if (!(m_cfg.pixelVolumes.empty() && m_cfg.stripVolumes.empty())) {
       auto& branchState = branchStateAccessor(track);
       // count both holes and outliers as holes for pixel/strip counts
       if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
