@@ -9,8 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Seeding/HoughTransformUtils.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <memory>
@@ -18,21 +19,23 @@
 
 namespace Acts::Test {
 
-  using Scalar = Acts::ActsScalar;
+using Scalar = Acts::ActsScalar;
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
-  struct DriftCircle{
-    Scalar y{0.};
-    Scalar z{0.};
-    Scalar rDrift{0.};
-    Scalar rDriftError{0.};
+struct DriftCircle {
+  Scalar y{0.};
+  Scalar z{0.};
+  Scalar rDrift{0.};
+  Scalar rDriftError{0.};
 
-    DriftCircle(const Scalar _y, const Scalar _z, 
-                const  Scalar _r, const Scalar _rUncert):
-        y{_y},z{_z},rDrift{_r}, rDriftError{_rUncert} {}
-
-  };
+  DriftCircle(const Scalar _y, const Scalar _z, const Scalar _r,
+              const Scalar _rUncert)
+      : y{_y}, z{_z}, rDrift{_r}, rDriftError{_rUncert} {}
+};
 
 BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
+  Logging::ScopedFailureThreshold ft{Logging::FATAL};
+
   // we are using the slope on yz plane with the y coordinate (hardcoded from
   // the csv MuonSimHit data)
   std::vector<std::pair<double, double>> simHits = {
@@ -41,14 +44,12 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   // Define the drift Circles
   constexpr double uncert{0.3};
   std::array<DriftCircle, 6> driftCircles{
-        DriftCircle{-427.981, -225.541, 14.5202, uncert},
-        DriftCircle{-412.964, -199.53, 1.66237, uncert},
-        DriftCircle{-427.981, -173.519, 12.3176, uncert},
-        DriftCircle{-427.981, 173.519, 1.5412, uncert},
-        DriftCircle{-442.999, 199.53, 12.3937, uncert},
-        DriftCircle{-427.981, 225.541, 3.77967, uncert},
-        
-
+      DriftCircle{-427.981, -225.541, 14.5202, uncert},
+      DriftCircle{-412.964, -199.53, 1.66237, uncert},
+      DriftCircle{-427.981, -173.519, 12.3176, uncert},
+      DriftCircle{-427.981, 173.519, 1.5412, uncert},
+      DriftCircle{-442.999, 199.53, 12.3937, uncert},
+      DriftCircle{-427.981, 225.541, 3.77967, uncert}
 
   };
 
@@ -71,16 +72,12 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   // Note that there are two solutions for each drift circle and angle
 
   // left solution
-  auto houghParamFromDCleft = [](double tanTheta,
-                                   const DriftCircle& DC) {
-    return DC.y - tanTheta * DC.z -
-           DC.rDrift / std::cos(std::atan(tanTheta));
+  auto houghParamFromDCleft = [](double tanTheta, const DriftCircle& DC) {
+    return DC.y - tanTheta * DC.z - DC.rDrift / std::cos(std::atan(tanTheta));
   };
   // right solution
-  auto houghParamFromDCright = [](double tanTheta,
-                                    const DriftCircle& DC) {
-    return DC.y - tanTheta * DC.z +
-           DC.rDrift / std::cos(std::atan(tanTheta));
+  auto houghParamFromDCright = [](double tanTheta, const DriftCircle& DC) {
+    return DC.y - tanTheta * DC.z + DC.rDrift / std::cos(std::atan(tanTheta));
   };
 
   // create the function parametrising the drift radius uncertainty
@@ -104,14 +101,13 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   for (auto& sh : simHits) {
     houghPlane.reset();
 
-    for (size_t k = 0; k < driftCircles.size() ; ++k) {     
-
+    for (std::size_t k = 0; k < driftCircles.size(); ++k) {
       auto dc = driftCircles[k];
 
-      houghPlane.fill<DriftCircle>(
-          dc, axisRanges, houghParamFromDCleft, houghWidthFromDC, k);
-      houghPlane.fill<DriftCircle>(
-          dc, axisRanges, houghParamFromDCright, houghWidthFromDC,k);
+      houghPlane.fill<DriftCircle>(dc, axisRanges, houghParamFromDCleft,
+                                   houghWidthFromDC, k);
+      houghPlane.fill<DriftCircle>(dc, axisRanges, houghParamFromDCright,
+                                   houghWidthFromDC, k);
     }
 
     // now get the peaks
