@@ -86,9 +86,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
                  std::declval<const BoundaryCheck&>(), std::declval<double>())
     } -> std::same_as<SurfaceMultiIntersection>;
 
-  {
-    cs.toStream(gctx, std::declval<std::ostream&>())
-    } -> std::same_as<std::ostream&>;
+  { cs.toStream(gctx) } -> std::same_as<GeometryContextOstreamWrapper<Surface>>;
 
   { cs.toString(gctx) } -> std::same_as<std::string>;
 

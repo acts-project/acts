@@ -15,6 +15,8 @@
 
 #include "Acts/Utilities/detail/ContextType.hpp"
 
+#include <ostream>
+
 namespace Acts {
 
 /// @brief This is the central definition of the Acts
@@ -45,7 +47,7 @@ struct GeometryContextOstreamWrapper {
 
   friend std::ostream& operator<<(
       std::ostream& os, const GeometryContextOstreamWrapper& osWrapper) {
-    osWrapper.m_object.toStream(osWrapper.m_gctx, os);
+    osWrapper.m_object.toStreamImpl(osWrapper.m_gctx, os);
     return os;
   }
 

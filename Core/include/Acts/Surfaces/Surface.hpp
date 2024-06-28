@@ -399,13 +399,6 @@ class Surface : public virtual GeometryObject,
       const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
-  /// Output Method for std::ostream, to be overloaded by child classes
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param sl is the ostream to be dumped into
-  virtual std::ostream& toStream(const GeometryContext& gctx,
-                                 std::ostream& sl) const;
-
   /// Helper method for printing: the returned object captures the
   /// surface and the geometry context and will print the surface
   /// @param gctx The current geometry context object, e.g. alignment
@@ -486,6 +479,14 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
  protected:
+  friend GeometryContextOstreamWrapper<Surface>;
+  /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param sl is the ostream to be dumped into
+  virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
+                                     std::ostream& sl) const;
+
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
   Transform3 m_transform = Transform3::Identity();
@@ -523,16 +524,5 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
-
-/// Print surface information to the provided stream. Internally invokes the
-/// `surface.toStream(...)`-method. This can be easily used e.g. like `std::cout
-/// << std::tie(surface, geometryContext);`
-inline std::ostream& operator<<(
-    std::ostream& os,
-    const std::tuple<const Surface&, const GeometryContext&>& tup) {
-  const auto [surface, gctx] = tup;
-  surface.toStream(gctx, os);
-  return os;
-}
 
 }  // namespace Acts

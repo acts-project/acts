@@ -74,15 +74,6 @@ class PerigeeSurface : public LineSurface {
   /// Return properly formatted class name for screen output */
   std::string name() const final;
 
-  /// Output Method for std::ostream
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param sl is the ostream to be dumped into
-  ///
-  /// @return ostreamn object which was streamed into
-  std::ostream& toStream(const GeometryContext& gctx,
-                         std::ostream& sl) const final;
-
   /// Return a Polyhedron for the surfaces
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -91,6 +82,16 @@ class PerigeeSurface : public LineSurface {
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       std::size_t lseg) const final;
+
+ protected:
+  /// Output Method for std::ostream
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param sl is the ostream to be dumped into
+  ///
+  /// @return ostreamn object which was streamed into
+  std::ostream& toStreamImpl(const GeometryContext& gctx,
+                             std::ostream& sl) const final;
 };
 
 ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, PerigeeSurface);

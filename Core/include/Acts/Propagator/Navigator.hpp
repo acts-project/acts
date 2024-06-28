@@ -907,7 +907,7 @@ class Navigator {
                      << " out of " << state.navigation.navBoundaries.size()
                      << " not reachable anymore, switching to next.");
         ACTS_VERBOSE("Targeted boundary surface was: \n"
-                     << std::tie(*boundarySurface, state.geoContext));
+                     << boundarySurface->toStream(state.geoContext));
       }
       // Increase the index to the next one
       ++state.navigation.navBoundaryIndex;
