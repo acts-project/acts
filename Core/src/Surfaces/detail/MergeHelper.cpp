@@ -10,7 +10,7 @@
 
 namespace Acts::detail {
 
-std::pair<ActsScalar, ActsScalar> mergedPhiSector(
+std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
     ActsScalar hlPhi1, ActsScalar avgPhi1, ActsScalar hlPhi2,
     ActsScalar avgPhi2, const Logger& logger, ActsScalar tolerance) {
   using namespace Acts::UnitLiterals;
@@ -36,17 +36,17 @@ std::pair<ActsScalar, ActsScalar> mergedPhiSector(
   ActsScalar newMaxPhi{}, newMinPhi{};
   ActsScalar newHlPhi = hlPhi1 + hlPhi2;
 
+  bool reversed = false;
   if (same(minPhi1, maxPhi2)) {
     ACTS_VERBOSE("-> CCW ordering: one is 'left' of two");
 
     newMinPhi = minPhi2;
     newMaxPhi = maxPhi1;
-
   } else if (same(maxPhi1, minPhi2)) {
     ACTS_VERBOSE("-> CW ordering: this is 'right' of other");
     newMinPhi = minPhi1;
     newMaxPhi = maxPhi2;
-
+    reversed = true;
   } else {
     ACTS_ERROR("Phi ranges are incompatible");
     throw std::invalid_argument("Phi ranges are incompatible");
@@ -59,7 +59,7 @@ std::pair<ActsScalar, ActsScalar> mergedPhiSector(
                            << newAvgPhi / 1_degree << " +- "
                            << newHlPhi / 1_degree);
 
-  return {newHlPhi, newAvgPhi};
+  return {newHlPhi, newAvgPhi, reversed};
 }
 
 }  // namespace Acts::detail

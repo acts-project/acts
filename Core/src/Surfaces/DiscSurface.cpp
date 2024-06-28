@@ -379,9 +379,10 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
-    const GeometryContext& gctx, const DiscSurface& other,
-    BinningValue direction, const Logger& logger) const {
+std::pair<std::shared_ptr<Acts::DiscSurface>, bool>
+Acts::DiscSurface::mergedWith(const GeometryContext& gctx,
+                              const DiscSurface& other, BinningValue direction,
+                              const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
   ACTS_DEBUG("Merging disc surfaces in " << binningValueName(direction)
@@ -478,7 +479,8 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
     auto newBounds =
         std::make_shared<RadialBounds>(newMinR, newMaxR, hlPhi, avgPhi);
 
-    return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
+    return {Surface::makeShared<DiscSurface>(transform(gctx), newBounds),
+            minR > otherMinR};
 
   } else if (direction == Acts::BinningValue::binPhi) {
     if (std::abs(maxR - otherMaxR) > tolerance ||
@@ -490,13 +492,14 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
     }
 
     try {
-      auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
+      auto [newHlPhi, newAvgPhi, reversed] = detail::mergedPhiSector(
           hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
 
       auto newBounds =
           std::make_shared<RadialBounds>(minR, maxR, newHlPhi, newAvgPhi);
 
-      return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
+      return {Surface::makeShared<DiscSurface>(transform(gctx), newBounds),
+              reversed};
     } catch (const std::invalid_argument& e) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                     e.what());

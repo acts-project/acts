@@ -339,8 +339,8 @@ class DiscSurface : public RegularSurface {
   /// @param other The other disc surface to merge with
   /// @param direction The binning direction: either @c binR or @c binPhi
   /// @param logger The logger to use
-  /// @return The merged disc surface
-  std::shared_ptr<DiscSurface> mergedWith(
+  /// @return The merged disc surface and the ordering of input surfaces
+  std::pair<std::shared_ptr<DiscSurface>, bool> mergedWith(
       const GeometryContext& gctx, const DiscSurface& other,
       BinningValue direction, const Logger& logger = getDummyLogger()) const;
 

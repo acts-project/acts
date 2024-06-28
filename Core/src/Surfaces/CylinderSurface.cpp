@@ -368,9 +368,11 @@ Acts::CylinderSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
-    const GeometryContext& gctx, const CylinderSurface& other,
-    BinningValue direction, const Logger& logger) const {
+std::pair<std::shared_ptr<Acts::CylinderSurface>, bool>
+Acts::CylinderSurface::mergedWith(const GeometryContext& gctx,
+                                  const CylinderSurface& other,
+                                  BinningValue direction,
+                                  const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
   ACTS_DEBUG("Merging cylinder surfaces in " << binningValueName(direction)
@@ -476,7 +478,8 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     Transform3 newTransform =
         transform(gctx) * Translation3{Vector3::UnitZ() * newMidZ};
 
-    return Surface::makeShared<CylinderSurface>(newTransform, newBounds);
+    return {Surface::makeShared<CylinderSurface>(newTransform, newBounds),
+            zShift < 0};
 
   } else if (direction == Acts::BinningValue::binRPhi) {
     // no z shift is allowed
@@ -497,13 +500,14 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     ActsScalar otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
 
     try {
-      auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
+      auto [newHlPhi, newAvgPhi, reversed] = detail::mergedPhiSector(
           hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
 
       auto newBounds = std::make_shared<CylinderBounds>(
           r, bounds().get(CylinderBounds::eHalfLengthZ), newHlPhi, newAvgPhi);
 
-      return Surface::makeShared<CylinderSurface>(transform(gctx), newBounds);
+      return {Surface::makeShared<CylinderSurface>(transform(gctx), newBounds),
+              reversed};
     } catch (const std::invalid_argument& e) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                     e.what());
