@@ -49,7 +49,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
                                                tubs.getDPhi() / 2);
     Acts::Transform3 newTransform = Acts::Transform3::Identity();
     newTransform.translate(transform.translation());
-    newTransform.rotate(Eigen::AngleAxisd(tubs.getSPhi() + 0.5 * tubs.getDPhi(),
+    newTransform.rotate(transform.rotation() * 
+            Eigen::AngleAxisd(tubs.getSPhi() + 0.5 * tubs.getDPhi(),
                                           Acts::Vector3::UnitZ()));
     return Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, newTransform, bounds,
@@ -81,11 +82,11 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         Experimental::tryAllPortalsAndSurfaces());
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd& trd = static_cast<const GeoTrd&>(shape);
-    float x1 = trd.getXHalfLength1();
-    float x2 = trd.getXHalfLength2();
-    float y1 = trd.getYHalfLength1();
-    float y2 = trd.getYHalfLength2();
-    float z = trd.getZHalfLength();
+    double x1 = trd.getXHalfLength1();
+    double x2 = trd.getXHalfLength2();
+    double y1 = trd.getYHalfLength1();
+    double y2 = trd.getYHalfLength2();
+    double z = trd.getZHalfLength();
     if (y1 == y2) {
       if (x1 <= x2) {
         // y axis in ACTS is z axis in geomodel
@@ -94,7 +95,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         auto rotationAngle = M_PI / 2;
         Acts::Transform3 newTransform = Acts::Transform3::Identity();
         newTransform.translate(transform.translation());
-        newTransform.rotate(
+        newTransform.rotate(transform.rotation() *
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitX()));
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
@@ -105,7 +106,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         auto rotationAngle = M_PI;
         Acts::Transform3 newTransform = Acts::Transform3::Identity();
         newTransform.translate(transform.translation());
-        newTransform.rotate(
+        newTransform.rotate(transform.rotation() *
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitY()) *
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitZ()));
         return Experimental::DetectorVolumeFactory::construct(
@@ -119,7 +120,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         auto rotationAngle = M_PI / 2;
         Acts::Transform3 newTransform = Acts::Transform3::Identity();
         newTransform.translate(transform.translation());
-        newTransform.rotate(
+        newTransform.rotate(transform.rotation() *
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitZ()) *
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitX()));
         return Experimental::DetectorVolumeFactory::construct(
@@ -131,7 +132,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         auto rotationAngle = M_PI;
         Acts::Transform3 newTransform = Acts::Transform3::Identity();
         newTransform.translate(transform.translation());
-        newTransform.rotate(
+        newTransform.rotate(transform.rotation() *
             Eigen::AngleAxisd(rotationAngle, Acts::Vector3::UnitX()) *
             Eigen::AngleAxisd(rotationAngle / 2, Acts::Vector3::UnitZ()) *
             Eigen::AngleAxisd(rotationAngle / 2, Acts::Vector3::UnitX()));
