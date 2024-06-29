@@ -46,7 +46,7 @@ struct ExtentEnvelope {
 
   /// Constructor from a single envelope that is assigned to all values
   /// @param envelope the envelope to be assigned
-  constexpr explicit ExtentEnvelope(const Envelope& envelope = zeroEnvelope) {
+  explicit ExtentEnvelope(const Envelope& envelope = zeroEnvelope) {
     for (auto& val : m_values) {
       val = envelope;
     }
@@ -61,7 +61,17 @@ struct ExtentEnvelope {
   /// Static factory for a zero envelope
   /// @return the zero envelope
   constexpr static ExtentEnvelope Zero() {
-    return ExtentEnvelope{zeroEnvelope};
+    return ExtentEnvelope{{
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+        zeroEnvelope,
+    }};
   }
 
   /// Comparison operator between envelope sets

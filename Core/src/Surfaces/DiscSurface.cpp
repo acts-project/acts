@@ -503,7 +503,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
 
   } else {
     ACTS_ERROR("DiscSurface::merge: invalid direction "
-               << binningValueNames()[direction]);
+               << binningValueName(direction));
     throw SurfaceMergingException(
         getSharedPtr(), other.getSharedPtr(),
         "DiscSurface::merge: invalid direction " + binningValueName(direction));
