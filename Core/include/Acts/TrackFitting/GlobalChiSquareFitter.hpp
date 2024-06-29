@@ -711,8 +711,8 @@ class Gx2Fitter {
     // new track and delete it after updating the parameters. However, if we
     // would work on the externally provided track container, it would be
     // difficult to remove the correct track, if it contains more than one.
-    Acts::VectorTrackContainer trackContainerTempBackend;
-    Acts::VectorMultiTrajectory trajectoryTempBackend;
+    track_container_t trackContainerTempBackend;
+    traj_t trajectoryTempBackend;
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
 
@@ -995,7 +995,7 @@ class Gx2Fitter {
 
     if (!trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
+      trackContainer.template addColumn<std::uint32_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return
@@ -1008,7 +1008,7 @@ class Gx2Fitter {
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
       ACTS_DEBUG("Add nUpdate to track");
-      track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
+      track.template component<std::uint32_t>("Gx2fnUpdateColumn") = nUpdate;
     }
 
     // TODO write test for calculateTrackQuantities

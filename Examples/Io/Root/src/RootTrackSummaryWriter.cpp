@@ -526,7 +526,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     if (m_cfg.writeGx2fSpecific) {
       if (tracks.hasColumn(Acts::hashString("Gx2fnUpdateColumn"))) {
         int nUpdate = static_cast<int>(
-            track.template component<std::size_t,
+            track.template component<std::uint32_t,
                                      Acts::hashString("Gx2fnUpdateColumn")>());
         m_nUpdatesGx2f.push_back(nUpdate);
       } else {
