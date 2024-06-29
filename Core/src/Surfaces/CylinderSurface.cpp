@@ -370,7 +370,7 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     BinningValue direction, const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging cylinder surfaces in " << binningValueNames()[direction]
+  ACTS_DEBUG("Merging cylinder surfaces in " << binningValueName(direction)
                                              << " direction")
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
@@ -508,6 +508,6 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
   } else {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: invalid direction " +
-                                      binningValueNames()[direction]);
+                                      binningValueName(direction));
   }
 }

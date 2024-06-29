@@ -108,14 +108,14 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
                                                 const Logger& logger) {
   ACTS_DEBUG("Creating CylinderVolumeStack from "
              << m_volumes.size() << " volumes in direction "
-             << binningValueNames()[direction]);
+             << binningValueName(direction));
   if (m_volumes.empty()) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires at least one volume");
   }
 
   if (direction != Acts::binZ && direction != Acts::binR) {
-    throw std::invalid_argument(binningValueNames()[direction] +
+    throw std::invalid_argument(binningValueName(direction) +
                                 " is not supported ");
   }
 
@@ -278,9 +278,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     m_groupTransform = m_transform;
 
   } else {
-    ACTS_ERROR("Binning in " << binningValueNames()[direction]
+    ACTS_ERROR("Binning in " << binningValueName(direction)
                              << " is not supported");
-    throw std::invalid_argument(binningValueNames()[direction] +
+    throw std::invalid_argument(binningValueName(direction) +
                                 " is not supported ");
   }
 }

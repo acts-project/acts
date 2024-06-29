@@ -246,7 +246,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
                       support.internalConstraints.end(),
                       bv) == support.internalConstraints.end()) {
           ACTS_VERBOSE("  Support surface is constrained by volume extent in "
-                       << binningValueNames()[bv]);
+                       << binningValueName(bv));
           supportExtent.set(bv, support.volumeExtent.min(bv),
                             support.volumeExtent.max(bv));
         }

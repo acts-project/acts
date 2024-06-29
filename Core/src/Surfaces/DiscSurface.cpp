@@ -383,7 +383,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
     BinningValue direction, const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging disc surfaces in " << binningValueNames()[direction]
+  ACTS_DEBUG("Merging disc surfaces in " << binningValueName(direction)
                                          << " direction")
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
@@ -504,9 +504,8 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
   } else {
     ACTS_ERROR("DiscSurface::merge: invalid direction "
                << binningValueNames()[direction]);
-
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
-                                  "DiscSurface::merge: invalid direction " +
-                                      binningValueNames()[direction]);
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: invalid direction " + binningValueName(direction));
   }
 }

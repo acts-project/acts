@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(SimpleBoxConnection) {
     Acts::ObjVisualization3D obj;
     Acts::GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
     Acts::GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
-    obj.write("ConnectectBoxesRegular_" + Acts::binningValueNames()[bVal] +
+    obj.write("ConnectectBoxesRegular_" + Acts::binningValueName(bVal) +
               ".obj");
   }
 }
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
       Acts::GeometryView3D::drawDetectorVolume(obj, *volumeA, tContext);
       Acts::GeometryView3D::drawDetectorVolume(obj, *volumeB, tContext);
       Acts::GeometryView3D::drawDetectorVolume(obj, *volumeC, tContext);
-      obj.write("ConnectectBoxesIrregular_" + Acts::binningValueNames()[bVal] +
+      obj.write("ConnectectBoxesIrregular_" + Acts::binningValueName(bVal) +
                 trstr + ".obj");
     }
   }

@@ -201,7 +201,7 @@ std::string Acts::Extent::toString(const std::string& indent) const {
   sl << indent << "Extent in space : " << std::endl;
   for (const auto& bv : s_binningValues) {
     if (constrains(bv)) {
-      sl << indent << "  - value :" << std::setw(10) << binningValueNames()[bv]
+      sl << indent << "  - value :" << std::setw(10) << binningValueName(bv)
          << " | range = [" << m_range[bv].min() << ", " << m_range[bv].max()
          << "]" << std::endl;
     }

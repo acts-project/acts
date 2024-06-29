@@ -32,7 +32,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in "
-                        << binningValueNames()[bValue] << ".");
+                        << binningValueName(bValue) << ".");
 
   // Check transform for consistency
   auto centerDistances =
@@ -246,7 +246,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   ACTS_DEBUG("Connect " << containers.size() << " containers in "
-                        << binningValueNames()[bValue] << ".");
+                        << binningValueName(bValue) << ".");
 
   // Return the new container
   DetectorComponent::PortalContainer dShell;

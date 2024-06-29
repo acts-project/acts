@@ -155,7 +155,7 @@ Acts::GeoModelBlueprintCreater::createNode(
     ACTS_VERBOSE("Found " << internalConstraints.size()
                           << " internal constraints to check for: ");
     for (const auto& ic : internalConstraints) {
-      ACTS_VERBOSE("- " << binningValueNames()[ic]);
+      ACTS_VERBOSE("- " << binningValueName(ic));
     }
   }
 
