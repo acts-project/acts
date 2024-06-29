@@ -485,7 +485,7 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
 
                 if entry["value"]["material"]["mapMaterial"]:
                     for val in entry["value"]["material"]["binUtility"]["binningdata"]:
-                        if val["value"] == "BinningValue::binZ" or val["value"] == "BinningValue::binR":
+                        if val["value"] == "binZ" or val["value"] == "binR":
                             val["bins"] = layer_data[index_to_names[vol - 1]][
                                 "activeBinningRorZ"
                             ]
@@ -529,7 +529,7 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                 entry["value"]["material"]["mapMaterial"] = True
                 for val in entry["value"]["material"]["binUtility"]["binningdata"]:
                     if entry["value"]["type"] == "CylinderSurface":
-                        if val["value"] == "BinningValue::binZ":
+                        if val["value"] == "binZ":
                             val["bins"] = layer_data[index_to_names[vol - 1]][
                                 "passiveCylinderBinningZ"
                             ]
@@ -538,7 +538,7 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                                 "passiveCylinderBinningPhi"
                             ]
                     elif entry["value"]["type"] == "DiscSurface":
-                        if val["value"] == "BinningValue::binR":
+                        if val["value"] == "binR":
                             val["bins"] = layer_data[index_to_names[vol - 1]][
                                 "passiveDiscBinningR"
                             ]
