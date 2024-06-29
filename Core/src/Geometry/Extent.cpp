@@ -84,7 +84,7 @@ void Acts::Extent::extend(const Extent& rhs,
 
 void Acts::Extent::addConstrain(const Acts::Extent& rhs,
                                 const ExtentEnvelope& envelope) {
-  for (const auto& bValue : s_binningValues) {
+  for (const auto& bValue : allBinningValues()) {
     if (rhs.constrains(bValue) && !constrains(bValue)) {
       const auto& cRange = rhs.range(bValue);
       m_range[toUnderlying(bValue)].setMin(cRange.min() - envelope[bValue][0u]);
@@ -123,7 +123,7 @@ void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
 
 bool Acts::Extent::contains(const Vector3& vtx) const {
   Extent checkExtent;
-  for (const auto& bv : s_binningValues) {
+  for (const auto& bv : allBinningValues()) {
     if (constrains(bv)) {
       ActsScalar vtxVal = VectorHelpers::cast(vtx, bv);
       checkExtent.set(bv, vtxVal, vtxVal);
@@ -143,7 +143,7 @@ bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
 
   // Check all
   if (bValue == BinningValue::binValues) {
-    for (const auto& bv : s_binningValues) {
+    for (const auto& bv : allBinningValues()) {
       if (!checkContainment(bv)) {
         return false;
       }
@@ -165,7 +165,7 @@ bool Acts::Extent::intersects(const Extent& rhs, BinningValue bValue) const {
 
   // Check all
   if (bValue == BinningValue::binValues) {
-    for (const auto& bv : s_binningValues) {
+    for (const auto& bv : allBinningValues()) {
       if (checkIntersect(bv)) {
         return true;
       }
@@ -202,7 +202,7 @@ bool Acts::Extent::operator==(const Extent& e) const {
 std::string Acts::Extent::toString(const std::string& indent) const {
   std::stringstream sl;
   sl << indent << "Extent in space : " << std::endl;
-  for (const auto& bv : s_binningValues) {
+  for (const auto& bv : allBinningValues()) {
     if (constrains(bv)) {
       sl << indent << "  - value :" << std::setw(10) << binningValueName(bv)
          << " | range = [" << m_range[toUnderlying(bv)].min() << ", "

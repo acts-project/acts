@@ -101,7 +101,7 @@ class Extent {
   /// @param fillHistograms is a boolean flag to steer whether the values
   ///        to fill this extent should be stored
   void extend(const Vector3& vtx,
-              const std::vector<BinningValue>& bValues = s_binningValues,
+              const std::vector<BinningValue>& bValues = allBinningValues(),
               bool applyEnv = true, bool fillHistograms = false);
 
   /// Extend with a set of vectors by iterators
@@ -114,7 +114,7 @@ class Extent {
   ///        to fill this extent should be stored
   template <typename vector_iterator_t>
   void extend(const vector_iterator_t& start, const vector_iterator_t& end,
-              const std::vector<BinningValue>& bValues = s_binningValues,
+              const std::vector<BinningValue>& bValues = allBinningValues(),
               bool applyEnv = true, bool fillHistograms = false) {
     for (vector_iterator_t vIt = start; vIt < end; ++vIt) {
       extend(*vIt, bValues, applyEnv, fillHistograms);
@@ -136,7 +136,7 @@ class Extent {
   ///
   /// @note that the histogram values can not be filled in this call
   void extend(const Extent& rhs,
-              const std::vector<BinningValue>& bValues = s_binningValues,
+              const std::vector<BinningValue>& bValues = allBinningValues(),
               bool applyEnv = true);
 
   /// Constrain an extent by another one, this is

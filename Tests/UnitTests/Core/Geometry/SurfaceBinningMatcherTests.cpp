@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
   sbm.tolerances[toUnderlying(BinningValue::binPhi)] = {phiTol, phiTol};
 
   // Always true
-  for (BinningValue ib : s_binningValues) {
+  for (BinningValue ib : allBinningValues()) {
     BOOST_CHECK(sbm(tgContext, ib, oneSurface.get(), oneSurface.get()));
   }
   // Not matching in R

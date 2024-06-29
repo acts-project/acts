@@ -240,7 +240,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
       Extent supportExtent;
       // Let us start with an eventually existing volume extent, but only pick
       // the binning value that are not constrained by the internal surfaces
-      for (const auto& bv : s_binningValues) {
+      for (const auto& bv : allBinningValues()) {
         if (support.volumeExtent.constrains(bv) &&
             std::find(support.internalConstraints.begin(),
                       support.internalConstraints.end(),

@@ -19,14 +19,12 @@
 #include <vector>
 
 void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
-  const auto& bValueNames = binningValueNames();
-
   {
     nlohmann::json jrange;
     const auto& xrange = e.range();
-    for (auto [ib, ibv] : enumerate(s_binningValues)) {
+    for (auto ibv : allBinningValues()) {
       if (e.constrains(ibv)) {
-        jrange[bValueNames[ib]] = xrange[ib];
+        jrange[binningValueName(ibv)] = xrange[toUnderlying(ibv)];
       }
     }
     j["range"] = jrange;
@@ -35,9 +33,9 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
   {
     nlohmann::json jenvelope;
     const auto& envelope = e.envelope();
-    for (auto [ib, ibv] : enumerate(s_binningValues)) {
+    for (auto ibv : allBinningValues()) {
       if (envelope[ibv] != zeroEnvelope) {
-        jenvelope[bValueNames[ib]] =
+        jenvelope[binningValueName(ibv)] =
             Range1D<ActsScalar>(envelope[ibv][0], envelope[ibv][1]);
       }
     }
@@ -48,27 +46,22 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
 }
 
 void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
-  const auto& bValueNames = binningValueNames();
+  const auto& jrange = j["range"];
 
-  {
-    const auto& jrange = j["range"];
-    for (auto [ib, bvn] : enumerate(bValueNames)) {
-      if (jrange.contains(bvn)) {
-        e.set(static_cast<BinningValue>(ib), jrange[bvn]["min"],
-              jrange[bvn]["max"]);
-      }
-    }
+  for (auto [key, value] : jrange.items()) {
+    BinningValue bval = binningValueFromName(key);
+    e.set(bval, value["min"], value["max"]);
   }
 
   if (j.contains("envelope")) {
     const auto& jenvelope = j["envelope"];
     ExtentEnvelope envelope;
-    for (auto [ib, bvn] : enumerate(bValueNames)) {
-      if (jenvelope.find(bvn) != jenvelope.end()) {
-        envelope[static_cast<BinningValue>(ib)] = {jenvelope[bvn]["min"],
-                                                   jenvelope[bvn]["max"]};
-      }
+
+    for (auto [key, value] : jenvelope.items()) {
+      BinningValue bval = binningValueFromName(key);
+      envelope[bval] = {value["min"], value["max"]};
     }
+
     e.setEnvelope(envelope);
   }
 }

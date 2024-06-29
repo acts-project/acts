@@ -147,7 +147,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
   }
   // Round up / down if configured
   if (roundInternalExtent) {
-    for (const auto& bv : s_binningValues) {
+    for (const auto& bv : allBinningValues()) {
       if (internalExtent.constrains(bv)) {
         extent.setMin(bv, std::floor(extent.min(bv)));
         extent.setMax(bv, std::ceil(extent.max(bv)));
