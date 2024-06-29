@@ -202,7 +202,10 @@ class Extent {
       const;
 
   /// Return an D-dimensional sub range according to the
-  /// the given @param BinningValue::binValues
+  /// the given binvalues
+  /// @tparam kSUBDIM the number of sub dimensions
+  /// @param binValues the binning values
+  /// @return the sub range
   template <unsigned int kSUBDIM>
   RangeXD<kSUBDIM, ActsScalar> range(
       const std::array<BinningValue, kSUBDIM>& binValues) const {
