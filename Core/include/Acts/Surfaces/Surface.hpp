@@ -63,7 +63,7 @@ using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 class Surface : public virtual GeometryObject,
                 public std::enable_shared_from_this<Surface> {
  public:
-  friend GeometryContextOstreamWrapper<Surface>;
+  friend struct GeometryContextOstreamWrapper<Surface>;
 
   /// @enum SurfaceType
   ///
