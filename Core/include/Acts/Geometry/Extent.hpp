@@ -82,6 +82,14 @@ struct ExtentEnvelope {
     return lhs.m_values == rhs.m_values;
   }
 
+  /// Comparison operator between envelope sets
+  /// @param lhs the left hand side
+  /// @param rhs the right hand side
+  /// @return true if the envelopes are not equal
+  friend bool operator!=(const ExtentEnvelope& lhs, const ExtentEnvelope& rhs) {
+    return !(lhs.m_values == rhs.m_values);
+  }
+
  private:
   std::array<Envelope, toUnderlying(BinningValue::binValues)> m_values;
 };
