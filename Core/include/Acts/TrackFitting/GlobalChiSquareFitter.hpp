@@ -1008,7 +1008,8 @@ class Gx2Fitter {
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
       ACTS_DEBUG("Add nUpdate to track");
-      track.template component<std::uint32_t>("Gx2fnUpdateColumn") = nUpdate;
+      track.template component<std::uint32_t>("Gx2fnUpdateColumn") =
+          static_cast<std::uint32_t>(nUpdate);
     }
 
     // TODO write test for calculateTrackQuantities
