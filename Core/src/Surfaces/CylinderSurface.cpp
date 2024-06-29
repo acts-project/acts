@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
@@ -28,6 +29,7 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -378,16 +380,18 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
   // surface cannot have any relative rotation
   if (!otherLocal.linear().isApprox(RotationMatrix3::Identity())) {
     ACTS_ERROR("CylinderSurface::merge: surfaces have relative rotation");
-    throw std::invalid_argument(
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
         "CylinderSurface::merge: surfaces have relative rotation");
   }
 
-  auto checkNoBevel = [&logger](const auto& bounds) {
+  auto checkNoBevel = [this, &logger, &other](const auto& bounds) {
     if (bounds.get(CylinderBounds::eBevelMinZ) != 0.0) {
       ACTS_ERROR(
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
-      throw std::invalid_argument(
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
     }
@@ -396,7 +400,8 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
       ACTS_ERROR(
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
-      throw std::invalid_argument(
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
           "CylinderVolumeStack requires all volumes to have a bevel angle of "
           "0");
     }
@@ -409,7 +414,8 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
   if (std::abs(bounds().get(CylinderBounds::eR) -
                other.bounds().get(CylinderBounds::eR)) > tolerance) {
     ACTS_ERROR("CylinderSurface::merge: surfaces have different radii");
-    throw std::invalid_argument(
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
         "CylinderSurface::merge: surfaces have different radii");
   }
 
@@ -422,7 +428,8 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
       std::abs(translation[1]) > tolerance) {
     ACTS_ERROR(
         "CylinderSurface::merge: surfaces have relative translation in x/y");
-    throw std::invalid_argument(
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
         "CylinderSurface::merge: surfaces have relative translation in x/y");
   }
 
@@ -449,7 +456,8 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     if (std::abs(maxZ - otherMinZ) > tolerance &&
         std::abs(minZ - otherMaxZ) > tolerance) {
       ACTS_ERROR("CylinderSurface::merge: surfaces have incompatible z bounds");
-      throw std::invalid_argument(
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
           "CylinderSurface::merge: surfaces have incompatible z bounds");
     }
 
@@ -473,7 +481,8 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
       ACTS_ERROR(
           "CylinderSurface::merge: surfaces have relative translation in z for "
           "rPhi merging");
-      throw std::invalid_argument(
+      throw SurfaceMergingException(
+          getSharedPtr(), other.getSharedPtr(),
           "CylinderSurface::merge: surfaces have relative translation in z for "
           "rPhi merging");
     }
@@ -484,15 +493,21 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     ActsScalar otherHlPhi = other.bounds().get(CylinderBounds::eHalfPhiSector);
     ActsScalar otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
 
-    auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
-        hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
+    try {
+      auto [newHlPhi, newAvgPhi] = detail::mergedPhiSector(
+          hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
 
-    auto newBounds = std::make_shared<CylinderBounds>(
-        r, bounds().get(CylinderBounds::eHalfLengthZ), newHlPhi, newAvgPhi);
+      auto newBounds = std::make_shared<CylinderBounds>(
+          r, bounds().get(CylinderBounds::eHalfLengthZ), newHlPhi, newAvgPhi);
 
-    return Surface::makeShared<CylinderSurface>(transform(gctx), newBounds);
+      return Surface::makeShared<CylinderSurface>(transform(gctx), newBounds);
+    } catch (const std::invalid_argument& e) {
+      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                    e.what());
+    }
   } else {
-    throw std::invalid_argument("CylinderSurface::merge: invalid direction " +
-                                binningValueNames()[direction]);
+    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                  "CylinderSurface::merge: invalid direction " +
+                                      binningValueNames()[direction]);
   }
 }

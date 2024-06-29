@@ -20,8 +20,8 @@
 // is sorted it can be used to quickly search for the index of a particle
 // within all column arrays.
 
-static constexpr uint32_t kParticlesCount = 6502u;
-static const int32_t kParticlesPdgNumber[kParticlesCount] = {
+static constexpr std::uint32_t kParticlesCount = 6502u;
+static const std::int32_t kParticlesPdgNumber[kParticlesCount] = {
     // Og294~
     -1001182940,
     // Ts294~
@@ -13027,7 +13027,7 @@ static const int32_t kParticlesPdgNumber[kParticlesCount] = {
     // Og294
     1001182940,
 };
-static const int16_t kParticlesThreeCharge[kParticlesCount] = {
+static const std::int16_t kParticlesThreeCharge[kParticlesCount] = {
     // Og294~
     -354,
     // Ts294~

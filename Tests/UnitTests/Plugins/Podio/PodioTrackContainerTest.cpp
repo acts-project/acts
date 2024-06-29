@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
 
     BOOST_CHECK(!tc.hasColumn("int_column"_hash));
     BOOST_CHECK(!tc.hasColumn("float_column"_hash));
-    tc.addColumn<int32_t>("int_column");
+    tc.addColumn<std::int32_t>("int_column");
     tc.addColumn<float>("float_column");
     BOOST_CHECK(tc.hasColumn("int_column"_hash));
     BOOST_CHECK(tc.hasColumn("float_column"_hash));
@@ -233,9 +233,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     auto pTrack2 = tracks.at(1);
     BOOST_CHECK_EQUAL(pTrack2.getReferenceSurface().identifier, 666);
 
-    t.component<int32_t, "int_column"_hash>() = -11;
-    t2.component<int32_t, "int_column"_hash>() = 42;
-    t3.component<int32_t, "int_column"_hash>() = -98;
+    t.component<std::int32_t, "int_column"_hash>() = -11;
+    t2.component<std::int32_t, "int_column"_hash>() = 42;
+    t3.component<std::int32_t, "int_column"_hash>() = -98;
 
     t.component<float, "float_column"_hash>() = -11.2f;
     t2.component<float, "float_column"_hash>() = 42.4f;
@@ -299,9 +299,9 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     auto t3 = tc.getTrack(2);
     BOOST_CHECK(!t3.hasReferenceSurface());
 
-    BOOST_CHECK_EQUAL((t.component<int32_t, "int_column"_hash>()), -11);
-    BOOST_CHECK_EQUAL((t2.component<int32_t, "int_column"_hash>()), 42);
-    BOOST_CHECK_EQUAL((t3.component<int32_t, "int_column"_hash>()), -98);
+    BOOST_CHECK_EQUAL((t.component<std::int32_t, "int_column"_hash>()), -11);
+    BOOST_CHECK_EQUAL((t2.component<std::int32_t, "int_column"_hash>()), 42);
+    BOOST_CHECK_EQUAL((t3.component<std::int32_t, "int_column"_hash>()), -98);
 
     BOOST_CHECK_EQUAL((t.component<float, "float_column"_hash>()), -11.2f);
     BOOST_CHECK_EQUAL((t2.component<float, "float_column"_hash>()), 42.4f);
@@ -318,10 +318,10 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   VectorTrackContainer vtc{};
   VectorMultiTrajectory mtj{};
   TrackContainer tc{vtc, mtj};
-  tc.addColumn<uint64_t>("counter");
-  tc.addColumn<uint8_t>("odd");
-  mtj.addColumn<uint64_t>("ts_counter");
-  mtj.addColumn<uint8_t>("ts_odd");
+  tc.addColumn<std::uint64_t>("counter");
+  tc.addColumn<std::uint8_t>("odd");
+  mtj.addColumn<std::uint64_t>("ts_counter");
+  mtj.addColumn<std::uint8_t>("ts_odd");
 
   Acts::MutablePodioTrackStateContainer tsc2{helper};
   Acts::MutablePodioTrackContainer ptc2{helper};
@@ -332,29 +332,30 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   Acts::MutablePodioTrackContainer ptc3{helper};
   Acts::TrackContainer tc3{ptc3, tsc3};
 
-  tc3.addColumn<uint64_t>("counter");
-  tc3.addColumn<uint8_t>("odd");
-  tsc3.addColumn<uint64_t>("ts_counter");
-  tsc3.addColumn<uint8_t>("ts_odd");
+  tc3.addColumn<std::uint64_t>("counter");
+  tc3.addColumn<std::uint8_t>("odd");
+  tsc3.addColumn<std::uint64_t>("ts_counter");
+  tsc3.addColumn<std::uint8_t>("ts_odd");
 
   for (std::size_t i = 0; i < 10; i++) {
     auto t = tc.makeTrack();
     auto ts = t.appendTrackState();
     ts.predicted() = BoundVector::Ones();
-    ts.component<uint64_t, "ts_counter"_hash>() = i;
+    ts.component<std::uint64_t, "ts_counter"_hash>() = i;
 
     ts = t.appendTrackState();
     ts.predicted().setOnes();
     ts.predicted() *= 2;
-    ts.component<uint64_t, "ts_counter"_hash>() = i + 1;
+    ts.component<std::uint64_t, "ts_counter"_hash>() = i + 1;
 
     ts = t.appendTrackState();
     ts.predicted().setOnes();
     ts.predicted() *= 3;
-    ts.component<uint64_t, "ts_counter"_hash>() = i + 2;
+    ts.component<std::uint64_t, "ts_counter"_hash>() = i + 2;
 
-    t.template component<uint64_t>("counter") = i;
-    t.template component<uint8_t>("odd") = static_cast<uint8_t>(i % 2 == 0);
+    t.template component<std::uint64_t>("counter") = i;
+    t.template component<std::uint8_t>("odd") =
+        static_cast<std::uint8_t>(i % 2 == 0);
 
     auto t2 = tc2.makeTrack();
     BOOST_CHECK_THROW(t2.copyFrom(t),
@@ -372,17 +373,18 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
       BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
 
       BOOST_CHECK_EQUAL(
-          (tsa.template component<uint64_t, "ts_counter"_hash>()),
-          (tsb.template component<uint64_t, "ts_counter"_hash>()));
+          (tsa.template component<std::uint64_t, "ts_counter"_hash>()),
+          (tsb.template component<std::uint64_t, "ts_counter"_hash>()));
 
-      BOOST_CHECK_EQUAL((tsa.template component<uint8_t, "ts_odd"_hash>()),
-                        (tsb.template component<uint8_t, "ts_odd"_hash>()));
+      BOOST_CHECK_EQUAL(
+          (tsa.template component<std::uint8_t, "ts_odd"_hash>()),
+          (tsb.template component<std::uint8_t, "ts_odd"_hash>()));
     }
 
-    BOOST_CHECK_EQUAL(t.template component<uint64_t>("counter"),
-                      t3.template component<uint64_t>("counter"));
-    BOOST_CHECK_EQUAL(t.template component<uint8_t>("odd"),
-                      t3.template component<uint8_t>("odd"));
+    BOOST_CHECK_EQUAL(t.template component<std::uint64_t>("counter"),
+                      t3.template component<std::uint64_t>("counter"));
+    BOOST_CHECK_EQUAL(t.template component<std::uint8_t>("odd"),
+                      t3.template component<std::uint8_t>("odd"));
   }
 }
 

@@ -13,9 +13,9 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
 #include <array>
@@ -115,8 +115,10 @@ class TestAxis : public IAxis {
 
   bool isVariable() const final { return false; }
 
-  detail::AxisBoundaryType getBoundaryType() const final {
-    return detail::AxisBoundaryType::Closed;
+  AxisType getType() const final { return AxisType::Equidistant; }
+
+  AxisBoundaryType getBoundaryType() const final {
+    return AxisBoundaryType::Closed;
   }
 
   std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }

@@ -64,7 +64,7 @@ class ElementFraction {
   ElementFraction& operator=(const ElementFraction&) = default;
 
   /// The element atomic number.
-  constexpr uint8_t element() const { return m_element; }
+  constexpr std::uint8_t element() const { return m_element; }
   /// The relative fraction of this element.
   constexpr float fraction() const {
     return static_cast<float>(m_fraction) /
@@ -73,9 +73,9 @@ class ElementFraction {
 
  private:
   // element atomic number
-  uint8_t m_element;
+  std::uint8_t m_element;
   // element fraction in the compound scaled to the [0,256) range.
-  uint8_t m_fraction;
+  std::uint8_t m_fraction;
 
   friend constexpr bool operator==(ElementFraction lhs, ElementFraction rhs) {
     return (lhs.m_fraction == rhs.m_fraction) &&

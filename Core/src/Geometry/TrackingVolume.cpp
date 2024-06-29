@@ -19,9 +19,9 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/TransformRange.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -51,14 +51,14 @@ TrackingVolume::TrackingVolume(
 TrackingVolume::TrackingVolume(const Volume& volume,
                                const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
+                     nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
-TrackingVolume::TrackingVolume(
-    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
-    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
-    const std::string& volumeName)
-    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr,
-                     containedVolumeArray, {}, volumeName) {}
+TrackingVolume::TrackingVolume(const Transform3& transform,
+                               std::shared_ptr<const VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
+                     {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() = default;
 

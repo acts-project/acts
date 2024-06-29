@@ -37,7 +37,7 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
 
 void Initialise_info(sinfo& surface_info,
                      const std::map<std::string, std::string>& surface_name,
-                     const uint64_t& id, const int& type, const float& pos,
+                     const std::uint64_t& id, const int& type, const float& pos,
                      const float& range_min, const float& range_max) {
   Acts::GeometryIdentifier ID(id);
   std::ostringstream layerID;

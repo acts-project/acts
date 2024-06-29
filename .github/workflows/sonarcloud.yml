@@ -1,0 +1,141 @@
+name: SonarCloud
+on:
+  workflow_run:
+    workflows: [Analysis]
+    types: [completed]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2204:v41
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Dump job context
+        env:
+          PAYLOAD: ${{ toJson(github) }}
+        run: echo "${PAYLOAD}"
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y unzip
+
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: 'Download artifact'
+        uses: actions/github-script@v7
+        id: dl-af
+        with:
+          script: |
+            console.log(`Getting artifacts for workflow run id: ${context.payload.workflow_run.id}`);
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            for (artifact of allArtifacts.data.artifacts) {
+              console.log(`Artifact #${artifact.id} ${artifact.name}`);
+              let download = await github.rest.actions.downloadArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+                archive_format: 'zip',
+              });
+              let fs = require('fs');
+              fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/${artifact.name}.zip`, Buffer.from(download.data));
+            }
+            return true;
+
+      - name: Unzip coverage build
+        run: unzip coverage-build.zip -d build
+
+      - name: Unzip PR_NUMBER
+        if: github.event.workflow_run.event == 'pull_request'
+        run: unzip PR_NUMBER.zip
+
+      - name: Debug
+        run: |
+          ls -al
+          ls -al build
+          ls -al build/coverage
+
+      - name: Read PR_NUMBER.txt
+        if: github.event.workflow_run.event == 'pull_request'
+        id: pr_number
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./PR_NUMBER.txt
+
+      - name: Request GitHub API for PR data
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: octokit/request-action@v2.x
+        id: get_pr_data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          route: GET /repos/{full_name}/pulls/{number}
+          number: ${{ steps.pr_number.outputs.content }}
+          full_name: ${{ github.event.repository.full_name }}
+
+      - name: Get upcoming version from milestones
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: acts-project/acts
+        run: |
+          CI/get_next_milestone.py | tee next_version.txt
+
+      - name: Read next_version.txt
+        id: next_version
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./next_version.txt
+
+      - name: Checkout base branch
+        if: github.event.workflow_run.event == 'pull_request'
+        run: |
+          git config --global --add safe.directory $PWD
+          git remote rename origin upstream
+          git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
+          git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
+          git fetch origin
+          git checkout ${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
+          git remote -v
+          git status
+
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v2
+
+      - name: Debug
+        run: |
+          ls -al
+          ls -al build
+          ls -al build/coverage
+
+      - name: Run sonar-scanner (PR mode)
+        if: github.event.workflow_run.event == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
+        run: |
+          sonar-scanner \
+            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
+            --define sonar.coverageReportPaths=build/coverage/cov.xml \
+            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}" \
+            --define sonar.scm.revision="${{ github.event.workflow_run.head_sha }}" \
+            --define sonar.pullrequest.key="${{ steps.pr_number.outputs.content }}" \
+            --define sonar.pullrequest.branch="${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}" \
+            --define sonar.pullrequest.base="${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}"
+
+      - name: Run sonar-scanner (push mode)
+        if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
+        run: |
+          sonar-scanner \
+            --define sonar.cfamily.compile-commands="build/compile_commands.json" \
+            --define sonar.coverageReportPaths=build/coverage/cov.xml \
+            --define sonar.projectVersion="${{ steps.next_version.outputs.content }}" \
+            --define sonar.branch.name=main

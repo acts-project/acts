@@ -66,10 +66,10 @@ concept MutableTrackContainerBackend = ConstTrackContainerBackend<T> &&
 
   // As far as I know there's no good way to assert that there's a
   // generic template function
-  {v.template addColumn_impl<uint32_t>(col)};
-  {v.template addColumn_impl<uint64_t>(col)};
-  {v.template addColumn_impl<int32_t>(col)};
-  {v.template addColumn_impl<int64_t>(col)};
+  {v.template addColumn_impl<std::uint32_t>(col)};
+  {v.template addColumn_impl<std::uint64_t>(col)};
+  {v.template addColumn_impl<std::int32_t>(col)};
+  {v.template addColumn_impl<std::int64_t>(col)};
   {v.template addColumn_impl<float>(col)};
   {v.template addColumn_impl<double>(col)};
 

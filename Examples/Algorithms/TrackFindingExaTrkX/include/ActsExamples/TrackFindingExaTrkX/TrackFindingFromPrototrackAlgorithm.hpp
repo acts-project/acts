@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
