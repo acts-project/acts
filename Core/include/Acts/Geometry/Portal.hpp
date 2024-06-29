@@ -200,10 +200,25 @@ class GridPortalLinkT : public GridPortalLink {
       }
     };
     auto checkRPhi = [&](const auto& axis) {
-      ActsScalar hlRPhi = cyl.bounds().get(CylinderBounds::eR) *
-                          cyl.bounds().get(CylinderBounds::eHalfPhiSector);
+      if (cyl.bounds().get(CylinderBounds::eAveragePhi) != 0) {
+        throw std::invalid_argument(
+            "GridPortalLink: CylinderBounds: only average phi == 0 is "
+            "supported. Rotate the cylinder surface.");
+      };
+
+      ActsScalar hlPhi = cyl.bounds().get(CylinderBounds::eHalfPhiSector);
+      ActsScalar r = cyl.bounds().get(CylinderBounds::eR);
+      ActsScalar hlRPhi = r * hlPhi;
 
       if (axis.getMin() != -hlRPhi || axis.getMax() != hlRPhi) {
+        throw std::invalid_argument(
+            "GridPortalLink: CylinderBounds: invalid phi sector setup.");
+      }
+
+      constexpr auto tolerance = s_onSurfaceTolerance;
+      // If full cylinder, make sure axis wraps around
+      if (std::abs(hlPhi - M_PI) < tolerance &&
+          axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid phi sector setup.");
       }

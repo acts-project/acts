@@ -145,6 +145,34 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       std::swap(a, b);
     }
 
+    auto mergeVariable = [&, mergedSurface](const auto& axisA,
+                                            const auto& axisB) {
+      ActsScalar halfWidth =
+          (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) /
+          2.0;
+
+      ActsScalar shift = axisA.getMax() - halfWidth;
+      ACTS_VERBOSE("    ~> shift: " << shift);
+
+      std::vector<ActsScalar> binEdges;
+
+      binEdges.reserve(axisA.getNBins() + axisB.getNBins() + 1);
+      auto edgesA = axisA.getBinEdges();
+      std::transform(edgesA.begin(), edgesA.end(), std::back_inserter(binEdges),
+                     [&](ActsScalar edge) { return edge + shift; });
+
+      ActsScalar stitchPoint = binEdges.back();
+      auto edgesB = axisB.getBinEdges();
+      std::transform(
+          std::next(edgesB.begin()), edgesB.end(), std::back_inserter(binEdges),
+          [&](ActsScalar edge) { return edge - axisB.getMin() + stitchPoint; });
+
+      Axis merged{AxisBound, std::move(binEdges)};
+      ACTS_VERBOSE("    ~> merged axis: " << merged);
+
+      return GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
+    };
+
     if (direction == binZ) {
       ACTS_VERBOSE("Grids are binned along "
                    << binningValueNames()[a->direction()]);
@@ -164,36 +192,6 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
               "AxisBoundaryType is not Bound, cannot do colinear merge");
           return nullptr;
         }
-
-        auto mergeVariable = [&, mergedSurface](const auto& axisA,
-                                                const auto& axisB) {
-          ActsScalar halfWidth = (axisA.getMax() - axisA.getMin() +
-                                  axisB.getMax() - axisB.getMin()) /
-                                 2.0;
-
-          ActsScalar shift = axisA.getMax() - halfWidth;
-          ACTS_VERBOSE("    ~> shift: " << shift);
-
-          std::vector<ActsScalar> binEdges;
-
-          binEdges.reserve(axisA.getNBins() + axisB.getNBins() + 1);
-          auto edgesA = axisA.getBinEdges();
-          std::transform(edgesA.begin(), edgesA.end(),
-                         std::back_inserter(binEdges),
-                         [&](ActsScalar edge) { return edge + shift; });
-
-          ActsScalar stitchPoint = binEdges.back();
-          auto edgesB = axisB.getBinEdges();
-          std::transform(std::next(edgesB.begin()), edgesB.end(),
-                         std::back_inserter(binEdges), [&](ActsScalar edge) {
-                           return edge - axisB.getMin() + stitchPoint;
-                         });
-
-          Axis merged{AxisBound, std::move(binEdges)};
-          ACTS_VERBOSE("    ~> merged axis: " << merged);
-
-          return GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
-        };
 
         AxisType aType = axisA.getType();
         AxisType bType = axisB.getType();
@@ -258,32 +256,14 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
           return mergedPortalLink;
         }
 
-        return nullptr;
-
       } else {
         ACTS_VERBOSE("=> perpendicular merge");
         return nullptr;
       }
 
-      // AxisBoundaryType aBoundaryType =
-      //     a.grid().axes().front()->getBoundaryType();
-      // AxisBoundaryType bBoundaryType =
-      //     b.grid().axes().front()->getBoundaryType();
-      // ACTS_VERBOSE("AxisBoundaryTypes are:");
-      // ACTS_VERBOSE(" - a: " << aBoundaryType);
-      // ACTS_VERBOSE(" - b: " << bBoundaryType);
-      //
-      // if(aBoundaryType != bBoundaryType) {
-      //   ACTS_WARNING("AxisBoundaryTypes are different");
-      //   return nullptr;
-      // }
-      // else if(aBoundaryType )
-      //
-      // }
     } else if (direction == binRPhi) {
-      ACTS_VERBOSE("BINRPHI");
       // Linear merge along rphi will NOT wrap around (doesn't make sense)
-      // Cross merge might have wrap around
+      // Cross merge might have to wrap around
       throw std::logic_error{"Not implemented"};
     } else {
       ACTS_ERROR(
@@ -314,7 +294,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GeometryContext& gctx,
                                                  BinningValue direction,
                                                  const Logger& logger) {
   assert(a->dim() == 2 || a->dim() == 1);
-  assert(b -.dim() == 2 || b -.dim() == 1);
+  assert(b->dim() == 2 || b->dim() == 1);
 
   if (a->dim() < b->dim()) {
     return mergeGridPortals(gctx, b, a, surfaceB, surfaceA, direction, logger);
