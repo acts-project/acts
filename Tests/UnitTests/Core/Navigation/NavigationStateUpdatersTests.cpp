@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
       Acts::Experimental::IInternalNavigation, decltype(grid),
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
-  auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::binR});
+  auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::BinningValue::binR});
 
   auto allPortalsGrid1DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
       Acts::Experimental::IndexedSurfacesExtractor,
       Acts::Experimental::SurfacesFiller>;
   auto grid2DSurfaces =
-      Grid2DSurfacesProvider(std::move(grid), {Acts::binR, Acts::binZ});
+      Grid2DSurfacesProvider(std::move(grid), {Acts::BinningValue::binR, Acts::BinningValue::binZ});
 
   auto allPortalsGrid2DSurfaces = Acts::Experimental::ChainedNavigation<
       Acts::Experimental::IInternalNavigation, AllPortalsProvider,

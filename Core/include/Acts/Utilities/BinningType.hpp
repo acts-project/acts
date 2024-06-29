@@ -8,6 +8,7 @@
 
 #pragma once
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace Acts {
@@ -32,7 +33,7 @@ enum BinningType { equidistant, arbitrary };
 enum BinningOption { open, closed };
 
 /// @enum BinningValue how to take the global / local position
-enum BinningValue : int {
+enum class BinningValue : int {
   binX = 0,
   binY = 1,
   binZ = 2,
@@ -47,7 +48,9 @@ enum BinningValue : int {
 
 /// @brief static list of all binning values
 static const std::vector<BinningValue> s_binningValues = {
-    binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta, binMag};
+    BinningValue::binX, BinningValue::binY,   BinningValue::binZ,
+    BinningValue::binR, BinningValue::binPhi, BinningValue::binRPhi,
+    BinningValue::binH, BinningValue::binEta, BinningValue::binMag};
 
 inline const std::vector<std::string>& binningValueNames() {
   static const std::vector<std::string> _binningValueNames = {
@@ -58,6 +61,13 @@ inline const std::vector<std::string>& binningValueNames() {
 
 /// @brief screen output option
 inline const std::string& binningValueName(BinningValue bValue) {
-  return binningValueNames()[bValue];
+  return binningValueNames()[static_cast<std::underlying_type_t<BinningValue>>(
+      bValue)];
 }
+
+inline std::ostream& operator<<(std::ostream& os, BinningValue bValue) {
+  os << binningValueName(bValue);
+  return os;
+}
+
 }  // namespace Acts

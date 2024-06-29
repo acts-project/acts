@@ -85,7 +85,7 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
     Acts::Direction dir) {
   // Autodetector stitch value
   Acts::BinningValue stitchValue =
-      phiBoundaries.size() == 2u ? Acts::binR : Acts::binPhi;
+      phiBoundaries.size() == 2u ? Acts::BinningValue::binR : Acts::BinningValue::binPhi;
   // Estimate ranges
   auto [minR, maxR] = Acts::min_max(rBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
@@ -98,7 +98,7 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
       transform, std::move(bounds));
   // Make a portal and indicate the new link direction
   const auto& stitchBoundaries =
-      (stitchValue == Acts::binR) ? rBoundaries : phiBoundaries;
+      (stitchValue == Acts::BinningValue::binR) ? rBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
       std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
       stitchBoundaries, stitchValue);
@@ -121,7 +121,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
     Acts::Direction dir) {
   // Autodetector stitch value
   Acts::BinningValue stitchValue =
-      phiBoundaries.size() == 2u ? Acts::binZ : Acts::binPhi;
+      phiBoundaries.size() == 2u ? Acts::BinningValue::binZ : Acts::BinningValue::binPhi;
   auto [lengthZ, medZ] = Acts::range_medium(zBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
 
@@ -134,7 +134,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
 
   // A make a portal and indicate the new link direction
   const auto& stitchBoundaries =
-      (stitchValue == Acts::binZ) ? zBoundaries : phiBoundaries;
+      (stitchValue == Acts::BinningValue::binZ) ? zBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
       std::make_shared<Acts::Experimental::Portal>(surface), index, dir,
       stitchBoundaries, stitchValue);
@@ -164,7 +164,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
 
   // Create a new transform
   Acts::Transform3 transform = Acts::Transform3::Identity();
-  if (binning == Acts::binR) {
+  if (binning == Acts::BinningValue::binR) {
     // Range and center-r calculation
     auto [range, medium] = Acts::range_medium(boundaries);
     // New joint center:
@@ -178,7 +178,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
                boundValues[Acts::RectangleBounds::BoundValues::eMinX]);
     // New joint bounds
     bounds = std::make_unique<Acts::RectangleBounds>(halfX, 0.5 * range);
-  } else if (binning == Acts::binZ) {
+  } else if (binning == Acts::BinningValue::binZ) {
     // Range and medium z alculation
     auto [range, medium] = Acts::range_medium(boundaries);
     // Center R calculation, using projection onto vector
@@ -402,7 +402,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
         const Surface& refSurface =
             volumes[volumes.size() - 1u]->portals()[iu + 4u]->surface();
         pReplacements.push_back(createSectorReplacement(
-            gctx, vCenter, refSurface, rBoundaries, Acts::binR, iu + 4u, idir));
+            gctx, vCenter, refSurface, rBoundaries, Acts::BinningValue::binR, iu + 4u, idir));
       }
     }
   } else {
@@ -607,7 +607,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
             volumes[0u]->portals()[iu + iSecOffset]->surface();
         pReplacements.push_back(
             createSectorReplacement(gctx, combinedCenter, refSurface,
-                                    zBoundaries, Acts::binZ, iu + 4u, idir));
+                                    zBoundaries, Acts::BinningValue::binZ, iu + 4u, idir));
       }
     }
   } else {

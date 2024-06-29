@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
       std::move(localX));
 
   auto globalX =
-      std::make_unique<const Acts::GridAccess::GlobalSubspace<Acts::binX>>();
+      std::make_unique<const Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>>();
   Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
-  gToX.connect<&Acts::GridAccess::GlobalSubspace<Acts::binX>::toGridLocal>(
+  gToX.connect<&Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binX>::toGridLocal>(
       std::move(globalX));
 
   Acts::IndexedSurfaceMaterial<EqGrid> ism(
@@ -128,10 +128,10 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
 
   // With z shift 10
   auto globalToGrid = std::make_unique<
-      const Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binPhi>>();
+      const Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binZ, Acts::BinningValue::binPhi>>();
   Acts::IndexedSurfaceMaterial<EqEqGrid>::GlobalToGridLocalDelegate gToZphi;
   gToZphi.connect<
-      &Acts::GridAccess::GlobalSubspace<Acts::binZ, Acts::binPhi>::toGridLocal>(
+      &Acts::GridAccess::GlobalSubspace<Acts::BinningValue::binZ, Acts::BinningValue::binPhi>::toGridLocal>(
       std::move(globalToGrid));
 
   // Create the indexed material grid

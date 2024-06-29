@@ -149,10 +149,13 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     if (type == 0) {
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating CylinderLayer with "
-                 << lSurfaces.size() << " surfaces at r = " << pl.medium(binR));
+                 << lSurfaces.size()
+                 << " surfaces at r = " << pl.medium(BinningValue::binR));
 
-      pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
-      pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
+      pl.envelope[Acts::BinningValue::binR] = {lCfg.envelope.first,
+                                               lCfg.envelope.second};
+      pl.envelope[Acts::BinningValue::binZ] = {lCfg.envelope.second,
+                                               lCfg.envelope.second};
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
@@ -163,10 +166,13 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     } else {
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating DiscLayer with "
-                 << lSurfaces.size() << " surfaces at z = " << pl.medium(binZ));
+                 << lSurfaces.size()
+                 << " surfaces at z = " << pl.medium(BinningValue::binZ));
 
-      pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
-      pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
+      pl.envelope[Acts::BinningValue::binR] = {lCfg.envelope.first,
+                                               lCfg.envelope.second};
+      pl.envelope[Acts::BinningValue::binZ] = {lCfg.envelope.second,
+                                               lCfg.envelope.second};
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));

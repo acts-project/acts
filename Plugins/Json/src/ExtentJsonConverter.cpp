@@ -38,7 +38,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
     for (auto [ib, ibv] : enumerate(s_binningValues)) {
       if (envelope[ibv] != zeroEnvelope) {
         jenvelope[bValueNames[ib]] =
-            Range1D<ActsScalar>(envelope[ib][0], envelope[ib][1]);
+            Range1D<ActsScalar>(envelope[ibv][0], envelope[ibv][1]);
       }
     }
     if (!jenvelope.empty()) {
@@ -65,7 +65,8 @@ void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
     ExtentEnvelope envelope;
     for (auto [ib, bvn] : enumerate(bValueNames)) {
       if (jenvelope.find(bvn) != jenvelope.end()) {
-        envelope[ib] = {jenvelope[bvn]["min"], jenvelope[bvn]["max"]};
+        envelope[static_cast<BinningValue>(ib)] = {jenvelope[bvn]["min"],
+                                                   jenvelope[bvn]["max"]};
       }
     }
     e.setEnvelope(envelope);

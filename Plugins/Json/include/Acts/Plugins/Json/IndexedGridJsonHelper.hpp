@@ -47,7 +47,7 @@ nlohmann::json convertImpl(const index_grid& indexGrid, bool detray = false,
     jCasts.push_back(indexGrid.casts[1u]);
     // Check for axis swap (detray version)
     swapAxes = checkSwap &&
-               (indexGrid.casts[0u] == binZ && indexGrid.casts[1u] == binPhi);
+               (indexGrid.casts[0u] == BinningValue::binZ && indexGrid.casts[1u] == BinningValue::binPhi);
   }
   jIndexedGrid["casts"] = jCasts;
   jIndexedGrid["transform"] =

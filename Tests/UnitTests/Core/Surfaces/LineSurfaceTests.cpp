@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   Transform3 transform(translation);
   LineSurfaceStub line(transform, 2.0, 20.);
   Vector3 referencePosition{0., 1., 2.};
-  CHECK_CLOSE_ABS(referencePosition, line.binningPosition(tgContext, binX),
+  CHECK_CLOSE_ABS(referencePosition, line.binningPosition(tgContext, BinningValue::binX),
                   1e-6);
   //
   // bounds()

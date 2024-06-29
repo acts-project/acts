@@ -39,7 +39,7 @@ inline BinningValue toBinningValue(const std::string& binning,
     throw std::invalid_argument(
         "GeoModelBinningHelper: Unknown binning value '" + binning + "'");
   }
-  return BinningValue::binValues;
+  return BinningValue::BinningValue::binValues;
 }
 
 /// @brief Convert a binning string into a ProtoiBinning description

@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   g.atPosition(std::array<Acts::ActsScalar, 1u>{150.}) = 2u;
 
   Acts::Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(std::move(g),
-                                                                  {Acts::binR});
+                                                                  {Acts::BinningValue::binR});
 
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);

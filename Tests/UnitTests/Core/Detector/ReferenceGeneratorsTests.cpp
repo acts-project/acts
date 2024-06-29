@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(BinningPositionReference) {
   // Simply return binning position, we test only the behavior of the generator
   // not the output
   auto binningPosition =
-      BinningValueReferenceGenerator<Acts::binZ>{}.references(tContext,
+      BinningValueReferenceGenerator<Acts::BinningValue::binZ>{}.references(tContext,
                                                               *pSurface);
   BOOST_CHECK_EQUAL(binningPosition.size(), 1u);
 }

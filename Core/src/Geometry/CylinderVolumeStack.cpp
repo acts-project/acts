@@ -114,7 +114,8 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
         "CylinderVolumeStack requires at least one volume");
   }
 
-  if (direction != Acts::binZ && direction != Acts::binR) {
+  if (direction != Acts::BinningValue::binZ &&
+      direction != Acts::BinningValue::binR) {
     throw std::invalid_argument(binningValueName(direction) +
                                 " is not supported ");
   }
@@ -156,7 +157,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
   ACTS_VERBOSE("Checking volume alignment");
   checkVolumeAlignment(volumeTuples, logger);
 
-  if (direction == Acts::binZ) {
+  if (direction == Acts::BinningValue::binZ) {
     ACTS_VERBOSE("Sorting by volume z position");
     std::sort(volumeTuples.begin(), volumeTuples.end(),
               [](const auto& a, const auto& b) {
@@ -219,7 +220,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     // @TODO: We probably can reuse m_transform
     m_groupTransform = m_transform;
 
-  } else if (direction == Acts::binR) {
+  } else if (direction == Acts::BinningValue::binR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
     std::sort(volumeTuples.begin(), volumeTuples.end(),
               [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
@@ -295,15 +296,15 @@ void CylinderVolumeStack::overlapPrint(
     ss << std::setfill(' ');
     ACTS_VERBOSE("Checking overlap between");
     int w = 9;
-    ss << " - "
-       << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
-       << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
+    ss << " - " << " z: [ " << std::setw(w) << a.minZ() << " <- "
+       << std::setw(w) << a.midZ() << " -> " << std::setw(w) << a.maxZ()
+       << " ]";
     ACTS_VERBOSE(ss.str());
 
     ss.str("");
-    ss << " - "
-       << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
-       << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
+    ss << " - " << " z: [ " << std::setw(w) << b.minZ() << " <- "
+       << std::setw(w) << b.midZ() << " -> " << std::setw(w) << b.maxZ()
+       << " ]";
     ACTS_VERBOSE(ss.str());
   }
 }
