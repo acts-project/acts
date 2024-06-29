@@ -94,7 +94,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   ///
   /// @return vector of canonical binning values
   std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY, Acts::BinningValue::binZ};
+    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
+            Acts::BinningValue::binZ};
   };
 
   /// @param sl is the output stream to be written into

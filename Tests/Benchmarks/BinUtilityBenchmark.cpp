@@ -124,7 +124,8 @@ int main(int argc, char* argv[]) {
   ACTS_INFO("Execution stats many: " << bin_utility_benchmark_many);
   ACTS_INFO("Fraction is: " << st << " vs. " << gt);
 
-  Acts::BinUtility equidistant(100, 0., 6., Acts::open, Acts::BinningValue::binX);
+  Acts::BinUtility equidistant(100, 0., 6., Acts::open,
+                               Acts::BinningValue::binX);
   st = 0;
   gt = 0;
   num_iters = 0;

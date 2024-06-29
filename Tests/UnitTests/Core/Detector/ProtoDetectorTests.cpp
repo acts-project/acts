@@ -122,7 +122,8 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   BOOST_CHECK_EQUAL(cts.constituentBinning.size(), 1u);
   BOOST_CHECK_EQUAL(cts.constituentBinning[0].type, Acts::arbitrary);
-  BOOST_CHECK_EQUAL(cts.constituentBinning[0].binvalue, Acts::BinningValue::binR);
+  BOOST_CHECK_EQUAL(cts.constituentBinning[0].binvalue,
+                    Acts::BinningValue::binR);
 
   const auto& binBoundaries = cts.constituentBinning[0].boundaries();
   BOOST_CHECK_EQUAL(binBoundaries.size(), 3u);
@@ -179,7 +180,8 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   // The binning should have been estimated
   BOOST_CHECK_EQUAL(cts1.constituentBinning.size(), 1u);
   BOOST_CHECK_EQUAL(cts1.constituentBinning[0].type, Acts::arbitrary);
-  BOOST_CHECK_EQUAL(cts1.constituentBinning[0].binvalue, Acts::BinningValue::binZ);
+  BOOST_CHECK_EQUAL(cts1.constituentBinning[0].binvalue,
+                    Acts::BinningValue::binZ);
 
   const auto& binBoundariesZ = cts1.constituentBinning[0].boundaries();
   BOOST_CHECK_EQUAL(binBoundariesZ.size(), 4u);

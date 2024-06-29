@@ -48,7 +48,8 @@ BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
 
   // The segmentation
   Acts::BinUtility pixelated(20, -1., 1., Acts::open, Acts::BinningValue::binX);
-  pixelated += Acts::BinUtility(20, -1., 1., Acts::open, Acts::BinningValue::binY);
+  pixelated +=
+      Acts::BinUtility(20, -1., 1., Acts::open, Acts::BinningValue::binY);
 
   Segmentizer cl;
 
@@ -92,7 +93,8 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
 
   // The segmentation
   Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::BinningValue::binR);
-  strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open, Acts::BinningValue::binPhi);
+  strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open,
+                             Acts::BinningValue::binPhi);
 
   Segmentizer cl;
 
@@ -181,8 +183,10 @@ BOOST_DATA_TEST_CASE(
         for (const auto yval : yboundaries) {
           csvHelper.writeLine(grid, {bxmin, yval}, {bxmax, yval});
         }
-      } else if (segmentation.binningData()[0].binvalue == Acts::BinningValue::binR &&
-                 segmentation.binningData()[1].binvalue == Acts::BinningValue::binPhi) {
+      } else if (segmentation.binningData()[0].binvalue ==
+                     Acts::BinningValue::binR &&
+                 segmentation.binningData()[1].binvalue ==
+                     Acts::BinningValue::binPhi) {
         double brmin = segmentation.binningData()[0].min;
         double brmax = segmentation.binningData()[0].max;
         double bphimin = segmentation.binningData()[1].min;

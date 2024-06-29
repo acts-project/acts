@@ -84,8 +84,9 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
     const std::vector<Acts::ActsScalar>& phiBoundaries, unsigned int index,
     Acts::Direction dir) {
   // Autodetector stitch value
-  Acts::BinningValue stitchValue =
-      phiBoundaries.size() == 2u ? Acts::BinningValue::binR : Acts::BinningValue::binPhi;
+  Acts::BinningValue stitchValue = phiBoundaries.size() == 2u
+                                       ? Acts::BinningValue::binR
+                                       : Acts::BinningValue::binPhi;
   // Estimate ranges
   auto [minR, maxR] = Acts::min_max(rBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
@@ -120,8 +121,9 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
     const std::vector<Acts::ActsScalar>& phiBoundaries, unsigned int index,
     Acts::Direction dir) {
   // Autodetector stitch value
-  Acts::BinningValue stitchValue =
-      phiBoundaries.size() == 2u ? Acts::BinningValue::binZ : Acts::BinningValue::binPhi;
+  Acts::BinningValue stitchValue = phiBoundaries.size() == 2u
+                                       ? Acts::BinningValue::binZ
+                                       : Acts::BinningValue::binPhi;
   auto [lengthZ, medZ] = Acts::range_medium(zBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
 
@@ -401,8 +403,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
         // As it is r-wrapping, the inner tube is guaranteed
         const Surface& refSurface =
             volumes[volumes.size() - 1u]->portals()[iu + 4u]->surface();
-        pReplacements.push_back(createSectorReplacement(
-            gctx, vCenter, refSurface, rBoundaries, Acts::BinningValue::binR, iu + 4u, idir));
+        pReplacements.push_back(
+            createSectorReplacement(gctx, vCenter, refSurface, rBoundaries,
+                                    Acts::BinningValue::binR, iu + 4u, idir));
       }
     }
   } else {
@@ -605,9 +608,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
               selectedOnly.end()) {
         const Surface& refSurface =
             volumes[0u]->portals()[iu + iSecOffset]->surface();
-        pReplacements.push_back(
-            createSectorReplacement(gctx, combinedCenter, refSurface,
-                                    zBoundaries, Acts::BinningValue::binZ, iu + 4u, idir));
+        pReplacements.push_back(createSectorReplacement(
+            gctx, combinedCenter, refSurface, zBoundaries,
+            Acts::BinningValue::binZ, iu + 4u, idir));
       }
     }
   } else {

@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
 
   std::vector<const Acts::Experimental::DetectorVolume*> volumes = {
       volumeA.get(), volumeB.get(), volumeC.get(), volumeD.get()};
-  Acts::Experimental::BoundVolumesGrid1Navigation bvg(zArray, Acts::BinningValue::binZ,
-                                                      volumes);
+  Acts::Experimental::BoundVolumesGrid1Navigation bvg(
+      zArray, Acts::BinningValue::binZ, volumes);
   // Reset the navigation state
   nState.currentVolume = nullptr;
 

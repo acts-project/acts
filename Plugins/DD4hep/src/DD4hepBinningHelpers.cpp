@@ -57,7 +57,8 @@ Acts::DD4hepBinningHelpers::convertBinning(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
         // Check for closed phi binning
-        if (bVal == BinningValue::binPhi && (edges.back() - edges.front()) > 1.9 * M_PI) {
+        if (bVal == BinningValue::binPhi &&
+            (edges.back() - edges.front()) > 1.9 * M_PI) {
           bType = Acts::AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(

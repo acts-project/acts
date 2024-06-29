@@ -169,7 +169,8 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
     lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
     lsConfig.surfacesProvider = endcapSurfaces;
     lsConfig.binnings = {Acts::Experimental::ProtoBinning(
-        Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 22u, 1u)};
+        Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI,
+        22u, 1u)};
 
     auto layerBuilder =
         std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -230,10 +231,12 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {
-      Acts::Experimental::ProtoBinning{
-          Acts::BinningValue::binZ, Acts::AxisBoundaryType::Bound, -480., 480., 14u, 1u},
-      Acts::Experimental::ProtoBinning(
-          Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 32u, 1u)};
+      Acts::Experimental::ProtoBinning{Acts::BinningValue::binZ,
+                                       Acts::AxisBoundaryType::Bound, -480.,
+                                       480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(Acts::BinningValue::binPhi,
+                                       Acts::AxisBoundaryType::Closed, -M_PI,
+                                       M_PI, 32u, 1u)};
 
   auto barrelBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(

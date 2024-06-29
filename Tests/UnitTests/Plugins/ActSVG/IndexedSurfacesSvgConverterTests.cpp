@@ -190,7 +190,8 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}, {2u, 4u}};
+      irSurfaces{
+          rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}, {2u, 4u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
@@ -211,7 +212,8 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
                                              116., 3., 2., {52, 14});
 
   IndexedSurfacesGenerator<decltype(surfaces), IndexedSurfacesNavigation>
-      icSurfaces{surfaces, {}, {BinningValue::binZ, BinningValue::binPhi}, {1u, 1u}};
+      icSurfaces{
+          surfaces, {}, {BinningValue::binZ, BinningValue::binPhi}, {1u, 1u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {-500., 500}, 28, {-M_PI, M_PI}, 52u};

@@ -56,7 +56,8 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
@@ -132,7 +133,8 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
@@ -208,7 +210,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridZPhi, {BinningValue::binZ, BinningValue::binPhi}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridZPhi, {BinningValue::binZ, BinningValue::binPhi}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_z_phi);
 
   pGrid._reference_r = 80.;
@@ -286,7 +289,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridRPhi, {BinningValue::binR, BinningValue::binPhi}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridRPhi, {BinningValue::binR, BinningValue::binPhi}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_r_phi);
 
   // Labelling the grid tiles
@@ -343,7 +347,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
       "- axis 0 : AxisBoundaryType::Bound, (100., 400, 3), BinningValue::binR",
-      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 4), BinningValue::binPhi"};
+      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 4), "
+      "BinningValue::binPhi"};
 
   auto caption = actsvg::draw::text("caption", {-180, -420}, captionText);
   auto oGrid = actsvg::display::grid("ClosedDiscGridRPhi", pGrid);

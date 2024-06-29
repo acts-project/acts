@@ -51,7 +51,8 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
   // Special checks of BinningValue::binR for hyper plane surfaces
   if (detail::VerticesHelper::onHyperPlane(vtxs)) {
     // Check inclusion of origin (i.e. convex around origin)
-    Vector3 origin = transform * Vector3(0., 0., extent.medium(BinningValue::binZ));
+    Vector3 origin =
+        transform * Vector3(0., 0., extent.medium(BinningValue::binZ));
     for (const auto& face : faces) {
       std::vector<Vector3> tface;
       tface.reserve(face.size());

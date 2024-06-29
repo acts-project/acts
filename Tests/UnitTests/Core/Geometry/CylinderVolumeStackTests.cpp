@@ -1530,7 +1530,8 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidDirection,
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
                      (boost::unit_test::data::make(strategies) *
-                      boost::unit_test::data::make(Acts::BinningValue::binZ, Acts::BinningValue::binR)),
+                      boost::unit_test::data::make(Acts::BinningValue::binZ,
+                                                   Acts::BinningValue::binR)),
                      strategy, direction) {
   BOOST_TEST_CONTEXT("Empty Volume") {
     std::vector<Volume*> volumes;
@@ -1641,7 +1642,8 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumesInvalidInput,
 }
 
 BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
-                     (boost::unit_test::data::make(Acts::BinningValue::binZ, Acts::BinningValue::binR) *
+                     (boost::unit_test::data::make(Acts::BinningValue::binZ,
+                                                   Acts::BinningValue::binR) *
                       boost::unit_test::data::make(strategies)),
                      direction, strategy) {
   auto vol = std::make_shared<Volume>(

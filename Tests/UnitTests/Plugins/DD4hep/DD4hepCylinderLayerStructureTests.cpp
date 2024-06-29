@@ -36,7 +36,7 @@ const char* beampipe_head_xml =
         <detector id="0" name="BeamPipe" type="BarrelDetector">
             <type_flags type="DetType_TRACKER + DetType_BEAMPIPE"/>
             <layers>
-                <layer name="BP" id="0">            
+                <layer name="BP" id="0">
 )"""";
 
 const char* cylinder_layer_head_xml =
@@ -295,7 +295,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructureAutoRange) {
   lsOptions.name = "AutoRangeLayer";
   auto extent = Acts::Extent();
   lsOptions.extent = extent;
-  lsOptions.extentConstraints = {Acts::BinningValue::binZ, Acts::BinningValue::binR};
+  lsOptions.extentConstraints = {Acts::BinningValue::binZ,
+                                 Acts::BinningValue::binR};
   lsOptions.logLevel = Acts::Logging::VERBOSE;
 
   auto [barrelInternalsBuilder, barrelExt] =

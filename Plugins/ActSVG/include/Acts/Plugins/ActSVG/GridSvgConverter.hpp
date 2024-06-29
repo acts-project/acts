@@ -89,21 +89,26 @@ ProtoGrid convert(const grid_type& grid,
     // Assign
     edges0 = axes[0]->getBinEdges();
     edges1 = axes[1]->getBinEdges();
-    if (bValues[0] == BinningValue::binPhi && bValues[1] == BinningValue::binZ) {
+    if (bValues[0] == BinningValue::binPhi &&
+        bValues[1] == BinningValue::binZ) {
       //  swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (bValues[0] == BinningValue::binPhi && bValues[1] == BinningValue::binR) {
+    } else if (bValues[0] == BinningValue::binPhi &&
+               bValues[1] == BinningValue::binR) {
       // swap needed
       std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (bValues[0] == BinningValue::binZ && bValues[1] == BinningValue::binPhi) {
+    } else if (bValues[0] == BinningValue::binZ &&
+               bValues[1] == BinningValue::binPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (bValues[0] == BinningValue::binR && bValues[1] == BinningValue::binPhi) {
+    } else if (bValues[0] == BinningValue::binR &&
+               bValues[1] == BinningValue::binPhi) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (bValues[0] == BinningValue::binX && bValues[1] == BinningValue::binY) {
+    } else if (bValues[0] == BinningValue::binX &&
+               bValues[1] == BinningValue::binY) {
       // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_x_y;
     }

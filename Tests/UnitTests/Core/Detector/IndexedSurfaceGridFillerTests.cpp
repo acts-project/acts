@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {BinningValue::binX, BinningValue::binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {BinningValue::binX, BinningValue::binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -199,8 +199,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {BinningValue::binX, BinningValue::binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {BinningValue::binX, BinningValue::binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);

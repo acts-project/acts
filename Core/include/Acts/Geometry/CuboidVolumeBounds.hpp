@@ -124,7 +124,8 @@ class CuboidVolumeBounds : public VolumeBounds {
   ///
   /// @return vector of canonical binning values
   std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY, Acts::BinningValue::binZ};
+    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
+            Acts::BinningValue::binZ};
   };
 
   /// Binning borders in ActsScalar

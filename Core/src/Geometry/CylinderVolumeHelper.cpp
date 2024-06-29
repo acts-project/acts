@@ -998,7 +998,8 @@ std::shared_ptr<const Acts::Layer> Acts::CylinderVolumeHelper::createDiscLayer(
                                                            << " bins in R. ");
   } else {
     // also binning in phi chosen
-    materialBinUtility += BinUtility(binsPhi, -M_PI, M_PI, closed, BinningValue::binPhi);
+    materialBinUtility +=
+        BinUtility(binsPhi, -M_PI, M_PI, closed, BinningValue::binPhi);
     ACTS_VERBOSE(" -> Preparing the binned material with "
                  << binsPhi << " / " << binsR << " bins in phi / R. ");
   }

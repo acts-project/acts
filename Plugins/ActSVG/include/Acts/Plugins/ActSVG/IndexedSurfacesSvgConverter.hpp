@@ -73,10 +73,11 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // Estimate the radial extension
   // - for 1D phi
   // - for 2D z-phi or phi-z
-  bool estimateR =
-      (index_grid::grid_type::DIM == 1 && indexGrid.casts[0u] == BinningValue::binPhi) ||
-      (index_grid::grid_type::DIM == 2 &&
-       (indexGrid.casts[0u] == BinningValue::binPhi || indexGrid.casts[1u] == BinningValue::binPhi));
+  bool estimateR = (index_grid::grid_type::DIM == 1 &&
+                    indexGrid.casts[0u] == BinningValue::binPhi) ||
+                   (index_grid::grid_type::DIM == 2 &&
+                    (indexGrid.casts[0u] == BinningValue::binPhi ||
+                     indexGrid.casts[1u] == BinningValue::binPhi));
 
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options

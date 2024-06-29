@@ -180,7 +180,8 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
       {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 12)}};
+       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI,
+                    M_PI, 12)}};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;

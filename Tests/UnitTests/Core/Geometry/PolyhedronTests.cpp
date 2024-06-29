@@ -90,9 +90,12 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
   CHECK_CLOSE_ABS(rExtent.min(BinningValue::binZ), 0., 1e-6);
   CHECK_CLOSE_ABS(rExtent.max(BinningValue::binZ), 0., 1e-6);
   CHECK_CLOSE_ABS(rExtent.min(BinningValue::binR), 1., 1e-6);
-  CHECK_CLOSE_ABS(rExtent.max(BinningValue::binR), VectorHelpers::perp(rvertices[0]), 1e-6);
-  CHECK_CLOSE_ABS(rExtent.min(BinningValue::binPhi), VectorHelpers::phi(rvertices[3]), 1e-6);
-  CHECK_CLOSE_ABS(rExtent.max(BinningValue::binPhi), VectorHelpers::phi(rvertices[2]), 1e-6);
+  CHECK_CLOSE_ABS(rExtent.max(BinningValue::binR),
+                  VectorHelpers::perp(rvertices[0]), 1e-6);
+  CHECK_CLOSE_ABS(rExtent.min(BinningValue::binPhi),
+                  VectorHelpers::phi(rvertices[3]), 1e-6);
+  CHECK_CLOSE_ABS(rExtent.max(BinningValue::binPhi),
+                  VectorHelpers::phi(rvertices[2]), 1e-6);
 
   // Now shift the Extent
   Vector3 shift(-1., 0., 1.);

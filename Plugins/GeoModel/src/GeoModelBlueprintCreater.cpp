@@ -49,7 +49,8 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   // Prepare the KdtSurfaces if configured to do so
   //
   if (!m_cfg.detectorSurfaces.empty()) {
-    std::array<BinningValue, 3u> kdtBinning = {BinningValue::binX, BinningValue::binY, BinningValue::binZ};
+    std::array<BinningValue, 3u> kdtBinning = {
+        BinningValue::binX, BinningValue::binY, BinningValue::binZ};
     if (m_cfg.kdtBinning.empty()) {
       throw std::invalid_argument(
           "GeoModelBlueprintCreater: At least one binning value for KDTree "
@@ -412,7 +413,8 @@ Acts::GeoModelBlueprintCreater::parseBounds(
   if (boundsType == VolumeBounds::BoundsType::eCylinder) {
     // Create the translation & bound values
     translation = Acts::Vector3(0., 0., extent.medium(BinningValue::binZ));
-    boundValues = {extent.min(BinningValue::binR), extent.max(BinningValue::binR),
+    boundValues = {extent.min(BinningValue::binR),
+                   extent.max(BinningValue::binR),
                    0.5 * extent.interval(BinningValue::binZ)};
   } else {
     throw std::invalid_argument(

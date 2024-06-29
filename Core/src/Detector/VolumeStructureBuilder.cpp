@@ -72,7 +72,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cuboid: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(BinningValue::binX) && vExtent.constrains(BinningValue::binY) &&
+        if (vExtent.constrains(BinningValue::binX) &&
+            vExtent.constrains(BinningValue::binY) &&
             vExtent.constrains(BinningValue::binZ)) {
           eTransform.pretranslate(Vector3(vExtent.medium(BinningValue::binX),
                                           vExtent.medium(BinningValue::binY),
@@ -116,9 +117,12 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       if (boundValues.empty() && m_cfg.extent.has_value()) {
         ACTS_VERBOSE("Cylinder: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
-        if (vExtent.constrains(BinningValue::binR) && vExtent.constrains(BinningValue::binZ)) {
-          eTransform.pretranslate(Vector3(0., 0., vExtent.medium(BinningValue::binZ)));
-          boundValues = {vExtent.min(BinningValue::binR), vExtent.max(BinningValue::binR),
+        if (vExtent.constrains(BinningValue::binR) &&
+            vExtent.constrains(BinningValue::binZ)) {
+          eTransform.pretranslate(
+              Vector3(0., 0., vExtent.medium(BinningValue::binZ)));
+          boundValues = {vExtent.min(BinningValue::binR),
+                         vExtent.max(BinningValue::binR),
                          0.5 * vExtent.interval(BinningValue::binZ)};
           if (vExtent.constrains(BinningValue::binPhi)) {
             boundValues.push_back(0.5 * vExtent.interval(BinningValue::binPhi));

@@ -35,10 +35,12 @@ Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
         "CuboidalContainerBuilder: no sub builders provided.");
   }
   // Check if binning value is correctly chosen
-  if (m_cfg.binning != Acts::BinningValue::binX && m_cfg.binning != Acts::BinningValue::binY &&
+  if (m_cfg.binning != Acts::BinningValue::binX &&
+      m_cfg.binning != Acts::BinningValue::binY &&
       m_cfg.binning != Acts::BinningValue::binZ) {
     throw std::invalid_argument(
-        "CuboidalContainerBuilder: Invalid binning value. Only Acts::BinningValue::binX, "
+        "CuboidalContainerBuilder: Invalid binning value. Only "
+        "Acts::BinningValue::binX, "
         "Acts::BinningValue::binY, Acts::BinningValue::binZ are supported.");
   }
 }
@@ -92,10 +94,12 @@ Acts::Experimental::CuboidalContainerBuilder::CuboidalContainerBuilder(
   }
   m_cfg.binning = bpNode.binning.at(0);
   // Check if binning value is correctly chosen
-  if (m_cfg.binning != Acts::BinningValue::binX && m_cfg.binning != Acts::BinningValue::binY &&
+  if (m_cfg.binning != Acts::BinningValue::binX &&
+      m_cfg.binning != Acts::BinningValue::binY &&
       m_cfg.binning != Acts::BinningValue::binZ) {
     throw std::invalid_argument(
-        "CuboidalContainerBuilder: Invalid binning value. Only Acts::BinningValue::binX, "
+        "CuboidalContainerBuilder: Invalid binning value. Only "
+        "Acts::BinningValue::binX, "
         "Acts::BinningValue::binY, Acts::BinningValue::binZ are supported.");
   }
 

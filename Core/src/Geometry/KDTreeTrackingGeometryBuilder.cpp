@@ -52,7 +52,9 @@ Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
   for (auto& s : m_cfg.surfaces) {
     auto ext = s->polyhedronRepresentation(gctx, 1u).extent();
     surfacesMeasured.push_back(MeasuredSurface{
-        std::array<ActsScalar, 2u>{ext.medium(BinningValue::binZ), ext.medium(BinningValue::binR)}, s});
+        std::array<ActsScalar, 2u>{ext.medium(BinningValue::binZ),
+                                   ext.medium(BinningValue::binR)},
+        s});
   }
 
   // Create the KDTree

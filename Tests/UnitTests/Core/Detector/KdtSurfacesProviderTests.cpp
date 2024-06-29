@@ -99,7 +99,8 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   BOOST_CHECK_EQUAL(pSurfaces.size(), refNumber);
 
   using KDTS = Acts::Experimental::KdtSurfaces<>;
-  auto skdt = std::make_shared<KDTS>(KDTS(tContext, pSurfaces, {BinningValue::binZ, BinningValue::binR}));
+  auto skdt = std::make_shared<KDTS>(
+      KDTS(tContext, pSurfaces, {BinningValue::binZ, BinningValue::binR}));
 
   // query: Negative disc 3, it should yield 22 surfaces
   Acts::Extent regionND3;

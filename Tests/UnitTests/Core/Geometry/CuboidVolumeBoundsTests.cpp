@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binX), hx, s_epsilon);
   CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binY), hy, s_epsilon);
   CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binZ), hz, s_epsilon);
-  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binR), std::sqrt(hx * hx + hy * hy),
-                  s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::BinningValue::binR),
+                  std::sqrt(hx * hx + hy * hy), s_epsilon);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {

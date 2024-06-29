@@ -26,7 +26,11 @@
 namespace Acts {
 
 static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
-    {"x", BinningValue::binX}, {"y", BinningValue::binY}, {"z", BinningValue::binZ}, {"phi", BinningValue::binPhi}, {"r", BinningValue::binR}};
+    {"x", BinningValue::binX},
+    {"y", BinningValue::binY},
+    {"z", BinningValue::binZ},
+    {"phi", BinningValue::binPhi},
+    {"r", BinningValue::binR}};
 
 /// Helper method to convert the string to binning value
 ///

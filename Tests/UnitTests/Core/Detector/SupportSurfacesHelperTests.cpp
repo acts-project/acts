@@ -167,7 +167,8 @@ BOOST_AUTO_TEST_CASE(RectangularSupportCase) {
 
   // place in Z with offset 2_mm
   // Asymmetric clearances in x an y for testing
-  RectangularSupport rsCreator{Acts::BinningValue::binZ, 2., {1., 2.}, {3., 4.}};
+  RectangularSupport rsCreator{
+      Acts::BinningValue::binZ, 2., {1., 2.}, {3., 4.}};
   auto rsComponents = rsCreator(lExtent);
   auto& [rsType, rsValues, rsTransform] = rsComponents;
 
@@ -295,7 +296,8 @@ BOOST_AUTO_TEST_CASE(addRectangularSupportCase) {
 
   // place in Z with offset 2_mm
   // Asymmetric clearances in x an y for testing
-  RectangularSupport rsCreator{Acts::BinningValue::binZ, 2., {1., 2.}, {3., 4.}};
+  RectangularSupport rsCreator{
+      Acts::BinningValue::binZ, 2., {1., 2.}, {3., 4.}};
 
   // Add a single disc as a support surface
   Acts::Experimental::detail::SupportSurfacesHelper::addSupport(

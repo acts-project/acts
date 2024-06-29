@@ -155,7 +155,8 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   // Barrel
   std::vector<Acts::ActsScalar> pixelBarrelBoundaries = {
       pixelIr + 1, pixelOr - 1., detectorHz - 2 * pixelEcHz};
-  std::vector<Acts::BinningValue> pixelBarrelBinning = {Acts::BinningValue::binR};
+  std::vector<Acts::BinningValue> pixelBarrelBinning = {
+      Acts::BinningValue::binR};
 
   auto pixelBarrel = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixelBarrel", Acts::Transform3::Identity(),

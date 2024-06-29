@@ -36,8 +36,9 @@ Acts::detail::GeoModelExentHelper::readBoundsConstaints(
           "least 4 entries (rmin, rmax, zmin, zmax)");
     }
     // Raw database values to extent entries
-    constexpr std::array<BinningValue, 6u> bvCyl = {BinningValue::binR, BinningValue::binR,   BinningValue::binZ,
-                                                    BinningValue::binZ, BinningValue::binPhi, BinningValue::binPhi};
+    constexpr std::array<BinningValue, 6u> bvCyl = {
+        BinningValue::binR, BinningValue::binR,   BinningValue::binZ,
+        BinningValue::binZ, BinningValue::binPhi, BinningValue::binPhi};
 
     for (auto [iv, value] : enumerate(valuesEntry)) {
       if (value == ctype || value[0u] == ctype[0u]) {
@@ -102,8 +103,9 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
           "least 4 entries (rmin, rmax, zmin, zmax)");
     }
     // Raw database values to extent entries
-    constexpr std::array<BinningValue, 6u> bvCyl = {BinningValue::binR, BinningValue::binR,   BinningValue::binZ,
-                                                    BinningValue::binZ, BinningValue::binPhi, BinningValue::binPhi};
+    constexpr std::array<BinningValue, 6u> bvCyl = {
+        BinningValue::binR, BinningValue::binR,   BinningValue::binZ,
+        BinningValue::binZ, BinningValue::binPhi, BinningValue::binPhi};
     for (auto [iv, value] : enumerate(valuesEntry)) {
       // Get the binning value
       BinningValue bValue = bvCyl.at(iv);

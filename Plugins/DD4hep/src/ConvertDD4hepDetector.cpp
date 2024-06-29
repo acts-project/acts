@@ -243,13 +243,17 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
               ACTS_VERBOSE("--> negative");
               cvbConfig.boundaryMaterial[2] = Acts::createProtoMaterial(
                   params, "boundary_material_negative",
-                  {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binR", Acts::open}}, logger);
+                  {{"BinningValue::binPhi", Acts::closed},
+                   {"BinningValue::binR", Acts::open}},
+                  logger);
             }
             if (hasParam("boundary_material_positive", volumeDetElement)) {
               ACTS_VERBOSE("--> positive");
               cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
                   params, "boundary_material_positive",
-                  {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binR", Acts::open}}, logger);
+                  {{"BinningValue::binPhi", Acts::closed},
+                   {"BinningValue::binR", Acts::open}},
+                  logger);
             }
           }
         } else {
@@ -274,13 +278,17 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
               ACTS_VERBOSE("--> negative");
               cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
                   params, "boundary_material_negative",
-                  {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binR", Acts::open}}, logger);
+                  {{"BinningValue::binPhi", Acts::closed},
+                   {"BinningValue::binR", Acts::open}},
+                  logger);
             }
             if (params.contains("boundary_material_positive")) {
               ACTS_VERBOSE("--> positive");
               cvbConfig.boundaryMaterial[5] = Acts::createProtoMaterial(
                   params, "boundary_material_positive",
-                  {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binR", Acts::open}}, logger);
+                  {{"BinningValue::binPhi", Acts::closed},
+                   {"BinningValue::binR", Acts::open}},
+                  logger);
             }
           }
         }
@@ -307,13 +315,17 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
             ACTS_VERBOSE("--> negative");
             cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
                 params, "boundary_material_negative",
-                {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binR", Acts::open}}, logger);
+                {{"BinningValue::binPhi", Acts::closed},
+                 {"BinningValue::binR", Acts::open}},
+                logger);
           }
           if (params.contains("boundary_material_positive")) {
             ACTS_VERBOSE("--> positive");
             cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
                 params, "boundary_material_positive",
-                {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binR", Acts::open}}, logger);
+                {{"BinningValue::binPhi", Acts::closed},
+                 {"BinningValue::binR", Acts::open}},
+                logger);
           }
         }
       } else {
@@ -332,15 +344,19 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         auto& params = getParams(volumeDetElement);
         if (params.contains("boundary_material_inner")) {
           ACTS_VERBOSE("--> inner");
-          cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
-              params, "boundary_material_inner",
-              {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binZ", Acts::open}}, logger);
+          cvbConfig.boundaryMaterial[0] =
+              Acts::createProtoMaterial(params, "boundary_material_inner",
+                                        {{"BinningValue::binPhi", Acts::closed},
+                                         {"BinningValue::binZ", Acts::open}},
+                                        logger);
         }
         if (params.contains("boundary_material_outer")) {
           ACTS_VERBOSE("--> outer");
-          cvbConfig.boundaryMaterial[1] = Acts::createProtoMaterial(
-              params, "boundary_material_outer",
-              {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binZ", Acts::open}}, logger);
+          cvbConfig.boundaryMaterial[1] =
+              Acts::createProtoMaterial(params, "boundary_material_outer",
+                                        {{"BinningValue::binPhi", Acts::closed},
+                                         {"BinningValue::binZ", Acts::open}},
+                                        logger);
         }
       }
     }
@@ -421,7 +437,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       ACTS_VERBOSE("--> adding layer material at 'representing'");
       plMaterial = Acts::createProtoMaterial(
           getParams(subDetector), "layer_material_representing",
-          {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binZ", Acts::open}}, logger);
+          {{"BinningValue::binPhi", Acts::closed},
+           {"BinningValue::binZ", Acts::open}},
+          logger);
     }
 
     // configure the passive layer builder
@@ -451,15 +469,19 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       auto& params = getParams(subDetector);
       if (hasParam("boundary_material_inner", subDetector)) {
         ACTS_VERBOSE("--> inner");
-        cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
-            params, "boundary_material_inner",
-            {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binZ", Acts::open}}, logger);
+        cvbConfig.boundaryMaterial[0] =
+            Acts::createProtoMaterial(params, "boundary_material_inner",
+                                      {{"BinningValue::binPhi", Acts::closed},
+                                       {"BinningValue::binZ", Acts::open}},
+                                      logger);
       }
       if (hasParam("boundary_material_outer", subDetector)) {
         ACTS_VERBOSE("--> outer");
-        cvbConfig.boundaryMaterial[1] = Acts::createProtoMaterial(
-            params, "boundary_material_outer",
-            {{"BinningValue::binPhi", Acts::closed}, {"BinningValue::binZ", Acts::open}}, logger);
+        cvbConfig.boundaryMaterial[1] =
+            Acts::createProtoMaterial(params, "boundary_material_outer",
+                                      {{"BinningValue::binPhi", Acts::closed},
+                                       {"BinningValue::binZ", Acts::open}},
+                                      logger);
       }
     }
 

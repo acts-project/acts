@@ -107,7 +107,9 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   beamPipe.internal = Acts::ProtoVolume::InternalStructure{
       Acts::Surface::SurfaceType::Cylinder};
   beamPipeContainer.container = Acts::ProtoVolume::ContainerStructure{
-      {beamPipe}, {Acts::BinningData(Acts::open, Acts::BinningValue::binR, {0., 1.})}, true};
+      {beamPipe},
+      {Acts::BinningData(Acts::open, Acts::BinningValue::binR, {0., 1.})},
+      true};
 
   // Pixel section
   Acts::ProtoVolume pixelContainer;
@@ -197,7 +199,8 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   detectorContainer.extent.set(Acts::BinningValue::binR, 0., 200);
   detectorContainer.container = Acts::ProtoVolume::ContainerStructure{
       {beamPipeContainer, pixelContainer},
-      {Acts::BinningData(Acts::open, Acts::BinningValue::binR, {0., 17.5, 200.})}};
+      {Acts::BinningData(Acts::open, Acts::BinningValue::binR,
+                         {0., 17.5, 200.})}};
 
   Acts::ProtoDetector detector;
   detector.name = "odd";
