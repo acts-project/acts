@@ -66,11 +66,14 @@
 
 // Debug level agnostic implementation of the ACTS_XYZ logging macros
 #define ACTS_LOG(level, x)                                                     \
-  if (logger().doPrint(level)) {                                               \
-    std::ostringstream os;                                                     \
-    os << x;                                                                   \
-    logger().log(level, os.str());                                             \
-  }
+  do {                                                                         \
+    if (logger().doPrint(level)) {                                             \
+      std::ostringstream os;                                                   \
+      os << x;                                                                 \
+      logger().log(level, os.str());                                           \
+    }                                                                          \
+  }                                                                            \
+  while(0)
 
 /// @brief macro for verbose debug output
 /// @ingroup Logging
@@ -239,13 +242,16 @@ class ThresholdFailure : public std::runtime_error {
 /// lifetime.
 class ScopedFailureThreshold {
  public:
-  ScopedFailureThreshold(Level level) : m_previousLevel(getFailureThreshold()) {
-    setFailureThreshold(level);
-  }
-  ~ScopedFailureThreshold() { setFailureThreshold(m_previousLevel); }
+  explicit ScopedFailureThreshold(Level level) { setFailureThreshold(level); }
+  ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
+  ScopedFailureThreshold(ScopedFailureThreshold&&) = delete;
+  ScopedFailureThreshold& operator=(ScopedFailureThreshold&&) = delete;
+
+  ~ScopedFailureThreshold() noexcept;
 
  private:
-  Level m_previousLevel;
+  Level m_previousLevel{getFailureThreshold()};
 };
 
 /// @brief abstract base class for printing debug output
