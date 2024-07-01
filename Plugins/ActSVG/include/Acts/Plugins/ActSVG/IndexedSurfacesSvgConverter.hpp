@@ -92,7 +92,8 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
     if (estimateR) {
       auto sExtent = s->polyhedronRepresentation(gctx, 4u).extent();
       if constexpr (index_grid::grid_type::DIM == 2u) {
-        pSurface._radii[0u] = sExtent.medium(BinningValue::binR);
+        pSurface._radii[0u] =
+            static_cast<float>(sExtent.medium(BinningValue::binR));
       }
       constrain.extend(sExtent, {BinningValue::binR});
     }
@@ -165,7 +166,8 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
                    std::to_string(binCenter1) + ")";
         pGrid._bin_ids.push_back(binInfo);
         if (estimateR) {
-          pGrid._reference_r = constrain.medium(BinningValue::binR);
+          pGrid._reference_r =
+              static_cast<float>(constrain.medium(BinningValue::binR));
         }
       }
     }

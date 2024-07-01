@@ -312,8 +312,10 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   std::vector<unsigned int> sidePortals = {};
   for (auto sVals : possibleValues) {
     if (sVals != bValue) {
-      sidePortals.push_back(portalSets[toUnderlying(sVals)][0]);
-      sidePortals.push_back(portalSets[toUnderlying(sVals)][1]);
+      sidePortals.push_back(
+          static_cast<unsigned int>(portalSets[toUnderlying(sVals)][0]));
+      sidePortals.push_back(
+          static_cast<unsigned int>(portalSets[toUnderlying(sVals)][1]));
     }
   }
 
