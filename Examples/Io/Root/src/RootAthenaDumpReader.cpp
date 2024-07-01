@@ -14,9 +14,12 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
+
+#include <cmath>
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
@@ -39,6 +42,8 @@ ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputClusters.initialize(m_cfg.outputClusters);
+  m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputMeasParticleMap.initialize(m_cfg.outputMeasParticlesMap);
 
   // Set the branches
 
@@ -215,22 +220,22 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   m_inputchain->GetEntry(entry);
 
   // Loop on clusters (measurements)
-  ACTS_DEBUG("Found " << nSP << " space points");
   ACTS_DEBUG("Found " << nCL << " clusters / measurements");
 
-  ClusterContainer clusters;
-  clusters.resize(nCL);
+  ClusterContainer clusters(nCL);
+  MeasurementContainer measurements;
+  measurements.reserve(nCL);
+
+  IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   for (int im = 0; im < nCL; im++) {
-    int bec = CLbarrel_endcap[im];
-    int lydisk = CLlayer_disk[im];
-    int etamod = CLeta_module[im];
-    int phimod = CLphi_module[im];
-    int side = CLside[im];
-    // ULong64_t moduleID = CLmoduleID     [im];
+    if(!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
+      ACTS_ERROR("hardware is neither 'PIXEL' or 'STRIP'");
+      return ActsExamples::ProcessCode::ABORT;
+    }
+    ACTS_VERBOSE("Cluster " << im << ": " << CLhardware->at(im));
 
-    ACTS_VERBOSE(bec << " " << lydisk << " " << etamod << " " << phimod << " "
-                     << side << " ");
+    auto type = (CLhardware->at(im) == "PIXEL") ? ePixel : eStrip;
 
     // Make cluster
     // TODO refactor ActsExamples::Cluster class so it is not so tedious
@@ -267,12 +272,43 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
     cluster.globalPosition = { CLx[im], CLy[im], CLz[im] };
 
-    ACTS_VERBOSE("Cluster " << im << ": " << cluster.channels.size()
+    ACTS_VERBOSE("CL shape: " << cluster.channels.size()
                             << "cells, dimensions: " << cluster.sizeLoc0 << ", "
                             << cluster.sizeLoc1);
 
     clusters[im] = cluster;
+
+    // Measurement creation
+    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", " << CLloc_direction2[im] << ", " << CLloc_direction3[im]);
+    const auto &locCov = CLlocal_cov->at(im);
+
+    DigitizedParameters digiPars;
+    if(type == ePixel) {
+      digiPars.indices = { Acts::eBoundLoc0, Acts::eBoundLoc1 };
+      digiPars.values = { CLloc_direction1[im], CLloc_direction2[im] };
+      assert(locCov.size() == 4);
+      digiPars.variances = { locCov[0], locCov[3] };
+    } else {
+      // TODO is this correct ???
+      digiPars.values = { CLloc_direction2[im] };
+      digiPars.indices = { Acts::eBoundLoc1 };
+      assert(locCov.size() == 1);
+      digiPars.variances = { locCov[0] };
+    }
+
+    IndexSourceLink sl(Acts::GeometryIdentifier{CLmoduleID[im]}, im);
+
+    measurements.push_back(createMeasurement(digiPars, sl));
+
+    // Measurement particles map
+    for(const auto barcode : CLparticleLink_barcode->at(im)) {
+      SimBarcode bc = barcode;
+      measPartMap.insert({im, bc});
+    }
   }
+
+
+  ACTS_DEBUG("Found " << nSP << " space points");
 
   // Prepare pixel space points
   SimSpacePointContainer pixelSpacePoints;
@@ -325,14 +361,33 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     spacePoints.push_back(sp);
   }
 
+  // Loop on particles
+  SimParticleContainer particles;
+
+  for(int ip = 0; ip < nPartEVT; ++ip) {
+    SimBarcode bc = Part_barcode[ip];
+    SimParticle particle(bc, static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+
+    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
+    particle.setAbsoluteMomentum(p.norm());
+    particle.setDirection(p.normalized());
+
+    auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
+    particle.setPosition4(x);
+
+    particles.insert(particle);
+  }
+
+  ACTS_DEBUG("Created " << particles.size() << " particles");
+  ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
-
-  ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
   m_outputSpacePoints(ctx, std::move(spacePoints));
   m_outputClusters(ctx, std::move(clusters));
+  m_outputParticles(ctx, std::move(particles));
+  m_outputMeasParticleMap(ctx, std::move(measPartMap));
 
   return ProcessCode::SUCCESS;
 }

@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <ActsExamples/EventData/Cluster.hpp>
+#include <ActsExamples/EventData/SimParticle.hpp>
 
 #include <map>
 #include <memory>
@@ -44,15 +45,19 @@ class RootAthenaDumpReader : public IReader {
     // Name of inputfile
     std::string inputfile;
     // name of the output measurements
-    std::string outputMeasurements = "ath_meas";
+    std::string outputMeasurements = "athena_measurements";
     // name of the output pixel space points
-    std::string outputPixelSpacePoints = "outputPixelSpacepoints";
+    std::string outputPixelSpacePoints = "athena_pixel_spacepoints";
     // name of the output strip space points
-    std::string outputStripSpacePoints = "outputStripSpacepoints";
+    std::string outputStripSpacePoints = "athena_strip_spacepoints";
     // name of the output space points
-    std::string outputSpacePoints = "output_spacepoints";
+    std::string outputSpacePoints = "athena_spacepoints";
     // name of the output clusters
-    std::string outputClusters = "output_clusters";
+    std::string outputClusters = "athena_clusters";
+    // name of the output particles
+    std::string outputParticles = "athena_particles";
+    // name of the simhit map
+    std::string outputMeasParticlesMap = "athena_meas_parts_map";
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -92,6 +97,9 @@ class RootAthenaDumpReader : public IReader {
   WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
       this, "output_spacepoints"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "output_clusters"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this, "output_particles"};
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{this, "output_measurements"};
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{this, "output_meas_part_map"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::mutex m_read_mutex;
