@@ -92,7 +92,8 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::RootAthenaDumpReader, mex, "RootAthenaDumpReader", treename,
       inputfile, outputMeasurements, outputPixelSpacePoints,
-      outputStripSpacePoints, outputSpacePoints, outputClusters);
+      outputStripSpacePoints, outputSpacePoints, outputClusters,
+      outputMeasurementParticlesMap, outputParticles);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,

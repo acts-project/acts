@@ -57,7 +57,7 @@ class RootAthenaDumpReader : public IReader {
     // name of the output particles
     std::string outputParticles = "athena_particles";
     // name of the simhit map
-    std::string outputMeasParticlesMap = "athena_meas_parts_map";
+    std::string outputMeasurementParticlesMap = "athena_meas_parts_map";
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
