@@ -1893,17 +1893,16 @@ def addVertexFitting(
         the output folder for the Root output, None triggers no output
     seeder : enum member
         determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
-        acts.seeder.AdaptiveGridSeeder
+        acts.seeder.AdaptiveGridSeeder or acts.seeder.SparseGridSeeder
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
     useTime : bool, False
         determines whether time information is used in vertex seeder, finder,
-        and fitter
-        only implemented for the AMVF and the AdaptiveGridSeeder
+        and fitter only implemented for the AMVF and the SparseGridSeeder
     spatialBinExtent : float, None
-        spatial bin extent for the AdaptiveGridSeeder
+        spatial bin extent for the AdaptiveGridSeeder and SparseGridSeeder
     temporalBinExtent : float, None
-        temporal bin extent for the AdaptiveGridSeeder
+        temporal bin extent for the SparseGridSeeder
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """

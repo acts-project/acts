@@ -8,16 +8,17 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
+#include "Acts/Vertexing/DummyVertexFitter.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
+#include "Acts/Vertexing/SparseGridTrackDensity.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include <map>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -30,29 +31,17 @@ namespace Acts {
 /// with the highest track density is returned as a vertex candidate.
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
-///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int trkGridSize = 15>
-class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
+class SparseGridDensityVertexFinder final : public IVertexFinder {
  public:
-  // Assert odd trkGridSize
-  static_assert(trkGridSize % 2);
-
-  using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
-  using TrackGridVector = typename GridDensity::TrackGridVector;
+  using DensityMap = SparseGridTrackDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
-    ///@param binSize Bin size of grid in mm
-    Config(float binSize = 0.1)
-        : gridDensity(typename GridDensity::Config(binSize)) {}
     ///@param gDensity The grid density
-    Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
+    Config(const SparseGridTrackDensity& gDensity) : gridDensity(gDensity) {}
 
     // The grid density object
-    GridDensity gridDensity;
+    SparseGridTrackDensity gridDensity;
 
     // Cache the main grid and the density contributions (trackGrid and z-bin)
     // for every single track.
@@ -79,20 +68,14 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // The main density vector
-    std::vector<float> mainGridDensity;
-    // Vector holding corresponding z bin values
-    std::vector<int> mainGridZValues;
+    // Map from the z bin values to the corresponding track density
+    DensityMap mainDensityMap;
 
-    // Map to store z-bin and track grid (i.e. the density contribution of
-    // a single track to the main grid) for every single track
-    std::map<InputTrack, std::pair<int, TrackGridVector>> binAndTrackGridMap;
-
-    // Map to store bool if track has passed track selection or not
-    std::map<InputTrack, bool> trackSelectionMap;
+    // Map from input track to corresponding track density map
+    std::unordered_map<InputTrack, DensityMap> trackDensities;
 
     // Store tracks that have been removed from track collection. These
-    // track will be removed from the main grid
+    // tracks will be removed from the main grid
     std::vector<InputTrack> tracksToRemove;
 
     bool isInitialized = false;
@@ -102,7 +85,7 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   ///
   /// @param trackVector Input track collection
   /// @param vertexingOptions Vertexing options
-  /// @param state The state object to cache the density grid
+  /// @param anyState The state object to cache the density grid
   /// and density contributions of each track, to be used
   /// if cacheGridStateForTrackRemoval == true
   ///
@@ -128,7 +111,7 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  explicit AdaptiveGridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
+  explicit SparseGridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   /// @brief Checks if a track passes the selection criteria for seeding
@@ -143,5 +126,3 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
 };
 
 }  // namespace Acts
-
-#include "AdaptiveGridDensityVertexFinder.ipp"

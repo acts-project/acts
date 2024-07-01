@@ -15,11 +15,14 @@
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/SparseGridDensityVertexFinder.hpp"
+#include "Acts/Vertexing/SparseGridTrackDensity.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -79,8 +82,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
-    -> Acts::AdaptiveMultiVertexFinder {
+Acts::AdaptiveMultiVertexFinder
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const {
   std::shared_ptr<const Acts::IVertexFinder> seedFinder;
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
     using Seeder = Acts::TrackDensityVertexFinder;
@@ -89,17 +92,32 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
         .connect<&Acts::InputTrack::extractParameters>();
     seedFinder = std::make_shared<Seeder>(Seeder::Config{trkDensityCfg});
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
+    constexpr int trkGridSize = 15;
+
     // Set up track density used during vertex seeding
-    Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
+    using Density = Acts::AdaptiveGridTrackDensity<trkGridSize>;
+    Density::Config trkDensityCfg;
+    trkDensityCfg.binSize = m_cfg.spatialBinExtent;
+    Density trkDensity(trkDensityCfg);
+
+    // Set up vertex seeder and finder
+    using Seeder = Acts::AdaptiveGridDensityVertexFinder<trkGridSize>;
+    Seeder::Config seederConfig(trkDensity);
+    seederConfig.extractParameters
+        .connect<&Acts::InputTrack::extractParameters>();
+    seedFinder = std::make_shared<Seeder>(seederConfig);
+  } else if (m_cfg.seedFinder == SeedFinder::SparseGridSeeder) {
+    // Set up track density used during vertex seeding
+    Acts::SparseGridTrackDensity::Config trkDensityCfg;
     // Bin extent in z-direction
     trkDensityCfg.spatialBinExtent = m_cfg.spatialBinExtent;
     // Bin extent in t-direction
     trkDensityCfg.temporalBinExtent = m_cfg.temporalBinExtent;
     trkDensityCfg.useTime = m_cfg.useTime;
-    Acts::AdaptiveGridTrackDensity trkDensity(trkDensityCfg);
+    Acts::SparseGridTrackDensity trkDensity(trkDensityCfg);
 
     // Set up vertex seeder and finder
-    using Seeder = Acts::AdaptiveGridDensityVertexFinder;
+    using Seeder = Acts::SparseGridDensityVertexFinder;
     Seeder::Config seederConfig(trkDensity);
     seederConfig.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();

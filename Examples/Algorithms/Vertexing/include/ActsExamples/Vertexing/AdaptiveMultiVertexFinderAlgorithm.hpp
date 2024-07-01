@@ -23,6 +23,7 @@
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/SparseGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
@@ -58,7 +59,11 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   using VertexCollection = std::vector<Acts::Vertex>;
 
-  enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
+  enum class SeedFinder {
+    GaussianSeeder,
+    AdaptiveGridSeeder,
+    SparseGridSeeder
+  };
 
   struct Config {
     /// Input track parameters collection
@@ -76,8 +81,9 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     /// Use time information in vertex seeder, finder, and fitter
     bool useTime = false;
     /// Bin extent in z-direction which is only used with `AdaptiveGridSeeder`
+    /// and `SparseGridSeeder`
     double spatialBinExtent = 15. * Acts::UnitConstants::um;
-    /// Bin extent in t-direction which is only used with `AdaptiveGridSeeder`
+    /// Bin extent in t-direction which is only used with `SparseGridSeeder`
     /// and `useTime`
     double temporalBinExtent = 19. * Acts::UnitConstants::mm;
   };

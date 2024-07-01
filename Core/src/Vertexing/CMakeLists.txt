@@ -1,13 +1,13 @@
 target_sources(
   ActsCore
   PRIVATE
-    AdaptiveGridTrackDensity.cpp
+    SparseGridTrackDensity.cpp
+    SparseGridDensityVertexFinder.cpp
     KalmanVertexUpdater.cpp
     FsmwMode1dFinder.cpp
     VertexingError.cpp
     IterativeVertexFinder.cpp
     AdaptiveMultiVertexFitter.cpp
-    AdaptiveGridDensityVertexFinder.cpp
     ZScanVertexFinder.cpp
     HelicalTrackLinearizer.cpp
     FullBilloirVertexFitter.cpp
