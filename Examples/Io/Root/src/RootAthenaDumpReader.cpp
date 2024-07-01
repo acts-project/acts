@@ -44,6 +44,7 @@ ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputClusters.initialize(m_cfg.outputClusters);
   m_outputParticles.initialize(m_cfg.outputParticles);
   m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
 
   // Set the branches
 
