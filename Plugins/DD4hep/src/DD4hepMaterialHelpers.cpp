@@ -105,8 +105,7 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), cylinderLayer,
-                          {{"BinningValue::binPhi", Acts::closed},
-                           {"BinningValue::binZ", Acts::open}},
+                          {{"binPhi", Acts::closed}, {"binZ", Acts::open}},
                           logger);
   }
 }
@@ -123,8 +122,7 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), discLayer,
-                          {{"BinningValue::binPhi", Acts::closed},
-                           {"BinningValue::binR", Acts::open}},
+                          {{"binPhi", Acts::closed}, {"binR", Acts::open}},
                           logger);
   }
 }

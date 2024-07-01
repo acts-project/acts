@@ -346,9 +346,9 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Bound, (100., 400, 3), BinningValue::binR",
+      "- axis 0 : AxisBoundaryType::Bound, (100., 400, 3), binR",
       "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 4), "
-      "BinningValue::binPhi"};
+      "binPhi"};
 
   auto caption = actsvg::draw::text("caption", {-180, -420}, captionText);
   auto oGrid = actsvg::display::grid("ClosedDiscGridRPhi", pGrid);
