@@ -143,7 +143,7 @@ bool Acts::Extent::contains(const Extent& rhs,
   };
 
   // Check all
-  if (bValue.has_value()) {
+  if (!bValue.has_value()) {
     for (const auto& bv : allBinningValues()) {
       if (!checkContainment(bv)) {
         return false;
@@ -166,7 +166,7 @@ bool Acts::Extent::intersects(const Extent& rhs,
   };
 
   // Check all
-  if (bValue.has_value()) {
+  if (!bValue.has_value()) {
     for (const auto& bv : allBinningValues()) {
       if (checkIntersect(bv)) {
         return true;
