@@ -42,7 +42,7 @@ class PrototracksToTracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  WriteDataHandle<TrackContainer> m_outputTracks{this,
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this,
                                                            "OutputTracks"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                             "InputMeasurements"};

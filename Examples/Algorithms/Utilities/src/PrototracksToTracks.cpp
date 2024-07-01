@@ -54,7 +54,13 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     track.tipIndex() = tip;
   }
 
-  m_outputTracks(ctx, std::move(tracks));
+  ConstTrackContainer constTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*mtj))};
+
+  m_outputTracks(ctx, std::move(constTracks));
 
   return ProcessCode::SUCCESS;
 }
