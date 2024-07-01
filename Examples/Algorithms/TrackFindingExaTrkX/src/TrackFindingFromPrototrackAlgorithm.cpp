@@ -91,9 +91,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateBackendContainer>>(&kfUpdater);
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.measurementSelector.connect<&Acts::MeasurementSelector::select<
-      typename TrackContainer::TrackStateBackendContainer>>(&measSel);
+      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
 
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;

@@ -79,7 +79,7 @@ static const auto pion = Acts::ParticleHypothesis::pion();
 using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
                                             Acts::VectorMultiTrajectory,
                                             Acts::detail::ValueHolder>;
-using TrackStateBackendContainer =
+using TrackStateContainerBackend =
     typename TrackContainer::TrackStateContainerBackend;
 
 struct Detector {
@@ -203,11 +203,11 @@ struct Fixture {
       const {
     Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
     extensions.calibrator.template connect<
-        &testSourceLinkCalibrator<TrackStateBackendContainer>>();
+        &testSourceLinkCalibrator<TrackStateContainerBackend>>();
     extensions.updater.template connect<
-        &KalmanUpdater::operator()<TrackStateBackendContainer>>(&kfUpdater);
+        &KalmanUpdater::operator()<TrackStateContainerBackend>>(&kfUpdater);
     extensions.measurementSelector.template connect<
-        &Acts::MeasurementSelector::select<TrackStateBackendContainer>>(
+        &Acts::MeasurementSelector::select<TrackStateContainerBackend>>(
         &measSel);
     return extensions;
   }
