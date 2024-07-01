@@ -18,13 +18,43 @@
 
 namespace Acts {
 
-/// Captures different types of boundary tolerances
-/// - Infinite: infinite tolerance i.e. no boundary check
-/// - None: no tolerance i.e. exact boundary check
-/// - AbsoluteBound: absolute tolerance in bound coordinates
-/// - AbsoluteCartesian: absolute tolerance in Cartesian coordinates
-/// - AbsoluteEuclidean: absolute tolerance in Euclidean distance
-/// - Chi2Bound: chi2 tolerance in bound coordinates
+/// @brief Variant-like type to capture different types of boundary tolerances
+///
+/// Since our track hypothesis comes with uncertainties, we sometimes need to
+/// check if the track is not just within the boundary of the surface but also
+/// within a certain tolerance. This class captures different parameterizations
+/// of such tolerances. The surface class will then use these tolerances to
+/// check if a ray is within the boundary+tolerance of the surface.
+///
+/// Different types of boundary tolerances implemented:
+/// - Infinite: Infinite tolerance i.e. no boundary check will be performed.
+/// - None: No tolerance i.e. exact boundary check will be performed.
+/// - AbsoluteBound: Absolute tolerance in bound coordinates.
+///   The tolerance is defined as a pair of absolute values for the bound
+///   coordinates. Only if both coordinates are within the tolerance, the
+///   boundary check is considered as passed.
+/// - AbsoluteCartesian: Absolute tolerance in Cartesian coordinates.
+///   The tolerance is defined as a pair of absolute values for the Cartesian
+///   coordinates. The transformation to Cartesian coordinates can be done via
+///   the Jacobian for small distances. Only if both coordinates are within
+///   the tolerance, the boundary check is considered as passed.
+/// - AbsoluteEuclidean: Absolute tolerance in Euclidean distance.
+///   The tolerance is defined as a single absolute value for the Euclidean
+///   distance. The Euclidean distance can be calculated via the local bound
+///   Jacobian and the bound coordinate residual. If the distance is within
+///   the tolerance, the boundary check is considered as passed.
+/// - Chi2Bound: Chi2 tolerance in bound coordinates.
+///   The tolerance is defined as a maximum chi2 value and a weight matrix,
+///   which is the inverse of the bound covariance matrix. The chi2 value is
+///   calculated from the bound coordinates residual and the weight matrix.
+///   If the chi2 value is below the maximum chi2 value, the boundary check
+///   is considered as passed.
+///
+/// The bound coordinates residual is defined as the difference between the
+/// point checked and the closest point on the boundary. The Jacobian is the
+/// derivative of the bound coordinates with respect to the Cartesian
+/// coordinates.
+///
 class BoundaryTolerance {
  public:
   /// Infinite tolerance i.e. no boundary check
