@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace {
