@@ -38,7 +38,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
                                       << binsPhi * binsZ << " bins.");
 
@@ -131,7 +131,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
@@ -182,7 +182,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   std::size_t bins0 = axes.at(0)->getNBins();
   std::size_t bins1 = axes.at(1)->getNBins();
 
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
   sl->fill(gctx, surfacesRaw);
@@ -289,7 +289,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   std::size_t bins0 = axes.at(0)->getNBins();
   std::size_t bins1 = axes.at(1)->getNBins();
 
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
@@ -314,7 +314,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
                            << " bins.");
   Transform3 ftransform = transform;

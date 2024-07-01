@@ -160,7 +160,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
-    return neighborHoodIndices(idx, std::make_pair(-size, size));
+    return neighborHoodIndices(idx,
+                               std::make_pair(-static_cast<int>(size), size));
   }
 
   /// @brief Get #size bins which neighbor the one given
@@ -418,7 +419,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(std::vector<ActsScalar> binEdges) : m_binEdges(std::move(binEdges)) {}
+  explicit Axis(std::vector<ActsScalar> binEdges)
+      : m_binEdges(std::move(binEdges)) {}
 
   /// @param [in] typeTag boundary type tag
   /// @param [in] binEdges vector of bin edges
@@ -461,7 +463,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::size_t size = 1) const {
-    return neighborHoodIndices(idx, std::make_pair(-size, size));
+    return neighborHoodIndices(idx,
+                               std::make_pair(-static_cast<int>(size), size));
   }
 
   /// @brief Get #size bins which neighbor the one given

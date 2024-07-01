@@ -210,7 +210,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
   // collect those that should be assigned to all bins
   std::vector<std::size_t> assignToAll = {};
   if (!m_cfg.supports.empty()) {
-    ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
+    ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.");
     // The surface candidate updator
     for (const auto& support : m_cfg.supports) {
       // Check if the supportsurface has already been built
