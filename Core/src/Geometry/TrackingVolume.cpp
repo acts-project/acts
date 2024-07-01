@@ -203,8 +203,8 @@ void TrackingVolume::glueTrackingVolumes(
       neighbors->arrayObjects().at(0);
   // get the distance
   Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
-  Vector3 distance = Vector3(
-      nRefVolume->binningPosition(gctx, BinningValue::binR) - bPosition);
+  Vector3 distance(nRefVolume->binningPosition(gctx, BinningValue::binR) -
+                   bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
