@@ -103,7 +103,7 @@ struct ExtentEnvelope {
 class Extent {
  public:
   /// Constructor with (optional) @param envelope
-  Extent(const ExtentEnvelope& envelope = ExtentEnvelope::Zero());
+  explicit Extent(const ExtentEnvelope& envelope = ExtentEnvelope::Zero());
 
   /// Define a comparison operator
   bool operator==(const Extent& e) const;

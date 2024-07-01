@@ -11,37 +11,37 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace {
-const std::vector<std::string>& binningValueNames() {
-  static const std::vector<std::string> _binningValueNames = {
-      "binX",    "binY", "binZ",   "binR",  "binPhi",
-      "binRPhi", "binH", "binEta", "binMag"};
-  return _binningValueNames;
-}
-}  // namespace
-
 namespace Acts {
 
+namespace {
+
+static const std::vector<std::string> s_binningValueNames = {
+    "binX",    "binY", "binZ",   "binR",  "binPhi",
+    "binRPhi", "binH", "binEta", "binMag"};
+
+static const std::vector<BinningValue> s_binningValues = {
+    BinningValue::binX, BinningValue::binY,   BinningValue::binZ,
+    BinningValue::binR, BinningValue::binPhi, BinningValue::binRPhi,
+    BinningValue::binH, BinningValue::binEta, BinningValue::binMag};
+
+}  // namespace
+
 const std::vector<BinningValue>& allBinningValues() {
-  static const std::vector<BinningValue> s_binningValues = {
-      BinningValue::binX, BinningValue::binY,   BinningValue::binZ,
-      BinningValue::binR, BinningValue::binPhi, BinningValue::binRPhi,
-      BinningValue::binH, BinningValue::binEta, BinningValue::binMag};
   return s_binningValues;
 }
 
 BinningValue binningValueFromName(const std::string& name) {
   auto it =
-      std::find(binningValueNames().begin(), binningValueNames().end(), name);
-  if (it == binningValueNames().end()) {
+      std::find(s_binningValueNames.begin(), s_binningValueNames.end(), name);
+  if (it == s_binningValueNames.end()) {
     throw std::invalid_argument("Unknown binning value name: " + name);
   }
   return static_cast<BinningValue>(
-      std::distance(binningValueNames().begin(), it));
+      std::distance(s_binningValueNames.begin(), it));
 }
 
 const std::string& binningValueName(BinningValue bValue) {
-  return binningValueNames().at(
+  return s_binningValueNames.at(
       static_cast<std::underlying_type_t<BinningValue>>(bValue));
 }
 

@@ -66,7 +66,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
-        static_cast<std::size_t>(Acts::numBinningValues()), {0., 0.});
+        Acts::numBinningValues(), {0., 0.});
     binTolerances[toUnderlying(Acts::BinningValue::binR)] = {
         volume.binToleranceR.lower.value_or(0.),
         volume.binToleranceR.upper.value_or(0.)};

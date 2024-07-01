@@ -48,7 +48,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
 void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
   const auto& jrange = j["range"];
 
-  for (auto [key, value] : jrange.items()) {
+  for (const auto& [key, value] : jrange.items()) {
     BinningValue bval = binningValueFromName(key);
     e.set(bval, value["min"], value["max"]);
   }
@@ -57,7 +57,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
     const auto& jenvelope = j["envelope"];
     ExtentEnvelope envelope;
 
-    for (auto [key, value] : jenvelope.items()) {
+    for (const auto& [key, value] : jenvelope.items()) {
       BinningValue bval = binningValueFromName(key);
       envelope[bval] = {value["min"], value["max"]};
     }
