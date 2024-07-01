@@ -34,9 +34,11 @@
 
 using namespace Acts;
 
+namespace {
 std::ofstream out;
 
 Acts::GeometryContext gctx;
+}  // namespace
 
 BOOST_AUTO_TEST_SUITE(SurfaceJsonConversion)
 
