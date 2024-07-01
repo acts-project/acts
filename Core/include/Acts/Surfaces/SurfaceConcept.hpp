@@ -51,7 +51,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
         std::declval<std::shared_ptr<const ISurfaceMaterial>>())
     } -> std::same_as<void>;
   {
-    cs.isOnSurface(gctx, Vector3{}, Vector3{}, tolerance > ())
+    cs.isOnSurface(gctx, Vector3{}, Vector3{}, tolerance)
     } -> std::same_as<bool>;
   { cs.insideBounds(Vector2{}, tolerance) } -> std::same_as<bool>;
 
