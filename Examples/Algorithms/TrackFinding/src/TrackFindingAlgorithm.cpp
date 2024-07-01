@@ -193,7 +193,6 @@ class BranchStopper {
       : m_cfg(config) {}
 
   BranchStopperResult operator()(
-      const Acts::CombinatorialKalmanFilterTipState& tipState,
       const TrackContainer::TrackProxy& track,
       const TrackContainer::TrackStateProxy& trackState) const {
     if (!m_cfg.trackSelectorCfg.has_value()) {
@@ -239,10 +238,10 @@ class BranchStopper {
     }
 
     bool enoughMeasurements =
-        tipState.nMeasurements >= singleConfig->minMeasurements;
+        track.nMeasurements() >= singleConfig->minMeasurements;
     bool tooManyHoles =
-        tipState.nHoles > singleConfig->maxHoles || tooManyHolesPS;
-    bool tooManyOutliers = tipState.nOutliers > singleConfig->maxOutliers;
+        track.nHoles() > singleConfig->maxHoles || tooManyHolesPS;
+    bool tooManyOutliers = track.nOutliers() > singleConfig->maxOutliers;
 
     if (tooManyHoles || tooManyOutliers) {
       ++m_nStoppedBranches;
