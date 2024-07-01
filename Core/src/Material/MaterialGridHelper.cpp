@@ -122,7 +122,6 @@ std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
       // case Acts::BinningValue::binEta:
       // case Acts::BinningValue::binH:
       // case Acts::BinningValue::binMag:
-      // case Acts::BinningValue::binValues:
     default:
       throw std::invalid_argument("Incorrect bin, should be x,y,z,r,phi");
   }

@@ -28,7 +28,7 @@ namespace Acts::Experimental {
 /// translated into concrete axis types
 struct ProtoBinning {
   /// The binning value of this
-  BinningValue binValue = BinningValue::binValues;
+  BinningValue binValue;
   /// The axis type: equidistant or variable
   Acts::AxisType axisType = Acts::AxisType::Equidistant;
   /// The axis boundary type: Open, Bound or Closed

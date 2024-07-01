@@ -132,7 +132,8 @@ bool Acts::Extent::contains(const Vector3& vtx) const {
   return contains(checkExtent);
 }
 
-bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
+bool Acts::Extent::contains(const Extent& rhs,
+                            std::optional<BinningValue> bValue) const {
   // Helper to check including a constraint bit set check
   auto checkContainment = [&](BinningValue bvc) -> bool {
     if (!constrains(bvc)) {
@@ -142,7 +143,7 @@ bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
   };
 
   // Check all
-  if (bValue == BinningValue::binValues) {
+  if (bValue.has_value()) {
     for (const auto& bv : allBinningValues()) {
       if (!checkContainment(bv)) {
         return false;
@@ -151,10 +152,11 @@ bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
     return true;
   }
   // Check specific
-  return checkContainment(bValue);
+  return checkContainment(bValue.value());
 }
 
-bool Acts::Extent::intersects(const Extent& rhs, BinningValue bValue) const {
+bool Acts::Extent::intersects(const Extent& rhs,
+                              std::optional<BinningValue> bValue) const {
   // Helper to check including a constraint bit set check
   auto checkIntersect = [&](BinningValue bvc) -> bool {
     if (!constrains(bvc) || !rhs.constrains(bvc)) {
@@ -164,7 +166,7 @@ bool Acts::Extent::intersects(const Extent& rhs, BinningValue bValue) const {
   };
 
   // Check all
-  if (bValue == BinningValue::binValues) {
+  if (bValue.has_value()) {
     for (const auto& bv : allBinningValues()) {
       if (checkIntersect(bv)) {
         return true;
@@ -173,14 +175,15 @@ bool Acts::Extent::intersects(const Extent& rhs, BinningValue bValue) const {
     return false;
   }
   // Check specific
-  return checkIntersect(bValue);
+  return checkIntersect(bValue.value());
 }
 
 bool Acts::Extent::constrains(BinningValue bValue) const {
-  if (bValue == BinningValue::binValues) {
-    return (m_constrains.count() > 0);
-  }
   return m_constrains.test(static_cast<std::size_t>(bValue));
+}
+
+bool Acts::Extent::constrains() const {
+  return m_constrains.count() > 0;
 }
 
 bool Acts::Extent::operator==(const Extent& e) const {

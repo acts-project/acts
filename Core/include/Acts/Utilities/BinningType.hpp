@@ -42,13 +42,18 @@ enum class BinningValue : int {
   binRPhi = 5,
   binH = 6,
   binEta = 7,
-  binMag = 8,
-  binValues = 9
+  binMag = 8
 };
 
 /// Get all possible binning values
 /// @return the binning values
 const std::vector<BinningValue>& allBinningValues();
+
+/// Returns the total number of binningvalues
+/// @return the number of binning values
+constexpr std::size_t numBinningValues() {
+  return 9;
+}
 
 /// Get the binning value from a name
 /// @param name is the name of the binning value

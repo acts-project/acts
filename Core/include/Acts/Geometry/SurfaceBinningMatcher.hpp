@@ -20,8 +20,7 @@ namespace Acts {
 struct SurfaceBinningMatcher {
   /// The binning tolerance parameters
   using Range = std::pair<double, double>;
-  std::vector<Range> tolerances{static_cast<int>(BinningValue::binValues),
-                                {0., 0.}};
+  std::vector<Range> tolerances{static_cast<int>(numBinningValues()), {0., 0.}};
 
   SurfaceBinningMatcher() = default;
 
