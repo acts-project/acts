@@ -388,6 +388,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   m_outputClusters(ctx, std::move(clusters));
   m_outputParticles(ctx, std::move(particles));
   m_outputMeasParticleMap(ctx, std::move(measPartMap));
+  m_outputMeasurements(ctx, std::move(measurements));
 
   return ProcessCode::SUCCESS;
 }
