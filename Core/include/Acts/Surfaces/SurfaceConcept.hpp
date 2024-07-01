@@ -26,7 +26,8 @@ namespace Acts {
 
 template <typename S>
 concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
-                                  GeometryContext gctx) {
+                                  GeometryContext gctx,
+                                  BoundaryTolerance tolerance) {
   { cs == s2 } -> std::same_as<bool>;
 
   { cs.type() } -> std::same_as<Surface::SurfaceType>;
@@ -50,11 +51,10 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
         std::declval<std::shared_ptr<const ISurfaceMaterial>>())
     } -> std::same_as<void>;
   {
-    cs.isOnSurface(gctx, Vector3{}, Vector3{},
-                   std::declval<const BoundaryTolerance&>())
+    cs.isOnSurface(gctx, Vector3{}, Vector3{}, tolerance>())
     } -> std::same_as<bool>;
   {
-    cs.insideBounds(Vector2{}, std::declval<const BoundaryTolerance&>())
+    cs.insideBounds(Vector2{}, tolerance)
     } -> std::same_as<bool>;
 
   { cs.localToGlobal(gctx, Vector2{}, Vector3{}) } -> std::same_as<Vector3>;
@@ -83,8 +83,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.intersect(gctx, Vector3{}, Vector3{},
-                 std::declval<const BoundaryTolerance&>(),
-                 std::declval<double>())
+                 tolerance, std::declval<double>())
     } -> std::same_as<SurfaceMultiIntersection>;
 
   {
