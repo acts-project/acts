@@ -51,11 +51,9 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
         std::declval<std::shared_ptr<const ISurfaceMaterial>>())
     } -> std::same_as<void>;
   {
-    cs.isOnSurface(gctx, Vector3{}, Vector3{}, tolerance>())
+    cs.isOnSurface(gctx, Vector3{}, Vector3{}, tolerance > ())
     } -> std::same_as<bool>;
-  {
-    cs.insideBounds(Vector2{}, tolerance)
-    } -> std::same_as<bool>;
+  { cs.insideBounds(Vector2{}, tolerance) } -> std::same_as<bool>;
 
   { cs.localToGlobal(gctx, Vector2{}, Vector3{}) } -> std::same_as<Vector3>;
 
@@ -82,8 +80,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   { cs.pathCorrection(gctx, Vector3{}, Vector3{}) } -> std::same_as<double>;
 
   {
-    cs.intersect(gctx, Vector3{}, Vector3{},
-                 tolerance, std::declval<double>())
+    cs.intersect(gctx, Vector3{}, Vector3{}, tolerance, std::declval<double>())
     } -> std::same_as<SurfaceMultiIntersection>;
 
   {
