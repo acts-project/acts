@@ -79,9 +79,7 @@ class TransitiveConstPointer {
 /// covariances.
 template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
-  enum {
-    Flags = Eigen::ColMajor | Eigen::AutoAlign,
-  };
+  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
   using Scalar = ActsScalar;
 
@@ -135,7 +133,7 @@ struct TrackStateTraits {
   using EffectiveCalibratedCovariance =
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
 
-  constexpr static auto ProjectorFlags = Eigen::ColMajor | Eigen::AutoAlign;
+  constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
   using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
                                            ProjectorFlags, M, eBoundSize>;
