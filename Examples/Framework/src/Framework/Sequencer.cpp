@@ -220,7 +220,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
                            << " '" << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
-                           << handle->name() << "'")
+                           << handle->name() << "'");
       valid = false;
     }
   }
