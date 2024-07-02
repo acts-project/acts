@@ -9,6 +9,8 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -41,8 +43,9 @@ Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-bool Acts::CylinderBounds::inside(const Vector2& lposition,
-                                  const BoundaryCheck& bcheck) const {
+bool Acts::CylinderBounds::inside(
+    const Vector2& lposition,
+    const BoundaryTolerance& boundaryTolerance) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
 
@@ -50,9 +53,9 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
   double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
-    return bcheck.transformed(jacobian())
-        .isInside(shifted(lposition), Vector2(-halfPhi, -halfLengthZ),
-                  Vector2(halfPhi, halfLengthZ));
+    return detail::insideAlignedBox(
+        Vector2(-halfPhi, -halfLengthZ), Vector2(halfPhi, halfLengthZ),
+        boundaryTolerance, shifted(lposition), jacobian());
   }
 
   double radius = get(eR);
@@ -76,9 +79,6 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
     return true;
   }
 
-  // check within tolerance
-  auto boundaryCheck = bcheck.transformed(jacobian());
-
   Vector2 lowerLeft = {-radius, -halfLengthZ};
   Vector2 middleLeft = {0., -(halfLengthZ + radius * std::tan(bevelMinZ))};
   Vector2 upperLeft = {radius, -halfLengthZ};
@@ -87,10 +87,9 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
   Vector2 lowerRight = {-radius, halfLengthZ};
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
-  Vector2 closestPoint =
-      boundaryCheck.computeClosestPointOnPolygon(lposition, vertices);
 
-  return boundaryCheck.isTolerated(closestPoint - lposition);
+  return detail::insidePolygon(vertices, boundaryTolerance, lposition,
+                               jacobian());
 }
 
 std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {

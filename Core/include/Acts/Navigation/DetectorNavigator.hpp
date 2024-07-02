@@ -17,7 +17,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -231,10 +231,9 @@ class DetectorNavigator {
                    << " (" << surface.center(state.geoContext).transpose()
                    << ")");
       // Estimate the surface status
-      bool boundaryCheck = c.boundaryCheck.isEnabled();
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
-          state.options.direction, BoundaryCheck(boundaryCheck),
+          state.options.direction, c.boundaryTolerance,
           state.options.surfaceTolerance, logger());
 
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
@@ -285,7 +284,8 @@ class DetectorNavigator {
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    bool boundaryCheck = nState.surfaceCandidate().boundaryCheck.isEnabled();
+    BoundaryTolerance boundaryTolerance =
+        nState.surfaceCandidate().boundaryTolerance;
 
     if (nState.surfaceCandidate().surface != nullptr) {
       nextSurface = nState.surfaceCandidate().surface;
@@ -304,7 +304,7 @@ class DetectorNavigator {
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *nextSurface,
         nState.surfaceCandidate().objectIntersection.index(),
-        state.options.direction, BoundaryCheck(boundaryCheck),
+        state.options.direction, boundaryTolerance,
         state.options.surfaceTolerance, logger());
 
     // Check if we are at a surface

@@ -19,6 +19,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/TryAllNavigator.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -326,7 +327,8 @@ StraightLinePropagator slpropagator(slstepper,
 
 Reference1EigenPropagator refepropagator1(
     estepper,
-    TryAllNavigator({tGeometry, true, true, false, BoundaryCheck(false)},
+    TryAllNavigator({tGeometry, true, true, false,
+                     BoundaryTolerance::Infinite()},
                     getDefaultLogger("ref1_e_nav", Logging::INFO)),
     getDefaultLogger("ref1_e_prop", Logging::INFO));
 Reference1StraightLinePropagator refslpropagator1(
@@ -338,7 +340,7 @@ Reference1StraightLinePropagator refslpropagator1(
 Reference2EigenPropagator refepropagator2(
     estepper,
     TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryCheck(false)},
+                             BoundaryTolerance::Infinite()},
                             getDefaultLogger("ref2_e_nav", Logging::INFO)),
     getDefaultLogger("ref2_e_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(

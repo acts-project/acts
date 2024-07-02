@@ -490,8 +490,8 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
         continue;
       }
 
-      auto candidates =
-          surface.intersect(gctx, position, direction, options.boundaryCheck);
+      auto candidates = surface.intersect(gctx, position, direction,
+                                          options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
       if (intersection.first) {

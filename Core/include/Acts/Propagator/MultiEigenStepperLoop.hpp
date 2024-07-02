@@ -577,12 +577,12 @@ class MultiEigenStepperLoop
   /// @param [in] surface The surface provided
   /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryCheck& bcheck,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
@@ -591,7 +591,7 @@ class MultiEigenStepperLoop
 
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          *this, component.state, surface, index, navDir, bcheck,
+          *this, component.state, surface, index, navDir, boundaryTolerance,
           surfaceTolerance, logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
@@ -668,7 +668,7 @@ class MultiEigenStepperLoop
       auto intersection = surface.intersect(
           component.state.geoContext, SingleStepper::position(component.state),
           direction * SingleStepper::direction(component.state),
-          BoundaryCheck(true))[oIntersection.index()];
+          BoundaryTolerance::None())[oIntersection.index()];
 
       SingleStepper::updateStepSize(component.state, intersection, direction,
                                     release);

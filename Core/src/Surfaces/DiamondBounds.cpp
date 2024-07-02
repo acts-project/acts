@@ -8,16 +8,22 @@
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+
 #include <iomanip>
 #include <iostream>
+#include <optional>
 
 Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }
 
-bool Acts::DiamondBounds::inside(const Acts::Vector2& lposition,
-                                 const Acts::BoundaryCheck& bcheck) const {
-  return bcheck.isInside(lposition, vertices());
+bool Acts::DiamondBounds::inside(
+    const Acts::Vector2& lposition,
+    const Acts::BoundaryTolerance& boundaryTolerance) const {
+  return detail::insidePolygon(vertices(), boundaryTolerance, lposition,
+                               std::nullopt);
 }
 
 std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(

@@ -55,7 +55,8 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
               ->intersect(
                   state.geoContext, stepper.position(state.stepping),
                   state.options.direction * stepper.direction(state.stepping),
-                  BoundaryCheck(boundaryCheck), averageOnSurfaceTolerance)
+                  BoundaryTolerance(boundaryTolerance),
+                  averageOnSurfaceTolerance)
               .closest();
 
       if (sIntersection.status() == Intersection3D::Status::onSurface) {

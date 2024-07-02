@@ -69,12 +69,12 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
 
 inline bool Layer::isOnLayer(const GeometryContext& gctx,
                              const Vector3& position,
-                             const BoundaryCheck& bcheck) const {
+                             const BoundaryTolerance& boundaryTolerance) const {
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(position);
   }
-  return (surfaceRepresentation())
-      .isOnSurface(gctx, position, Vector3::Zero(), bcheck);
+  return surfaceRepresentation().isOnSurface(gctx, position, Vector3::Zero(),
+                                             boundaryTolerance);
 }
 
 }  // namespace Acts

@@ -392,9 +392,9 @@ void test_multi_stepper_surface_status_update() {
 
   // Update surface status and check
   {
-    auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                                    0, Direction::Forward,
-                                                    BoundaryCheck(false));
+    auto status = multi_stepper.updateSurfaceStatus(
+        multi_state, *right_surface, 0, Direction::Forward,
+        BoundaryTolerance::Infinite());
 
     BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
 
@@ -421,9 +421,9 @@ void test_multi_stepper_surface_status_update() {
 
   // Update surface status and check again
   {
-    auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                                    0, Direction::Forward,
-                                                    BoundaryCheck(false));
+    auto status = multi_stepper.updateSurfaceStatus(
+        multi_state, *right_surface, 0, Direction::Forward,
+        BoundaryTolerance::Infinite());
 
     BOOST_CHECK_EQUAL(status, Intersection3D::Status::onSurface);
 
@@ -437,9 +437,9 @@ void test_multi_stepper_surface_status_update() {
 
   // Start surface should be reachable
   {
-    auto status = multi_stepper.updateSurfaceStatus(multi_state, *start_surface,
-                                                    0, Direction::Forward,
-                                                    BoundaryCheck(false));
+    auto status = multi_stepper.updateSurfaceStatus(
+        multi_state, *start_surface, 0, Direction::Forward,
+        BoundaryTolerance::Infinite());
 
     BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
 
@@ -502,14 +502,15 @@ void test_component_bound_state() {
   // Step forward now
   {
     multi_stepper.updateSurfaceStatus(multi_state, *right_surface, 0,
-                                      Direction::Forward, BoundaryCheck(false));
+                                      Direction::Forward,
+                                      BoundaryTolerance::Infinite());
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
     single_stepper.updateSurfaceStatus(single_state, *right_surface, 0,
                                        Direction::Forward,
-                                       BoundaryCheck(false));
+                                       BoundaryTolerance::Infinite());
     auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }

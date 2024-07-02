@@ -14,7 +14,7 @@
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -26,7 +26,8 @@ namespace Acts {
 
 template <typename S>
 concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
-                                  GeometryContext gctx) {
+                                  GeometryContext gctx,
+                                  BoundaryTolerance tolerance) {
   { cs == s2 } -> std::same_as<bool>;
 
   { cs.type() } -> std::same_as<Surface::SurfaceType>;
@@ -50,12 +51,9 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
         std::declval<std::shared_ptr<const ISurfaceMaterial>>())
     } -> std::same_as<void>;
   {
-    cs.isOnSurface(gctx, Vector3{}, Vector3{},
-                   std::declval<const BoundaryCheck&>())
+    cs.isOnSurface(gctx, Vector3{}, Vector3{}, tolerance)
     } -> std::same_as<bool>;
-  {
-    cs.insideBounds(Vector2{}, std::declval<const BoundaryCheck&>())
-    } -> std::same_as<bool>;
+  { cs.insideBounds(Vector2{}, tolerance) } -> std::same_as<bool>;
 
   { cs.localToGlobal(gctx, Vector2{}, Vector3{}) } -> std::same_as<Vector3>;
 
@@ -82,8 +80,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
   { cs.pathCorrection(gctx, Vector3{}, Vector3{}) } -> std::same_as<double>;
 
   {
-    cs.intersect(gctx, Vector3{}, Vector3{},
-                 std::declval<const BoundaryCheck&>(), std::declval<double>())
+    cs.intersect(gctx, Vector3{}, Vector3{}, tolerance, std::declval<double>())
     } -> std::same_as<SurfaceMultiIntersection>;
 
   { cs.toStream(gctx) } -> std::same_as<GeometryContextOstreamWrapper<Surface>>;

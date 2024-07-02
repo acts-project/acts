@@ -148,7 +148,7 @@ const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
 
 Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     ActsScalar tolerance) const {
   // The nomenclature is following the header file and doxygen documentation
 
@@ -180,14 +180,11 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-  if (bcheck.isEnabled() && m_bounds) {
-    // At closest approach: check inside R or and inside Z
+  if (m_bounds && !boundaryTolerance.isInfinite()) {
     Vector3 vecLocal = result - mb;
     double cZ = vecLocal.dot(eb);
-    double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
-    if ((std::abs(cZ) > std::abs(hZ)) ||
-        ((vecLocal - cZ * eb).norm() >
-         m_bounds->get(LineBounds::eR) + tolerance)) {
+    double cR = (vecLocal - cZ * eb).norm();
+    if (!m_bounds->inside({cR, cZ}, boundaryTolerance)) {
       status = Intersection3D::Status::missed;
     }
   }
@@ -198,7 +195,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
@@ -235,7 +232,7 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
 Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
@@ -264,7 +261,7 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
