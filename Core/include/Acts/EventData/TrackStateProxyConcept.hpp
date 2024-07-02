@@ -54,9 +54,8 @@ using ConstDynamicMeasurementCovariance = Eigen::Map<
 constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
 using Projector = Eigen::Matrix<typename Covariance::Scalar, eBoundSize,
                                 eBoundSize, ProjectorFlags>;
-
 using EffectiveProjector =
-    Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
+    Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, eBoundSize,
                   ProjectorFlags, eBoundSize, eBoundSize>;
 
 }  // namespace detail

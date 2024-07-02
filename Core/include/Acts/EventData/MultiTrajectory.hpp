@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -148,6 +148,7 @@ struct IsReadOnlyMultiTrajectory;
 /// iterating over specific sub-components.
 template <typename derived_t>
 class MultiTrajectory {
+ public:
   using Derived = derived_t;
 
   static constexpr bool ReadOnly = IsReadOnlyMultiTrajectory<Derived>::value;
@@ -161,7 +162,6 @@ class MultiTrajectory {
   template <typename T>
   friend class MultiTrajectory;
 
- public:
   /// Alias for the const version of a track state proxy, with the same
   /// backends as this container
   using ConstTrackStateProxy =
@@ -461,62 +461,103 @@ class MultiTrajectory {
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
-  /// @param jacIdx Index into the jacobian column
+  /// @param istate The track state
   /// @return Mutable proxy
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::Covariance jacobian(IndexType jacIdx) {
-    return self().jacobian_impl(jacIdx);
+  typename TrackStateProxy::Covariance jacobian(IndexType istate) {
+    return self().jacobian_impl(istate);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
-  /// @param jacIdx Index into the jacobian column
+  /// @param istate The track state
   /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance jacobian(IndexType jacIdx) const {
-    return self().jacobian_impl(jacIdx);
+  typename ConstTrackStateProxy::Covariance jacobian(IndexType istate) const {
+    return self().jacobian_impl(istate);
   }
 
-  /// Retrieve a measurement proxy instance for a measurement at a given index
+  /// Retrieve a calibrated measurement proxy instance for a measurement at a
+  /// given index
   /// @tparam measdim the measurement dimension
-  /// @param measIdx Index into the measurement column
+  /// @param istate The track state
   /// @return Mutable proxy
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::template Measurement<measdim> measurement(
-      IndexType measIdx) {
-    return self().template measurement_impl<measdim>(measIdx);
+  typename TrackStateProxy::template Calibrated<measdim> calibrated(
+      IndexType istate) {
+    return self().template calibrated_impl<measdim>(istate);
   }
 
-  /// Retrieve a measurement proxy instance for a measurement at a given index
-  /// @tparam measdim the measurement dimension
-  /// @param measIdx Index into the measurement column
-  /// @return Const proxy
-  template <std::size_t measdim>
-  typename ConstTrackStateProxy::template Measurement<measdim> measurement(
-      IndexType measIdx) const {
-    return self().template measurement_impl<measdim>(measIdx);
-  }
-
-  /// Retrieve a measurement covariance proxy instance for a measurement at a
+  /// Retrieve a calibrated measurement proxy instance for a measurement at a
   /// given index
   /// @tparam measdim the measurement dimension
-  /// @param covIdx Index into the measurement covariance column
+  /// @param istate The track state
+  /// @return Const proxy
+  template <std::size_t measdim>
+  typename ConstTrackStateProxy::template Calibrated<measdim> calibrated(
+      IndexType istate) const {
+    return self().template calibrated_impl<measdim>(istate);
+  }
+
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @tparam measdim the measurement dimension
+  /// @param istate The track state
   /// @return Mutable proxy
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  typename TrackStateProxy::template MeasurementCovariance<measdim>
-  measurementCovariance(IndexType covIdx) {
-    return self().template measurementCovariance_impl<measdim>(covIdx);
+  typename TrackStateProxy::template CalibratedCovariance<measdim>
+  calibratedCovariance(IndexType istate) {
+    return self().template calibratedCovariance_impl<measdim>(istate);
   }
 
-  /// Retrieve a measurement covariance proxy instance for a measurement at a
-  /// given index
-  /// @param covIdx Index into the measurement covariance column
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  typename TrackStateProxy::EffectiveCalibrated effectiveCalibrated(
+      IndexType istate) {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename TrackStateProxy::EffectiveCalibrated{
+        calibrated<eBoundSize>(istate).data(), calibratedSize(istate)};
+  }
+
+  typename ConstTrackStateProxy::EffectiveCalibrated effectiveCalibrated(
+      IndexType istate) const {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename ConstTrackStateProxy::EffectiveCalibrated{
+        calibrated<eBoundSize>(istate).data(), calibratedSize(istate)};
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  typename TrackStateProxy::EffectiveCalibratedCovariance
+  effectiveCalibratedCovariance(IndexType istate) {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename TrackStateProxy::EffectiveCalibratedCovariance{
+        calibratedCovariance<eBoundSize>(istate).data(), calibratedSize(istate),
+        calibratedSize(istate)};
+  }
+
+  typename ConstTrackStateProxy::EffectiveCalibratedCovariance
+  effectiveCalibratedCovariance(IndexType istate) const {
+    // This abuses an incorrectly sized vector / matrix to access the
+    // data pointer! This works (don't use the matrix as is!), but be
+    // careful!
+    return typename ConstTrackStateProxy::EffectiveCalibratedCovariance{
+        calibratedCovariance<eBoundSize>(istate).data(), calibratedSize(istate),
+        calibratedSize(istate)};
+  }
+
+  /// Retrieve a calibrated measurement covariance proxy instance for a
+  /// measurement at a given index
+  /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  constexpr
-      typename ConstTrackStateProxy::template MeasurementCovariance<measdim>
-      measurementCovariance(IndexType covIdx) const {
-    return self().template measurementCovariance_impl<measdim>(covIdx);
+  typename ConstTrackStateProxy::template CalibratedCovariance<measdim>
+  calibratedCovariance(IndexType istate) const {
+    return self().template calibratedCovariance_impl<measdim>(istate);
   }
 
   /// Get the calibrated measurement size for a track state
