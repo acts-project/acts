@@ -95,11 +95,11 @@ void Mat_map_surface_plot_ratio(std::string input_file_prop = "", std::string in
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  std::map<uint64_t,std::vector<TH2F*>> surface_hist_prop;
-  std::map<uint64_t,sinfo> surface_info_prop;
+  std::map<std::uint64_t,std::vector<TH2F*>> surface_hist_prop;
+  std::map<std::uint64_t,sinfo> surface_info_prop;
 
-  std::map<uint64_t,std::vector<TH2F*>> surface_hist_geant;
-  std::map<uint64_t,sinfo> surface_info_geant;
+  std::map<std::uint64_t,std::vector<TH2F*>> surface_hist_geant;
+  std::map<std::uint64_t,sinfo> surface_info_geant;
 
   Fill(surface_hist_prop, surface_info_prop, input_file_prop, nbprocess);
   Fill(surface_hist_geant, surface_info_geant, input_file_geant, nbprocess);

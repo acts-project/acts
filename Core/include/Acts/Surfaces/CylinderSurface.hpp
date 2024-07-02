@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -246,6 +247,19 @@ class CylinderSurface : public RegularSurface {
   /// cartesian coordinates
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
+
+  /// Merge two cylinder surfaces into a single one.
+  /// @image html Cylinder_Merging.svg
+  /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
+  ///       that align, and have the same radius
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other The other cylinder surface to merge with
+  /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param logger The logger to use
+  /// @return The merged cylinder surface
+  std::shared_ptr<CylinderSurface> mergedWith(
+      const GeometryContext& gctx, const CylinderSurface& other,
+      BinningValue direction, const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)

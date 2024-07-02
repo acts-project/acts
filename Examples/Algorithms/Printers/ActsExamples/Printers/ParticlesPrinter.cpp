@@ -40,7 +40,7 @@ ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
                      << particles.size() << " particles");
   for (const auto& particle : particles) {
     ACTS_INFO("  particle " << particle);
-    ACTS_INFO("    process_type: " << particle.process())
+    ACTS_INFO("    process_type: " << particle.process());
     ACTS_INFO("    position:     " << particle.position().transpose() / 1_mm
                                    << " mm");
     ACTS_INFO("    direction:    " << particle.direction().transpose());

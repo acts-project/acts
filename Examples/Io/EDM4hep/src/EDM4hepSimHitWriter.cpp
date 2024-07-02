@@ -24,7 +24,7 @@ namespace ActsExamples {
 
 EDM4hepSimHitWriter::EDM4hepSimHitWriter(
     const EDM4hepSimHitWriter::Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputSimHits, "CsvSimHitWriter", level),
+    : WriterT(config.inputSimHits, "EDM4hepSimHitWriter", level),
       m_cfg(config),
       m_writer(config.outputPath) {
   ACTS_VERBOSE("Created output file " << config.outputPath);

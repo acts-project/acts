@@ -27,11 +27,11 @@ set( ACTS_DFELIBS_SOURCE
 mark_as_advanced( ACTS_DFELIBS_SOURCE )
 
 set( ACTS_FRNN_SOURCE
-   "GIT_REPOSITORY;https://github.com/lxxue/FRNN;GIT_TAG;3e370d8d9073d4e130363faf87d2370598b5fbf2" CACHE STRING "Source to take FRNN from")
+   "GIT_REPOSITORY;https://github.com/hrzhao76/FRNN/;GIT_TAG;5f8a48b0022300cd2863119f5646a5f31373e0c8" CACHE STRING "Source to take FRNN from")
 mark_as_advanced( ACTS_FRNN_SOURCE )
 
 set( ACTS_GEOMODEL_SOURCE
-   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;4.6.0;PATCH_COMMAND;git am ${CMAKE_CURRENT_SOURCE_DIR}/0001-Add-option-to-skip-setting-up-json-completely.patch" CACHE STRING "Source to take GeoModel from")
+   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;4.6.0;" CACHE STRING "Source to take GeoModel from")
 mark_as_advanced( ACTS_GEOMODEL_SOURCE )
 
 set( ACTS_NLOHMANNJSON_SOURCE

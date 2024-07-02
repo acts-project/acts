@@ -278,4 +278,24 @@ BOOST_AUTO_TEST_CASE(Accessors) {
   // superChi2Const(ts) = 66.66;
 }
 
+BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
+  VectorMultiTrajectory mtj;
+  auto ts = mtj.makeTrackState();
+
+  int value = 5;
+  ts.setUncalibratedSourceLink(SourceLink{value});
+
+  BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<int>(), value);
+  BOOST_CHECK_THROW(ts.getUncalibratedSourceLink().get<double>(),
+                    std::bad_any_cast);
+
+  double otherValue = 42.42;
+
+  // this changes the stored type
+  ts.setUncalibratedSourceLink(SourceLink{otherValue});
+  BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<double>(), otherValue);
+  BOOST_CHECK_THROW(ts.getUncalibratedSourceLink().get<int>(),
+                    std::bad_any_cast);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
