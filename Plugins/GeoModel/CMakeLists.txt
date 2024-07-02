@@ -4,6 +4,7 @@ add_library(
   ActsPluginGeoModel SHARED
   src/GeoModelBlueprintCreater.cpp
   src/GeoModelConversionError.cpp
+  src/GeoModelToDetVol.cpp
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp
@@ -22,7 +23,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
     ActsPluginGeoModel
-  PUBLIC ActsCore GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
+  PUBLIC ActsCore GeoModelCore::GeoModelKernel GeoModelIO::GeoModelDBManager GeoModelIO::GeoModelRead)
 
 install(
   TARGETS ActsPluginGeoModel
