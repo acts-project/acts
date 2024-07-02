@@ -71,7 +71,7 @@ Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
 void Acts::VolumeMaterialMapper::resolveMaterialVolume(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
 
   ACTS_VERBOSE("- Insert Volume ...");
   checkAndInsert(mState, tVolume);
@@ -181,7 +181,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
 void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
+                                   << "' for material surfaces.");
 
   ACTS_VERBOSE("- boundary surfaces ...");
   // Check the boundary surfaces
@@ -391,12 +391,12 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
-                            << " recorded material steps to map.")
+                            << " recorded material steps to map.");
 
   // These should be mapped onto the mapping surfaces found
   ACTS_VERBOSE("Found     " << mappingVolumes.size()
                             << " mapping volumes for this track.");
-  ACTS_VERBOSE("Mapping volumes are :")
+  ACTS_VERBOSE("Mapping volumes are :");
   for (auto& mVolumes : mappingVolumes) {
     ACTS_VERBOSE(" - Volume : " << mVolumes.volume->geometryId()
                                 << " at position = (" << mVolumes.position.x()

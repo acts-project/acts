@@ -424,7 +424,7 @@ bool Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
   // through the binning? If not, surfaces get lost and the binning does not
   // work
 
-  ACTS_VERBOSE("Performing consistency check")
+  ACTS_VERBOSE("Performing consistency check");
 
   std::vector<const Surface*> surfaces = sArray.surfaces();
   std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
