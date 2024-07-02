@@ -21,6 +21,8 @@
 #include "detray/io/common/geometry_reader.hpp"
 #include "detray/utils/consistency_checker.hpp"
 
+#include "detray/io/frontend/detector_writer.hpp"
+
 namespace Acts {
 
 class Surface;
@@ -118,10 +120,10 @@ template <typename detector_t = DetrayDetector>
 std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
     const Acts::GeometryContext& gctx,
     const Acts::Experimental::Detector& detector, vecmem::memory_resource& mr) {
-  detray::io::detector_payload detecorPayload;
+  detray::io::detector_payload detectorPayload;
   for (const auto volume : detector.volumes()) {
-    detecorPayload.volumes.push_back(
-        convertVolume(*volume, detector.volumes(), gctx));
+    detectorPayload.volumes.push_back(
+        convertVolume(gctx, *volume, detector.volumes()));
   }
   typename detector_t::name_map names = {{0u, detector.name()}};
 

@@ -46,7 +46,7 @@ int findVolume(
 void Acts::DetrayConverter::writeToJson(
     const DetrayDetector& dDetector,
     const typename DetrayDetector::name_map& names,
-    detray::io::detector_writer_config writer_cfg = {}) {
+    detray::io::detector_writer_config writer_cfg) {
     writer_cfg.format(detray::io::format::json);
     detray::io::write_detector(dDetector, names, writer_cfg);
 }
