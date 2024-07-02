@@ -86,6 +86,41 @@ BOOST_AUTO_TEST_CASE(FixedBoundAll) {
   BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 }
 
+BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
+  auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
+  auto meas = BoundVariableMeasurement(source, std::array{index}, params, cov);
+
+  BOOST_CHECK_EQUAL(meas.size(), 1);
+  for (auto i : boundIndices) {
+    if (i == index) {
+      BOOST_CHECK(meas.contains(i));
+    } else {
+      BOOST_CHECK(!meas.contains(i));
+    }
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
+}
+
+BOOST_AUTO_TEST_CASE(VariableBoundAll) {
+  auto [params, cov] = generateBoundParametersCovariance(rng);
+  auto meas = BoundVariableMeasurement(
+      source,
+      std::array{eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta, eBoundQOverP,
+                 eBoundTime},
+      params, cov);
+
+  BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
+  for (auto i : boundIndices) {
+    BOOST_CHECK(meas.contains(i));
+  }
+  BOOST_CHECK_EQUAL(meas.parameters(), params);
+  BOOST_CHECK_EQUAL(meas.covariance(), cov);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
+}
+
 namespace {
 // example data for phi residual tests. each entry contains
 //
@@ -108,8 +143,8 @@ const std::vector<std::tuple<double, double, double>> kPhiDataset = {
 };
 }  // namespace
 
-BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
-                     phiRes) {
+BOOST_DATA_TEST_CASE(FixedBoundResidualsPhi, bd::make(kPhiDataset), phiMea,
+                     phiRef, phiRes) {
   using MeasurementVector = Acts::ActsVector<1>;
   using MeasurementCovariance = Acts::ActsSquareMatrix<1>;
 

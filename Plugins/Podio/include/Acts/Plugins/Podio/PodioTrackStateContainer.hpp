@@ -43,14 +43,14 @@ class ConstPodioTrackStateContainer;
 class PodioTrackStateContainerBase {
  public:
   using Parameters =
-      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
  protected:
   template <typename T>

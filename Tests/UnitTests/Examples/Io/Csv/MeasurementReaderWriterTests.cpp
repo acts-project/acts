@@ -132,19 +132,13 @@ BOOST_AUTO_TEST_CASE(CsvMeasurementRoundTrip) {
   ///////////
   // Check //
   ///////////
-  auto checkMeasurementClose = [](const auto &m1, const auto &m2) {
-    constexpr auto SizeA = std::decay_t<decltype(m1)>::size();
-    constexpr auto SizeB = std::decay_t<decltype(m2)>::size();
-    if constexpr (SizeA == SizeB) {
-      CHECK_CLOSE_REL(m1.parameters(), m2.parameters(), 1e-4);
-    }
-  };
-
   static_assert(
       std::is_same_v<std::decay_t<decltype(measRead)>, decltype(measOriginal)>);
   BOOST_REQUIRE(measRead.size() == measOriginal.size());
   for (const auto &[a, b] : Acts::zip(measRead, measOriginal)) {
-    std::visit(checkMeasurementClose, a, b);
+    if (a.size() == b.size()) {
+      CHECK_CLOSE_REL(a.parameters(), b.parameters(), 1e-4);
+    }
   }
 
   static_assert(std::is_same_v<std::decay_t<decltype(clusterRead)>,

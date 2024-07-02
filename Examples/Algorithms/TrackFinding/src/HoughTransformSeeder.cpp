@@ -525,20 +525,9 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         // are transformed to the bound space where we do know their location.
         // if the local parameters are not measured, this results in a
         // zero location, which is a reasonable default fall-back.
-        auto [localPos, localCov] = std::visit(
-            [](const auto& meas) {
-              auto expander = meas.expander();
-              Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSquareMatrix cov =
-                  expander * meas.covariance() * expander.transpose();
-              // extract local position
-              Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
-              // extract local position covariance.
-              Acts::SquareMatrix2 lcov =
-                  cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
-              return std::make_pair(lpar, lcov);
-            },
-            measurements[sourceLink.index()]);
+        const auto& meas = measurements[sourceLink.index()];
+
+        Acts::Vector2 localPos = meas.parameters().segment<2>(Acts::eBoundLoc0);
 
         // transform local position to global coordinates
         Acts::Vector3 globalFakeMom(1, 1, 1);
@@ -551,10 +540,10 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         if (hitlayer.ok()) {
           std::vector<Index> index;
           index.push_back(sourceLink.index());
-          auto meas = std::shared_ptr<HoughMeasurementStruct>(
+          auto houghMeas = std::shared_ptr<HoughMeasurementStruct>(
               new HoughMeasurementStruct(hitlayer.value(), phi, r, z, index,
                                          HoughHitType::MEASUREMENT));
-          houghMeasurementStructs.push_back(meas);
+          houghMeasurementStructs.push_back(houghMeas);
         }
       }
     }
