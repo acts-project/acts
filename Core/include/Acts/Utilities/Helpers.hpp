@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
@@ -190,6 +191,11 @@ std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
   typename T::value_type range = (max - min);
   ActsScalar medium = static_cast<ActsScalar>((max + min) * 0.5);
   return std::tie(range, medium);
+}
+
+template <typename enum_t>
+constexpr std::underlying_type_t<enum_t> toUnderlying(enum_t value) {
+  return static_cast<std::underlying_type_t<enum_t>>(value);
 }
 
 }  // namespace Acts

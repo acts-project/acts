@@ -56,7 +56,8 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
@@ -108,8 +109,8 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 4), binX",
-      "- axis 1 : AxisBoundaryType::Bound, (-200, 200, 6), binY"};
+      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 4), BinningValue::binX",
+      "- axis 1 : AxisBoundaryType::Bound, (-200, 200, 6), BinningValue::binY"};
 
   auto caption = actsvg::draw::text("caption", {-180, -220}, captionText);
 
@@ -132,7 +133,8 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   Grid gridXY(Type<std::tuple<GlobalBin, LocalBin>>, axisX, axisY);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
@@ -183,8 +185,8 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Open, (-200., 200, 4), binX",
-      "- axis 1 : AxisBoundaryType::Open, (-200, 200, 6), binY"};
+      "- axis 0 : AxisBoundaryType::Open, (-200., 200, 4), BinningValue::binX",
+      "- axis 1 : AxisBoundaryType::Open, (-200, 200, 6), BinningValue::binY"};
 
   auto caption = actsvg::draw::text("caption", {-180, -220}, captionText);
   auto oGrid = actsvg::display::grid("OpenGridXY", pGrid);
@@ -208,7 +210,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridZPhi, {binZ, binPhi}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridZPhi, {BinningValue::binZ, BinningValue::binPhi}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_z_phi);
 
   pGrid._reference_r = 80.;
@@ -260,8 +263,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 3), binZ",
-      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 6), binPhi",
+      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 3), BinningValue::binZ",
+      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 6), BinningValue::binPhi",
       "- draw reference radius set to 80"};
 
   auto caption = actsvg::draw::text("caption", {-180, -270}, captionText);
@@ -286,7 +289,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;
-  auto pGrid = Svg::GridConverter::convert(gridRPhi, {binR, binPhi}, cOptions);
+  auto pGrid = Svg::GridConverter::convert(
+      gridRPhi, {BinningValue::binR, BinningValue::binPhi}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_r_phi);
 
   // Labelling the grid tiles
@@ -343,7 +347,8 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
       "- axis 0 : AxisBoundaryType::Bound, (100., 400, 3), binR",
-      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 4), binPhi"};
+      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 4), "
+      "binPhi"};
 
   auto caption = actsvg::draw::text("caption", {-180, -420}, captionText);
   auto oGrid = actsvg::display::grid("ClosedDiscGridRPhi", pGrid);

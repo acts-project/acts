@@ -95,14 +95,15 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
                                                   const std::string& name) {
   ///  create the volume array
   using VAP = std::pair<TrackingVolumePtr, Vector3>;
-  std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(gctx, binR)},
-                              {oVolume, oVolume->binningPosition(gctx, binR)}};
+  std::vector<VAP> volumes = {
+      {iVolume, iVolume->binningPosition(gctx, BinningValue::binR)},
+      {oVolume, oVolume->binningPosition(gctx, BinningValue::binR)}};
   ///  the bounds for the container
   auto hVolumeBounds =
       std::make_shared<CylinderVolumeBounds>(0., hVolumeR, hVolumeHalflength);
   ///  create the BinUtility & the BinnedArray
-  auto vUtility = std::make_unique<const BinUtility>(volumes.size(), 0.,
-                                                     hVolumeR, open, binR);
+  auto vUtility = std::make_unique<const BinUtility>(
+      volumes.size(), 0., hVolumeR, open, BinningValue::binR);
   std::shared_ptr<const TrackingVolumeArray> vArray =
       std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
           volumes, std::move(vUtility));

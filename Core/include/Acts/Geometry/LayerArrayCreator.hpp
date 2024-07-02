@@ -60,7 +60,7 @@ class LayerArrayCreator : public ILayerArrayCreator {
   std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layersInput, double min,
       double max, BinningType bType = arbitrary,
-      BinningValue bValue = binX) const override;
+      BinningValue bValue = BinningValue::binX) const override;
 
   /// set logging instance
   void setLogger(std::unique_ptr<const Logger> logger) {

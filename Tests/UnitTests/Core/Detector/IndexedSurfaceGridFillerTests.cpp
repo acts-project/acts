@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {binX, binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {binX, binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
   IndexedGridFiller filler{{}};
   filler.oLogger = getDefaultLogger("IndexGridFiller", Logging::VERBOSE);
 
-  BinningValueReferenceGenerator<binX> generator;
+  BinningValueReferenceGenerator<BinningValue::binX> generator;
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
 
   // Fill the surface
@@ -199,8 +199,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {binX, binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
               std::move(axisY));
 
   // Indexed Surface grid
-  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                            {binX, binY});
+  IndexedSurfacesNavigation<decltype(gridXY)> indexedGridXY(
+      std::move(gridXY), {BinningValue::binX, BinningValue::binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
 
   // Indexed Surface grid
   IndexedSurfacesNavigation<decltype(gridZPhi)> indexedGridZPhi(
-      std::move(gridZPhi), {binZ, binPhi});
+      std::move(gridZPhi), {BinningValue::binZ, BinningValue::binPhi});
 
   auto cBounds = std::make_shared<CylinderBounds>(10, 2., M_PI / 30, 0.);
   auto cSurface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
 
   // Indexed Surface grid
   IndexedSurfacesNavigation<decltype(gridZPhi)> indexedGridZPhi(
-      std::move(gridZPhi), {binZ, binPhi});
+      std::move(gridZPhi), {BinningValue::binZ, BinningValue::binPhi});
 
   auto cBounds = std::make_shared<CylinderBounds>(10, 2., M_PI / 10, 0.);
   auto tf = AngleAxis3(M_PI, Vector3::UnitZ()) * Transform3::Identity();

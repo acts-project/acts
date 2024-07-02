@@ -125,14 +125,15 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in x, y, z
   misCfg.builders = {nullptr};
-  misCfg.binning = Acts::binR;
+  misCfg.binning = Acts::BinningValue::binR;
   BOOST_CHECK_THROW(auto b = CuboidalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
-  std::array<Acts::BinningValue, 3> binningValues = {Acts::binX, Acts::binY,
-                                                     Acts::binZ};
+  std::array<Acts::BinningValue, 3> binningValues = {Acts::BinningValue::binX,
+                                                     Acts::BinningValue::binY,
+                                                     Acts::BinningValue::binZ};
   for (auto bVal : binningValues) {
     // A perfect box shape
     auto box = Acts::CuboidVolumeBounds(10, 10, 10);
@@ -141,7 +142,7 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
     auto transformB = Acts::Transform3::Identity();
 
     Acts::Vector3 translation = Acts::Vector3::Zero();
-    translation[bVal] = 20;
+    translation[toUnderlying(bVal)] = 20;
     transformB.pretranslate(translation);
 
     auto builderA = std::make_shared<CuboidalVolumeBuilder>(
@@ -167,10 +168,14 @@ BOOST_AUTO_TEST_CASE(CuboidalContainerBuildingXYZVolumes) {
     BOOST_CHECK_EQUAL(roots.volumes.size(), 2u);
     BOOST_CHECK_EQUAL(roots.volumes.at(0)->geometryId().volume(), 1u);
     BOOST_CHECK_EQUAL(roots.volumes.at(1)->geometryId().volume(), 2u);
-    BOOST_CHECK_EQUAL(
-        roots.volumes.at(0)->transform(tContext).translation()[bVal], 0);
-    BOOST_CHECK_EQUAL(
-        roots.volumes.at(1)->transform(tContext).translation()[bVal], 20);
+    BOOST_CHECK_EQUAL(roots.volumes.at(0)
+                          ->transform(tContext)
+                          .translation()[toUnderlying(bVal)],
+                      0);
+    BOOST_CHECK_EQUAL(roots.volumes.at(1)
+                          ->transform(tContext)
+                          .translation()[toUnderlying(bVal)],
+                      20);
 
     for (auto& portal : portals) {
       if (portal.second->attachedDetectorVolumes().at(0).empty()) {

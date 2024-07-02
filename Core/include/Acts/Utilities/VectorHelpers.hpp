@@ -154,23 +154,23 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
 /// binning values.
 inline double cast(const Vector3& position, BinningValue bval) {
   switch (bval) {
-    case binX:
+    case BinningValue::binX:
       return position[0];
-    case binY:
+    case BinningValue::binY:
       return position[1];
-    case binZ:
+    case BinningValue::binZ:
       return position[2];
-    case binR:
+    case BinningValue::binR:
       return perp(position);
-    case binPhi:
+    case BinningValue::binPhi:
       return phi(position);
-    case binRPhi:
+    case BinningValue::binRPhi:
       return perp(position) * phi(position);
-    case binH:
+    case BinningValue::binH:
       return theta(position);
-    case binEta:
+    case BinningValue::binEta:
       return eta(position);
-    case binMag:
+    case BinningValue::binMag:
       return position.norm();
     default:
       assert(false && "Invalid BinningValue enum value");

@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes = {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
-  IndexedRootVolumeFinderBuilder builder({Acts::binZ, Acts::binR});
+  IndexedRootVolumeFinderBuilder builder(
+      {Acts::BinningValue::binZ, Acts::BinningValue::binR});
 
   // Let's construct a detector
   auto rootVolumeFinder = builder.construct(tContext, rootVolumes);

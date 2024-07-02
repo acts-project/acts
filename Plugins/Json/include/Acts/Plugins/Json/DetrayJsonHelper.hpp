@@ -109,19 +109,25 @@ inline static std::size_t accelerationLink(const binning_values_t& casts) {
   // Default is `brute_force`
   std::size_t accLink = 0u;
   if (casts.size() == 2u) {
-    if (casts[0u] == binX && casts[1u] == binY) {
+    if (casts[0u] == BinningValue::binX && casts[1u] == BinningValue::binY) {
       accLink = 1u;
-    } else if (casts[0u] == binR && casts[1u] == binPhi) {
+    } else if (casts[0u] == BinningValue::binR &&
+               casts[1u] == BinningValue::binPhi) {
       accLink = 3u;
-    } else if (casts[0u] == binZ && casts[1u] == binPhi) {
+    } else if (casts[0u] == BinningValue::binZ &&
+               casts[1u] == BinningValue::binPhi) {
       accLink = 4u;
-    } else if (casts[0u] == binZ && casts[1u] == binR) {
+    } else if (casts[0u] == BinningValue::binZ &&
+               casts[1u] == BinningValue::binR) {
       accLink = 5u;
     }
   } else if (casts.size() == 3u) {
-    if (casts[0u] == binX && casts[1u] == binY && casts[2u] == binZ) {
+    if (casts[0u] == BinningValue::binX && casts[1u] == BinningValue::binY &&
+        casts[2u] == BinningValue::binZ) {
       accLink = 2u;
-    } else if (casts[0u] == binZ && casts[1u] == binPhi && casts[2u] == binR) {
+    } else if (casts[0u] == BinningValue::binZ &&
+               casts[1u] == BinningValue::binPhi &&
+               casts[2u] == BinningValue::binR) {
       accLink = 5u;
     }
   }

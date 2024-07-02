@@ -197,10 +197,12 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
   std::array<bool, 2u> transformOptions = {false, true};
 
   // One dimensional sub spaces
-  const std::tuple<
-      GridAccess::GlobalSubspace<binX>, GridAccess::GlobalSubspace<binY>,
-      GridAccess::GlobalSubspace<binZ>, GridAccess::GlobalSubspace<binR>,
-      GridAccess::GlobalSubspace<binPhi>, GridAccess::GlobalSubspace<binEta>>
+  const std::tuple<GridAccess::GlobalSubspace<BinningValue::binX>,
+                   GridAccess::GlobalSubspace<BinningValue::binY>,
+                   GridAccess::GlobalSubspace<BinningValue::binZ>,
+                   GridAccess::GlobalSubspace<BinningValue::binR>,
+                   GridAccess::GlobalSubspace<BinningValue::binPhi>,
+                   GridAccess::GlobalSubspace<BinningValue::binEta>>
       oneDimSubspaces = {};
 
   for (bool transform : transformOptions) {
@@ -212,16 +214,17 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
   }
 
   // Useful two dimensional sub spaces
-  const std::tuple<GridAccess::GlobalSubspace<binX, binY>,
-                   GridAccess::GlobalSubspace<binY, binX>,
-                   GridAccess::GlobalSubspace<binX, binZ>,
-                   GridAccess::GlobalSubspace<binZ, binX>,
-                   GridAccess::GlobalSubspace<binY, binZ>,
-                   GridAccess::GlobalSubspace<binZ, binY>,
-                   GridAccess::GlobalSubspace<binR, binPhi>,
-                   GridAccess::GlobalSubspace<binPhi, binR>,
-                   GridAccess::GlobalSubspace<binZ, binPhi>,
-                   GridAccess::GlobalSubspace<binPhi, binZ>>
+  const std::tuple<
+      GridAccess::GlobalSubspace<BinningValue::binX, BinningValue::binY>,
+      GridAccess::GlobalSubspace<BinningValue::binY, BinningValue::binX>,
+      GridAccess::GlobalSubspace<BinningValue::binX, BinningValue::binZ>,
+      GridAccess::GlobalSubspace<BinningValue::binZ, BinningValue::binX>,
+      GridAccess::GlobalSubspace<BinningValue::binY, BinningValue::binZ>,
+      GridAccess::GlobalSubspace<BinningValue::binZ, BinningValue::binY>,
+      GridAccess::GlobalSubspace<BinningValue::binR, BinningValue::binPhi>,
+      GridAccess::GlobalSubspace<BinningValue::binPhi, BinningValue::binR>,
+      GridAccess::GlobalSubspace<BinningValue::binZ, BinningValue::binPhi>,
+      GridAccess::GlobalSubspace<BinningValue::binPhi, BinningValue::binZ>>
       twoDimSubspaces = {};
 
   for (bool transform : transformOptions) {
@@ -246,23 +249,29 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
   // Switch and fill for 1D
   if (accessors.size() == 1u) {
     switch (accessors[0]) {
-      case binX:
-        globalToGridLocal = decodeGeneralSubspace<binX>(jGlobalToGridLocal);
+      case BinningValue::binX:
+        globalToGridLocal =
+            decodeGeneralSubspace<BinningValue::binX>(jGlobalToGridLocal);
         break;
-      case binY:
-        globalToGridLocal = decodeGeneralSubspace<binY>(jGlobalToGridLocal);
+      case BinningValue::binY:
+        globalToGridLocal =
+            decodeGeneralSubspace<BinningValue::binY>(jGlobalToGridLocal);
         break;
-      case binZ:
-        globalToGridLocal = decodeGeneralSubspace<binZ>(jGlobalToGridLocal);
+      case BinningValue::binZ:
+        globalToGridLocal =
+            decodeGeneralSubspace<BinningValue::binZ>(jGlobalToGridLocal);
         break;
-      case binR:
-        globalToGridLocal = decodeGeneralSubspace<binR>(jGlobalToGridLocal);
+      case BinningValue::binR:
+        globalToGridLocal =
+            decodeGeneralSubspace<BinningValue::binR>(jGlobalToGridLocal);
         break;
-      case binPhi:
-        globalToGridLocal = decodeGeneralSubspace<binPhi>(jGlobalToGridLocal);
+      case BinningValue::binPhi:
+        globalToGridLocal =
+            decodeGeneralSubspace<BinningValue::binPhi>(jGlobalToGridLocal);
         break;
-      case binEta:
-        globalToGridLocal = decodeGeneralSubspace<binEta>(jGlobalToGridLocal);
+      case BinningValue::binEta:
+        globalToGridLocal =
+            decodeGeneralSubspace<BinningValue::binEta>(jGlobalToGridLocal);
         break;
       default:
         // globalToGridLocal = nullptr;
@@ -272,30 +281,56 @@ Acts::GridAccessJsonConverter::globalToGridLocalFromJson(
 
   // Switch and fill for 2D
   if (accessors.size() == 2u) {
-    if (accessors == std::vector<BinningValue>{binX, binY}) {
-      globalToGridLocal = decodeGeneralSubspace<binX, binY>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binY, binX}) {
-      globalToGridLocal = decodeGeneralSubspace<binY, binX>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binX, binZ}) {
-      globalToGridLocal = decodeGeneralSubspace<binX, binZ>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binZ, binX}) {
-      globalToGridLocal = decodeGeneralSubspace<binZ, binX>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binY, binZ}) {
-      globalToGridLocal = decodeGeneralSubspace<binY, binZ>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binZ, binY}) {
-      globalToGridLocal = decodeGeneralSubspace<binZ, binY>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binR, binPhi}) {
+    if (accessors ==
+        std::vector<BinningValue>{BinningValue::binX, BinningValue::binY}) {
       globalToGridLocal =
-          decodeGeneralSubspace<binR, binPhi>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binPhi, binR}) {
+          decodeGeneralSubspace<BinningValue::binX, BinningValue::binY>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binY,
+                                                      BinningValue::binX}) {
       globalToGridLocal =
-          decodeGeneralSubspace<binPhi, binR>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binZ, binPhi}) {
+          decodeGeneralSubspace<BinningValue::binY, BinningValue::binX>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binX,
+                                                      BinningValue::binZ}) {
       globalToGridLocal =
-          decodeGeneralSubspace<binZ, binPhi>(jGlobalToGridLocal);
-    } else if (accessors == std::vector<BinningValue>{binPhi, binZ}) {
+          decodeGeneralSubspace<BinningValue::binX, BinningValue::binZ>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binZ,
+                                                      BinningValue::binX}) {
       globalToGridLocal =
-          decodeGeneralSubspace<binPhi, binZ>(jGlobalToGridLocal);
+          decodeGeneralSubspace<BinningValue::binZ, BinningValue::binX>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binY,
+                                                      BinningValue::binZ}) {
+      globalToGridLocal =
+          decodeGeneralSubspace<BinningValue::binY, BinningValue::binZ>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binZ,
+                                                      BinningValue::binY}) {
+      globalToGridLocal =
+          decodeGeneralSubspace<BinningValue::binZ, BinningValue::binY>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binR,
+                                                      BinningValue::binPhi}) {
+      globalToGridLocal =
+          decodeGeneralSubspace<BinningValue::binR, BinningValue::binPhi>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binPhi,
+                                                      BinningValue::binR}) {
+      globalToGridLocal =
+          decodeGeneralSubspace<BinningValue::binPhi, BinningValue::binR>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binZ,
+                                                      BinningValue::binPhi}) {
+      globalToGridLocal =
+          decodeGeneralSubspace<BinningValue::binZ, BinningValue::binPhi>(
+              jGlobalToGridLocal);
+    } else if (accessors == std::vector<BinningValue>{BinningValue::binPhi,
+                                                      BinningValue::binZ}) {
+      globalToGridLocal =
+          decodeGeneralSubspace<BinningValue::binPhi, BinningValue::binZ>(
+              jGlobalToGridLocal);
     }
     // else globalToGridLocal = nullptr;
   }
@@ -312,7 +347,9 @@ Acts::GridAccessJsonConverter::globalToGridLocal1DimDelegateFromJson(
   }
   // Unroll the decoration
   Acts::GridAccess::GlobalToGridLocal1DimDelegate delegate;
-  decorateGlobal1DimDelegate<binX, binY, binZ, binR, binPhi, binEta>(
+  decorateGlobal1DimDelegate<BinningValue::binX, BinningValue::binY,
+                             BinningValue::binZ, BinningValue::binR,
+                             BinningValue::binPhi, BinningValue::binEta>(
       delegate, jGlobalToGridLocal);
   return delegate;
 }
@@ -329,26 +366,36 @@ Acts::GridAccessJsonConverter::globalToGridLocal2DimDelegateFromJson(
   Acts::GridAccess::GlobalToGridLocal2DimDelegate delegate;
   // Only the matching one will be applied, matching condition is checked inside
   // the call - may unroll this es well
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binX,
-                         binY>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binY,
-                         binX>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binX,
-                         binZ>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binZ,
-                         binX>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binY,
-                         binZ>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binZ,
-                         binY>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binR,
-                         binPhi>(delegate, jGlobalToGridLocal);
   decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
-                         binPhi, binR>(delegate, jGlobalToGridLocal);
-  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate, binZ,
-                         binPhi>(delegate, jGlobalToGridLocal);
+                         BinningValue::binX, BinningValue::binY>(
+      delegate, jGlobalToGridLocal);
   decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
-                         binPhi, binZ>(delegate, jGlobalToGridLocal);
+                         BinningValue::binY, BinningValue::binX>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binX, BinningValue::binZ>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binZ, BinningValue::binX>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binY, BinningValue::binZ>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binZ, BinningValue::binY>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binR, BinningValue::binPhi>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binPhi, BinningValue::binR>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binZ, BinningValue::binPhi>(
+      delegate, jGlobalToGridLocal);
+  decorateGlobalDelegate<Acts::GridAccess::GlobalToGridLocal2DimDelegate,
+                         BinningValue::binPhi, BinningValue::binZ>(
+      delegate, jGlobalToGridLocal);
   return delegate;
 }
 

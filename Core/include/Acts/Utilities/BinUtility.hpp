@@ -72,7 +72,7 @@ class BinUtility {
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
   BinUtility(std::size_t bins, float min, float max, BinningOption opt = open,
-             BinningValue value = binX,
+             BinningValue value = BinningValue::binX,
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
@@ -86,7 +86,7 @@ class BinUtility {
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
   BinUtility(std::vector<float>& bValues, BinningOption opt = open,
-             BinningValue value = binPhi,
+             BinningValue value = BinningValue::binPhi,
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);

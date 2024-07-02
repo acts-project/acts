@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   Acts::ActsScalar pixelEcLayerHz = 10;
 
   // Create  root node
-  std::vector<Acts::BinningValue> detectorBinning = {Acts::binR};
+  std::vector<Acts::BinningValue> detectorBinning = {Acts::BinningValue::binR};
   std::vector<Acts::ActsScalar> detectorBoundaries = {detectorIr, detectorOr,
                                                       detectorHz};
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   // A pixel system
   std::vector<Acts::ActsScalar> pixelBoundaries = {pixelIr, pixelOr,
                                                    detectorHz};
-  std::vector<Acts::BinningValue> pixelBinning = {Acts::binZ};
+  std::vector<Acts::BinningValue> pixelBinning = {Acts::BinningValue::binZ};
   auto pixel = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixel", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       pixelBoundaries, pixelBinning);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   // Nec: Small differences to check if the adjustments are made
   std::vector<Acts::ActsScalar> pixelEcBoundaries = {pixelIr, pixelOr - 5.,
                                                      pixelEcHz};
-  std::vector<Acts::BinningValue> pixelEcBinning = {Acts::binZ};
+  std::vector<Acts::BinningValue> pixelEcBinning = {Acts::BinningValue::binZ};
 
   Acts::Transform3 pixelNecTransform =
       Acts::Transform3::Identity() *
@@ -151,7 +151,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   // Barrel
   std::vector<Acts::ActsScalar> pixelBarrelBoundaries = {
       pixelIr + 1, pixelOr - 1., detectorHz - 2 * pixelEcHz};
-  std::vector<Acts::BinningValue> pixelBarrelBinning = {Acts::binR};
+  std::vector<Acts::BinningValue> pixelBarrelBinning = {
+      Acts::BinningValue::binR};
 
   auto pixelBarrel = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixel_barrel", Acts::Transform3::Identity(),
@@ -210,7 +211,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(pixel));
 
   // An Indexed volume finder will be attached
-  std::vector<Acts::BinningValue> rootVolumeBinning = {Acts::binZ, Acts::binR};
+  std::vector<Acts::BinningValue> rootVolumeBinning = {
+      Acts::BinningValue::binZ, Acts::BinningValue::binR};
   detectorBpr->rootVolumeFinderBuilder =
       std::make_shared<Acts::Experimental::IndexedRootVolumeFinderBuilder>(
           rootVolumeBinning);

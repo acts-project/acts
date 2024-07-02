@@ -242,10 +242,10 @@ class SurfaceArrayCreator {
     using namespace UnitLiterals;
     using VectorHelpers::perp;
 
-    if (bValue == Acts::binPhi) {
+    if (bValue == Acts::BinningValue::binPhi) {
       // Take the two binning positions
-      auto pos1 = a->binningPosition(gctx, binR),
-           pos2 = b->binningPosition(gctx, binR);
+      auto pos1 = a->binningPosition(gctx, BinningValue::binR),
+           pos2 = b->binningPosition(gctx, BinningValue::binR);
 
       // Project them on the (x, y) plane, where Phi angles are calculated
       auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
@@ -260,14 +260,16 @@ class SurfaceArrayCreator {
       return std::abs(dPhi) < M_PI / 180.;
     }
 
-    if (bValue == Acts::binZ) {
-      return (std::abs(a->binningPosition(gctx, binR).z() -
-                       b->binningPosition(gctx, binR).z()) < 1_um);
+    if (bValue == Acts::BinningValue::binZ) {
+      return (std::abs(a->binningPosition(gctx, BinningValue::binR).z() -
+                       b->binningPosition(gctx, BinningValue::binR).z()) <
+              1_um);
     }
 
-    if (bValue == Acts::binR) {
-      return (std::abs(perp(a->binningPosition(gctx, binR)) -
-                       perp(b->binningPosition(gctx, binR))) < 1_um);
+    if (bValue == Acts::BinningValue::binR) {
+      return (std::abs(perp(a->binningPosition(gctx, BinningValue::binR)) -
+                       perp(b->binningPosition(gctx, BinningValue::binR))) <
+              1_um);
     }
 
     return false;

@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       auto oneConePh = oneCone->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = oneConePh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0_mm, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0_mm, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), hzPos, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0_mm, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0_mm, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
 
       const unsigned int expectedFaces = segments < 4 ? 4 : segments;
       BOOST_CHECK_EQUAL(oneConePh.faces.size(), expectedFaces);
@@ -98,14 +98,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
           oneConePiece->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = oneConePiecePh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), rMin, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), hzpMin, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), hzPos, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), rMin, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), hzpMin, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
     }
 
     /// The full cone on both sides
@@ -115,14 +115,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       auto twoConesPh = twoCones->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = twoConesPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0_mm, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), hzNeg, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), hzPos, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0_mm, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), hzNeg, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
 
       const unsigned int expectedFaces = segments < 4 ? 8 : 2 * segments;
       BOOST_CHECK_EQUAL(twoConesPh.faces.size(), expectedFaces);
@@ -141,14 +141,15 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
           sectoralCones->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = sectoralConesPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), 0, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rMax, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binY).min(), ???, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binY).max(), ???, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0_mm, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), rMax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), hzNeg, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), hzPos, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), 0, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMax, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), ???,
+      //      epsAbs); CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
+      //      ???, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0_mm, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), rMax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), hzNeg, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hzPos, epsAbs);
     }
   }
 }
@@ -175,14 +176,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
           fullCylinder->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = fullCylinderPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), -hZ, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), hZ, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), -hZ, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hZ, epsAbs);
 
       const unsigned int expectedFaces = segments < 4 ? 4 : segments;
       const unsigned int expectedVertices = segments < 4 ? 8 : 2 * segments;
@@ -201,17 +202,17 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
           centerSectoredCylinder->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = centerSectoredCylinderPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), r * std::cos(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -r * std::sin(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), r * std::sin(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), r, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), -hZ, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), hZ, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(),
+                      r * std::cos(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(),
+                      -r * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
+                      r * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), r, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), -hZ, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), hZ, epsAbs);
     }
   }
 }
@@ -237,14 +238,14 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       auto fullDiscPh = fullDisc->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = fullDiscPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
 
       const unsigned int expectedFaces = 1;
       const unsigned int expectedVertices = segments > 4 ? segments + 1 : 4 + 1;
@@ -259,14 +260,14 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       auto radialPh = radialDisc->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = radialPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), innerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), innerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     /// Sectoral disc - around 0.
@@ -276,16 +277,16 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       auto sectorPh = sectorDisc->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = sectorPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -outerR * std::sin(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), outerR * std::sin(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(),
+                      -outerR * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
+                      outerR * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     /// Sectoral ring - around 0.
@@ -298,17 +299,17 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
           sectorRingDisc->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = sectorRingDiscPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), innerR * std::cos(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -outerR * std::sin(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), outerR * std::sin(phiSector),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), innerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), outerR, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(),
+                      innerR * std::cos(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(),
+                      -outerR * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
+                      outerR * std::sin(phiSector), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), innerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), outerR, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     /// Trapezoid for a disc
@@ -324,18 +325,19 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
           trapezoidDiscSf->polyhedronRepresentation(tgContext, segments);
       const auto extent = trapezoidDiscSfPh.extent();
 
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -std::abs(outerR - innerR) / 2.,
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(),
+                      -std::abs(outerR - innerR) / 2., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(),
+                      std::abs(outerR - innerR) / 2., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -halfXmax,
                       epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), std::abs(outerR - innerR) / 2.,
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -halfXmax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), halfXmax, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(),
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), halfXmax, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
                       std::hypot(std::abs(outerR - innerR) / 2., halfXmax),
                       epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     /// AnnulusBounds for a disc
@@ -353,14 +355,18 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
           annulusDisc->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = annulusDiscPh.extent();
-      //      CHECK_CLOSE_ABS(extent.range(binX).min(), ???, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binX).max(), ???, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binY).min(), ???, epsAbs);
-      //      CHECK_CLOSE_ABS(extent.range(binY).max(), ???, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), minRadius, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), maxRadius, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), ???,
+      //      epsAbs); CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(),
+      //      ???, epsAbs);
+      //      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), ???,
+      //      epsAbs); CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(),
+      //      ???, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), minRadius,
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), maxRadius,
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
   }
 }
@@ -387,14 +393,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
           rectangularPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = rectangularPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rhX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rhX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rhY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rhY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), std::hypot(rhX, rhY), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rhX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rhX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rhY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rhY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
+                      std::hypot(rhX, rhY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
 
       BOOST_CHECK_EQUAL(rectangularPh.vertices.size(), 4);
       BOOST_CHECK_EQUAL(rectangularPh.faces.size(), 1);
@@ -416,15 +423,17 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
           trapezoidalPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = trapezoidalPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -std::max(thX1, thX2), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), std::max(thX1, thX2), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -thY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), thY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(),
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(),
+                      -std::max(thX1, thX2), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(),
+                      std::max(thX1, thX2), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -thY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), thY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
                       std::hypot(std::max(thX1, thX2), thY), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
 
       BOOST_CHECK_EQUAL(trapezoidalPh.vertices.size(), 4);
       BOOST_CHECK_EQUAL(trapezoidalPh.faces.size(), 1);
@@ -447,14 +456,16 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
           ellipsoidPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = ellipsoidPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rMaxX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rMaxX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rMaxY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rMaxY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), std::min(rMinX, rMinY), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), std::max(rMaxX, rMaxY), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rMaxX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMaxX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rMaxY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rMaxY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(),
+                      std::min(rMinX, rMinY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
+                      std::max(rMaxX, rMaxY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     {
@@ -470,14 +481,16 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
           ellipsoidRingPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = ellipsoidRingPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rMaxX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rMaxX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rMaxY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rMaxY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), std::min(rMinX, rMinY), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), std::max(rMaxX, rMaxY), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rMaxX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rMaxX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rMaxY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rMaxY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(),
+                      std::min(rMinX, rMinY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
+                      std::max(rMaxX, rMaxY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     /// ConvexPolygonBounds test
@@ -493,14 +506,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
           hexagonPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = hexagonPlanePh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -40, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), 30, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -30, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), 50, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), std::sqrt(2900), epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -40, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), 30, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -30, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), 50, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(), std::sqrt(2900),
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
     }
 
     /// Diamond shaped plane
@@ -518,15 +532,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
           diamondPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = diamondPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -hMedX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), hMedX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -hMinY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), hMaxY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), std::hypot(hMaxX, hMaxY),
-                      epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -hMedX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), hMedX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -hMinY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), hMaxY, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
+                      std::hypot(hMaxX, hMaxY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
 
       BOOST_CHECK_EQUAL(diamondPh.vertices.size(), 6);
       BOOST_CHECK_EQUAL(diamondPh.faces.size(), 1);
@@ -561,15 +575,17 @@ BOOST_AUTO_TEST_CASE(ShiftedSurfacePolyhedrons) {
           rectangularPlane->polyhedronRepresentation(tgContext, segments);
 
       const auto extent = rectangularPh.extent();
-      CHECK_CLOSE_ABS(extent.range(binX).min(), -rhX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binX).max(), rhX, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).min(), -rhY + shiftY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binY).max(), rhY + shiftY, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).min(), 25, epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binR).max(), std::hypot(rhX, rhY + shiftY),
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).min(), -rhX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binX).max(), rhX, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).min(), -rhY + shiftY,
                       epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).min(), 0., epsAbs);
-      CHECK_CLOSE_ABS(extent.range(binZ).max(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binY).max(), rhY + shiftY,
+                      epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).min(), 25, epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binR).max(),
+                      std::hypot(rhX, rhY + shiftY), epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).min(), 0., epsAbs);
+      CHECK_CLOSE_ABS(extent.range(BinningValue::binZ).max(), 0., epsAbs);
 
       BOOST_CHECK_EQUAL(rectangularPh.vertices.size(), 4);
       BOOST_CHECK_EQUAL(rectangularPh.faces.size(), 1);

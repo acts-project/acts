@@ -75,15 +75,15 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
 
       Acts::ActsScalar refC = 0.5 * (boundaries[il + 1u] + boundaries[il]);
 
-      if (bValue == Acts::binR) {
+      if (bValue == Acts::BinningValue::binR) {
         Acts::ActsScalar phi = Acts::VectorHelpers::phi(refPosition);
         position = Acts::Vector3(refC * std::cos(phi), refC * std::sin(phi),
                                  refPosition.z());
-      } else if (bValue == Acts::binZ) {
+      } else if (bValue == Acts::BinningValue::binZ) {
         // correct to global
         refC += surface.transform(gctx).translation().z();
         position[2] = refC;
-      } else if (bValue == Acts::binPhi) {
+      } else if (bValue == Acts::BinningValue::binPhi) {
         Acts::ActsScalar r = Acts::VectorHelpers::perp(refPosition);
         position = Acts::Vector3(r * std::cos(refC), r * std::sin(refC),
                                  refPosition.z());

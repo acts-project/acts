@@ -132,19 +132,19 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in z, r, phi
   misCfg.builders = {nullptr};
-  misCfg.binning = {Acts::binX};
+  misCfg.binning = {Acts::BinningValue::binX};
   BOOST_CHECK_THROW(auto b = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning not in z, r,
   misCfg.builders = {nullptr, nullptr};
-  misCfg.binning = {Acts::binZ, Acts::binPhi};
+  misCfg.binning = {Acts::BinningValue::binZ, Acts::BinningValue::binPhi};
   BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning  in z, r, but not exactly 2 builders
   misCfg.builders = {nullptr, nullptr, nullptr};
-  misCfg.binning = {Acts::binZ, Acts::binR};
+  misCfg.binning = {Acts::BinningValue::binZ, Acts::BinningValue::binR};
   BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
@@ -175,12 +175,13 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   CylindricalContainerBuilder::Config tripleZCfg;
   tripleZCfg.auxiliary = "*** Test 0 - Build triple in Z ***";
   tripleZCfg.builders = {negDisc, barrel, posDisc};
-  tripleZCfg.binning = {binZ};
+  tripleZCfg.binning = {BinningValue::binZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
-      {ProtoBinning(binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 12)}};
+      {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
+       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI,
+                    M_PI, 12)}};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
@@ -227,7 +228,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.auxiliary = "*** Test 1 - Build multilayer barrel ***";
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {binR};
+  barrelRCfg.binning = {BinningValue::binR};
   barrelRCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
 
   auto barrelR = std::make_shared<CylindricalContainerBuilder>(
@@ -246,7 +247,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   // Create the container builder
   CylindricalContainerBuilder::Config barrelPhiCfg;
   barrelPhiCfg.auxiliary = "*** Test 2 - Build segmented phi barrel ***";
-  barrelPhiCfg.binning = {binPhi};
+  barrelPhiCfg.binning = {BinningValue::binPhi};
 
   unsigned int phiSectors = 5;
   Acts::ActsScalar phiHalfSector = M_PI / phiSectors;
@@ -312,7 +313,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {binR};
+  barrelRCfg.binning = {BinningValue::binR};
 
   auto barrel = std::make_shared<CylindricalContainerBuilder>(
       barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
@@ -327,7 +328,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelEndcapCfg;
   barrelEndcapCfg.builders = {endcapN, barrel, endcapP};
-  barrelEndcapCfg.binning = {binZ};
+  barrelEndcapCfg.binning = {BinningValue::binZ};
 
   auto barrelEndcap = std::make_shared<CylindricalContainerBuilder>(
       barrelEndcapCfg,
@@ -336,7 +337,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config detectorCfg;
   detectorCfg.builders = {beampipe, barrelEndcap};
-  detectorCfg.binning = {binR};
+  detectorCfg.binning = {BinningValue::binR};
 
   auto detector = std::make_shared<CylindricalContainerBuilder>(
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));

@@ -21,8 +21,8 @@ namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
-  BinUtility xyBinning(2, -1., 1., open, binX);
-  xyBinning += BinUtility(3, -3., 3., open, binY);
+  BinUtility xyBinning(2, -1., 1., open, BinningValue::binX);
+  xyBinning += BinUtility(3, -3., 3., open, BinningValue::binY);
 
   // Constructor a few material properties
   MaterialSlab a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);

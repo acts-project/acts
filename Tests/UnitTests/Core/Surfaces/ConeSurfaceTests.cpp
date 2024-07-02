@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//#include <boost/test/tools/output_test_stream.hpp>
+// #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -220,14 +220,22 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   auto pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
 
   double rMax = zMax * std::tan(alpha);
-  CHECK_CLOSE_ABS(zMin, pConeExtent.min(binZ), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(zMax, pConeExtent.max(binZ), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(0., pConeExtent.min(binR), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binR), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(binX), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binX), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(binY), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(zMin, pConeExtent.min(BinningValue::binZ),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(zMax, pConeExtent.max(BinningValue::binZ),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pConeExtent.min(BinningValue::binR),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binR),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(BinningValue::binX),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binX),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(BinningValue::binY),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binY),
+                  s_onSurfaceTolerance);
 
   // Now a sector
   double halfPhiSector = M_PI / 8.;
@@ -236,10 +244,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
   pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
 
-  CHECK_CLOSE_ABS(zMin, pConeExtent.min(binZ), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(zMax, pConeExtent.max(binZ), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(0., pConeExtent.min(binR), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(binR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(zMin, pConeExtent.min(BinningValue::binZ),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(zMax, pConeExtent.max(BinningValue::binZ),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(0., pConeExtent.min(BinningValue::binR),
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binR),
+                  s_onSurfaceTolerance);
 }
 
 /// Unit test for testing ConeSurface alignment derivatives

@@ -590,7 +590,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   // actually filled SA
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     auto binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -640,7 +640,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto A = pr.first;
     auto B = pr.second;
 
-    Vector3 ctr = A->binningPosition(tgContext, binR);
+    Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
     auto binContent = sa.at(ctr);
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
@@ -710,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto A = pr.first;
       auto B = pr.second;
 
-      Vector3 ctr = A->binningPosition(tgContext, binR);
+      Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
       auto binContent = sa2.at(ctr);
       BOOST_CHECK_EQUAL(binContent.size(), 2u);
       std::set<const Surface*> act;
