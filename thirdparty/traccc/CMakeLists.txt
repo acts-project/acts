@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.14)
 include(FetchContent)
 
 # Tell the user what's happening.
-message( STATUS "Building tracc as part of the Acts project" )
+message( STATUS "Building traccc as part of the Acts project" )
 
 set( TRACCC_VERSION "${_acts_traccc_version}")
 
