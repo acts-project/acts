@@ -31,7 +31,6 @@ target_include_directories(frnn
     SYSTEM PUBLIC
         ${TORCH_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/frnn/csrc>
-        $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(frnn PRIVATE ${TORCH_LIBRARIES})

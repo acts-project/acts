@@ -5,7 +5,7 @@ target_include_directories(
   ActsPluginFpeMonitoring
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-    $<INSTALL_INTERFACE:include>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_link_libraries(
   ActsPluginFpeMonitoring PUBLIC ActsCore)
@@ -24,7 +24,7 @@ else()
 
   if(dl_LIBRARY)
     target_link_libraries(ActsPluginFpeMonitoring PUBLIC ${dl_LIBRARY})
-    
+
     set(_backtrace_setup_complete FALSE)
 
     if(Backtrace_FOUND)

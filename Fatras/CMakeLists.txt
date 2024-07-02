@@ -17,7 +17,7 @@ target_include_directories(
   ActsFatras
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsFatras
   PUBLIC ActsCore)
@@ -30,5 +30,5 @@ install(
 install(
   DIRECTORY include/ActsFatras
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  
+
 add_component_if(Geant4 FatrasGeant4 ACTS_BUILD_FATRAS_GEANT4)
