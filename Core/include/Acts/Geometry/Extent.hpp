@@ -91,7 +91,7 @@ struct ExtentEnvelope {
   }
 
  private:
-  std::array<Envelope, numBinningValues()> m_values;
+  std::array<Envelope, numBinningValues()> m_values{};
 };
 
 /// A class representing the geometric extent of an object in its possible
