@@ -64,6 +64,9 @@ class SeedingAlgorithm final : public IAlgorithm {
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
     int numPhiNeighbors = 1;
+
+    // Connect custom selections on the space points or to the doublet compatibility
+    bool useExperimentCuts = false;
   };
 
   /// Construct the seeding algorithm.

@@ -18,13 +18,11 @@
 #include <vector>
 
 namespace Acts {
-
-  inline bool voidSpacePointSelector(float /*par1*/, float /*par2*/, float /*par3*/) {return true;}
   
 // forward declaration to avoid cyclic dependence
 template <typename T>
 class SeedFilter;
-  
+
 /// @brief Structure that holds configuration parameters for the seed finder algorithm
 template <typename SpacePoint>
 struct SeedFinderConfig {
@@ -192,8 +190,11 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
   /// Delegate for specifying experiment specific cuts on space points
   /// before filling the grid. Currently accepts three parameters
-  Delegate<bool(float /*p1*/, float /*p2*/, float /*p3*/)> spacePointSelector{
-    DelegateFuncTag<voidSpacePointSelector>{}}; 
+  Delegate<bool(const SpacePoint&)> spacePointSelector{
+    DelegateFuncTag<voidSpacePointSelector>{}};
+
+  static bool voidSpacePointSelector(const SpacePoint&) {return true;}
+    
   /// Tolerance parameter used to check the compatibility of space-point
   /// coordinates in xyz. This is only used in a detector specific check for
   /// strip modules
