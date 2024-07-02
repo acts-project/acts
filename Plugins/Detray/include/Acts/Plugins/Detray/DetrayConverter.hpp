@@ -16,6 +16,7 @@
 
 #include "detray/core/detector.hpp"
 #include "detray/io/frontend/payloads.hpp"
+#include "detray/definitions/geometry.hpp"
 
 #include "detray/builders/detector_builder.hpp"
 #include "detray/io/common/geometry_reader.hpp"
