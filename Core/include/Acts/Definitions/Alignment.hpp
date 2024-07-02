@@ -24,7 +24,7 @@ enum AlignmentIndices : unsigned int {
   eAlignmentCenter0 = 0u,
   eAlignmentCenter1 = eAlignmentCenter0 + 1u,
   eAlignmentCenter2 = eAlignmentCenter0 + 2u,
-  // Rotation angle around global x/y/z axis of geometry object
+  // Rotation angle around local x/y/z axis of geometry object
   eAlignmentRotation0 = 3u,
   eAlignmentRotation1 = eAlignmentRotation0 + 1u,
   eAlignmentRotation2 = eAlignmentRotation0 + 2u,
