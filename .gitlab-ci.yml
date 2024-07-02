@@ -6,7 +6,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v41
+  image: ghcr.io/acts-project/ubuntu2204:51
   tags:
     - large
   artifacts:
@@ -304,11 +304,11 @@ linux_physmon:
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
 
-linux_ubuntu_2004_cpp17:
+linux_ubuntu_2404_cpp17:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 17
-  image: ghcr.io/acts-project/ubuntu2004:v41
+  image: ghcr.io/acts-project/ubuntu2404:51
 
 linux_ubuntu_2204_cpp20:
   <<: *linux_ubuntu_extra
@@ -413,17 +413,6 @@ linux_ubuntu_2204_clang:
 
     - ctest --test-dir build -j$(nproc)
 
-
-lcg_102b:
-  <<: *lcg_base_job
-
-  variables:
-    LCG_VERSION: "102b"
-
-  parallel:
-    matrix:
-      - OS: [centos7]
-        COMPILER: [gcc11]
 
 lcg_104:
   <<: *lcg_base_job
