@@ -1,0 +1,60 @@
+{
+    "version": 8,
+    "$schema": "https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json",
+    "configurePresets": [
+        {
+            "name": "common",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
+                "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
+                "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
+                "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
+                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_FATRAS": "ON",
+                "ACTS_BUILD_FATRAS_GEANT4": "ON",
+                "ACTS_BUILD_ODD": "ON"
+            }
+        },
+        {
+            "name": "dev",
+            "displayName": "Development",
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "ACTS_FORCE_ASSERTIONS": "ON"
+            }
+        },
+        {
+            "name": "perf",
+            "displayName": "Performance",
+            "inherits": "common",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer",
+                "ACTS_BUILD_BENCHMARKS": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "all-dev",
+            "displayName": "All Dev Build",
+            "configurePreset": "dev",
+            "configuration": "Dev"
+        },
+        {
+            "name": "all-perf",
+            "displayName": "All Perf Build",
+            "configurePreset": "perf",
+            "configuration": "Perf"
+        }
+    ]
+}
