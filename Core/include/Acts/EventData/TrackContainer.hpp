@@ -23,6 +23,7 @@
 #include <any>
 #include <cstddef>
 #include <iterator>
+#include <string_view>
 
 namespace Acts {
 
@@ -68,6 +69,13 @@ class TrackContainer {
   /// this container
   using ConstTrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, true>;
+
+  using TrackBackendContainer = track_container_t;
+  using TrackStateBackendContainer = traj_t;
+
+  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  using ConstTrackStateProxy =
+      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
 
 #ifndef DOXYGEN
   friend TrackProxy;

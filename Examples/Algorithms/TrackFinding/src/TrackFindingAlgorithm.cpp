@@ -182,13 +182,22 @@ class BranchStopper {
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
+  struct BrachState {
+    int nPixelHoles = 0;
+    int nShortStripHoles = 0;
+  };
+
+  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
+      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
+
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
   explicit BranchStopper(const Config& config) : m_config(config) {}
 
   BranchStopperResult operator()(
       const Acts::CombinatorialKalmanFilterTipState& tipState,
-      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
+      const TrackContainer::TrackProxy& track,
+      const TrackContainer::TrackStateProxy& trackState) const {
     if (!m_config.has_value()) {
       return BranchStopperResult::Continue;
     }
@@ -209,6 +218,21 @@ class BranchStopper {
 
     if (singleConfig == nullptr) {
       ++m_nStoppedBranches;
+      return BranchStopperResult::StopAndDrop;
+    }
+
+    auto& branchState = branchStateAccessor(track);
+    if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+      if (trackState.referenceSurface().geometryId().volume() == 17) {
+        ++branchState.nPixelHoles;
+      } else if (trackState.referenceSurface().geometryId().volume() == 24) {
+        ++branchState.nShortStripHoles;
+      }
+    }
+    if (branchState.nPixelHoles > 1) {
+      return BranchStopperResult::StopAndDrop;
+    }
+    if (branchState.nShortStripHoles > 1) {
       return BranchStopperResult::StopAndDrop;
     }
 
@@ -301,17 +325,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementSelector measSel{
       Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  using Extensions =
-      Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>;
+  using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
   BranchStopper branchStopper(m_cfg.trackSelectorCfg);
 
   Extensions extensions;
   extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
-  extensions.updater.connect<
-      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
-      &kfUpdater);
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateBackendContainer>>(&kfUpdater);
   extensions.measurementSelector.connect<&MeasurementSelector::select>(
       &measSel);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
@@ -331,13 +353,13 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  TrackFindingAlgorithm::TrackFinderOptions firstOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, firstPropOptions);
+  TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
+                                  ctx.calibContext, slAccessorDelegate,
+                                  extensions, firstPropOptions);
 
-  TrackFindingAlgorithm::TrackFinderOptions secondOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, secondPropOptions);
+  TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
+                                   ctx.calibContext, slAccessorDelegate,
+                                   extensions, secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
 
   Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator> extrapolator(
@@ -365,7 +387,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   tracks.addColumn<unsigned int>("trackGroup");
+  tracks.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
+  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
   tracksTemp.addColumn<unsigned int>("trackGroup");
+  tracksTemp.addColumn<Acts::CombinatorialKalmanFilterTipState>("CkfTipState");
+  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
@@ -502,7 +528,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             auto& secondTracksForSeed = secondResult.value();
             for (auto& secondTrack : secondTracksForSeed) {
-              if (secondTrack.nTrackStates() < 2) {
+              if (!secondTrack.hasReferenceSurface()) {
+                ACTS_WARNING("Second track has no reference surface.");
+                continue;
+              }
+              if (secondTrack.nMeasurements() <= 1) {
                 continue;
               }
 

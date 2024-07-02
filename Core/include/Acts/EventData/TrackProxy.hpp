@@ -865,4 +865,5 @@ class TrackProxy {
       m_container;
   IndexType m_index;
 };
+
 }  // namespace Acts
