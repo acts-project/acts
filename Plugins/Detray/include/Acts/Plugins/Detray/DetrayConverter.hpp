@@ -37,8 +37,7 @@ class Portal;
 
 namespace DetrayConverter {
 
-using namespace detray;
-using DetrayDetector = detector<default_metadata>;
+using DetrayDetector = detray::detector<detray::default_metadata>;
 
 /// Write the detector to json output
 ///
@@ -54,7 +53,7 @@ void writeToJson(const DetrayDetector& dDetector,
 /// @param t the transform to be converted
 ///
 /// @return the transform_payload(translation, rotation)
-io::transform_payload convertTransform(const Transform3& t);
+detray::io::transform_payload convertTransform(const Transform3& t);
 
 /// Conversion method for surface bounds to detray::mask payloads
 ///
@@ -62,7 +61,7 @@ io::transform_payload convertTransform(const Transform3& t);
 /// @param portal the flag for conversion into detray portal format
 ///
 /// @return the mask_payload representing the bounds
-io::mask_payload convertMask(const SurfaceBounds& bounds, bool portal = false);
+detray::io::mask_payload convertMask(const SurfaceBounds& bounds, bool portal = false);
 
 /// Conversion method for surface objects to detray::surface payloads
 ///
@@ -71,7 +70,7 @@ io::mask_payload convertMask(const SurfaceBounds& bounds, bool portal = false);
 /// @param portal the flag for conversion into detray portal format
 ///
 /// @return the surface_payload for portals and volumes by @param Surface acts object
-io::surface_payload convertSurface(const GeometryContext& gctx,
+detray::io::surface_payload convertSurface(const GeometryContext& gctx,
                                    const Surface& surface, bool portal = false);
 /// Conversion method for Portal object to detray::portal payloads
 ///
@@ -85,7 +84,7 @@ io::surface_payload convertSurface(const GeometryContext& gctx,
 /// @note due to portal splitting this can add up in N portals for one initial one
 ///
 /// @brief convert the acts portal to detray surface payload and populate the payload
-std::vector<io::surface_payload> convertPortal(
+std::vector<detray::io::surface_payload> convertPortal(
     const GeometryContext& gctx, const Experimental::Portal& portal,
     std::size_t ip, const Experimental::DetectorVolume& volume,
     const std::vector<OrientedSurface>& orientedSurfaces,
@@ -98,7 +97,7 @@ std::vector<io::surface_payload> convertPortal(
 /// @param detectorVolumes the detector volumes for the link lookup
 ///
 /// @return the volume_payload for portals and volumes by @param volume acts object
-io::volume_payload convertVolume(
+detray::io::volume_payload convertVolume(
     const GeometryContext& gctx, const Experimental::DetectorVolume& volume,
     const std::vector<const Experimental::DetectorVolume*>& detectorVolumes);
 
@@ -107,7 +106,7 @@ io::volume_payload convertVolume(
 /// @param detector is the detector to be converted
 ///
 /// @return a geometry header payload
-io::geo_header_payload convertHead(
+detray::io::geo_header_payload convertHead(
     const Acts::Experimental::Detector& detector);
 
 /// Convert an Acts::Experimental::Detector to a detray::detector object
@@ -129,7 +128,7 @@ std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
   typename detector_t::name_map names = {{0u, detector.name()}};
 
   // build detector
-  detector_builder<default_metadata> detectorBuilder{};
+  detray::detector_builder<detray::default_metadata> detectorBuilder{};
   detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                    detectorPayload);
   detector_t detrayDetector(detectorBuilder.build(mr));
