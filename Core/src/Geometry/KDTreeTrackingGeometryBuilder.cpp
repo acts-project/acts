@@ -169,7 +169,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
 
   if (layerSurfaces.size() == 1u) {
     auto surface = layerSurfaces[0u].second;
-    const auto& transform = surface->transform(gctx);
+    auto transform = surface->transform(gctx);
     if (its.layerType == Acts::Surface::SurfaceType::Cylinder) {
       ACTS_VERBOSE(indent +
                    ">> creating cylinder layer from a single surface.");

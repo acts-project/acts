@@ -319,7 +319,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
     status2 = Intersection3D::Status::missed;
   }
 
-  const auto& tf = transform(gctx);
+  auto tf = transform(gctx);
   // Set the intersection
   Intersection3D first(tf * solution1, qe.first, status1);
   Intersection3D second(tf * solution2, qe.second, status2);
@@ -338,7 +338,7 @@ Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  auto rotation = transform(gctx).rotation();
   // The local frame x/y/z axis
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -387,7 +387,7 @@ Acts::ActsMatrix<2, 3> Acts::ConeSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  auto sTransform = transform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);

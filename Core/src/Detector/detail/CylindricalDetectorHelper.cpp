@@ -156,7 +156,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
     const std::vector<Acts::ActsScalar>& boundaries, Acts::BinningValue binning,
     unsigned int index, Acts::Direction dir) {
   // Get a reference transform
-  const auto& refTransform = refSurface.transform(gctx);
+  auto refTransform = refSurface.transform(gctx);
   auto refRotation = refTransform.rotation();
   // Bounds handling
   const auto& boundValues = refSurface.bounds().values();
@@ -378,7 +378,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
         std::find(selectedOnly.begin(), selectedOnly.end(), iu) !=
             selectedOnly.end()) {
       const Surface& refSurface = volumes[0u]->portals()[iu]->surface();
-      const Transform3& refTransform = refSurface.transform(gctx);
+      Transform3 refTransform = refSurface.transform(gctx);
       pReplacements.push_back(createDiscReplacement(
           refTransform, rBoundaries, {avgPhi - phiSector, avgPhi + phiSector},
           iu, idir));
