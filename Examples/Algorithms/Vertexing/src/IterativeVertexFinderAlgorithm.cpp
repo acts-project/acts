@@ -120,10 +120,10 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   }
 
   // show some debug output
-  ACTS_INFO("Found " << vertices.size() << " vertices in event");
+  ACTS_DEBUG("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
-    ACTS_INFO("Found vertex at " << vtx.fullPosition().transpose() << " with "
-                                 << vtx.tracks().size() << " tracks.");
+    ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
+                                  << vtx.tracks().size() << " tracks.");
   }
 
   // store proto vertices extracted from the found vertices
