@@ -200,9 +200,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     rRangeSPExtent.extend({spX, spY, spZ});
 
     // remove SPs according to experiment specific cuts
-    if (!config.spacePointSelector(sp)) 
-       continue;					
-							
+    if (!config.spacePointSelector(sp))
+      continue;
+
     // remove SPs outside z and phi region
     if (spZ > zMax || spZ < zMin) {
       continue;

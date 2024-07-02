@@ -65,7 +65,8 @@ class SeedingAlgorithm final : public IAlgorithm {
     // used to search for SPs
     int numPhiNeighbors = 1;
 
-    // Connect custom selections on the space points or to the doublet compatibility
+    // Connect custom selections on the space points or to the doublet
+    // compatibility
     bool useExperimentCuts = false;
   };
 

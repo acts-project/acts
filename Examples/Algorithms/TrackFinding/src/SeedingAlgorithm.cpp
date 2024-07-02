@@ -204,40 +204,37 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (m_cfg.useExperimentCuts) {
-
     // This function will be applied to select space points during grid filling
     m_cfg.seedFinderConfig.spacePointSelector.connect(
-						      [](const void*, const SimSpacePoint& sp) -> bool{
-							// At small r we remove points beyond |z| > 200.
-							float r = sp.r();
-							float zabs = std::abs(sp.z());
-							if (zabs > 200. && r < 50.)
-							  return false;
-							
-							/// Remove space points beyond eta=4 if their z is
-							/// larger than the max seed z0 (150.)
-							float cotTheta = 27.2899; // corresponds to eta=4
-							if ((zabs - 150.) > cotTheta * r)
-							  return false;
-							return true;
-						      }
-						      );
-    
+        [](const void*, const SimSpacePoint& sp) -> bool {
+          // At small r we remove points beyond |z| > 200.
+          float r = sp.r();
+          float zabs = std::abs(sp.z());
+          if (zabs > 200. && r < 50.)
+            return false;
+
+          /// Remove space points beyond eta=4 if their z is
+          /// larger than the max seed z0 (150.)
+          float cotTheta = 27.2899;  // corresponds to eta=4
+          if ((zabs - 150.) > cotTheta * r)
+            return false;
+          return true;
+        });
+
     // This function will be applied to the doublet compatibility selection
     m_cfg.seedFinderConfig.experimentCuts.connect(
-						  [](const void*, float bottomRadius, float cotTheta) -> bool {
-						    float RMin = 50.;
-						    float CotThetaMax = 1.5;
-						    
-						    if (bottomRadius < RMin and
-							(cotTheta > CotThetaMax or
-							 cotTheta < -CotThetaMax)) {
-						      return false;
-						    }
-						    return true;
-						  }); 
+        [](const void*, float bottomRadius, float cotTheta) -> bool {
+          float RMin = 50.;
+          float CotThetaMax = 1.5;
+
+          if (bottomRadius < RMin and
+              (cotTheta > CotThetaMax or cotTheta < -CotThetaMax)) {
+            return false;
+          }
+          return true;
+        });
   }
-  
+
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
