@@ -93,7 +93,8 @@ class FixedSizeSubspace {
   /// @tparam index_t Input index type, must be convertible to std::uint8_t
   /// @param indices Unique, ordered indices
   template <typename index_t>
-  constexpr FixedSizeSubspace(const std::array<index_t, kSize>& indices) {
+  constexpr explicit FixedSizeSubspace(
+      const std::array<index_t, kSize>& indices) {
     for (std::size_t i = 0u; i < kSize; ++i) {
       assert((indices[i] < kFullSize) &&
              "Axis indices must be within the full space");
@@ -106,12 +107,6 @@ class FixedSizeSubspace {
       m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
-  // The subset can not be constructed w/o defining its axis indices.
-  FixedSizeSubspace() = delete;
-  FixedSizeSubspace(const FixedSizeSubspace&) = default;
-  FixedSizeSubspace(FixedSizeSubspace&&) = default;
-  FixedSizeSubspace& operator=(const FixedSizeSubspace&) = default;
-  FixedSizeSubspace& operator=(FixedSizeSubspace&&) = default;
 
   /// Size of the subspace.
   static constexpr std::size_t size() { return kSize; }
@@ -138,8 +133,8 @@ class FixedSizeSubspace {
     bool isContained = false;
     // always iterate over all elements to avoid branching and hope the compiler
     // can optimise this for us.
-    for (auto a : m_axes) {
-      isContained |= (a == index);
+    for (std::uint8_t a : m_axes) {
+      isContained = isContained || (a == index);
     }
     return isContained;
   }
@@ -152,12 +147,12 @@ class FixedSizeSubspace {
   ///
   /// @note Always returns a column vector regardless of the input
   template <typename fullspace_vector_t>
-  auto projectVector(const Eigen::MatrixBase<fullspace_vector_t>& full) const
-      -> SubspaceVectorFor<fullspace_vector_t> {
+  SubspaceVectorFor<fullspace_vector_t> projectVector(
+      const Eigen::MatrixBase<fullspace_vector_t>& full) const {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(fullspace_vector_t, kFullSize);
 
     SubspaceVectorFor<fullspace_vector_t> sub;
-    for (auto i = 0u; i < kSize; ++i) {
+    for (std::size_t i = 0u; i < kSize; ++i) {
       sub[i] = full[m_axes[i]];
     }
     return sub;
@@ -171,13 +166,13 @@ class FixedSizeSubspace {
   ///
   /// @note Always returns a column vector regardless of the input
   template <typename subspace_vector_t>
-  auto expandVector(const Eigen::MatrixBase<subspace_vector_t>& sub) const
-      -> FullspaceVectorFor<subspace_vector_t> {
+  FullspaceVectorFor<subspace_vector_t> expandVector(
+      const Eigen::MatrixBase<subspace_vector_t>& sub) const {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(subspace_vector_t, kSize);
 
     FullspaceVectorFor<subspace_vector_t> full;
     full.setZero();
-    for (auto i = 0u; i < kSize; ++i) {
+    for (std::size_t i = 0u; i < kSize; ++i) {
       full[m_axes[i]] = sub[i];
     }
     return full;
@@ -187,10 +182,10 @@ class FixedSizeSubspace {
   ///
   /// @tparam scalar_t Scalar type for the projection matrix
   template <typename scalar_t>
-  auto projector() const -> ProjectionMatrix<scalar_t> {
+  ProjectionMatrix<scalar_t> projector() const {
     ProjectionMatrix<scalar_t> proj;
     proj.setZero();
-    for (auto i = 0u; i < kSize; ++i) {
+    for (std::size_t i = 0u; i < kSize; ++i) {
       proj(i, m_axes[i]) = 1;
     }
     return proj;
@@ -200,10 +195,10 @@ class FixedSizeSubspace {
   ///
   /// @tparam scalar_t Scalar type of the generated expansion matrix
   template <typename scalar_t>
-  auto expander() const -> ExpansionMatrix<scalar_t> {
+  ExpansionMatrix<scalar_t> expander() const {
     ExpansionMatrix<scalar_t> expn;
     expn.setZero();
-    for (auto i = 0u; i < kSize; ++i) {
+    for (std::size_t i = 0u; i < kSize; ++i) {
       expn(m_axes[i], i) = 1;
     }
     return expn;
@@ -218,11 +213,6 @@ template <std::size_t kFullSize>
 class VariableSizeSubspace {
   static_assert(kFullSize <= static_cast<std::size_t>(UINT8_MAX),
                 "Full vector space size is larger than the supported range");
-
-  template <typename scalar_t>
-  using ProjectionMatrix = Eigen::Matrix<scalar_t, Eigen::Dynamic, kFullSize>;
-  template <typename scalar_t>
-  using ExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, Eigen::Dynamic>;
 
   template <typename scalar_t>
   using FullProjectionMatrix = Eigen::Matrix<scalar_t, kFullSize, kFullSize>;
@@ -246,7 +236,8 @@ class VariableSizeSubspace {
   /// @tparam index_t Input index type, must be convertible to std::uint8_t
   /// @param indices Unique, ordered indices
   template <typename index_t, std::size_t kSize>
-  constexpr VariableSizeSubspace(const std::array<index_t, kSize>& indices) {
+  constexpr explicit VariableSizeSubspace(
+      const std::array<index_t, kSize>& indices) {
     m_size = kSize;
     for (std::size_t i = 0u; i < kSize; ++i) {
       assert((indices[i] < kFullSize) &&
@@ -260,12 +251,6 @@ class VariableSizeSubspace {
       m_axes[i] = static_cast<std::uint8_t>(indices[i]);
     }
   }
-  // The subset can not be constructed w/o defining its axis indices.
-  VariableSizeSubspace() = delete;
-  VariableSizeSubspace(const VariableSizeSubspace&) = default;
-  VariableSizeSubspace(VariableSizeSubspace&&) = default;
-  VariableSizeSubspace& operator=(const VariableSizeSubspace&) = default;
-  VariableSizeSubspace& operator=(VariableSizeSubspace&&) = default;
 
   /// Size of the subspace.
   constexpr std::size_t size() const { return m_size; }
@@ -287,7 +272,7 @@ class VariableSizeSubspace {
     // always iterate over all elements to avoid branching and hope the compiler
     // can optimise this for us.
     for (std::size_t i = 0; i < kFullSize; ++i) {
-      isContained |= ((i < m_size) & (m_axes[i] == index));
+      isContained = isContained || ((i < m_size) && (m_axes[i] == index));
     }
     return isContained;
   }
@@ -296,36 +281,10 @@ class VariableSizeSubspace {
   ///
   /// @tparam scalar_t Scalar type for the projection matrix
   template <typename scalar_t>
-  auto projector() const -> ProjectionMatrix<scalar_t> {
-    ProjectionMatrix<scalar_t> proj(m_size, kFullSize);
-    proj.setZero();
-    for (auto i = 0u; i < m_size; ++i) {
-      proj(i, m_axes[i]) = 1;
-    }
-    return proj;
-  }
-
-  /// Expansion matrix that maps from the subspace into the full space.
-  ///
-  /// @tparam scalar_t Scalar type of the generated expansion matrix
-  template <typename scalar_t>
-  auto expander() const -> ExpansionMatrix<scalar_t> {
-    ExpansionMatrix<scalar_t> expn(kFullSize, m_size);
-    expn.setZero();
-    for (auto i = 0u; i < m_size; ++i) {
-      expn(m_axes[i], i) = 1;
-    }
-    return expn;
-  }
-
-  /// Projection matrix that maps from the full space into the subspace.
-  ///
-  /// @tparam scalar_t Scalar type for the projection matrix
-  template <typename scalar_t>
-  auto fullProjector() const -> FullProjectionMatrix<scalar_t> {
+  FullProjectionMatrix<scalar_t> fullProjector() const {
     FullProjectionMatrix<scalar_t> proj;
     proj.setZero();
-    for (auto i = 0u; i < m_size; ++i) {
+    for (std::size_t i = 0u; i < m_size; ++i) {
       proj(i, m_axes[i]) = 1;
     }
     return proj;
@@ -335,10 +294,10 @@ class VariableSizeSubspace {
   ///
   /// @tparam scalar_t Scalar type of the generated expansion matrix
   template <typename scalar_t>
-  auto fullExpander() const -> FullExpansionMatrix<scalar_t> {
+  FullExpansionMatrix<scalar_t> fullExpander() const {
     FullExpansionMatrix<scalar_t> expn;
     expn.setZero();
-    for (auto i = 0u; i < m_size; ++i) {
+    for (std::size_t i = 0u; i < m_size; ++i) {
       expn(m_axes[i], i) = 1;
     }
     return expn;
