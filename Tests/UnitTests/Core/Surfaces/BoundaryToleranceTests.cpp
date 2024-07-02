@@ -51,8 +51,14 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
 // Aligned box w/ tolerance check along first axis
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
   boost::execution_monitor em;
+  em.p_detect_fp_exceptions.set(boost::fpe::BOOST_FPE_ALL);
 
   divbyzero();
+
+  em.execute([]() {
+    divbyzero();
+    return 0;
+  });
 
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
