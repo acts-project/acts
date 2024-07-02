@@ -10,6 +10,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
+#include "Acts/Seeding/ContainerPolicy.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -211,8 +212,10 @@ int main(int argc, char** argv) {
   auto start = std::chrono::system_clock::now();
   for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(options, state, spGroup.grid(), std::back_inserter(v),
-                          bottom, middle, top, rMiddleSPRange);
+    VectorPolicy seedPolicyContainer(v);
+    GenericBackInserter backInserter(seedPolicyContainer);
+    a.createSeedsForGroup(options, state, spGroup.grid(), backInserter, bottom,
+                          middle, top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

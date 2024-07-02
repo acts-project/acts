@@ -211,6 +211,7 @@ set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+set(_acts_annoy_version 1.17.3)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -273,6 +274,8 @@ if (ACTS_SETUP_ALGEBRAPLUGINS)
     add_subdirectory(thirdparty/algebra-plugins)
   endif()
 endif()
+
+add_subdirectory(thirdparty/Annoy)
 
 find_package(Filesystem REQUIRED)
 

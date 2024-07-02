@@ -80,6 +80,30 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
       m_t(globalTime),
       m_sp(sp) {}
 
+template <typename SpacePoint>
+inline bool operator<(const InternalSpacePoint<SpacePoint>& lhs,
+                      const InternalSpacePoint<SpacePoint>& rhs) {
+  // TODO would it be sufficient to check just the index under the assumption
+  //   that the same measurement index always produces the same space point?
+  // no need to check r since it is fully defined by x/y
+  // Can be used for sorting the space points
+  if ((lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and (lhs.z() == rhs.z()) and
+      (lhs.varianceR() == rhs.varianceR()) and
+      (lhs.varianceZ() == rhs.varianceZ())) {
+    return false;
+  }
+  if (lhs.x() != rhs.x()) {
+    return (lhs.x() < rhs.x());
+  }
+  if (lhs.y() != rhs.y()) {
+    return (lhs.y() < rhs.y());
+  }
+  if (lhs.z() != rhs.z()) {
+    return (lhs.z() < rhs.z());
+  }
+  return false;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 // Copy constructor
 /////////////////////////////////////////////////////////////////////////////////
