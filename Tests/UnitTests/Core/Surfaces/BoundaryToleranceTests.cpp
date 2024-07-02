@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,12 +23,6 @@
 #include "BoundaryToleranceTestsRefs.hpp"
 
 namespace Acts::Test {
-
-__attribute__((noinline)) void divbyzero() {
-  volatile float j = 0.0;
-  volatile float r = 123 / j;
-  (void)r;
-}
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -53,22 +47,24 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
   boost::execution_monitor em;
   em.p_detect_fp_exceptions.set(boost::fpe::BOOST_FPE_ALL);
 
-  divbyzero();
+  em.execute([]() {
+    Vector2 ll(-1, -1);
+    Vector2 ur(1, 1);
+    auto tolerance = BoundaryTolerance::AbsoluteBound(
+        1.5, std::numeric_limits<double>::infinity());
+    BOOST_CHECK(
+        detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
+    BOOST_CHECK(
+        detail::insideAlignedBox(ll, ur, tolerance, {2, 2}, std::nullopt));
+    BOOST_CHECK(
+        !detail::insideAlignedBox(ll, ur, tolerance, {4, 4}, std::nullopt));
+    BOOST_CHECK(
+        detail::insideAlignedBox(ll, ur, tolerance, {0, 2}, std::nullopt));
+    BOOST_CHECK(
+        detail::insideAlignedBox(ll, ur, tolerance, {2, 0}, std::nullopt));
 
-  Vector2 ll(-1, -1);
-  Vector2 ur(1, 1);
-  auto tolerance = BoundaryTolerance::AbsoluteBound(
-      1.5, std::numeric_limits<double>::infinity());
-  BOOST_CHECK(
-      detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
-  BOOST_CHECK(
-      detail::insideAlignedBox(ll, ur, tolerance, {2, 2}, std::nullopt));
-  BOOST_CHECK(
-      !detail::insideAlignedBox(ll, ur, tolerance, {4, 4}, std::nullopt));
-  BOOST_CHECK(
-      detail::insideAlignedBox(ll, ur, tolerance, {0, 2}, std::nullopt));
-  BOOST_CHECK(
-      detail::insideAlignedBox(ll, ur, tolerance, {2, 0}, std::nullopt));
+    return 0;
+  });
 }
 
 // Aligned box w/ covariance check
