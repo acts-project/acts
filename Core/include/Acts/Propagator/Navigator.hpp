@@ -163,8 +163,6 @@ class Navigator {
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
 
-    /// Indicator for start layer treatment
-    bool startLayerResolved = false;
     /// Indicator if the target is reached
     bool targetReached = false;
     /// Indicator that the last VolumeHierarchy surface was reached
@@ -280,7 +278,7 @@ class Navigator {
     // - short-cut through object association, saves navigation in the
     // - geometry and volume tree search for the lowest volume
     if (state.navigation.startSurface != nullptr &&
-        state.navigation.startSurface->associatedLayer()) {
+        state.navigation.startSurface->associatedLayer() != nullptr) {
       ACTS_VERBOSE(
           volInfo(state)
           << "Fast start initialization through association from Surface.");
@@ -317,6 +315,22 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Start volume resolved.");
       }
     }
+
+    if (state.navigation.startLayer != nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
+      // We provide the layer to the resolve surface method in this case
+      bool startResolved = resolveSurfaces(state, stepper);
+      if (!startResolved &&
+          state.navigation.startLayer == state.navigation.targetLayer) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Start is target layer and we have no surface "
+                        "candidates. Nothing left to do.");
+        // set the navigation break
+        state.navigation.navigationBreak = true;
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+      }
+    }
+
     // Set the start volume as current volume
     state.navigation.currentVolume = state.navigation.startVolume;
     // Set the start layer as current layer
@@ -587,23 +601,6 @@ class Navigator {
                       const stepper_t& stepper) const {
     if (state.navigation.navigationBreak) {
       return false;
-    }
-    // Make sure resolve Surfaces is called on the start layer
-    if (state.navigation.startLayer != nullptr &&
-        !state.navigation.startLayerResolved) {
-      ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
-      // We provide the layer to the resolve surface method in this case
-      state.navigation.startLayerResolved = true;
-      bool startResolved = resolveSurfaces(state, stepper);
-      if (!startResolved &&
-          state.navigation.startLayer == state.navigation.targetLayer) {
-        ACTS_VERBOSE(volInfo(state)
-                     << "Start is target layer, nothing left to do.");
-        // set the navigation break
-        state.navigation.navigationBreak = true;
-        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      }
-      return startResolved;
     }
 
     // The call that we are on a layer and have not yet resolved the surfaces
@@ -1173,7 +1170,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool inactive(propagator_state_t& state, const stepper_t& stepper) const {
     // Void behavior in case no tracking geometry is present
-    if (!m_cfg.trackingGeometry) {
+    if (m_cfg.trackingGeometry == nullptr) {
       return true;
     }
     // turn the navigator into void when you are instructed to do nothing
