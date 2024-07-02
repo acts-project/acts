@@ -83,14 +83,6 @@ inline static std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
   return std::tie(type, boundaries);
 }
 
-/// @brief add volume link
-///
-/// @param jSurface [in,out] is the json object to be patched
-/// @param vLink is the volume link to be added
-inline static void addVolumeLink(nlohmann::json& jSurface, int vLink) {
-  jSurface["volume_link"] = vLink;
-}
-
 /// Determine the acceleration link from a grid
 ///
 ///
