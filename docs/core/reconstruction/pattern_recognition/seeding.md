@@ -68,7 +68,7 @@ compatibility by applying a set of configurable cuts that can be tested with
 two SP only (pseudorapidity, origin along $z$-axis, distance in $r$ between SP,
 compatibility with interaction point).
 
-:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const grid_t &grid, std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
+:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const grid_t &grid, GenericBackInserter<Seed<external_spacepoint_t>> outIt, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
 :::
 
 
@@ -228,7 +228,7 @@ The seed confirmation also sets a limit on the number of seeds produced for each
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
-:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (Acts::SpacePointData &spacePointData, CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&,const std::size_t,std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>) const
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (Acts::SpacePointData &spacePointData, CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&,const std::size_t,GenericBackInserter<Seed<external_spacepoint_t>>) const
 :outline:
 :::
 
