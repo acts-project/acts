@@ -49,7 +49,7 @@ jobs:
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
+          -DCMAKE_CXX_FLAGS="-Werror --coverage -g -gz -g1"
           -DACTS_BUILD_UNITTESTS=on
           -DACTS_BUILD_EXAMPLES_UNITTESTS=off
           -DACTS_BUILD_EVERYTHING=ON
