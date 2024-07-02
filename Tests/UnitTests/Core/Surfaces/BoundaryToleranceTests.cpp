@@ -55,11 +55,6 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
 
   divbyzero();
 
-  em.execute([]() {
-    divbyzero();
-    return 0;
-  });
-
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
   auto tolerance = BoundaryTolerance::AbsoluteBound(
