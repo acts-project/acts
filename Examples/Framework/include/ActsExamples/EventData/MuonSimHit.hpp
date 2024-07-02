@@ -34,7 +34,7 @@ enum class MuonIdentifierFieldMaps {
   tubeLayer = 8,
   tube = 0,
 };
-struct muonMdtIdentifierFields {
+struct MuonMdtIdentifierFields {
   std::int8_t stationName = 0;
   std::int8_t stationEta = 0;
   std::int8_t stationPhi = 0;
@@ -42,8 +42,8 @@ struct muonMdtIdentifierFields {
   std::int8_t tubeLayer = 0;
   std::int8_t tube = 0;
 };
-muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
-  muonMdtIdentifierFields f;
+MuonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
+  MuonMdtIdentifierFields f;
   f.tube = theID & 0xFF;
   theID = theID >> g_fieldShift;
   f.tubeLayer = theID & 0xFF;
@@ -57,7 +57,7 @@ muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
   f.stationName = theID & 0xFF;
   return f;
 }
-Acts::GeometryIdentifier::Value compressId(muonMdtIdentifierFields f) {
+Acts::GeometryIdentifier::Value compressId(MuonMdtIdentifierFields f) {
   Acts::GeometryIdentifier::Value out{0};
   out = out << g_fieldShift | f.stationName;
   out = out << g_fieldShift | static_cast<std::uint8_t>(f.stationEta);
