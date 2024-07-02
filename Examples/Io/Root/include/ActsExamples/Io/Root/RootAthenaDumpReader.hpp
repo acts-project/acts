@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <ActsExamples/EventData/Cluster.hpp>
+#include <ActsExamples/EventData/Track.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
 
 #include <map>
@@ -58,6 +59,9 @@ class RootAthenaDumpReader : public IReader {
     std::string outputParticles = "athena_particles";
     // name of the simhit map
     std::string outputMeasurementParticlesMap = "athena_meas_parts_map";
+    // name of the track parameters (fitted by athena?)
+    std::string outputTrackParameters = "athena_track_parameters";
+
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;

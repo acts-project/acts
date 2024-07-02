@@ -227,6 +227,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   MeasurementContainer measurements;
   measurements.reserve(nCL);
 
+  SimParticleContainer particles;
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   for (int im = 0; im < nCL; im++) {
@@ -301,10 +302,31 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
     measurements.push_back(createMeasurement(digiPars, sl));
 
-    // Measurement particles map
-    for(const auto barcode : CLparticleLink_barcode->at(im)) {
-      SimBarcode bc = barcode;
-      measPartMap.insert({im, bc});
+    // Create measurement particles map and particles container
+    for(auto barcode : CLparticleLink_barcode->at(im)) {
+      ActsFatras::Barcode fBarcode = barcode;
+      measPartMap.insert({im, fBarcode});
+
+      auto found = std::find(Part_barcode, Part_barcode+nPartEVT, barcode);
+      if(found == Part_barcode+nPartEVT) {
+        ACTS_WARNING("Could not find all truth particles for cluster " << im);
+        continue;
+      }
+
+      auto ip = std::distance(Part_barcode, found);
+      assert(Part_barcode[ip] == barcode);
+
+      SimParticle particle(fBarcode, static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+
+      auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
+      particle.setAbsoluteMomentum(p.norm());
+      particle.setDirection(p.normalized());
+
+      auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
+      particle.setPosition4(x);
+
+      particles.insert(particle);
+      measPartMap.insert({im, fBarcode});
     }
   }
 
@@ -362,21 +384,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     spacePoints.push_back(sp);
   }
 
-  // Loop on particles
-  SimParticleContainer particles;
-
   for(int ip = 0; ip < nPartEVT; ++ip) {
-    SimBarcode bc = Part_barcode[ip];
-    SimParticle particle(bc, static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
-
-    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
-    particle.setAbsoluteMomentum(p.norm());
-    particle.setDirection(p.normalized());
-
-    auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
-    particle.setPosition4(x);
-
-    particles.insert(particle);
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");

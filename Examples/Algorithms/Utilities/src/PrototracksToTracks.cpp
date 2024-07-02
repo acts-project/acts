@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 
 
 #include <algorithm>
@@ -32,9 +33,15 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, mtj);
 
-  MeasurementCalibratorAdapter calibrator(PassThroughCalibrator{}, m_inputMeasurements(ctx));
+  PassThroughCalibrator calibratorImpl;
+  MeasurementCalibratorAdapter calibrator(calibratorImpl, m_inputMeasurements(ctx));
 
-  for (const auto& protoTrack : m_inputProtoTracks(ctx)) {
+  auto refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+      Acts::Vector3{0., 0., 0.});
+  const auto &prototracks = m_inputProtoTracks(ctx);
+  ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
+
+  for (const auto& protoTrack : prototracks) {
     if( protoTrack.empty() ) {
         continue;
     }
@@ -48,10 +55,14 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       IndexSourceLink sl(Acts::GeometryIdentifier{}, idx);
 
       calibrator.calibrate({}, {}, Acts::SourceLink{sl}, trackStateProxy);
+      trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
     }
 
     auto track = tracks.makeTrack();
     track.tipIndex() = tip;
+    track.setReferenceSurface(refSurface->getSharedPtr());
+    track.parameters() = Acts::BoundVector::Zero();
+    track.covariance() = Acts::BoundSquareMatrix::Identity();
   }
 
   ConstTrackContainer constTracks{
@@ -59,6 +70,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
           std::move(*trackContainer)),
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
           std::move(*mtj))};
+
+  ACTS_DEBUG("Produced " << constTracks.size() << " tracks");
 
   m_outputTracks(ctx, std::move(constTracks));
 
