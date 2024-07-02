@@ -23,6 +23,8 @@
 
 #include "detray/io/frontend/detector_writer.hpp"
 
+using namespace detray;
+
 namespace {
 
 /// Find the position of the volume to point to
@@ -71,8 +73,7 @@ detray::io::mask_payload Acts::DetrayConverter::convertMask(
       DetrayConversionHelper::maskFromBounds(bounds, portal);
   maskPayload.shape = static_cast<io::mask_payload::mask_shape>(shape);
   maskPayload.boundaries = static_cast<std::vector<real_io>>(boundaries);
-  detray::io::single_link_payload lnk;
-  maskPayload.volume_link = lnk;
+  //default maskPayload.volume_link
 
   return maskPayload;
 }
@@ -272,19 +273,6 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
   }
 
   return portals;
-}
-
-detray::io::geo_header_payload Acts::DetrayConverter::convertHead(
-    const Acts::Experimental::Detector& detector) {
-  detray::io::geo_header_payload geoHeaderPayload;
-  detray::io::common_header_payload commonHeaderPayload;
-
-  commonHeaderPayload.version = detray::io::detail::get_detray_version();
-  commonHeaderPayload.detector = detector.name();
-  commonHeaderPayload.tag = "geometry";
-  commonHeaderPayload.date = io::detail::get_current_date();
-
-  return geoHeaderPayload;
 }
 
 detray::io::volume_payload Acts::DetrayConverter::convertVolume(
