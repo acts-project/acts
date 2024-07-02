@@ -64,12 +64,15 @@ Acts::Vector3 Acts::ConeSurface::binningPosition(
   const Vector3& sfCenter = center(gctx);
 
   // special binning type for R-type methods
-  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
+  if (bValue == Acts::BinningValue::binR ||
+      bValue == Acts::BinningValue::binRPhi) {
     return Vector3(sfCenter.x() + bounds().r(sfCenter.z()), sfCenter.y(),
                    sfCenter.z());
   }
   // give the center as default for all of these binning types
-  // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
+  // BinningValue::binX, BinningValue::binY, BinningValue::binZ,
+  // BinningValue::binR, BinningValue::binPhi, BinningValue::binRPhi,
+  // BinningValue::binH, BinningValue::binEta
   return sfCenter;
 }
 

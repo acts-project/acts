@@ -22,18 +22,24 @@ BOOST_AUTO_TEST_SUITE(ExtentJsonConverter)
 
 BOOST_AUTO_TEST_CASE(ExtentRoundtripTests) {
   Extent e;
-  e.set(binR, 0, 200);
-  e.set(binZ, -50, 50);
+  e.set(BinningValue::binR, 0, 200);
+  e.set(BinningValue::binZ, -50, 50);
 
   nlohmann::json j;
   j["extent"] = e;
 
+  std::cout << j.dump(2) << std::endl;
+
   Extent eIn = j["extent"];
 
-  CHECK_CLOSE_ABS(eIn.min(binR), e.min(binR), 10e-5);
-  CHECK_CLOSE_ABS(eIn.max(binR), e.max(binR), 10e-5);
-  CHECK_CLOSE_ABS(eIn.min(binZ), e.min(binZ), 10e-5);
-  CHECK_CLOSE_ABS(eIn.max(binZ), e.max(binZ), 10e-5);
+  CHECK_CLOSE_ABS(eIn.min(BinningValue::binR), e.min(BinningValue::binR),
+                  10e-5);
+  CHECK_CLOSE_ABS(eIn.max(BinningValue::binR), e.max(BinningValue::binR),
+                  10e-5);
+  CHECK_CLOSE_ABS(eIn.min(BinningValue::binZ), e.min(BinningValue::binZ),
+                  10e-5);
+  CHECK_CLOSE_ABS(eIn.max(BinningValue::binZ), e.max(BinningValue::binZ),
+                  10e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

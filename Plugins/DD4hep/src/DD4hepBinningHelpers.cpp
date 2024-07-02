@@ -36,14 +36,14 @@ Acts::DD4hepBinningHelpers::convertBinning(
               Experimental::ProtoBinning(bVal, bType, nBins, nExpansion));
         } else {
           // Equidistant binning
-          ActsScalar minDefault = bVal == binPhi ? -M_PI : 0.;
-          ActsScalar maxDefault = bVal == binPhi ? M_PI : 0.;
+          ActsScalar minDefault = bVal == BinningValue::binPhi ? -M_PI : 0.;
+          ActsScalar maxDefault = bVal == BinningValue::binPhi ? M_PI : 0.;
           auto min = getParamOr<ActsScalar>(bname + "_" + ab + "_min",
                                             dd4hepElement, minDefault);
           auto max = getParamOr<ActsScalar>(bname + "_" + ab + "_max",
                                             dd4hepElement, maxDefault);
           // Check for closed phi binning
-          if (bVal == binPhi && (max - min) > 1.9 * M_PI) {
+          if (bVal == BinningValue::binPhi && (max - min) > 1.9 * M_PI) {
             bType = Acts::AxisBoundaryType::Closed;
           }
           protoBinnings.push_back(Experimental::ProtoBinning(
@@ -57,7 +57,8 @@ Acts::DD4hepBinningHelpers::convertBinning(
               bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
         }
         // Check for closed phi binning
-        if (bVal == binPhi && (edges.back() - edges.front()) > 1.9 * M_PI) {
+        if (bVal == BinningValue::binPhi &&
+            (edges.back() - edges.front()) > 1.9 * M_PI) {
           bType = Acts::AxisBoundaryType::Closed;
         }
         protoBinnings.push_back(

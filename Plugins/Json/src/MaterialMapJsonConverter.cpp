@@ -118,9 +118,9 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
                 Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
-        Acts::binPhi);
+        Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
-                                 Acts::open, Acts::binR);
+                                 Acts::open, Acts::BinningValue::binR);
   }
   if (cylinderBounds != nullptr) {
     bUtility += Acts::BinUtility(
@@ -133,40 +133,41 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
                 Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
-        Acts::binPhi);
+        Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(
         1, -1 * cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
         cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ), Acts::open,
-        Acts::binZ);
+        Acts::BinningValue::binZ);
   }
   if (annulusBounds != nullptr) {
     bUtility +=
         Acts::BinUtility(1, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
                          annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel),
-                         Acts::open, Acts::binPhi);
-    bUtility += Acts::BinUtility(1, annulusBounds->rMin(),
-                                 annulusBounds->rMax(), Acts::open, Acts::binR);
+                         Acts::open, Acts::BinningValue::binPhi);
+    bUtility +=
+        Acts::BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
+                         Acts::open, Acts::BinningValue::binR);
   }
   if (rectangleBounds != nullptr) {
     bUtility +=
         Acts::BinUtility(1, rectangleBounds->get(Acts::RectangleBounds::eMinX),
                          rectangleBounds->get(Acts::RectangleBounds::eMaxX),
-                         Acts::open, Acts::binX);
+                         Acts::open, Acts::BinningValue::binX);
     bUtility +=
         Acts::BinUtility(1, rectangleBounds->get(Acts::RectangleBounds::eMinY),
                          rectangleBounds->get(Acts::RectangleBounds::eMaxY),
-                         Acts::open, Acts::binY);
+                         Acts::open, Acts::BinningValue::binY);
   }
   if (trapezoidBounds != nullptr) {
     double halfLengthX =
         std::max(trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
                  trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
     bUtility += Acts::BinUtility(1, -1 * halfLengthX, halfLengthX, Acts::open,
-                                 Acts::binX);
+                                 Acts::BinningValue::binX);
     bUtility += Acts::BinUtility(
         1, -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
         trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY), Acts::open,
-        Acts::binY);
+        Acts::BinningValue::binY);
   }
   return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility),
           context};
@@ -190,7 +191,7 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
     bUtility +=
         Acts::BinUtility(1, cyBounds->get(Acts::CylinderVolumeBounds::eMinR),
                          cyBounds->get(Acts::CylinderVolumeBounds::eMaxR),
-                         Acts::open, Acts::binR);
+                         Acts::open, Acts::BinningValue::binR);
     bUtility += Acts::BinUtility(
         1, -cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
         cyBounds->get(Acts::CylinderVolumeBounds::eHalfPhiSector),
@@ -198,35 +199,36 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
                 Acts::s_epsilon
             ? Acts::closed
             : Acts::open,
-        Acts::binPhi);
+        Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(
         1, -cyBounds->get(Acts::CylinderVolumeBounds::eHalfLengthZ),
         cyBounds->get(Acts::CylinderVolumeBounds::eHalfLengthZ), Acts::open,
-        Acts::binZ);
+        Acts::BinningValue::binZ);
   }
   if (cutcylBounds != nullptr) {
     bUtility += Acts::BinUtility(
         1, cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMinR),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eMaxR), Acts::open,
-        Acts::binR);
-    bUtility += Acts::BinUtility(1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
+        Acts::BinningValue::binR);
+    bUtility += Acts::BinUtility(1, -M_PI, M_PI, Acts::closed,
+                                 Acts::BinningValue::binPhi);
     bUtility += Acts::BinUtility(
         1, -cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
         cutcylBounds->get(Acts::CutoutCylinderVolumeBounds::eHalfLengthZ),
-        Acts::open, Acts::binZ);
+        Acts::open, Acts::BinningValue::binZ);
   } else if (cuBounds != nullptr) {
     bUtility += Acts::BinUtility(
         1, -cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthX),
         cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthX), Acts::open,
-        Acts::binX);
+        Acts::BinningValue::binX);
     bUtility += Acts::BinUtility(
         1, -cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthY),
         cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthY), Acts::open,
-        Acts::binY);
+        Acts::BinningValue::binY);
     bUtility += Acts::BinUtility(
         1, -cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthZ),
         cuBounds->get(Acts::CuboidVolumeBounds::eHalfLengthZ), Acts::open,
-        Acts::binZ);
+        Acts::BinningValue::binZ);
   }
   return {volume, std::make_shared<Acts::ProtoVolumeMaterial>(bUtility)};
 }

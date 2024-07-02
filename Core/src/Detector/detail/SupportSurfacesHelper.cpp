@@ -27,23 +27,26 @@ Acts::Experimental::detail::SupportSurfacesHelper::SupportSurfaceComponents
 Acts::Experimental::detail::SupportSurfacesHelper::CylindricalSupport::
 operator()(const Extent& lExtent) const {
   // Bail out if you have no measure of R, Z
-  if (!lExtent.constrains(binZ) || !lExtent.constrains(binR)) {
+  if (!lExtent.constrains(BinningValue::binZ) ||
+      !lExtent.constrains(BinningValue::binR)) {
     throw std::invalid_argument(
         "SupportSurfacesHelper::CylindricalSupport::operator() - z or "
         "r are not constrained.");
   }
 
   // Min / Max z  with clearances adapted
-  ActsScalar minZ = lExtent.min(binZ) + std::abs(zClearance[0u]);
-  ActsScalar maxZ = lExtent.max(binZ) - std::abs(zClearance[1u]);
+  ActsScalar minZ = lExtent.min(BinningValue::binZ) + std::abs(zClearance[0u]);
+  ActsScalar maxZ = lExtent.max(BinningValue::binZ) - std::abs(zClearance[1u]);
 
   // Phi sector
   ActsScalar hPhiSector = M_PI;
   ActsScalar avgPhi = 0.;
-  if (lExtent.constrains(binPhi)) {
+  if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
-    ActsScalar minPhi = lExtent.min(binPhi) + std::abs(phiClearance[0u]);
-    ActsScalar maxPhi = lExtent.max(binPhi) - std::abs(phiClearance[1u]);
+    ActsScalar minPhi =
+        lExtent.min(BinningValue::binPhi) + std::abs(phiClearance[0u]);
+    ActsScalar maxPhi =
+        lExtent.max(BinningValue::binPhi) - std::abs(phiClearance[1u]);
     hPhiSector = 0.5 * (maxPhi - minPhi);
     avgPhi = 0.5 * (minPhi + maxPhi);
   }
@@ -54,10 +57,10 @@ operator()(const Extent& lExtent) const {
   }
 
   // The Radius estimation
-  ActsScalar r =
-      rOffset < 0 ? lExtent.min(binR) + rOffset : lExtent.max(binR) + rOffset;
+  ActsScalar r = rOffset < 0 ? lExtent.min(BinningValue::binR) + rOffset
+                             : lExtent.max(BinningValue::binR) + rOffset;
   if (rOffset == 0.) {
-    r = lExtent.medium(binR);
+    r = lExtent.medium(BinningValue::binR);
   }
   // Components are resolved and returned as a tuple
   return {
@@ -68,32 +71,35 @@ Acts::Experimental::detail::SupportSurfacesHelper::SupportSurfaceComponents
 Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
     const Extent& lExtent) const {
   // Bail out if you have no measure of R, Z
-  if (!lExtent.constrains(binZ) || !lExtent.constrains(binR)) {
+  if (!lExtent.constrains(BinningValue::binZ) ||
+      !lExtent.constrains(BinningValue::binR)) {
     throw std::invalid_argument(
         "SupportSurfacesHelper::DiscSupport::operator() - z or "
         "r are not constrained.");
   }
 
   // Min / Max r  with clearances adapted
-  ActsScalar minR = lExtent.min(binR) + std::abs(rClearance[0u]);
-  ActsScalar maxR = lExtent.max(binR) - std::abs(rClearance[1u]);
+  ActsScalar minR = lExtent.min(BinningValue::binR) + std::abs(rClearance[0u]);
+  ActsScalar maxR = lExtent.max(BinningValue::binR) - std::abs(rClearance[1u]);
 
   // Phi sector
   ActsScalar hPhiSector = M_PI;
   ActsScalar avgPhi = 0.;
-  if (lExtent.constrains(binPhi)) {
+  if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
-    ActsScalar minPhi = lExtent.min(binPhi) + std::abs(phiClearance[0u]);
-    ActsScalar maxPhi = lExtent.max(binPhi) - std::abs(phiClearance[1u]);
+    ActsScalar minPhi =
+        lExtent.min(BinningValue::binPhi) + std::abs(phiClearance[0u]);
+    ActsScalar maxPhi =
+        lExtent.max(BinningValue::binPhi) - std::abs(phiClearance[1u]);
     hPhiSector = 0.5 * (maxPhi - minPhi);
     avgPhi = 0.5 * (minPhi + maxPhi);
   }
 
   // The z position estimate
-  ActsScalar z =
-      zOffset < 0 ? lExtent.min(binZ) + zOffset : lExtent.max(binZ) + zOffset;
+  ActsScalar z = zOffset < 0 ? lExtent.min(BinningValue::binZ) + zOffset
+                             : lExtent.max(BinningValue::binZ) + zOffset;
   if (zOffset == 0.) {
-    z = lExtent.medium(binZ);
+    z = lExtent.medium(BinningValue::binZ);
   }
 
   Transform3 transform = Transform3::Identity();
@@ -107,19 +113,20 @@ Acts::Experimental::detail::SupportSurfacesHelper::SupportSurfaceComponents
 Acts::Experimental::detail::SupportSurfacesHelper::RectangularSupport::
 operator()(const Extent& lExtent) const {
   // Bail out if you have no measure of X, Y, Z
-  if (!(lExtent.constrains(binX) && lExtent.constrains(binY) &&
-        lExtent.constrains(binZ))) {
+  if (!(lExtent.constrains(BinningValue::binX) &&
+        lExtent.constrains(BinningValue::binY) &&
+        lExtent.constrains(BinningValue::binZ))) {
     throw std::invalid_argument(
         "SupportSurfacesHelper::RectangularSupport::operator() - x, y or "
         "z are not constrained.");
   }
 
   // Set the local coordinates - cyclic permutation
-  std::array<BinningValue, 2> locals = {binX, binY};
-  if (pPlacement == binX) {
-    locals = {binY, binZ};
-  } else if (pPlacement == binY) {
-    locals = {binZ, binX};
+  std::array<BinningValue, 2> locals = {BinningValue::binX, BinningValue::binY};
+  if (pPlacement == BinningValue::binX) {
+    locals = {BinningValue::binY, BinningValue::binZ};
+  } else if (pPlacement == BinningValue::binY) {
+    locals = {BinningValue::binZ, BinningValue::binX};
   }
 
   // Make the rectangular shape
@@ -130,7 +137,7 @@ operator()(const Extent& lExtent) const {
 
   ActsScalar gPlacement = lExtent.medium(pPlacement) + pOffset;
   Vector3 placement = Vector3::Zero();
-  placement[pPlacement] = gPlacement;
+  placement[toUnderlying(pPlacement)] = gPlacement;
 
   Transform3 transform = Transform3::Identity();
   transform.pretranslate(placement);

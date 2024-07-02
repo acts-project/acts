@@ -91,7 +91,7 @@ inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
                            Acts::ActsScalar tolerance = 0.) {
   bool equalConstrains = true;
   bool equalRange = true;
-  for (auto& bVal : s_binningValues) {
+  for (auto& bVal : allBinningValues()) {
     equalConstrains =
         equalConstrains && (ea.constrains(bVal) == eb.constrains(bVal));
     BOOST_CHECK(equalConstrains);

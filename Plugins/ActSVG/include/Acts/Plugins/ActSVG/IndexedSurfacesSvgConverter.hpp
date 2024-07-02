@@ -73,10 +73,11 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // Estimate the radial extension
   // - for 1D phi
   // - for 2D z-phi or phi-z
-  bool estimateR =
-      (index_grid::grid_type::DIM == 1 && indexGrid.casts[0u] == binPhi) ||
-      (index_grid::grid_type::DIM == 2 &&
-       (indexGrid.casts[0u] == binPhi || indexGrid.casts[1u] == binPhi));
+  bool estimateR = (index_grid::grid_type::DIM == 1 &&
+                    indexGrid.casts[0u] == BinningValue::binPhi) ||
+                   (index_grid::grid_type::DIM == 2 &&
+                    (indexGrid.casts[0u] == BinningValue::binPhi ||
+                     indexGrid.casts[1u] == BinningValue::binPhi));
 
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options
@@ -91,9 +92,9 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
     if (estimateR) {
       auto sExtent = s->polyhedronRepresentation(gctx, 4u).extent();
       if constexpr (index_grid::grid_type::DIM == 2u) {
-        pSurface._radii[0u] = sExtent.medium(binR);
+        pSurface._radii[0u] = sExtent.medium(BinningValue::binR);
       }
-      constrain.extend(sExtent, {binR});
+      constrain.extend(sExtent, {BinningValue::binR});
     }
     // Add center info
     std::string centerInfo = " - center = (";
@@ -113,10 +114,10 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 
   // Adjust the grid options
   if constexpr (index_grid::grid_type::DIM == 1u) {
-    if (indexGrid.casts[0u] == binPhi) {
-      auto estRangeR = constrain.range(binR);
+    if (indexGrid.casts[0u] == BinningValue::binPhi) {
+      auto estRangeR = constrain.range(BinningValue::binR);
       std::array<ActsScalar, 2u> rRange = {estRangeR.min(), estRangeR.max()};
-      gridOptions.optionalBound = {rRange, binR};
+      gridOptions.optionalBound = {rRange, BinningValue::binR};
     }
   }
 
@@ -164,7 +165,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
                    std::to_string(binCenter1) + ")";
         pGrid._bin_ids.push_back(binInfo);
         if (estimateR) {
-          pGrid._reference_r = constrain.medium(binR);
+          pGrid._reference_r = constrain.medium(BinningValue::binR);
         }
       }
     }

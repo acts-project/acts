@@ -36,8 +36,9 @@ Acts::detail::GeoModelExentHelper::readBoundsConstaints(
           "least 4 entries (rmin, rmax, zmin, zmax)");
     }
     // Raw database values to extent entries
-    constexpr std::array<BinningValue, 6u> bvCyl = {binR, binR,   binZ,
-                                                    binZ, binPhi, binPhi};
+    constexpr std::array<BinningValue, 6u> bvCyl = {
+        BinningValue::binR, BinningValue::binR,   BinningValue::binZ,
+        BinningValue::binZ, BinningValue::binPhi, BinningValue::binPhi};
 
     for (auto [iv, value] : enumerate(valuesEntry)) {
       if (value == ctype || value[0u] == ctype[0u]) {
@@ -61,7 +62,7 @@ Acts::detail::GeoModelExentHelper::readBinningConstraints(
     boost::split(sbTokens, sbe, boost::is_any_of(","));
     BinningValue bv =
         Acts::detail::GeoModelBinningHelper::toBinningValue(sbTokens[0], false);
-    if (bv != binValues && sbTokens.size() > 1u) {
+    if (bv != numBinningValues() && sbTokens.size() > 1u) {
       std::vector<std::string> valueTokens = {sbTokens.begin() + 1,
                                               sbTokens.end()};
       if (!valueTokens.empty() && valueTokens[0] == "bound") {
@@ -102,8 +103,9 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
           "least 4 entries (rmin, rmax, zmin, zmax)");
     }
     // Raw database values to extent entries
-    constexpr std::array<BinningValue, 6u> bvCyl = {binR, binR,   binZ,
-                                                    binZ, binPhi, binPhi};
+    constexpr std::array<BinningValue, 6u> bvCyl = {
+        BinningValue::binR, BinningValue::binR,   BinningValue::binZ,
+        BinningValue::binZ, BinningValue::binPhi, BinningValue::binPhi};
     for (auto [iv, value] : enumerate(valuesEntry)) {
       // Get the binning value
       BinningValue bValue = bvCyl.at(iv);
@@ -147,7 +149,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
   }
   // Round up / down if configured
   if (roundInternalExtent) {
-    for (const auto& bv : s_binningValues) {
+    for (const auto& bv : allBinningValues()) {
       if (internalExtent.constrains(bv)) {
         extent.setMin(bv, std::floor(extent.min(bv)));
         extent.setMax(bv, std::ceil(extent.max(bv)));

@@ -85,13 +85,16 @@ Acts::CylinderSurface& Acts::CylinderSurface::operator=(
 Acts::Vector3 Acts::CylinderSurface::binningPosition(
     const GeometryContext& gctx, BinningValue bValue) const {
   // special binning type for R-type methods
-  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
+  if (bValue == Acts::BinningValue::binR ||
+      bValue == Acts::BinningValue::binRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
     return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
   }
   // give the center as default for all of these binning types
-  // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
+  // BinningValue::binX, BinningValue::binY, BinningValue::binZ,
+  // BinningValue::binR, BinningValue::binPhi, BinningValue::binRPhi,
+  // BinningValue::binH, BinningValue::binEta
   return center(gctx);
 }
 
@@ -370,7 +373,7 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
     BinningValue direction, const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging cylinder surfaces in " << binningValueNames()[direction]
+  ACTS_DEBUG("Merging cylinder surfaces in " << binningValueName(direction)
                                              << " direction");
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
@@ -433,7 +436,7 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
         "CylinderSurface::merge: surfaces have relative translation in x/y");
   }
 
-  if (direction == Acts::binZ) {
+  if (direction == Acts::BinningValue::binZ) {
     // z shift must match the bounds
 
     ActsScalar hlZ = bounds().get(CylinderBounds::eHalfLengthZ);
@@ -475,7 +478,7 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
 
     return Surface::makeShared<CylinderSurface>(newTransform, newBounds);
 
-  } else if (direction == Acts::binRPhi) {
+  } else if (direction == Acts::BinningValue::binRPhi) {
     // no z shift is allowed
     if (std::abs(translation[2]) > tolerance) {
       ACTS_ERROR(
@@ -508,6 +511,6 @@ std::shared_ptr<Acts::CylinderSurface> Acts::CylinderSurface::mergedWith(
   } else {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: invalid direction " +
-                                      binningValueNames()[direction]);
+                                      binningValueName(direction));
   }
 }

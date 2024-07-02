@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyFail) {
   // Move it into the bval direction
   auto transformB = Acts::Transform3::Identity();
   Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[Acts::binX] = 20;
-  translationB[Acts::binY] = 5;
+  translationB[toUnderlying(Acts::BinningValue::binX)] = 20;
+  translationB[toUnderlying(Acts::BinningValue::binY)] = 5;
   transformB.pretranslate(translationB);
   // Create volume B
   auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyFail) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_THROW(
-      Acts::Experimental::detail::DetectorVolumeConsistency::
-          checkCenterAlignment(tContext, {volumeA, volumeB}, Acts::binX),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::Experimental::detail::DetectorVolumeConsistency::
+                        checkCenterAlignment(tContext, {volumeA, volumeB},
+                                             Acts::BinningValue::binX),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
   // Move it into the bval direction
   auto transformB = Acts::Transform3::Identity();
   Acts::Vector3 translationB = Acts::Vector3::Zero();
-  translationB[Acts::binX] = 20;
+  translationB[toUnderlying(Acts::BinningValue::binX)] = 20;
   transformB.pretranslate(translationB);
   // Create volume B
   auto volumeB = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -72,9 +72,9 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeConsistencyPass) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
       volumeA, volumeB};
 
-  BOOST_CHECK_NO_THROW(
-      Acts::Experimental::detail::DetectorVolumeConsistency::
-          checkCenterAlignment(tContext, {volumeA, volumeB}, Acts::binX));
+  BOOST_CHECK_NO_THROW(Acts::Experimental::detail::DetectorVolumeConsistency::
+                           checkCenterAlignment(tContext, {volumeA, volumeB},
+                                                Acts::BinningValue::binX));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

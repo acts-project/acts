@@ -50,6 +50,6 @@ class ILayerArrayCreator {
   virtual std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layers, double min,
       double max, BinningType btype = arbitrary,
-      BinningValue bvalue = binX) const = 0;
+      BinningValue bvalue = BinningValue::binX) const = 0;
 };
 }  // namespace Acts

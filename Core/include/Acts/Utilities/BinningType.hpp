@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace Acts {
@@ -32,7 +33,7 @@ enum BinningType { equidistant, arbitrary };
 enum BinningOption { open, closed };
 
 /// @enum BinningValue how to take the global / local position
-enum BinningValue : int {
+enum class BinningValue : int {
   binX = 0,
   binY = 1,
   binZ = 2,
@@ -41,19 +42,33 @@ enum BinningValue : int {
   binRPhi = 5,
   binH = 6,
   binEta = 7,
-  binMag = 8,
-  binValues = 9
+  binMag = 8
 };
 
-/// @brief static list of all binning values
-static const std::vector<BinningValue> s_binningValues = {
-    binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta, binMag};
+/// Get all possible binning values
+/// @return the binning values
+const std::vector<BinningValue>& allBinningValues();
 
-/// @brief screen output option
-inline const std::vector<std::string>& binningValueNames() {
-  static const std::vector<std::string> _binningValueNames = {
-      "binX",    "binY", "binZ",   "binR",  "binPhi",
-      "binRPhi", "binH", "binEta", "binMag"};
-  return _binningValueNames;
+/// Returns the total number of binningvalues
+/// @return the number of binning values
+constexpr std::size_t numBinningValues() {
+  return 9;
 }
+
+/// Get the binning value from a name
+/// @param name is the name of the binning value
+/// @return the binning value
+BinningValue binningValueFromName(const std::string& name);
+
+/// Get the name of a binning value as a string
+/// @param bValue is the binning value
+/// @return the name of the binning value
+const std::string& binningValueName(BinningValue bValue);
+
+/// Output stream operator for @c BinningValue
+/// @param os is the output stream
+/// @param bValue is the binning value
+/// @return the output stream
+std::ostream& operator<<(std::ostream& os, BinningValue bValue);
+
 }  // namespace Acts

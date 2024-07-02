@@ -351,7 +351,7 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
 
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
-  if (bValue == binR || bValue == binPhi) {
+  if (bValue == BinningValue::binR || bValue == BinningValue::binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
@@ -361,10 +361,10 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
 
 double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
                                                BinningValue bValue) const {
-  if (bValue == binR) {
+  if (bValue == BinningValue::binR) {
     return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
-  if (bValue == binPhi) {
+  if (bValue == BinningValue::binPhi) {
     return VectorHelpers::phi(binningPosition(gctx, bValue));
   }
 
@@ -383,7 +383,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
     BinningValue direction, const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging disc surfaces in " << binningValueNames()[direction]
+  ACTS_DEBUG("Merging disc surfaces in " << binningValueName(direction)
                                          << " direction");
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
@@ -447,7 +447,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
                                 << otherAvgPhi / 1_degree << " +- "
                                 << otherHlPhi / 1_degree);
 
-  if (direction == Acts::binR) {
+  if (direction == Acts::BinningValue::binR) {
     if (std::abs(minR - otherMaxR) > tolerance &&
         std::abs(maxR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces are not touching r");
@@ -479,7 +479,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
 
     return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
 
-  } else if (direction == Acts::binPhi) {
+  } else if (direction == Acts::BinningValue::binPhi) {
     if (std::abs(maxR - otherMaxR) > tolerance ||
         std::abs(minR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
@@ -503,10 +503,9 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
 
   } else {
     ACTS_ERROR("DiscSurface::merge: invalid direction "
-               << binningValueNames()[direction]);
-
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
-                                  "DiscSurface::merge: invalid direction " +
-                                      binningValueNames()[direction]);
+               << binningValueName(direction));
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: invalid direction " + binningValueName(direction));
   }
 }

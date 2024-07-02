@@ -156,8 +156,10 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   ActsExamples::GeometricConfig gdc;
 
   Acts::BinUtility segmentation;
-  segmentation += Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::binX);
-  segmentation += Acts::BinUtility(1280, -36, 36, Acts::open, Acts::binY);
+  segmentation +=
+      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::BinningValue::binX);
+  segmentation +=
+      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::BinningValue::binY);
 
   gdc.segmentation = segmentation;
   gdc.threshold = 0.01;

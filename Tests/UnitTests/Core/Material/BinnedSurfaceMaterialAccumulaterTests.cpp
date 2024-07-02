@@ -85,14 +85,14 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
 
   // Second surface is binned Phi / Z
-  BinUtility sb1(4, -M_PI, M_PI, closed, binPhi);
-  sb1 += BinUtility(2, -100., 100., open, binZ);
+  BinUtility sb1(4, -M_PI, M_PI, closed, BinningValue::binPhi);
+  sb1 += BinUtility(2, -100., 100., open, BinningValue::binZ);
   surfaces[1u]->assignSurfaceMaterial(
       std::make_shared<ProtoSurfaceMaterial>(sb1));
 
   // Third is binned
   std::vector<MaterialSlab> mps = {mp, mp, mp};
-  BinUtility sb2(3, -100., 100., open, binZ);
+  BinUtility sb2(3, -100., 100., open, BinningValue::binZ);
   surfaces[2u]->assignSurfaceMaterial(
       std::make_shared<BinnedSurfaceMaterial>(sb2, mps));
 

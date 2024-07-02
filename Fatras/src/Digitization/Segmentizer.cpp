@@ -116,7 +116,8 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     }
     // The phi boundaries
     if (bstart[1] != bend[1]) {
-      double referenceR = surface.binningPositionValue(geoCtx, Acts::binR);
+      double referenceR =
+          surface.binningPositionValue(geoCtx, Acts::BinningValue::binR);
       Acts::Vector2 origin = {0., 0.};
       const auto& phiboundaries = segmentation.binningData()[1].boundaries();
       std::vector<double> phibbounds = {

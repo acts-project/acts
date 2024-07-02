@@ -53,19 +53,20 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR && bval != binPhi && bval != binZ) {
+    } else if (bval != BinningValue::binR && bval != BinningValue::binPhi &&
+               bval != BinningValue::binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: phi, r, z");
     }
     float min = 0;
     float max = 0;
     // Perform the value adjustment
-    if (bval == binPhi) {
+    if (bval == BinningValue::binPhi) {
       min = minPhi;
       max = maxPhi;
-    } else if (bval == binR) {
+    } else if (bval == BinningValue::binR) {
       min = minR;
       max = maxR;
-    } else if (bval == binZ) {
+    } else if (bval == BinningValue::binZ) {
       min = minZ;
       max = maxZ;
     }
@@ -108,20 +109,21 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR && bval != binPhi && bval != binZ) {
+    } else if (bval != BinningValue::binR && bval != BinningValue::binPhi &&
+               bval != BinningValue::binZ) {
       throw std::invalid_argument(
           "Cutout cylinder volume binning must be: phi, r, z");
     }
     float min = 0;
     float max = 0;
     // Perform the value adjustment
-    if (bval == binPhi) {
+    if (bval == BinningValue::binPhi) {
       min = minPhi;
       max = maxPhi;
-    } else if (bval == binR) {
+    } else if (bval == BinningValue::binR) {
       min = minR;
       max = maxR;
-    } else if (bval == binZ) {
+    } else if (bval == BinningValue::binZ) {
       min = minZ;
       max = maxZ;
     }
@@ -163,19 +165,20 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX && bval != binY && bval != binZ) {
+    } else if (bval != BinningValue::binX && bval != BinningValue::binY &&
+               bval != BinningValue::binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: x, y, z");
     }
     float min = 0;
     float max = 0;
     // Perform the value adjustment
-    if (bval == binX) {
+    if (bval == BinningValue::binX) {
       min = minX;
       max = maxX;
-    } else if (bval == binY) {
+    } else if (bval == BinningValue::binY) {
       min = minY;
       max = maxY;
-    } else if (bval == binZ) {
+    } else if (bval == BinningValue::binZ) {
       min = minZ;
       max = maxZ;
     }

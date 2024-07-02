@@ -210,7 +210,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   sa.toStream(tgContext, std::cout);
 
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     std::vector<const Surface*> binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -230,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
   SurfaceArray sa2(std::move(sl2), brl);
   sa.toStream(tgContext, std::cout);
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     std::vector<const Surface*> binContent = sa2.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);

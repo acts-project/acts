@@ -233,17 +233,18 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
 
 Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
     const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
+  if (bValue == Acts::BinningValue::binR ||
+      bValue == Acts::BinningValue::binRPhi) {
     return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
   return VolumeBounds::binningOffset(bValue);
 }
 
 ActsScalar CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::binR) {
+  if (bValue == Acts::BinningValue::binR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
-  if (bValue == Acts::binZ) {
+  if (bValue == Acts::BinningValue::binZ) {
     return get(eHalfLengthZ);
   }
   return VolumeBounds::binningBorder(bValue);

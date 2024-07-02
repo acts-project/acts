@@ -37,7 +37,7 @@ Vector3 Volume::binningPosition(const GeometryContext& /*gctx*/,
                                 BinningValue bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
-  if (bValue == binR || bValue == binRPhi) {
+  if (bValue == BinningValue::binR || bValue == BinningValue::binRPhi) {
     // the binning Position for R-type may have an offset
     return (center() + m_volumeBounds->binningOffset(bValue));
   }

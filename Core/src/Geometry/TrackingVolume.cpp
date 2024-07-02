@@ -153,10 +153,11 @@ void TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
                                         BoundarySurfaceFace bsfMine,
                                         TrackingVolume* neighbor,
                                         BoundarySurfaceFace bsfNeighbor) {
-  // Find the connection of the two tracking volumes: binR returns the center
-  // except for cylindrical volumes
-  Vector3 bPosition(binningPosition(gctx, binR));
-  Vector3 distance = Vector3(neighbor->binningPosition(gctx, binR) - bPosition);
+  // Find the connection of the two tracking volumes: BinningValue::binR returns
+  // the center except for cylindrical volumes
+  Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
+  Vector3 distance =
+      Vector3(neighbor->binningPosition(gctx, BinningValue::binR) - bPosition);
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
@@ -196,14 +197,14 @@ void TrackingVolume::glueTrackingVolumes(
     const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
     BoundarySurfaceFace bsfNeighbor) {
-  // find the connection of the two tracking volumes : binR returns the center
-  // except for cylindrical volumes
+  // find the connection of the two tracking volumes : BinningValue::binR
+  // returns the center except for cylindrical volumes
   std::shared_ptr<const TrackingVolume> nRefVolume =
       neighbors->arrayObjects().at(0);
   // get the distance
-  Vector3 bPosition(binningPosition(gctx, binR));
-  Vector3 distance =
-      Vector3(nRefVolume->binningPosition(gctx, binR) - bPosition);
+  Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
+  Vector3 distance = Vector3(
+      nRefVolume->binningPosition(gctx, BinningValue::binR) - bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);

@@ -31,7 +31,7 @@ struct ProtoLayer {
   Extent extent;
 
   /// The envelope parameters
-  ExtentEnvelope envelope = zeroEnvelopes;
+  ExtentEnvelope envelope = ExtentEnvelope::Zero();
 
   /// Constructor
   ///

@@ -204,10 +204,10 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                     Acts::s_epsilon
                 ? Acts::closed
                 : Acts::open,
-            Acts::binPhi);
-        bUtility +=
-            Acts::BinUtility(binning.second, radialBounds->rMin(),
-                             radialBounds->rMax(), Acts::open, Acts::binR);
+            Acts::BinningValue::binPhi);
+        bUtility += Acts::BinUtility(binning.second, radialBounds->rMin(),
+                                     radialBounds->rMax(), Acts::open,
+                                     Acts::BinningValue::binR);
       }
       if (cylinderBounds != nullptr) {
         bUtility += Acts::BinUtility(
@@ -220,43 +220,44 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                     Acts::s_epsilon
                 ? Acts::closed
                 : Acts::open,
-            Acts::binPhi);
+            Acts::BinningValue::binPhi);
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ),
             cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ), Acts::open,
-            Acts::binZ);
+            Acts::BinningValue::binZ);
       }
       if (annulusBounds != nullptr) {
         bUtility += Acts::BinUtility(
             binning.first, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
             annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel), Acts::open,
-            Acts::binPhi);
-        bUtility +=
-            Acts::BinUtility(binning.second, annulusBounds->rMin(),
-                             annulusBounds->rMax(), Acts::open, Acts::binR);
+            Acts::BinningValue::binPhi);
+        bUtility += Acts::BinUtility(binning.second, annulusBounds->rMin(),
+                                     annulusBounds->rMax(), Acts::open,
+                                     Acts::BinningValue::binR);
       }
       if (rectangleBounds != nullptr) {
         bUtility += Acts::BinUtility(
             binning.first, rectangleBounds->get(Acts::RectangleBounds::eMinX),
             rectangleBounds->get(Acts::RectangleBounds::eMaxX), Acts::open,
-            Acts::binX);
+            Acts::BinningValue::binX);
         bUtility += Acts::BinUtility(
             binning.second, rectangleBounds->get(Acts::RectangleBounds::eMinY),
             rectangleBounds->get(Acts::RectangleBounds::eMaxY), Acts::open,
-            Acts::binY);
+            Acts::BinningValue::binY);
       }
       if (trapezoidBounds != nullptr) {
         double halfLengthX = std::max(
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
-        bUtility += Acts::BinUtility(binning.first, -1 * halfLengthX,
-                                     halfLengthX, Acts::open, Acts::binX);
+        bUtility +=
+            Acts::BinUtility(binning.first, -1 * halfLengthX, halfLengthX,
+                             Acts::open, Acts::BinningValue::binX);
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
-            Acts::open, Acts::binY);
+            Acts::open, Acts::BinningValue::binY);
       }
     }
     return std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility);

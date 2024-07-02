@@ -26,7 +26,11 @@
 namespace Acts {
 
 static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
-    {"x", binX}, {"y", binY}, {"z", binZ}, {"phi", binPhi}, {"r", binR}};
+    {"x", BinningValue::binX},
+    {"y", BinningValue::binY},
+    {"z", BinningValue::binZ},
+    {"phi", BinningValue::binPhi},
+    {"r", BinningValue::binR}};
 
 /// Helper method to convert the string to binning value
 ///
@@ -35,15 +39,15 @@ static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
 /// @return a binningValue
 inline BinningValue stringToBinningValue(const std::string &binningString) {
   if (binningString == "x") {
-    return binX;
+    return BinningValue::binX;
   } else if (binningString == "y") {
-    return binY;
+    return BinningValue::binY;
   } else if (binningString == "z") {
-    return binZ;
+    return BinningValue::binZ;
   } else if (binningString == "phi") {
-    return binPhi;
+    return BinningValue::binPhi;
   } else if (binningString == "r") {
-    return binR;
+    return BinningValue::binR;
   } else {
     throw std::invalid_argument("DD4hepBinningHelpers: Binning value " +
                                 binningString + " not allowed.");
