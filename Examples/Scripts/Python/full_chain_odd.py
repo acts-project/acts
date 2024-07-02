@@ -350,6 +350,10 @@ if args.reco:
         CkfConfig(
             seedDeduplication=True,
             stayOnSeed=True,
+            pixelVolumes={16, 17, 18},
+            stripVolumes={23, 24, 25},
+            maxPixelHoles=1,
+            maxStripHoles=2,
         ),
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,

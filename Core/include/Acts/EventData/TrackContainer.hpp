@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,6 +23,7 @@
 #include <any>
 #include <cstddef>
 #include <iterator>
+#include <string_view>
 
 namespace Acts {
 
@@ -68,6 +69,13 @@ class TrackContainer {
   /// this container
   using ConstTrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, true>;
+
+  using TrackContainerBackend = track_container_t;
+  using TrackStateContainerBackend = traj_t;
+
+  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  using ConstTrackStateProxy =
+      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
 
 #ifndef DOXYGEN
   friend TrackProxy;
