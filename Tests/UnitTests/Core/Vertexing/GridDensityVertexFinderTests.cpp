@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -100,13 +100,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   Finder1 finder1(cfg1);
   IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
-  adaptiveDensityConfig.spatialTrkGridSizeRange = {trkGridSize, trkGridSize};
-  adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
-  AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity::Config adaptiveDensityConfig;
+  adaptiveDensityConfig.binSize = 2. / 30. * 1_mm;
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder;
+  using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
@@ -219,14 +219,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   cfg.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg);
 
+  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
-  adaptiveDensityConfig.spatialTrkGridSizeRange = {trkGridSize, trkGridSize};
-  adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
+  AdapticeGridDensity::Config adaptiveDensityConfig;
+  adaptiveDensityConfig.binSize = 2. / 30. * 1_mm;
   adaptiveDensityConfig.useHighestSumZPosition = true;
-  AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
+  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder;
+  using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = true;
   cfg2.extractParameters.connect<&InputTrack::extractParameters>();
@@ -386,13 +386,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   Finder1 finder1(cfg1);
   IVertexFinder::State state1 = finder1.makeState(magFieldContext);
 
+  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdaptiveGridTrackDensity::Config adaptiveDensityConfig;
-  adaptiveDensityConfig.spatialTrkGridSizeRange = {trkGridSize, trkGridSize};
-  adaptiveDensityConfig.spatialBinExtent = 2. / 30.01 * 1_mm;
-  AdaptiveGridTrackDensity adaptiveDensity(adaptiveDensityConfig);
+  AdapticeGridDensity::Config adaptiveDensityConfig;
+  adaptiveDensityConfig.binSize = 2. / 30. * 1_mm;
+  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
-  using Finder2 = AdaptiveGridDensityVertexFinder;
+  using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
   cfg2.cacheGridStateForTrackRemoval = false;
   cfg2.estimateSeedWidth = true;

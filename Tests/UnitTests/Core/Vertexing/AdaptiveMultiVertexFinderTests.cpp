@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
+#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
@@ -559,18 +560,9 @@ BOOST_AUTO_TEST_CASE(
 
   Fitter fitter(fitterCfg);
 
-  // Grid density used during vertex seed finding
-  AdaptiveGridTrackDensity::Config gridDensityCfg;
-  // force track to have exactly spatialTrkGridSize spatial bins for testing
-  // purposes
-  gridDensityCfg.spatialTrkGridSizeRange = {55, 55};
-  gridDensityCfg.spatialBinExtent = 0.05;
-  AdaptiveGridTrackDensity gridDensity(gridDensityCfg);
-
-  using SeedFinder = AdaptiveGridDensityVertexFinder;
-  SeedFinder::Config seedFinderCfg(gridDensity);
+  using SeedFinder = AdaptiveGridDensityVertexFinder<55>;
+  SeedFinder::Config seedFinderCfg(0.05);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
-  seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
   auto seedFinder = std::make_shared<SeedFinder>(seedFinderCfg);
 
