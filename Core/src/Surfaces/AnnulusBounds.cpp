@@ -289,7 +289,7 @@ bool Acts::AnnulusBounds::inside(
   jacobianStripPCToModulePC(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
 
   // Mahalanobis distance uses inverse covariance as weights
-  auto weightStripPC = boundaryToleranceChi2.weight;
+  const auto& weightStripPC = boundaryToleranceChi2.weight;
   auto weightModulePC = jacobianStripPCToModulePC.transpose() * weightStripPC *
                         jacobianStripPCToModulePC;
 

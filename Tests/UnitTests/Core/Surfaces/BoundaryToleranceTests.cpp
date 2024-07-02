@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/test/execution_monitor.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -22,6 +23,12 @@
 #include "BoundaryToleranceTestsRefs.hpp"
 
 namespace Acts::Test {
+
+__attribute__((noinline)) void divbyzero() {
+  volatile float j = 0.0;
+  volatile float r = 123 / j;
+  (void)r;
+}
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -43,6 +50,10 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
 }
 // Aligned box w/ tolerance check along first axis
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
+  boost::execution_monitor em;
+
+  divbyzero();
+
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
   auto tolerance = BoundaryTolerance::AbsoluteBound(

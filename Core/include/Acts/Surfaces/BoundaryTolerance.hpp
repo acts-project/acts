@@ -88,7 +88,7 @@ class BoundaryTolerance {
     double tolerance{};
 
     AbsoluteEuclidean() = default;
-    AbsoluteEuclidean(double tolerance_) : tolerance(tolerance_) {}
+    explicit AbsoluteEuclidean(double tolerance_) : tolerance(tolerance_) {}
   };
 
   /// Chi2 tolerance in bound coordinates
