@@ -13,6 +13,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <cmath>
 #include <vector>
@@ -59,8 +60,8 @@ muonMdtIdentifierFields splitId(Acts::GeometryIdentifier::Value theID) {
 Acts::GeometryIdentifier::Value compressId(muonMdtIdentifierFields f) {
   Acts::GeometryIdentifier::Value out{0};
   out = out << g_fieldShift | f.stationName;
-  out = out << g_fieldShift | f.stationEta;
-  out = out << g_fieldShift | f.stationPhi;
+  out = out << g_fieldShift | static_cast<std::uint8_t>(f.stationEta);
+  out = out << g_fieldShift | static_cast<std::uint8_t>(f.stationPhi);
   out = out << g_fieldShift | f.multilayer;
   out = out << g_fieldShift | f.tubeLayer;
   out = out << g_fieldShift | f.tube;
