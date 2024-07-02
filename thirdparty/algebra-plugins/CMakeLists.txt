@@ -32,7 +32,7 @@ set(ALGEBRA_PLUGINS_INCLUDE_SMATRIX ${DETRAY_SMATRIX_PLUGIN}
 
 set(ALGEBRA_PLUGINS_SETUP_EIGEN3 OFF CACHE BOOL
    "Do not have Algebra Plugins set up Eigen3 for itself")
-set(ALGEBRA_PLUGINS_SETUP_VC ON CACHE BOOL
+set(ALGEBRA_PLUGINS_SETUP_VC TRUE CACHE BOOL
    "Have Algebra Plugins set up Vc for itself")
 set(ALGEBRA_PLUGINS_USE_SYSTEM_VC OFF CACHE BOOL
    "Have Algebra Plugins build Vc itself")
