@@ -10,6 +10,7 @@
 
 #include <any>
 #include <string>
+#include <string_view>
 
 #include <podio/Frame.h>
 #include <podio/UserDataCollection.h>
@@ -17,7 +18,7 @@
 namespace Acts::podio_detail {
 
 struct ConstDynamicColumnBase {
-  ConstDynamicColumnBase(const std::string& name) : m_name{name} {}
+  ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
 
   virtual ~ConstDynamicColumnBase() = default;
 
@@ -31,7 +32,7 @@ struct ConstDynamicColumnBase {
 
 template <typename T>
 struct ConstDynamicColumn : public ConstDynamicColumnBase {
-  ConstDynamicColumn(const std::string& name,
+  ConstDynamicColumn(std::string_view name,
                      const podio::UserDataCollection<T>& collection)
       : ConstDynamicColumnBase(name), m_collection{collection} {}
 
@@ -44,7 +45,7 @@ struct ConstDynamicColumn : public ConstDynamicColumnBase {
 };
 
 struct DynamicColumnBase : public ConstDynamicColumnBase {
-  DynamicColumnBase(const std::string& name) : ConstDynamicColumnBase{name} {}
+  DynamicColumnBase(std::string_view name) : ConstDynamicColumnBase{name} {}
 
   virtual std::any get(std::size_t i) = 0;
   std::any get(std::size_t i) const override = 0;
@@ -66,7 +67,7 @@ struct DynamicColumnBase : public ConstDynamicColumnBase {
 
 template <typename T>
 struct DynamicColumn : public DynamicColumnBase {
-  DynamicColumn(const std::string& name,
+  DynamicColumn(std::string_view name,
                 podio::UserDataCollection<T> collection = {})
       : DynamicColumnBase(name), m_collection{std::move(collection)} {}
 

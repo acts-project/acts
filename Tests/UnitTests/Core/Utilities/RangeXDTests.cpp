@@ -8,13 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <limits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_SUITE(RangeXD)
@@ -191,5 +190,5 @@ BOOST_AUTO_TEST_CASE(intersection_false2_double) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

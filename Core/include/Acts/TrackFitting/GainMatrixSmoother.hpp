@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/detail/covariance_helper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -29,18 +28,19 @@ namespace Acts {
 /// linearization.
 class GainMatrixSmoother {
  public:
+  /// Whether to check the covariance matrices if they are semi-positive and if
+  /// not attempt to correct them.
+  bool doCovCheckAndAttemptFix = false;
+
   /// Run the Kalman smoothing for one trajectory.
   ///
-  /// @param[in] gctx The geometry context for the smoothing
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
+  Result<void> operator()(const GeometryContext& /*gctx*/, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
-
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
     GetParameters filtered;
@@ -82,8 +82,8 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Getting previous track state");
     auto prev_ts = trajectory.getTrackState(entryIndex);
 
-    prev_ts.smoothed() = prev_ts.filtered();
-    prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
+    prev_ts.shareFrom(TrackStatePropMask::Filtered,
+                      TrackStatePropMask::Smoothed);
 
     // make sure there is more than one track state
     if (!prev_ts.hasPrevious()) {
@@ -110,6 +110,9 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
+
+      // ensure the track state has a smoothed component
+      ts.addComponents(TrackStatePropMask::Smoothed);
 
       if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
                                smoothed, predicted, predictedCovariance,

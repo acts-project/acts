@@ -13,8 +13,7 @@
 
 #include <array>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 struct IntersectionHelper2D {
   /// Intersect two segments
@@ -73,5 +72,4 @@ struct IntersectionHelper2D {
 
 };  // struct IntersectionHelper2D
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

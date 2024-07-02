@@ -47,6 +47,8 @@ def main():
         "vertexing_event_mu20_beamspot.csv",
         "vertexing_event_mu20_tracks.csv",
         "vertexing_event_mu20_vertices_AMVF.csv",
+        "event000000001-MuonDriftCircle.csv",
+        "event000000001-MuonSimHit.csv",
         # TODO Move the following files to a better place?
         "Magfield.ipynb",
         "SolenoidField.ipynb",

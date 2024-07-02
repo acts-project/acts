@@ -155,11 +155,9 @@ class FiniteStateMachine {
 
   /// Returns whether the FSM is in the specified state
   /// @tparam State type to check against
-  /// @param state State instance to check against
   /// @return Whether the FSM is in the given state.
   template <typename S>
-  bool is(const S& state) const noexcept {
-    (void)state;
+  bool is(const S& /*state*/) const noexcept {
     return is<S>();
   }
 

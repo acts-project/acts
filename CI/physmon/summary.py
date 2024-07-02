@@ -3,7 +3,6 @@
 
 import argparse
 import re
-import functools
 import os
 import csv
 

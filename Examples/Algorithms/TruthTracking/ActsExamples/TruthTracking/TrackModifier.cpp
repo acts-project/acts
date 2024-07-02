@@ -9,23 +9,14 @@
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 
-#include <algorithm>
-#include <cstdint>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::TrackModifier::TrackModifier(const Config& config,
-                                           Acts::Logging::Level level)
+TrackModifier::TrackModifier(const Config& config, Acts::Logging::Level level)
     : IAlgorithm("TrackModifier", level), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks");
@@ -38,7 +29,7 @@ ActsExamples::TrackModifier::TrackModifier(const Config& config,
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
+ProcessCode TrackModifier::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   auto modifyTrack = [this](auto& trk) {
     {
@@ -73,7 +64,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
   outputTracks.ensureDynamicColumns(inputTracks);
 
   for (const auto& inputTrack : inputTracks) {
-    auto outputTrack = outputTracks.getTrack(outputTracks.addTrack());
+    auto outputTrack = outputTracks.makeTrack();
     outputTrack.copyFrom(inputTrack);
     modifyTrack(outputTrack);
   }
@@ -90,3 +81,5 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

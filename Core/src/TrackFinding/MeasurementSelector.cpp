@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,8 +15,17 @@
 
 namespace Acts {
 
+MeasurementSelector::MeasurementSelector()
+    : m_config{{GeometryIdentifier(), MeasurementSelectorCuts{}}} {}
+
+MeasurementSelector::MeasurementSelector(const MeasurementSelectorCuts& cuts)
+    : m_config{{GeometryIdentifier(), cuts}} {}
+
+MeasurementSelector::MeasurementSelector(Config config)
+    : m_config(std::move(config)) {}
+
 double MeasurementSelector::calculateChi2(
-    double* fullCalibrated, double* fullCalibratedCovariance,
+    const double* fullCalibrated, const double* fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -24,32 +33,35 @@ double MeasurementSelector::calculateChi2(
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector projector,
     unsigned int calibratedSize) const {
-  return visit_measurement(calibratedSize, [&](auto N) -> double {
-    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+  return visit_measurement(
+      calibratedSize,
+      [&fullCalibrated, &fullCalibratedCovariance, &predicted,
+       &predictedCovariance, &projector](auto N) -> double {
+        constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
-    typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
-        fullCalibrated};
+        typename TrackStateTraits<kMeasurementSize, true>::Measurement
+            calibrated{fullCalibrated};
 
-    typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
-        calibratedCovariance{fullCalibratedCovariance};
+        typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+            calibratedCovariance{fullCalibratedCovariance};
 
-    using ParametersVector = ActsVector<kMeasurementSize>;
+        using ParametersVector = ActsVector<kMeasurementSize>;
 
-    // Take the projector (measurement mapping function)
-    const auto H =
-        projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
+        // Take the projector (measurement mapping function)
+        const auto H =
+            projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
+                .eval();
 
-    // Get the residuals
-    ParametersVector res;
-    res = calibrated - H * predicted;
+        // Get the residuals
+        ParametersVector res = calibrated - H * predicted;
 
-    // Get the chi2
-    return (res.transpose() *
-            ((calibratedCovariance + H * predictedCovariance * H.transpose()))
-                .inverse() *
-            res)
-        .eval()(0, 0);
-  });
+        // Get the chi2
+        return (res.transpose() *
+                (calibratedCovariance + H * predictedCovariance * H.transpose())
+                    .inverse() *
+                res)
+            .eval()(0, 0);
+      });
 }
 
 }  // namespace Acts

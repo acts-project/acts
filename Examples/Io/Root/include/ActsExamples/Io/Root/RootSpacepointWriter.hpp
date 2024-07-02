@@ -64,7 +64,7 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
-  /// @param[in] hits are the hits to be written
+  /// @param[in] spacepoints are the spacepoints to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const SimSpacePointContainer& spacepoints) final;
 
@@ -74,11 +74,11 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   TFile* m_outputFile = nullptr;
   TTree* m_outputTree = nullptr;
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  uint64_t m_measurementId = 0;
+  std::uint64_t m_measurementId = 0;
   /// Space point surface identifier.
-  uint64_t m_geometryId = 0;
+  std::uint64_t m_geometryId = 0;
   /// Global space point position components in mm.
   float m_x = std::numeric_limits<float>::infinity();
   float m_y = std::numeric_limits<float>::infinity();

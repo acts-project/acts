@@ -32,10 +32,17 @@ void ActsExamples::PassThroughCalibrator::calibrate(
 
   std::visit(
       [&trackState](const auto& meas) {
+        using MeasurementType = std::decay_t<decltype(meas)>;
+        constexpr std::size_t size = MeasurementType::size();
+
         trackState.allocateCalibrated(meas.size());
-        trackState.setCalibrated(meas);
+        assert(trackState.hasCalibrated());
+
+        trackState.calibrated<size>() = meas.parameters();
+        trackState.calibratedCovariance<size>() = meas.covariance();
+        trackState.setProjector(meas.projector());
       },
-      (measurements)[idxSourceLink.index()]);
+      measurements[idxSourceLink.index()]);
 }
 
 ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(

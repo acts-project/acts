@@ -18,8 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
@@ -30,7 +29,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   BinUtility xUtil_eq(10, 0., 10., open, binX);
   BinUtility yUtil_eq(10, 0., 10., open, binY);
   BinUtility zUtil_eq(10, 0., 10., open, binZ);
-  BOOST_CHECK_EQUAL(xUtil_eq.bins(), (std::size_t)10);
+  BOOST_CHECK_EQUAL(xUtil_eq.bins(), std::size_t{10});
   // make it 2-dim
   BinUtility xyUtil_eq(10, 0., 10., open, binX);
   xyUtil_eq += yUtil_eq;
@@ -128,5 +127,4 @@ BOOST_AUTO_TEST_CASE(BinUtility_transform) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -9,8 +9,8 @@
 #include "Acts/Detector/detail/PortalHelper.hpp"
 
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -18,19 +18,18 @@
 #include <stdexcept>
 #include <utility>
 
-void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
+void Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
     Portal& portal, const std::shared_ptr<DetectorVolume>& volume,
     const Direction& direction) {
   // Create a shared link instance & delegate
-  auto volumeLinkImpl =
-      std::make_unique<const Acts::Experimental::SingleDetectorVolumeImpl>(
-          volume.get());
-  Acts::Experimental::DetectorVolumeUpdater volumeLink;
-  volumeLink.connect<&Acts::Experimental::SingleDetectorVolumeImpl::update>(
-      std::move(volumeLinkImpl));
+  auto volumeLinkImpl = std::make_unique<
+      const Acts::Experimental::SingleDetectorVolumeNavigation>(volume.get());
+  Acts::Experimental::ExternalNavigationDelegate volumeLink;
+  volumeLink
+      .connect<&Acts::Experimental::SingleDetectorVolumeNavigation::update>(
+          std::move(volumeLinkImpl));
   // Update the volume link and the store
-  portal.assignDetectorVolumeUpdater(direction, std::move(volumeLink),
-                                     {volume});
+  portal.assignPortalNavigation(direction, std::move(volumeLink), {volume});
 }
 
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
@@ -41,19 +40,20 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
   // Check if the boundaries need a transform
   const auto pTransform = portal.surface().transform(gctx);
   // Creating a link to the mother
-  auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
+  auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
       boundaries, binning, unpack_shared_const_vector(volumes),
       pTransform.inverse());
-  DetectorVolumeUpdater dVolumeUpdater;
-  dVolumeUpdater.connect<&BoundVolumesGrid1Impl::update>(std::move(volumes1D));
-  portal.assignDetectorVolumeUpdater(direction, std::move(dVolumeUpdater),
-                                     volumes);
+  ExternalNavigationDelegate dVolumeUpdater;
+  dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
+      std::move(volumes1D));
+  portal.assignPortalNavigation(direction, std::move(dVolumeUpdater), volumes);
 }
 
-void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdaters(
-    const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    std::vector<PortalReplacement>& pReplacements) {
+void Acts::Experimental::detail::PortalHelper::
+    attachExternalNavigationDelegates(
+        const GeometryContext& gctx,
+        const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+        std::vector<PortalReplacement>& pReplacements) {
   // Unpack to navigation bare points
   auto cVolumes = unpack_shared_const_vector(volumes);
   // Set to the constructed portals (p), at index (i), in direction (d)
@@ -62,12 +62,12 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdaters(
     // Check if the boundaries need a transform
     const auto pTransform = p->surface().transform(gctx);
     // Creating a link to the mother
-    auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
+    auto volumes1D = std::make_unique<const BoundVolumesGrid1Navigation>(
         boundaries, binning, cVolumes, pTransform.inverse());
-    DetectorVolumeUpdater dVolumeUpdater;
-    dVolumeUpdater.connect<&BoundVolumesGrid1Impl::update>(
+    ExternalNavigationDelegate dVolumeUpdater;
+    dVolumeUpdater.connect<&BoundVolumesGrid1Navigation::update>(
         std::move(volumes1D));
-    p->assignDetectorVolumeUpdater(dir, std::move(dVolumeUpdater), volumes);
+    p->assignPortalNavigation(dir, std::move(dVolumeUpdater), volumes);
   }
 }
 

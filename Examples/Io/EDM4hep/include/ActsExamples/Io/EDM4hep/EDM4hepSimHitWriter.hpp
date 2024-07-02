@@ -67,6 +67,8 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
 
   podio::ROOTFrameWriter m_writer;
 
+  std::mutex m_writeMutex;
+
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };
 

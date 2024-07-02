@@ -220,7 +220,7 @@ class TrackContainer {
   /// @note Only available if the track container is not read-only
   /// @param key the name of the column to be added
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr void addColumn(const std::string& key) {
+  constexpr void addColumn(std::string_view key) {
     m_container->template addColumn_impl<T>(key);
   }
 

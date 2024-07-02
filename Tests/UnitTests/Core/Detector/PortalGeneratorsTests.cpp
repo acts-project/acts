@@ -15,8 +15,8 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 
 #include <cmath>
 #include <memory>

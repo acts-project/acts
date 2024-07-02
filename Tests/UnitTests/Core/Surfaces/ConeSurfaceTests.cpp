@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 //#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -28,10 +27,7 @@
 #include <memory>
 #include <string>
 
-// using boost::test_tools::output_test_stream;
-
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -276,5 +272,4 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

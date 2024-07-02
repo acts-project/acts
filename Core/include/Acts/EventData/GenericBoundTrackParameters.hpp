@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -93,9 +93,9 @@ class GenericBoundTrackParameters {
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis,
       ActsScalar tolerance = s_onSurfaceTolerance) {
-    Result<BoundVector> bound = detail::transformFreeToBoundParameters(
-        pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx,
-        tolerance);
+    Result<BoundVector> bound =
+        transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
+                                       qOverP, *surface, geoCtx, tolerance);
 
     if (!bound.ok()) {
       return bound.error();

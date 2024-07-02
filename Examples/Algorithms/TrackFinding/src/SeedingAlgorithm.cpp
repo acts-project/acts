@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <chrono>
@@ -168,15 +167,14 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
-    // check if zBinsCustomLooping contains numbers from 1 to the total number
-    // of bin in zBinEdges
-    for (std::size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
-      if (std::find(m_cfg.seedFinderConfig.zBinsCustomLooping.begin(),
-                    m_cfg.seedFinderConfig.zBinsCustomLooping.end(),
-                    i) == m_cfg.seedFinderConfig.zBinsCustomLooping.end()) {
+    // check that the bins required in the custom bin looping
+    // are contained in the bins defined by the total number of edges
+
+    for (std::size_t i : m_cfg.seedFinderConfig.zBinsCustomLooping) {
+      if (i >= m_cfg.gridConfig.zBinEdges.size()) {
         throw std::invalid_argument(
-            "Inconsistent config zBinsCustomLooping does not contain the same "
-            "bins as zBinEdges");
+            "Inconsistent config zBinsCustomLooping does not contain a subset "
+            "of bins defined by zBinEdges");
       }
     }
   }
@@ -186,16 +184,17 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       Acts::detail::RefHolder>::ConstSpacePointProxyType;
 
   m_bottomBinFinder =
-      std::make_shared<const Acts::GridBinFinder<2ul>>(
+      std::make_unique<const Acts::GridBinFinder<2ul>>(
 						       m_cfg.numPhiNeighbors, cfg.zBinNeighborsBottom);
   m_topBinFinder =
-      std::make_shared<const Acts::GridBinFinder<2ul>>(
+      std::make_unique<const Acts::GridBinFinder<2ul>>(
 						       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop);
 
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(
+      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
           m_cfg.seedFilterConfig);
   m_seedFinder = Acts::SeedFinder<SpacePointProxy_type>(m_cfg.seedFinderConfig);
+
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -242,17 +241,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  Acts::SpacePointGrid<value_type> grid = Acts::SpacePointGridCreator::createGrid<value_type>(
+
+  Acts::CylindricalSpacePointGrid<value_type> grid = Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
-  Acts::SpacePointGridCreator::fillGrid(
+  Acts::CylindricalSpacePointGridCreator::fillGrid(
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid,
       spContainer.begin(), spContainer.end(),
       rRangeSPExtent);
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[1ul] = m_cfg.seedFinderConfig.zBinsCustomLooping;
-  auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
+
+  auto spacePointsGrouping = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *m_bottomBinFinder, *m_topBinFinder,
       std::move(navigation));
 

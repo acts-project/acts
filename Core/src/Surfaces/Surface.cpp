@@ -9,13 +9,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <algorithm>
 #include <iomanip>
 #include <utility>
 
@@ -57,16 +55,18 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 }
 
 Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters,
-    const FreeVector& pathDerivative) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const FreeVector& pathDerivative) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
   const auto alignToBoundWithoutCorrection =
-      alignmentToBoundDerivativeWithoutCorrection(gctx, parameters);
+      alignmentToBoundDerivativeWithoutCorrection(gctx, position, direction);
   // 2) Calculate the derivative of path length w.r.t. alignment parameters
-  const auto alignToPath = alignmentToPathDerivative(gctx, parameters);
+  const auto alignToPath = alignmentToPathDerivative(gctx, position, direction);
   // 3) Calculate the jacobian from free parameters to bound parameters
-  FreeToBoundMatrix jacToLocal = freeToBoundJacobian(gctx, parameters);
+  FreeToBoundMatrix jacToLocal = freeToBoundJacobian(gctx, position, direction);
   // 4) The derivative of bound parameters w.r.t. alignment
   // parameters is alignToBoundWithoutCorrection +
   // jacToLocal*pathDerivative*alignToPath
@@ -78,9 +78,11 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
 
 Acts::AlignmentToBoundMatrix
 Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global posiiton
-  const auto position = parameters.segment<3>(eFreePos0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  (void)direction;
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
@@ -117,11 +119,10 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
 }
 
 Acts::AlignmentToPathMatrix Acts::Surface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global posiiton
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The local frame rotation
@@ -194,8 +195,8 @@ bool Acts::Surface::operator==(const Surface& other) const {
 }
 
 // overload dump for stream operator
-std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
-                                      std::ostream& sl) const {
+std::ostream& Acts::Surface::toStreamImpl(const GeometryContext& gctx,
+                                          std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(4);
   sl << name() << std::endl;
@@ -220,7 +221,7 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
 
 std::string Acts::Surface::toString(const GeometryContext& gctx) const {
   std::stringstream ss;
-  toStream(gctx, ss);
+  ss << toStream(gctx);
   return ss.str();
 }
 
@@ -254,16 +255,13 @@ Acts::RotationMatrix3 Acts::Surface::referenceFrame(
 }
 
 Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
-    const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Transform from bound to free parameters
-  FreeVector freeParams =
-      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
-  // The global position
-  const Vector3 position = freeParams.segment<3>(eFreePos0);
-  // The direction
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
+
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - given by reference frame
@@ -278,14 +276,14 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
 }
 
 Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global position
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
+
   // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Local position component given by the reference frame
@@ -300,11 +298,10 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
 }
 
 Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
-  // The global position
-  const auto position = parameters.segment<3>(eFreePos0);
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+
   // The measurement frame of the surface
   const RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
   // The measurement frame z axis

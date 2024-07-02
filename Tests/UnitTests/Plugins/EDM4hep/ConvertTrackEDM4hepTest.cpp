@@ -6,10 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
@@ -302,7 +299,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   std::uint32_t numT = nTracks(rng);
   for (std::uint32_t t = 0; t < numT; t++) {
-    auto track = tracks.getTrack(tracks.addTrack());
+    auto track = tracks.makeTrack();
     {
       auto [par, cov] = genParams();
       track.parameters() = par;
@@ -371,8 +368,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
                             std::make_shared<Acts::VectorMultiTrajectory>());
 
   for (const auto edm4hepTrack : edm4hepTracksConst) {
-    EDM4hepUtil::readTrack(
-        edm4hepTrack, readTracks.getTrack(readTracks.addTrack()), Bz, *logger);
+    EDM4hepUtil::readTrack(edm4hepTrack, readTracks.makeTrack(), Bz, *logger);
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());

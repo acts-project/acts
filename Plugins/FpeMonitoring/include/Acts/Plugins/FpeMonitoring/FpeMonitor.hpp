@@ -24,7 +24,7 @@
 
 namespace Acts {
 
-enum class FpeType : uint32_t {
+enum class FpeType : std::uint32_t {
   INTDIV = FPE_INTDIV,
   INTOVF = FPE_INTOVF,
   FLTDIV = FPE_FLTDIV,

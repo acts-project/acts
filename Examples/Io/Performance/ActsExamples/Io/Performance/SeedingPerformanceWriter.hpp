@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
@@ -34,8 +33,6 @@ struct AlgorithmContext;
 
 class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
  public:
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     /// Input reconstructed seed collection.
     std::string inputSeeds;

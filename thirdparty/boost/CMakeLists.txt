@@ -3,7 +3,6 @@ message(STATUS "Building Boost ${_acts_boost_recommended_version}")
 include(ExternalProject)
 
 string(REPLACE "." "_" _acts_boost_recommended_version_ ${_acts_boost_recommended_version})
-set(Boost_URL "https://boostorg.jfrog.io/artifactory/main/release/${_acts_boost_recommended_version}/source/boost_${_acts_boost_recommended_version_}.tar.gz")
 set(Boost_LIBRARY_LIST "filesystem,program_options,test")
 set(Boost_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/boost-prefix/src/boost)
 set(Boost_INCLUDE_DIR ${Boost_SOURCE_DIR})
@@ -16,13 +15,7 @@ set(Boost_B2_FLAGS variant=release threading=multi runtime-link=shared link=shar
 # Note: Since all builds below depend on the headers, use this step to
 # download the boost release
 
-ExternalProject_Add(
-  boost
-  URL ${Boost_URL}
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-)
+ExternalProject_Add( boost "${ACTS_BOOST_SOURCE};CONFIGURE_COMMAND;;BUILD_COMMAND;;INSTALL_COMMAND;" )
 
 add_library(Boost::boost INTERFACE IMPORTED GLOBAL)
 add_dependencies(Boost::boost boost)

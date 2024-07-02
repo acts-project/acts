@@ -68,11 +68,11 @@ compatibility by applying a set of configurable cuts that can be tested with
 two SP only (pseudorapidity, origin along $z$-axis, distance in $r$ between SP,
 compatibility with interaction point).
 
-:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const Acts::SpacePointGrid<external_spacepoint_t> &grid, std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
+:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const grid_t &grid, std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
 :::
 
 
-:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, const Acts::SpacePointGrid<external_spacepoint_t> &grid, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs) const
+:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, const grid_t &grid, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs) const
 :::
 
 

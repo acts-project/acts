@@ -37,7 +37,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   DD4hepDetectorSurfaceFactory::Cache fCache;
   fCache.sExtent = options.extent;
   fCache.pExtent = options.extent;
-  fCache.extentContraints = options.extentContraints;
+  fCache.extentConstraints = options.extentConstraints;
   fCache.nExtentSegments = options.nSegments;
   m_surfaceFactory->construct(fCache, gctx, dd4hepElement,
                               options.conversionOptions);

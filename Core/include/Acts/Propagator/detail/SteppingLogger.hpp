@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -37,6 +38,8 @@ struct Step {
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
   GeometryIdentifier geoID = 0;
+  /// Note that this is the total number of trials including the previous steps
+  std::size_t nTotalTrials = 0;
 };
 
 /// @brief a step length logger for debugging the stepping
@@ -69,15 +72,17 @@ struct SteppingLogger {
                   const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
     // Don't log if you have reached the target or are sterile
-    if (sterile || navigator.targetReached(state.navigation)) {
+    if (sterile || state.stage == PropagatorStage::postPropagation) {
       return;
     }
+
     // Record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;
     step.navDir = state.options.direction;
     step.position = stepper.position(state.stepping);
     step.momentum = stepper.momentum(state.stepping);
+    step.nTotalTrials = state.stepping.nStepTrials;
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,6 +23,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
+#include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -116,7 +117,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(zOutermostLayers);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
@@ -181,7 +181,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(zOutermostLayers);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
@@ -239,7 +238,7 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SpacePointGridConfig;
+    using Config = Acts::CylindricalSpacePointGridConfig;
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -259,7 +258,7 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Options = Acts::SpacePointGridOptions;
+    using Options = Acts::CylindricalSpacePointGridOptions;
     auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Options);
@@ -292,12 +291,15 @@ void addTrackFinding(Context& ctx) {
       yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
+                                "MuonHoughSeeder", inSimHits, inDriftCircles);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialVarInflation,
-      particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSimgaQoverPCoefficients,
+      initialVarInflation, noTimeVarInflation, particleHypothesis);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
@@ -329,12 +331,17 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
+    ACTS_PYTHON_MEMBER(inputSeeds);
     ACTS_PYTHON_MEMBER(outputTracks);
+    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_MEMBER(trackSelectorCfg);
-    ACTS_PYTHON_MEMBER(backward);
     ACTS_PYTHON_MEMBER(maxSteps);
+    ACTS_PYTHON_MEMBER(twoWay);
+    ACTS_PYTHON_MEMBER(seedDeduplication);
+    ACTS_PYTHON_MEMBER(stayOnSeed);
     ACTS_PYTHON_STRUCT_END();
   }
 

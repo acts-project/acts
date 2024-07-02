@@ -2,7 +2,6 @@
 import os
 import asyncio
 from typing import List, Optional, Tuple
-import re
 from pathlib import Path
 import sys
 import http
@@ -15,11 +14,14 @@ import base64
 import aiohttp
 from gidgethub.aiohttp import GitHubAPI
 from gidgethub import InvalidField
+from semantic_release.enums import LevelBump
+from semantic_release.version import Version
+from semantic_release.commit_parser.angular import (
+    AngularCommitParser,
+    AngularParserOptions,
+)
+from semantic_release.commit_parser.token import ParseError, ParseResult
 import gidgethub
-from semantic_release.history import angular_parser, get_new_version
-from semantic_release.errors import UnknownCommitMessageStyleError
-from semantic_release.history.logs import LEVELS
-from semantic_release.history.parser_helpers import ParsedCommit
 import sh
 from dotenv import load_dotenv
 import functools
@@ -43,12 +45,6 @@ def get_repo():
     return repo
 
 
-def get_current_version():
-    raw = git.describe().split("-")[0]
-    m = re.match(r"v(\d+\.\d+\.\d+)", raw)
-    return m.group(1)
-
-
 class Commit:
     sha: str
     message: str
@@ -68,8 +64,13 @@ class Commit:
         message = self.message.split("\n")[0]
         return f"Commit(sha='{self.sha[:8]}', message='{message}')"
 
+    # needed for semantic_release duck typing
+    @property
+    def hexsha(self):
+        return self.sha
 
-_default_parser = angular_parser
+
+_default_parser = AngularCommitParser(AngularParserOptions())
 
 
 def evaluate_version_bump(
@@ -85,16 +86,17 @@ def evaluate_version_bump(
 
     for commit in commits:
         commit_count += 1
-        try:
-            message = commit_parser(commit.message)
-            changes.append(message.bump)
-        except UnknownCommitMessageStyleError:
+
+        message: ParseResult = commit_parser.parse(commit)
+        if isinstance(message, ParseError):
             print("Unknown commit message style!")
+        else:
+            changes.append(message.bump)
 
     if changes:
         level = max(changes)
-        if level in LEVELS:
-            bump = LEVELS[level]
+        if level in LevelBump:
+            bump = level
         else:
             print(f"Unknown bump level {level}")
 
@@ -108,26 +110,19 @@ def generate_changelog(commits, commit_parser=_default_parser) -> dict:
     changes: dict = {"breaking": []}
 
     for commit in commits:
-        try:
-            message: ParsedCommit = commit_parser(commit.message)
-            if message.type not in changes:
-                changes[message.type] = list()
+        message: ParseResult = commit_parser.parse(commit)
 
-            capital_message = (
-                message.descriptions[0][0].upper() + message.descriptions[0][1:]
-            )
-            changes[message.type].append((commit.sha, capital_message, commit.author))
-
-            if message.breaking_descriptions:
-                for paragraph in message.breaking_descriptions:
-                    changes["breaking"].append((commit.sha, paragraph, commit.author))
-            elif message.bump == 3:
-                changes["breaking"].append(
-                    (commit.sha, message.descriptions[0], commit.author)
-                )
-
-        except UnknownCommitMessageStyleError:
+        if isinstance(message, ParseError):
             print("Unknown commit message style!")
+            continue
+
+        if message.type not in changes:
+            changes[message.type] = list()
+
+        capital_message = (
+            message.descriptions[0][0].upper() + message.descriptions[0][1:]
+        )
+        changes[message.type].append((commit.sha, capital_message, commit.author))
 
     return changes
 
@@ -189,14 +184,16 @@ async def get_parsed_commit_range(
             if commit_hash == end:
                 break
 
+            commit = Commit(commit_hash, commit_message, item["author"]["login"])
+
             invalid_message = False
-            try:
-                _default_parser(commit_message)
-                # if this succeeds, do nothing
-            except UnknownCommitMessageStyleError:
+            message: ParseResult = _default_parser.parse(commit)
+
+            if isinstance(message, ParseError):
                 print("Unknown commit message style!")
                 if not commit_message.startswith("Merge"):
                     invalid_message = True
+
             if (
                 (invalid_message or edit)
                 and sys.stdout.isatty()
@@ -206,7 +203,6 @@ async def get_parsed_commit_range(
                 commit_message = typer.edit(commit_message)
                 _default_parser(commit_message)
 
-            commit = Commit(commit_hash, commit_message, item["author"]["login"])
             commits.append(commit)
 
             if invalid_message:
@@ -227,6 +223,7 @@ async def get_parsed_commit_range(
 @make_sync
 async def make_release(
     token: str = typer.Argument(..., envvar="GH_TOKEN"),
+    force_next_version: Optional[str] = typer.Option(None, "--next-version"),
     draft: bool = True,
     dry_run: bool = False,
     edit: bool = False,
@@ -255,7 +252,12 @@ async def make_release(
         if bump is None:
             print("-> nothing to do")
             return
-        next_version = get_new_version(current_version, bump)
+
+        current_version_obj = Version(*(map(int, current_version.split("."))))
+        next_version_obj = current_version_obj.bump(bump)
+        next_version = f"{next_version_obj.major}.{next_version_obj.minor}.{next_version_obj.patch}"
+        if force_next_version is not None:
+            next_version = force_next_version
         print("next version:", next_version)
         next_tag = f"v{next_version}"
 
@@ -265,18 +267,9 @@ async def make_release(
         print(md)
 
         if not dry_run:
-            version_file.write_text(next_version)
-            git.add(version_file)
+            execute_bump(next_version)
 
-            zenodo_file = Path(".zenodo.json")
-            update_zenodo(zenodo_file, repo, next_version)
-            git.add(zenodo_file)
-
-            citation_file = Path("CITATION.cff")
-            update_citation(citation_file, next_version)
-            git.add(citation_file)
-
-            git.commit(m=f"Bump to version {next_tag}")
+            git.commit(m=f"Bump to version {next_tag}", no_verify=True)
 
             target_hash = str(git("rev-parse", "HEAD")).strip()
             print("target_hash:", target_hash)
@@ -312,6 +305,33 @@ async def make_release(
                     "target_commitish": target_hash,
                 },
             )
+
+
+def execute_bump(next_version: str):
+    version_file = Path("version_number")
+
+    version_file.write_text(next_version)
+    git.add(version_file)
+
+    repo = get_repo()
+    zenodo_file = Path(".zenodo.json")
+    update_zenodo(zenodo_file, repo, next_version)
+    git.add(zenodo_file)
+
+    citation_file = Path("CITATION.cff")
+    update_citation(citation_file, next_version)
+    git.add(citation_file)
+
+
+@app.command()
+def bump(
+    next_version: str = typer.Argument(..., help="Format: X.Y.Z"), commit: bool = False
+):
+    execute_bump(next_version)
+    next_tag = f"v{next_version}"
+
+    if commit:
+        git.commit(m=f"Bump to version {next_tag}", no_verify=True)
 
 
 async def get_release_branch_version(
@@ -361,129 +381,6 @@ async def get_release(tag: str, repo: str, gh: GitHubAPI):
         else:
             raise e
     return existing_release
-
-
-@app.command()
-@make_sync
-async def pr_action(
-    fail: bool = False,
-    pr: int = None,
-    token: Optional[str] = typer.Option(None, envvar="GH_TOKEN"),
-    repo: Optional[str] = typer.Option(None, envvar="GH_REPO"),
-):
-    print("::group::Information")
-
-    context = os.environ.get("GITHUB_CONTEXT")
-
-    if context is not None:
-        context = json.loads(context)
-        repo = context["repository"]
-        token = context["token"]
-    else:
-        if token is None or repo is None:
-            raise ValueError("No context, need token and repo")
-        if pr is None:
-            raise ValueError("No context, need explicit PR to run on")
-
-    async with aiohttp.ClientSession(loop=asyncio.get_event_loop()) as session:
-        gh = GitHubAPI(session, __name__, oauth_token=token)
-
-        if pr is not None:
-            pr = await gh.getitem(f"repos/{repo}/pulls/{pr}")
-        else:
-            pr = context["event"]["pull_request"]
-
-        target_branch = pr["base"]["ref"]
-        print("Target branch:", target_branch)
-        sha = pr["head"]["sha"]
-        print("Source hash:", sha)
-
-        merge_commit_sha = await get_merge_commit_sha(
-            pr["number"],
-            repo,
-            gh,
-        )
-        print("Merge commit sha:", merge_commit_sha)
-
-        # Get current version from target branch
-        current_version = await get_release_branch_version(repo, target_branch, gh)
-        tag_hash = await get_tag_hash(f"v{current_version}", repo, gh)
-        print("current_version:", current_version, "[" + tag_hash[:8] + "]")
-
-        commits, unparsed_commits = await get_parsed_commit_range(
-            start=merge_commit_sha, end=tag_hash, repo=repo, gh=gh
-        )
-
-        bump = evaluate_version_bump(commits)
-        print("bump:", bump)
-        next_version = get_new_version(current_version, bump)
-        print("next version:", next_version)
-        next_tag = f"v{next_version}"
-
-        print("::endgroup::")
-
-        changes = generate_changelog(commits)
-        md = markdown_changelog(next_version, changes, header=False)
-
-        body = ""
-        title = f"Release: {current_version} -> {next_version}"
-
-        existing_release = await get_release(next_tag, repo, gh)
-        existing_tag = await get_tag(next_tag, repo, gh)
-
-        body += f"# `v{current_version}` -> `v{next_version}`\n"
-
-        exit_code = 0
-
-        if existing_release is not None or existing_tag is not None:
-            if current_version == next_version:
-                body += (
-                    "## :no_entry_sign: Merging this will not result in a new version (no `fix`, "
-                    "`feat` or breaking changes). I recommend **delaying** this PR until more changes accumulate.\n"
-                )
-                print("::warning::Merging this will not result in a new version")
-
-            else:
-                exit_code = 1
-                title = f":no_entry_sign: {title}"
-                if existing_release is not None:
-                    body += f"## :warning: **WARNING**: A release for '{next_tag}' already exists"
-                    body += f"[here]({existing_release['html_url']})** :warning:"
-                    print(f"::error::A release for tag '{next_tag}' already exists")
-                else:
-                    body += (
-                        f"## :warning: **WARNING**: A tag '{next_tag}' already exists"
-                    )
-                    print(f"::error::A tag '{next_tag}' already exists")
-
-                body += "\n"
-                body += ":no_entry_sign: I recommend to **NOT** merge this and double check the target branch!\n\n"
-
-        else:
-            body += f"## Merging this PR will create a new release `v{next_version}`\n"
-
-        if len(unparsed_commits) > 0:
-            body += "\n" * 3
-            body += "## :warning: This PR contains commits which are not parseable:"
-            for commit in unparsed_commits:
-                msg, _ = commit.message.split("\n", 1)
-                body += f"\n - {msg} {commit.sha})"
-            body += "\n **Make sure these commits do not contain changes which affect the bump version!**"
-
-        body += "\n\n"
-
-        body += "### Changelog"
-
-        body += md
-
-        print("::group::PR message")
-        print(body)
-        print("::endgroup::")
-
-        await gh.post(pr["url"], data={"body": body, "title": title})
-
-        if fail:
-            sys.exit(exit_code)
 
 
 if __name__ == "__main__":

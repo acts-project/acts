@@ -82,7 +82,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   }
 
   std::cout << "Reading tree: " << treeName << std::endl;
-  TTree* tree = (TTree*)file->Get(treeName.c_str());
+  TTree* tree = static_cast<TTree*>(file->Get(treeName.c_str()));
 
   // Bail out if no tree was found
   if (tree == nullptr) {

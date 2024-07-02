@@ -14,8 +14,7 @@
 #include <cmath>
 #include <cstddef>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Traits class for an unrestricted parameter.
 struct UnrestrictedParameterTraits {
@@ -172,5 +171,4 @@ struct ParametersTraitsImpl<FreeIndices> {
 template <typename indices_t>
 constexpr std::size_t kParametersSize = ParametersTraitsImpl<indices_t>::kSize;
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

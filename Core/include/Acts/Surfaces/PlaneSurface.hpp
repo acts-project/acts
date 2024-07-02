@@ -59,6 +59,8 @@ class PlaneSurface : public RegularSurface {
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
+  /// @deprecated Use `CurvilinearSurface` instead
+  ///
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
   ///
@@ -236,4 +238,4 @@ class PlaneSurface : public RegularSurface {
 
 ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
 
-}  // end of namespace Acts
+}  // namespace Acts

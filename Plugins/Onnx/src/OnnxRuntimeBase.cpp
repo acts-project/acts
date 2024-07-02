@@ -76,8 +76,8 @@ std::vector<std::vector<std::vector<float>>>
 Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
     NetworkBatchInput& inputTensorValues) const {
   int batchSize = inputTensorValues.rows();
-  std::vector<int64_t> inputNodeDims = m_inputNodeDims;
-  std::vector<std::vector<int64_t>> outputNodeDims = m_outputNodeDims;
+  std::vector<std::int64_t> inputNodeDims = m_inputNodeDims;
+  std::vector<std::vector<std::int64_t>> outputNodeDims = m_outputNodeDims;
 
   // The first dim node should correspond to the batch size
   // If it is -1, it is dynamic and should be set to the input size
@@ -86,7 +86,7 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
   }
 
   bool outputDimsMatch = true;
-  for (std::vector<int64_t>& nodeDim : outputNodeDims) {
+  for (std::vector<std::int64_t>& nodeDim : outputNodeDims) {
     if (nodeDim[0] == -1) {
       nodeDim[0] = batchSize;
     }

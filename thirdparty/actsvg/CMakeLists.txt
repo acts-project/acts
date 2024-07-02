@@ -13,16 +13,7 @@ include( FetchContent )
 # Tell the user what's happening.
 message( STATUS "Building actsvg as part of the ACTS project" )
 
-set( ACTS_VERSION "v${_acts_actsvg_version}")
-
-# Declare where to get VecMem from.
-set( ACTS_ACTSVG_GIT_REPOSITORY "https://github.com/acts-project/actsvg.git"
-   CACHE STRING "Git repository to take actsvg from" )
-set( ACTS_ACTSVG_GIT_TAG "${ACTS_VERSION}" CACHE STRING "Version of actsvg to build" )
-mark_as_advanced( ACTS_ACTSVG_GIT_REPOSITORY ACTS_ACTSVG_GIT_TAG )
-FetchContent_Declare( actsvg
-   GIT_REPOSITORY "${ACTS_ACTSVG_GIT_REPOSITORY}"
-   GIT_TAG "${ACTS_ACTSVG_GIT_TAG}" )
+FetchContent_Declare( actsvg ${ACTS_ACTSVG_SOURCE} )
 
 # Now set up its build.
 FetchContent_MakeAvailable( actsvg )

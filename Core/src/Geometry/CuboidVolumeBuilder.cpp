@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -20,6 +19,7 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -110,7 +110,7 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
 
   // Compute the min volume boundaries for computing the binning start
   // See
-  // https://acts.readthedocs.io/en/latest/core/geometry.html#geometry-building
+  // https://acts.readthedocs.io/en/latest/core/geometry/legacy/building.html
   // !! IMPORTANT !! The volume is assumed to be already rotated into the
   // telescope geometry
   Vector3 minVolumeBoundaries = cfg.position - 0.5 * cfg.length;
@@ -149,7 +149,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   Transform3 trafo(Transform3::Identity());
   trafo.translation() = cfg.position;
   // Set bounds
-  auto bounds = std::make_shared<const CuboidVolumeBounds>(
+  auto bounds = std::make_shared<CuboidVolumeBounds>(
       cfg.length.x() * 0.5, cfg.length.y() * 0.5, cfg.length.z() * 0.5);
 
   // Gather the layers
@@ -186,21 +186,21 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
     // Build TrackingVolume
-    trackVolume =
-        TrackingVolume::create(trafo, bounds, cfg.volumeMaterial, nullptr,
-                               nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume = std::make_shared<TrackingVolume>(
+        trafo, bounds, cfg.volumeMaterial, nullptr, nullptr,
+        cfg.trackingVolumes, cfg.name);
   } else {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(trafo, bounds, cfg.volumeMaterial,
-                                         std::move(layArr), nullptr,
-                                         cfg.trackingVolumes, cfg.name);
+    trackVolume = std::make_shared<TrackingVolume>(
+        trafo, bounds, cfg.volumeMaterial, std::move(layArr), nullptr,
+        cfg.trackingVolumes, cfg.name);
   }
   return trackVolume;
 }
 
 Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, Acts::TrackingVolumePtr /*gctx*/,
-    Acts::VolumeBoundsPtr /*bounds*/) const {
+    std::shared_ptr<const VolumeBounds> /*bounds*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());
@@ -230,7 +230,7 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
   trafo.translation() = m_cfg.position;
 
   // Size of the volume
-  auto volume = std::make_shared<const CuboidVolumeBounds>(
+  auto volumeBounds = std::make_shared<CuboidVolumeBounds>(
       m_cfg.length.x() * 0.5, m_cfg.length.y() * 0.5, m_cfg.length.z() * 0.5);
 
   // Build vector of confined volumes
@@ -258,8 +258,9 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
       new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
   // Create world volume
-  MutableTrackingVolumePtr mtvp(
-      TrackingVolume::create(trafo, volume, trVolArr, "World"));
+  MutableTrackingVolumePtr mtvp(std::make_shared<TrackingVolume>(
+      trafo, volumeBounds, nullptr, nullptr, trVolArr,
+      MutableTrackingVolumeVector{}, "World"));
 
   return mtvp;
 }

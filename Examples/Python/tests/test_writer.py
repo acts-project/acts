@@ -18,12 +18,7 @@ from helpers import (
 )
 
 import acts
-
-from common import getOpenDataDetectorDirectory
-
-from acts import PlanarModuleStepper, UnitConstants as u
-
-
+from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
     TrackFinderPerformanceWriter,
@@ -33,24 +28,22 @@ from acts.examples import (
     RootTrackParameterWriter,
     RootMaterialTrackWriter,
     RootMaterialWriter,
-    RootPlanarClusterWriter,
     RootSimHitWriter,
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
     VertexPerformanceWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
-    CsvPlanarClusterWriter,
     CsvSimHitWriter,
     CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    PlanarSteppingAlgorithm,
     JsonMaterialWriter,
     JsonFormat,
     Sequencer,
     GenericDetector,
 )
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 @pytest.mark.obj
@@ -170,7 +163,7 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
         inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         filePath=str(out),
-        trackingGeometry=trk_geo,
+        surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
     )
     config.addBoundIndicesFromDigiConfig(digiAlg.config)
     s.addWriter(RootMeasurementWriter(level=acts.logging.INFO, config=config))
@@ -202,51 +195,6 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     s.run()
     assert out.exists()
     assert out.stat().st_size > 2e4
-    assert_root_hash(out.name, out)
-
-
-@pytest.mark.root
-def test_root_clusters_writer(
-    tmp_path, fatras, conf_const, trk_geo, rng, assert_root_hash
-):
-    s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
-    evGen, simAlg, _ = fatras(s)
-    s = Sequencer(numThreads=1, events=10)
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.INFO,
-        inputSimHits=simAlg.config.outputSimHits,
-        outputClusters="clusters",
-        outputSourceLinks="sourcelinks",
-        outputDigiSourceLinks="digi_sourcelinks",
-        outputMeasurements="measurements",
-        outputMeasurementParticlesMap="meas_ptcl_map",
-        outputMeasurementSimHitsMap="meas_sh_map",
-        trackingGeometry=trk_geo,
-        randomNumbers=rng,
-        planarModuleStepper=PlanarModuleStepper(),
-    )
-    s.addAlgorithm(digiAlg)
-
-    out = tmp_path / "clusters.root"
-
-    assert not out.exists()
-
-    s.addWriter(
-        conf_const(
-            RootPlanarClusterWriter,
-            level=acts.logging.INFO,
-            filePath=str(out),
-            inputSimHits=simAlg.config.outputSimHits,
-            inputClusters=digiAlg.config.outputClusters,
-            trackingGeometry=trk_geo,
-        )
-    )
-
-    s.run()
-    assert out.exists()
-    assert out.stat().st_size > 2**10 * 50
     assert_root_hash(out.name, out)
 
 
@@ -297,47 +245,6 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     assert all(f.stat().st_size > 200 for f in out.iterdir())
 
 
-@pytest.mark.csv
-def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
-    s = Sequencer(numThreads=1, events=10)  # we're not going to use this one
-    evGen, simAlg, _ = fatras(s)
-    s = Sequencer(numThreads=1, events=10)
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    digiAlg = PlanarSteppingAlgorithm(
-        level=acts.logging.WARNING,
-        inputSimHits=simAlg.config.outputSimHits,
-        outputClusters="clusters",
-        outputSourceLinks="sourcelinks",
-        outputDigiSourceLinks="digi_sourcelinks",
-        outputMeasurements="measurements",
-        outputMeasurementParticlesMap="meas_ptcl_map",
-        outputMeasurementSimHitsMap="meas_sh_map",
-        trackingGeometry=trk_geo,
-        randomNumbers=rng,
-        planarModuleStepper=PlanarModuleStepper(),
-    )
-    s.addAlgorithm(digiAlg)
-
-    out = tmp_path / "csv"
-    out.mkdir()
-
-    s.addWriter(
-        conf_const(
-            CsvPlanarClusterWriter,
-            level=acts.logging.WARNING,
-            outputDir=str(out),
-            inputSimHits=simAlg.config.outputSimHits,
-            inputClusters=digiAlg.config.outputClusters,
-            trackingGeometry=trk_geo,
-        )
-    )
-
-    s.run()
-    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events * 3
-    assert all(f.stat().st_size > 1024 for f in out.iterdir())
-
-
 @pytest.mark.parametrize(
     "writer",
     [
@@ -349,7 +256,6 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         RootMaterialTrackWriter,
         RootMeasurementWriter,
         RootMaterialWriter,
-        RootPlanarClusterWriter,
         RootSimHitWriter,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
@@ -374,8 +280,8 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
     for k, _ in inspect.getmembers(config):
         if k.startswith("input"):
             kw[k] = "collection"
-        if k == "trackingGeometry":
-            kw[k] = trk_geo
+        if k == "surfaceByIdentifier":
+            kw[k] = trk_geo.geoIdSurfaceMap()
 
     assert conf_const(writer, **kw)
 
@@ -387,7 +293,6 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
     [
         CsvParticleWriter,
         CsvMeasurementWriter,
-        CsvPlanarClusterWriter,
         CsvSimHitWriter,
         CsvTrackWriter,
         CsvTrackingGeometryWriter,
@@ -735,7 +640,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kfTracks",
+            inputTracks="kf_tracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )

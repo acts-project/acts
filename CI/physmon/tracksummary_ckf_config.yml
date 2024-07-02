@@ -165,6 +165,11 @@ histograms:
     min: -200
     max: 200
 
+  trackClassification:
+    nbins: 4
+    min: 0
+    max: 4
+
 exclude:
   - event_nr
   - track_nr

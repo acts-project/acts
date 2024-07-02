@@ -126,6 +126,9 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   if (pdg == ePionPlus) {
     return "pi";
   }
+  if (pdg == eKaonPlus) {
+    return "K";
+  }
   if (pdg == eNeutron) {
     return "n";
   }

@@ -22,11 +22,9 @@
 
 #include <nlohmann/json.hpp>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 Acts::GeometryContext tContext;
 
@@ -75,9 +73,9 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
+  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       *portal, forwardVolume, Acts::Direction::Forward);
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
+  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       *portal, backwardVolume, Acts::Direction::Backward);
 
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
@@ -122,7 +120,7 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
   BOOST_CHECK_NE(portal, nullptr);
 
   // Attaching the portals
-  Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdater(
+  Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
       *portal, backwardVolume, Acts::Direction::Backward);
 
   Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(

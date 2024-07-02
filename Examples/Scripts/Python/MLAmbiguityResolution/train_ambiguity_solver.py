@@ -273,7 +273,7 @@ input_test = torch.tensor(x_train, dtype=torch.float32)
 torch.save(duplicateClassifier, "duplicateClassifier.pt")
 torch.onnx.export(
     duplicateClassifier,
-    input_test,
+    input_test[0:1],
     "duplicateClassifier.onnx",
     input_names=["x"],
     output_names=["y"],

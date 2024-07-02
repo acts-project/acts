@@ -59,3 +59,24 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
   }
   return bIndexInput;
 }
+
+std::vector<Acts::ActsScalar> ActsExamples::GeometricConfig::variances(
+    const std::array<std::size_t, 2u>& csizes,
+    const std::array<std::size_t, 2u>& cmins) const {
+  std::vector<Acts::ActsScalar> rVariances;
+  for (const auto& bIndex : indices) {
+    Acts::ActsScalar var = 0.;
+    if (varianceMap.find(bIndex) != varianceMap.end()) {
+      // Try to find the variance for this cluster size
+      std::size_t lsize =
+          std::min(csizes[bIndex], varianceMap.at(bIndex).size());
+      var = varianceMap.at(bIndex).at(lsize - 1);
+    } else {
+      // Pitch size ofer / sqrt(12) as error instead
+      std::size_t ictr = cmins[bIndex] + csizes[bIndex] / 2;
+      var = std::pow(segmentation.binningData()[bIndex].width(ictr), 2) / 12.0;
+    }
+    rVariances.push_back(var);
+  }
+  return rVariances;
+}

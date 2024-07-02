@@ -7,14 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
-#include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
@@ -69,7 +67,7 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(doMerge);
     ACTS_PYTHON_MEMBER(minEnergyDeposit);
@@ -87,41 +85,6 @@ void addDigitization(Context& ctx) {
         mex, "GeometryHierarchyMap_DigiComponentsConfig")
         .def(py::init<std::vector<
                  std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
-  }
-
-  {
-    using Alg = ActsExamples::PlanarSteppingAlgorithm;
-
-    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "PlanarSteppingAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
-    ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(outputClusters);
-    ACTS_PYTHON_MEMBER(outputSourceLinks);
-    ACTS_PYTHON_MEMBER(outputDigiSourceLinks);
-    ACTS_PYTHON_MEMBER(outputMeasurements);
-    ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(planarModuleStepper);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    py::class_<PlanarModuleStepper, std::shared_ptr<PlanarModuleStepper>>(
-        m, "PlanarModuleStepper")
-        .def(py::init<>())
-        .def(py::init([](Logging::Level level) {
-          return std::make_shared<PlanarModuleStepper>(
-              getDefaultLogger("PlanarModuleStepper", level));
-        }));
   }
 
   {

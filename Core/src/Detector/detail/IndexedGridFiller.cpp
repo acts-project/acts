@@ -13,7 +13,7 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -27,7 +27,7 @@
 
 std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
-    std::size_t nBins, Acts::detail::AxisBoundaryType type) {
+    std::size_t nBins, Acts::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -43,14 +43,18 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
   std::size_t bmax = minMaxBins[1u];
 
   // Open/Bound cases
-  if (type != Acts::detail::AxisBoundaryType::Closed) {
+  if (type != Acts::AxisBoundaryType::Closed) {
     rBins.reserve(bmax - bmin + 1u + 2 * expand);
     // handle bmin:/max expand it down (for bound, don't fill underflow)
-    if (type == Acts::detail::AxisBoundaryType::Bound) {
-      bmin = (int(bmin) - int(expand) > 0) ? bmin - expand : 1u;
+    if (type == Acts::AxisBoundaryType::Bound) {
+      bmin = (static_cast<int>(bmin) - static_cast<int>(expand) > 0)
+                 ? bmin - expand
+                 : 1u;
       bmax = (bmax + expand <= nBins) ? bmax + expand : nBins;
-    } else if (type == Acts::detail::AxisBoundaryType::Open) {
-      bmin = (int(bmin) - int(expand) >= 0) ? bmin - expand : 0u;
+    } else if (type == Acts::AxisBoundaryType::Open) {
+      bmin = (static_cast<int>(bmin) - static_cast<int>(expand) >= 0)
+                 ? bmin - expand
+                 : 0u;
       bmax = (bmax + expand <= nBins + 1u) ? bmax + expand : nBins + 1u;
     }
     fill_linear(bmin, bmax);
@@ -59,11 +63,13 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     std::size_t span = bmax - bmin + 1u + 2 * expand;
     // Safe with respect to the closure point, treat as bound
     if (2 * span < nBins && (bmax + expand <= nBins) &&
-        (int(bmin) - int(expand) > 0)) {
+        (static_cast<int>(bmin) - static_cast<int>(expand) > 0)) {
       return binSequence({bmin, bmax}, expand, nBins,
-                         Acts::detail::AxisBoundaryType::Bound);
+                         Acts::AxisBoundaryType::Bound);
     } else if (2 * span < nBins) {
-      bmin = int(bmin) - int(expand) > 0 ? bmin - expand : 1u;
+      bmin = static_cast<int>(bmin) - static_cast<int>(expand) > 0
+                 ? bmin - expand
+                 : 1u;
       bmax = bmax + expand <= nBins ? bmax + expand : nBins;
       fill_linear(bmin, bmax);
       // deal with expansions over the phi boundary
@@ -71,8 +77,9 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
         std::size_t overstep = (bmax + expand - nBins);
         fill_linear(1u, overstep);
       }
-      if (int(bmin) - int(expand) < 1) {
-        std::size_t understep = abs(int(bmin) - int(expand));
+      if (static_cast<int>(bmin) - static_cast<int>(expand) < 1) {
+        std::size_t understep =
+            abs(static_cast<int>(bmin) - static_cast<int>(expand));
         fill_linear(nBins - understep, nBins);
       }
       std::sort(rBins.begin(), rBins.end());

@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
 #include <limits>
 #include <utility>
@@ -19,8 +19,8 @@ std::vector<int> v = {-100, -90, -80, -70, -60, -50, -40, -30, -20, 10, 0,
                       10,   20,  30,  40,  50,  60,  70,  80,  90,  100};
 }
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_SUITE(Range1D)
@@ -612,5 +612,5 @@ BOOST_AUTO_TEST_CASE(range_exclusive_right) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

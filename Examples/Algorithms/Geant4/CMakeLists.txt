@@ -6,6 +6,7 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/MaterialPhysicsList.cpp
     src/MaterialSteppingAction.cpp
     src/ParticleTrackingAction.cpp
+    src/RegionCreator.cpp
     src/SensitiveSurfaceMapper.cpp
     src/SensitiveSteppingAction.cpp
     src/SimParticleTranslation.cpp
@@ -15,6 +16,10 @@ set(ACTS_EXAMPLES_G4SOURCES
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
     list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)
+endif()
+
+if (ACTS_BUILD_PLUGIN_GEOMODEL)
+  list(APPEND ACTS_EXAMPLES_G4SOURCES src/GeoModelDetectorConstruction.cpp)
 endif()
 
 add_library(
@@ -45,6 +50,12 @@ if (ACTS_BUILD_EXAMPLES_DD4HEP)
     ActsExamplesGeant4
     PUBLIC ActsExamplesDetectorDD4hep DD4hep::DDCore DD4hep::DDG4)
   endif()
+endif()
+
+if (ACTS_BUILD_PLUGIN_GEOMODEL)
+  target_link_libraries(
+    ActsExamplesGeant4
+    PUBLIC ActsPluginGeoModel GeoModel2G4)
 endif()
 
 install(

@@ -236,6 +236,7 @@ int main(int argc, char** argv) {
   auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
+
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
       Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
@@ -243,7 +244,7 @@ int main(int argc, char** argv) {
   Acts::SeedFinder<value_type, Acts::Cuda> seedFinder_cuda(config, options);
 
   // setup spacepoint grid config
-  Acts::SpacePointGridConfig gridConf;
+  Acts::CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -251,12 +252,13 @@ int main(int argc, char** argv) {
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
-  Acts::SpacePointGrid<value_type> grid =
-      Acts::SpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
+
+  Acts::CylindricalSpacePointGrid<value_type> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
                                         spVec.end(), ct, rRangeSPExtent);
 
   auto spGroup = Acts::BinnedSPGroup<value_type>(
@@ -283,7 +285,8 @@ int main(int argc, char** argv) {
       spGroup.grid().localBinsFromGlobalBin(skip);
 
   int group_count;
-  auto groupIt = Acts::BinnedSPGroupIterator<value_type>(spGroup, localPosition,
+
+  auto groupIt = Acts::CylindricalBinnedSPGroupIterator<value_type>(spGroup, localPosition,
                                                          navigation);
 
   //----------- CPU ----------//
@@ -320,13 +323,10 @@ int main(int argc, char** argv) {
 
   group_count = 0;
 
-  std::vector<std::vector<seed_type>> seedVector_cuda;
-  groupIt = Acts::BinnedSPGroupIterator<value_type>(spGroup, localPosition,
-                                                    navigation);
 
-  Acts::SpacePointData spacePointData;
-  spacePointData.resize(spVec.size());
->>>>>>> upstream/main
+  std::vector<std::vector<seed_type>> seedVector_cuda;
+  groupIt = Acts::CylindricalBinnedSPGroupIterator<value_type>(spGroup, localPosition,
+                                                    navigation);
 
   for (; groupIt != spGroup.end(); ++groupIt) {
     const auto [bottom, middle, top] = *groupIt;

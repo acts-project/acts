@@ -25,7 +25,7 @@ namespace {
 struct IndexedSurfacesGenerator {
   using value_type = std::vector<std::size_t>;
 
-  /// @brief  Helper function to create and connect the IndexedSurfacesImpl
+  /// @brief  Helper function to create and connect the IndexedSurfacesNavigation
   ///
   /// @tparam grid_type the type of the grid, indicates also the dimension
   ///
@@ -33,26 +33,27 @@ struct IndexedSurfacesGenerator {
   /// @param bv the bin value array
   /// @param transform the transform for the indexed surfaces inmplementaiton
   ///
-  /// @return a connected SurfaceCandidatesUpdater object
+  /// @return a connected InternalNavigationDelegate object
   template <typename grid_type>
-  Acts::Experimental::SurfaceCandidatesUpdater createUpdater(
+  Acts::Experimental::InternalNavigationDelegate createUpdater(
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
-    Acts::Experimental::IndexedSurfacesImpl<grid_type> indexedSurfaces(
+    Acts::Experimental::IndexedSurfacesNavigation<grid_type> indexedSurfaces(
         std::move(grid), bv, transform);
 
     // The portal delegate
-    Acts::Experimental::AllPortalsImpl allPortals;
+    Acts::Experimental::AllPortalsNavigation allPortals;
 
     // The chained delegate: indexed surfaces and all portals
-    using DelegateType = Acts::Experimental::IndexedSurfacesAllPortalsImpl<
-        grid_type, Acts::Experimental::IndexedSurfacesImpl>;
+    using DelegateType =
+        Acts::Experimental::IndexedSurfacesAllPortalsNavigation<
+            grid_type, Acts::Experimental::IndexedSurfacesNavigation>;
     auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
         std::tie(allPortals, indexedSurfaces));
 
     // Create the delegate and connect it
-    Acts::Experimental::SurfaceCandidatesUpdater nStateUpdater;
+    Acts::Experimental::InternalNavigationDelegate nStateUpdater;
     nStateUpdater.connect<&DelegateType::update>(
         std::move(indexedSurfacesAllPortals));
 
@@ -62,13 +63,13 @@ struct IndexedSurfacesGenerator {
 
 }  // namespace
 
-Acts::Experimental::SurfaceCandidatesUpdater
+Acts::Experimental::InternalNavigationDelegate
 Acts::IndexedSurfacesJsonConverter::fromJson(
     const nlohmann::json& jSurfaceNavigation) {
   if (!jSurfaceNavigation.is_null()) {
     // The return object
     auto sfCandidates = IndexedGridJsonHelper::generateFromJson<
-        Experimental::SurfaceCandidatesUpdater, IndexedSurfacesGenerator>(
+        Experimental::InternalNavigationDelegate, IndexedSurfacesGenerator>(
         jSurfaceNavigation, "IndexedSurfaces");
     if (sfCandidates.connected()) {
       return sfCandidates;

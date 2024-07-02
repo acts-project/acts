@@ -29,11 +29,11 @@ At this step, we have multiple clusters of tracks. We use a NN to compute a scor
 
 ### Cleaning
 
-Finally, for the remaining tracks, there might be some fakes and duplicates. It doesn’t seem to be the case with the first tests, so the current implementation stops here. But in the future, if some configuration encounters too many fake/duplicates after the ranking, a simple classification NN could be used to separate the good tracks from the others. 
+Finally, for the remaining tracks, there might be some fakes and duplicates. It does not seem to be the case with the first tests, so the current implementation stops here. But in the future, if some configuration encounters too many fake/duplicates after the ranking, a simple classification NN could be used to separate the good tracks from the others.
 
-Running the ACTS Greedy Solver after the ML Solver can be helpful in some cases; it will likely remove most of the remaining fakes while being extremely fast and not affecting the reconstruction performances (since both algorithms are orthogonal). The default implementation in the full ODD chain uses this approach. 
+Running the ACTS Greedy Solver after the ML Solver can be helpful in some cases; it will likely remove most of the remaining fakes while being extremely fast and not affecting the reconstruction performances (since both algorithms are orthogonal). The default implementation in the full ODD chain uses this approach.
 
-### How to use 
+### How to use
 
 The ML-based Ambiguity solver comes with a pre-trained model to be used with the ODD. Using it is extremely simple; just call the `full_chain_odd.py` with the `--MLSolver` option. If you want to try this solver with another detector, a few more steps are needed. First, you need to train a model. As an input, you will need the multitrajectory output from the CKF (run a full chain up to the CKF, then use the `CSVWriter`). At least 100 ttbar events with 200 PU are needed (1000 would be ideal). You can then run `Examples/Scripts/Python/MLAmbiguityResolution/train_ambiguity_solver.py` on our dataset, 2/3 of the data should be used for the training and 1/3 for the validation. You will receive a `duplicateClassifier.onnx` file as an output, which can now be used as an input for the `AmbiguityResolutionMLAlgorithm` with your detector.
 
@@ -59,7 +59,7 @@ The clustering is implemented with the `dbscanSeedClustering` function. Its inpu
 
 At this step, we have multiple clusters of seeds. We use a NN to compute a score for each seed. Due to the loss function used in training, the fake seed (coming from more than one truth particle) tends to have a score close to 0; we can thus remove them by cutting the low-score seed. The `minSeedScore` parameter is used to choose the cutoff value. For each cluster, we can then select the seed with the highest score to be kept.
 
-### How to use 
+### How to use
 
 The ML-based Ambiguity solver comes with a pre-trained model to be used with the ODD. Using it is extremely simple; just call the `full_chain_odd.py` with the `--MLSeedFilter` option. If you want to try this solver with another detector, a few more steps are needed. First, you need to train a model. As an input, you will need the seeding and multitrajectory output from the CKF (run a full chain up to the CKF, then use the `CSVWriter` for both the seeding and the CKF). At least 1000 ttbar events with 200 PU are needed. First, we need to match the seed and the corresponding tracks together; for that, we can run `Examples/Scripts/Python/MLAmbiguityResolution/match_good_track-seed.py`. The network can then be trained with: `Examples/Scripts/Python/MLAmbiguityResolution/train_seed_solver.py ` on our dataset, 2/3 of the data should be used for the training and 1/3 for the validation. You will receive a `seedduplicateClassifier.onnx` file as an output, which can now be used as an input for the `AmbiguityResolutionMLAlgorithm` with your detector.
 

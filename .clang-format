@@ -19,7 +19,7 @@ IncludeCategories:
   # Acts headers before system headers to ensure that they include what they use
   - Regex: '^(<|")Acts.*'
     Priority: 1
-  - Regex: '^(<|")ACTFW/.*'
+  - Regex: '^(<|")ActsExamples/.*'
     Priority: 1
   # standard library includes: '<...>' without any '/' or '.' in the path
   - Regex:    '^<[^/.]*>'

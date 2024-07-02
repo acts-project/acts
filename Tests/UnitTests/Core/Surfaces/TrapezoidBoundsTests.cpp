@@ -26,9 +26,8 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
@@ -127,9 +126,9 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   /// Test dump
   boost::test_tools::output_test_stream dumpOuput;
   trapezoidBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(
-      dumpOuput.is_equal("Acts::TrapezoidBounds:  (halfXnegY, halfXposY, "
-                         "halfY) = (1.0000000, 6.0000000, 2.0000000)"));
+  BOOST_CHECK(dumpOuput.is_equal(
+      "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
+      "(1.0000000, 6.0000000, 2.0000000, 0.0000000)"));
   //
   /// Test inside
   BOOST_CHECK(trapezoidBoundsObject.inside(inRectangle, BoundaryCheck(true)));
@@ -218,6 +217,4 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

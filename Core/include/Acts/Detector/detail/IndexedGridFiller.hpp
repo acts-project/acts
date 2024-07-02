@@ -13,7 +13,7 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
@@ -26,9 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// @brief Helper method to generate completely populated bin sequences
 /// that respect the boundary type of the axis
@@ -43,7 +41,7 @@ namespace detail {
 /// @return a vector of bins to be filled
 std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
-                                     Acts::detail::AxisBoundaryType type);
+                                     Acts::AxisBoundaryType type);
 
 /// @brief Helper method to fill local bins given a set of query points
 /// bin in between the extra points are filled, and a possible expansion
@@ -75,7 +73,7 @@ std::set<typename grid_type::index_t> localIndices(
   }
 
   /// These are the axis bounds type parameters - for correct bin sequences
-  std::array<Acts::detail::AxisBoundaryType, grid_type::DIM> axisTypes{};
+  std::array<Acts::AxisBoundaryType, grid_type::DIM> axisTypes{};
   std::array<std::size_t, grid_type::DIM> axisBins{};
   // Fill the axis types
   for (auto [ia, a] : enumerate(grid.axes())) {
@@ -253,6 +251,4 @@ struct IndexedGridFiller {
   const Logger& logger() const { return (*oLogger); }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

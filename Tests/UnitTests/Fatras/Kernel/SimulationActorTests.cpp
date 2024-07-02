@@ -15,6 +15,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -63,8 +64,8 @@ struct MockInteractionList {
   struct Selection {
     double x0Limit = std::numeric_limits<double>::infinity();
     double l0Limit = std::numeric_limits<double>::infinity();
-    std::size_t x0Process = SIZE_MAX;
-    std::size_t l0Process = SIZE_MAX;
+    std::size_t x0Process = std::numeric_limits<std::size_t>::max();
+    std::size_t l0Process = std::numeric_limits<std::size_t>::max();
   };
 
   double energyLoss = 0;
@@ -155,6 +156,7 @@ struct MockPropagatorState {
   MockNavigatorState navigation;
   MockStepperState stepping;
   Acts::GeometryContext geoContext;
+  Acts::PropagatorStage stage = Acts::PropagatorStage::invalid;
 };
 
 template <typename SurfaceSelector>
@@ -190,6 +192,7 @@ struct Fixture {
     actor.generator = &generator;
     actor.interactions.energyLoss = energyLoss;
     actor.initialParticle = particle;
+    state.stage = Acts::PropagatorStage::postStep;
     state.navigation.currentSurface = surface.get();
     state.stepping.pos = particle.position();
     state.stepping.time = particle.time();
@@ -243,9 +246,11 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -268,9 +273,11 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -311,9 +318,11 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 1);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -337,9 +346,11 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 2);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -379,9 +390,11 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -402,9 +415,11 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 0);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -436,9 +451,11 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 1);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
@@ -460,9 +477,11 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_CHECK_EQUAL(f.result.particle.pathInL0(), 2);
   // no processes are configured, so none can be selected
   BOOST_CHECK_EQUAL(f.result.x0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.x0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.x0Process,
+                    std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(f.result.l0Limit, inf);
-  BOOST_CHECK_EQUAL(f.result.l0Process, SIZE_MAX);
+  BOOST_CHECK_EQUAL(f.result.l0Process,
+                    std::numeric_limits<std::size_t>::max());
   // check consistency between particle and stepper state
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());

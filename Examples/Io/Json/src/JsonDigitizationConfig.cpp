@@ -100,7 +100,7 @@ void from_json(
   } else if (sType == "Digitial") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Uniform(std::move(bd));
+    f = Digitization::Digital(std::move(bd));
   } else if (sType == "Exact") {
     f = Digitization::Exact{};
   } else {
@@ -114,12 +114,16 @@ void from_json(
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::ParameterSmearingConfig& psc) {
   j["index"] = psc.index;
+  j["forcePositiveValues"] = psc.forcePositiveValues;
   to_json(j, psc.smearFunction);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::ParameterSmearingConfig& psc) {
   psc.index = static_cast<Acts::BoundIndices>(j["index"]);
+  if (j.find("forcePositiveValues") != j.end()) {
+    psc.forcePositiveValues = j["forcePositiveValues"];
+  }
   from_json(j, psc.smearFunction);
 }
 
@@ -146,6 +150,16 @@ void ActsExamples::from_json(const nlohmann::json& j,
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
+  if (j.find("variances") != j.end()) {
+    /// Read the variances from the json file
+    auto jvariances = j["variances"];
+    for (const auto& jvar : jvariances) {
+      auto idx =
+          static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
+      auto vars = jvar["rms"].get<std::vector<Acts::ActsScalar>>();
+      gdc.varianceMap[idx] = vars;
+    }
+  }
   from_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 

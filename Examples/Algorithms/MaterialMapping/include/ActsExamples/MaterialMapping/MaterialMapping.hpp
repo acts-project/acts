@@ -32,11 +32,6 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-class IMaterialWriter;
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 namespace Acts {
 
 class TrackingGeometry;
@@ -81,7 +76,7 @@ class MaterialMapping : public IAlgorithm {
     std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
 
     /// Input collection
-    std::string collection = "material_tracks";
+    std::string inputMaterialTracks = "material_tracks";
 
     /// The material collection to be stored
     std::string mappingMaterialCollection = "mapped_material_tracks";
@@ -121,7 +116,8 @@ class MaterialMapping : public IAlgorithm {
   /// Those parameters are the variance and the number of track for each bin
   ///
   /// @param surfaceID the ID of the surface of interest
-  std::vector<std::pair<double, int>> scoringParameters(uint64_t surfaceID);
+  std::vector<std::pair<double, int>> scoringParameters(
+      std::uint64_t surfaceID);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

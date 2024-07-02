@@ -16,7 +16,7 @@ approval_rules:
     ignore_update_merges: true
   if:
     targets_branch:
-      pattern: "^main$"
+      pattern: "^(main|develop\\/.+)$"
 
 - name: Is a backport
   requires:

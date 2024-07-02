@@ -10,9 +10,9 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
 #include <exception>
@@ -228,6 +228,8 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("ePionZero", Acts::PdgParticle::ePionZero)
       .value("ePionPlus", Acts::PdgParticle::ePionPlus)
       .value("ePionMinus", Acts::PdgParticle::ePionMinus)
+      .value("eKaonPlus", Acts::PdgParticle::eKaonPlus)
+      .value("eKaonMinus", Acts::PdgParticle::eKaonMinus)
       .value("eNeutron", Acts::PdgParticle::eNeutron)
       .value("eAntiNeutron", Acts::PdgParticle::eAntiNeutron)
       .value("eProton", Acts::PdgParticle::eProton)
@@ -293,15 +295,15 @@ void addBinning(Context& ctx) {
                           .export_values();
 
   auto boundaryType =
-      py::enum_<Acts::detail::AxisBoundaryType>(binning, "AxisBoundaryType")
-          .value("bound", Acts::detail::AxisBoundaryType::Bound)
-          .value("closed", Acts::detail::AxisBoundaryType::Closed)
-          .value("open", Acts::detail::AxisBoundaryType::Open)
+      py::enum_<Acts::AxisBoundaryType>(binning, "AxisBoundaryType")
+          .value("bound", Acts::AxisBoundaryType::Bound)
+          .value("closed", Acts::AxisBoundaryType::Closed)
+          .value("open", Acts::AxisBoundaryType::Open)
           .export_values();
 
-  auto axisType = py::enum_<Acts::detail::AxisType>(binning, "AxisType")
-                      .value("equidistant", Acts::detail::AxisType::Equidistant)
-                      .value("variable", Acts::detail::AxisType::Variable)
+  auto axisType = py::enum_<Acts::AxisType>(binning, "AxisType")
+                      .value("equidistant", Acts::AxisType::Equidistant)
+                      .value("variable", Acts::AxisType::Variable)
                       .export_values();
 }
 

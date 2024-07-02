@@ -20,9 +20,7 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief A wrapper class around a KDTree of surfaces
 ///
@@ -93,7 +91,7 @@ class KdtSurfaces {
     std::vector<std::shared_ptr<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
     std::for_each(surfaceQuery.begin(), surfaceQuery.end(),
-                  [&](auto& s) { surfacePtrs.push_back(s.second); });
+                  [&](auto& surf) { surfacePtrs.push_back(surf.second); });
     return surfacePtrs;
   }
 
@@ -195,6 +193,4 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   Extent m_region;
 };
 
-}  // namespace Experimental
-
-}  // namespace Acts
+}  // namespace Acts::Experimental

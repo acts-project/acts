@@ -23,8 +23,8 @@ DigitizedParameters makeDigitizationParameters(const Vector2 &position,
                                                const BinUtility &binUtility) {
   auto [binX, binY, _] =
       binUtility.binTriple((Vector3() << position, 0).finished());
-  Segmentizer::Bin2D bin = {(Segmentizer::Bin2D::value_type)binX,
-                            (Segmentizer::Bin2D::value_type)binY};
+  Segmentizer::Bin2D bin = {static_cast<Segmentizer::Bin2D::value_type>(binX),
+                            static_cast<Segmentizer::Bin2D::value_type>(binY)};
   Segmentizer::Segment2D segment = {position, position};
   double activation = 1;
   Cluster::Cell cell = {bin, segment, activation};

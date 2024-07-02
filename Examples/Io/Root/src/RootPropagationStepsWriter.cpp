@@ -105,6 +105,10 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
   // Get the event number
   m_eventNr = context.eventNumber;
 
+  // Initialize the last total trials
+  // This is used to calculate the number of trials per step
+  std::size_t lastTotalTrials = 0;
+
   // Loop over the step vector of each test propagation in this
   for (auto& steps : stepCollection) {
     // Clear the vectors for each collection
@@ -180,7 +184,8 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_step_usr.push_back(Acts::clampValue<float>(user));
 
       // Stepper efficiency
-      m_nStepTrials.push_back(step.stepSize.nStepTrials);
+      m_nStepTrials.push_back(step.nTotalTrials - lastTotalTrials);
+      lastTotalTrials = step.nTotalTrials;
     }
     m_outputTree->Fill();
   }

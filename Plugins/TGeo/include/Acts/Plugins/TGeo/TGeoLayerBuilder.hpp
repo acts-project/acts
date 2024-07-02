@@ -15,7 +15,6 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -91,13 +90,14 @@ class TGeoLayerBuilder : public ILayerBuilder {
   };
 
   using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
-      const Identifier&, const TGeoNode&, const TGeoMatrix& tGeoMatrix,
-      const std::string& axes, double scalor,
+      const TGeoDetectorElement::Identifier&, const TGeoNode&,
+      const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
       std::shared_ptr<const Acts::ISurfaceMaterial> material)>;
 
   static std::shared_ptr<TGeoDetectorElement> defaultElementFactory(
-      const Identifier& identifier, const TGeoNode& tGeoNode,
-      const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+      const TGeoDetectorElement::Identifier& identifier,
+      const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
+      const std::string& axes, double scalor,
       std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
   /// @struct Config

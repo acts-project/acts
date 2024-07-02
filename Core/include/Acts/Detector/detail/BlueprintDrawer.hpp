@@ -13,12 +13,7 @@
 #include <ostream>
 #include <string>
 
-namespace Acts {
-
-namespace Experimental {
-
-namespace detail {
-namespace BlueprintDrawer {
+namespace Acts::Experimental::detail::BlueprintDrawer {
 
 /// @brief Nested options struct for the drawer
 struct Options {
@@ -63,7 +58,4 @@ struct Options {
 void dotStream(std::ostream& ss, const Blueprint::Node& node,
                const Options& options = Options{});
 
-}  // namespace BlueprintDrawer
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail::BlueprintDrawer

@@ -11,8 +11,7 @@
 #include <system_error>
 #include <type_traits>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 enum class SimulationError {
   // ensure all values are non-zero
@@ -24,8 +23,7 @@ enum class SimulationError {
 /// Must use snake_case naming for STL compatibility.
 std::error_code make_error_code(SimulationError e);
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail
 
 // Register the error enum as STL-compatible.
 namespace std {

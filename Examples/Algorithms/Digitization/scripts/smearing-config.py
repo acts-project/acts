@@ -32,7 +32,6 @@ import sys
 
 
 def add_switch(i, argv, current):
-
     fields = argv[i].split("=")
 
     if len(fields) == 1:
@@ -66,7 +65,6 @@ def get_args_blocks():
         i = add_switch(i, argv, current)
     if current:
         blocks.append(current)
-        current = []
 
     return blocks
 

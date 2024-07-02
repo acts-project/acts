@@ -67,8 +67,7 @@ def runTruthTrackingGsf(
             acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                particleCollection="particles_input",
-                orderedEvents=False,
+                outputParticles="particles_input",
             )
         )
 
@@ -125,8 +124,8 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
+            inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
             filePath=str(outputDir / "trackstates_gsf.root"),
         )
@@ -137,7 +136,7 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_gsf.root"),
             writeGsfSpecific=True,
         )
@@ -148,7 +147,7 @@ def runTruthTrackingGsf(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gsf.root"),
         )
     )
@@ -159,19 +158,26 @@ def runTruthTrackingGsf(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # ODD
+    from acts.examples.odd import getOpenDataDetector
+
+    detector, trackingGeometry, _ = getOpenDataDetector()
+    digiConfigFile = (
+        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    )
+
+    ## GenericDetector
+    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # digiConfigFile = (
+    #     srcdir
+    #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    inputParticlePath = Path("particles.root")
-    if not inputParticlePath.exists():
-        inputParticlePath = None
 
     runTruthTrackingGsf(
         trackingGeometry=trackingGeometry,
         field=field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        inputParticlePath=inputParticlePath,
+        digiConfigFile=digiConfigFile,
         outputDir=Path.cwd(),
     ).run()

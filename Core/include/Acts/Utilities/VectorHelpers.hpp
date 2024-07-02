@@ -19,8 +19,7 @@
 
 #include "Eigen/Dense"
 
-namespace Acts {
-namespace VectorHelpers {
+namespace Acts::VectorHelpers {
 
 namespace detail {
 template <class T>
@@ -139,6 +138,9 @@ inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
   // can be turned into cosine/sine
   const ActsScalar cosTheta = z;
   const ActsScalar sinTheta = std::sqrt(1 - z * z);
+  assert(sinTheta != 0 &&
+         "VectorHelpers: Vector is parallel to the z-axis "
+         "which leads to division by zero");
   const ActsScalar invSinTheta = 1. / sinTheta;
   const ActsScalar cosPhi = x * invSinTheta;
   const ActsScalar sinPhi = y * invSinTheta;
@@ -232,5 +234,4 @@ inline std::pair<double, double> incidentAngles(
   return {phi, theta};
 }
 
-}  // namespace VectorHelpers
-}  // namespace Acts
+}  // namespace Acts::VectorHelpers

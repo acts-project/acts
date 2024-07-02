@@ -83,6 +83,18 @@ class TrackStateType {
   /// @param pos the position of the bit to change
   void reset(std::size_t pos) { set(pos, false); }
 
+  friend std::ostream& operator<<(std::ostream& os, TrackStateType t) {
+    assert(t.m_raw != nullptr);
+    std::bitset<kRawBits> bs{*t.m_raw};
+    std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
+    for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
+      trunc[i] = bs[i];
+    }
+    // SharedhitMaterialHoleOutlierParameterMeasurement
+    os << "SMHOPM=" << trunc;
+    return os;
+  }
+
  private:
   raw_type* m_raw{nullptr};
 };
@@ -115,8 +127,8 @@ class ConstTrackStateType {
     for (std::size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
       trunc[i] = bs[i];
     }
-    // MeasurementParameterOutlierHoleMaterialSharedhit
-    os << "MPOHMS=" << trunc;
+    // SharedhitMaterialHoleOutlierParameterMeasurement
+    os << "SMHOPM=" << trunc;
     return os;
   }
 

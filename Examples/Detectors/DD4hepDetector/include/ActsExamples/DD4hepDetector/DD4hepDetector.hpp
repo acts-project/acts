@@ -35,8 +35,7 @@ namespace ActsExamples {
 class IContextDecorator;
 }  // namespace ActsExamples
 
-namespace ActsExamples {
-namespace DD4hep {
+namespace ActsExamples::DD4hep {
 
 struct DD4hepDetector {
   /// @brief The context decorators
@@ -93,5 +92,4 @@ struct DD4hepDetector {
   std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
 };
 
-}  // namespace DD4hep
-}  // namespace ActsExamples
+}  // namespace ActsExamples::DD4hep

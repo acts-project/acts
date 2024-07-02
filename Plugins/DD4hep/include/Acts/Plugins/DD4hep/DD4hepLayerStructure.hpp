@@ -26,9 +26,7 @@ namespace dd4hep {
 class DetElement;
 }
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief This class allows to generate layer structure builders for dd4hep sub detectors
 /// It performs an intermediate step by taking dd4hep::DetElemnent objects that
@@ -66,7 +64,7 @@ class DD4hepLayerStructure {
     // The extent structure - optionally
     std::optional<Extent> extent = std::nullopt;
     /// The extent constraints - optionally
-    std::vector<BinningValue> extentContraints = {};
+    std::vector<BinningValue> extentConstraints = {};
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
     /// Patch the binning with the extent if possible
@@ -103,5 +101,4 @@ class DD4hepLayerStructure {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
   sfConfig = sfConfig.toInternalUnits().calculateDerivedQuantities();
 
   // Set up the spacepoint grid configuration.
-  Acts::SpacePointGridConfig gridConfig;
+  Acts::CylindricalSpacePointGridConfig gridConfig;
   gridConfig.minPt = sfConfig.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
   gridConfig = gridConfig.toInternalUnits();
   // Set up the spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
   // extent used to store r range for middle spacepoint
@@ -125,12 +125,12 @@ int main(int argc, char* argv[]) {
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
   auto grid =
-      Acts::SpacePointGridCreator::createGrid<value_type>(gridConfig, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
+      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConfig, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(sfConfig, sfOptions, grid,
                                         spView.begin(), spView.end(), ct,
                                         rRangeSPExtent);
   
-  auto spGroup = Acts::BinnedSPGroup<value_type>(
+  auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
   // Make a convenient iterator that will be used multiple times later on.
@@ -166,7 +166,9 @@ int main(int argc, char* argv[]) {
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedFinder objects.
-  Acts::SeedFinder<value_type> seedFinder_host(sfConfig);
+  Acts::SeedFinder<value_type,
+                   Acts::CylindricalSpacePointGrid<TestSpacePoint>>
+      seedFinder_host(sfConfig);
   Acts::Cuda::SeedFinder<value_type> seedFinder_device(
       sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
 
@@ -191,7 +193,8 @@ int main(int argc, char* argv[]) {
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
       std::array<std::size_t, 2ul> localPosition =
           spGroup.grid().localBinsFromGlobalBin(i);
-      auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+
+      auto spGroup_itr = Acts::CylindricalBinnedGroupIterator<TestSpacePoint>(
           spGroup, localPosition, navigation);
       if (spGroup_itr == spGroup.end()) {
         break;
@@ -228,7 +231,7 @@ int main(int argc, char* argv[]) {
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
     std::array<std::size_t, 2ul> localPosition =
         spGroup.grid().localBinsFromGlobalBin(i);
-    auto spGroup_itr = Acts::BinnedSPGroupIterator<TestSpacePoint>(
+    auto spGroup_itr = Acts::CylindricalBinnedGroupIterator<TestSpacePoint>(
         spGroup, localPosition, navigation);
     if (spGroup_itr == spGroup_end) {
       break;

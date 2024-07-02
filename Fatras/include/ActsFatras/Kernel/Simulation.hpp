@@ -232,7 +232,7 @@ struct Simulation {
         // only need to switch between charged/neutral.
         SingleParticleSimulationResult result =
             SingleParticleSimulationResult::success({});
-        if (initialParticle.charge() != Particle::Scalar(0)) {
+        if (initialParticle.charge() != Particle::Scalar{0}) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
@@ -268,7 +268,7 @@ struct Simulation {
  private:
   /// Select if the particle should be simulated at all.
   bool selectParticle(const Particle &particle) const {
-    if (particle.charge() != Particle::Scalar(0)) {
+    if (particle.charge() != Particle::Scalar{0}) {
       return selectCharged(particle);
     } else {
       return selectNeutral(particle);

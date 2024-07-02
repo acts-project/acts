@@ -93,3 +93,8 @@ const Acts::Surface* Acts::TrackingGeometry::findSurface(
   }
   return srf->second;
 }
+
+const std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>&
+Acts::TrackingGeometry::geoIdSurfaceMap() const {
+  return m_surfacesById;
+}

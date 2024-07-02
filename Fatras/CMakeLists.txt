@@ -5,6 +5,7 @@ add_library(
   src/Digitization/PlanarSurfaceMask.cpp
   src/Digitization/PlanarSurfaceDrift.cpp
   src/EventData/Particle.cpp
+  src/EventData/ParticleOutcome.cpp
   src/EventData/ProcessType.cpp
   src/Kernel/SimulationError.cpp
   src/Physics/BetheHeitler.cpp

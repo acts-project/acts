@@ -24,19 +24,14 @@ namespace Acts {
 template <typename C>
 concept ChargeConcept = requires(C c, float f, double d) {
   {C{f}};
-  { c.absQ() } -> std::same_as<float>;
-
-  { c.extractCharge(f) } -> std::convertible_to<float>;
-  { c.extractCharge(d) } -> std::convertible_to<float>;
-
-  { c.extractMomentum(f) } -> std::convertible_to<float>;
-  { c.extractMomentum(d) } -> std::convertible_to<float>;
-
-  { c.qOverP(f, f) } -> std::same_as<float>;
-  { c.qOverP(d, d) } -> std::same_as<double>;
 
   { c == c } -> std::same_as<bool>;
   { c != c } -> std::same_as<bool>;
+
+  { c.absQ() } -> std::same_as<float>;
+  { c.extractCharge(d) } -> std::same_as<float>;
+  { c.extractMomentum(d) } -> std::same_as<double>;
+  { c.qOverP(d, d) } -> std::same_as<double>;
 };
 
 }  // namespace Acts

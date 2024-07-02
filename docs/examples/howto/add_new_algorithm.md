@@ -8,11 +8,7 @@ Before doing so, the ideas explored in Examples are typically first developed as
 In a second step, the essential parts of this code are then moved to the `Core` packages,
 which the algorithm then executes.
 
-
-
-Code Organisation
-------------------
-
+## Code Organisation
 
 Algorithms reside in `Examples/Algorithms` of the repository.
 The code is split into a header with the algorithm class declaration
@@ -87,13 +83,13 @@ It is common practice to put the algorithm code in the `ActsExamples` namespace.
 ## Input and Output
 
 The algorithm would be typically part of some processing sequence and thus
-consume and produce some event data.  In the hypothetical example discussed
-here, space-points are the input and track seeds an output. 
+consume and produce some event data. In the hypothetical example discussed
+here, space-points are the input and track seeds an output.
 
 Data is passed between algorithms through a central *event store*, basically a
 dictionary type that can store arbitrary value types in memory.
 
-The data can be retrieved using special *handle* objects that encode a on
+The data can be retrieved using special *handle* objects that encode an
 object type and the name with which they are associated in the event store.
 
 To add an input and output to your algorithm, in the class declaration add handles like
@@ -135,7 +131,8 @@ store by calling the output handle like this:
 auto mydata = makeData();
 m_outputSeeds(ctx, std::move(mydata));
 ```
-The ownership of the object is transferred to the store.  That is, the
+
+The ownership of the object is transferred to the store. That is, the
 destruction of this object at the end of event processing is taken care of.
 
 ## Configurability
@@ -154,8 +151,9 @@ struct Config {
     std::vector<int> layers; // layers to use by the seeder
     float deltaZ;  // the maximum allowed deviation in r-z plane
 };
-  ...
+...
 ```
+
 :::{tip}
 It is customary to put the config structures in the ``Acts`` namespace.
 :::
@@ -168,6 +166,7 @@ MySeedingAlgorithm::MySeedingAlgorithm( Config cfg, Acts::Logging::Level lvl):
   ActsExamples::BareAlgortihm("MySeedingAlgorithm", lvl),
   m_cfg(std::move(cfg)){...}
 ```
+
 ## Python bindings
 
 In order to use an algorithm in standalone ACTS the algorithm
@@ -195,14 +194,10 @@ help(MySeedingConfig)
 ```
 An info about the class and config structure should be printed.
 
-Example empty algorithm
------------------------
+## Example empty algorithm
+
 A complete example of an algorithm called `UserAlgorithm` can be found in these two branches/locations:
 
 [Algorithm definition](https://github.com/asalzburger/acts/tree/ws-add-user-algorithm/Examples/Algorithms/Tutorial)
 
 [Python bindings definition](https://github.com/asalzburger/acts/blob/ws-add-user-algorithm-python-bindings/Examples/Python/src/Tutorial.cpp)
-
-
-
-

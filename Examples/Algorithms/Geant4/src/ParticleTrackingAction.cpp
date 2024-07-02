@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,13 +11,11 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <cassert>
-#include <cstddef>
 #include <ostream>
 #include <unordered_map>
 #include <utility>
@@ -119,12 +117,27 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
   G4double p = convertEnergy * aTrack.GetKineticEnergy();
 
+  std::uint32_t numberOfHits = 0;
+  if (auto it = eventStore().particleHitCount.find(particleId);
+      it != eventStore().particleHitCount.end()) {
+    numberOfHits = it->second;
+  }
+
+  ActsFatras::ParticleOutcome particleOutcome =
+      ActsFatras::ParticleOutcome::Alive;
+  if (auto it = eventStore().particleOutcome.find(particleId);
+      it != eventStore().particleOutcome.end()) {
+    particleOutcome = it->second;
+  }
+
   // Now create the Particle
-  ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle(pdg),
+  ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle{pdg},
                                       charge, mass);
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
   aParticle.setAbsoluteMomentum(p);
+  aParticle.setNumberOfHits(numberOfHits);
+  aParticle.setOutcome(particleOutcome);
   return aParticle;
 }
 

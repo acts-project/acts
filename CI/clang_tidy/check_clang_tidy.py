@@ -43,10 +43,8 @@ def main():
 
     kf = lambda i: i.path
     for file, items in itertools.groupby(sorted(data, key=kf), key=kf):
-
         output = []
         for item in items:
-
             emoji = Emoji(
                 {"warning": "yellow_circle", "error": "red_circle"}[item.severity]
             )
@@ -72,7 +70,6 @@ def main():
 
             accounted_for = False
             for pattern in config["limits"].keys():
-
                 if not fnmatch.fnmatch(item.code, pattern):
                     continue
                 counts[pattern] += 1

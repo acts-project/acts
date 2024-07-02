@@ -103,7 +103,9 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
 
 std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
 
-namespace Test {
+}  // namespace Acts
+
+namespace Acts::Test {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
@@ -128,6 +130,4 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3u);
 }
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -3,9 +3,12 @@ target_sources(
   PRIVATE
     EigenStepperError.cpp
     MultiStepperError.cpp
+    SympyStepper.cpp
     PropagatorError.cpp
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
     detail/CovarianceEngine.cpp
     detail/JacobianEngine.cpp
+    detail/SympyCovarianceEngine.cpp
+    detail/SympyJacobianEngine.cpp
 )

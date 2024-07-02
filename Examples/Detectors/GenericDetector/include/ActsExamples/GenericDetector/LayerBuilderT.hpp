@@ -26,8 +26,7 @@
 
 #include <iostream>
 
-namespace ActsExamples {
-namespace Generic {
+namespace ActsExamples::Generic {
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -243,5 +242,4 @@ LayerBuilderT<detector_element_t>::constructEndcapLayers(
   return eLayers;
 }
 
-}  // end of namespace Generic
-}  // end of namespace ActsExamples
+}  // namespace ActsExamples::Generic

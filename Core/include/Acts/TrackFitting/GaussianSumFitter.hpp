@@ -10,15 +10,13 @@
 
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include <fstream>
 
 namespace Acts {
 
@@ -276,29 +274,29 @@ struct GaussianSumFitter {
       using IsMultiParameters =
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
-      typename propagator_t::template action_list_t_result_t<
-          MultiComponentCurvilinearTrackParameters,
-          decltype(fwdPropOptions.actionList)>
-          inputResult;
-
-      auto& r = inputResult.template get<typename GsfActor::result_type>();
-
-      r.fittedStates = &trackContainer.trackStateContainer();
+      // dirty optional because parameters are not default constructible
+      std::optional<MultiComponentBoundTrackParameters> params;
 
       // This allows the initialization with single- and multicomponent start
       // parameters
       if constexpr (!IsMultiParameters::value) {
-        MultiComponentBoundTrackParameters params(
+        params = MultiComponentBoundTrackParameters(
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), *sParameters.covariance(),
             sParameters.particleHypothesis());
-
-        return m_propagator.propagate(params, fwdPropOptions, false,
-                                      std::move(inputResult));
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions, false,
-                                      std::move(inputResult));
+        params = sParameters;
       }
+
+      auto state = m_propagator.makeState(*params, fwdPropOptions);
+
+      auto& r = state.template get<typename GsfActor::result_type>();
+      r.fittedStates = &trackContainer.trackStateContainer();
+
+      auto propagationResult = m_propagator.propagate(state);
+
+      return m_propagator.makeResult(std::move(state), propagationResult,
+                                     fwdPropOptions, false);
     }();
 
     if (!fwdResult.ok()) {
@@ -339,7 +337,6 @@ struct GaussianSumFitter {
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
       actor.m_cfg.logger = m_actorLogger.get();
-      actor.setOptions(options);
 
       bwdPropOptions.direction = gsfBackward;
 
@@ -349,47 +346,34 @@ struct GaussianSumFitter {
 
       using PM = TrackStatePropMask;
 
-      typename propagator_t::template action_list_t_result_t<
-          MultiComponentBoundTrackParameters,
-          decltype(bwdPropOptions.actionList)>
-          inputResult;
-
-      // Unfortunately we must construct the result type here to be able to
-      // return an error code
-      using ResultType =
-          decltype(m_propagator.template propagate<
-                   MultiComponentBoundTrackParameters, decltype(bwdPropOptions),
-                   MultiStepperSurfaceReached>(
-              std::declval<MultiComponentBoundTrackParameters>(),
-              std::declval<Acts::Surface&>(),
-              std::declval<decltype(bwdPropOptions)>(),
-              std::declval<decltype(inputResult)>()));
-
-      auto& r = inputResult.template get<typename GsfActor::result_type>();
-
-      r.fittedStates = &trackContainer.trackStateContainer();
+      const auto& params = *fwdGsfResult.lastMeasurementState;
+      auto state =
+          m_propagator.template makeState<MultiComponentBoundTrackParameters,
+                                          decltype(bwdPropOptions),
+                                          MultiStepperSurfaceReached>(
+              params, target, bwdPropOptions);
 
       assert(
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&
            "tip is invalid"));
 
-      auto proxy =
-          r.fittedStates->getTrackState(fwdGsfResult.lastMeasurementTip);
+      auto proxy = trackContainer.trackStateContainer().getTrackState(
+          fwdGsfResult.lastMeasurementTip);
       proxy.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);
 
+      auto& r = state.template get<typename GsfActor::result_type>();
+      r.fittedStates = &trackContainer.trackStateContainer();
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
       r.surfacesVisitedBwdAgain.push_back(&proxy.referenceSurface());
       r.measurementStates++;
       r.processedStates++;
 
-      const auto& params = *fwdGsfResult.lastMeasurementState;
+      auto propagationResult = m_propagator.propagate(state);
 
-      return m_propagator.template propagate<std::decay_t<decltype(params)>,
-                                             decltype(bwdPropOptions),
-                                             MultiStepperSurfaceReached>(
-          params, target, bwdPropOptions, std::move(inputResult));
+      return m_propagator.makeResult(std::move(state), propagationResult,
+                                     target, bwdPropOptions);
     }();
 
     if (!bwdResult.ok()) {
@@ -466,7 +450,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(GsfError::NoMeasurementStatesCreatedFinal);
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    auto track = trackContainer.makeTrack();
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
 
     if (options.referenceSurface) {

@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructureAutoRange) {
   lsOptions.name = "AutoRangeLayer";
   auto extent = Acts::Extent();
   lsOptions.extent = extent;
-  lsOptions.extentContraints = {Acts::binZ, Acts::binR};
+  lsOptions.extentConstraints = {Acts::binZ, Acts::binR};
   lsOptions.logLevel = Acts::Logging::VERBOSE;
 
   auto [barrelInternalsBuilder, barrelExt] =

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ChargeConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
@@ -67,19 +68,17 @@ struct Neutral {
 
   constexpr float absQ() const noexcept { return 0; }
 
-  template <typename T>
-  constexpr auto extractCharge(T /*qOverP*/) const noexcept {
+  constexpr float extractCharge(ActsScalar /*qOverP*/) const noexcept {
     return 0.0f;
   }
 
-  template <typename T>
-  constexpr auto extractMomentum(T qOverP) const noexcept {
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
     assert(qOverP >= 0 && "qOverP cannot be negative");
     return 1.0f / qOverP;
   }
 
-  template <typename P, typename Q>
-  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
     assert((signedQ != 0) && "charge must be 0");
     (void)signedQ;
     return 1.0f / momentum;
@@ -112,24 +111,18 @@ struct SinglyCharged {
 
   constexpr float absQ() const noexcept { return UnitConstants::e; }
 
-  template <typename T>
-  constexpr auto extractCharge(T qOverP) const noexcept {
-    // using because of autodiff
-    using std::copysign;
-    return copysign(UnitConstants::e, qOverP);
+  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+    return std::copysign(UnitConstants::e, qOverP);
   }
 
-  template <typename T>
-  constexpr auto extractMomentum(T qOverP) const noexcept {
-    // using because of autodiff
-    using std::abs;
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
     return extractCharge(qOverP) / qOverP;
   }
 
-  template <typename P, typename Q>
-  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
-    using std::abs;
-    assert((abs(signedQ) == UnitConstants::e) && "absolute charge must be e");
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert((std::abs(signedQ) == UnitConstants::e) &&
+           "absolute charge must be e");
     return signedQ / momentum;
   }
 
@@ -158,24 +151,16 @@ class NonNeutralCharge {
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
-  template <typename T>
-  constexpr auto extractCharge(T qOverP) const noexcept {
-    // using because of autodiff
-    using std::copysign;
-    return copysign(m_absQ, qOverP);
+  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+    return std::copysign(m_absQ, qOverP);
   }
-  template <typename T>
-  constexpr auto extractMomentum(T qOverP) const noexcept {
-    // using because of autodiff
-    using std::abs;
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
     return extractCharge(qOverP) / qOverP;
   }
 
-  template <typename P, typename Q>
-  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
-    // using because of autodiff
-    using std::abs;
-    assert(abs(signedQ) == m_absQ && "inconsistent charge");
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
     return signedQ / momentum;
   }
 
@@ -208,24 +193,16 @@ class AnyCharge {
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
-  template <typename T>
-  constexpr auto extractCharge(T qOverP) const noexcept {
-    // using because of autodiff
-    using std::copysign;
-    return copysign(m_absQ, qOverP);
+  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+    return std::copysign(m_absQ, qOverP);
   }
-  template <typename T>
-  constexpr auto extractMomentum(T qOverP) const noexcept {
-    // using because of autodiff
-    using std::abs;
+  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
     return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
   }
 
-  template <typename P, typename Q>
-  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
-    // using because of autodiff
-    using std::abs;
-    assert(abs(signedQ) == m_absQ && "inconsistent charge");
+  constexpr ActsScalar qOverP(ActsScalar momentum,
+                              float signedQ) const noexcept {
+    assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
     return (m_absQ != 0.0f) ? signedQ / momentum : 1.0f / momentum;
   }
 

@@ -12,6 +12,7 @@
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
+#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"

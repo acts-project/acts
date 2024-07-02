@@ -18,9 +18,7 @@
 #include <TH2.h>
 #include <TProfile.h>
 
-namespace ActsExamples {
-
-namespace PlotHelpers {
+namespace ActsExamples::PlotHelpers {
 TH1F* bookHisto(const char* histName, const char* histTitle,
                 const Binning& varBinning) {
   TH1F* hist =
@@ -108,6 +106,4 @@ void fillProf(TProfile* profile, float xValue, float yValue, float weight) {
   profile->Fill(xValue, yValue, weight);
 }
 
-}  // namespace PlotHelpers
-
-}  // namespace ActsExamples
+}  // namespace ActsExamples::PlotHelpers

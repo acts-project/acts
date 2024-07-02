@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file ConstantBField_tests.cpp
-
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -22,8 +20,7 @@
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -122,5 +119,4 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache).value());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

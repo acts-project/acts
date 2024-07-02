@@ -14,7 +14,7 @@
 #include "Acts/Detector/detail/DetectorVolumeConsistency.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 
 auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 auto tContext = Acts::GeometryContext();

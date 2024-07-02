@@ -12,8 +12,7 @@
 
 #include <limits>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 class LineSurfaceStub : public LineSurface {
  public:
@@ -66,5 +65,4 @@ class LineSurfaceStub : public LineSurface {
     return Polyhedron({}, {}, {});
   }
 };
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

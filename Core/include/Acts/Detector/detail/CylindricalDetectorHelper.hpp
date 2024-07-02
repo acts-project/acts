@@ -23,15 +23,12 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 class DetectorVolume;
 class Portal;
 
-namespace detail {
-namespace CylindricalDetectorHelper {
+namespace detail::CylindricalDetectorHelper {
 
 /// @brief Connect detector volumes in R
 ///
@@ -240,7 +237,5 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
                                    uniqueBoundaries[2].end())}};
 }
 
-}  // namespace CylindricalDetectorHelper
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace detail::CylindricalDetectorHelper
+}  // namespace Acts::Experimental

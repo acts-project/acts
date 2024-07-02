@@ -15,8 +15,8 @@
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -149,8 +149,7 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning(
-      Acts::binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI, 22u,
-      1u)};
+      Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 22u, 1u)};
 
   auto layerBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -159,8 +158,9 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
 
   Acts::Experimental::VolumeStructureBuilder::Config shapeConfig;
   shapeConfig.boundValues = {10, 100, 10., M_PI, 0.};
-  shapeConfig.transform = Acts::Transform3(Acts::Transform3::Identity())
-                              .pretranslate(Acts::Vector3(0., 0., -800.));
+  shapeConfig.transform =
+      Acts::Transform3{Acts::Transform3::Identity()}.pretranslate(
+          Acts::Vector3(0., 0., -800.));
   shapeConfig.boundsType = Acts::VolumeBounds::BoundsType::eCylinder;
 
   auto shapeBuilder =
@@ -217,12 +217,11 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
-  lsConfig.binnings = {Acts::Experimental::ProtoBinning{
-                           Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
-                           -480., 480., 14u, 1u},
-                       Acts::Experimental::ProtoBinning(
-                           Acts::binPhi, Acts::detail::AxisBoundaryType::Closed,
-                           -M_PI, M_PI, 32u, 1u)};
+  lsConfig.binnings = {
+      Acts::Experimental::ProtoBinning{
+          Acts::binZ, Acts::AxisBoundaryType::Bound, -480., 480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(
+          Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 32u, 1u)};
 
   auto barrelBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(

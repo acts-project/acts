@@ -6,21 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file InterpolatedBFieldMap_tests.cpp
-
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
@@ -33,8 +30,7 @@
 
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -61,14 +57,13 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   };
 
   // magnetic field known on grid in (r,z)
-  detail::EquidistantAxis r(0.0, 4.0, 4u);
-  detail::EquidistantAxis z(-5, 7, 6u);
+  Axis r(0.0, 4.0, 4u);
+  Axis z(-5, 7, 6u);
 
-  using Grid_t =
-      Grid<Vector3, detail::EquidistantAxis, detail::EquidistantAxis>;
+  Grid g(Type<Vector3>, std::move(r), std::move(z));
+
+  using Grid_t = decltype(g);
   using BField_t = InterpolatedBFieldMap<Grid_t>;
-
-  Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
   // set grid values
   for (std::size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
@@ -83,7 +78,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   BField_t b{{transformPos, transformBField, std::move(g)}};
 
   auto bCacheAny = b.makeCache(mfContext);
-  BField_t::Cache& bCache = bCacheAny.get<BField_t::Cache>();
+  BField_t::Cache& bCache = bCacheAny.as<BField_t::Cache>();
 
   auto check = [&](double i) {
     BOOST_CHECK(b.isInside({0, 0, i * 4.9}));
@@ -142,7 +137,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   pos << 0, 1.5, -2.5;
   BOOST_CHECK(b.isInside(pos));
   bCacheAny = b.makeCache(mfContext);
-  BField_t::Cache& bCache2 = bCacheAny.get<BField_t::Cache>();
+  BField_t::Cache& bCache2 = bCacheAny.as<BField_t::Cache>();
   CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache2.fieldCell;
@@ -156,7 +151,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   pos << 2, 2.2, -4;
   BOOST_CHECK(b.isInside(pos));
   bCacheAny = b.makeCache(mfContext);
-  BField_t::Cache& bCache3 = bCacheAny.get<BField_t::Cache>();
+  BField_t::Cache& bCache3 = bCacheAny.as<BField_t::Cache>();
   CHECK_CLOSE_REL(b.getField(pos, bCacheAny).value(),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
   c = *bCache3.fieldCell;
@@ -171,5 +166,4 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   BOOST_CHECK(c.isInside(transformPos((pos << 0, 2, -4.7).finished())));
   BOOST_CHECK(!c.isInside(transformPos((pos << 5, 2, 14.).finished())));
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

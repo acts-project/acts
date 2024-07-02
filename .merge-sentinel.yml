@@ -1,7 +1,6 @@
 rules:
   - required_checks:
       - Lint PR / Validate PR title
-      - WIP
       - milestone-set
     required_pattern:
       - "policy-bot: *"

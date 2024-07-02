@@ -8,19 +8,37 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
+
+namespace ActsExamples {
 
 namespace {
 
 /// @brief Converts HepMC3::GenParticle objects into Acts
 /// @param genParticles list of HepMC3::GenParticle objects
 /// @return converted list
-std::vector<ActsExamples::SimParticle> genParticlesToActs(
+SimBarcodeContainer genBarcodeToActs(
     const std::vector<HepMC3::GenParticlePtr>& genParticles) {
-  std::vector<ActsExamples::SimParticle> actsParticles;
+  SimBarcodeContainer actsBarcodes;
   // Translate all particles
   for (auto& genParticle : genParticles) {
-    actsParticles.push_back(ActsExamples::HepMC3Particle::particle(
+    actsBarcodes.insert(HepMC3Particle::barcode(
+        std::make_shared<HepMC3::GenParticle>(*genParticle)));
+  }
+  return actsBarcodes;
+}
+
+/// @brief Converts HepMC3::GenParticle objects into Acts
+/// @param genParticles list of HepMC3::GenParticle objects
+/// @return converted list
+std::vector<SimParticle> genParticlesToActs(
+    const std::vector<HepMC3::GenParticlePtr>& genParticles) {
+  std::vector<SimParticle> actsParticles;
+  // Translate all particles
+  for (auto& genParticle : genParticles) {
+    actsParticles.push_back(HepMC3Particle::particle(
         std::make_shared<HepMC3::GenParticle>(*genParticle)));
   }
   return actsParticles;
@@ -31,7 +49,7 @@ std::vector<ActsExamples::SimParticle> genParticlesToActs(
 /// @param actsParticle Acts particle that will be converted
 /// @return converted particle
 HepMC3::GenParticlePtr actsParticleToGen(
-    const std::shared_ptr<ActsExamples::SimParticle>& actsParticle) {
+    const std::shared_ptr<SimParticle>& actsParticle) {
   // Extract momentum and energy from Acts particle for HepMC3::FourVector
   const auto mom = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom[0], mom[1], mom[2], mom[3]);
@@ -51,7 +69,7 @@ HepMC3::GenParticlePtr actsParticleToGen(
 /// no match was found
 HepMC3::GenParticlePtr matchParticles(
     const std::vector<HepMC3::GenParticlePtr>& genParticles,
-    const std::shared_ptr<ActsExamples::SimParticle>& actsParticle) {
+    const std::shared_ptr<SimParticle>& actsParticle) {
   const auto id = actsParticle->particleId();
   // Search HepMC3::GenParticle with the same id as the Acts particle
   for (auto& genParticle : genParticles) {
@@ -65,38 +83,36 @@ HepMC3::GenParticlePtr matchParticles(
 
 }  // namespace
 
-std::unique_ptr<ActsExamples::SimVertex>
-ActsExamples::HepMC3Vertex::processVertex(
+std::unique_ptr<SimVertex> HepMC3Vertex::processVertex(
     const std::shared_ptr<HepMC3::GenVertex>& vertex) {
-  SimVertex vtx({vertex->position().x(), vertex->position().y(),
+  SimVertex vtx(SimVertexBarcode().setVertexPrimary(vertex->id()),
+                {vertex->position().x(), vertex->position().y(),
                  vertex->position().z(), vertex->position().t()});
-  vtx.incoming = genParticlesToActs(vertex->particles_in());
-  vtx.outgoing = genParticlesToActs(vertex->particles_out());
+  vtx.incoming = genBarcodeToActs(vertex->particles_in());
+  vtx.outgoing = genBarcodeToActs(vertex->particles_out());
   // Create Acts vertex
   return std::make_unique<SimVertex>(std::move(vtx));
 }
 
-bool ActsExamples::HepMC3Vertex::inEvent(
-    const std::shared_ptr<HepMC3::GenVertex>& vertex) {
+bool HepMC3Vertex::inEvent(const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   return vertex->in_event();
 }
 
-int ActsExamples::HepMC3Vertex::id(
-    const std::shared_ptr<HepMC3::GenVertex>& vertex) {
+int HepMC3Vertex::id(const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   return vertex->id();
 }
 
-std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Vertex::particlesIn(
+std::vector<SimParticle> HepMC3Vertex::particlesIn(
     const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   return genParticlesToActs(vertex->particles_in());
 }
 
-std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Vertex::particlesOut(
+std::vector<SimParticle> HepMC3Vertex::particlesOut(
     const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   return genParticlesToActs(vertex->particles_out());
 }
 
-Acts::Vector3 ActsExamples::HepMC3Vertex::position(
+Acts::Vector3 HepMC3Vertex::position(
     const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   Acts::Vector3 vec;
   vec(0) = vertex->position().x();
@@ -105,24 +121,23 @@ Acts::Vector3 ActsExamples::HepMC3Vertex::position(
   return vec;
 }
 
-double ActsExamples::HepMC3Vertex::time(
-    const std::shared_ptr<HepMC3::GenVertex>& vertex) {
+double HepMC3Vertex::time(const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   return vertex->position().t();
 }
 
-void ActsExamples::HepMC3Vertex::addParticleIn(
+void HepMC3Vertex::addParticleIn(
     const std::shared_ptr<HepMC3::GenVertex>& vertex,
     const std::shared_ptr<SimParticle>& particle) {
   vertex->add_particle_in(actsParticleToGen(particle));
 }
 
-void ActsExamples::HepMC3Vertex::addParticleOut(
+void HepMC3Vertex::addParticleOut(
     const std::shared_ptr<HepMC3::GenVertex>& vertex,
     const std::shared_ptr<SimParticle>& particle) {
   vertex->add_particle_out(actsParticleToGen(particle));
 }
 
-void ActsExamples::HepMC3Vertex::removeParticleIn(
+void HepMC3Vertex::removeParticleIn(
     const std::shared_ptr<HepMC3::GenVertex>& vertex,
     const std::shared_ptr<SimParticle>& particle) {
   // Remove particle if it exists
@@ -132,7 +147,7 @@ void ActsExamples::HepMC3Vertex::removeParticleIn(
   }
 }
 
-void ActsExamples::HepMC3Vertex::removeParticleOut(
+void HepMC3Vertex::removeParticleOut(
     const std::shared_ptr<HepMC3::GenVertex>& vertex,
     const std::shared_ptr<SimParticle>& particle) {
   // Remove particle if it exists
@@ -142,16 +157,17 @@ void ActsExamples::HepMC3Vertex::removeParticleOut(
   }
 }
 
-void ActsExamples::HepMC3Vertex::position(
-    const std::shared_ptr<HepMC3::GenVertex>& vertex,
-    const Acts::Vector3& pos) {
+void HepMC3Vertex::position(const std::shared_ptr<HepMC3::GenVertex>& vertex,
+                            const Acts::Vector3& pos) {
   HepMC3::FourVector fVec(pos(0), pos(1), pos(2), vertex->position().t());
   vertex->set_position(fVec);
 }
 
-void ActsExamples::HepMC3Vertex::time(
-    const std::shared_ptr<HepMC3::GenVertex>& vertex, double time) {
+void HepMC3Vertex::time(const std::shared_ptr<HepMC3::GenVertex>& vertex,
+                        double time) {
   HepMC3::FourVector fVec(vertex->position().x(), vertex->position().y(),
                           vertex->position().z(), time);
   vertex->set_position(fVec);
 }
+
+}  // namespace ActsExamples

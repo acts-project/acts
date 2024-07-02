@@ -9,9 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Digitization/DigitizationModule.hpp"
-#include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"

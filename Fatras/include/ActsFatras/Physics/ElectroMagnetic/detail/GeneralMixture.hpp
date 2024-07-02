@@ -13,8 +13,7 @@
 
 #include <random>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Generate scattering angles using a general mixture model.
 ///
@@ -201,5 +200,4 @@ struct GeneralMixture {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

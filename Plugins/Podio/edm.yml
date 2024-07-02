@@ -1,4 +1,5 @@
 ---
+schema_version: 1
 options:
   getSyntax: True
   exposePODMembers: False

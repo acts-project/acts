@@ -18,10 +18,6 @@ CMake instructions to build [dfelibs](https://github.com/msmk0/dfelibs).
 
 CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).
 
-## autodiff
-
-CMake instructions to build  [autodiff](https://github.com/autodiff/autodiff).
-
 ## boost 
 
 For convenience, it's possible to use the ACTS build system to build the minimum

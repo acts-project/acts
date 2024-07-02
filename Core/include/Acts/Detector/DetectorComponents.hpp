@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 
 #include <map>
 #include <memory>
@@ -39,7 +39,7 @@ struct RootDetectorVolumes {
   /// The list of root volumes
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The Root volumes finder
-  DetectorVolumeUpdater volumeFinder;
+  ExternalNavigationDelegate volumeFinder;
 };
 
 /// @brief The currently built detector components
@@ -82,9 +82,9 @@ struct InternalStructure {
   /// Contained volumes of this volume, handled by the volumeUpdater
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces
-  SurfaceCandidatesUpdater surfacesUpdater;
+  InternalNavigationDelegate surfacesUpdater;
   // Navigation delegate for volumes
-  DetectorVolumeUpdater volumeUpdater;
+  ExternalNavigationDelegate volumeUpdater;
 };
 
 }  // namespace Experimental

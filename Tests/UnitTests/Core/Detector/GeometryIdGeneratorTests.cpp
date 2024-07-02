@@ -16,7 +16,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
+#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -92,7 +92,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   ///
   /// @param cache is the cache object for e.g. object counting
   /// @param dVolume the detector volume to assign the geometry id to
-  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*unused*/,
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
                         DetectorVolume& dVolume) const final {
     auto vgid = dVolume.geometryId();
     vgid.setVolume(vgid.volume() + 1);
@@ -103,7 +103,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   ///
   /// @param cache is the cache object for e.g. object counting
   /// @param portal the portal to assign the geometry id to
-  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*unused*/,
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
                         Portal& portal) const final {
     auto pgid = portal.surface().geometryId();
     pgid.setBoundary(pgid.boundary() + 1);
@@ -114,7 +114,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   ///
   /// @param cache is the cache object for e.g. object counting
   /// @param surface the surface to assign the geometry id to
-  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*unused*/,
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
                         Surface& surface) const final {
     auto sgid = surface.geometryId();
     if (sgid.sensitive() != 0u) {

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -20,19 +21,20 @@
 
 #include <Pythia8/Pythia.h>
 
+namespace ActsExamples {
+
 namespace {
 struct FrameworkRndmEngine : public Pythia8::RndmEngine {
-  ActsExamples::RandomEngine& rng;
+  RandomEngine& rng;
 
-  FrameworkRndmEngine(ActsExamples::RandomEngine& rng_) : rng(rng_) {}
+  FrameworkRndmEngine(RandomEngine& rng_) : rng(rng_) {}
   double flat() override {
     return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
   }
 };
 }  // namespace
 
-ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
-                                                 Acts::Logging::Level lvl)
+Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
       m_pythia8(std::make_unique<Pythia8::Pythia>("", false)) {
@@ -51,14 +53,14 @@ ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
-ActsExamples::Pythia8Generator::~Pythia8Generator() = default;
+Pythia8Generator::~Pythia8Generator() = default;
 
-ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
-    RandomEngine& rng) {
+std::pair<SimVertexContainer, SimParticleContainer>
+Pythia8Generator::operator()(RandomEngine& rng) {
   using namespace Acts::UnitLiterals;
 
-  SimParticleContainer::sequence_type generated;
-  std::vector<SimParticle::Vector4> vertexPositions;
+  SimVertexContainer::sequence_type vertices;
+  SimParticleContainer::sequence_type particles;
 
   // pythia8 is not thread safe and generation needs to be protected
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
@@ -80,6 +82,9 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
   if (m_cfg.printLongEventListing) {
     m_pythia8->event.list();
   }
+
+  // create the primary vertex
+  vertices.emplace_back(0, SimVertex::Vector4(0., 0., 0., 0.));
 
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {
@@ -103,25 +108,35 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
         genParticle.zProd() * 1_mm, genParticle.tProd() * 1_mm);
 
     // define the particle identifier including possible secondary vertices
-    ActsFatras::Barcode particleId(0u);
+
+    SimBarcode particleId(0u);
     // ensure particle identifier component is non-zero
-    particleId.setParticle(1u + generated.size());
+    particleId.setParticle(1u + particles.size());
     // only secondaries have a defined vertex position
-    if (genParticle.hasVertex()) {
+    if (m_cfg.labelSecondaries && genParticle.hasVertex()) {
       // either add to existing secondary vertex if exists or create new one
-      // TODO can we do this w/o the manual search and position check?
-      auto it = std::find_if(
-          vertexPositions.begin(), vertexPositions.end(),
-          [=](const SimParticle::Vector4& pos) { return (pos == pos4); });
-      if (it == vertexPositions.end()) {
-        // no matching secondary vertex exists -> create new one
-        vertexPositions.emplace_back(pos4);
-        particleId.setVertexSecondary(vertexPositions.size());
-        ACTS_VERBOSE("created new secondary vertex " << pos4.transpose());
+
+      // check if an existing vertex is close enough
+      auto it =
+          std::find_if(vertices.begin(), vertices.end(),
+                       [&pos4, this](const SimVertex& other) {
+                         return (pos4.head<3>() - other.position()).norm() <
+                                m_cfg.spatialVertexThreshold;
+                       });
+
+      if (it != vertices.end()) {
+        particleId.setVertexSecondary(std::distance(vertices.begin(), it));
+        it->outgoing.insert(particleId);
       } else {
-        particleId.setVertexSecondary(
-            1u + std::distance(vertexPositions.begin(), it));
+        // no matching secondary vertex exists -> create new one
+        particleId.setVertexSecondary(vertices.size());
+        auto& vertex = vertices.emplace_back(particleId.vertexId(), pos4);
+        vertex.outgoing.insert(particleId);
+        ACTS_VERBOSE("created new secondary vertex " << pos4.transpose());
       }
+    } else {
+      auto& primaryVertex = vertices.front();
+      primaryVertex.outgoing.insert(particleId);
     }
 
     // construct internal particle
@@ -136,10 +151,13 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
         std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
-    generated.push_back(std::move(particle));
+    particles.push_back(std::move(particle));
   }
 
-  SimParticleContainer out;
-  out.insert(generated.begin(), generated.end());
+  std::pair<SimVertexContainer, SimParticleContainer> out;
+  out.first.insert(vertices.begin(), vertices.end());
+  out.second.insert(particles.begin(), particles.end());
   return out;
 }
+
+}  // namespace ActsExamples

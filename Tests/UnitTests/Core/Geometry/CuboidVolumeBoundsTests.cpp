@@ -26,8 +26,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 GeometryContext gctx = GeometryContext();
 
@@ -121,15 +120,15 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   auto geoCtx = GeometryContext();
 
   for (auto& os : cvbOrientedSurfaces) {
-    auto osCenter = os.first->center(geoCtx);
+    auto osCenter = os.surface->center(geoCtx);
     const auto* pSurface =
-        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+        dynamic_cast<const Acts::PlaneSurface*>(os.surface.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
                           "The surface is not a plane surface");
     auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
-    Vector3 insideBox = osCenter + os.second * osNormal;
-    Vector3 outsideBox = osCenter - os.second * osNormal;
+    Vector3 insideBox = osCenter + os.direction * osNormal;
+    Vector3 outsideBox = osCenter - os.direction * osNormal;
     BOOST_CHECK(box.inside(insideBox));
     BOOST_CHECK(!box.inside(outsideBox));
   }
@@ -140,43 +139,68 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY =
-      cvbOrientedSurfaces[negativeFaceXY].first->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[negativeFaceXY].surface->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(nFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(nFaceXY.col(2).isApprox(zaxis));
 
   auto pFaceXY =
-      cvbOrientedSurfaces[positiveFaceXY].first->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[positiveFaceXY].surface->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceXY.col(0).isApprox(xaxis));
   BOOST_CHECK(pFaceXY.col(1).isApprox(yaxis));
   BOOST_CHECK(pFaceXY.col(2).isApprox(zaxis));
 
   auto nFaceYZ =
-      cvbOrientedSurfaces[negativeFaceYZ].first->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[negativeFaceYZ].surface->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceYZ.col(0).isApprox(yaxis));
   BOOST_CHECK(nFaceYZ.col(1).isApprox(zaxis));
   BOOST_CHECK(nFaceYZ.col(2).isApprox(xaxis));
 
   auto pFaceYZ =
-      cvbOrientedSurfaces[positiveFaceYZ].first->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[positiveFaceYZ].surface->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceYZ.col(0).isApprox(yaxis));
   BOOST_CHECK(pFaceYZ.col(1).isApprox(zaxis));
   BOOST_CHECK(pFaceYZ.col(2).isApprox(xaxis));
 
   auto nFaceZX =
-      cvbOrientedSurfaces[negativeFaceZX].first->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[negativeFaceZX].surface->transform(geoCtx).rotation();
   BOOST_CHECK(nFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(nFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(nFaceZX.col(2).isApprox(yaxis));
 
   auto pFaceZX =
-      cvbOrientedSurfaces[positiveFaceZX].first->transform(geoCtx).rotation();
+      cvbOrientedSurfaces[positiveFaceZX].surface->transform(geoCtx).rotation();
   BOOST_CHECK(pFaceZX.col(0).isApprox(zaxis));
   BOOST_CHECK(pFaceZX.col(1).isApprox(xaxis));
   BOOST_CHECK(pFaceZX.col(2).isApprox(yaxis));
 }
 
+BOOST_AUTO_TEST_CASE(CuboidVolumeBoundsSetValues) {
+  CuboidVolumeBounds box(5, 8, 7);
+
+  for (auto bValue :
+       {CuboidVolumeBounds::eHalfLengthX, CuboidVolumeBounds::eHalfLengthY,
+        CuboidVolumeBounds::eHalfLengthZ}) {
+    ActsScalar target = 0.5 * box.get(bValue);
+    ActsScalar previous = box.get(bValue);
+    BOOST_CHECK_THROW(box.set(bValue, -1), std::logic_error);
+    BOOST_CHECK_EQUAL(box.get(bValue), previous);
+    box.set(bValue, target);
+    BOOST_CHECK_EQUAL(box.get(bValue), target);
+  }
+
+  auto previous = box.values();
+
+  BOOST_CHECK_THROW(box.set({
+                        {CuboidVolumeBounds::eHalfLengthX, -1},
+                        {CuboidVolumeBounds::eHalfLengthY, 1},
+                    }),
+                    std::logic_error);
+  auto act = box.values();
+  BOOST_CHECK_EQUAL_COLLECTIONS(previous.begin(), previous.end(), act.begin(),
+                                act.end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

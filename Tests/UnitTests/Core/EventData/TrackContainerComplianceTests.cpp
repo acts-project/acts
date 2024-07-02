@@ -25,11 +25,11 @@ ACTS_DOES_NOT_COMPILE_SUITE_BEGIN(BuildFromConstRef)
   TrackContainer mutTc{mutVtc, mutMtj};
   static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
-  auto t = mutTc.getTrack(mutTc.addTrack());
+  auto t = mutTc.makeTrack();
   t.appendTrackState();
   t.appendTrackState();
   t.appendTrackState();
-  t = mutTc.getTrack(mutTc.addTrack());
+  t = mutTc.makeTrack();
   t.appendTrackState();
 
   ConstVectorTrackContainer vtc{std::move(mutVtc)};
@@ -71,7 +71,7 @@ ACTS_DOES_NOT_COMPILE_SUITE_BEGIN(BuildFromConstRef)
   VectorTrackContainer vtc;
   VectorMultiTrajectory mtj;
   TrackContainer tc{vtc, mtj};
-  auto t = tc.getTrack(tc.addTrack());
+  auto t = tc.makeTrack();
   (void)t;
 
   ConstProxyAccessor<unsigned int> caccNMeasuements("nMeasurements");

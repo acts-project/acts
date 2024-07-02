@@ -11,7 +11,6 @@
 #include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
-#include "ActsExamples/Printers/HitsPrinter.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -45,11 +44,6 @@ void addExampleAlgorithms(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
                                 "ParticlesPrinter", inputParticles);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::HitsPrinter, mex, "HitsPrinter", inputClusters,
-      inputMeasurementParticlesMap, inputHitIds, selectIndexStart,
-      selectIndexLength, selectVolume, selectLayer, selectModule);
-
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
                                 "TrackParametersPrinter", inputTrackParameters);
 
@@ -81,6 +75,14 @@ void addExampleAlgorithms(Context& ctx) {
                     .def(py::init<const EtaBinnedConfig&>(), py::arg("config"));
 
     {
+      auto mc = py::class_<Acts::TrackSelector::MeasurementCounter>(
+                    tool, "MeasurementCounter")
+                    .def(py::init<>())
+                    .def("addCounter",
+                         &Acts::TrackSelector::MeasurementCounter::addCounter);
+    }
+
+    {
       auto c = py::class_<Config>(tool, "Config").def(py::init<>());
 
       patchKwargsConstructor(c);
@@ -101,6 +103,11 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(ptMin);
       ACTS_PYTHON_MEMBER(ptMax);
       ACTS_PYTHON_MEMBER(minMeasurements);
+      ACTS_PYTHON_MEMBER(maxHoles);
+      ACTS_PYTHON_MEMBER(maxOutliers);
+      ACTS_PYTHON_MEMBER(maxSharedHits);
+      ACTS_PYTHON_MEMBER(maxChi2);
+      ACTS_PYTHON_MEMBER(measurementCounter);
       ACTS_PYTHON_STRUCT_END();
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
@@ -116,6 +123,8 @@ void addExampleAlgorithms(Context& ctx) {
       auto c = py::class_<EtaBinnedConfig>(tool, "EtaBinnedConfig")
                    .def(py::init<>())
                    .def(py::init<const Config&>());
+
+      patchKwargsConstructor(c);
 
       c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 

@@ -1,4 +1,4 @@
-add_unittest(DetectorVolumeUpdaters DetectorVolumeUpdatersTests.cpp)
+add_unittest(PortalNavigation PortalNavigationTests.cpp)
 add_unittest(DetectorVolumeFinders DetectorVolumeFindersTests.cpp)
 add_unittest(NavigationState NavigationStateTests.cpp)
 add_unittest(NavigationStateUpdaters NavigationStateUpdatersTests.cpp)

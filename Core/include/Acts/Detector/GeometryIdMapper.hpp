@@ -16,8 +16,7 @@
 
 #include <map>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief This is a mapper of geometry ids, which can be used to
 /// assign predefined geometry ids to objects
@@ -144,5 +143,4 @@ class GeometryIdMapper final : public IGeometryIdGenerator {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

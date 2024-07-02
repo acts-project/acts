@@ -55,25 +55,8 @@ namespace Acts {
 /// described above.
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
-///
-/// @tparam propagator_t Propagator type
-/// @tparam propagator_options_t Propagator options type
-template <typename propagator_t,
-          typename propagator_options_t = PropagatorOptions<>>
 class NumericalTrackLinearizer {
  public:
-  using Propagator_t = propagator_t;
-
-  /// State struct
-  struct State {
-    /// @brief State constructor
-    ///
-    /// @param fieldCacheIn Magnetic field cache
-    State(MagneticFieldProvider::Cache fieldCacheIn)
-        : fieldCache(std::move(fieldCacheIn)) {}
-    MagneticFieldProvider::Cache fieldCache;
-  };
-
   /// @brief Configuration struct
   struct Config {
     /// @ Config constructor if magnetic field is present
@@ -81,18 +64,18 @@ class NumericalTrackLinearizer {
     /// @param bIn The magnetic field
     /// @param prop The propagator
     Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-           std::shared_ptr<const Propagator_t> prop)
+           std::shared_ptr<const BasePropagator> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
     /// @brief Config constructor without B field -> uses NullBField
     ///
     /// @param prop Propagator
-    Config(std::shared_ptr<const Propagator_t> prop)
+    Config(std::shared_ptr<const BasePropagator> prop)
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     std::shared_ptr<const MagneticFieldProvider> bField;
 
-    std::shared_ptr<const Propagator_t> propagator;
+    std::shared_ptr<const BasePropagator> propagator;
 
     /// Tolerance determining how close we need to get to a surface to
     /// reach it during propagation
@@ -124,12 +107,11 @@ class NumericalTrackLinearizer {
   /// @param mctx Magnetic field context
   ///
   /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
-                                         double linPointTime,
-                                         const Surface& perigeeSurface,
-                                         const Acts::GeometryContext& gctx,
-                                         const Acts::MagneticFieldContext& mctx,
-                                         State& /*state*/) const;
+  Result<LinearizedTrack> linearizeTrack(
+      const BoundTrackParameters& params, double linPointTime,
+      const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+      const Acts::MagneticFieldContext& mctx,
+      MagneticFieldProvider::Cache& /*fieldCache*/) const;
 
  private:
   const Config m_cfg;
@@ -140,5 +122,3 @@ class NumericalTrackLinearizer {
 };
 
 }  // namespace Acts
-
-#include "NumericalTrackLinearizer.ipp"

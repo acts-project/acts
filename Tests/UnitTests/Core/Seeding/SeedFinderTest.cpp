@@ -20,7 +20,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -189,14 +188,15 @@ int main(int argc, char** argv) {
   auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
+
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
-  config.seedFilter = std::make_shared<Acts::SeedFilter<value_type>>(
+  config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
       Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
   Acts::SeedFinder<value_type> a;  // test creation of unconfigured finder
   a = Acts::SeedFinder<value_type>(config);
 
   // setup spacepoint grid config
-  Acts::SpacePointGridConfig gridConf;
+  Acts::CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -204,15 +204,16 @@ int main(int argc, char** argv) {
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // setup spacepoint grid options
-  Acts::SpacePointGridOptions gridOpts;
+  Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
+
   Acts::SpacePointGrid<value_type> grid =
-      Acts::SpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
-  Acts::SpacePointGridCreator::fillGrid(config, options, grid, spContainer.begin(),
+      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spContainer.begin(),
                                         spContainer.end(), rRangeSPExtent);
   
-  auto spGroup = Acts::BinnedSPGroup<value_type>(
+  auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
   std::vector<std::vector<seed_type>> seedVector;

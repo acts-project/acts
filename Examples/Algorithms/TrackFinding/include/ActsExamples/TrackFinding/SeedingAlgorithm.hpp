@@ -52,12 +52,14 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::string outputSeeds;
 
     Acts::SeedFilterConfig seedFilterConfig;
+
     Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
         ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
         Acts::detail::RefHolder>::ConstSpacePointProxyType>
         seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
     Acts::SpacePointGridOptions gridOptions;
+
     Acts::SeedFinderOptions seedFinderOptions;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
@@ -94,6 +96,7 @@ class SeedingAlgorithm final : public IAlgorithm {
   Acts::SeedFinder<SpacePointProxy_t> m_seedFinder;
   std::shared_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
   std::shared_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>

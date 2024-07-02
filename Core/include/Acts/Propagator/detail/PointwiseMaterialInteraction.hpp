@@ -21,8 +21,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// @brief Struct to handle pointwise material interaction
 struct PointwiseMaterialInteraction {
@@ -185,5 +184,4 @@ struct PointwiseMaterialInteraction {
                         NoiseUpdateMode updateMode = addNoise) const;
 };
 
-}  // namespace detail
-}  // end of namespace Acts
+}  // namespace Acts::detail

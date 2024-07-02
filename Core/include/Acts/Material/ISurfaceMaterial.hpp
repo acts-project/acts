@@ -70,13 +70,6 @@ class ISurfaceMaterial {
   /// @return const MaterialSlab
   virtual const MaterialSlab& materialSlab(const Vector3& gp) const = 0;
 
-  /// Direct access via bins to the MaterialSlab
-  ///
-  /// @param bin0 is the material bin in dimension 0
-  /// @param bin1 is the material bin in dimension 1
-  virtual const MaterialSlab& materialSlab(std::size_t bin0,
-                                           std::size_t bin1) const = 0;
-
   /// Update pre factor
   ///
   /// @param pDir is the positive direction through the surface

@@ -12,15 +12,12 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
-#include <iomanip>
+#include <initializer_list>
 #include <iosfwd>
 #include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -94,37 +91,26 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param avgphi The average phi value
   /// @param bevelMinZ The bevel angle, in radians, for the negative side
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
-  CylinderVolumeBounds(double rmin, double rmax, double halfz,
-                       double halfphi = M_PI, double avgphi = 0.,
-                       double bevelMinZ = 0.,
-                       double bevelMaxZ = 0.) noexcept(false)
-      : m_values({rmin, rmax, halfz, halfphi, avgphi, bevelMinZ, bevelMaxZ}) {
-    checkConsistency();
-    buildSurfaceBounds();
-  }
+  CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax, ActsScalar halfz,
+                       ActsScalar halfphi = M_PI, ActsScalar avgphi = 0.,
+                       ActsScalar bevelMinZ = 0., ActsScalar bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  CylinderVolumeBounds(const std::array<double, eSize>& values) noexcept(false)
-      : m_values(values) {
-    checkConsistency();
-    buildSurfaceBounds();
-  }
+  CylinderVolumeBounds(const std::array<ActsScalar, eSize>& values);
 
   /// Constructor - extruded from cylinder bounds and thickness
   ///
   /// @param cBounds the cylinder bounds
   /// @param thickness of the extrusion
-  CylinderVolumeBounds(const CylinderBounds& cBounds,
-                       double thickness) noexcept(false);
+  CylinderVolumeBounds(const CylinderBounds& cBounds, ActsScalar thickness);
 
   /// Constructor - extruded from radial bounds and thickness
   ///
   /// @param rBounds the Radial bounds
   /// @param thickness
-  CylinderVolumeBounds(const RadialBounds& rBounds,
-                       double thickness) noexcept(false);
+  CylinderVolumeBounds(const RadialBounds& rBounds, ActsScalar thickness);
 
   /// Copy Constructor
   ///
@@ -141,14 +127,14 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<ActsScalar> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
-  bool inside(const Vector3& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, ActsScalar tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -160,7 +146,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
+  std::vector<OrientedSurface> orientedSurfaces(
       const Transform3& transform = Transform3::Identity()) const override;
 
   /// Construct bounding box for this shape
@@ -172,26 +158,45 @@ class CylinderVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
+  /// Get the canonical binning values, i.e. the binning values
+  /// for that fully describe the shape's extent
+  ///
+  /// @return vector of canonical binning values
+  std::vector<Acts::BinningValue> canonicalBinning() const override {
+    return {Acts::binR, Acts::binPhi, Acts::binZ};
+  };
+
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the type used for the binning
   Vector3 binningOffset(BinningValue bValue) const override;
 
-  /// Binning borders in double
+  /// Binning borders in ActsScalar
   ///
   /// @param bValue is the type used for the binning
-  double binningBorder(BinningValue bValue) const override;
+  ActsScalar binningBorder(BinningValue bValue) const override;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const override;
+  /// @param os is the output stream
+  std::ostream& toStream(std::ostream& os) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
+
+  /// Set a bound value
+  /// @param bValue the bound value identifier
+  /// @param value the value to be set
+  void set(BoundValues bValue, ActsScalar value);
+
+  /// Set a range of bound values
+  /// @param keyValues the initializer list of key value pairs
+  void set(std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues);
 
  private:
-  /// The internal version of the bounds can be float/double
-  std::array<double, eSize> m_values{};
+  /// The internal version of the bounds can be float/ActsScalar
+  std::array<ActsScalar, eSize> m_values{};
+
   /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
   /// Bounds of the inner CylinderBounds
@@ -203,89 +208,10 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
-  void checkConsistency() noexcept(false);
+  void checkConsistency();
 
   /// Helper method to create the surface bounds
   void buildSurfaceBounds();
-
-  /// Templated dumpT method
-  /// @tparam stream_t The type for the dump stream
-  /// @param dt The dump stream object
-  template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
 };
-
-inline bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
-  using VectorHelpers::perp;
-  using VectorHelpers::phi;
-  double ros = perp(pos);
-  bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
-  bool insideR = insidePhi
-                     ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
-                     : false;
-  bool insideZ =
-      insideR ? (std::abs(pos.z()) <= get(eHalfLengthZ) + tol) : false;
-  return (insideZ && insideR && insidePhi);
-}
-
-inline Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
-    const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
-    return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
-  }
-  return VolumeBounds::binningOffset(bValue);
-}
-
-inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::binR) {
-    return 0.5 * (get(eMaxR) - get(eMinR));
-  }
-  if (bValue == Acts::binZ) {
-    return get(eHalfLengthZ);
-  }
-  return VolumeBounds::binningBorder(bValue);
-}
-
-template <class stream_t>
-stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
-  dt << std::setiosflags(std::ios::fixed);
-  dt << std::setprecision(5);
-  dt << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
-        "averagePhi, minBevelZ, maxBevelZ) = ";
-  dt << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfLengthZ) << ", "
-     << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", "
-     << get(eBevelMinZ) << ", " << get(eBevelMaxZ);
-  return dt;
-}
-
-inline std::vector<double> CylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) >= get(eMaxR)) {
-    throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
-  }
-  if (get(eHalfLengthZ) <= 0) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid longitudinal input.");
-  }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument(
-        "CylinderVolumeBounds: invalid phi positioning.");
-  }
-  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
-  }
-  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
-    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
-  }
-}
 
 }  // namespace Acts

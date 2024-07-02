@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -21,9 +20,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit tests for RadialBounds constrcuctors
@@ -137,6 +135,4 @@ BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

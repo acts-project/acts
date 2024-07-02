@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -49,6 +49,7 @@ struct BoundParametersSmearer {
   /// Parameter indices that will be used to create the smeared measurements.
   std::array<Acts::BoundIndices, kSize> indices{};
   std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions{};
+  std::array<bool, kSize> forcePositive = {};
 
   static constexpr std::size_t size() { return kSize; }
 
@@ -74,9 +75,9 @@ struct BoundParametersSmearer {
     // construct full bound parameters. they are probably not all needed, but it
     // is easier to just create them all and then select the requested ones.
     Acts::Result<Acts::BoundVector> boundParamsRes =
-        Acts::detail::transformFreeToBoundParameters(
-            hit.position(), hit.time(), hit.direction(), 0, surface, geoCtx,
-            tolerance);
+        Acts::transformFreeToBoundParameters(hit.position(), hit.time(),
+                                             hit.direction(), 0, surface,
+                                             geoCtx, tolerance);
 
     if (!boundParamsRes.ok()) {
       return boundParamsRes.error();
@@ -93,6 +94,9 @@ struct BoundParametersSmearer {
       }
       auto [value, stddev] = res.value();
       par[i] = value;
+      if (forcePositive[i]) {
+        par[i] = std::abs(value);
+      }
       cov(i, i) = stddev * stddev;
     }
 

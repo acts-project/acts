@@ -14,8 +14,7 @@
 #include <optional>
 #include <vector>
 
-namespace ActsExamples {
-namespace Options {
+namespace ActsExamples::Options {
 
 /// @defgroup option-types Additional types for program options
 ///
@@ -167,5 +166,4 @@ inline std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
-}  // namespace Options
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Options

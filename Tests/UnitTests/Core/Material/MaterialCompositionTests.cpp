@@ -13,8 +13,7 @@
 
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(material_composition)
 
@@ -25,7 +24,7 @@ BOOST_AUTO_TEST_CASE(construct_element_fraction) {
   unsigned int carbonZ = 12u;
   // a fraction between 0 and 255
   unsigned int carbonWeight = 46u;
-  float carbonFraction = float(carbonWeight) / 255u;
+  float carbonFraction = static_cast<float>(carbonWeight) / 255u;
 
   ElementFraction a(carbonZ, carbonFraction);
   BOOST_CHECK_EQUAL(a.element(), carbonZ);
@@ -80,5 +79,4 @@ BOOST_AUTO_TEST_CASE(construct_with_weights) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

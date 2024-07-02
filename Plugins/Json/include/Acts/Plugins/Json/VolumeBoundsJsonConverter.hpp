@@ -25,8 +25,6 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-class VolumeBounds;
-
 void to_json(nlohmann::json& j, const VolumeBounds& bounds);
 
 namespace VolumeBoundsJsonConverter {

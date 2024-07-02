@@ -58,6 +58,7 @@ with tempfile.TemporaryDirectory() as temp:
                 ]
             ],
             outputParticles="particles_input",
+            outputVertices="vertices_input",
             randomNumbers=rnd,
         )
     )

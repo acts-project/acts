@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>
@@ -18,13 +18,15 @@
 
 namespace Acts {
 
+/// @defgroup MagneticField Magnetic field
+
 /// Base class for all magnetic field providers
 class MagneticFieldProvider {
  public:
   /// Opaque cache type that can store arbitrary implementation specific cache
   /// data. Examples are an interpolation cell, or an experiment specific
   /// conditions data handle.
-  using Cache = detail::SmallObjectCache;
+  using Cache = Acts::AnyBase<sizeof(char) * 512>;
 
   /// Make an opaque cache for the magnetic field. Instructs the specific
   /// implementation to generate a @c Cache instance for magnetic field lookup.

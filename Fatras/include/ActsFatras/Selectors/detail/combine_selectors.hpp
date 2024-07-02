@@ -12,8 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// Combine multiple selectors with a configurable combine function.
 template <bool Initial, typename Combine, typename... Selectors>
@@ -65,5 +64,4 @@ class CombineSelectors {
   }
 };
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

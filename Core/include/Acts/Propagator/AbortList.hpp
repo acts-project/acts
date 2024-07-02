@@ -97,20 +97,17 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
-  /// @tparam result_t is the result type from a certain action
   ///
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
-  /// @param [in] result is the result object from a certain action
   /// @param [in] args are the arguments to be passed to the aborters
   template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename result_t, typename... Args>
+            typename navigator_t, typename... Args>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, const result_t& result,
-                  Args&&... args) const {
+                  const navigator_t& navigator, Args&&... args) const {
     using impl = detail::abort_list_impl<aborters_t...>;
-    return impl::check(tuple(), state, stepper, navigator, result,
+    return impl::check(tuple(), state, stepper, navigator,
                        std::forward<Args>(args)...);
   }
 };

@@ -12,8 +12,7 @@
 
 #include <memory>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class Detector;
 
@@ -37,5 +36,4 @@ class IDetectorBuilder {
       const GeometryContext& gctx) const = 0;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

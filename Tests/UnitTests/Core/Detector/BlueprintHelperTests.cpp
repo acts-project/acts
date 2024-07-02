@@ -15,11 +15,9 @@
 #include <exception>
 #include <fstream>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class IInternalStructureBuilder {};
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
@@ -269,30 +267,15 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapException) {
   std::vector<Acts::ActsScalar> detectorBoundaries = {0., 50., 100.};
   std::vector<Acts::BinningValue> detectorBinning = {Acts::binX};
   auto detector = std::make_unique<Acts::Experimental::Blueprint::Node>(
-      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCuboid,
+      "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
 
-  std::vector<Acts::ActsScalar> cubeOneBoundaries = {0., 20., 100.};
-  auto cubeOne = std::make_unique<Acts::Experimental::Blueprint::Node>(
-      "cubeOne", Acts::Transform3::Identity(), Acts::VolumeBounds::eCuboid,
-      cubeOneBoundaries, innerBuilder);
-  detector->add(std::move(cubeOne));
-
-  // Throw because the detector is not cylindrical (cube not yet implemented)
-  BOOST_CHECK_THROW(
-      Acts::Experimental::detail::BlueprintHelper::fillGaps(*detector),
-      std::runtime_error);
-
-  // Let's change both from a cuboid to a cylinder
-  detector->boundsType = Acts::VolumeBounds::eCylinder;
-  detector->children.front()->boundsType = Acts::VolumeBounds::eCylinder;
-
-  // Add a second volume
+  // Add a volume
   std::vector<Acts::ActsScalar> volTwoBoundaries = {0., 20., 100.};
-  auto volTwo = std::make_unique<Acts::Experimental::Blueprint::Node>(
-      "volTwo", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
+  auto vol = std::make_unique<Acts::Experimental::Blueprint::Node>(
+      "vol", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       volTwoBoundaries, innerBuilder);
-  detector->add(std::move(volTwo));
+  detector->add(std::move(vol));
 
   // Throw because cylinders can not be binned in x
   BOOST_CHECK_THROW(

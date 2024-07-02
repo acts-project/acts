@@ -484,6 +484,39 @@ class MutablePodioTrackStateContainer final
     return m_collection->size() - 1;
   }
 
+  void addTrackStateComponents_impl(IndexType istate, TrackStatePropMask mask) {
+    auto& data = m_collection->at(istate).data();
+
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted) &&
+        data.ipredicted == kInvalid) {
+      m_params->create();
+      data.ipredicted = m_params->size() - 1;
+    }
+
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered) &&
+        data.ifiltered == kInvalid) {
+      m_params->create();
+      data.ifiltered = m_params->size() - 1;
+    }
+
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed) &&
+        data.ismoothed == kInvalid) {
+      m_params->create();
+      data.ismoothed = m_params->size() - 1;
+    }
+
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Jacobian) &&
+        data.ijacobian == kInvalid) {
+      m_jacs->create();
+      data.ijacobian = m_jacs->size() - 1;
+    }
+
+    if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated) &&
+        !data.hasProjector) {
+      data.hasProjector = true;
+    }
+  }
+
   void shareFrom_impl(TrackIndexType iself, TrackIndexType iother,
                       TrackStatePropMask shareSource,
                       TrackStatePropMask shareTarget) {
@@ -570,7 +603,7 @@ class MutablePodioTrackStateContainer final
   }
 
   template <typename T>
-  constexpr void addColumn_impl(const std::string& key) {
+  constexpr void addColumn_impl(std::string_view key) {
     HashedString hashedKey = hashString(key);
     m_dynamic.insert(
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});

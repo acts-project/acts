@@ -30,7 +30,7 @@ DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
 
 MagneticFieldProvider::Cache DD4hepFieldAdapter::makeCache(
     const Acts::MagneticFieldContext& /*mctx*/) const {
-  return MagneticFieldProvider::Cache::make<Cache>();
+  return MagneticFieldProvider::Cache{};
 }
 
 Result<Vector3> DD4hepFieldAdapter::getField(

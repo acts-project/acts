@@ -9,7 +9,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -133,7 +133,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   const auto& [paramsNom, mweightNom, cweightNom] = sampledFreeParams[0];
   // Transform the free to bound
   auto nominalRes =
-      detail::transformFreeToBoundParameters(paramsNom, surface, geoContext);
+      transformFreeToBoundParameters(paramsNom, surface, geoContext);
   // Not successful, fall back to nominal free to bound transformation
   if (!nominalRes.ok()) {
     ACTS_WARNING(
@@ -160,8 +160,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 
     // Transform the free to bound
-    auto result = detail::transformFreeToBoundParameters(correctedFreeParams,
-                                                         surface, geoContext);
+    auto result = transformFreeToBoundParameters(correctedFreeParams, surface,
+                                                 geoContext);
     // Not successful, fall back to nominal free to bound transformation
     if (!result.ok()) {
       ACTS_WARNING(

@@ -12,7 +12,6 @@
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include <memory>
@@ -39,17 +38,13 @@ void addVertexing(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      outputProtoVertices, outputVertices, seedFinder, useTime, bField);
+      outputProtoVertices, outputVertices, seedFinder, bField, useTime,
+      spatialBinExtent, temporalBinExtent);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",
                                 inputTrackParameters, outputProtoVertices,
                                 outputVertices, bField);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TutorialVertexFinderAlgorithm,
-                                mex, "TutorialVertexFinderAlgorithm",
-                                inputTrackParameters, outputProtoVertices,
-                                bField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
                                 "VertexFitterAlgorithm", inputTrackParameters,

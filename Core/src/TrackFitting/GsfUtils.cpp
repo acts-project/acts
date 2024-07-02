@@ -12,8 +12,7 @@
 
 #include <cstddef>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
@@ -36,5 +35,4 @@ ActsScalar calculateDeterminant(
         .determinant();
   });
 }
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

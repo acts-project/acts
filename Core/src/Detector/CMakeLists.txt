@@ -8,9 +8,10 @@ target_sources(
     detail/DetectorVolumeConsistency.cpp
     detail/PortalHelper.cpp
     detail/ProtoMaterialHelper.cpp
-    detail/SupportHelper.cpp
+    detail/SupportSurfacesHelper.cpp
     detail/IndexedGridFiller.cpp
     CylindricalContainerBuilder.cpp
+    CuboidalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
     DetectorVolume.cpp

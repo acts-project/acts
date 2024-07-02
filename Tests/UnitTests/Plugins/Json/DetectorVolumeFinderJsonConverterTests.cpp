@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/PortalNavigation.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
@@ -53,8 +53,9 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
 
   auto casts = std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR};
 
-  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
-      GridType, Acts::Experimental::IndexedDetectorVolumeExtractor,
+  using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedGridNavigation<
+      Acts::Experimental::IExternalNavigation, GridType,
+      Acts::Experimental::IndexedDetectorVolumeExtractor,
       Acts::Experimental::DetectorVolumeFiller>;
 
   auto indexedDetectorVolumesImpl =
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
                                                          casts);
 
   // Return the root volume finder
-  Acts::Experimental::DetectorVolumeUpdater rootVolumeFinder;
+  Acts::Experimental::ExternalNavigationDelegate rootVolumeFinder;
   rootVolumeFinder.connect<&IndexedDetectorVolumesImpl::update>(
       std::move(indexedDetectorVolumesImpl));
 

@@ -14,7 +14,7 @@ Following the general ACTS design, these classes do not manage their internal st
 
 The interaction of these two components is handled by the {class}`Acts::Propagator` class template that takes the stepper and the navigator as template parameters:
 
-```c++
+```cpp
 Propagator<Navigator, Stepper>
 ```
 
@@ -22,7 +22,7 @@ Additional to these mandatory components, the propagator can be equipped with **
 
 The propagator exposes its state to the actors and aborters as arguments to `operator()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
 
-```c++
+```cpp
 template<typename propagator_state_t, typename stepper_t>
 auto operator(propagator_state_t &state, const stepper_t &stepper, result_type &result) const {
   const auto &navigatorState = state.navigation;
@@ -41,7 +41,7 @@ aborters. This is done with the classes {struct}`Acts::ActionList` and
 {struct}`Acts::AbortList` (which are in fact small wrappers around
 `std::tuple`):
 
-```c++
+```cpp
 using MyOptions = Acts::PropagatorOptions<
                     Acts::ActionList<MyActor1, MyActor2>,
                     Acts::AbortList<MyAborter1, MyAborter2>
@@ -50,7 +50,7 @@ using MyOptions = Acts::PropagatorOptions<
 
 The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {struct}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
 
-```c++
+```cpp
 auto options = MyOptions();
 options.actionList.get<MyActor1>().foo = bar;
 options.maxStepSize = 100;
@@ -68,7 +68,7 @@ To run the propagation, we must call the member function `propagate(...)` with t
 
 The result is an instance of {class}`Acts::Result`. It contains the actual result, or an error code in case something went wrong. In the actual result, the results of the different actors can again be accessed via a `get` method:
 
-```c++
+```cpp
 auto res = propagator.propagate(myParams, options);
 
 if( res.ok() ) {
@@ -78,19 +78,20 @@ if( res.ok() ) {
 
 ## Navigators
 
-Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {struct}`Acts::DirectNavigator::Initializer`.
+ACTS comes with a couple of different navigator implementations:
+- The standard navigator {class}`Acts::Navigator` which performs the full navigation in the volume/layer/surface hierarchy
+- The {class}`Acts::DirectNavigator` which takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {struct}`Acts::DirectNavigator::Initializer`.
+- The {class}`Acts::TryAllNavigator` which, as the name suggests, tries to intersect all available surfaces without acceleration structure and special assumptions. This navigator is meant for validation rather than production.
+- The {class}`Acts::TryAllOverstepNavigator` which is similar to the {class}`Acts::TryAllNavigator`, but deliberately oversteps and then intersects surfaces which might have been missed by that step and targets them. This navigator is meant for validation rather than production.
+- The {class}`Acts::Experimental::DetectorNavigator` which performs the full navigation in the gen2 geometry. Note that this is still experimental and should not be included in production code as it might be unstable and break with minor version updates of ACTS.
 
-The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
-
-:::{tip}
-The {class}`Acts::Navigator` by default does a straight-line extrapolation to resolve layer candidates. In certain geometries (e.g., telescope) this can lead to the effect that bent tracks miss some layers. This can be mitigated by disabling the bound-check for layer resolution with the `boundaryCheckLayerResolving` option in {struct}`Acts::Navigator::Config`.
-:::
+The navigators provide information about the current position inside the geometry in their state variable (e.g. {struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
 
 ## Steppers
 
 ACTS also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead, all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
 
-```c++
+```cpp
 template<typename propagator_state_t, typename stepper_t>
 auto operator(propagator_state_t &state, const stepper_t &stepper) const {
   stepper.foo(state.stepping);
@@ -109,11 +110,11 @@ The {class}`Acts::StraightLineStepper` is a very stripped down stepper that just
 
 The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extensions**.
 
-The extensions encapsulate the relevant equations for different environments. There exists a {type}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {type}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
+The extensions encapsulate the relevant equations for different environments. There exists a {struct}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {struct}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
 
 The extension can be configured via the {struct}`Acts::StepperExtensionList`:
 
-```c++
+```cpp
 using Stepper = Acts::EigenStepper<
                   Acts::StepperExtensionList<
                     Acts::DefaultExtension,
@@ -122,7 +123,7 @@ using Stepper = Acts::EigenStepper<
                 >;
 ```
 
-By default, the {class}`Acts::EigenStepper` only uses the {type}`Acts::DefaultExtension`.
+By default, the {class}`Acts::EigenStepper` only uses the {struct}`Acts::DefaultExtension`.
 
 ### MultiEigenStepperLoop
 

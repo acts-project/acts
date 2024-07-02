@@ -11,8 +11,7 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief This is the interface definition of external structure
 /// builders for DetectorVolume construction.
@@ -28,5 +27,4 @@ class IExternalStructureBuilder {
   virtual ExternalStructure construct(const GeometryContext& gctx) const = 0;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

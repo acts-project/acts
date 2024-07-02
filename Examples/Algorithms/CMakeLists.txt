@@ -1,4 +1,4 @@
-add_subdirectory_if(Digitization ACTS_BUILD_PLUGIN_IDENTIFICATION)
+add_subdirectory(Digitization)
 add_subdirectory_if(HepMC ACTS_BUILD_EXAMPLES_HEPMC3)
 add_subdirectory(Fatras)
 add_subdirectory_if(Geant4HepMC ACTS_BUILD_EXAMPLES_GEANT4 AND ACTS_BUILD_EXAMPLES_HEPMC3)

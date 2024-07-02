@@ -22,7 +22,6 @@ class Layer;
 class Volume;
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 using LayerPtr = std::shared_ptr<const Layer>;
 using LayerVector = std::vector<LayerPtr>;
 ///  @class ITrackingVolumeBuilder
@@ -51,7 +50,7 @@ class ITrackingVolumeBuilder {
   /// @return shared pointer to a newly created TrackingVolume
   virtual MutableTrackingVolumePtr trackingVolume(
       const GeometryContext& gctx, TrackingVolumePtr oppositeVolume = nullptr,
-      VolumeBoundsPtr outsideBounds = nullptr) const = 0;
+      std::shared_ptr<const VolumeBounds> outsideBounds = nullptr) const = 0;
 };
 
 }  // namespace Acts

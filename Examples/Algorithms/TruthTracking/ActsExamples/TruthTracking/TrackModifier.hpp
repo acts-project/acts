@@ -10,18 +10,16 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// Select tracks by applying some selection cuts.
+/// Modify tracks based on configuration.
 class TrackModifier final : public IAlgorithm {
  public:
   struct Config {
@@ -49,7 +47,6 @@ class TrackModifier final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 

@@ -14,7 +14,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -46,11 +45,9 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
+using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
-
-using namespace UnitLiterals;
+namespace Acts::Test {
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
 using TestSourceLink = detail::Test::TestSourceLink;
@@ -321,5 +318,4 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   BOOST_CHECK_EQUAL(spacePoints.size(), 6);
 }
 
-}  // end of namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

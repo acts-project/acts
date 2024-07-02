@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -38,8 +36,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
@@ -266,5 +263,4 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   testJacobianToGlobal(atStraw);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

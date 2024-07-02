@@ -146,9 +146,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   struct Cache {
     /// @brief Constructor with magnetic field context
-    ///
-    /// @param mctx the magnetic field context
-    Cache(const MagneticFieldContext& mctx) { (void)mctx; }
+    Cache(const MagneticFieldContext& /*mctx*/) {}
 
     std::optional<FieldCell> fieldCell;
     bool initialized = false;
@@ -270,7 +268,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   MagneticFieldProvider::Cache makeCache(
       const MagneticFieldContext& mctx) const final {
-    return MagneticFieldProvider::Cache::make<Cache>(mctx);
+    return MagneticFieldProvider::Cache{std::in_place_type<Cache>, mctx};
   }
 
   /// @brief retrieve field at given position
@@ -299,7 +297,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const final {
-    Cache& lcache = cache.get<Cache>();
+    Cache& lcache = cache.as<Cache>();
     const auto gridPosition = m_cfg.transformPos(position);
     if (!lcache.fieldCell || !(*lcache.fieldCell).isInside(gridPosition)) {
       auto res = getFieldCell(position);

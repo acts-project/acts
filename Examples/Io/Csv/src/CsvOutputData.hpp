@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file
-/// @brief Plain structs that each define one row in a TrackML csv file
-
 #pragma once
 
 #include <ActsExamples/EventData/Index.hpp>
@@ -21,11 +18,11 @@ namespace ActsExamples {
 
 struct ParticleData {
   /// Event-unique particle identifier a.k.a barcode.
-  uint64_t particle_id = 0;
+  std::uint64_t particle_id = 0;
   /// Particle type number a.k.a. PDG particle number.
-  int32_t particle_type = 0;
+  std::int32_t particle_type = 0;
   /// Production process type. Not available in the TrackML datasets.
-  uint32_t process = 0u;
+  std::uint32_t process = 0u;
   /// Production position components in mm.
   float vx = 0, vy = 0, vz = 0;
   // Production time in ns. Not available in the TrackML datasets.
@@ -44,9 +41,9 @@ struct ParticleData {
 // Write out simhits before digitization (no hi_id associated)
 struct SimHitData {
   /// Hit surface identifier. Not available in the TrackML datasets.
-  uint64_t geometry_id = 0u;
+  std::uint64_t geometry_id = 0u;
   /// Event-unique particle identifier of the generating particle.
-  uint64_t particle_id = 0;
+  std::uint64_t particle_id = 0;
   /// True global hit position components in mm.
   float tx = 0, ty = 0, tz = 0;
   // True global hit time in ns. Not available in the TrackML datasets.
@@ -63,21 +60,59 @@ struct SimHitData {
   float deltapz = 0.0f;
   float deltae = 0.0f;
   // Hit index along the trajectory. Not available in the TrackML datasets.
-  int32_t index = -1;
+  std::int32_t index = -1;
 
   DFE_NAMEDTUPLE(SimHitData, particle_id, geometry_id, tx, ty, tz, tt, tpx, tpy,
                  tpz, te, deltapx, deltapy, deltapz, deltae, index);
+};
+
+// Write out muon simhits before digitization
+struct MuonSimHitData {
+  /// Hit surface identifier. Not available in the TrackML datasets.
+  int pdgId = 0;
+  /// three components of the muon station identifier
+  int StationName = 0;
+  int StationEta = 0;
+  int StationPhi = 0;
+  // True hit location in station frame, in mm.
+  float LocalPositionExtrx = 0.0f, LocalPositionExtry = 0.0f,
+        LocalPositionExtrz = 0.0f;
+  /// True particle momentum in GeV before interaction.
+  float LocalDirectionx = 0.0f, LocalDirectiony = 0.0f, LocalDirectionz = 0.0f;
+  DFE_NAMEDTUPLE(MuonSimHitData, pdgId, StationName, StationEta, StationPhi,
+                 LocalPositionExtrx, LocalPositionExtry, LocalPositionExtrz,
+                 LocalDirectionx, LocalDirectiony, LocalDirectionz);
+};
+
+// Write out muon simhits before digitization
+struct MuonDriftCircleData {
+  /// Drift radius, in mm.
+  float driftRadius = 0.0f;
+  /// Drift tube center location in the station frame
+  float tubePositionx = 0.0f, tubePositiony = 0.0f, tubePositionz = 0.0f;
+  /// three components of the muon station identifier
+  int stationName = 0;
+  int stationEta = 0;
+  int stationPhi = 0;
+  // components of the tube identifier within the station
+  int multilayer = 0;
+  int tubelayer = 0;
+  int tube = 0;
+
+  DFE_NAMEDTUPLE(MuonDriftCircleData, driftRadius, tubePositionx, tubePositiony,
+                 tubePositionz, stationName, stationEta, stationPhi, multilayer,
+                 tubelayer, tube);
 };
 
 struct TruthHitData {
   /// Event-unique hit identifier. As defined for the simulated hit below and
   /// used to link back to it; same value can appear multiple times here due to
   /// shared hits in dense environments.
-  uint64_t hit_id = 0;
+  std::uint64_t hit_id = 0;
   /// Hit surface identifier. Not available in the TrackML datasets.
-  uint64_t geometry_id = 0u;
+  std::uint64_t geometry_id = 0u;
   /// Event-unique particle identifier of the generating particle.
-  uint64_t particle_id = 0;
+  std::uint64_t particle_id = 0;
   /// True global hit position components in mm.
   float tx = 0, ty = 0, tz = 0;
   // True global hit time in ns. Not available in the TrackML datasets.
@@ -94,7 +129,7 @@ struct TruthHitData {
   float deltapz = 0.0f;
   float deltae = 0.0f;
   // Hit index along the trajectory. Not available in the TrackML datasets.
-  int32_t index = -1;
+  std::int32_t index = -1;
 
   DFE_NAMEDTUPLE(TruthHitData, hit_id, particle_id, geometry_id, tx, ty, tz, tt,
                  tpx, tpy, tpz, te, deltapx, deltapy, deltapz, deltae, index);
@@ -102,9 +137,9 @@ struct TruthHitData {
 
 struct HitData {
   /// Event-unique hit identifier. Each value can appear at most once.
-  uint64_t hit_id = 0;
+  std::uint64_t hit_id = 0;
   /// Hit surface identifier. Not available in the TrackML datasets.
-  uint64_t geometry_id = 0u;
+  std::uint64_t geometry_id = 0u;
   /// Global hit position components in mm.
   float x = 0, y = 0, z = 0;
   /// Global hit time in ns. Not available in the TrackML datasets.
@@ -115,20 +150,20 @@ struct HitData {
 
 struct MeasurementSimHitLink {
   /// Event-unique measurement identifier. Each value can appear at most once.
-  uint64_t measurement_id = 0;
+  std::uint64_t measurement_id = 0;
   /// Event-unique measurement sim hit identifier.
-  uint64_t hit_id = 0;
+  std::uint64_t hit_id = 0;
 
   DFE_NAMEDTUPLE(MeasurementSimHitLink, measurement_id, hit_id);
 };
 
 struct MeasurementData {
   /// Event-unique measurement identifier. Each value can appear at most once.
-  uint64_t measurement_id = 0;
+  std::uint64_t measurement_id = 0;
   /// Hit surface identifier.
-  uint64_t geometry_id = 0u;
+  std::uint64_t geometry_id = 0u;
   /// Local hit information - bit identification what's measured
-  uint8_t local_key = 0;
+  std::uint8_t local_key = 0;
   float local0 = 0, local1 = 0, phi = 0, theta = 0, time = 0;
   float var_local0 = 0, var_local1 = 0, var_phi = 0, var_theta = 0,
         var_time = 0;
@@ -140,13 +175,13 @@ struct MeasurementData {
 
 struct CellData {
   /// Hit surface identifier.
-  uint64_t geometry_id = 0u;
+  std::uint64_t geometry_id = 0u;
   /// Event-unique measurement identifier. As defined for the measurement above
   /// and used to link back to it; same value can appear multiple times for
   /// clusters with more than one active cell.
-  uint64_t measurement_id = 0;
+  std::uint64_t measurement_id = 0;
   /// Digital cell address/ channel
-  int32_t channel0 = 0, channel1 = 0;
+  std::int32_t channel0 = 0, channel1 = 0;
   /// Digital cell timestamp. Not available in the TrackML datasets.
   float timestamp = 0;
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
@@ -159,13 +194,13 @@ struct CellData {
 // uses hit id
 struct CellDataLegacy {
   /// Hit surface identifier.
-  uint64_t geometry_id = 0u;
+  std::uint64_t geometry_id = 0u;
   /// Event-unique measurement identifier. As defined for the measurement above
   /// and used to link back to it; same value can appear multiple times for
   /// clusters with more than one active cell.
-  uint64_t hit_id = 0;
+  std::uint64_t hit_id = 0;
   /// Digital cell address/ channel
-  int32_t channel0 = 0, channel1 = 0;
+  std::int32_t channel0 = 0, channel1 = 0;
   /// Digital cell timestamp. Not available in the TrackML datasets.
   float timestamp = 0;
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
@@ -177,9 +212,9 @@ struct CellDataLegacy {
 
 struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
-  uint64_t geometry_id = 0;
+  std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
-  uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0;
+  std::uint32_t volume_id = 0, boundary_id = 0, layer_id = 0, module_id = 0;
   /// Center position components in mm.
   float cx = 0, cy = 0, cz = 0;
   /// Rotation matrix components.
@@ -209,9 +244,9 @@ struct SurfaceData {
 
 struct LayerVolumeData {
   /// Surface identifier. Not available in the TrackML datasets.
-  uint64_t geometry_id = 0;
+  std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
-  uint32_t volume_id = 0, layer_id = 0;
+  std::uint32_t volume_id = 0, layer_id = 0;
   /// The type of the surface bpounds object, determines the parameters filled
   int volume_type = 0;
   float min_v0 = -1.f;
@@ -227,7 +262,7 @@ struct LayerVolumeData {
 
 struct SpacePointData {
   /// Event-unique measurement identifier. Each value can appear at most once.
-  uint64_t measurement_id = 0;
+  std::uint64_t measurement_id = 0;
   /// Space point information
   float sp_x = 0, sp_y = 0, sp_z = 0, sp_radius = 0;
   float sp_covr = 0, sp_covz = 0;
@@ -258,9 +293,9 @@ struct SpacePointData {
 
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
-  uint64_t geometry_id = 0;
+  std::uint64_t geometry_id = 0;
   /// Partially decoded surface identifier components.
-  uint32_t volume_id = 0, layer_id = 0, surface_id = 0;
+  std::uint32_t volume_id = 0, layer_id = 0, surface_id = 0;
   /// The number of bins in loc 0 / 1
   int type_loc0 = -1;
   int nbins_loc0 = -1;
@@ -275,8 +310,8 @@ struct SurfaceGridData {
 };
 
 struct SpacepointData {
-  uint64_t measurement_id;
-  uint64_t geometry_id;
+  std::uint64_t measurement_id;
+  std::uint64_t geometry_id;
   float x, y, z;
   float var_r, var_z;
   DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,

@@ -52,6 +52,7 @@ ProcessCode EDM4hepParticleWriter::writeT(
 
   frame.put(std::move(mcParticleCollection), m_cfg.outputParticles);
 
+  std::lock_guard guard(m_writeMutex);
   m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;
