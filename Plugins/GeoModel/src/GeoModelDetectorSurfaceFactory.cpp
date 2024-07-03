@@ -175,7 +175,7 @@ Acts::GeoModelDetectorSurfaceFactory::findAllSubVolumes(
 
   for (const auto &child : children) {
     if (matchFunc(child.nodeName, child.volume)) {
-      ACTS_VERBOSE("The subvol" << child.nodeName << "mathes the queries");
+      ACTS_VERBOSE("The subvol" << child.nodeName << "matches the queries");
       foundVols.push_back(child);
     }
     if (!child.volume->getNChildVols()) {
