@@ -73,7 +73,7 @@ using GeoUnionDoubleTrdConverter =
 
 std::shared_ptr<const IGeoShapeConverter> GeoShapesConverters(int geoShapeId) {
   using ConverterLookUpMap =
-      std::map<int, std::shared_ptr<const IGeoShapeConverter>>;
+      std::unordered_map<int, std::shared_ptr<const IGeoShapeConverter>>;
 
   static const ConverterLookUpMap converters{
       {GeoBox::getClassTypeID(), std::make_shared<GeoBoxConverter>()},

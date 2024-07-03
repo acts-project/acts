@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// clang-format off
+// Needs to be included first to avoid some conflict between forward declare and
+// typedef from Geomodel side
+//  clang-format off
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 // clang-format on
 
@@ -65,13 +67,13 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
       bool matchName{false}, matchMaterial{false};
 
-      matchName |= std::any_of(
+      matchName = std::any_of(
           m_cfg.nameList.begin(), m_cfg.nameList.end(),
           [&](const auto &n) { return name.find(n) != std::string::npos; });
 
       std::string matStr = physvol->getLogVol()->getMaterial()->getName();
 
-      matchMaterial |= std::any_of(
+      matchMaterial = std::any_of(
           m_cfg.materialList.begin(), m_cfg.materialList.end(),
           [&](const auto &m) { return matStr.find(m) != std::string::npos; });
 
@@ -123,6 +125,8 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
                          cache.sensitiveSurfaces);
       }
+      convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
+                       cache.sensitiveSurfaces);
     }
 
     ACTS_VERBOSE("Found " << qFPV.size()
@@ -143,26 +147,26 @@ void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
   std::string name = logVol->getName();
   std::shared_ptr<const Acts::IGeoShapeConverter> converter =
       Acts::GeoShapesConverters(shapeId);
-  if (converter != nullptr) {
-    auto converted = converter->toSensitiveSurface(geoPV, transform);
-    if (converted.ok()) {
-      sensitives.push_back(converted.value());
-      const auto &[el, sf] = converted.value();
-
-      ACTS_VERBOSE("(successfully converted: "
-                   << name << " / " << recType(*shape) << " / "
-                   << logVol->getMaterial()->getName() << ")");
-
-      if (!(el && sf)) {
-        throw std::runtime_error("something is nullptr");
-      }
-      return;
-    }
-    ACTS_DEBUG(name << " / " << recType(*shape)
-                    << ") could not be converted by any converter");
+  if (converter == nullptr) {
+    ACTS_DEBUG("converter is a nullptr");
+    return;
   }
-  ACTS_DEBUG("converter is a nullptr");
-  return;
+  auto converted = converter->toSensitiveSurface(geoPV, transform);
+  if (converted.ok()) {
+    sensitives.push_back(converted.value());
+    const auto &[el, sf] = converted.value();
+
+    ACTS_VERBOSE("(successfully converted: "
+                 << name << " / " << recType(*shape) << " / "
+                 << logVol->getMaterial()->getName() << ")");
+
+    if (!(el && sf)) {
+      throw std::runtime_error("The Detector Element or the Surface is nllptr");
+    }
+    return;
+  }
+  ACTS_DEBUG(name << " / " << recType(*shape)
+                  << ") could not be converted by any converter");
 }
 
 std::vector<GeoChildNodeWithTrf>
