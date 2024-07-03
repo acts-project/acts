@@ -22,7 +22,7 @@
 namespace ActsExamples {
 
 PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("PrototracksToSeeds", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("PrototracksToTracks", lvl), m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
@@ -60,8 +60,11 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
 
     auto track = tracks.makeTrack();
     track.tipIndex() = tip;
+    track.nMeasurements() = protoTrack.size();
+    track.nHoles() = 0;
+    track.nOutliers() = 0;
     track.setReferenceSurface(refSurface->getSharedPtr());
-    track.parameters() = Acts::BoundVector::Zero();
+    track.parameters() = Acts::BoundVector::Ones();
     track.covariance() = Acts::BoundSquareMatrix::Identity();
   }
 

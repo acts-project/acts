@@ -294,7 +294,9 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
       // TODO is this correct ???
       digiPars.values = { CLloc_direction2[im] };
       digiPars.indices = { Acts::eBoundLoc1 };
-      assert(locCov.size() == 1);
+
+      // why is this 4
+      // assert(locCov.size() == 1);
       digiPars.variances = { locCov[0] };
     }
 

@@ -107,7 +107,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   bool print = logger().level() == Acts::Logging::VERBOSE;
   auto [graph, _] =
       m_graphCreator->build_impl(hitsTree, particlesTree, eventId, print);
-  const auto numEdges = boost::num_edges(graph.graph_impl());
+  auto numEdges = boost::num_edges(graph.graph_impl());
 
   if (numEdges == 0) {
     throw std::runtime_error("no edges");
@@ -120,11 +120,21 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   std::vector<float> edgeFeatureVector;
 
   auto [begin, end] = boost::edges(graph.graph_impl());
+  numEdges = 0;
   for (auto it = begin; it != end; ++it) {
     const auto &edge = *it;
 
     auto src = graph.graph_impl()[boost::source(edge, graph.graph_impl())];
     auto tgt = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
+
+    const auto deltaR = tgt.r() - src.r();
+    if(deltaR == 0.0) {
+        ACTS_WARNING("deltaR == 0, skip edge");
+        continue;
+    }
+    // assert(deltaR != 0);
+
+    numEdges++;
 
     // Edge index
     assert(src.hit_id() >= 0 && src.hit_id() < static_cast<int>(numNodes));
@@ -139,7 +149,6 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     edgeFeatureVector.push_back(graph.graph_impl()[edge].dz());
     edgeFeatureVector.push_back(graph.graph_impl()[edge].dEta());
 
-    const auto deltaR = tgt.r() - src.r();
     const auto deltaPhi = tgt.phi() - src.phi();
     const auto phiSlope = deltaPhi / deltaR;
     edgeFeatureVector.push_back(phiSlope);
@@ -151,17 +160,21 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
+  assert(inputValues.size() % numFeatures == 0);
   auto nodeFeatures = detail::vectorToTensor2D(inputValues, numFeatures).clone();
+  assert(edgeIndexVector.size() % numEdges == 0);
   auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, numEdges).clone().to(torch::kInt64);
 
   constexpr std::size_t numEdgeFeatures = 6;
+  assert(edgeFeatureVector.size() % numEdgeFeatures == 0);
   auto edgeFeatures =
       detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures).clone();
 
   ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes() << " | " << nodeFeatures.dtype()
                               << ", edgeIndex: " << edgeIndex.sizes() << " | " << edgeIndex.dtype()
                               << ", edgeFeatures: " << edgeFeatures.sizes() << " | "  << edgeFeatures.dtype());
-
+  ACTS_DEBUG("nodeFeatures has nan? " << std::boolalpha << at::isnan(nodeFeatures).any().item<bool>());
+  ACTS_DEBUG("edgeFeatures has nan?" << std::boolalpha << at::isnan(edgeFeatures).any().item<bool>());
   return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
                          std::move(edgeFeatures));
 }
