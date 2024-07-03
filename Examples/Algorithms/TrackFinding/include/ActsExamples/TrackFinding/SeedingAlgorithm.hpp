@@ -67,7 +67,7 @@ class SeedingAlgorithm final : public IAlgorithm {
 
     // Connect custom selections on the space points or to the doublet
     // compatibility
-    bool useExperimentCuts = false;
+    bool useExtraCuts = false;
   };
 
   /// Construct the seeding algorithm.
@@ -98,6 +98,32 @@ class SeedingAlgorithm final : public IAlgorithm {
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  static inline bool ItkFastTrackingCuts(float bottomRadius, float cotTheta) {
+    float RMin = 50.;
+    float CotThetaMax = 1.5;
+    
+    if (bottomRadius < RMin and
+	(cotTheta > CotThetaMax or cotTheta < -CotThetaMax)) {
+      return false;
+    }
+    return true;
+  }
+  
+  static inline bool ItkFastTrackingSPselect(const SimSpacePoint& sp) {
+    // At small r we remove points beyond |z| > 200.
+    float r = sp.r();
+    float zabs = std::abs(sp.z());
+    if (zabs > 200. && r < 50.)
+      return false;
+    
+    /// Remove space points beyond eta=4 if their z is
+    /// larger than the max seed z0 (150.)
+    float cotTheta = 27.2899;  // corresponds to eta=4
+    if ((zabs - 150.) > cotTheta * r)
+      return false;
+    return true;
+  }  
 };
 
 }  // namespace ActsExamples
