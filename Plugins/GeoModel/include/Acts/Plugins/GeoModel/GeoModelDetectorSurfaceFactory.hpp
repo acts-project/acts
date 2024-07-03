@@ -18,6 +18,8 @@
 #include <tuple>
 #include <vector>
 
+#include <GeoModelHelpers/getChildNodesWithTrf.h>
+
 class GeoShape;
 class GeoFullPhysVol;
 
@@ -38,12 +40,16 @@ class GeoModelDetectorSurfaceFactory {
 
   // Configuration struct for the Detector surface factory
   struct Config {
-    /// The shape converters to be use
-    std::vector<std::shared_ptr<const IGeoShapeConverter>> shapeConverters = {};
-    /// List for names to match
+    // /// The shape converters to be use
+    // std::vector<std::shared_ptr<const IGeoShapeConverter>> shapeConverters =
+    // {};
+    // /// List for names to match
     std::vector<std::string> nameList;
-    /// List for materials to match
+    // /// List for materials to match
     std::vector<std::string> materialList;
+
+    /// boolean flag to build subvolumes
+    bool convertSubVolumes = false;
   };
 
   /// Nested cache that records the conversion status
@@ -88,6 +94,24 @@ class GeoModelDetectorSurfaceFactory {
 
   /// Private access to the logger
   const Logger& logger() const { return *m_logger; }
+
+  /// Private helper method that does the conversion to surfaces
+  ///
+  /// @param geoPV the pointer to the physical volume
+  /// @param transform the transform to the global frame
+  /// @param sensitives the vector which we fill with the converted surfaces
+  void convertSensitive(
+      PVConstLink geoPV, const Acts::Transform3& transform,
+      std::vector<Acts::GeoModelSensitiveSurface>& sensitives);
+
+  /// Private helper method that finds the subvolumes from the top-level full
+  /// physical volume
+  ///
+  /// @param geoPV the pointer to the physical volume
+  /// @param matchFunc the function that checks if the volume matches the name and material requirements
+  std::vector<GeoChildNodeWithTrf> findAllSubVolumes(
+      PVConstLink geoPV,
+      std::function<bool(std::string, PVConstLink)> matchFunc);
 };
 
 }  // namespace Acts

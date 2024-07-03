@@ -26,7 +26,7 @@
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
 Acts::detail::GeoIntersectionAnnulusConverter::operator()(
-    const GeoFullPhysVol& geoFPV, const GeoShapeIntersection& geoIntersection,
+    PVConstLink geoPV, const GeoShapeIntersection& geoIntersection,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
   static constexpr ActsScalar unitLength =
@@ -83,9 +83,10 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
         }
 
         // Create the detector element
+        // PVConstLink pVolume{&geoFPV};
         auto detectorElement =
             GeoModelDetectorElement::createDetectorElement<DiscSurface>(
-                geoFPV, annulusBounds, annulusTransform, thickness);
+                geoPV, annulusBounds, annulusTransform, thickness);
         auto surface = detectorElement->surface().getSharedPtr();
         return std::make_tuple(detectorElement, surface);
       }

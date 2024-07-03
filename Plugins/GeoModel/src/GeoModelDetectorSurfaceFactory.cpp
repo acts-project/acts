@@ -6,15 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
+#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+// clang-format on
+
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 
+#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <set>
-
-#include <GeoModelKernel/GeoShapeShift.h>
-#include <GeoModelKernel/GeoShapeUnion.h>
 
 namespace {
 std::string recType(const GeoShapeShift &gshift);
@@ -37,6 +39,7 @@ std::string recType(const GeoShape &gshape) {
   }
   return gshape.type();
 }
+
 }  // namespace
 
 Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
@@ -55,23 +58,36 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     auto qFPV = geoModelTree.geoReader
                     ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
-    auto matches = [&](const std::string &name, const GeoVFullPhysVol &fpv) {
-      bool match = m_cfg.nameList.empty() && m_cfg.materialList.empty();
-      if (match) {
+    auto matches = [&](const std::string &name, PVConstLink physvol) {
+      if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
         return true;
       }
 
-      match |= std::any_of(
+      bool matchName{false}, matchMaterial{false};
+
+      matchName |= std::any_of(
           m_cfg.nameList.begin(), m_cfg.nameList.end(),
           [&](const auto &n) { return name.find(n) != std::string::npos; });
-      if (match) {
-        return true;
-      }
 
-      const auto &matStr = fpv.getLogVol()->getMaterial()->getName();
-      match |= std::any_of(
+      std::string matStr = physvol->getLogVol()->getMaterial()->getName();
+
+      matchMaterial |= std::any_of(
           m_cfg.materialList.begin(), m_cfg.materialList.end(),
           [&](const auto &m) { return matStr.find(m) != std::string::npos; });
+
+      bool match = matchMaterial && matchName;
+      GeoIntrusivePtr<const GeoVFullPhysVol> fullVol =
+          dynamic_pointer_cast<const GeoVFullPhysVol>(physvol);
+
+      // for the fullphysvol we only check the name
+
+      if (m_cfg.nameList.empty()) {
+        return matchMaterial;
+      }
+
+      if (m_cfg.materialList.empty() || !(fullVol == nullptr)) {
+        return matchName;
+      }
 
       return match;
     };
@@ -81,62 +97,100 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     std::set<std::string> materials;
 
     for (auto &[name, fpv] : qFPV) {
-      if (fpv == nullptr) {
-        ACTS_WARNING("Pointer to volume '" << name << "' is null");
+      PVConstLink physVol{fpv};
+      GeoIntrusivePtr<const GeoVPhysVol> physvol{fpv};
+
+      if (!matches(name, physVol)) {
         continue;
       }
 
-      const std::string &vname = fpv->getLogVol()->getName();
-      const GeoShape &shape = *fpv->getLogVol()->getShape();
+      if (m_cfg.convertSubVolumes) {
+        std::vector<GeoChildNodeWithTrf> subvolumes =
+            findAllSubVolumes(physVol, matches);
+        ACTS_VERBOSE("Found" << subvolumes.size()
+                             << "sub volumes matching the query");
 
-      if (!matches(name, *fpv)) {
-        continue;
-      }
+        for (auto &subvol : subvolumes) {
+          // get the transform of the subvolume to the global frame
+          const Transform3 &transform =
+              fpv->getAbsoluteTransform() * subvol.transform;
 
-      // Convert using the list of converters
-      bool success = false;
-
-      for (const auto &converter : m_cfg.shapeConverters) {
-        auto converted = converter->toSensitiveSurface(*fpv);
-        if (converted.ok()) {
-          // Add the element and surface to the cache
-          cache.sensitiveSurfaces.push_back(converted.value());
-          const auto &[el, sf] = converted.value();
-          success = true;
-          ACTS_VERBOSE("successfully converted "
-                       << name << " (" << vname << " / " << recType(shape)
-                       << " / " << fpv->getLogVol()->getMaterial()->getName()
-                       << ")");
-          if (!(el && sf)) {
-            throw std::runtime_error("something is nullptr");
-          }
-          break;
+          convertSensitive(subvol.volume, transform, cache.sensitiveSurfaces);
         }
-      }
 
-      if (!success) {
-        ACTS_DEBUG(name << " (" << vname << " / " << recType(shape)
-                        << ") could not be converted by any converter");
       } else {
-        volNameStems.emplace(name.substr(0, 6));
-        materials.emplace(fpv->getLogVol()->getMaterial()->getName());
+        // convert the full phys vol
+        convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
+                         cache.sensitiveSurfaces);
       }
     }
+
     ACTS_VERBOSE("Found " << qFPV.size()
                           << " full physical volumes matching the query.");
-
-    auto streamVec = [](const auto &v) {
-      std::stringstream ss;
-      for (const auto &el : v) {
-        ss << el << " ";
-      }
-      return ss.str();
-    };
-
-    ACTS_INFO("Converted volumes (stems): " << streamVec(volNameStems));
-    ACTS_INFO("Materials of converted volumes: " << streamVec(materials));
   }
+
   ACTS_DEBUG("Constructed "
              << cache.sensitiveSurfaces.size() << " sensitive elements and "
              << cache.passiveSurfaces.size() << " passive elements");
+}
+
+void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
+    PVConstLink geoPV, const Acts::Transform3 &transform,
+    std::vector<Acts::GeoModelSensitiveSurface> &sensitives) {
+  const GeoLogVol *logVol = geoPV->getLogVol();
+  const GeoShape *shape = logVol->getShape();
+  int shapeId = shape->typeID();
+  std::string name = logVol->getName();
+  std::shared_ptr<const Acts::IGeoShapeConverter> converter =
+      Acts::GeoShapesConverters(shapeId);
+  if (converter != nullptr) {
+    auto converted = converter->toSensitiveSurface(geoPV, transform);
+    if (converted.ok()) {
+      sensitives.push_back(converted.value());
+      const auto &[el, sf] = converted.value();
+
+      ACTS_VERBOSE("(successfully converted: "
+                   << name << " / " << recType(*shape) << " / "
+                   << logVol->getMaterial()->getName() << ")");
+
+      if (!(el && sf)) {
+        throw std::runtime_error("something is nullptr");
+      }
+      return;
+    }
+    ACTS_DEBUG(name << " / " << recType(*shape)
+                    << ") could not be converted by any converter");
+  }
+  ACTS_DEBUG("converter is a nullptr");
+  return;
+}
+
+std::vector<GeoChildNodeWithTrf>
+Acts::GeoModelDetectorSurfaceFactory::findAllSubVolumes(
+    PVConstLink geoPV,
+    std::function<bool(std::string, PVConstLink)> matchFunc) {
+  const std::vector<GeoChildNodeWithTrf> children =
+      getChildrenWithRef(geoPV, false);
+  std::vector<GeoChildNodeWithTrf> foundVols{};
+
+  for (const auto &child : children) {
+    if (matchFunc(child.nodeName, child.volume)) {
+      ACTS_VERBOSE("The subvol" << child.nodeName << "mathes the queries");
+      foundVols.push_back(child);
+    }
+    if (!child.volume->getNChildVols()) {
+      continue;
+    }
+    std::vector<GeoChildNodeWithTrf> grandChildren =
+        findAllSubVolumes(child.volume, matchFunc);
+    std::transform(std::make_move_iterator(grandChildren.begin()),
+                   std::make_move_iterator(grandChildren.end()),
+                   std::back_inserter(foundVols),
+                   [&child](GeoChildNodeWithTrf &&vol) {
+                     vol.transform = child.transform * vol.transform;
+                     return vol;
+                   });
+  }
+
+  return foundVols;
 }

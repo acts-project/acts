@@ -20,7 +20,7 @@ namespace Acts::detail {
 
 template <typename ContainedShape, typename Converter, typename Surface,
           typename Bounds>
-Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
+Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
                                       bool sensitive) {
@@ -34,7 +34,7 @@ Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
   const Transform3& shift = geoShift.getX();
 
   const auto& conversionRes =
-      Converter{}(geoFPV, *trd, absTransform * shift, sensitive);
+      Converter{}(geoPV, *trd, absTransform * shift, sensitive);
   if (!conversionRes.ok()) {
     return conversionRes.error();
   }
@@ -59,17 +59,17 @@ Result<GeoModelSensitiveSurface> impl(const GeoFullPhysVol& geoFPV,
 }
 
 Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
-    const GeoFullPhysVol& geoFPV, const GeoShapeShift& geoShift,
+    PVConstLink geoPV, const GeoShapeShift& geoShift,
     const Transform3& absTransform, bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
-      geoFPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, sensitive);
 
   if (r.ok()) {
     return r;
   }
 
   r = impl<GeoBox, detail::GeoBoxConverter, PlaneSurface, RectangleBounds>(
-      geoFPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, sensitive);
 
   if (r.ok()) {
     return r;
@@ -77,7 +77,7 @@ Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
 
   // For now this does straw by default
   r = impl<GeoTube, detail::GeoTubeConverter, StrawSurface, LineBounds>(
-      geoFPV, geoShift, absTransform, sensitive);
+      geoPV, geoShift, absTransform, sensitive);
 
   if (r.ok()) {
     return r;
