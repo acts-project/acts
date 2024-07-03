@@ -22,7 +22,7 @@ clang_tidy:
         apt-get update
         && apt-get install -y g++-12 libstdc++-12-dev parallel software-properties-common
         && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
-        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main'
+        && add-apt-repository 'deb http://apt.llvm.org/noble/ llvm-toolchain-noble-17 main'
         && apt-get install -y clang-17 clang-tidy-17
         && ln -s /usr/bin/clang++-17 /usr/bin/clang++
         && ln -s /usr/bin/clang-17 /usr/bin/clang
