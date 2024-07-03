@@ -98,7 +98,6 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
     for (auto &[name, fpv] : qFPV) {
       PVConstLink physVol{fpv};
-      // GeoIntrusivePtr<const GeoVPhysVol> physvol{fpv};
 
       if (!matches(name, physVol)) {
         continue;
