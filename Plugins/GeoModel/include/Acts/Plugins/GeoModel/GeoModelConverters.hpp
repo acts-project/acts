@@ -21,7 +21,7 @@
 #include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <tuple>
 
