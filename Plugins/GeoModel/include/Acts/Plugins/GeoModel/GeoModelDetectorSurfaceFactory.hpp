@@ -72,7 +72,7 @@ class GeoModelDetectorSurfaceFactory {
   GeoModelDetectorSurfaceFactory(
       const Config& cfg,
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
-          "GeoModelDetectorSurfaceFactory", Acts::Logging::INFO));
+          "GeoModelDetectorSurfaceFactory", Acts::Logging::WARNING));
 
   /// Construction method of the detector elements
   ///

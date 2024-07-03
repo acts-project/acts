@@ -64,15 +64,13 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         return true;
       }
 
-      bool matchName{false}, matchMaterial{false};
-
-      matchName = std::any_of(
+      auto matchName = std::any_of(
           m_cfg.nameList.begin(), m_cfg.nameList.end(),
           [&](const auto &n) { return name.find(n) != std::string::npos; });
 
       std::string matStr = physvol->getLogVol()->getMaterial()->getName();
 
-      matchMaterial = std::any_of(
+      auto matchMaterial = std::any_of(
           m_cfg.materialList.begin(), m_cfg.materialList.end(),
           [&](const auto &m) { return matStr.find(m) != std::string::npos; });
 
@@ -99,7 +97,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
     for (auto &[name, fpv] : qFPV) {
       PVConstLink physVol{fpv};
-      GeoIntrusivePtr<const GeoVPhysVol> physvol{fpv};
+      // GeoIntrusivePtr<const GeoVPhysVol> physvol{fpv};
 
       if (!matches(name, physVol)) {
         continue;
@@ -126,8 +124,6 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
                          cache.sensitiveSurfaces);
       }
-      convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
-                       cache.sensitiveSurfaces);
     }
 
     ACTS_VERBOSE("Found " << qFPV.size()
@@ -150,6 +146,7 @@ void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
       Acts::GeoShapesConverters(shapeId);
   if (converter == nullptr) {
     ACTS_DEBUG("converter is a nullptr");
+
     return;
   }
   auto converted = converter->toSensitiveSurface(geoPV, transform);
@@ -183,7 +180,7 @@ Acts::GeoModelDetectorSurfaceFactory::findAllSubVolumes(
       ACTS_VERBOSE("The subvol" << child.nodeName << "matches the queries");
       foundVols.push_back(child);
     }
-    if (child.volume->getNChildVols() != 0) {
+    if (child.volume->getNChildVols() == 0) {
       continue;
     }
     std::vector<GeoChildNodeWithTrf> grandChildren =
