@@ -212,7 +212,8 @@ class GridPortalLinkT : public GridPortalLink {
 
       if (axis.getMin() != -hlRPhi || axis.getMax() != hlRPhi) {
         throw std::invalid_argument(
-            "GridPortalLink: CylinderBounds: invalid phi sector setup.");
+            "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
+            "don't match bounds");
       }
 
       constexpr auto tolerance = s_onSurfaceTolerance;
@@ -220,7 +221,8 @@ class GridPortalLinkT : public GridPortalLink {
       if (std::abs(hlPhi - M_PI) < tolerance &&
           axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
         throw std::invalid_argument(
-            "GridPortalLink: CylinderBounds: invalid phi sector setup.");
+            "GridPortalLink: CylinderBounds: invalid phi sector setup: axis is "
+            "not closed.");
       }
     };
 

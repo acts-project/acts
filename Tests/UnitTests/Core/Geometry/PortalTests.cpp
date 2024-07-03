@@ -210,8 +210,8 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
         100_mm, 20_degree, 0_degree);
 
     auto cylPhi2 = Surface::makeShared<CylinderSurface>(
-        Transform3::Identity() * AngleAxis3(110_degree, Vector3::UnitZ()),
-        30_mm, 100_mm, 45_degree, 0_degree);
+        Transform3::Identity() * AngleAxis3(105_degree, Vector3::UnitZ()),
+        30_mm, 100_mm, 40_degree, 0_degree);
 
     auto portalPhi1 = GridPortalLink::make(
         *cylPhi1, binRPhi,
@@ -219,10 +219,23 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
 
     auto portalPhi2 = GridPortalLink::make(
         *cylPhi2, binRPhi,
-        Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5});
+        Axis{AxisBound, -40_degree * 30_mm, 40_degree * 30_mm, 10});
 
     auto portalMerged = portalPhi1->merge(gctx, *portalPhi2, binRPhi, *logger);
     BOOST_REQUIRE_NE(portalMerged, nullptr);
+
+    const auto* merged =
+        dynamic_cast<const GridPortalLink*>(portalMerged.get());
+    BOOST_REQUIRE_NE(merged, nullptr);
+    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+    const auto& axis = *merged->grid().axes().front();
+    BOOST_CHECK_EQUAL(axis.getMin(), -60_degree * 30_mm);
+    BOOST_CHECK_EQUAL(axis.getMax(), 60_degree * 30_mm);
+    BOOST_CHECK_EQUAL(axis.getNBins(), 15);
+    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+
+    // @TODO: Test that if you merge half-circles, we get a closed axis
   }
 
   // @TODO: Colinear merging of phi sectors along rphi
@@ -231,9 +244,9 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
 }
 }
 
-BOOST_AUTO_TEST_CASE(Merging2dCylinder) {
+BOOST_AUTO_TEST_CASE(Make2DCylinderPortal) {
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
-                                                  100_mm);
+                                                  100_mm, 45_degree);
 
   // z bad, rphi bad
   BOOST_CHECK_THROW(GridPortalLink::make(*cyl, Axis{AxisBound, 1, 2, 5},
@@ -241,19 +254,21 @@ BOOST_AUTO_TEST_CASE(Merging2dCylinder) {
                     std::invalid_argument);
 
   // z good, rphi bad
-  BOOST_CHECK_THROW(
-      GridPortalLink::make(*cyl, Axis{AxisBound, 0, 5, 5},
-                           Axis{AxisBound, -M_PI * 30_mm, M_PI * 30_mm, 5}),
-      std::invalid_argument);
-
-  // z bad, rphi good
-  BOOST_CHECK_THROW(GridPortalLink::make(*cyl, Axis{AxisBound, 1, 2, 5},
-                                         Axis{AxisBound, -100_mm, 100_mm, 5}),
+  BOOST_CHECK_THROW(GridPortalLink::make(*cyl, Axis{AxisBound, 3_mm, 4_mm, 5},
+                                         Axis{AxisBound, -100_mm, 100_m, 5}),
                     std::invalid_argument);
 
-  auto grid2dCyl = GridPortalLink::make(
-      *cyl, Axis{AxisBound, -M_PI * 30_mm, M_PI * 30_mm, 5},
-      Axis{AxisBound, -100_mm, 100_mm, 5});
+  // z bad, rphi good
+  BOOST_CHECK_THROW(
+      GridPortalLink::make(
+          *cyl, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+          Axis{AxisBound, -80_mm, 100_mm, 5}),
+      std::invalid_argument);
+
+  // z good, rphi good
+  BOOST_CHECK_NO_THROW(GridPortalLink::make(
+      *cyl, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+      Axis{AxisBound, -100_mm, 100_mm, 5}));
 }
 
 // std::unique_ptr<PortalLinkBase> grid1d1 =
