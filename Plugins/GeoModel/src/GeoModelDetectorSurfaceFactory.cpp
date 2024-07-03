@@ -12,10 +12,9 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 // clang-format on
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
-
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <set>
@@ -106,7 +105,8 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
         continue;
       }
 
-	  // TODO: This should be changed in a way that both top level volume and subvolumes can be converted.
+      // TODO: This should be changed in a way that both top level volume and
+      // subvolumes can be converted.
       if (m_cfg.convertSubVolumes) {
         std::vector<GeoChildNodeWithTrf> subvolumes =
             findAllSubVolumes(physVol, matches);
