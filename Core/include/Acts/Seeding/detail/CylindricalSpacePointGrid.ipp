@@ -215,7 +215,8 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     // fill rbins into grid
-    std::size_t globIndex = grid.globalBinFromPosition({isp->phi(), isp->z()});
+    std::size_t globIndex =
+        grid.globalBinFromPosition(Acts::Vector2{isp->phi(), isp->z()});
     auto& rbin = grid.at(globIndex);
     rbin.push_back(std::move(isp));
 
