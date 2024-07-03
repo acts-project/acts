@@ -36,7 +36,6 @@ def main():
         nargs="+",
         default=[],
         help="List of Name List for the Surface Factory",
-
     )
 
     p.add_argument(
@@ -46,7 +45,6 @@ def main():
         nargs="+",
         default=[],
         help="List of Material List for the Surface Factory",
-
     )
 
     p.add_argument(
@@ -152,7 +150,7 @@ def main():
     gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
 
     # Construct the building hierarchy
-    #if the blueprint is enabled
+    # if the blueprint is enabled
     if args.enable_blueprint:
         gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
         gmBlueprintConfig.detectorSurfaces = gmSurfaces
@@ -169,7 +167,7 @@ def main():
 
         gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
 
-    # Top level geo id generator
+        # Top level geo id generator
         gmGeoIdConfig = GeometryIdGenerator.Config()
         gmGeoIdGenerator = GeometryIdGenerator(
             gmGeoIdConfig, "GeoModelGeoIdGenerator", logLevel
@@ -182,7 +180,7 @@ def main():
         gmDetectorConfig.geoIdGenerator = gmGeoIdGenerator
         gmDetectorConfig.materialDecorator = materialDecorator
         gmDetectorConfig.auxiliary = (
-        "GeoModel based Acts::Detector from '" + args.input + "'"
+            "GeoModel based Acts::Detector from '" + args.input + "'"
         )
 
         gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
