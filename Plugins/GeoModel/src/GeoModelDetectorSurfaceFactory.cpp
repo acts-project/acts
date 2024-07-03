@@ -12,9 +12,10 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 // clang-format on
 
+#include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
+
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <set>

@@ -21,9 +21,9 @@
 #include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <unordered_map>
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>

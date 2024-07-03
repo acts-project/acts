@@ -17,7 +17,6 @@
 
 #include <GeoModelKernel/GeoFullPhysVol.h>
 
-class GeoFullPhysVol;
 class GeoVPhysVol;
 
 namespace Acts {
