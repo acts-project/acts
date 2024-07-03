@@ -6,7 +6,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204:51
+  image: ghcr.io/acts-project/ubuntu2404:51
   tags:
     - large
   artifacts:
@@ -20,7 +20,7 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common
+        && apt-get install -y g++-12 libstdc++-12-dev parallel software-properties-common
         && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
         && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main'
         && apt-get install -y clang-17 clang-tidy-17
