@@ -48,25 +48,29 @@ Acts::Svg::SurfaceArrayConverter::convert(
     };
 
     // Walk through the binning and translate
-    if (binning[0] == binPhi && binning[1] == binZ) {
+    if (binning[0] == BinningValue::binPhi &&
+        binning[1] == BinningValue::binZ) {
       vType = cylinder;
       //  flip to fit with actsvg convention
       edges1 = axes[0]->getBinEdges();
       edges0 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (binning[0] == binPhi && binning[1] == binR) {
+    } else if (binning[0] == BinningValue::binPhi &&
+               binning[1] == BinningValue::binR) {
       vType = polar;
       //  flip to fit with actsvg convention
       edges1 = axes[0]->getBinEdges();
       edges0 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;
-    } else if (binning[0] == binZ && binning[1] == binPhi) {
+    } else if (binning[0] == BinningValue::binZ &&
+               binning[1] == BinningValue::binPhi) {
       // good
       vType = cylinder;
       edges0 = axes[0]->getBinEdges();
       edges1 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_z_phi;
-    } else if (binning[0] == binR && binning[1] == binPhi) {
+    } else if (binning[0] == BinningValue::binR &&
+               binning[1] == BinningValue::binPhi) {
       // good
       vType = polar;
       edges0 = axes[0]->getBinEdges();

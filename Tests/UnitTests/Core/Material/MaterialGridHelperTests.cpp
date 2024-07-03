@@ -39,8 +39,8 @@ using MaterialGrid3D =
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid
 BOOST_AUTO_TEST_CASE(Square_Grid_test) {
-  BinUtility bu(7, -3., 3., open, binX);
-  bu += BinUtility(3, -2., 2., open, binY);
+  BinUtility bu(7, -3., 3., open, BinningValue::binX);
+  bu += BinUtility(3, -2., 2., open, BinningValue::binY);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
 /// @brief Various test for the Material in the case of a Cylindrical volume
 /// with a 2D grid
 BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
-  BinUtility bu(2, -2., 2., open, binZ);
-  bu += BinUtility(3, -M_PI, M_PI, closed, binPhi);
+  BinUtility bu(2, -2., 2., open, BinningValue::binZ);
+  bu += BinUtility(3, -M_PI, M_PI, closed, BinningValue::binPhi);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -221,9 +221,9 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
 
 /// @brief Various test for the Material in the case of a Cuboid volume
 BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
-  BinUtility bu(7, -3., 3., open, binX);
-  bu += BinUtility(3, -2., 2., open, binY);
-  bu += BinUtility(2, -1., 1., open, binZ);
+  BinUtility bu(7, -3., 3., open, BinningValue::binX);
+  bu += BinUtility(3, -2., 2., open, BinningValue::binY);
+  bu += BinUtility(2, -1., 1., open, BinningValue::binZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -315,9 +315,9 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
 
 /// @brief Various test for the Material in the case of a Cylindrical volume
 BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
-  BinUtility bu(4, 1., 4., open, binR);
-  bu += BinUtility(3, -M_PI, M_PI, closed, binPhi);
-  bu += BinUtility(2, -2., 2., open, binZ);
+  BinUtility bu(4, 1., 4., open, BinningValue::binR);
+  bu += BinUtility(3, -M_PI, M_PI, closed, BinningValue::binPhi);
+  bu += BinUtility(2, -2., 2., open, BinningValue::binZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
