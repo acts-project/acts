@@ -8,7 +8,7 @@
 
 // Needs to be included first to avoid some conflict between forward declare and
 // typedef from Geomodel side
-//  clang-format off
+// clang-format off
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 // clang-format on
 
