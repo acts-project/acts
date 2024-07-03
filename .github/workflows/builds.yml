@@ -47,7 +47,8 @@ jobs:
           && ls ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
           && ls ${{ env.DEPENDENCY_DIR }}
-          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m pip install pyyaml jinja2
+          && ls ${{ env.DEPENDENCY_DIR }}/python
+          && ${{ env.DEPENDENCY_DIR }}/python/3.12.2/bin/python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -67,7 +68,7 @@ jobs:
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/bin/python3
+          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}python/3.12.2/bin/python3
           -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
