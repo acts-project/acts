@@ -39,7 +39,7 @@ jobs:
 
       - name: Install dependencies
         run: >
-          brew install cmake eigen ninja ccache
+          brew install cmake ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.a7e32a9.tar.zst
