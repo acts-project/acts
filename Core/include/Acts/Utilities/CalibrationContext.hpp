@@ -13,7 +13,7 @@
 #include ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #else
 
-#include <any>
+#include "Acts/Utilities/detail/ContextType.hpp"
 
 namespace Acts {
 
@@ -23,7 +23,10 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent calibration
 
-using CalibrationContext = std::any;
+class CalibrationContext : public ContextType {
+ public:
+  using ContextType::ContextType;
+};
 
 }  // namespace Acts
 

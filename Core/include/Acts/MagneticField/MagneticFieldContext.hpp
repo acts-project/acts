@@ -23,9 +23,9 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent magnetic field changes
 
-class MagneticFieldContext: public ContextType{
-    public:
-        using ContextType::ContextType;
+class MagneticFieldContext : public ContextType {
+ public:
+  using ContextType::ContextType;
 };
 
 }  // namespace Acts
