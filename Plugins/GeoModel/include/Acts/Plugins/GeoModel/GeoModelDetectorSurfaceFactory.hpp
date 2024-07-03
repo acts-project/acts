@@ -42,7 +42,7 @@ class GeoModelDetectorSurfaceFactory {
   struct Config {
     // /// List for names to match
     std::vector<std::string> nameList;
-    // /// List for materials to match
+    /// List for materials to match
     std::vector<std::string> materialList;
 
     /// boolean flag to build subvolumes
