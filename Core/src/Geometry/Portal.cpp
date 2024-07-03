@@ -134,7 +134,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     }
 
     auto [mergedSurface, reversed] =
-        surfaceA->mergedWith(gctx, *surfaceB, direction);
+        surfaceA->mergedWith(gctx, *surfaceB, direction, true, logger);
 
     ACTS_VERBOSE("Merged surface: " << mergedSurface->toStream(gctx));
 
