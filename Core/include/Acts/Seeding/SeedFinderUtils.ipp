@@ -56,12 +56,12 @@ inline void transformCoordinates(Acts::SpacePointMutableData& mutableData,
     const std::vector<const external_spacepoint_t*>& vec,
     const external_spacepoint_t& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
-  const float& xM = spM.x();
-  const float& yM = spM.y();
-  const float& zM = spM.z();
-  const float& rM = spM.radius();
-  const float& varianceRM = spM.varianceR();
-  const float& varianceZM = spM.varianceZ();
+  const float xM = spM.x();
+  const float yM = spM.y();
+  const float zM = spM.z();
+  const float rM = spM.radius();
+  const float varianceRM = spM.varianceR();
+  const float varianceZM = spM.varianceZ();
 
   // resize + operator[] is faster than reserve and push_back
   linCircleVec.resize(vec.size());
@@ -74,38 +74,38 @@ inline void transformCoordinates(Acts::SpacePointMutableData& mutableData,
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
     const external_spacepoint_t* sp = vec[idx];
 
-    const float& xSP = sp->x();
-    const float& ySP = sp->y();
-    const float& zSP = sp->z();
-    const float& varianceRSP = sp->varianceR();
-    const float& varianceZSP = sp->varianceZ();
+    const float xSP = sp->x();
+    const float ySP = sp->y();
+    const float zSP = sp->z();
+    const float varianceRSP = sp->varianceR();
+    const float varianceZSP = sp->varianceZ();
 
-    float deltaX = xSP - xM;
-    float deltaY = ySP - yM;
-    float deltaZ = zSP - zM;
+    const float deltaX = xSP - xM;
+    const float deltaY = ySP - yM;
+    const float deltaZ = zSP - zM;
     // calculate projection fraction of spM->sp vector pointing in same
     // direction as
     // vector origin->spM (x) and projection fraction of spM->sp vector pointing
     // orthogonal to origin->spM (y)
-    float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
-    float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+    const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+    const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
     // 1/(length of M -> SP)
-    float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
-    float iDeltaR2 = 1. / deltaR2;
-    float iDeltaR = std::sqrt(iDeltaR2);
+    const float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
+    const float iDeltaR2 = 1. / deltaR2;
+    const float iDeltaR = std::sqrt(iDeltaR2);
     //
     // cot_theta = (deltaZ/deltaR)
-    float cotTheta = deltaZ * iDeltaR * bottomFactor;
+    const float cotTheta = deltaZ * iDeltaR * bottomFactor;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
     // is transformed into
     // 1 - 2x_0*u - 2y_0*v = 0
     // using the following m_U and m_V
     // (u = A + B*v); A and B are created later on
-    float U = xNewFrame * iDeltaR2;
-    float V = yNewFrame * iDeltaR2;
+    const float U = xNewFrame * iDeltaR2;
+    const float V = yNewFrame * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    float Er = ((varianceZM + varianceZSP) +
+    const float Er = ((varianceZM + varianceZSP) +
                 (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
                iDeltaR2;
 

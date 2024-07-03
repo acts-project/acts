@@ -48,7 +48,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(m_cfg.seedFilterConfig);
+    std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();

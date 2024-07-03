@@ -184,8 +184,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < mutableData.quality(bottomSP.index()) and 
-	  weight < mutableData.quality(middleSP.index()) and
+      if (weight < mutableData.quality(bottomSP.index()) &&
+	  weight < mutableData.quality(middleSP.index()) &&
           weight < mutableData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
@@ -289,8 +289,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
       if (numQualitySeeds > 0 && !qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < mutableData.quality(bottom->index()) and
-          bestSeedQuality < mutableData.quality(medium->index()) and
+      if (bestSeedQuality < mutableData.quality(bottom->index()) &&
+          bestSeedQuality < mutableData.quality(medium->index()) &&
           bestSeedQuality < mutableData.quality(top->index())) {
         continue;
       }
