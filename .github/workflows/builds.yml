@@ -23,7 +23,7 @@ env:
 
 jobs:
   macos:
-    runs-on: macos-13
+    runs-on: macos-14
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       DEPENDENCY_DIR: ${{ github.workspace }}/install
