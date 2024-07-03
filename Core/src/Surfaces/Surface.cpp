@@ -30,7 +30,6 @@ Acts::Surface::Surface(const DetectorElementBase& detelement)
 Acts::Surface::Surface(const Surface& other)
     : GeometryObject(other),
       std::enable_shared_from_this<Surface>(),
-
       m_associatedDetElement(other.m_associatedDetElement),
       m_surfaceMaterial(other.m_surfaceMaterial) {
   if (other.m_transform) {
