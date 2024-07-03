@@ -150,9 +150,9 @@ class SeedFinder {
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
-      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const grid_t& grid,
       Acts::SpacePointMutableData& mutableData,
-      boost::container::small_vector<Neighbour<external_spacepoint_t>, Acts::detail::ipow(3, grid_t::DIM)>&
+      boost::container::small_vector<Neighbour<grid_t>, Acts::detail::ipow(3, grid_t::DIM)>&
           otherSPsNeighbours,
       const external_spacepoint_t& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,

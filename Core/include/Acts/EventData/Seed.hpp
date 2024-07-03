@@ -26,7 +26,7 @@ class Seed {
 
  private:
   std::array<const external_spacePoint_t*, 3> m_spacepoints;
-  float m_zvertex{0.};
+  float m_zvertex{0.f};
   float m_seedQuality{-std::numeric_limits<float>::infinity()};
 };
 

@@ -193,7 +193,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
           m_cfg.seedFilterConfig);
-  m_seedFinder = Acts::SeedFinder<SpacePointProxy_type>(m_cfg.seedFinderConfig);
+  m_seedFinder = Acts::SeedFinder<SpacePointProxy_type, Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(m_cfg.seedFinderConfig);
 
 }
 

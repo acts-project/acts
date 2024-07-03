@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -8,8 +9,8 @@
 
 #include <boost/container/flat_set.hpp>
 
-template <typename SpacePoint>
-Acts::CylindricalSpacePointGrid<SpacePoint>
+template <typename external_spacepoint_t>
+Acts::CylindricalSpacePointGrid<external_spacepoint_t>
 Acts::CylindricalSpacePointGridCreator::createGrid(
     const Acts::CylindricalSpacePointGridConfig& config,
     const Acts::CylindricalSpacePointGridOptions& options) {
@@ -131,24 +132,24 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
   }
 
   Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
-  return Acts::CylindricalSpacePointGrid<SpacePoint>(
+  return Acts::CylindricalSpacePointGrid<external_spacepoint_t>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }
 
 template <typename external_spacepoint_t,
-          typename external_spacepoint_iterator_t, typename callable_t>
+          typename external_spacepoint_iterator_t>
 void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd, callable_t&& toGlobal,
+    external_spacepoint_iterator_t spEnd,
     Acts::Extent& rRangeSPExtent) {
   using iterated_value_t =
       typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
   using iterated_t = typename std::remove_const<
       typename std::remove_pointer<iterated_value_t>::type>::type;
-  static_assert(std::is_pointer<iterated_value_t>::value,
+  static_assert(!std::is_pointer<iterated_value_t>::value,
                 "Iterator must contain pointers to space points");
   static_assert(std::is_same<iterated_t, external_spacepoint_t>::value,
                 "Iterator does not contain type this class was templated with");
@@ -185,16 +186,11 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   std::size_t counter = 0ul;
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
        it++, ++counter) {
-    if (*it == nullptr) {
-      continue;
-    }
-    const external_spacepoint_t& sp = **it;
-    const auto& [spPosition, variance, spTime] =
-        toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
-    float spX = spPosition[0];
-    float spY = spPosition[1];
-    float spZ = spPosition[2];
+    const external_spacepoint_t& sp = *it;
+    float spX = sp.x();
+    float spY = sp.y();
+    float spZ = sp.z();
 
     // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
@@ -208,22 +204,20 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
       continue;
     }
 
-    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        counter, sp, spPosition, options.beamPos, variance, spTime);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     std::size_t rIndex =
-        static_cast<std::size_t>(isp->radius() / config.binSizeR);
+        static_cast<std::size_t>(sp.radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
     }
 
     // fill rbins into grid
-    Acts::Vector2 spLocation(isp->phi(), isp->z());
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+    Acts::Vector2 spLocation(spPhi, spZ);
+    std::vector<external_spacepoint_t>&
         rbin = grid.atPosition(spLocation);
-    rbin.push_back(std::move(isp));
+    rbin.push_back(sp);
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
@@ -233,10 +227,11 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   }
 
   /// sort SPs in R for each filled bin
-  for (auto& binIndex : rBinsIndex) {
+  for (std::size_t binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
-    std::sort(rbin.begin(), rbin.end(), [](const auto& a, const auto& b) {
-      return a->radius() < b->radius();
-    });
+    std::sort(rbin.begin(), rbin.end(),
+	      [] (const external_spacepoint_t& a, const external_spacepoint_t& b) -> bool {
+		return a.radius() < b.radius();
+	      });
   }
 }

@@ -108,9 +108,3 @@ class BinnedGroup {
 }  // namespace Acts
 
 #include "Acts/Seeding/BinnedGroup.ipp"
-
-namespace Acts {
-template <typename external_spacepoint_t>
-using BinnedSPGroup =
-    Acts::BinnedGroup<Acts::SpacePointGrid<external_spacepoint_t>>;
-}
