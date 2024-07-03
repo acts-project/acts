@@ -41,8 +41,8 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.80e4e05.tar.gz
-          && tar -xf deps.tar.gz -C /usr/local/acts
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.a7e32a9.tar.zst
+          && tar -xf deps.tar.zst -C /usr/local/acts
           && /usr/local/acts/bin/python3.10 -m pip install pyyaml jinja2
 
       - name: Restore ccache
