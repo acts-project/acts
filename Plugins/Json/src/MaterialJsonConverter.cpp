@@ -46,42 +46,34 @@ namespace {
 // Grid definition : eq bound
 template <typename value_type>
 using GridEqBound =
-    Acts::Grid<value_type,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Bound>>;
+    Acts::Grid<value_type, Acts::Axis<Acts::AxisType::Equidistant,
+                                      Acts::AxisBoundaryType::Bound>>;
 // Grid definition : eq closed
 template <typename value_type>
 using GridEqClosed =
-    Acts::Grid<value_type,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Closed>>;
+    Acts::Grid<value_type, Acts::Axis<Acts::AxisType::Equidistant,
+                                      Acts::AxisBoundaryType::Closed>>;
 
 // Grid definition : eq bound eq bound
 template <typename value_type>
-using GridEqBoundEqBound =
-    Acts::Grid<value_type,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Bound>,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Bound>>;
+using GridEqBoundEqBound = Acts::Grid<
+    value_type,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
 
 // Grid definition : eq bound eq closed
 template <typename value_type>
-using GridEqBoundEqClosed =
-    Acts::Grid<value_type,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Bound>,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Closed>>;
+using GridEqBoundEqClosed = Acts::Grid<
+    value_type,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>>;
 
 // Grid definition : eq closed eq bound
 template <typename value_type>
-using GridEqClosedEqBound =
-    Acts::Grid<value_type,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Closed>,
-               Acts::detail::Axis<Acts::detail::AxisType::Equidistant,
-                                  Acts::detail::AxisBoundaryType::Bound>>;
+using GridEqClosedEqBound = Acts::Grid<
+    value_type,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
 
 /// @brief Helper function to convert a grid surface material to json
 ///
@@ -164,12 +156,12 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   nlohmann::json jGrid = jMaterialAccessor["grid"];
   nlohmann::json jGridAxes = jGrid["axes"];
 
-  Acts::detail::AxisBoundaryType boundaryType0 = jGridAxes[0]["boundary_type"];
+  Acts::AxisBoundaryType boundaryType0 = jGridAxes[0]["boundary_type"];
 
   // 1-dimensional case
   if (jGridAxes.size() == 1u) {
     // Bound case
-    if (boundaryType0 == Acts::detail::AxisBoundaryType::Bound) {
+    if (boundaryType0 == Acts::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqBound eqBound{jGridAxes[0]["range"],
                                                 jGridAxes[0]["bins"]};
       auto grid =
@@ -189,7 +181,7 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
           std::move(boundToGridLocal), std::move(globalToGridLocal));
     }
     // Closed case
-    if (boundaryType0 == Acts::detail::AxisBoundaryType::Closed) {
+    if (boundaryType0 == Acts::AxisBoundaryType::Closed) {
       Acts::GridAxisGenerators::EqClosed eqClosed{jGridAxes[0]["range"],
                                                   jGridAxes[0]["bins"]};
       auto grid =
@@ -213,12 +205,11 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   // 2-dimensional case
   if (jGridAxes.size() == 2u) {
     // Second boundary type
-    Acts::detail::AxisBoundaryType boundaryType1 =
-        jGridAxes[1]["boundary_type"];
+    Acts::AxisBoundaryType boundaryType1 = jGridAxes[1]["boundary_type"];
 
     // Bound-bound setup
-    if (boundaryType0 == Acts::detail::AxisBoundaryType::Bound &&
-        boundaryType1 == Acts::detail::AxisBoundaryType::Bound) {
+    if (boundaryType0 == Acts::AxisBoundaryType::Bound &&
+        boundaryType1 == Acts::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqBoundEqBound eqBoundEqBound{
           jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
           jGridAxes[1]["bins"]};
@@ -240,8 +231,8 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
     }
 
     // Bound-closed setup
-    if (boundaryType0 == Acts::detail::AxisBoundaryType::Bound &&
-        boundaryType1 == Acts::detail::AxisBoundaryType::Closed) {
+    if (boundaryType0 == Acts::AxisBoundaryType::Bound &&
+        boundaryType1 == Acts::AxisBoundaryType::Closed) {
       Acts::GridAxisGenerators::EqBoundEqClosed eqBoundEqClosed{
           jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
           jGridAxes[1]["bins"]};
@@ -263,8 +254,8 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
     }
 
     // Closed-bound setup
-    if (boundaryType0 == Acts::detail::AxisBoundaryType::Closed &&
-        boundaryType1 == Acts::detail::AxisBoundaryType::Bound) {
+    if (boundaryType0 == Acts::AxisBoundaryType::Closed &&
+        boundaryType1 == Acts::AxisBoundaryType::Bound) {
       Acts::GridAxisGenerators::EqClosedEqBound eqClosedEqBound{
           jGridAxes[0]["range"], jGridAxes[0]["bins"], jGridAxes[1]["range"],
           jGridAxes[1]["bins"]};

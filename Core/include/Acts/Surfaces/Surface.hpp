@@ -63,6 +63,8 @@ using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 class Surface : public virtual GeometryObject,
                 public std::enable_shared_from_this<Surface> {
  public:
+  friend struct GeometryContextOstreamWrapper<Surface>;
+
   /// @enum SurfaceType
   ///
   /// This enumerator simplifies the persistency & calculations,
@@ -399,12 +401,14 @@ class Surface : public virtual GeometryObject,
       const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
-  /// Output Method for std::ostream, to be overloaded by child classes
-  ///
+  /// Helper method for printing: the returned object captures the
+  /// surface and the geometry context and will print the surface
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param sl is the ostream to be dumped into
-  virtual std::ostream& toStream(const GeometryContext& gctx,
-                                 std::ostream& sl) const;
+  /// @return The wrapper object for printing
+  GeometryContextOstreamWrapper<Surface> toStream(
+      const GeometryContext& gctx) const {
+    return {*this, gctx};
+  }
 
   /// Output into a std::string
   ///
@@ -477,6 +481,13 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
  protected:
+  /// Output Method for std::ostream, to be overloaded by child classes
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param sl is the ostream to be dumped into
+  virtual std::ostream& toStreamImpl(const GeometryContext& gctx,
+                                     std::ostream& sl) const;
+
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
   Transform3 m_transform = Transform3::Identity();
@@ -514,16 +525,5 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction) const;
 };
-
-/// Print surface information to the provided stream. Internally invokes the
-/// `surface.toStream(...)`-method. This can be easily used e.g. like `std::cout
-/// << std::tie(surface, geometryContext);`
-inline std::ostream& operator<<(
-    std::ostream& os,
-    const std::tuple<const Surface&, const GeometryContext&>& tup) {
-  const auto [surface, gctx] = tup;
-  surface.toStream(gctx, os);
-  return os;
-}
 
 }  // namespace Acts

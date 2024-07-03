@@ -36,7 +36,7 @@ namespace Acts {
 /// the surface with `mapMaterial=true` will be added to a binning map.
 class MappingMaterialDecorator : public IMaterialDecorator {
  public:
-  using BinningMap = std::map<uint64_t, std::pair<int, int>>;
+  using BinningMap = std::map<std::uint64_t, std::pair<int, int>>;
 
   using VolumeMaterialMap =
       std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;

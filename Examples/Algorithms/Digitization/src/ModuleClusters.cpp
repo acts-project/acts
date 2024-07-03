@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
@@ -270,9 +271,9 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   Acts::Vector2 pos(0., 0.);
   Acts::Vector2 var(0., 0.);
 
-  std::size_t b0min = SIZE_MAX;
+  std::size_t b0min = std::numeric_limits<std::size_t>::max();
   std::size_t b0max = 0;
-  std::size_t b1min = SIZE_MAX;
+  std::size_t b1min = std::numeric_limits<std::size_t>::max();
   std::size_t b1max = 0;
 
   for (std::size_t i = 0; i < values.size(); i++) {

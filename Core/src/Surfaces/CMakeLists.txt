@@ -23,8 +23,10 @@ target_sources(
     SurfaceArray.cpp
     SurfaceError.cpp
     TrapezoidBounds.cpp
-    detail/AlignmentHelper.cpp
     VerticesHelper.cpp
     RegularSurface.cpp
     CurvilinearSurface.cpp
+    detail/AlignmentHelper.cpp
+    detail/AnnulusBoundsHelper.cpp
+    detail/MergeHelper.cpp
 )

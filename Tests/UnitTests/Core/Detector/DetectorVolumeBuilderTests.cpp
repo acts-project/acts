@@ -160,9 +160,8 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
 
   // Assign proto material to
   dvCfg.portalMaterialBinning[2u] = BinningDescription{
-      {ProtoBinning(binZ, Acts::detail::AxisBoundaryType::Bound, 50),
-       ProtoBinning(binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI,
-                    12)}};
+      {ProtoBinning(binZ, Acts::AxisBoundaryType::Bound, 50),
+       ProtoBinning(binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 12)}};
 
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));

@@ -177,7 +177,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after z attachment:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    ACTS_VERBOSE("Synchronizing bounds in r")
+    ACTS_VERBOSE("Synchronizing bounds in r");
     const auto [minR, maxR] = synchronizeRBounds(volumeTuples, logger);
 
     for (auto& vt : volumeTuples) {
@@ -237,7 +237,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     ACTS_VERBOSE("*** Volume configuration after r attachment:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
 
-    ACTS_VERBOSE("Synchronizing bounds in z")
+    ACTS_VERBOSE("Synchronizing bounds in z");
     const auto [minZ, maxZ] = synchronizeZBounds(volumeTuples, logger);
 
     for (auto& vt : volumeTuples) {

@@ -195,8 +195,8 @@ bool Acts::Surface::operator==(const Surface& other) const {
 }
 
 // overload dump for stream operator
-std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
-                                      std::ostream& sl) const {
+std::ostream& Acts::Surface::toStreamImpl(const GeometryContext& gctx,
+                                          std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(4);
   sl << name() << std::endl;
@@ -221,7 +221,7 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
 
 std::string Acts::Surface::toString(const GeometryContext& gctx) const {
   std::stringstream ss;
-  toStream(gctx, ss);
+  ss << toStream(gctx);
   return ss.str();
 }
 

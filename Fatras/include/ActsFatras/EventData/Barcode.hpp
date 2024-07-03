@@ -91,8 +91,8 @@ namespace ActsFatras {
 /// easily solved by renumbering the sub-particle identifier within each
 /// generation to contain unique values. However, this can only be done when all
 /// particles are known.
-class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
-  using Base = Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16>;
+class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
+  using Base = Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16>;
 
  public:
   using Base::Base;

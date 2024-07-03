@@ -1,0 +1,2 @@
+set(unittest_extra_libraries ActsExamplesFramework)
+add_unittest(Measurement MeasurementTests.cpp)

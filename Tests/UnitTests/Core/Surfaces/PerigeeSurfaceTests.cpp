@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
                     std::string("Acts::PerigeeSurface"));
   //
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  perigeeSurfaceObject->toStream(tgContext, dumpOuput);
+  boost::test_tools::output_test_stream dumpOutput;
+  dumpOutput << perigeeSurfaceObject->toStream(tgContext);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::PerigeeSurface:\n\
+      dumpOutput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
 }
 
