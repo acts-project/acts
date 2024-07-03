@@ -57,4 +57,5 @@ class IAxis {
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 };
+
 }  // namespace Acts

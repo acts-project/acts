@@ -19,6 +19,7 @@
 #include <set>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -583,6 +584,11 @@ class Grid final : public IGrid {
     return local_iterator_t(*this, std::move(endline), navigator);
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const Grid& grid) {
+    grid.printAxes(os, std::make_index_sequence<sizeof...(Axes)>());
+    return os;
+  }
+
  private:
   /// set of axis defining the multi-dimensional grid
   std::tuple<Axes...> m_axes;
@@ -595,6 +601,18 @@ class Grid final : public IGrid {
   detail::GlobalNeighborHoodIndices<DIM> rawClosestPointsIndices(
       const index_t& localBins) const {
     return detail::grid_helper::closestPointsIndices(localBins, m_axes);
+  }
+
+  template <std::size_t... Is>
+  void printAxes(std::ostream& os, std::index_sequence<Is...> /*s*/) const {
+    auto printOne = [&os, this](auto I) {
+      constexpr std::size_t index = decltype(I)::value;
+      if constexpr (index > 0) {
+        os << ", ";
+      }
+      os << std::get<index>(m_axes);
+    };
+    (printOne(std::integral_constant<std::size_t, Is>()), ...);
   }
 };
 
