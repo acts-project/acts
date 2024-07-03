@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"

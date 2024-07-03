@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -71,175 +72,143 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <template <typename> class, typename>
-SpacePointContainer<container_t, holder_t>::SpacePointContainer(
-    SpacePointContainer<container_t, holder_t>& other)
-    : m_config(other.m_config),
-      m_options(other.m_options),
-      m_container(*other.m_container.ptr) {}
-
-template <typename container_t, template <typename> class holder_t>
-template <template <typename> class, typename>
-SpacePointContainer<container_t, holder_t>&
-SpacePointContainer<container_t, holder_t>::operator=(
-    SpacePointContainer<container_t, holder_t>& other) {
-  m_config = other.m_config;
-  m_options = other.m_options;
-  m_container.ptr = other.m_container.ptr;
-  return *this;
-}
-
-template <typename container_t, template <typename> class holder_t>
-SpacePointContainer<container_t, holder_t>::SpacePointContainer(
-    SpacePointContainer<container_t, holder_t>&& other) noexcept
-    : m_config(other.m_config),
-      m_options(other.m_options),
-      m_container(std::exchange(other.m_container.ptr, nullptr)) {}
-
-template <typename container_t, template <typename> class holder_t>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::topStripVector(
     const std::size_t n) const {
   return m_data.topStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::bottomStripVector(
     const std::size_t n) const {
   return m_data.bottomStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::stripCenterDistance(
     const std::size_t n) const {
   return m_data.stripCenterDistance(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
     const std::size_t n) const {
   return m_data.topStripCenterPosition(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-SpacePointContainer<container_t, holder_t>&
-SpacePointContainer<container_t, holder_t>::operator=(
-    SpacePointContainer<container_t, holder_t>&& other) noexcept {
-  m_container = std::exchange(other.m_container.ptr, nullptr);
-  return *this;
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline std::size_t SpacePointContainer<container_t, holder_t>::size() const {
+std::size_t SpacePointContainer<container_t, holder_t>::size() const {
   return container().size_impl();
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::iterator
+typename SpacePointContainer<container_t, holder_t>::iterator
 SpacePointContainer<container_t, holder_t>::begin() {
   return {*this, 0};
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::iterator
+typename SpacePointContainer<container_t, holder_t>::iterator
 SpacePointContainer<container_t, holder_t>::end() {
   return {*this, size()};
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::const_iterator
+typename SpacePointContainer<container_t, holder_t>::const_iterator
 SpacePointContainer<container_t, holder_t>::begin() const {
   return {*this, 0};
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::const_iterator
+typename SpacePointContainer<container_t, holder_t>::const_iterator
 SpacePointContainer<container_t, holder_t>::end() const {
   return {*this, size()};
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline container_t& SpacePointContainer<container_t, holder_t>::container() {
+container_t& SpacePointContainer<container_t, holder_t>::container() {
   return *m_container;
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const container_t&
+const container_t&
 SpacePointContainer<container_t, holder_t>::container() const {
   return *m_container;
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::ValueType&
+typename SpacePointContainer<container_t, holder_t>::ValueType&
 SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) {
   return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::ValueType&
+typename SpacePointContainer<container_t, holder_t>::ValueType&
 SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) const {
   return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::x(
+float SpacePointContainer<container_t, holder_t>::x(
     const std::size_t n) const {
   return m_data.x(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::y(
+float SpacePointContainer<container_t, holder_t>::y(
     const std::size_t n) const {
   return m_data.y(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::z(
+float SpacePointContainer<container_t, holder_t>::z(
     const std::size_t n) const {
   return m_data.z(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::phi(
+float SpacePointContainer<container_t, holder_t>::phi(
     const std::size_t n) const {
   return m_data.phi(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::radius(
+float SpacePointContainer<container_t, holder_t>::radius(
     const std::size_t n) const {
   return m_data.radius(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::varianceR(
+float SpacePointContainer<container_t, holder_t>::varianceR(
     const std::size_t n) const {
   return m_data.varianceR(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::varianceZ(
+float SpacePointContainer<container_t, holder_t>::varianceZ(
     const std::size_t n) const {
   return m_data.varianceZ(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
+typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) {
+  assert(n < proxies().size());
   return proxies()[n];
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const typename SpacePointContainer<container_t, holder_t>::ProxyType&
+const typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) const {
+  assert(n < proxies().size());
   return proxies()[n];
 }
 

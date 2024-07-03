@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Seeding/BinnedGroupIterator.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/GridIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"

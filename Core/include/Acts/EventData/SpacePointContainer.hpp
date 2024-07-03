@@ -123,22 +123,13 @@ class SpacePointContainer {
                       const Acts::SpacePointContainerOptions& options,
                       container_t&& container);
 
-  // If we take ownership, forbid copy operations
-  // Need to define copy operations only if holder_t is RefHolder !!!
-  template <template <typename> class H = holder_t,
-            typename = std::enable_if_t<Acts::detail::is_same_template<
-                H, Acts::detail::RefHolder>::value>>
-  SpacePointContainer(SpacePointContainer& other);
-
-  template <template <typename> class H = holder_t,
-            typename = std::enable_if_t<Acts::detail::is_same_template<
-                                            H, Acts::detail::RefHolder>::value,
-                                        bool>>
-  SpacePointContainer& operator=(SpacePointContainer& other);
+  // No copy operations
+  SpacePointContainer(SpacePointContainer& other) = delete;
+  SpacePointContainer& operator=(SpacePointContainer& other) = delete;
 
   // move operations
-  SpacePointContainer(SpacePointContainer&& other) noexcept;
-  SpacePointContainer& operator=(SpacePointContainer&& other) noexcept;
+  SpacePointContainer(SpacePointContainer&& other) noexcept = default;
+  SpacePointContainer& operator=(SpacePointContainer&& other) noexcept = default;
 
   // Destructor
   ~SpacePointContainer() = default;
