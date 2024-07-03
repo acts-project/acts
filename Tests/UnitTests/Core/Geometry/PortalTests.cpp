@@ -12,6 +12,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 
 #include <iostream>
@@ -36,44 +38,62 @@ BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
 
 BOOST_AUTO_TEST_SUITE(GridMerging)
 
-BOOST_AUTO_TEST_CASE(Merging1d) {
-  std::unique_ptr<PortalLinkBase> grid1d1 =
-      GridPortalLink::make(Axis{AxisBound{}, 0, 5, 5});
-  std::unique_ptr<PortalLinkBase> grid1d2 =
-      GridPortalLink::make(Axis{AxisBound{}, -1, 5, 6});
+BOOST_AUTO_TEST_CASE(Merging1dCylinder) {
+  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
+                                                  100_mm);
 
-  // @TODO Equidistance different bin widths to variable
-  // @TODO Diagonal offset gives error
-  // @TODO Zero offset
+  std::unique_ptr<GridPortalLink> grid1dCyl = GridPortalLink::make(
+      *cyl, GridPortalLink::Direction::loc1, Axis{AxisBound{}, 0, 5, 5});
 
-  {
-    auto mergedPtr = grid1d1->merge(*grid1d2, Vector2{5, 0}, *logger);
-    auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
-    BOOST_REQUIRE_NE(merged, nullptr);
-    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-    auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -1);
-    BOOST_CHECK_EQUAL(axis.getMax(), 10);
-  }
-
-  {
-    auto mergedPtr = grid1d2->merge(*grid1d1, Vector2{6, 0}, *logger);
-    auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
-    // BOOST_REQUIRE_NE(merged, nullptr);
-    // merged->grid().axes();
-  }
-
-  // @TODO Check merge loc0 (closed + bound)
-  // @TODO Check merge loc1 (bound only)
-  // @TODO Check non-bound for same direction (error)
-  // @TODO: Check inconsistent directions (error)
-
-  // std::unique_ptr<PortalLinkBase> grid2d1 = GridPortalLink::make(
-  //     Axis{AxisBound{}, 0, 5, 5}, Axis{AxisBound{}, 0, 5, 5});
-  //
-  // grid1d1->merge(*grid2d1);
-  // grid2d1->merge(*grid1d1);
+  std::cout << *grid1dCyl << std::endl;
 }
+
+BOOST_AUTO_TEST_CASE(Merging2dCylinder) {
+  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
+                                                  100_mm);
+
+  std::unique_ptr<GridPortalLink> grid2dCyl = GridPortalLink::make(
+      *cyl, Axis{AxisBound{}, 0, 5, 5}, Axis{AxisBound{}, 0, 5, 5});
+
+  std::cout << *grid2dCyl << std::endl;
+}
+
+// std::unique_ptr<PortalLinkBase> grid1d1 =
+//     GridPortalLink::make(Axis{AxisBound{}, 0, 5, 5});
+// std::unique_ptr<PortalLinkBase> grid1d2 =
+//     GridPortalLink::make(Axis{AxisBound{}, -1, 5, 6});
+//
+// // @TODO Equidistance different bin widths to variable
+// // @TODO Diagonal offset gives error
+// // @TODO Zero offset
+//
+// {
+//   auto mergedPtr = grid1d1->merge(*grid1d2, Vector2{5, 0}, *logger);
+//   auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
+//   BOOST_REQUIRE_NE(merged, nullptr);
+//   BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+//   auto& axis = *merged->grid().axes().front();
+//   BOOST_CHECK_EQUAL(axis.getMin(), -1);
+//   BOOST_CHECK_EQUAL(axis.getMax(), 10);
+// }
+//
+// {
+//   auto mergedPtr = grid1d2->merge(*grid1d1, Vector2{6, 0}, *logger);
+//   auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
+//   // BOOST_REQUIRE_NE(merged, nullptr);
+//   // merged->grid().axes();
+// }
+
+// @TODO Check merge loc0 (closed + bound)
+// @TODO Check merge loc1 (bound only)
+// @TODO Check non-bound for same direction (error)
+// @TODO: Check inconsistent directions (error)
+
+// std::unique_ptr<PortalLinkBase> grid2d1 = GridPortalLink::make(
+//     Axis{AxisBound{}, 0, 5, 5}, Axis{AxisBound{}, 0, 5, 5});
+//
+// grid1d1->merge(*grid2d1);
+// grid2d1->merge(*grid1d1);
 
 BOOST_AUTO_TEST_SUITE_END()
 
