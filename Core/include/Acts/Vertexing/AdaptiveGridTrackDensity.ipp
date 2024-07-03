@@ -62,7 +62,7 @@ Result<double> AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
   } else {
     // Get z position with highest density sum
     // of surrounding bins
-    zGridPos = getHighestSumZPosition(densityMap);
+    zGridPos = highestDensitySumBin(densityMap);
   }
 
   std::int32_t zBin = densityMap.zBin[zGridPos];
@@ -315,20 +315,22 @@ std::int32_t AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
 
 template <int trkGridSize>
 double AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
-    const MainDensityMap& mainDensityMap, std::int32_t zBin) const {
-  double sum = mainDensityMap.density[zBin];
-  // Sum up only the density contributions from the
-  // neighboring bins if they are still within bounds
-  if (zBin > 0) {
+    const MainDensityMap& mainDensityMap, std::size_t zBinIndex) const {
+  double sum = mainDensityMap.density[zBinIndex];
+  // Sum up only the density contributions from the neighboring bins if they are
+  // still within bounds
+  if (zBinIndex > 0) {
     // Check if we are still operating on continuous z values
-    if (mainDensityMap.zBin[zBin] - mainDensityMap.zBin[zBin - 1] == 1) {
-      sum += mainDensityMap.density[zBin - 1];
+    if (mainDensityMap.zBin[zBinIndex] - mainDensityMap.zBin[zBinIndex - 1] ==
+        1) {
+      sum += mainDensityMap.density[zBinIndex - 1];
     }
   }
-  if (zBin + 1 <= mainDensityMap.density.size() - 1) {
+  if (zBinIndex < mainDensityMap.size() - 1) {
     // Check if we are still operating on continuous z values
-    if (mainDensityMap.zBin[zBin + 1] - mainDensityMap.zBin[zBin] == 1) {
-      sum += mainDensityMap.density[zBin + 1];
+    if (mainDensityMap.zBin[zBinIndex + 1] - mainDensityMap.zBin[zBinIndex] ==
+        1) {
+      sum += mainDensityMap.density[zBinIndex + 1];
     }
   }
   return sum;

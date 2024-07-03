@@ -6,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was !distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+namespace Acts {
+
 template <int trkGridSize>
-auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::find(
+auto AdaptiveGridDensityVertexFinder<trkGridSize>::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
@@ -21,14 +23,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::find(
         // Track was never added to grid, so can!remove it
         continue;
       }
-      auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
-      m_cfg.gridDensity.removeTrackGridFromMainGrid(
-          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGridDensity,
-          state.mainGridZValues);
+      auto binAndTrackGrid = state.trackDensityMaps.at(trk);
+      m_cfg.gridDensity.subtractTrack(binAndTrackGrid, state.mainDensityMap);
     }
   } else {
-    state.mainGridDensity.clear();
-    state.mainGridZValues.clear();
+    state.mainDensityMap.clear();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_cfg.extractParameters(trk);
@@ -39,11 +38,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::find(
         }
         continue;
       }
-      auto binAndTrackGrid = m_cfg.gridDensity.addTrack(
-          trkParams, state.mainGridDensity, state.mainGridZValues);
+      auto binAndTrackGrid =
+          m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        state.binAndTrackGridMap[trk] = binAndTrackGrid;
+        state.trackDensityMaps[trk] = binAndTrackGrid;
         state.trackSelectionMap[trk] = true;
       }
     }
@@ -52,11 +51,10 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::find(
 
   double z = 0;
   double width = 0;
-  if (!state.mainGridDensity.empty()) {
+  if (!state.mainDensityMap.empty()) {
     if (!m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGridDensity,
-                                                       state.mainGridZValues);
+      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainDensityMap);
 
       if (!maxZres.ok()) {
         return maxZres.error();
@@ -64,8 +62,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::find(
       z = *maxZres;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(
-          state.mainGridDensity, state.mainGridZValues);
+      auto maxZres =
+          m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainDensityMap);
 
       if (!maxZres.ok()) {
         return maxZres.error();
@@ -93,7 +91,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::find(
 }
 
 template <int trkGridSize>
-auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::doesPassTrackSelection(
+auto AdaptiveGridDensityVertexFinder<trkGridSize>::doesPassTrackSelection(
     const BoundTrackParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
@@ -133,3 +131,5 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize>::doesPassTrackSelection(
 
   return true;
 }
+
+}  // namespace Acts

@@ -31,9 +31,9 @@ namespace Acts {
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
 ///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
+/// @tparam trkGridSize The 1-dim grid size of a single track, i.e.
+/// a single track is modelled as a (trkGridSize) grid in the z0 axis.
+/// Note: trkGridSize has to be an odd value.
 template <int trkGridSize = 15>
 class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
  public:
@@ -41,37 +41,39 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   static_assert(trkGridSize % 2);
 
   using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
-  using TrackGridVector = typename GridDensity::TrackGridVector;
+  using TrackDensityMap = typename GridDensity::TrackDensityMap;
+  using MainDensityMap = typename GridDensity::MainDensityMap;
 
   /// @brief The Config struct
   struct Config {
-    ///@param binSize Bin size of grid in mm
-    Config(float binSize = 0.1)
+    /// @param binSize Bin size of grid in mm
+    Config(double binSize = 0.1)
         : gridDensity(typename GridDensity::Config(binSize)) {}
-    ///@param gDensity The grid density
+
+    /// @param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
-    // The grid density object
+    /// The grid density object
     GridDensity gridDensity;
 
-    // Cache the main grid and the density contributions (trackGrid and z-bin)
-    // for every single track.
-    // This option enables the possibility to calculate the entire main grid
-    // only once in the first iteration. If tracks are removed from the track
-    // collection, the individual track density contributions to the main grid
-    // can just be removed without calculating the entire grid from scratch.
+    /// Cache the main grid and the density contributions (trackGrid and z-bin)
+    /// for every single track.
+    /// This option enables the possibility to calculate the entire main grid
+    /// only once in the first iteration. If tracks are removed from the track
+    /// collection, the individual track density contributions to the main grid
+    /// can just be removed without calculating the entire grid from scratch.
     bool cacheGridStateForTrackRemoval = true;
 
-    // Maximum d0 impact parameter significance to use a track
+    /// Maximum d0 impact parameter significance to use a track
     double maxD0TrackSignificance = 3.5;
-    // Maximum z0 impact parameter significance to use a track
+    /// Maximum z0 impact parameter significance to use a track
     double maxZ0TrackSignificance = 12.;
     // The actual corresponding cut values in the algorithm
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
     bool estimateSeedWidth = false;
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
   };
 
@@ -79,20 +81,18 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // The main density vector
-    std::vector<float> mainGridDensity;
-    // Vector holding corresponding z bin values
-    std::vector<int> mainGridZValues;
+    /// The main density map
+    MainDensityMap mainDensityMap;
 
-    // Map to store z-bin and track grid (i.e. the density contribution of
-    // a single track to the main grid) for every single track
-    std::map<InputTrack, std::pair<int, TrackGridVector>> binAndTrackGridMap;
+    /// Map to track density maps (i.e. the density contribution of
+    /// a single track to the main grid) for every input track
+    std::map<InputTrack, TrackDensityMap> trackDensityMaps;
 
-    // Map to store bool if track has passed track selection or not
+    /// Map to store bool if track has passed track selection or not
     std::map<InputTrack, bool> trackSelectionMap;
 
-    // Store tracks that have been removed from track collection. These
-    // track will be removed from the main grid
+    /// Store tracks that have been removed from track collection. These
+    /// track will be removed from the main grid
     std::vector<InputTrack> tracksToRemove;
 
     bool isInitialized = false;

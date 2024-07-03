@@ -59,6 +59,11 @@ class AdaptiveGridTrackDensity {
     std::size_t size() const { return density.size(); }
 
     bool empty() const { return density.empty(); }
+
+    void clear() {
+      density.clear();
+      zBin.clear();
+    }
   };
 
   /// The configuration struct
@@ -184,10 +189,11 @@ class AdaptiveGridTrackDensity {
   /// in z direction
   ///
   /// @param densityMap Map between bins and corresponding density values
-  /// @param bin Bin whose neighbors in z we want to sum up
+  /// @param zBinIndex Bin index whose neighbors in z we want to sum up
   ///
   /// @return The density sum
-  double getDensitySum(const MainDensityMap& mainGrid, std::int32_t zBin) const;
+  double getDensitySum(const MainDensityMap& mainGrid,
+                       std::size_t zBinIndex) const;
 };
 
 }  // namespace Acts
