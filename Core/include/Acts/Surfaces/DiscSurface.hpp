@@ -335,15 +335,13 @@ class DiscSurface : public RegularSurface {
   /// @image html Disc_Merging.svg
   /// @note The surfaces need to be *compatible*, i.e. have disc bounds
   ///       that align
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param other The other disc surface to merge with
   /// @param direction The binning direction: either @c binR or @c binPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged disc surface and the ordering of input surfaces
   std::pair<std::shared_ptr<DiscSurface>, bool> mergedWith(
-      const GeometryContext& gctx, const DiscSurface& other,
-      BinningValue direction, bool externalRotation,
+      const DiscSurface& other, BinningValue direction, bool externalRotation,
       const Logger& logger = getDummyLogger()) const;
 
  protected:

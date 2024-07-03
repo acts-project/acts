@@ -380,8 +380,7 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
 }
 
 std::pair<std::shared_ptr<Acts::DiscSurface>, bool>
-Acts::DiscSurface::mergedWith(const GeometryContext& gctx,
-                              const DiscSurface& other, BinningValue direction,
+Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                               bool externalRotation,
                               const Logger& logger) const {
   using namespace Acts::UnitLiterals;

@@ -369,8 +369,7 @@ Acts::CylinderSurface::localCartesianToBoundLocalDerivative(
 }
 
 std::pair<std::shared_ptr<Acts::CylinderSurface>, bool>
-Acts::CylinderSurface::mergedWith(const GeometryContext& gctx,
-                                  const CylinderSurface& other,
+Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
                                   BinningValue direction, bool externalRotation,
                                   const Logger& logger) const {
   using namespace Acts::UnitLiterals;

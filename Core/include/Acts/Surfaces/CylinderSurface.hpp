@@ -252,16 +252,14 @@ class CylinderSurface : public RegularSurface {
   /// @image html Cylinder_Merging.svg
   /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
   ///       that align, and have the same radius
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param other The other cylinder surface to merge with
   /// @param direction The binning direction: either @c binZ or @c binRPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged cylinder surface and the ordering of input surfaces
   std::pair<std::shared_ptr<CylinderSurface>, bool> mergedWith(
-      const GeometryContext& gctx, const CylinderSurface& other,
-      BinningValue direction, bool externalRotation,
-      const Logger& logger = getDummyLogger()) const;
+      const CylinderSurface& other, BinningValue direction,
+      bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
  protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
