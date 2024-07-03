@@ -87,7 +87,7 @@ class SparseGridTrackDensity {
     double maxRelativeDensityDev = 0.01;
   };
 
-  SparseGridTrackDensity(const Config& cfg);
+  explicit SparseGridTrackDensity(const Config& cfg);
 
   /// @brief Returns the z and t coordinate of maximum (surrounding)
   /// track density
