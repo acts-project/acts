@@ -130,11 +130,6 @@ def main():
     gmTree = acts.geomodel.readFromDb(args.input)
 
     gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
-    # gmFactoryConfig.shapeConverters = [
-    #     gm.GeoBoxConverter(),
-    #     gm.GeoTrdConverter(),
-    #     gm.GeoIntersectionAnnulusConverter(),
-    # ]
     gmFactoryConfig.materialList = args.material_list
     gmFactoryConfig.nameList = args.name_list
     gmFactoryConfig.convertSubVolumes = args.convert_subvols
