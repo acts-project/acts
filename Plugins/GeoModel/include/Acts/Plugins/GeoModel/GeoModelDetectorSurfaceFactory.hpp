@@ -40,9 +40,6 @@ class GeoModelDetectorSurfaceFactory {
 
   // Configuration struct for the Detector surface factory
   struct Config {
-    // /// The shape converters to be use
-    // std::vector<std::shared_ptr<const IGeoShapeConverter>> shapeConverters =
-    // {};
     // /// List for names to match
     std::vector<std::string> nameList;
     // /// List for materials to match
