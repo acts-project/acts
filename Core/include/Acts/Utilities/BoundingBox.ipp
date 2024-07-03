@@ -128,7 +128,7 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
 
   // Calculate the component wise min/max between the t0s and t1s
   // this is non-compliant with IEEE-754-2008, NaN gets propagated through
-  // http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+  // https://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
   // this means that rays parallel to boundaries might not be considered
   // to intersect.
   vertex_array_type tsmaller = t0s.min(t1s);

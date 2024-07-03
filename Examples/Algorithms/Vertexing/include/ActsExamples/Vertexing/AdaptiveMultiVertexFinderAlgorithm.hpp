@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -67,12 +67,19 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
+
+    /// The magnetic field
+    std::shared_ptr<Acts::MagneticFieldProvider> bField;
+
     /// Enum member determining the choice of the vertex seed finder
     SeedFinder seedFinder;
     /// Use time information in vertex seeder, finder, and fitter
     bool useTime = false;
-    /// The magnetic field
-    std::shared_ptr<Acts::MagneticFieldProvider> bField;
+    /// Bin extent in z-direction which is only used with `AdaptiveGridSeeder`
+    double spatialBinExtent = 15. * Acts::UnitConstants::um;
+    /// Bin extent in t-direction which is only used with `AdaptiveGridSeeder`
+    /// and `useTime`
+    double temporalBinExtent = 19. * Acts::UnitConstants::mm;
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,

@@ -74,7 +74,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMuonSimHitReader::read(
                   data.LocalDirectiony * data.LocalDirectiony +
                   data.LocalDirectionz * data.LocalDirectionz) *
             Acts::UnitConstants::GeV};
-    muonMdtIdentifierFields f;
+    MuonMdtIdentifierFields f;
     f.multilayer = 0;
     f.tube = 0;
     f.tubeLayer = 0;

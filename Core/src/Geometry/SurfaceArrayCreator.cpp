@@ -38,7 +38,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with phi x z  = " << binsPhi << " x " << binsZ << " = "
                                       << binsPhi * binsZ << " bins.");
 
@@ -62,8 +62,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
-      makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
-                              detail::AxisBoundaryType::Bound>(
+      makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
+                              AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
@@ -118,8 +118,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
-      makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
-                              detail::AxisBoundaryType::Bound>(
+      makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
+                              AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl->fill(gctx, surfacesRaw);
@@ -131,7 +131,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   std::size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
@@ -173,8 +173,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
-      makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                              detail::AxisBoundaryType::Closed>(
+      makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
+                              AxisBoundaryType::Closed>(
           globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
@@ -182,7 +182,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   std::size_t bins0 = axes.at(0)->getNBins();
   std::size_t bins1 = axes.at(1)->getNBins();
 
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
   sl->fill(gctx, surfacesRaw);
@@ -280,8 +280,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   };
 
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
-      makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                              detail::AxisBoundaryType::Closed>(
+      makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
+                              AxisBoundaryType::Closed>(
           globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
@@ -289,7 +289,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   std::size_t bins0 = axes.at(0)->getNBins();
   std::size_t bins1 = axes.at(1)->getNBins();
 
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
@@ -314,7 +314,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
-  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.");
   ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
                            << " bins.");
   Transform3 ftransform = transform;
@@ -337,8 +337,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
                                                protoLayer, ftransform, bins1);
       ProtoAxis pAxis2 = createEquidistantAxis(gctx, surfacesRaw, binZ,
                                                protoLayer, ftransform, bins2);
-      sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                                   detail::AxisBoundaryType::Bound>(
+      sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
+                                   AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxis1, pAxis2);
       break;
     }
@@ -347,8 +347,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
                                                protoLayer, ftransform, bins1);
       ProtoAxis pAxis2 = createEquidistantAxis(gctx, surfacesRaw, binZ,
                                                protoLayer, ftransform, bins2);
-      sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                                   detail::AxisBoundaryType::Bound>(
+      sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
+                                   AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxis1, pAxis2);
       break;
     }
@@ -357,8 +357,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
                                                protoLayer, ftransform, bins1);
       ProtoAxis pAxis2 = createEquidistantAxis(gctx, surfacesRaw, binY,
                                                protoLayer, ftransform, bins2);
-      sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                                   detail::AxisBoundaryType::Bound>(
+      sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
+                                   AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxis1, pAxis2);
       break;
     }

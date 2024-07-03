@@ -66,9 +66,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
-  lsConfig.binnings = {ProtoBinning(Acts::binPhi,
-                                    Acts::detail::AxisBoundaryType::Closed,
-                                    -M_PI, M_PI, 22u, 1u)};
+  lsConfig.binnings = {ProtoBinning(
+      Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 22u, 1u)};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
@@ -184,12 +183,11 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
-  lsConfig.binnings = {Acts::Experimental::ProtoBinning{
-                           Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
-                           -480., 480., 14u, 1u},
-                       Acts::Experimental::ProtoBinning(
-                           Acts::binPhi, Acts::detail::AxisBoundaryType::Closed,
-                           -M_PI, M_PI, 32u, 1u)};
+  lsConfig.binnings = {
+      Acts::Experimental::ProtoBinning{
+          Acts::binZ, Acts::AxisBoundaryType::Bound, -480., 480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(
+          Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 32u, 1u)};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));

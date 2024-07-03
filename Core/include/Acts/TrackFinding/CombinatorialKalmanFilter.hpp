@@ -13,7 +13,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -769,14 +768,14 @@ class CombinatorialKalmanFilter {
 
         if (!tsRes.ok()) {
           ACTS_ERROR(
-              "Processing of selected track states failed: " << tsRes.error())
+              "Processing of selected track states failed: " << tsRes.error());
           return tsRes.error();
         }
         Result<std::tuple<unsigned int, bool>> procRes = processNewTrackStates(
             state.geoContext, prevTipState, *tsRes, result);
         if (!procRes.ok()) {
-          ACTS_ERROR(
-              "Processing of selected track states failed: " << procRes.error())
+          ACTS_ERROR("Processing of selected track states failed: "
+                     << procRes.error());
           return procRes.error();
         }
         auto [nNewBranchesOnSurface, isOutlier] = *procRes;

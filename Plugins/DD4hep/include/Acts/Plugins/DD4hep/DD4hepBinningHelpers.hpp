@@ -12,8 +12,8 @@
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <optional>
 #include <sstream>
