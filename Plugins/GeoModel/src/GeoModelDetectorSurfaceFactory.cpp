@@ -178,7 +178,7 @@ Acts::GeoModelDetectorSurfaceFactory::findAllSubVolumes(
       ACTS_VERBOSE("The subvol" << child.nodeName << "matches the queries");
       foundVols.push_back(child);
     }
-    if (!child.volume->getNChildVols()) {
+    if (child.volume->getNChildVols() != 0) {
       continue;
     }
     std::vector<GeoChildNodeWithTrf> grandChildren =
