@@ -14,95 +14,95 @@ template <typename container_t, bool read_only>
 SpacePointProxy<container_t, read_only>::SpacePointProxy(
     typename SpacePointProxy<container_t, read_only>::ContainerType& container,
     std::size_t index)
-    : m_container(container), m_index(index) {}
+   : m_container(container), m_index(index) {}
 
 template <typename container_t, bool read_only>
 template <bool, typename>
-inline typename SpacePointProxy<container_t, read_only>::ValueType&
+typename SpacePointProxy<container_t, read_only>::ValueType&
 SpacePointProxy<container_t, read_only>::externalSpacePoint() {
   return container().sp(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline typename SpacePointProxy<container_t, read_only>::ValueType&
+typename SpacePointProxy<container_t, read_only>::ValueType&
 SpacePointProxy<container_t, read_only>::externalSpacePoint() const {
   return container().sp(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline std::size_t SpacePointProxy<container_t, read_only>::index()
+std::size_t SpacePointProxy<container_t, read_only>::index()
     const {
   return m_index;
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::x() const {
+float SpacePointProxy<container_t, read_only>::x() const {
   return container().x(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::y() const {
+float SpacePointProxy<container_t, read_only>::y() const {
   return container().y(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::z() const {
+float SpacePointProxy<container_t, read_only>::z() const {
   return container().z(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::phi() const {
+float SpacePointProxy<container_t, read_only>::phi() const {
   return container().phi(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::radius() const {
+float SpacePointProxy<container_t, read_only>::radius() const {
   return container().radius(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::varianceR() const {
+float SpacePointProxy<container_t, read_only>::varianceR() const {
   return container().varianceR(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::varianceZ() const {
+float SpacePointProxy<container_t, read_only>::varianceZ() const {
   return container().varianceZ(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointProxy<container_t, read_only>::topStripVector() const {
   return container().topStripVector(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointProxy<container_t, read_only>::bottomStripVector() const {
   return container().bottomStripVector(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointProxy<container_t, read_only>::stripCenterDistance() const {
   return container().stripCenterDistance(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const Acts::Vector3&
+const Acts::Vector3&
 SpacePointProxy<container_t, read_only>::topStripCenterPosition() const {
   return container().topStripCenterPosition(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline typename SpacePointProxy<container_t, read_only>::ContainerType&
+typename SpacePointProxy<container_t, read_only>::ContainerType&
 SpacePointProxy<container_t, read_only>::container() const {
   return *m_container;
 }
 
 template <typename container_t, bool read_only>
 template <bool, typename>
-inline typename SpacePointProxy<container_t, read_only>::ContainerType&
+typename SpacePointProxy<container_t, read_only>::ContainerType&
 SpacePointProxy<container_t, read_only>::container() {
   return *m_container;
 }

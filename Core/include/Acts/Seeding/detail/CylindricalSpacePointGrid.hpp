@@ -21,7 +21,7 @@ namespace Acts {
 /// It stores a vector of internal space points to external space points
 template <typename external_spacepoint_t>
 using CylindricalSpacePointGrid = Acts::Grid<
-    std::vector<external_spacepoint_t>,
+    std::vector<const external_spacepoint_t*>,
     Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
     Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>>;
 

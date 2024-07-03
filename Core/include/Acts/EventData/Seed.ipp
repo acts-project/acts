@@ -18,18 +18,18 @@ Seed<external_spacePoint_t>::Seed(const external_spacePoint_t& b,
       m_seedQuality(seedQuality) {}
 
 template <typename external_spacePoint_t>
-inline const std::array<const external_spacePoint_t*, 3>&
+const std::array<const external_spacePoint_t*, 3>&
 Seed<external_spacePoint_t>::sp() const {
   return m_spacepoints;
 }
 
 template <typename external_spacePoint_t>
-inline float Seed<external_spacePoint_t>::z() const {
+float Seed<external_spacePoint_t>::z() const {
   return m_zvertex;
 }
 
 template <typename external_spacePoint_t>
-inline float Seed<external_spacePoint_t>::seedQuality() const {
+float Seed<external_spacePoint_t>::seedQuality() const {
   return m_seedQuality;
 }
 

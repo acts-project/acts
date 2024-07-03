@@ -215,9 +215,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
     // fill rbins into grid
     Acts::Vector2 spLocation(spPhi, spZ);
-    std::vector<external_spacepoint_t>&
+    std::vector<const external_spacepoint_t*>&
         rbin = grid.atPosition(spLocation);
-    rbin.push_back(sp);
+    rbin.push_back(&sp);
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
@@ -230,8 +230,8 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   for (std::size_t binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
     std::sort(rbin.begin(), rbin.end(),
-	      [] (const external_spacepoint_t& a, const external_spacepoint_t& b) -> bool {
-		return a.radius() < b.radius();
+	      [] (const external_spacepoint_t* a, const external_spacepoint_t* b) -> bool {
+		return a->radius() < b->radius();
 	      });
   }
 }

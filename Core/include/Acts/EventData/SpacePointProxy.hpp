@@ -33,12 +33,21 @@ class SpacePointProxy {
       typename ContainerType::ValueType>::type;
 
  public:
+  SpacePointProxy() = delete;
   // Never take the ownership of the container
   SpacePointProxy(ContainerType&& container, std::size_t index) = delete;
   // Only get the reference
   SpacePointProxy(ContainerType& container, std::size_t index);
   // copy and move operations are defaults
 
+  SpacePointProxy(const SpacePointProxy& other) = default;
+  SpacePointProxy& operator=(const SpacePointProxy& other) = default;
+  
+  SpacePointProxy(SpacePointProxy&& other) noexcept = default;
+  SpacePointProxy& operator=(SpacePointProxy&&other) noexcept = default;
+
+  ~SpacePointProxy() = default;
+  
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   ValueType& externalSpacePoint();
 
