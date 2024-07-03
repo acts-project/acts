@@ -25,6 +25,7 @@ namespace Acts {
 
 class MagneticFieldContext : public ContextType {
  public:
+  /// Inherit all constructors
   using ContextType::ContextType;
 };
 
