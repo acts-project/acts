@@ -146,7 +146,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     }
 
     auto mergeVariable = [&, mergedSurface](const auto& axisA,
-                                            const auto& axisB) {
+                                            const auto& axisB, bool periodic) {
       ActsScalar halfWidth =
           (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) /
           2.0;
@@ -173,95 +173,117 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       return GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
     };
 
+    auto mergeEquidistant = [&, mergedSurface](const auto& axisA,
+                                               const auto& axisB,
+                                               bool periodic) {
+      ACTS_VERBOSE("===> potentially equidistant merge: checking bin widths");
+
+      ActsScalar binsWidthA =
+          (axisA.getMax() - axisA.getMin()) / axisA.getNBins();
+      ActsScalar binsWidthB =
+          (axisB.getMax() - axisB.getMin()) / axisB.getNBins();
+
+      ACTS_VERBOSE("  ~> binWidths: " << binsWidthA << " vs " << binsWidthB);
+
+      if (std::abs(binsWidthA - binsWidthB) < tolerance) {
+        ACTS_VERBOSE("==> binWidths same: " << binsWidthA);
+
+        ActsScalar halfWidth = (axisA.getMax() - axisA.getMin() +
+                                axisB.getMax() - axisB.getMin()) /
+                               2.0;
+        Axis merged{AxisBound, -halfWidth, halfWidth,
+                    axisA.getNBins() + axisB.getNBins()};
+
+        ACTS_VERBOSE("    ~> merged axis: " << merged);
+
+        std::unique_ptr<PortalLinkBase> mergedPortalLink =
+            GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
+
+        return mergedPortalLink;
+
+      } else {
+        ACTS_VERBOSE("==> binWidths differ: " << binsWidthA << " vs "
+                                              << binsWidthB
+                                              << " ~> variable merge");
+
+        std::unique_ptr<PortalLinkBase> mergedPortalLink =
+            mergeVariable(axisA, axisB, periodic);
+        return mergedPortalLink;
+      }
+    };
+
+    auto colinearMerge = [&, mergedSurface](
+                             const auto& axisA, const auto& axisB,
+                             bool periodic) -> std::unique_ptr<PortalLinkBase> {
+      AxisType aType = axisA.getType();
+      AxisType bType = axisB.getType();
+      if (axisA.getBoundaryType() != axisB.getBoundaryType()) {
+        ACTS_WARNING("AxisBoundaryTypes are different");
+        return nullptr;
+      }
+
+      if (axisA.getBoundaryType() != AxisBoundaryType::Bound) {
+        ACTS_WARNING("AxisBoundaryType is not Bound, cannot do colinear merge");
+        return nullptr;
+      }
+
+      if (aType == AxisType::Equidistant && bType == AxisType::Equidistant) {
+        std::unique_ptr<PortalLinkBase> mergedPortalLink =
+            mergeEquidistant(axisA, axisB, periodic);
+        // @TODO: Sync bin contents
+        return mergedPortalLink;
+      } else if (aType == AxisType::Variable && bType == AxisType::Variable) {
+        ACTS_VERBOSE("===> variable merge");
+        std::unique_ptr<PortalLinkBase> mergedPortalLink =
+            mergeVariable(axisA, axisB, periodic);
+        // @TODO: Sync bin contents
+        return mergedPortalLink;
+      } else if (aType == AxisType::Equidistant &&
+                 bType == AxisType::Variable) {
+        ACTS_WARNING("===> mixed merged");
+        std::unique_ptr<PortalLinkBase> mergedPortalLink =
+            mergeVariable(axisA, axisB, periodic);
+        // @TODO: Sync bin contents
+        return mergedPortalLink;
+      } else {
+        ACTS_WARNING("===> mixed merged");
+        std::unique_ptr<PortalLinkBase> mergedPortalLink =
+            mergeVariable(axisA, axisB, periodic);
+        // @TODO: Sync bin contents
+        return mergedPortalLink;
+      }
+    };
+
+    const auto& axisA = *a->grid().axes().front();
+    const auto& axisB = *b->grid().axes().front();
+
     if (direction == binZ) {
       ACTS_VERBOSE("Grids are binned along "
                    << binningValueNames()[a->direction()]);
       if (a->direction() == binZ) {
         ACTS_VERBOSE("=> colinear merge");
 
-        const auto& axisA = *a->grid().axes().front();
-        const auto& axisB = *b->grid().axes().front();
-
-        if (axisA.getBoundaryType() != axisB.getBoundaryType()) {
-          ACTS_WARNING("AxisBoundaryTypes are different");
-          return nullptr;
-        }
-
-        if (axisA.getBoundaryType() != AxisBoundaryType::Bound) {
-          ACTS_WARNING(
-              "AxisBoundaryType is not Bound, cannot do colinear merge");
-          return nullptr;
-        }
-
-        AxisType aType = axisA.getType();
-        AxisType bType = axisB.getType();
-        if (aType == AxisType::Equidistant && bType == AxisType::Equidistant) {
-          ACTS_VERBOSE(
-              "===> potentially equidistant merge: checking bin widths");
-
-          ActsScalar binsWidthA =
-              (axisA.getMax() - axisA.getMin()) / axisA.getNBins();
-          ActsScalar binsWidthB =
-              (axisB.getMax() - axisB.getMin()) / axisB.getNBins();
-
-          ACTS_VERBOSE("  ~> binWidths: " << binsWidthA << " vs "
-                                          << binsWidthB);
-
-          if (std::abs(binsWidthA - binsWidthB) < tolerance) {
-            ACTS_VERBOSE("==> binWidths same: " << binsWidthA);
-
-            ActsScalar halfWidth = (axisA.getMax() - axisA.getMin() +
-                                    axisB.getMax() - axisB.getMin()) /
-                                   2.0;
-            Axis merged{AxisBound, -halfWidth, halfWidth,
-                        axisA.getNBins() + axisB.getNBins()};
-
-            ACTS_VERBOSE("    ~> merged axis: " << merged);
-
-            std::unique_ptr<PortalLinkBase> mergedPortalLink =
-                GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
-
-            // @TODO: Sync bin contents
-            return mergedPortalLink;
-
-          } else {
-            ACTS_VERBOSE("==> binWidths differ: " << binsWidthA << " vs "
-                                                  << binsWidthB
-                                                  << " ~> variable merge");
-
-            std::unique_ptr<PortalLinkBase> mergedPortalLink =
-                mergeVariable(axisA, axisB);
-            // @TODO: Sync bin contents
-            return mergedPortalLink;
-          }
-
-        } else if (aType == AxisType::Variable && bType == AxisType::Variable) {
-          ACTS_VERBOSE("===> variable merge");
-          std::unique_ptr<PortalLinkBase> mergedPortalLink =
-              mergeVariable(axisA, axisB);
-          // @TODO: Sync bin contents
-          return mergedPortalLink;
-        } else if (aType == AxisType::Equidistant &&
-                   bType == AxisType::Variable) {
-          ACTS_WARNING("===> mixed merged");
-          std::unique_ptr<PortalLinkBase> mergedPortalLink =
-              mergeVariable(axisA, axisB);
-          // @TODO: Sync bin contents
-          return mergedPortalLink;
-        } else {
-          ACTS_WARNING("===> mixed merged");
-          std::unique_ptr<PortalLinkBase> mergedPortalLink =
-              mergeVariable(axisA, axisB);
-          // @TODO: Sync bin contents
-          return mergedPortalLink;
-        }
+        return colinearMerge(axisA, axisB, false);
 
       } else {
         ACTS_VERBOSE("=> perpendicular merge");
+        throw std::logic_error{"Not implemented"};
         return nullptr;
       }
 
     } else if (direction == binRPhi) {
+      ACTS_VERBOSE("Grids are binned along "
+                   << binningValueNames()[a->direction()]);
+      if (a->direction() == binRPhi) {
+        ACTS_VERBOSE("=> colinear merge");
+
+        return colinearMerge(axisA, axisB, false);
+
+      } else {
+        ACTS_VERBOSE("=> perpendicular merge");
+        throw std::logic_error{"Not implemented"};
+        return nullptr;
+      }
       // Linear merge along rphi will NOT wrap around (doesn't make sense)
       // Cross merge might have to wrap around
       throw std::logic_error{"Not implemented"};
