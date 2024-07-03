@@ -421,11 +421,13 @@ BOOST_AUTO_TEST_CASE(IncompatibleBounds) {
   auto discTrap2 =
       Surface::makeShared<DiscSurface>(base, 20_mm, 40_mm, 30_mm, 100_mm);
 
-  BOOST_CHECK_THROW(discRadial->mergedWith(tgContext, *discTrap, binR, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      discRadial->mergedWith(tgContext, *discTrap, binR, false, *logger),
+      SurfaceMergingException);
 
-  BOOST_CHECK_THROW(discTrap2->mergedWith(tgContext, *discTrap, binR, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      discTrap2->mergedWith(tgContext, *discTrap, binR, false, *logger),
+      SurfaceMergingException);
 }
 
 BOOST_DATA_TEST_CASE(IncompatibleRDirection,
@@ -446,35 +448,37 @@ BOOST_DATA_TEST_CASE(IncompatibleRDirection,
   // Disc with overlap in r
   auto discOverlap = makeDisc(base, 90_mm, 150_mm);
   BOOST_CHECK_THROW(
-      disc->mergedWith(tgContext, *discOverlap, Acts::binR, *logger),
+      disc->mergedWith(tgContext, *discOverlap, Acts::binR, false, *logger),
       SurfaceMergingException);
 
   // Disc with gap in r
   auto discGap = makeDisc(base, 110_mm, 150_mm);
-  BOOST_CHECK_THROW(disc->mergedWith(tgContext, *discGap, Acts::binR, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(tgContext, *discGap, Acts::binR, false, *logger),
+      SurfaceMergingException);
 
   auto discShiftedZ = Surface::makeShared<DiscSurface>(
       base * Translation3{Vector3::UnitZ() * 10_mm}, 100_mm, 150_mm);
   BOOST_CHECK_THROW(
-      disc->mergedWith(tgContext, *discShiftedZ, Acts::binR, *logger),
+      disc->mergedWith(tgContext, *discShiftedZ, Acts::binR, false, *logger),
       SurfaceMergingException);
 
   auto discShiftedXy = makeDisc(
       base * Translation3{Vector3{1_mm, 2_mm, 200_mm}}, 100_mm, 150_mm);
   BOOST_CHECK_THROW(
-      disc->mergedWith(tgContext, *discShiftedXy, Acts::binZ, *logger),
+      disc->mergedWith(tgContext, *discShiftedXy, Acts::binZ, false, *logger),
       SurfaceMergingException);
 
-  auto discRotatedZ =
-      makeDisc(base * AngleAxis3{10_degree, Vector3::UnitZ()}, 100_mm, 150_mm);
+  auto discRotatedZ = makeDisc(base * AngleAxis3{10_degree, Vector3::UnitZ()},
+                               100_mm, 150_mm, 60_degree, 0_degree);
   BOOST_CHECK_THROW(
-      disc->mergedWith(tgContext, *discRotatedZ, Acts::binR, *logger),
+      disc->mergedWith(tgContext, *discRotatedZ, Acts::binR, false, *logger),
       SurfaceMergingException);
+
   auto discRotatedX =
       makeDisc(base * AngleAxis3{10_degree, Vector3::UnitX()}, 100_mm, 150_mm);
   BOOST_CHECK_THROW(
-      disc->mergedWith(tgContext, *discRotatedX, Acts::binR, *logger),
+      disc->mergedWith(tgContext, *discRotatedX, Acts::binR, false, *logger),
       SurfaceMergingException);
 }
 
@@ -491,17 +495,18 @@ BOOST_DATA_TEST_CASE(RDirection,
 
   auto disc = makeDisc(base, 30_mm, 100_mm);
 
-  auto disc2 = makeDisc(base, 100_mm, 150_mm);
+  auto disc2 =
+      makeDisc(base * AngleAxis3(14_degree, Vector3::UnitZ()), 100_mm, 150_mm);
 
   auto [disc3, reversed] =
-      disc->mergedWith(tgContext, *disc2, Acts::binR, *logger);
+      disc->mergedWith(tgContext, *disc2, Acts::binR, false, *logger);
   BOOST_REQUIRE_NE(disc3, nullptr);
   BOOST_CHECK(!reversed);
 
   auto [disc3Reversed, reversed2] =
-      disc2->mergedWith(tgContext, *disc, Acts::binR, *logger);
+      disc2->mergedWith(tgContext, *disc, Acts::binR, false, *logger);
   BOOST_REQUIRE_NE(disc3Reversed, nullptr);
-  BOOST_CHECK(*disc3 == *disc3Reversed);
+  BOOST_CHECK(disc3->bounds() == disc3Reversed->bounds());
   BOOST_CHECK(reversed2);
 
   const auto* bounds = dynamic_cast<const RadialBounds*>(&disc3->bounds());
@@ -512,6 +517,14 @@ BOOST_DATA_TEST_CASE(RDirection,
 
   // Disc did not move
   BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+
+  // Rotation in z depends on the ordering, the left side "wins"
+  Transform3 expected12 = base;
+  BOOST_CHECK_EQUAL(expected12.matrix(), disc3->transform(tgContext).matrix());
+
+  Transform3 expected21 = base * AngleAxis3(14_degree, Vector3::UnitZ());
+  CHECK_CLOSE_OR_SMALL(disc3Reversed->transform(tgContext).matrix(),
+                       expected21.matrix(), 1e-6, 1e-10);
 }
 
 BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
@@ -536,26 +549,26 @@ BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
   // Disc with overlap in phi
   auto discPhi2 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(85_degree));
   BOOST_CHECK_THROW(
-      discPhi->mergedWith(tgContext, *discPhi2, Acts::binPhi, *logger),
+      discPhi->mergedWith(tgContext, *discPhi2, Acts::binPhi, false, *logger),
       SurfaceMergingException);
 
   // Disc with gap in phi
   auto discPhi3 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(105_degree));
   BOOST_CHECK_THROW(
-      discPhi->mergedWith(tgContext, *discPhi3, Acts::binPhi, *logger),
+      discPhi->mergedWith(tgContext, *discPhi3, Acts::binPhi, false, *logger),
       SurfaceMergingException);
 
   // Disc with a z shift
   auto discPhi4 = makeDisc(base * Translation3{Vector3::UnitZ() * 20_mm}, 30_mm,
                            100_mm, 45_degree, a(95_degree));
   BOOST_CHECK_THROW(
-      discPhi->mergedWith(tgContext, *discPhi4, Acts::binPhi, *logger),
+      discPhi->mergedWith(tgContext, *discPhi4, Acts::binPhi, false, *logger),
       SurfaceMergingException);
 
   // Disc with different r bounds: could be merged in r but not in phi
   auto discPhi5 = makeDisc(base, 100_mm, 150_mm, 45_degree, a(95_degree));
   BOOST_CHECK_THROW(
-      discPhi->mergedWith(tgContext, *discPhi5, Acts::binPhi, *logger),
+      discPhi->mergedWith(tgContext, *discPhi5, Acts::binPhi, false, *logger),
       SurfaceMergingException);
 }
 
@@ -575,54 +588,116 @@ BOOST_DATA_TEST_CASE(PhiDirection,
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
-  auto disc = makeDisc(base, 30_mm, 100_mm, 10_degree, a(40_degree));
-  auto disc2 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(95_degree));
+  BOOST_TEST_CONTEXT("Internal rotation") {
+    auto disc = makeDisc(base, 30_mm, 100_mm, 10_degree, a(40_degree));
+    auto disc2 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(95_degree));
 
-  auto [disc3, reversed] =
-      disc->mergedWith(tgContext, *disc2, Acts::binPhi, *logger);
-  BOOST_REQUIRE_NE(disc3, nullptr);
-  BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
-  BOOST_CHECK(reversed);
+    auto [disc3, reversed] =
+        disc->mergedWith(tgContext, *disc2, Acts::binPhi, false, *logger);
+    BOOST_REQUIRE_NE(disc3, nullptr);
+    BOOST_CHECK_EQUAL(base.matrix(), disc3->transform(tgContext).matrix());
+    BOOST_CHECK(reversed);
 
-  auto [disc3Reversed, reversed2] =
-      disc2->mergedWith(tgContext, *disc, Acts::binPhi, *logger);
-  BOOST_REQUIRE_NE(disc3Reversed, nullptr);
-  BOOST_CHECK(*disc3 == *disc3Reversed);
-  BOOST_CHECK(!reversed2);
+    auto [disc3Reversed, reversed2] =
+        disc2->mergedWith(tgContext, *disc, Acts::binPhi, false, *logger);
+    BOOST_REQUIRE_NE(disc3Reversed, nullptr);
+    BOOST_CHECK(*disc3 == *disc3Reversed);
+    BOOST_CHECK(!reversed2);
 
-  const auto* bounds = dynamic_cast<const RadialBounds*>(&disc3->bounds());
-  BOOST_REQUIRE_NE(bounds, nullptr);
+    const auto* bounds = dynamic_cast<const RadialBounds*>(&disc3->bounds());
+    BOOST_REQUIRE_NE(bounds, nullptr);
 
-  BOOST_CHECK_SMALL(
-      detail::difference_periodic(bounds->get(RadialBounds::eAveragePhi),
-                                  a(85_degree), 2 * M_PI),
-      1e-6);
-  BOOST_CHECK_CLOSE(bounds->get(RadialBounds::eHalfPhiSector), 55_degree, 0.1);
+    BOOST_CHECK_SMALL(
+        detail::difference_periodic(bounds->get(RadialBounds::eAveragePhi),
+                                    a(85_degree), 2 * M_PI),
+        1e-6);
+    BOOST_CHECK_CLOSE(bounds->get(RadialBounds::eHalfPhiSector), 55_degree,
+                      1e-6);
 
-  auto disc4 = makeDisc(base, 30_mm, 100_mm, 20_degree, a(170_degree));
-  auto disc5 = makeDisc(base, 30_mm, 100_mm, 10_degree, a(-160_degree));
-  auto [disc45, reversed45] =
-      disc4->mergedWith(tgContext, *disc5, Acts::binPhi, *logger);
-  BOOST_REQUIRE_NE(disc45, nullptr);
-  BOOST_CHECK_EQUAL(base.matrix(), disc45->transform(tgContext).matrix());
-  BOOST_CHECK(reversed45);
+    auto disc4 = makeDisc(base, 30_mm, 100_mm, 20_degree, a(170_degree));
+    auto disc5 = makeDisc(base, 30_mm, 100_mm, 10_degree, a(-160_degree));
+    auto [disc45, reversed45] =
+        disc4->mergedWith(tgContext, *disc5, Acts::binPhi, false, *logger);
+    BOOST_REQUIRE_NE(disc45, nullptr);
+    BOOST_CHECK_EQUAL(base.matrix(), disc45->transform(tgContext).matrix());
+    BOOST_CHECK(reversed45);
 
-  auto [disc54, reversed54] =
-      disc5->mergedWith(tgContext, *disc4, Acts::binPhi, *logger);
-  BOOST_REQUIRE_NE(disc54, nullptr);
-  BOOST_CHECK(!reversed54);
+    auto [disc54, reversed54] =
+        disc5->mergedWith(tgContext, *disc4, Acts::binPhi, false, *logger);
+    BOOST_REQUIRE_NE(disc54, nullptr);
+    BOOST_CHECK(!reversed54);
 
-  BOOST_CHECK(*disc54 == *disc45);
+    BOOST_CHECK(*disc54 == *disc45);
 
-  const auto* bounds45 = dynamic_cast<const RadialBounds*>(&disc45->bounds());
-  BOOST_REQUIRE_NE(bounds, nullptr);
+    const auto* bounds45 = dynamic_cast<const RadialBounds*>(&disc45->bounds());
+    BOOST_REQUIRE_NE(bounds, nullptr);
 
-  BOOST_CHECK_SMALL(
-      detail::difference_periodic(bounds45->get(RadialBounds::eAveragePhi),
-                                  a(180_degree), 2 * M_PI),
-      1e-6);
-  BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
-                    0.1);
+    BOOST_CHECK_SMALL(
+        detail::difference_periodic(bounds45->get(RadialBounds::eAveragePhi),
+                                    a(180_degree), 2 * M_PI),
+        1e-6);
+    BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
+                      1e-6);
+  }
+
+  BOOST_TEST_CONTEXT("External rotation") {
+    Transform3 trf1 = base * AngleAxis3(a(40_degree), Vector3::UnitZ());
+    auto disc = makeDisc(trf1, 30_mm, 100_mm, 10_degree, 0_degree);
+    Transform3 trf2 = base * AngleAxis3(a(95_degree), Vector3::UnitZ());
+    auto disc2 = makeDisc(trf2, 30_mm, 100_mm, 45_degree, 0_degree);
+
+    auto [disc3, reversed] =
+        disc->mergedWith(tgContext, *disc2, Acts::binPhi, true, *logger);
+    BOOST_REQUIRE_NE(disc3, nullptr);
+    Transform3 trfExpected12 =
+        base * AngleAxis3(a(85_degree), Vector3::UnitZ());
+    CHECK_CLOSE_OR_SMALL(disc3->transform(tgContext).matrix(),
+                         trfExpected12.matrix(), 1e-6, 1e-10);
+    BOOST_CHECK(reversed);
+
+    auto [disc3Reversed, reversed2] =
+        disc2->mergedWith(tgContext, *disc, Acts::binPhi, true, *logger);
+    BOOST_REQUIRE_NE(disc3Reversed, nullptr);
+    BOOST_CHECK(*disc3 == *disc3Reversed);
+    BOOST_CHECK(!reversed2);
+
+    const auto* bounds = dynamic_cast<const RadialBounds*>(&disc3->bounds());
+    BOOST_REQUIRE_NE(bounds, nullptr);
+
+    BOOST_CHECK_EQUAL(bounds->get(RadialBounds::eAveragePhi), 0);
+    BOOST_CHECK_CLOSE(bounds->get(RadialBounds::eHalfPhiSector), 55_degree,
+                      1e-6);
+
+    Transform3 trf4 = base * AngleAxis3(a(170_degree), Vector3::UnitZ());
+    auto disc4 = makeDisc(trf4, 30_mm, 100_mm, 20_degree, 0_degree);
+    Transform3 trf5 = base * AngleAxis3(a(-160_degree), Vector3::UnitZ());
+    auto disc5 = makeDisc(trf5, 30_mm, 100_mm, 10_degree, 0_degree);
+    auto [disc45, reversed45] =
+        disc4->mergedWith(tgContext, *disc5, Acts::binPhi, true, *logger);
+    BOOST_REQUIRE_NE(disc45, nullptr);
+    Transform3 trfExpected45 =
+        base * AngleAxis3(a(180_degree), Vector3::UnitZ());
+    CHECK_CLOSE_OR_SMALL(disc45->transform(tgContext).matrix(),
+                         trfExpected45.matrix(), 1e-6, 1e-10);
+    BOOST_CHECK(reversed45);
+
+    auto [disc54, reversed54] =
+        disc5->mergedWith(tgContext, *disc4, Acts::binPhi, true, *logger);
+    BOOST_REQUIRE_NE(disc54, nullptr);
+    BOOST_CHECK(!reversed54);
+
+    BOOST_CHECK(*disc54 == *disc45);
+
+    const auto* bounds45 = dynamic_cast<const RadialBounds*>(&disc45->bounds());
+    BOOST_REQUIRE_NE(bounds, nullptr);
+
+    BOOST_CHECK_EQUAL(bounds45->get(RadialBounds::eAveragePhi), 0);
+    BOOST_CHECK_CLOSE(bounds45->get(RadialBounds::eHalfPhiSector), 30_degree,
+                      1e-6);
+  }
+
+  // @TODO: Add half-circle sector test
+  // @TODO: Add detector element test
 }
 
 BOOST_AUTO_TEST_SUITE_END()

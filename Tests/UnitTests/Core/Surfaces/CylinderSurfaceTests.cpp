@@ -451,6 +451,7 @@ BOOST_DATA_TEST_CASE(ZDirection,
   BOOST_CHECK_EQUAL(bounds.get(CylinderBounds::eR), 30_mm);
   BOOST_CHECK_EQUAL(bounds.get(CylinderBounds::eHalfLengthZ), 200_mm);
 
+  // Rotation in z depends on the ordering, the left side "wins"
   Transform3 expected12 = base * Translation3{Vector3::UnitZ() * 100_mm};
   BOOST_CHECK_EQUAL(expected12.matrix(), cyl3->transform(testContext).matrix());
 
@@ -568,7 +569,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                           a(180_degree), 2 * M_PI),
                       1e-6);
     BOOST_CHECK_CLOSE(cyl45->bounds().get(CylinderBounds::eHalfPhiSector),
-                      30_degree, 0.1);
+                      30_degree, 1e-6);
 
     auto cyl6 = Surface::makeShared<CylinderSurface>(base, 30_mm, 100_mm,
                                                      90_degree, a(90_degree));
@@ -595,7 +596,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
                           a(180_degree), 2 * M_PI),
                       1e-6);
     BOOST_CHECK_CLOSE(cyl67->bounds().get(CylinderBounds::eHalfPhiSector),
-                      180_degree, 0.1);
+                      180_degree, 1e-6);
   }
 
   BOOST_TEST_CONTEXT("External rotation") {
@@ -619,7 +620,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 
     BOOST_CHECK_EQUAL(cyl3->bounds().get(CylinderBounds::eAveragePhi), 0);
     BOOST_CHECK_CLOSE(cyl3->bounds().get(CylinderBounds::eHalfPhiSector),
-                      55_degree, 0.1);
+                      55_degree, 1e-6);
 
     Transform3 trf4 = base * AngleAxis3(a(170_degree), Vector3::UnitZ());
     auto cyl4 = Surface::makeShared<CylinderSurface>(trf4, 30_mm, 100_mm,
@@ -645,7 +646,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
 
     BOOST_CHECK_EQUAL(cyl45->bounds().get(CylinderBounds::eAveragePhi), 0);
     BOOST_CHECK_CLOSE(cyl45->bounds().get(CylinderBounds::eHalfPhiSector),
-                      30_degree, 0.1);
+                      30_degree, 1e-6);
 
     Transform3 trf6 = base * AngleAxis3(a(90_degree), Vector3::UnitZ());
     auto cyl6 = Surface::makeShared<CylinderSurface>(trf6, 30_mm, 100_mm,
