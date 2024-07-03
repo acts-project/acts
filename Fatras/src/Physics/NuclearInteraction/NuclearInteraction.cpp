@@ -93,8 +93,9 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   if (interpolate) {
     // Interpolate between neighbouring bins and return a diced intermediate
     // value
-    const uint32_t basecont = (iBin > 0 ? distribution.second[iBin - 1] : 0);
-    const uint32_t dcont = distribution.second[iBin] - basecont;
+    const std::uint32_t basecont =
+        (iBin > 0 ? distribution.second[iBin - 1] : 0);
+    const std::uint32_t dcont = distribution.second[iBin] - basecont;
     return distribution.first[iBin] +
            (distribution.first[iBin + 1] - distribution.first[iBin]) *
                (dcont > 0 ? (int_rnd - basecont) / dcont : 0.5);

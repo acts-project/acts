@@ -101,7 +101,7 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(
 
   // Can extract from time, but we need a complete picture of the trajectory
   // first
-  int32_t index = -1;
+  std::int32_t index = -1;
 
   return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
                          index);

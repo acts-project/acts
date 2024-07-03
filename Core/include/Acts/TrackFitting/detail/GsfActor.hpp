@@ -152,7 +152,7 @@ struct GsfActor {
 
     // Return is we found an error earlier
     if (!result.result.ok()) {
-      ACTS_WARNING("result.result not ok, return!")
+      ACTS_WARNING("result.result not ok, return!");
       return;
     }
 

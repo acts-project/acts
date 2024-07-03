@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
@@ -30,6 +31,16 @@ class GridLocalIterator;
 
 namespace Acts {
 
+/// Base class for all grid types
+class IGrid {
+ public:
+  virtual ~IGrid() = default;
+
+  /// Get a dynamically sized vector of axis objects for inspection
+  /// @return a vector of axis pointers
+  virtual boost::container::small_vector<const IAxis*, 3> axes() const = 0;
+};
+
 /// @brief class for describing a regular multi-dimensional grid
 ///
 /// @tparam T    type of values stored inside the bins of the grid
@@ -41,7 +52,7 @@ namespace Acts {
 ///
 /// @note @c T must be default-constructible.
 template <typename T, class... Axes>
-class Grid final {
+class Grid final : public IGrid {
  public:
   /// number of dimensions of the grid
   static constexpr std::size_t DIM = sizeof...(Axes);
@@ -61,11 +72,6 @@ class Grid final {
   /// local iterator type
   using local_iterator_t = Acts::GridLocalIterator<T, Axes...>;
 
-  /// @brief default constructor
-  ///
-  /// @param [in] axes actual axis objects spanning the grid
-  Grid(std::tuple<Axes...>& axes) = delete;
-
   /// @brief Constructor from const axis tuple, this will allow
   /// creating a grid with a different value type from a template
   /// grid object.
@@ -80,6 +86,33 @@ class Grid final {
   Grid(std::tuple<Axes...>&& axes) : m_axes(std::move(axes)) {
     m_values.resize(size());
   }
+
+  /// @brief constructor from parameters pack of axes
+  /// @param axes
+  Grid(Axes&&... axes) : m_axes(std::forward_as_tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes
+  /// @param axes
+  Grid(const Axes&... axes) : m_axes(std::tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes and type tag
+  /// @param axes
+  Grid(TypeTag<T> /*tag*/, Axes&&... axes)
+      : m_axes(std::forward_as_tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  /// @brief constructor from parameters pack of axes and type tag
+  /// @param axes
+  Grid(TypeTag<T> /*tag*/, const Axes&... axes) : m_axes(std::tuple(axes...)) {
+    m_values.resize(size());
+  }
+
+  // Grid(TypeTag<T> /*tag*/, Axes&... axes) = delete;
 
   /// @brief access value stored in bin for a given point
   ///
@@ -516,8 +549,11 @@ class Grid final {
   const std::tuple<Axes...>& axesTuple() const { return m_axes; }
 
   /// @brief get the axes as an array of IAxis pointers
-  std::array<const IAxis*, DIM> axes() const {
-    return detail::grid_helper::getAxes(m_axes);
+  boost::container::small_vector<const IAxis*, 3> axes() const override {
+    boost::container::small_vector<const IAxis*, 3> result;
+    auto axes = detail::grid_helper::getAxes(m_axes);
+    std::copy(axes.begin(), axes.end(), std::back_inserter(result));
+    return result;
   }
 
   /// begin iterator for global bins
@@ -561,5 +597,11 @@ class Grid final {
     return detail::grid_helper::closestPointsIndices(localBins, m_axes);
   }
 };
+
+template <typename T, class... Axes>
+Grid(TypeTag<T> /*type*/, Axes&&... axes) -> Grid<T, Axes...>;
+
+template <typename T, class... Axes>
+Grid(TypeTag<T> /*type*/, Axes&... axes) -> Grid<T, Axes...>;
 
 }  // namespace Acts

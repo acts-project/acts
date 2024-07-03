@@ -14,10 +14,11 @@
 
 namespace {
 
-auto cantorize(std::vector<int64_t> edgeIndex, const Acts::Logger& logger) {
+auto cantorize(std::vector<std::int64_t> edgeIndex,
+               const Acts::Logger& logger) {
   // Use cantor pairing to store truth graph, so we can easily use set
   // operations to compute efficiency and purity
-  std::vector<Acts::detail::CantorEdge<int64_t>> cantorEdgeIndex;
+  std::vector<Acts::detail::CantorEdge<std::int64_t>> cantorEdgeIndex;
   cantorEdgeIndex.reserve(edgeIndex.size() / 2);
   for (auto it = edgeIndex.begin(); it != edgeIndex.end(); it += 2) {
     cantorEdgeIndex.emplace_back(*it, *std::next(it));
@@ -39,7 +40,7 @@ auto cantorize(std::vector<int64_t> edgeIndex, const Acts::Logger& logger) {
 }  // namespace
 
 Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
-    const std::vector<int64_t>& truthGraph,
+    const std::vector<std::int64_t>& truthGraph,
     std::unique_ptr<const Acts::Logger> l)
     : m_logger(std::move(l)) {
   m_truthGraphCantor = cantorize(truthGraph, logger());
@@ -49,13 +50,13 @@ void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
                                                   const std::any& edges,
                                                   const std::any&) const {
   // We need to transpose the edges here for the right memory layout
-  const auto edgeIndex = Acts::detail::tensor2DToVector<int64_t>(
+  const auto edgeIndex = Acts::detail::tensor2DToVector<std::int64_t>(
       std::any_cast<torch::Tensor>(edges).t());
 
   auto predGraphCantor = cantorize(edgeIndex, logger());
 
   // Calculate intersection
-  std::vector<Acts::detail::CantorEdge<int64_t>> intersection;
+  std::vector<Acts::detail::CantorEdge<std::int64_t>> intersection;
   intersection.reserve(
       std::max(predGraphCantor.size(), m_truthGraphCantor.size()));
 

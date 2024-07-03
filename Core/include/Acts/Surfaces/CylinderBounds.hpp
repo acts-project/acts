@@ -105,15 +105,6 @@ class CylinderBounds : public SurfaceBounds {
   bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
-  /// Specialized method for CylinderBounds that checks if a global position
-  /// is within the cylinder cover
-  ///
-  /// @param position is the position in the cylinder frame
-  /// @param bcheck is the boundary check directive
-  /// @return boolean indicator for operation success
-  bool inside3D(const Vector3& position,
-                const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
-
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
   double get(BoundValues bValue) const { return m_values[bValue]; }

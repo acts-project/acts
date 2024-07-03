@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
