@@ -16,7 +16,6 @@
 #include <memory>
 #include <tuple>
 
-#include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoShapeUnion.h>
 
 class GeoFullPhysVol;
