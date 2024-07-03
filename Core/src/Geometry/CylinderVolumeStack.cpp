@@ -108,14 +108,15 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
                                                 const Logger& logger) {
   ACTS_DEBUG("Creating CylinderVolumeStack from "
              << m_volumes.size() << " volumes in direction "
-             << binningValueNames()[direction]);
+             << binningValueName(direction));
   if (m_volumes.empty()) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires at least one volume");
   }
 
-  if (direction != Acts::binZ && direction != Acts::binR) {
-    throw std::invalid_argument(binningValueNames()[direction] +
+  if (direction != Acts::BinningValue::binZ &&
+      direction != Acts::BinningValue::binR) {
+    throw std::invalid_argument(binningValueName(direction) +
                                 " is not supported ");
   }
 
@@ -156,7 +157,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
   ACTS_VERBOSE("Checking volume alignment");
   checkVolumeAlignment(volumeTuples, logger);
 
-  if (direction == Acts::binZ) {
+  if (direction == Acts::BinningValue::binZ) {
     ACTS_VERBOSE("Sorting by volume z position");
     std::sort(volumeTuples.begin(), volumeTuples.end(),
               [](const auto& a, const auto& b) {
@@ -219,7 +220,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     // @TODO: We probably can reuse m_transform
     m_groupTransform = m_transform;
 
-  } else if (direction == Acts::binR) {
+  } else if (direction == Acts::BinningValue::binR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
     std::sort(volumeTuples.begin(), volumeTuples.end(),
               [](const auto& a, const auto& b) { return a.midR() < b.midR(); });
@@ -278,9 +279,9 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     m_groupTransform = m_transform;
 
   } else {
-    ACTS_ERROR("Binning in " << binningValueNames()[direction]
+    ACTS_ERROR("Binning in " << binningValueName(direction)
                              << " is not supported");
-    throw std::invalid_argument(binningValueNames()[direction] +
+    throw std::invalid_argument(binningValueName(direction) +
                                 " is not supported ");
   }
 }

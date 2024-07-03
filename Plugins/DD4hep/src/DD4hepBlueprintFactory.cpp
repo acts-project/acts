@@ -32,7 +32,7 @@ Acts::Experimental::DD4hepBlueprintFactory::create(
 
   // Create the root node
   std::vector<ActsScalar> bValues = {0., 150., 1000.};
-  std::vector<BinningValue> binning = {Acts::binR};
+  std::vector<BinningValue> binning = {Acts::BinningValue::binR};
   auto root = std::make_unique<Acts::Experimental::Blueprint::Node>(
       dd4hepElement.name(), Acts::Transform3::Identity(),
       Acts::VolumeBounds::eCylinder, bValues, binning);
@@ -173,17 +173,17 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     // Set as defaults
     bValues = {0., 0., 0.};
     auto parsedExtent = extOpt.value();
-    if (parsedExtent.constrains(binR)) {
-      bValues[0u] = std::floor(parsedExtent.min(binR));
-      bValues[1u] = std::ceil(parsedExtent.max(binR));
+    if (parsedExtent.constrains(BinningValue::binR)) {
+      bValues[0u] = std::floor(parsedExtent.min(BinningValue::binR));
+      bValues[1u] = std::ceil(parsedExtent.max(BinningValue::binR));
     }
-    if (parsedExtent.constrains(binZ)) {
-      ActsScalar minZ = parsedExtent.min(binZ) > 0.
-                            ? std::floor(parsedExtent.min(binZ))
-                            : std::ceil(parsedExtent.min(binZ));
-      ActsScalar maxZ = parsedExtent.max(binZ) > 0.
-                            ? std::floor(parsedExtent.max(binZ))
-                            : std::ceil(parsedExtent.max(binZ));
+    if (parsedExtent.constrains(BinningValue::binZ)) {
+      ActsScalar minZ = parsedExtent.min(BinningValue::binZ) > 0.
+                            ? std::floor(parsedExtent.min(BinningValue::binZ))
+                            : std::ceil(parsedExtent.min(BinningValue::binZ));
+      ActsScalar maxZ = parsedExtent.max(BinningValue::binZ) > 0.
+                            ? std::floor(parsedExtent.max(BinningValue::binZ))
+                            : std::ceil(parsedExtent.max(BinningValue::binZ));
       bValues[2u] = 0.5 * (maxZ - minZ);
       transform.translation().z() = 0.5 * (maxZ + minZ);
     }
@@ -258,10 +258,9 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       if (!internalBinningValues.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");
         Extent internalsExtent;
-        ExtentEnvelope clearance = zeroEnvelopes;
+        ExtentEnvelope clearance = ExtentEnvelope::Zero();
         for (const auto& bv : internalBinningValues) {
-          ACTS_VERBOSE("   -> measuring extent for "
-                       << binningValueNames()[bv]);
+          ACTS_VERBOSE("   -> measuring extent for " << binningValueName(bv));
           ACTS_VERBOSE("   -> with clearance :" << internalsClearance);
           clearance[bv] = {internalsClearance, internalsClearance};
         }
@@ -286,7 +285,8 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       baseName + "_root_volume_finder", dd4hepElement, "");
   if (rootFinder == "indexed") {
     aux[1u] = "root finder : indexed";
-    std::vector<BinningValue> binning = {binZ, binR};
+    std::vector<BinningValue> binning = {BinningValue::binZ,
+                                         BinningValue::binR};
     rootsFinderBuilder =
         std::make_shared<Acts::Experimental::IndexedRootVolumeFinderBuilder>(
             binning);
