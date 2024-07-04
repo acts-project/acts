@@ -115,7 +115,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   }
 
   ACTS_DEBUG("Got " << numEdges << " edges, put them in a vector...");
-  std::vector<int32_t> edgeIndexVector;
+  std::vector<int64_t> edgeIndexVector;
   edgeIndexVector.reserve(2 * numEdges);
 
   std::vector<float> edgeFeatureVector;
@@ -140,8 +140,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     auto dst = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
 
     // Edge index
-    assert(src.hit_id() >= 0 && src.hit_id() < static_cast<int>(numNodes));
-    assert(dst.hit_id() >= 0 && dst.hit_id() < static_cast<int>(numNodes));
+    assert(src.hit_id() >= 0 && src.hit_id() < static_cast<uint64_t>(numNodes));
+    assert(dst.hit_id() >= 0 && dst.hit_id() < static_cast<uint64_t>(numNodes));
 
     edgeIndexVector.push_back(src.hit_id());
     edgeIndexVector.push_back(dst.hit_id());
@@ -150,7 +150,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     // See
     // https://gitlab.cern.ch/gnn4itkteam/acorn/-/blob/dev/acorn/utils/loading_utils.py?ref_type=heads#L288
     const float *srcFeatures = inputValues.data() + src.hit_id() * numFeatures;
-    const float *dstFeatures = inputValues.data() + src.hit_id() * numFeatures;
+    const float *dstFeatures = inputValues.data() + dst.hit_id() * numFeatures;
 
     const float deltaR = dstFeatures[0] - srcFeatures[0];
     const float deltaPhi =
