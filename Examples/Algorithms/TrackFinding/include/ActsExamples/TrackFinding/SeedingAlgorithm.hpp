@@ -114,8 +114,9 @@ class SeedingAlgorithm final : public IAlgorithm {
     // At small r we remove points beyond |z| > 200.
     float r = sp.r();
     float zabs = std::abs(sp.z());
-    if (zabs > 200. && r < 50.)
+    if (zabs > 200. && r < 50.) {
       return false;
+    }
     
     /// Remove space points beyond eta=4 if their z is
     /// larger than the max seed z0 (150.)
