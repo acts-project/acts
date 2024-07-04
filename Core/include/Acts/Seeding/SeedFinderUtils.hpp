@@ -12,6 +12,7 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfigNA60.hpp"
 
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
@@ -89,6 +90,13 @@ bool xyzCoordinateCheck(
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates);
 
+template <typename external_spacepoint_t>
+bool xyzCoordinateCheck(
+    Acts::SpacePointData& spacePointData,
+    const Acts::SeedFinderConfigNA60<external_spacepoint_t>& config,
+    const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
+    const double* spacepointPosition, double* outputCoordinates);
+ 
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"

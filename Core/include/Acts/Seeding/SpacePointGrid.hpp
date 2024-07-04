@@ -10,5 +10,6 @@
 
 // Define specialization for Cylindrical detector geometry
 #include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
+#include "Acts/Seeding/detail/PlanarSpacePointGrid.hpp"
 
 // Define specialization for other detector geometries

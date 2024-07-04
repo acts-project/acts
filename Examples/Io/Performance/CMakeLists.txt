@@ -5,6 +5,7 @@ add_library(
   ActsExamples/Io/Performance/TrackFinderPerformanceWriter.cpp
   ActsExamples/Io/Performance/TrackFitterPerformanceWriter.cpp
   ActsExamples/Io/Performance/VertexPerformanceWriter.cpp
+  ActsExamples/Io/Performance/TrackletVertexingPerformanceWriter.cpp
 )
 target_include_directories(
   ActsExamplesIoPerformance

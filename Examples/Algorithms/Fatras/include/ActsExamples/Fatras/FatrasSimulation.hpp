@@ -61,7 +61,7 @@ class FatrasSimulation final : public IAlgorithm {
 
     // tuning parameters
     /// Minimal absolute momentum for particles to be simulated.
-    double pMin = 0.5 * Acts::UnitConstants::GeV;
+    double pMin = 0.1 * Acts::UnitConstants::GeV;
     /// Simulate (multiple) scattering for charged particles.
     bool emScattering = true;
     /// Simulate ionisiation/excitation energy loss of charged particles.

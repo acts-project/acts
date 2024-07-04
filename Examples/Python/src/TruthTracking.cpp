@@ -76,6 +76,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
     ACTS_PYTHON_MEMBER(keepNeutral);
+    ACTS_PYTHON_MEMBER(keepPrimary);
+    ACTS_PYTHON_MEMBER(keepSecondary);
     ACTS_PYTHON_MEMBER(nHitsMin);
     ACTS_PYTHON_MEMBER(nHitsMax);
     ACTS_PYTHON_STRUCT_END();

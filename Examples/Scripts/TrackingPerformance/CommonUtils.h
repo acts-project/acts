@@ -95,7 +95,7 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
 /// @param minScale the minimum of the scale
 /// @param maxScale the maximum of the scale
 template <typename eff_t>
-void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
+void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1) {
   gPad->Update();
   auto ymin = gPad->GetUymin();
   auto ymax = gPad->GetUymax();

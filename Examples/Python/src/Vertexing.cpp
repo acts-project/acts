@@ -13,6 +13,7 @@
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
+#include "ActsExamples/Vertexing/TrackletVertexingAlgorithm.hpp"
 
 #include <memory>
 
@@ -54,6 +55,12 @@ void addVertexing(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
                                 mex, "SingleSeedVertexFinderAlgorithm",
                                 inputSpacepoints, outputVertices);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackletVertexingAlgorithm,
+                                mex, "TrackletVertexingAlgorithm",
+                                inputSpacePoints, inputSpacePointsMC, inputParticles, inputMeasurementParticlesMap,
+                                zmax, zmin, deltaPhi, deltaThetaMin, deltaThetaMax, verbose, doMCtruth, outputRecPrimaryVertex, outputFitPrimaryVertex, outputGenPrimaryVertex, noGuessing,
+                                useFit, nbins, addDeltas, projective, zPerigee, outputFitFunction, outputZTracklets, outputZTrackletsPeak);
 }
 
 }  // namespace Acts::Python

@@ -51,7 +51,7 @@ namespace Acts {
 template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    const Logger& logger = getDummyLogger()) {
+    const Logger& logger = getDummyLogger(), bool verbose =false) {
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
@@ -71,6 +71,17 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
       return std::nullopt;
     }
     const auto& sp = *it;
+
+
+//============ 	modification: rotation of the SP (as in the seeding)  
+//     std::cout << "before rotation" << std::endl;
+//     std::cout << "EstimateTrackParamesFromSeed.hpp SPx= " << sp->x() << " SPy= " << sp->y() << " SPz= " << sp->z() << std::endl;
+//     std::cout << "after rotation" << std::endl;
+//     std::cout << "EstimateTrackParamesFromSeed.hpp SPx= " << sp->x() << " SPy= " << sp->z() << " SPz= " << sp->y() << std::endl;
+// 
+//     ActsScalar x = sp->x();
+//     ActsScalar y = sp->z();
+//=================================
 
     ActsScalar x = sp->x();
     ActsScalar y = sp->y();
@@ -154,7 +165,7 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger()) {
+    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger(), bool verbose = false) {
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
@@ -165,6 +176,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Convert bField to Tesla
   ActsScalar bFieldInTesla = bField.norm() / UnitConstants::T;
   ActsScalar bFieldMinInTesla = bFieldMin / UnitConstants::T;
+  if(verbose)
+    std::cout << "EstimateTrackParametersFromSeed.pp_Bfield= " << bField.x() << " " << bField.y() << " " << bField.z() << std::endl;
   // Check if magnetic field is too small
   if (bFieldInTesla < bFieldMinInTesla) {
     // @todo shall we use straight-line estimation and use default q/pt in such
@@ -191,6 +204,9 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     const auto& sp = *it;
     spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
     spGlobalTimes[isp] = sp->t();
+    //    spGlobalPositions[isp] = Vector3(sp->y(), sp->z(), sp->x());  //MODIFIED BY ME TO TAKE INTO ACCOUNT THE SP ROTATION?
+    if(verbose)
+      std::cout << "NA60+_EstimateTrackParamsFromSeed_SP(x,y,z)= " << spGlobalPositions[isp].y() << " " << spGlobalPositions[isp].z() << " " << spGlobalPositions[isp].x() << std::endl;
   }
 
   // Define a new coordinate frame with its origin at the bottom space point, z
@@ -284,6 +300,13 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
         << "\nbottom sp: " << spGlobalPositions[0] << "\nmiddle sp: "
         << spGlobalPositions[1] << "\ntop sp: " << spGlobalPositions[2]);
     return std::nullopt;
+  }
+  if(verbose){
+    std::cout << "NA60+_EstimateTrackParamsFromSeed_eBoundLoc0=  " << params[eBoundLoc0] << std::endl;
+    std::cout << "NA60+_EstimateTrackParamsFromSeed_eBoundLoc1=  " << params[eBoundLoc1] << std::endl;
+    std::cout << "NA60+_EstimateTrackParamsFromSeed_eBoundPhi=  " << params[eBoundPhi] << std::endl;
+    std::cout << "NA60+_EstimateTrackParamsFromSeed_eBoundTheta=  " << params[eBoundTheta] << std::endl;
+    std::cout << "NA60+_EstimateTrackParamsFromSeed_eBoundQOverP=  " << params[eBoundQOverP] << std::endl;
   }
   return params;
 }

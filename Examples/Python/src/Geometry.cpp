@@ -37,6 +37,8 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 #include <array>
 #include <memory>
@@ -107,7 +109,6 @@ void addGeometry(Context& ctx) {
         .def("extra", &Acts::GeometryIdentifier::extra)
         .def("value", &Acts::GeometryIdentifier::value);
   }
-
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         .def("geometryId",
@@ -116,7 +117,11 @@ void addGeometry(Context& ctx) {
              [](Acts::Surface& self) {
                return self.center(Acts::GeometryContext{});
              })
-        .def("type", [](Acts::Surface& self) { return self.type(); });
+        .def("type", [](Acts::Surface& self) { return self.type(); })
+        .def("assignSurfaceMaterial",
+             [](Acts::Surface& self, std::shared_ptr<const ProtoSurfaceMaterial> material) {
+               self.assignSurfaceMaterial(material);
+             });
   }
 
   {
@@ -277,6 +282,30 @@ void addExperimentalGeometry(Context& ctx) {
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
                       Acts::ActsScalar, Acts::ActsScalar, std::size_t,
                       std::size_t>());
+  }
+
+  {
+    // Be able to construct a BinUtility
+    py::class_<BinUtility>(m, "BinUtility")
+        .def(py::init<std::size_t, float, float, Acts::BinningOption,
+                      Acts::BinningValue>())
+        .def(py::init<std::vector<float>&, Acts::BinningOption,
+                      Acts::BinningValue>())
+        .def("__add__", &BinUtility::operator+=);
+  }
+  /*
+  {
+    // Be able to construct a BinUtility
+    py::class_<ProtoSurfaceMaterial, std::shared_ptr<const ProtoSurfaceMaterial>>(m, "ProtoSurfaceMaterial")
+        .def(py::init<Acts::BinUtility>());
+        
+  }
+  */
+  {
+    // Be able to construct a BinUtility
+    py::class_<ProtoSurfaceMaterial, std::shared_ptr<ProtoSurfaceMaterial>>(m, "ProtoSurfaceMaterial")
+        .def(py::init<Acts::BinUtility>());
+        
   }
 
   {

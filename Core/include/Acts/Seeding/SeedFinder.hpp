@@ -106,8 +106,9 @@ class SeedFinder {
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
-
+      const Acts::Range1D<float>& rMiddleSPRange,
+      float zTarget) const;
+ 
   /// @brief Compatibility method for the new-style seed finding API.
   ///
   /// This method models the old-style seeding API where we only need a

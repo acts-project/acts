@@ -65,6 +65,8 @@ class TruthSeedSelector final : public IAlgorithm {
     double ptMax = std::numeric_limits<double>::max();
     /// Keep neutral particles
     bool keepNeutral = false;
+    bool keepPrimary = true;
+    bool keepSecondary = true;
     /// Requirement on number of recorded hits
     //@TODO: implement detector-specific requirements
     std::size_t nHitsMin = 0;

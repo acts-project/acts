@@ -22,6 +22,7 @@ add_library(
   src/Validation/ResPlotTool.cpp
   src/Validation/TrackClassification.cpp
   src/Validation/TrackSummaryPlotTool.cpp
+  src/Validation/TrkVtxPlotTool.cpp
   )
 
 target_include_directories(

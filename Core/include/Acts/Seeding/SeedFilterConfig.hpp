@@ -21,10 +21,11 @@ namespace Acts {
 struct SeedFilterConfig {
   /// Allowed difference in curvature (inverted seed radii) between two
   /// compatible seeds
-  float deltaInvHelixDiameter = 0.00003 * 1. / Acts::UnitConstants::mm;
+  float deltaInvHelixDiameter = 0.01 * 1. / Acts::UnitConstants::mm;
   /// Minimum distance between compatible outer space-points to be considered.
   /// This is used to avoid counting space-points from the same layer
-  float deltaRMin = 5. * Acts::UnitConstants::mm;
+  float deltaRMin = 50. * Acts::UnitConstants::mm;
+  float deltaYMin = 50. * Acts::UnitConstants::mm;
   /// Seed weight/score is increased by this value if a compatible seed has been
   /// found. This is the c1 factor in the seed score calculation (w = c1 * Nt -
   /// c2 * d0 - c3 * z0)
@@ -84,6 +85,7 @@ struct SeedFilterConfig {
   /// Use deltaR between top and middle SP instead of top radius to search for
   /// compatible SPs
   bool useDeltaRorTopRadius = false;
+  bool verbose=false;
 
   bool isInInternalUnits = false;
   SeedFilterConfig toInternalUnits() const {
@@ -95,6 +97,7 @@ struct SeedFilterConfig {
     SeedFilterConfig config = *this;
     config.isInInternalUnits = true;
     config.deltaRMin /= 1_mm;
+    config.deltaYMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
 
     return config;
