@@ -352,7 +352,7 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
 
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
-  if (bValue == binR || bValue == binPhi) {
+  if (bValue == BinningValue::binR || bValue == BinningValue::binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
@@ -362,10 +362,10 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
 
 double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
                                                BinningValue bValue) const {
-  if (bValue == binR) {
+  if (bValue == BinningValue::binR) {
     return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
-  if (bValue == binPhi) {
+  if (bValue == BinningValue::binPhi) {
     return VectorHelpers::phi(binningPosition(gctx, bValue));
   }
 
@@ -385,8 +385,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                               const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging disc surfaces in " << binningValueNames()[direction]
-                                         << " direction");
+  ACTS_DEBUG("Merging disc surfaces in " << direction << " direction");
 
   if (m_associatedDetElement != nullptr ||
       other.m_associatedDetElement != nullptr) {
@@ -394,8 +393,9 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");
   }
+  assert(m_transform != nullptr && other.m_transform != nullptr);
 
-  Transform3 otherLocal = m_transform.inverse() * other.m_transform;
+  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
@@ -494,7 +494,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
     auto newBounds =
         std::make_shared<RadialBounds>(newMinR, newMaxR, hlPhi, avgPhi);
 
-    return {Surface::makeShared<DiscSurface>(m_transform, newBounds),
+    return {Surface::makeShared<DiscSurface>(*m_transform, newBounds),
             minR > otherMinR};
 
   } else if (direction == Acts::BinningValue::binPhi) {
@@ -527,7 +527,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
       auto [newHlPhi, newAvgPhi, reversed] = detail::mergedPhiSector(
           hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
 
-      Transform3 newTransform = m_transform;
+      Transform3 newTransform = *m_transform;
 
       if (externalRotation) {
         ACTS_VERBOSE("Modifying transform for external rotation of "
@@ -547,11 +547,10 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
     }
 
   } else {
-    ACTS_ERROR("DiscSurface::merge: invalid direction "
-               << binningValueNames()[direction]);
+    ACTS_ERROR("DiscSurface::merge: invalid direction " << direction);
 
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
-                                  "DiscSurface::merge: invalid direction " +
-                                      binningValueNames()[direction]);
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: invalid direction " + binningValueName(direction));
   }
 }

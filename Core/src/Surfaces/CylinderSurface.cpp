@@ -384,7 +384,9 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
                                   "associated with a detector element");
   }
 
-  Transform3 otherLocal = m_transform.inverse() * other.m_transform;
+  assert(m_transform != nullptr && other.m_transform != nullptr);
+
+  Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
 
   constexpr auto tolerance = s_onSurfaceTolerance;
 
@@ -492,7 +494,7 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
     auto newBounds = std::make_shared<CylinderBounds>(r, newHlZ);
 
     Transform3 newTransform =
-        m_transform * Translation3{Vector3::UnitZ() * newMidZ};
+        *m_transform * Translation3{Vector3::UnitZ() * newMidZ};
 
     return {Surface::makeShared<CylinderSurface>(newTransform, newBounds),
             zShift < 0};
@@ -536,7 +538,7 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
       auto [newHlPhi, newAvgPhi, reversed] = detail::mergedPhiSector(
           hlPhi, avgPhi, otherHlPhi, otherAvgPhi, logger, tolerance);
 
-      Transform3 newTransform = m_transform;
+      Transform3 newTransform = *m_transform;
 
       if (externalRotation) {
         ACTS_VERBOSE("Modifying transform for external rotation of "
