@@ -31,7 +31,7 @@ Acts::Material Acts::GeoModel::GeoMaterialConverter::convert(
     A += fraction * (geoEl->getA() / GeoModelKernelUnits::gram);
     Z += fraction * geoEl->getZ();
   }
-  if (molarDensity) {
+  if (useMolarDensity) {
     return Material::fromMolarDensity(x0, l0, A, Z, density);
   } else {
     return Material::fromMassDensity(x0, l0, A, Z, density);
