@@ -19,6 +19,7 @@
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
 
 #include <memory>
 
@@ -215,13 +216,18 @@ void addExaTrkXTrackFinding(Context &ctx) {
       .value("Cluster2Eta",
              TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+                                "TrackFindingAlgorithmExaTrkX",
+                                inputSpacePoints, inputClusters,
+                                inputTruthGraph, outputProtoTracks, outputGraph,
+                                graphConstructor, edgeClassifiers, trackBuilder,
+                                nodeFeatures, featureScales, filterShortTracks);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
-      inputParticles, inputClusters, inputMeasurementSimhitsMap,
-      outputProtoTracks, outputGraph, graphConstructor, edgeClassifiers,
-      trackBuilder, nodeFeatures, featureScales, filterShortTracks,
-      targetMinHits, targetMinPT);
+      ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
+      inputSpacePoints, inputSimHits, inputParticles,
+      inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
+      targetMinPT, targetMinSize);
 
   {
     auto cls =
