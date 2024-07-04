@@ -20,23 +20,17 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y g++-10 libstdc++-10-dev parallel software-properties-common
-        && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
-        && add-apt-repository 'deb http://apt.llvm.org/noble/ llvm-toolchain-noble-17 main'
-        && apt-get install -y clang-17 clang-tidy-17
-        && ln -s /usr/bin/clang++-17 /usr/bin/clang++
-        && ln -s /usr/bin/clang-17 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-17 /usr/bin/clang-tidy
-        && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/
-        && clang++ --gcc-toolchain=/opt -v
+        && apt-get install -y clang-tidy-18
+        && ln -sf /usr/bin/clang++-18 /usr/bin/clang++
+        && ln -sf /usr/bin/clang-18 /usr/bin/clang
+        && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
     - >
         cmake -B build -S .
         -GNinja
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
+        -DCMAKE_CXX_FLAGS="-Werror"
         -DACTS_BUILD_EVERYTHING=on
         -DACTS_RUN_CLANG_TIDY=on
 
