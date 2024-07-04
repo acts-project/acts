@@ -78,8 +78,8 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
                  "Cannot merge CylinderSurface with "
                  "non-CylinderSurface");
     throw_assert(
-        direction == binZ || direction == binRPhi,
-        "Invalid binning direction: " + binningValueNames()[direction]);
+        direction == BinningValue::binZ || direction == BinningValue::binRPhi,
+        "Invalid binning direction: " + binningValueName(direction));
 
     return mergeImpl(gctx, other, surfaceA, surfaceB, direction, logger);
 
@@ -89,8 +89,8 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     throw_assert(discB != nullptr,
                  "Cannot merge DiscSurface with non-DiscSurface");
     throw_assert(
-        direction == binR || direction == binPhi,
-        "Invalid binning direction: " + binningValueNames()[direction]);
+        direction == BinningValue::binR || direction == BinningValue::binPhi,
+        "Invalid binning direction: " + binningValueName(direction));
 
     return mergeImpl(gctx, other, surfaceA, surfaceB, direction, logger);
 
@@ -127,7 +127,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
   if (a->dim() == 1) {
     ACTS_VERBOSE("Merge two 1D GridPortalLinks on CylinderSurfaces in "
-                 << binningValueNames()[direction]);
+                 << direction);
     if (a->direction() != b->direction()) {
       ACTS_WARNING("GridPortalLinks have different directions");
       return nullptr;
@@ -170,7 +170,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       Axis merged{AxisBound, std::move(binEdges)};
       ACTS_VERBOSE("    ~> merged axis: " << merged);
 
-      return GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
+      return GridPortalLink::make(*mergedSurface, BinningValue::binZ,
+                                  std::move(merged));
     };
 
     auto mergeEquidistant = [&, mergedSurface](const auto& axisA,
@@ -196,8 +197,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
         ACTS_VERBOSE("    ~> merged axis: " << merged);
 
-        std::unique_ptr<PortalLinkBase> mergedPortalLink =
-            GridPortalLink::make(*mergedSurface, binZ, std::move(merged));
+        std::unique_ptr<PortalLinkBase> mergedPortalLink = GridPortalLink::make(
+            *mergedSurface, BinningValue::binZ, std::move(merged));
 
         return mergedPortalLink;
 
@@ -257,10 +258,9 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     const auto& axisA = *a->grid().axes().front();
     const auto& axisB = *b->grid().axes().front();
 
-    if (direction == binZ) {
-      ACTS_VERBOSE("Grids are binned along "
-                   << binningValueNames()[a->direction()]);
-      if (a->direction() == binZ) {
+    if (direction == BinningValue::binZ) {
+      ACTS_VERBOSE("Grids are binned along " << a->direction());
+      if (a->direction() == BinningValue::binZ) {
         ACTS_VERBOSE("=> colinear merge");
 
         return colinearMerge(axisA, axisB, false);
@@ -271,10 +271,9 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
         return nullptr;
       }
 
-    } else if (direction == binRPhi) {
-      ACTS_VERBOSE("Grids are binned along "
-                   << binningValueNames()[a->direction()]);
-      if (a->direction() == binRPhi) {
+    } else if (direction == BinningValue::binRPhi) {
+      ACTS_VERBOSE("Grids are binned along " << a->direction());
+      if (a->direction() == BinningValue::binRPhi) {
         ACTS_VERBOSE("=> colinear merge");
 
         return colinearMerge(axisA, axisB, false);
@@ -288,8 +287,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       // Cross merge might have to wrap around
       throw std::logic_error{"Not implemented"};
     } else {
-      ACTS_ERROR(
-          "Invalid binning direction: " << binningValueNames()[direction]);
+      ACTS_ERROR("Invalid binning direction: " << direction);
       throw std::invalid_argument{"Invalid binning direction"};
     }
   } else {
@@ -322,12 +320,9 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GeometryContext& gctx,
     return mergeGridPortals(gctx, b, a, surfaceB, surfaceA, direction, logger);
   }
 
-  ACTS_VERBOSE("Merging GridPortalLinks along "
-               << binningValueNames()[direction] << ":");
-  ACTS_VERBOSE(" - a: " << a->grid()
-                        << " along: " << binningValueNames()[a->direction()]);
-  ACTS_VERBOSE(" - b: " << b->grid()
-                        << " along: " << binningValueNames()[b->direction()]);
+  ACTS_VERBOSE("Merging GridPortalLinks along " << direction << ":");
+  ACTS_VERBOSE(" - a: " << a->grid() << " along: " << a->direction());
+  ACTS_VERBOSE(" - b: " << b->grid() << " along: " << b->direction());
 
   if (a->dim() == b->dim()) {
     ACTS_VERBOSE("Grid both have same dimension: " << a->dim());
