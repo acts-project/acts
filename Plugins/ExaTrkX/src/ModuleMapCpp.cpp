@@ -144,7 +144,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     auto dst = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
 
     dupCount[{src.hit_id(), dst.hit_id()}]++;
-    sortDupCount[{std::min(src.hit_id(), dst.hit_id()), std::max(src.hit_id(), dst.hit_id())}]++;
+    sortDupCount[{std::min(src.hit_id(), dst.hit_id()),
+                  std::max(src.hit_id(), dst.hit_id())}]++;
 
     // Edge index
     assert(src.hit_id() >= 0 && src.hit_id() < static_cast<int>(numNodes));
@@ -189,7 +190,6 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   }
   ACTS_DEBUG("MM duplicate edges: " << dupEdges);
 
-
   std::size_t sortDupEdges = 0;
   for (const auto &[e, c] : sortDupCount) {
     if (c > 1) {
@@ -197,8 +197,6 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     };
   }
   ACTS_DEBUG("MM duplicate edges (w sort): " << sortDupEdges);
-
-
 
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");

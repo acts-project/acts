@@ -48,7 +48,8 @@ TruthGraph TruthGraphBuilder::buildFromMeasurements(
   std::unordered_map<ActsFatras::Barcode, std::vector<std::size_t>> tracks;
 
   for (auto i = 0ul; i < spacepoints.size(); ++i) {
-    const auto measId = spacepoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
+    const auto measId =
+        spacepoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
 
     auto [a, b] = measPartMap.equal_range(measId);
     for (auto it = a; it != b; ++it) {

@@ -163,7 +163,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // sp?
     const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
 
-    // TODO this makes it a bit useless, refactor so we do not need to pass this to the pipeline
+    // TODO this makes it a bit useless, refactor so we do not need to pass this
+    // to the pipeline
     spacepointIDs.push_back(isp);
     moduleIds.push_back(sl1.geometryId().value());
 
@@ -239,13 +240,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   int nShortTracks = 0;
 
-  /// TODO the whole conversion back to meas idxs should be pulled out of the track trackBuilder
+  /// TODO the whole conversion back to meas idxs should be pulled out of the
+  /// track trackBuilder
   for (auto& candidate : trackCandidates) {
     ProtoTrack onetrack;
     onetrack.reserve(candidate.size());
 
-    for( auto i : candidate ) {
-      for(const auto &sl : spacepoints[i].sourceLinks()) {
+    for (auto i : candidate) {
+      for (const auto& sl : spacepoints[i].sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }
