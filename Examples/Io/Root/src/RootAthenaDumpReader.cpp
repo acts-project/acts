@@ -227,7 +227,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   MeasurementContainer measurements;
   measurements.reserve(nCL);
 
-  SimParticleContainer particles;
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   for (int im = 0; im < nCL; im++) {
@@ -307,34 +306,16 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     measurements.push_back(createMeasurement(digiPars, sl));
 
     // Create measurement particles map and particles container
-    for (auto barcode : CLparticleLink_barcode->at(im)) {
-      ActsFatras::Barcode fBarcode = barcode;
-      measPartMap.insert({im, fBarcode});
-
-      auto found = std::find(Part_barcode, Part_barcode + nPartEVT, barcode);
-      if (found == Part_barcode + nPartEVT) {
-        ACTS_WARNING("Could not find all truth particles for cluster " << im);
-        continue;
-      }
-
-      auto ip = std::distance(Part_barcode, found);
-      assert(Part_barcode[ip] == barcode);
-
-      SimParticle particle(fBarcode,
-                           static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
-
-      auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
-      particle.setAbsoluteMomentum(p.norm());
-      particle.setDirection(p.normalized());
-
-      auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
-      particle.setPosition4(x);
-
-      particles.insert(particle);
+    for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
+                                              CLparticleLink_barcode->at(im))) {
+      ActsFatras::Barcode barcode;
+      assert(subevt < std::numeric_limits<std::uint16_t>::max());
+      barcode.setParticle(subevt);
+      assert(bc < std::numeric_limits<std::uint16_t>::max());
+      barcode.setSubParticle(bc);
+      measPartMap.insert({im, barcode});
     }
   }
-
-  ACTS_DEBUG("Found " << nSP << " space points");
 
   // Prepare pixel space points
   SimSpacePointContainer pixelSpacePoints;
@@ -385,6 +366,28 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     }
 
     spacePoints.push_back(sp);
+  }
+
+  SimParticleContainer particles;
+
+  for (auto ip = 0; ip < nPartEVT; ++ip) {
+    ActsFatras::Barcode barcode;
+    assert(Part_event_number[ip] < std::numeric_limits<std::uint16_t>::max());
+    barcode.setParticle(Part_event_number[ip]);
+    assert(Part_barcode[ip] < std::numeric_limits<std::uint16_t>::max());
+    barcode.setSubParticle(Part_barcode[ip]);
+
+    SimParticle particle(barcode,
+                         static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+
+    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
+    particle.setAbsoluteMomentum(p.norm());
+    particle.setDirection(p.normalized());
+
+    auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
+    particle.setPosition4(x);
+
+    particles.insert(particle);
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
