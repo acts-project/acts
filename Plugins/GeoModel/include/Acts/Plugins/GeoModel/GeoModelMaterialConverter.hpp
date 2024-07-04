@@ -26,7 +26,7 @@ class GeoMaterialConverter {
     ///
     /// @param gm The GeoMaterial to be converted
     /// @return the Acts::Material
-    static Material convert(const GeoMaterial* gm, bool molarDensity = true);
+    static Material convert(const GeoMaterial* gm, bool useMolarDensity = true);
 
 }; // class GeoMaterialConverter
 } // namespace GeoModel
