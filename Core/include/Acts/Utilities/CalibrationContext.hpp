@@ -27,6 +27,7 @@ class CalibrationContext : public ContextType {
  public:
   /// Inherit all constructors
   using ContextType::ContextType;
+  using ContextType::operator=;
 };
 
 }  // namespace Acts

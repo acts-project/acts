@@ -29,6 +29,7 @@ class GeometryContext : public ContextType {
  public:
   /// Inherit all constructors
   using ContextType::ContextType;
+  using ContextType::operator=;
 };
 
 /// Helper struct that stores an object and a context, and will print it to
