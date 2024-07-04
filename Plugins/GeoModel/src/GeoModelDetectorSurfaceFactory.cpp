@@ -159,7 +159,7 @@ void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
                  << logVol->getMaterial()->getName() << ")");
 
     if (!(el && sf)) {
-      throw std::runtime_error("The Detector Element or the Surface is nllptr");
+      throw std::runtime_error("The Detector Element or the Surface is nullptr");
     }
     return;
   }
