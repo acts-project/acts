@@ -328,7 +328,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
       particle.setPosition4(x);
 
       particles.insert(particle);
-      measPartMap.insert({im, fBarcode});
     }
   }
 
@@ -384,9 +383,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     }
 
     spacePoints.push_back(sp);
-  }
-
-  for(int ip = 0; ip < nPartEVT; ++ip) {
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");

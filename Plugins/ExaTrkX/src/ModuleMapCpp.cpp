@@ -148,24 +148,23 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
     // Edge features
     // See https://gitlab.cern.ch/gnn4itkteam/acorn/-/blob/dev/acorn/utils/loading_utils.py?ref_type=heads#L288
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dr() / m_cfg.rScale);
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dPhi() / m_cfg.phiScale);
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dz() / m_cfg.zScale);
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dEta() / m_cfg.etaScale);
-
-    const auto deltaR = (dst.r() - src.r()) / m_cfg.rScale;
+    const float deltaR = (dst.r() - src.r()) / m_cfg.rScale;
+    const float deltaPhi = resetAngle(dst.phi() - src.phi()) / m_cfg.phiScale;
+    const float deltaZ = dst.z() - src.z() / m_cfg.zScale;
+    const float deltaEta = dst.eta() - src.eta() / m_cfg.etaScale;
 
     // In acorn, nan gets converted to 0
-    if (deltaR == 0) {
-      edgeFeatureVector.push_back(0.f);
-      edgeFeatureVector.push_back(0.f);
-    } else {
-      const float deltaPhi = resetAngle(dst.phi() - src.phi()) / m_cfg.phiScale;
-      const float phiSlope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
-      edgeFeatureVector.push_back(phiSlope);
+    float phiSlope = 0.f;
+    float rPhiSlope = 0.f;
 
-      const float avgR = 0.5 * (dst.r() + src.r()) / m_cfg.rScale;
-      edgeFeatureVector.push_back(avgR * phiSlope);
+    if (deltaR != 0) {
+      phiSlope = deltaPhi / deltaR;
+      const float avgR = 0.5f * (dst.r() + src.r()) / m_cfg.rScale;
+      rPhiSlope = avgR * phiSlope;
+    }
+
+    for(auto f : {deltaR, deltaPhi, deltaZ, deltaEta, phiSlope, rPhiSlope}) {
+      edgeFeatureVector.push_back(f);
     }
   }
 
