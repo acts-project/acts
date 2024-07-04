@@ -164,6 +164,7 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
   // Vector of input features for neural network classification
   std::vector<float> inputFeatures(3);
 
+  std::size_t unmatched = 0;
   for (const auto& track : tracks) {
     // Counting number of total trajectories
     m_nTotalTracks++;
@@ -187,8 +188,9 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     // Get the truth matching information
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth matching information for this track, index = "
+      ACTS_VERBOSE("No truth matching information for this track, index = "
                  << track.index() << " tip index = " << track.tipIndex());
+      unmatched++;
       continue;
     }
 
@@ -211,6 +213,10 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     m_duplicationPlotTool.fill(
         m_duplicationPlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
+  }
+
+  if( unmatched > 0 ) {
+    ACTS_DEBUG("No matching information found for " << unmatched << " tracks");
   }
 
   // Loop over all truth particles for efficiency plots and reco details.

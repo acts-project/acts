@@ -67,13 +67,15 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
 
+  std::size_t failed = 0;
   for (const auto& track : tracks) {
     // Get the majority truth particle to this track
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     if (particleHitCounts.empty()) {
-      ACTS_DEBUG(
+      ACTS_VERBOSE(
           "No truth particle associated with this trajectory with tip index = "
           << track.tipIndex());
+      failed++;
       continue;
     }
 
@@ -85,10 +87,11 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
     if (particles.find(majorityParticleId) == particles.end()) {
-      ACTS_DEBUG(
+      ACTS_VERBOSE(
           "The majority particle is not in the input particle collection, "
           "majorityParticleId = "
           << majorityParticleId);
+      failed++;
       continue;
     }
 
@@ -137,6 +140,8 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
       ++particleTrackMatch.fakes;
     }
   }
+
+  ACTS_DEBUG("Matching failed for " << failed << " tracks");
 
   m_outputTrackParticleMatching(ctx, std::move(trackParticleMatching));
   m_outputParticleTrackMatching(ctx, std::move(particleTrackMatching));
