@@ -78,7 +78,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     // TODO Use std::span when we move to C++20
     const float *hitFeatures = inputValues.data() + i * numFeatures;
 
-    uint64_t hitId = i;
+    int hitId = static_cast<int>(i);
 
     float r = hitFeatures[0] * m_cfg.rScale;
     float phi = hitFeatures[1] * m_cfg.phiScale;
@@ -134,6 +134,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   };
 
   std::map<std::pair<uint64_t, uint64_t>, uint64_t> dupCount;
+  std::map<std::pair<uint64_t, uint64_t>, uint64_t> sortDupCount;
 
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {
@@ -143,10 +144,11 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     auto dst = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
 
     dupCount[{src.hit_id(), dst.hit_id()}]++;
+    sortDupCount[{std::min(src.hit_id(), dst.hit_id()), std::max(src.hit_id(), dst.hit_id())}]++;
 
     // Edge index
-    assert(src.hit_id() >= 0 && src.hit_id() < static_cast<uint64_t>(numNodes));
-    assert(dst.hit_id() >= 0 && dst.hit_id() < static_cast<uint64_t>(numNodes));
+    assert(src.hit_id() >= 0 && src.hit_id() < static_cast<int>(numNodes));
+    assert(dst.hit_id() >= 0 && dst.hit_id() < static_cast<int>(numNodes));
 
     edgeIndexVector.push_back(src.hit_id());
     edgeIndexVector.push_back(dst.hit_id());
@@ -186,6 +188,17 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     };
   }
   ACTS_DEBUG("MM duplicate edges: " << dupEdges);
+
+
+  std::size_t sortDupEdges = 0;
+  for (const auto &[e, c] : sortDupCount) {
+    if (c > 1) {
+      sortDupEdges++;
+    };
+  }
+  ACTS_DEBUG("MM duplicate edges (w sort): " << sortDupEdges);
+
+
 
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
