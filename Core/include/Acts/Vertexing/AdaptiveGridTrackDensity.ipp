@@ -36,15 +36,14 @@ double multivariateGaussian(const ActsVector<nDim>& args,
 }  // namespace
 
 template <int trkGridSize>
-double AdaptiveGridTrackDensity<trkGridSize>::getBinCenter(std::int32_t bin,
-                                                           double binExtent) {
-  return bin * binExtent;
+double AdaptiveGridTrackDensity<trkGridSize>::getBinCenter(
+    std::int32_t bin) const {
+  return bin * m_cfg.binSize;
 }
 
 template <int trkGridSize>
-std::int32_t AdaptiveGridTrackDensity<trkGridSize>::getBin(double value,
-                                                           double binExtent) {
-  return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
+std::int32_t AdaptiveGridTrackDensity<trkGridSize>::getBin(double value) const {
+  return static_cast<std::int32_t>(std::floor(value / m_cfg.binSize - 0.5) + 1);
 }
 
 template <int trkGridSize>
@@ -66,9 +65,7 @@ Result<double> AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
   }
 
   std::int32_t zBin = densityMap.zBin[zGridPos];
-  // Derive corresponding z value
-  int sign = (zBin > 0) ? +1 : -1;
-  return (zBin + sign * 0.5f) * m_cfg.binSize;
+  return getBinCenter(zBin);
 }
 
 template <int trkGridSize>
@@ -102,34 +99,36 @@ AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   double d0 = trk.parameters()[0];
   double z0 = trk.parameters()[1];
 
-  // Calculate offset in d direction to central bin at z-axis
-  int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
+  // Calculate bin in d direction
+  std::int32_t centralDBin = getBin(d0);
 
-  // Check if current track does affect grid density
-  // in central bins at z-axis
-  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
+  std::int32_t halfTrkGridSize = (trkGridSize - 1) / 2;
+
+  // Check if current track affects grid density
+  if (std::abs(centralDBin) > halfTrkGridSize) {
     return {};
   }
 
   // Calculate bin in z
-  int zBin = int(z0 / m_cfg.binSize);
+  std::int32_t centralZBin = getBin(z0);
 
-  TrackDensityMap trackDensityMap = createTrackGrid(zBin, impactParams, cov);
+  TrackDensityMap trackDensityMap =
+      createTrackGrid(centralZBin, impactParams, cov);
 
-  std::vector<std::int32_t> zBinValues;
+  std::vector<std::int32_t> zBins;
 
-  std::int32_t startEnd = std::int32_t(trkGridSize - 1) / 2;
+  std::int32_t firstZBin = centralZBin - halfTrkGridSize;
 
   for (std::int32_t i = 0; i < trkGridSize; ++i) {
-    zBinValues.push_back(static_cast<std::int32_t>(zBin + (i - startEnd)));
+    zBins.push_back(centralZBin + (i - firstZBin));
   }
 
   for (std::int32_t i = 0; i < trkGridSize; ++i) {
-    std::int32_t z = zBinValues[i];
+    std::int32_t zBin = zBins[i];
 
     // Check if track density already exists at current z position
     auto findIter =
-        std::find(densityMap.zBin.begin(), densityMap.zBin.end(), z);
+        std::find(densityMap.zBin.begin(), densityMap.zBin.end(), zBin);
 
     if (findIter != densityMap.zBin.end()) {
       // Z bin already exists
@@ -137,12 +136,12 @@ AdaptiveGridTrackDensity<trkGridSize>::addTrack(
           trackDensityMap.density[i];
     } else {
       // Create new z bin
-      auto it =
-          std::upper_bound(densityMap.zBin.begin(), densityMap.zBin.end(), z);
+      auto it = std::upper_bound(densityMap.zBin.begin(), densityMap.zBin.end(),
+                                 zBin);
       densityMap.density.insert(densityMap.density.begin() +
                                     std::distance(densityMap.zBin.begin(), it),
                                 trackDensityMap.density[i]);
-      densityMap.zBin.insert(it, z);
+      densityMap.zBin.insert(it, zBin);
     }
   }
 
@@ -161,10 +160,10 @@ void AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
       std::distance(mainDensityMap.zBin.begin(), findIter);
 
   // Go over trkGrid and remove it from mainDensityGrid
-  std::int32_t startEnd = static_cast<std::int32_t>((trkGridSize - 1) / 2);
+  std::int32_t halfTrkGridSize = (trkGridSize - 1) / 2;
+  std::int32_t firstZBin = trackDensityMap.zBin - halfTrkGridSize;
   for (std::int32_t i = 0; i < trkGridSize; ++i) {
-    mainDensityMap
-        .density[static_cast<std::int32_t>(densityIdx + (i - startEnd))] -=
+    mainDensityMap.density[densityIdx + (i - firstZBin)] -=
         trackDensityMap.density[i];
   }
 }
@@ -175,12 +174,13 @@ AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
     std::int32_t centralZBin, const Vector2& impactParams,
     const SquareMatrix2& cov) const {
   TrackDensityMap trackGrid;
-
   trackGrid.zBin = centralZBin;
 
+  std::int32_t halfTrkGridSize = (trkGridSize - 1) / 2;
+  std::int32_t firstZBin = centralZBin - halfTrkGridSize;
   for (std::int32_t i = 0; i < trkGridSize; ++i) {
-    double z =
-        (i - static_cast<double>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
+    std::int32_t zBin = firstZBin + i;
+    double z = getBinCenter(zBin);
     // Bin coordinates in the d-z plane
     Vector2 binCoords(0., z);
     // Transformation to coordinate system with origin at the track center
@@ -197,59 +197,78 @@ Result<double> AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   if (mainDensityMap.empty()) {
     return VertexingError::EmptyInput;
   }
+
   // Get z bin of max density z value
-  int sign = (maxZ > 0) ? +1 : -1;
-  int zMaxGridBin = int(maxZ / m_cfg.binSize - sign * 0.5f);
+  std::int32_t zMaxBin = getBin(maxZ);
 
-  // Find location in mainGridZValues
-  auto findIter = std::find(mainDensityMap.zBin.begin(),
-                            mainDensityMap.zBin.end(), zMaxGridBin);
-  int zBin = std::distance(mainDensityMap.zBin.begin(), findIter);
+  // Find location in mainDensityMap
+  std::size_t zMaxIndex =
+      std::distance(mainDensityMap.zBin.begin(),
+                    std::find(mainDensityMap.zBin.begin(),
+                              mainDensityMap.zBin.end(), zMaxBin));
 
-  const double maxValue = mainDensityMap.density[zBin];
-  double gridValue = mainDensityMap.density[zBin];
+  const double maxValue = mainDensityMap.density[zMaxIndex];
 
   // Find right half-maximum bin
-  int rhmBin = zBin;
+  std::size_t rhmIndex = zMaxIndex;
+  double gridValue = mainDensityMap.density[zMaxIndex];
+  // Boolean indicating whether we find a filled bin that has a densityValue <=
+  // maxValue/2
+  bool binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if ((zMaxGridBin + (rhmBin - zBin)) != mainDensityMap.zBin[rhmBin]) {
+    if ((zMaxBin + static_cast<std::int32_t>(rhmIndex - zMaxIndex)) !=
+        mainDensityMap.zBin[rhmIndex]) {
+      binFilled = false;
       break;
     }
-    rhmBin += 1;
-    if (rhmBin == int(mainDensityMap.density.size())) {
+    ++rhmIndex;
+    if (rhmIndex == mainDensityMap.density.size()) {
       break;
     }
-    gridValue = mainDensityMap.density[rhmBin];
+    gridValue = mainDensityMap.density[rhmIndex];
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  double deltaZ1 = (maxValue / 2 - mainDensityMap.density[rhmBin - 1]) *
-                   (m_cfg.binSize / (mainDensityMap.density[rhmBin - 1] -
-                                     mainDensityMap.density[rhmBin]));
+  double rightDensity = 0;
+  if (binFilled) {
+    rightDensity = mainDensityMap.density[rhmIndex];
+  }
+  double leftDensity = mainDensityMap.density[rhmIndex - 1];
+  double deltaZ1 = m_cfg.binSize * (maxValue / 2 - leftDensity) /
+                   (rightDensity - leftDensity);
+
   // Find left half-maximum bin
-  int lhmBin = zBin;
-  gridValue = mainDensityMap.density[zBin];
+  std::size_t lhmIndex = zMaxIndex;
+  gridValue = maxValue;
+  binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if ((zMaxGridBin + (lhmBin - zBin)) != mainDensityMap.zBin[lhmBin]) {
+    if ((zMaxBin + static_cast<std::int32_t>(lhmIndex - zMaxIndex)) !=
+        mainDensityMap.zBin[lhmIndex]) {
+      binFilled = false;
       break;
     }
-    lhmBin -= 1;
-    if (lhmBin < 0) {
+    if (lhmIndex == 0) {
       break;
     }
-    gridValue = mainDensityMap.density[lhmBin];
+    --lhmIndex;
+    gridValue = mainDensityMap.density[lhmIndex];
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  double deltaZ2 = (maxValue / 2 - mainDensityMap.density[lhmBin + 1]) *
-                   (m_cfg.binSize / (mainDensityMap.density[rhmBin + 1] -
-                                     mainDensityMap.density[rhmBin]));
+  rightDensity = mainDensityMap.density[lhmIndex + 1];
+  if (binFilled) {
+    leftDensity = mainDensityMap.density[lhmIndex];
+  } else {
+    leftDensity = 0;
+  }
+  float deltaZ2 = m_cfg.binSize * (rightDensity - maxValue / 2) /
+                  (rightDensity - leftDensity);
 
   // Approximate FWHM
   double fwhm =
-      rhmBin * m_cfg.binSize - deltaZ1 - lhmBin * m_cfg.binSize - deltaZ2;
+      rhmIndex * m_cfg.binSize - deltaZ1 - lhmIndex * m_cfg.binSize - deltaZ2;
 
   // FWHM = 2.355 * sigma
   double width = fwhm / 2.355f;

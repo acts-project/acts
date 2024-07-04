@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -73,8 +74,8 @@ class AdaptiveGridTrackDensity {
     /// @param binSize_ The binSize in mm
     explicit Config(double binSize_) : binSize(binSize_) {}
 
-    /// Z size of one single bin in grid in mm
-    double binSize = 0.1;
+    /// Z size of one single bin in grid
+    double binSize = 0.1 * UnitConstants::mm;
 
     /// Do NOT use just the z-bin with the highest
     /// track density, but instead check (up to)
@@ -133,18 +134,16 @@ class AdaptiveGridTrackDensity {
   // TODO this should not be public
   /// @brief Calculates the bin center from the bin number
   /// @param bin Bin number
-  /// @param binExtent Bin extent
   /// @return Bin center
-  static double getBinCenter(std::int32_t bin, double binExtent);
+  double getBinCenter(std::int32_t bin) const;
 
  private:
   Config m_cfg;
 
   /// @brief Calculates the bin number corresponding to a d, z, or time value
   /// @param value d, z, or time value
-  /// @param binExtent Bin extent
   /// @return Bin number
-  static std::int32_t getBin(double value, double binExtent);
+  std::int32_t getBin(double value) const;
 
   /// @brief Function that creates a track density map, i.e., a map from bins
   /// to the corresponding density values for a single track.
