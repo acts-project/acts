@@ -189,7 +189,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2204:v41
+  image: ghcr.io/acts-project/ubuntu2404:v51
   needs: [build_linux_ubuntu]
 
   script:
@@ -210,7 +210,7 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2204:v41
+  image: ghcr.io/acts-project/ubuntu2404:v51
   needs: [build_linux_ubuntu]
 
   artifacts:
