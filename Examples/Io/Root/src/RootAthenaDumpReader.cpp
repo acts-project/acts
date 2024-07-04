@@ -220,8 +220,28 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
   m_inputchain->GetEntry(entry);
 
-  // Loop on clusters (measurements)
-  ACTS_DEBUG("Found " << nCL << " clusters / measurements");
+  // Concat the two 32bit integers from athena to a Fatras barcode
+  auto makeBarcode = [&](std::uint32_t subevt, std::uint32_t barcode) {
+    std::uint64_t value = (static_cast<std::uint64_t>(subevt) << 32) | barcode;
+    return ActsFatras::Barcode(value);
+  };
+
+  SimParticleContainer particles;
+
+  for (auto ip = 0; ip < nPartEVT; ++ip) {
+    auto barcode = makeBarcode(Part_event_number[ip], Part_barcode[ip]);
+    SimParticle particle(barcode,
+                         static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+
+    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
+    particle.setAbsoluteMomentum(p.norm());
+    particle.setDirection(p.normalized());
+
+    auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
+    particle.setPosition4(x);
+
+    particles.insert(particle);
+  }
 
   ClusterContainer clusters(nCL);
   MeasurementContainer measurements;
@@ -308,11 +328,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     // Create measurement particles map and particles container
     for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
                                               CLparticleLink_barcode->at(im))) {
-      ActsFatras::Barcode barcode;
-      assert(subevt < std::numeric_limits<std::uint16_t>::max());
-      barcode.setParticle(subevt);
-      assert(bc < std::numeric_limits<std::uint16_t>::max());
-      barcode.setSubParticle(bc);
+      auto barcode = makeBarcode(subevt, bc);
       measPartMap.insert({im, barcode});
     }
   }
@@ -366,28 +382,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     }
 
     spacePoints.push_back(sp);
-  }
-
-  SimParticleContainer particles;
-
-  for (auto ip = 0; ip < nPartEVT; ++ip) {
-    ActsFatras::Barcode barcode;
-    assert(Part_event_number[ip] < std::numeric_limits<std::uint16_t>::max());
-    barcode.setParticle(Part_event_number[ip]);
-    assert(Part_barcode[ip] < std::numeric_limits<std::uint16_t>::max());
-    barcode.setSubParticle(Part_barcode[ip]);
-
-    SimParticle particle(barcode,
-                         static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
-
-    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
-    particle.setAbsoluteMomentum(p.norm());
-    particle.setDirection(p.normalized());
-
-    auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
-    particle.setPosition4(x);
-
-    particles.insert(particle);
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
