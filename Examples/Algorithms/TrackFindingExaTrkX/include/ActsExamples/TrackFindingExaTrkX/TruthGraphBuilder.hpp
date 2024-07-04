@@ -52,9 +52,6 @@ class TruthGraphBuilder final : public IAlgorithm {
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final;
 
-  /// Finalize and print timing
-  ActsExamples::ProcessCode finalize() final;
-
   const Config& config() const { return m_cfg; }
 
  private:
