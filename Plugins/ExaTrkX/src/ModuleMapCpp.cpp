@@ -12,9 +12,8 @@
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <graph_creator>
-#include <module_map_triplet>
-
 #include <map>
+#include <module_map_triplet>
 
 namespace Acts {
 
@@ -134,7 +133,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     return angle;
   };
 
-  std::map<std::pair<uint64_t,uint64_t>, uint64_t> dupCount;
+  std::map<std::pair<uint64_t, uint64_t>, uint64_t> dupCount;
 
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {
@@ -181,8 +180,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   }
 
   std::size_t dupEdges = 0;
-  for(const auto &[e, c] : dupCount) {
-    if(c > 1) {
+  for (const auto &[e, c] : dupCount) {
+    if (c > 1) {
       dupEdges++;
     };
   }
