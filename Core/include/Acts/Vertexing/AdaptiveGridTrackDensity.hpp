@@ -44,8 +44,8 @@ class AdaptiveGridTrackDensity {
   struct TrackDensityMap {
     using Vector = Eigen::Matrix<double, trkGridSize, 1>;
 
-    /// The z-bin position of the track density
-    std::int32_t zBin = 0;
+    /// The central z-bin position of the track density
+    std::int32_t centralZBin = 0;
     /// The 1-dim density contribution of the track
     Vector density = Vector::Zero();
   };
