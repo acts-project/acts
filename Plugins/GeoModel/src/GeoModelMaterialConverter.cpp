@@ -15,8 +15,8 @@
 namespace {
 constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
 }
-Acts::Material Acts::GeoModel::geoMaterialConverter(
-    const GeoMaterial* gm, bool useMolarDensity) {
+Acts::Material Acts::GeoModel::geoMaterialConverter(const GeoMaterial* gm,
+                                                    bool useMolarDensity) {
   double x0 = gm->getRadLength();
   double l0 = gm->getIntLength();
   double density = gm->getDensity() * s_densityCnvFactor;

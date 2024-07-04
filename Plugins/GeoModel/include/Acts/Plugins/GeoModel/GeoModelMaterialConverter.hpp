@@ -14,11 +14,12 @@ class GeoMaterial;
 namespace Acts {
 
 namespace GeoModel {
-  /// @brief Convert GeoMaterial to Acts::Material
-  ///
-  /// @param gm The GeoMaterial to be converted
-  /// @return the Acts::Material
-  Material geoMaterialConverter(const GeoMaterial* gm, bool useMolarDensity = true);
+/// @brief Convert GeoMaterial to Acts::Material
+///
+/// @param gm The GeoMaterial to be converted
+/// @return the Acts::Material
+Material geoMaterialConverter(const GeoMaterial* gm,
+                              bool useMolarDensity = true);
 
 }  // namespace GeoModel
 }  // namespace Acts

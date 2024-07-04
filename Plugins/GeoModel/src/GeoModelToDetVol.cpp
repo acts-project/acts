@@ -48,15 +48,17 @@ void convertVolume(
         std::make_shared<CylinderVolumeBounds>(tubs->getRMin(), tubs->getRMax(),
                                                tubs->getZHalfLength(),
                                                tubs->getDPhi() / 2);
-	GeoTrf::Transform3D newTransform = transform * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
+    GeoTrf::Transform3D newTransform =
+        transform * GeoTrf::RotateZ3D(tubs->getSPhi() + 0.5 * tubs->getDPhi());
     volumes.emplace_back(Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, newTransform, bounds,
         Experimental::tryAllPortalsAndSurfaces()));
   } else if (shape->typeID() == GeoBox::getClassTypeID()) {
     const GeoBox* box = static_cast<const GeoBox*>(shape);
     std::shared_ptr<CuboidVolumeBounds> bounds =
-        std::make_shared<CuboidVolumeBounds>(
-            box->getXHalfLength(), box->getYHalfLength(), box->getZHalfLength());
+        std::make_shared<CuboidVolumeBounds>(box->getXHalfLength(),
+                                             box->getYHalfLength(),
+                                             box->getZHalfLength());
     volumes.emplace_back(Experimental::DetectorVolumeFactory::construct(
         portalGenerator, context, name, transform, bounds,
         Experimental::tryAllPortalsAndSurfaces()));
@@ -84,7 +86,8 @@ void convertVolume(
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x1, x2, z, y1);
         constexpr double rotationAngle = M_PI / 2;
-		GeoTrf::Transform3D newTransform = transform * GeoTrf::RotateX3D(rotationAngle);
+        GeoTrf::Transform3D newTransform =
+            transform * GeoTrf::RotateX3D(rotationAngle);
         volumes.emplace_back(Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
             Experimental::tryAllPortalsAndSurfaces()));
@@ -92,7 +95,9 @@ void convertVolume(
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
         constexpr double rotationAngle = M_PI;
-		GeoTrf::Transform3D newTransform = transform * GeoTrf::RotateY3D(rotationAngle) * GeoTrf::RotateZ3D(rotationAngle);
+        GeoTrf::Transform3D newTransform = transform *
+                                           GeoTrf::RotateY3D(rotationAngle) *
+                                           GeoTrf::RotateZ3D(rotationAngle);
         volumes.emplace_back(Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
             Experimental::tryAllPortalsAndSurfaces()));
@@ -102,7 +107,9 @@ void convertVolume(
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(y1, y2, z, x1);
         auto rotationAngle = M_PI / 2;
-		GeoTrf::Transform3D newTransform = transform * GeoTrf::RotateZ3D(rotationAngle) * GeoTrf::RotateX3D(rotationAngle);
+        GeoTrf::Transform3D newTransform = transform *
+                                           GeoTrf::RotateZ3D(rotationAngle) *
+                                           GeoTrf::RotateX3D(rotationAngle);
         volumes.emplace_back(Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
             Experimental::tryAllPortalsAndSurfaces()));
@@ -110,7 +117,10 @@ void convertVolume(
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(y2, y1, z, x1);
         auto rotationAngle = M_PI;
-		GeoTrf::Transform3D newTransform = transform * GeoTrf::RotateX3D(rotationAngle) * GeoTrf::RotateZ3D(rotationAngle / 2) * GeoTrf::RotateX3D(rotationAngle / 2);
+        GeoTrf::Transform3D newTransform =
+            transform * GeoTrf::RotateX3D(rotationAngle) *
+            GeoTrf::RotateZ3D(rotationAngle / 2) *
+            GeoTrf::RotateX3D(rotationAngle / 2);
         volumes.emplace_back(Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
             Experimental::tryAllPortalsAndSurfaces()));
@@ -146,7 +156,7 @@ void convertVolume(
   if (shape->typeID() == GeoShapeShift::getClassTypeID()) {
     const GeoShapeShift* shiftShape = static_cast<const GeoShapeShift*>(shape);
     const GeoShape* shapeOp = shiftShape->getOp();
-	GeoTrf::Transform3D newTransform = transform * shiftShape->getX();
+    GeoTrf::Transform3D newTransform = transform * shiftShape->getX();
     convertVolume(context, shapeOp, name, newTransform, volumes);
   }
 }
