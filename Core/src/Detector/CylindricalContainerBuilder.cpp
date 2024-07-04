@@ -52,17 +52,17 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
     Acts::BinningValue bv = binning.front();
     // 1-dimensional binning options
     switch (bv) {
-      case Acts::binR: {
+      case Acts::BinningValue::binR: {
         portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
                 gctx, objects, {}, logLevel);
       } break;
-      case Acts::binZ: {
+      case Acts::BinningValue::binZ: {
         portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                 gctx, objects, {}, logLevel);
       } break;
-      case Acts::binPhi: {
+      case Acts::BinningValue::binPhi: {
         portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
                 gctx, objects, {}, logLevel);
@@ -71,7 +71,8 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
         break;
     }
   } else if (binning ==
-                 std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} &&
+                 std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                                 Acts::BinningValue::binR} &&
              objects.size() == 2u) {
     portalContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
@@ -94,7 +95,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   if (m_cfg.binning.size() == 1u) {
     // 1-dimensional case
     auto b = m_cfg.binning.front();
-    if (b != Acts::binR && b != Acts::binZ && b != Acts::binPhi) {
+    if (b != Acts::BinningValue::binR && b != Acts::BinningValue::binZ &&
+        b != Acts::BinningValue::binPhi) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
           "phi");
@@ -102,7 +104,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   } else if (m_cfg.binning.size() == 2u) {
     // 2-dimensional case, this is for wrapping
     if (m_cfg.binning !=
-        std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
+        std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                        Acts::BinningValue::binR}) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 2D binning only supports wrapping in "
           "z-r.");
@@ -165,7 +168,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   if (m_cfg.binning.size() == 1u) {
     // 1-dimensional case
     auto b = m_cfg.binning.front();
-    if (b != Acts::binR && b != Acts::binZ && b != Acts::binPhi) {
+    if (b != Acts::BinningValue::binR && b != Acts::BinningValue::binZ &&
+        b != Acts::BinningValue::binPhi) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
           "phi");
@@ -173,7 +177,8 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
   } else if (m_cfg.binning.size() == 2u) {
     // 2-dimensional case, this is for wrapping
     if (m_cfg.binning !=
-        std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
+        std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
+                                        Acts::BinningValue::binR}) {
       throw std::invalid_argument(
           "CylindricalContainerBuilder: 2D binning only supports wrapping in "
           "z-r.");

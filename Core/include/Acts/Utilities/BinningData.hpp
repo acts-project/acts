@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -240,10 +241,11 @@ class BinningData {
   /// @return float value according to the binning setup
   float value(const Vector2& lposition) const {
     // ordered after occurrence
-    if (binvalue == binR || binvalue == binRPhi || binvalue == binX ||
-        binvalue == binH) {
+    if (binvalue == BinningValue::binR || binvalue == BinningValue::binRPhi ||
+        binvalue == BinningValue::binX || binvalue == BinningValue::binH) {
       return lposition[0];
     }
+
     return lposition[1];
   }
 
@@ -257,17 +259,17 @@ class BinningData {
     using VectorHelpers::perp;
     using VectorHelpers::phi;
     // ordered after occurrence
-    if (binvalue == binR || binvalue == binH) {
+    if (binvalue == BinningValue::binR || binvalue == BinningValue::binH) {
       return (perp(position));
     }
-    if (binvalue == binRPhi) {
+    if (binvalue == BinningValue::binRPhi) {
       return (perp(position) * phi(position));
     }
-    if (binvalue == binEta) {
+    if (binvalue == BinningValue::binEta) {
       return (eta(position));
     }
-    if (binvalue < 3) {
-      return (position[binvalue]);
+    if (toUnderlying(binvalue) < 3) {
+      return position[toUnderlying(binvalue)];
     }
     // phi gauging
     return phi(position);
