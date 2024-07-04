@@ -11,6 +11,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include <boost/safe_numerics/safe_integer.hpp>
+
 namespace Acts::detail {
 
 /// Class that encapsulates a cantor pair, which represents an edge of a graph
@@ -25,7 +27,16 @@ class CantorEdge {
     if ((x > y) && sort) {
       std::swap(x, y);
     }
-    m_value = y + ((x + y) * (x + y + 1)) / 2;
+
+    // Use safe integers here to ensure that no overflow happens
+    using namespace boost::safe_numerics;
+
+    safe<T> sx(x);
+    safe<T> sy(y);
+
+    auto res = sy + ((sx + sy) * (sx + sy + 1)) / 2;
+
+    m_value = res;
   }
 
   std::pair<T, T> inverse() const {
