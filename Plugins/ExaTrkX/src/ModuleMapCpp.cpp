@@ -14,6 +14,8 @@
 #include <graph_creator>
 #include <module_map_triplet>
 
+#include <map>
+
 namespace Acts {
 
 ModuleMapCpp::ModuleMapCpp(const Config &cfg,
@@ -132,12 +134,16 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     return angle;
   };
 
+  std::map<std::pair<uint64_t,uint64_t>, uint64_t> dupCount;
+
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {
     const auto &edge = *it;
 
     auto src = graph.graph_impl()[boost::source(edge, graph.graph_impl())];
     auto dst = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
+
+    dupCount[{src.hit_id(), dst.hit_id()}]++;
 
     // Edge index
     assert(src.hit_id() >= 0 && src.hit_id() < static_cast<uint64_t>(numNodes));
@@ -173,6 +179,14 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
       edgeFeatureVector.push_back(f);
     }
   }
+
+  std::size_t dupEdges = 0;
+  for(const auto &[e, c] : dupCount) {
+    if(c > 1) {
+      dupEdges++;
+    };
+  }
+  ACTS_DEBUG("MM duplicate edges: " << dupEdges);
 
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
