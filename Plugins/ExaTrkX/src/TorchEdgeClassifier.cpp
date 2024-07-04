@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
+
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #ifndef ACTS_EXATRKX_CPUONLY

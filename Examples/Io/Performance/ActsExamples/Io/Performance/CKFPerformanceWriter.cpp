@@ -189,7 +189,7 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
       ACTS_VERBOSE("No truth matching information for this track, index = "
-                 << track.index() << " tip index = " << track.tipIndex());
+                   << track.index() << " tip index = " << track.tipIndex());
       unmatched++;
       continue;
     }
@@ -215,7 +215,7 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
         particleMatch.classification == TrackMatchClassification::Duplicate);
   }
 
-  if( unmatched > 0 ) {
+  if (unmatched > 0) {
     ACTS_DEBUG("No matching information found for " << unmatched << " tracks");
   }
 

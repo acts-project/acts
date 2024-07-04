@@ -16,10 +16,10 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
+#include <cmath>
+
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
-
-#include <cmath>
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
@@ -231,7 +231,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   for (int im = 0; im < nCL; im++) {
-    if(!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
+    if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
       ACTS_ERROR("hardware is neither 'PIXEL' or 'STRIP'");
       return ActsExamples::ProcessCode::ABORT;
     }
@@ -272,32 +272,34 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
                                     activation);
     }
 
-    cluster.globalPosition = { CLx[im], CLy[im], CLz[im] };
+    cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
 
     ACTS_VERBOSE("CL shape: " << cluster.channels.size()
-                            << "cells, dimensions: " << cluster.sizeLoc0 << ", "
-                            << cluster.sizeLoc1);
+                              << "cells, dimensions: " << cluster.sizeLoc0
+                              << ", " << cluster.sizeLoc1);
 
     clusters[im] = cluster;
 
     // Measurement creation
-    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", " << CLloc_direction2[im] << ", " << CLloc_direction3[im]);
-    const auto &locCov = CLlocal_cov->at(im);
+    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", "
+                                << CLloc_direction2[im] << ", "
+                                << CLloc_direction3[im]);
+    const auto& locCov = CLlocal_cov->at(im);
 
     DigitizedParameters digiPars;
-    if(type == ePixel) {
-      digiPars.indices = { Acts::eBoundLoc0, Acts::eBoundLoc1 };
-      digiPars.values = { CLloc_direction1[im], CLloc_direction2[im] };
+    if (type == ePixel) {
+      digiPars.indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+      digiPars.values = {CLloc_direction1[im], CLloc_direction2[im]};
       assert(locCov.size() == 4);
-      digiPars.variances = { locCov[0], locCov[3] };
+      digiPars.variances = {locCov[0], locCov[3]};
     } else {
       // TODO is this correct ???
-      digiPars.values = { CLloc_direction2[im] };
-      digiPars.indices = { Acts::eBoundLoc1 };
+      digiPars.values = {CLloc_direction2[im]};
+      digiPars.indices = {Acts::eBoundLoc1};
 
       // why is this 4
       // assert(locCov.size() == 1);
-      digiPars.variances = { locCov[0] };
+      digiPars.variances = {locCov[0]};
     }
 
     IndexSourceLink sl(Acts::GeometryIdentifier{CLmoduleID[im]}, im);
@@ -305,12 +307,12 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     measurements.push_back(createMeasurement(digiPars, sl));
 
     // Create measurement particles map and particles container
-    for(auto barcode : CLparticleLink_barcode->at(im)) {
+    for (auto barcode : CLparticleLink_barcode->at(im)) {
       ActsFatras::Barcode fBarcode = barcode;
       measPartMap.insert({im, fBarcode});
 
-      auto found = std::find(Part_barcode, Part_barcode+nPartEVT, barcode);
-      if(found == Part_barcode+nPartEVT) {
+      auto found = std::find(Part_barcode, Part_barcode + nPartEVT, barcode);
+      if (found == Part_barcode + nPartEVT) {
         ACTS_WARNING("Could not find all truth particles for cluster " << im);
         continue;
       }
@@ -318,7 +320,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
       auto ip = std::distance(Part_barcode, found);
       assert(Part_barcode[ip] == barcode);
 
-      SimParticle particle(fBarcode, static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+      SimParticle particle(fBarcode,
+                           static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
       auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
       particle.setAbsoluteMomentum(p.norm());
@@ -330,7 +333,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
       particles.insert(particle);
     }
   }
-
 
   ACTS_DEBUG("Found " << nSP << " space points");
 

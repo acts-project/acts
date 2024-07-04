@@ -11,8 +11,8 @@
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <numeric>
-#include <vector>
 #include <optional>
+#include <vector>
 
 namespace ActsExamples {
 

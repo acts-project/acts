@@ -177,8 +177,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
   // Check if we want cluster features but do not have them
   const static std::array clFeatures = {
-      NodeFeature::eClusterX, NodeFeature::eClusterY, NodeFeature::eCellCount,
-      NodeFeature::eCellSum, NodeFeature::eCluster1R, NodeFeature::eCluster2R};
+      NodeFeature::eClusterX, NodeFeature::eClusterY,  NodeFeature::eCellCount,
+      NodeFeature::eCellSum,  NodeFeature::eCluster1R, NodeFeature::eCluster2R};
 
   auto wantClFeatures = std::any_of(
       m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
@@ -190,8 +190,9 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     throw std::invalid_argument("Cluster features requested, but not provided");
   }
 
-  if ( m_cfg.nodeFeatures.size() != m_cfg.featureScales.size()) {
-    throw std::invalid_argument("Number of features mismatches number of scale parameters.");
+  if (m_cfg.nodeFeatures.size() != m_cfg.featureScales.size()) {
+    throw std::invalid_argument(
+        "Number of features mismatches number of scale parameters.");
   }
 }
 

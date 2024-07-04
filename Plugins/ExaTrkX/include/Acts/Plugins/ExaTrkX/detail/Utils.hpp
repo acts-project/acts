@@ -9,26 +9,24 @@
 #pragma once
 
 #include <ostream>
+
 #include <torch/torch.h>
 
 namespace Acts::detail {
 
-struct TensorDetails{
-    const torch::Tensor &tensor;
-    TensorDetails(const torch::Tensor &t) : tensor(t) {}
+struct TensorDetails {
+  const torch::Tensor &tensor;
+  TensorDetails(const torch::Tensor &t) : tensor(t) {}
 };
 
 inline std::ostream &operator<<(std::ostream &os, const TensorDetails &t) {
-    os << t.tensor.dtype() << ", " << t.tensor.sizes();
-    if( at::isnan(t.tensor).any().item<bool>() ) {
-        os << ", contains NaNs";
-    } else {
-        os << ", no NaNs";
-    }
-    return os;
+  os << t.tensor.dtype() << ", " << t.tensor.sizes();
+  if (at::isnan(t.tensor).any().item<bool>()) {
+    os << ", contains NaNs";
+  } else {
+    os << ", no NaNs";
+  }
+  return os;
 }
 
-}
-
-
-
+}  // namespace Acts::detail

@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -42,13 +42,11 @@ class PrototracksToTracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  WriteDataHandle<ConstTrackContainer> m_outputTracks{this,
-                                                           "OutputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                            "InputMeasurements"};
+                                                           "InputMeasurements"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
 };
 
 }  // namespace ActsExamples
-

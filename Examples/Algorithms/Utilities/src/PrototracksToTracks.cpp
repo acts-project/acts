@@ -8,14 +8,13 @@
 
 #include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-
 
 #include <algorithm>
 
@@ -34,11 +33,12 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracks(trackContainer, mtj);
 
   PassThroughCalibrator calibratorImpl;
-  MeasurementCalibratorAdapter calibrator(calibratorImpl, m_inputMeasurements(ctx));
+  MeasurementCalibratorAdapter calibrator(calibratorImpl,
+                                          m_inputMeasurements(ctx));
 
   auto refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
-  const auto &prototracks = m_inputProtoTracks(ctx);
+  const auto& prototracks = m_inputProtoTracks(ctx);
   ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
 
   float avgSize = 0;
@@ -46,8 +46,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   std::size_t maxSize = 0;
 
   for (const auto& protoTrack : prototracks) {
-    if( protoTrack.empty() ) {
-        continue;
+    if (protoTrack.empty()) {
+      continue;
     }
 
     avgSize += protoTrack.size();
@@ -56,8 +56,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
 
     std::size_t tip = Acts::kTrackIndexInvalid;
     for (auto idx : protoTrack) {
-      auto trackStateProxy = mtj->makeTrackState(
-          Acts::TrackStatePropMask::Calibrated, tip);
+      auto trackStateProxy =
+          mtj->makeTrackState(Acts::TrackStatePropMask::Calibrated, tip);
       tip = trackStateProxy.index();
 
       IndexSourceLink sl(Acts::GeometryIdentifier{}, idx);
@@ -79,12 +79,11 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   ConstTrackContainer constTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
           std::move(*trackContainer)),
-      std::make_shared<Acts::ConstVectorMultiTrajectory>(
-          std::move(*mtj))};
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(std::move(*mtj))};
 
   ACTS_DEBUG("Produced " << constTracks.size() << " tracks");
   ACTS_DEBUG("Avg track size: " << avgSize / constTracks.size());
-  ACTS_DEBUG("Min track size: " << minSize << ", max track size " << maxSize); 
+  ACTS_DEBUG("Min track size: " << minSize << ", max track size " << maxSize);
 
   m_outputTracks(ctx, std::move(constTracks));
 

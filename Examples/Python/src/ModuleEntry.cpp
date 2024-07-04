@@ -65,7 +65,7 @@ void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 void addAmbiguityResolution(Context& ctx);
-void addUtilities(Context &ctx);
+void addUtilities(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);

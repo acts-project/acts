@@ -15,8 +15,8 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <ActsExamples/EventData/Cluster.hpp>
-#include <ActsExamples/EventData/Track.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
+#include <ActsExamples/EventData/Track.hpp>
 
 #include <map>
 #include <memory>
@@ -61,7 +61,6 @@ class RootAthenaDumpReader : public IReader {
     std::string outputMeasurementParticlesMap = "athena_meas_parts_map";
     // name of the track parameters (fitted by athena?)
     std::string outputTrackParameters = "athena_track_parameters";
-
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -101,9 +100,12 @@ class RootAthenaDumpReader : public IReader {
   WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
       this, "output_spacepoints"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "output_clusters"};
-  WriteDataHandle<SimParticleContainer> m_outputParticles{this, "output_particles"};
-  WriteDataHandle<MeasurementContainer> m_outputMeasurements{this, "output_measurements"};
-  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{this, "output_meas_part_map"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "output_particles"};
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "output_measurements"};
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{
+      this, "output_meas_part_map"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::mutex m_read_mutex;

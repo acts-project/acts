@@ -204,12 +204,16 @@ void addExaTrkXTrackFinding(Context &ctx) {
       .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellSum)
       .value("Cluster1R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1R)
       .value("Cluster2R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2R)
-      .value("Cluster1Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Phi)
-      .value("Cluster2Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Phi)
+      .value("Cluster1Phi",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Phi)
+      .value("Cluster2Phi",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Phi)
       .value("Cluster1Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Z)
       .value("Cluster2Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Z)
-      .value("Cluster1Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Eta)
-      .value("Cluster2Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
+      .value("Cluster1Eta",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Eta)
+      .value("Cluster2Eta",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
