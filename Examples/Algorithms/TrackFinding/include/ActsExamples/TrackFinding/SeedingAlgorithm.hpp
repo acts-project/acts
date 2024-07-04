@@ -110,7 +110,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     return true;
   }
   
-  static inline bool ItkFastTrackingSPselect(const SimSpacePoint& sp) {
+  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
     // At small r we remove points beyond |z| > 200.
     float r = sp.r();
     float zabs = std::abs(sp.z());
