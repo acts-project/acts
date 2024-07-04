@@ -26,6 +26,7 @@ class ModuleMapCpp : public GraphConstructionBase {
     float rScale = 1.0;
     float phiScale = 1.0;
     float zScale = 1.0;
+    float etaScale = 1.0;
   };
 
  private:

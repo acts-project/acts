@@ -121,12 +121,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   std::vector<float> edgeFeatureVector;
 
   // TODO I think this is already somewhere in the codebase
-  auto resetAngle = [](float angle) {
-    if (angle > M_PIf) {
-      return angle - 2.f * M_PIf;
+  const float pi = static_cast<float>(M_PI);
+  auto resetAngle = [pi](float angle) {
+    if (angle > pi) {
+      return angle - 2.f * pi;
     }
-    if (angle < M_PIf) {
-      return angle + 2.f * M_PIf;
+    if (angle < pi) {
+      return angle + 2.f * pi;
     }
     return angle;
   };
@@ -147,23 +148,23 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
     // Edge features
     // See https://gitlab.cern.ch/gnn4itkteam/acorn/-/blob/dev/acorn/utils/loading_utils.py?ref_type=heads#L288
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dr());
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dPhi());
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dz());
-    edgeFeatureVector.push_back(graph.graph_impl()[edge].dEta());
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dr() / m_cfg.rScale);
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dPhi() / m_cfg.phiScale);
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dz() / m_cfg.zScale);
+    edgeFeatureVector.push_back(graph.graph_impl()[edge].dEta() / m_cfg.etaScale);
 
-    const auto deltaR = dst.r() - src.r();
+    const auto deltaR = (dst.r() - src.r()) / m_cfg.rScale;
 
     // In acorn, nan gets converted to 0
     if (deltaR == 0) {
       edgeFeatureVector.push_back(0.f);
       edgeFeatureVector.push_back(0.f);
     } else {
-      const auto deltaPhi = resetAngle(dst.phi() - src.phi());
-      const auto phiSlope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
+      const float deltaPhi = resetAngle(dst.phi() - src.phi()) / m_cfg.phiScale;
+      const float phiSlope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
       edgeFeatureVector.push_back(phiSlope);
 
-      const auto avgR = 0.5 * (dst.r() + src.r());
+      const float avgR = 0.5 * (dst.r() + src.r()) / m_cfg.rScale;
       edgeFeatureVector.push_back(avgR * phiSlope);
     }
   }
