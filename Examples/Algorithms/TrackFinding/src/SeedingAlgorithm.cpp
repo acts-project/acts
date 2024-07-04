@@ -204,7 +204,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
   
   if (m_cfg.useExtraCuts) {
-
     // This function will be applied to select space points during grid filling
     m_cfg.seedFinderConfig.spacePointSelector.connect<ItkFastTrackingSPselect>();
 
