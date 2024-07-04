@@ -87,7 +87,7 @@ void convertVolume(
         // y axis in ACTS is z axis in geomodel
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x1, x2, z, y1);
-        auto rotationAngle = M_PI / 2;
+        constexpr double rotationAngle = M_PI / 2;
         Acts::Transform3 newTransform = Acts::Transform3::Identity();
         newTransform.translate(transform.translation());
         newTransform.rotate(
@@ -99,7 +99,7 @@ void convertVolume(
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
-        auto rotationAngle = M_PI;
+        constexpr double rotationAngle = M_PI;
         Acts::Transform3 newTransform = Acts::Transform3::Identity();
         newTransform.translate(transform.translation());
         newTransform.rotate(
