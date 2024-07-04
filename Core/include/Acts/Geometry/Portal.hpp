@@ -117,7 +117,7 @@ class GridPortalLink : public PortalLinkBase {
   template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
   static auto make(const CylinderSurface& surface, BinningValue direction,
                    Axes&&... axes) {
-    if (direction != binZ && direction != binRPhi) {
+    if (direction != BinningValue::binZ && direction != BinningValue::binRPhi) {
       throw std::invalid_argument{"Invalid binning direction"};
     }
 
@@ -128,7 +128,7 @@ class GridPortalLink : public PortalLinkBase {
   template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
   static auto make(const DiscSurface& surface, BinningValue direction,
                    Axes&&... axes) {
-    if (direction != binR && direction != binPhi) {
+    if (direction != BinningValue::binR && direction != BinningValue::binPhi) {
       throw std::invalid_argument{"Invalid binning direction"};
     }
 
@@ -139,13 +139,13 @@ class GridPortalLink : public PortalLinkBase {
   template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
   static auto make(const CylinderSurface& surface, Axes&&... axes) {
     return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, binRPhi, std::forward<Axes>(axes)...);
+        surface, BinningValue::binRPhi, std::forward<Axes>(axes)...);
   }
 
   template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
   static auto make(const DiscSurface& surface, Axes&&... axes) {
     return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, binR, std::forward<Axes>(axes)...);
+        surface, BinningValue::binR, std::forward<Axes>(axes)...);
   }
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
@@ -228,7 +228,7 @@ class GridPortalLinkT : public GridPortalLink {
 
     if constexpr (DIM == 1) {
       auto [axisLoc0] = m_grid.axesTuple();
-      if (direction() == binRPhi) {
+      if (direction() == BinningValue::binRPhi) {
         checkRPhi(axisLoc0);
       } else {
         checkZ(axisLoc0);
