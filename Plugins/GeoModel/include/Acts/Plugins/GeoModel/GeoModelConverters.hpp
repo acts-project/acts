@@ -72,19 +72,19 @@ using GeoUnionDoubleTrdConverter =
 /// @brief The map that maps the converters with the shapes
 
 std::shared_ptr<const IGeoShapeConverter> GeoShapesConverters(int geoShapeId) {
-  using ConverterLookUpMap =
-      std::unordered_map<int, std::shared_ptr<const IGeoShapeConverter>>;
-
-  static const ConverterLookUpMap converters{
-      {GeoBox::getClassTypeID(), std::make_shared<GeoBoxConverter>()},
-      {GeoShapeIntersection::getClassTypeID(),
-       std::make_shared<GeoIntersectionAnnulusConverter>()},
-      {GeoShapeShift::getClassTypeID(), std::make_shared<GeoShiftConverter>()},
-      {GeoTrd::getClassTypeID(), std::make_shared<GeoTrdConverter>()},
-      {GeoTube::getClassTypeID(), std::make_shared<GeoTubeConverter>()},
-      {GeoShapeUnion::getClassTypeID(),
-       std::make_shared<GeoUnionDoubleTrdConverter>()}};
-  ConverterLookUpMap::const_iterator itr = converters.find(geoShapeId);
+  static const std::unordered_map<int,
+                                  std::shared_ptr<const IGeoShapeConverter>>
+      converters{
+          {GeoBox::getClassTypeID(), std::make_shared<GeoBoxConverter>()},
+          {GeoShapeIntersection::getClassTypeID(),
+           std::make_shared<GeoIntersectionAnnulusConverter>()},
+          {GeoShapeShift::getClassTypeID(),
+           std::make_shared<GeoShiftConverter>()},
+          {GeoTrd::getClassTypeID(), std::make_shared<GeoTrdConverter>()},
+          {GeoTube::getClassTypeID(), std::make_shared<GeoTubeConverter>()},
+          {GeoShapeUnion::getClassTypeID(),
+           std::make_shared<GeoUnionDoubleTrdConverter>()}};
+  auto itr = converters.find(geoShapeId);
 
   return itr != converters.end() ? itr->second : nullptr;
 };

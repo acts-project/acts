@@ -31,7 +31,7 @@ set( ACTS_FRNN_SOURCE
 mark_as_advanced( ACTS_FRNN_SOURCE )
 
 set( ACTS_GEOMODEL_SOURCE
-   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;5.3.0;" CACHE STRING "Source to take GeoModel from")
+   "GIT_REPOSITORY;https://gitlab.cern.ch/GeoModelDev/GeoModel;GIT_TAG;6.2.0;" CACHE STRING "Source to take GeoModel from")
 mark_as_advanced( ACTS_GEOMODEL_SOURCE )
 
 set( ACTS_NLOHMANNJSON_SOURCE

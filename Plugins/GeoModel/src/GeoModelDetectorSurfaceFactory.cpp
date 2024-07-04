@@ -51,6 +51,7 @@ Acts::GeoModelDetectorSurfaceFactory::GeoModelDetectorSurfaceFactory(
 void Acts::GeoModelDetectorSurfaceFactory::construct(
     Cache &cache, const GeometryContext &, const GeoModelTree &geoModelTree,
     const Options &options) {
+  std::cout << "here" << std::endl;
   if (geoModelTree.geoReader == nullptr) {
     throw std::invalid_argument("GeoModelTree has no GeoModelReader");
   }
@@ -59,7 +60,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     ACTS_VERBOSE("Constructing detector elements for query " << q);
     auto qFPV = geoModelTree.geoReader
                     ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
-
+    std::cout << "Constructing detector elements for query " << q << std::endl;
     auto matches = [&](const std::string &name, PVConstLink physvol) {
       if (m_cfg.nameList.empty() && m_cfg.materialList.empty()) {
         return true;
@@ -99,6 +100,8 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
     for (auto &[name, fpv] : qFPV) {
       PVConstLink physVol{fpv};
 
+      // std::cout<<"name="<<name<<std::endl;
+
       if (!matches(name, physVol)) {
         continue;
       }
@@ -110,6 +113,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
             findAllSubVolumes(physVol, matches);
         ACTS_VERBOSE("Found" << subvolumes.size()
                              << "sub volumes matching the query");
+        std::cout << subvolumes.size() << std::endl;
 
         for (auto &subvol : subvolumes) {
           // get the transform of the subvolume to the global frame
@@ -145,7 +149,7 @@ void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
   std::shared_ptr<const Acts::IGeoShapeConverter> converter =
       Acts::GeoShapesConverters(shapeId);
   if (converter == nullptr) {
-    ACTS_DEBUG("converter is a nullptr");
+    throw std::runtime_error("The converter is nullptr");
 
     return;
   }
@@ -158,12 +162,12 @@ void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
                  << name << " / " << recType(*shape) << " / "
                  << logVol->getMaterial()->getName() << ")");
 
-    if (!(el && sf)) {
+    if (!el || !sf) {
       throw std::runtime_error("The Detector Element or the Surface is nllptr");
     }
     return;
   }
-  ACTS_DEBUG(name << " / " << recType(*shape)
+  ACTS_ERROR(name << " / " << recType(*shape)
                   << ") could not be converted by any converter");
 }
 

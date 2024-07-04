@@ -40,7 +40,8 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
         "GeoModelBlueprintCreater: GeoModelTree has no GeoModelReader");
   }
 
-  auto blueprintTable = gmTree.geoReader->getTableFromTableName(options.table);
+  auto blueprintTable =
+      gmTree.geoReader->getTableFromTableName_String(options.table);
 
   // Prepare the map
   std::map<std::string, TableEntry> blueprintTableMap;
