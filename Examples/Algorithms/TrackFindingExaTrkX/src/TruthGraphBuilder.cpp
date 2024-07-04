@@ -47,12 +47,8 @@ TruthGraph TruthGraphBuilder::buildFromMeasurements(
   // Associate tracks to graph, collect momentum
   std::unordered_map<ActsFatras::Barcode, std::vector<std::size_t>> tracks;
 
-  auto getId = [](const auto& sp) {
-    return sp.sourceLinks()[0].template get<IndexSourceLink>().index();
-  };
-
   for (auto i = 0ul; i < spacepoints.size(); ++i) {
-    const auto measId = getId(spacepoints[i]);
+    const auto measId = spacepoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
 
     auto [a, b] = measPartMap.equal_range(measId);
     for (auto it = a; it != b; ++it) {
@@ -64,12 +60,6 @@ TruthGraph TruthGraphBuilder::buildFromMeasurements(
   std::vector<std::int64_t> graph;
 
   for (auto& [pid, track] : tracks) {
-    // Sort by radius (this of course breaks down if the particle has to low
-    // momentum)
-    std::sort(track.begin(), track.end(), [&](const auto& a, const auto& b) {
-      return spacepoints[a].r() < spacepoints[b].r();
-    });
-
     auto found = particles.find(pid);
     if (found == particles.end()) {
       ACTS_WARNING("Did not find " << pid << ", skip track");
@@ -80,6 +70,11 @@ TruthGraph TruthGraphBuilder::buildFromMeasurements(
         track.size() < m_cfg.targetMinSize) {
       continue;
     }
+
+    // Sort by radius (this breaks down if the particle has to low momentum)
+    std::sort(track.begin(), track.end(), [&](const auto& a, const auto& b) {
+      return spacepoints[a].r() < spacepoints[b].r();
+    });
 
     for (auto i = 0ul; i < track.size() - 1; ++i) {
       graph.push_back(track[i]);
