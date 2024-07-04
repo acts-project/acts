@@ -162,7 +162,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // TODO does it work for the module map construction to use only the first
     // sp?
     const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
-    spacepointIDs.push_back(sl1.index());
+
+    // TODO this makes it a bit useless, refactor so we do not need to pass this to the pipeline
+    spacepointIDs.push_back(isp);
     moduleIds.push_back(sl1.geometryId().value());
 
     // This should be fine, because check in constructor
@@ -237,16 +239,22 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   int nShortTracks = 0;
 
-  for (auto& x : trackCandidates) {
-    if (m_cfg.filterShortTracks && x.size() < 3) {
+  /// TODO the whole conversion back to meas idxs should be pulled out of the track trackBuilder
+  for (auto& candidate : trackCandidates) {
+    ProtoTrack onetrack;
+    onetrack.reserve(candidate.size());
+
+    for( auto i : candidate ) {
+      for(const auto &sl : spacepoints[i].sourceLinks()) {
+        onetrack.push_back(sl.template get<IndexSourceLink>().index());
+      }
+    }
+
+    if (m_cfg.filterShortTracks && onetrack.size() < 3) {
       nShortTracks++;
       continue;
     }
 
-    ProtoTrack onetrack;
-    onetrack.reserve(x.size());
-
-    std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
     protoTracks.push_back(std::move(onetrack));
   }
 
