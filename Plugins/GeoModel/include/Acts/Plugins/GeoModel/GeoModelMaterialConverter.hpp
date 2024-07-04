@@ -11,23 +11,23 @@
 
 class GeoMaterial;
 
-namespace Acts{
+namespace Acts {
 
 namespace GeoModel {
 
 class GeoMaterialConverter {
-    public:
-    // Remove default constructor
-    GeoMaterialConverter() = delete;
+ public:
+  // Remove default constructor
+  GeoMaterialConverter() = delete;
 
-    ~GeoMaterialConverter() = default;
+  ~GeoMaterialConverter() = default;
 
-    /// @brief Convert GeoMaterial to Acts::Material
-    ///
-    /// @param gm The GeoMaterial to be converted
-    /// @return the Acts::Material
-    static Material convert(const GeoMaterial* gm, bool useMolarDensity = true);
+  /// @brief Convert GeoMaterial to Acts::Material
+  ///
+  /// @param gm The GeoMaterial to be converted
+  /// @return the Acts::Material
+  static Material convert(const GeoMaterial* gm, bool useMolarDensity = true);
 
-}; // class GeoMaterialConverter
-} // namespace GeoModel
-} // namespace Acts
+};  // class GeoMaterialConverter
+}  // namespace GeoModel
+}  // namespace Acts
