@@ -158,7 +158,7 @@ void Acts::GeoModelDetectorSurfaceFactory::convertSensitive(
                  << name << " / " << recType(*shape) << " / "
                  << logVol->getMaterial()->getName() << ")");
 
-    if (!(el && sf)) {
+    if (!el || !sf)) {
       throw std::runtime_error("The Detector Element or the Surface is nullptr");
     }
     return;
