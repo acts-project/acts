@@ -1,0 +1,6 @@
+matplotlib==3.8.4
+numpy==2.0.0
+pandas==2.2.2
+PyQt5==5.15.10
+PyQt5_sip==12.13.0
+scipy==1.13.1

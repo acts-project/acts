@@ -270,8 +270,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   std::map<unsigned int, std::tuple<double, double>> ranges;
 
   std::array<unsigned int, 3> g4Axes{0};
-  for (auto& bv : {Acts::binX, Acts::binY, Acts::binZ}) {
-    g4Axes[bv] = Acts::binToGeant4Axis(bv);
+  for (auto& bv : {Acts::BinningValue::binX, Acts::BinningValue::binY,
+                   Acts::BinningValue::binZ}) {
+    g4Axes[toUnderlying(bv)] = Acts::binToGeant4Axis(bv);
   }
 
   ranges[g4Axes[0]] = std::make_tuple(armOffset - 5, armOffset + 100);
