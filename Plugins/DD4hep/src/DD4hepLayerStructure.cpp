@@ -93,7 +93,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   cElements.reserve(fCache.sensitiveSurfaces.size());
 
   // Fill them in to the surface provider struct and detector store
-  for (auto [de, ds] : fCache.sensitiveSurfaces) {
+  for (const auto& [de, ds] : fCache.sensitiveSurfaces) {
     lSurfaces.push_back(ds);
     cElements.push_back(de);
   }
