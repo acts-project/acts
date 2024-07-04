@@ -31,6 +31,6 @@ ActsExamples::ProcessCode ActsExamples::ScalableBFieldService::decorate(
     AlgorithmContext& ctx) {
   ScalableBFieldContext magCtx;
   magCtx.scalor = std::pow(m_cfg.scalor, ctx.eventNumber);
-  ctx.magFieldContext = Acts::MagneticFieldContext(magCtx);
+  ctx.magFieldContext = std::make_any<ScalableBFieldContext>(magCtx);
   return ProcessCode::SUCCESS;
 }
