@@ -1036,7 +1036,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   // The outer one is a single volume represented as a container
   auto outerContainer = containers.back();
   std::shared_ptr<DetectorVolume> wrappingVolume = nullptr;
-  for (auto [key, value] : outerContainer) {
+  for (const auto& [key, value] : outerContainer) {
     auto attachedVolumes = value->attachedDetectorVolumes();
     for (const auto& ava : attachedVolumes) {
       for (const auto& av : ava) {

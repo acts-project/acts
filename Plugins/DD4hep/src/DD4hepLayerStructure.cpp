@@ -100,7 +100,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   dd4hepStore[options.name] = cElements;
 
   // Passive surfaces to be added
-  for (auto [ps, toAll] : fCache.passiveSurfaces) {
+  for (const auto& [ps, toAll] : fCache.passiveSurfaces) {
     // Passive surface is not declared to be added to all navigation bins
     if (!toAll) {
       lSurfaces.push_back(ps);
