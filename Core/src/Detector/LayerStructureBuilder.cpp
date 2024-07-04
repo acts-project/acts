@@ -240,13 +240,13 @@ Acts::Experimental::LayerStructureBuilder::construct(
       Extent supportExtent;
       // Let us start with an eventually existing volume extent, but only pick
       // the binning value that are not constrained by the internal surfaces
-      for (const auto& bv : s_binningValues) {
+      for (const auto& bv : allBinningValues()) {
         if (support.volumeExtent.constrains(bv) &&
             std::find(support.internalConstraints.begin(),
                       support.internalConstraints.end(),
                       bv) == support.internalConstraints.end()) {
           ACTS_VERBOSE("  Support surface is constrained by volume extent in "
-                       << binningValueNames()[bv]);
+                       << binningValueName(bv));
           supportExtent.set(bv, support.volumeExtent.min(bv),
                             support.volumeExtent.max(bv));
         }
@@ -265,26 +265,27 @@ Acts::Experimental::LayerStructureBuilder::construct(
       // Add cylindrical support
       if (support.type == Surface::SurfaceType::Cylinder) {
         detail::SupportSurfacesHelper::CylindricalSupport cSupport{
-            support.offset, support.volumeClearance[binZ],
-            support.volumeClearance[binPhi]};
+            support.offset, support.volumeClearance[BinningValue::binZ],
+            support.volumeClearance[BinningValue::binPhi]};
         detail::SupportSurfacesHelper::addSupport(internalSurfaces, assignToAll,
                                                   supportExtent, cSupport,
                                                   support.splits);
       } else if (support.type == Surface::SurfaceType::Disc) {
         // Add disc support
         detail::SupportSurfacesHelper::DiscSupport dSupport{
-            support.offset, support.volumeClearance[binR],
-            support.volumeClearance[binPhi]};
+            support.offset, support.volumeClearance[BinningValue::binR],
+            support.volumeClearance[BinningValue::binPhi]};
         detail::SupportSurfacesHelper::addSupport(internalSurfaces, assignToAll,
                                                   supportExtent, dSupport,
                                                   support.splits);
       } else if (support.type == Surface::SurfaceType::Plane) {
         // Set the local coordinates - cyclic permutation
-        std::array<BinningValue, 2> locals = {binX, binY};
-        if (support.pPlacement == binX) {
-          locals = {binY, binZ};
-        } else if (support.pPlacement == binY) {
-          locals = {binZ, binX};
+        std::array<BinningValue, 2> locals = {BinningValue::binX,
+                                              BinningValue::binY};
+        if (support.pPlacement == BinningValue::binX) {
+          locals = {BinningValue::binY, BinningValue::binZ};
+        } else if (support.pPlacement == BinningValue::binY) {
+          locals = {BinningValue::binZ, BinningValue::binX};
         }
         // Add rectangular support
         detail::SupportSurfacesHelper::RectangularSupport rSupport{

@@ -69,7 +69,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
     for (auto& b : fCache.binnings) {
       if (extent.constrains(b.binValue)) {
-        ACTS_VERBOSE("Binning '" << binningValueNames()[b.binValue]
+        ACTS_VERBOSE("Binning '" << binningValueName(b.binValue)
                                  << "' is patched.");
         ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back()
                                     << "]");
