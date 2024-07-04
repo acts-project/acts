@@ -99,7 +99,7 @@ class SeedingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  static inline bool ItkFastTrackingCuts(float bottomRadius, float cotTheta) {
+  static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
     float RMin = 50.;
     float CotThetaMax = 1.5;
     
