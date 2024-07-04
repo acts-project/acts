@@ -11,12 +11,12 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
-#include "detray/io/frontend/definitions.hpp"
-
 #include <string>
 #include <tuple>
 
 #include <nlohmann/json.hpp>
+
+#include "detray/io/frontend/definitions.hpp"
 
 namespace Acts::DetrayConversionHelper {
 

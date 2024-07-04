@@ -7,11 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
-
-#include "detray/builders/detector_builder.hpp"
-#include "detray/io/frontend/detector_reader_config.hpp"
 #include "Acts/Plugins/Detray/DetrayConverter.hpp"
+#include "Acts/Plugins/Python/Utilities.hpp"
 
 #include <memory>
 #include <string>
@@ -19,6 +16,9 @@
 #include <pybind11/pybind11.h>
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
+
+#include "detray/builders/detector_builder.hpp"
+#include "detray/io/frontend/detector_reader_config.hpp"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -45,7 +45,8 @@ void addDetray(Context& ctx) {
               mex.def("convertDetectorToDetray",
                       [](const Acts::GeometryContext& gctx,
                       const Acts::Experimental::Detector& acts_detector,
-                      const std::string& name) -> auto {//detector<default_metadata>
+                      const std::string& name) -> auto
+     {//detector<default_metadata>
 
                           // Create a host memory resource
                           vecmem::host_memory_resource host_mr;

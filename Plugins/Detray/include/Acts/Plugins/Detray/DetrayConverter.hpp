@@ -14,15 +14,13 @@
 
 #include <vector>
 
-#include "detray/core/detector.hpp"
-#include "detray/io/frontend/payloads.hpp"
-#include "detray/definitions/geometry.hpp"
-
 #include "detray/builders/detector_builder.hpp"
+#include "detray/core/detector.hpp"
+#include "detray/definitions/geometry.hpp"
 #include "detray/io/common/geometry_reader.hpp"
-#include "detray/utils/consistency_checker.hpp"
-
 #include "detray/io/frontend/detector_writer.hpp"
+#include "detray/io/frontend/payloads.hpp"
+#include "detray/utils/consistency_checker.hpp"
 
 namespace Acts {
 
@@ -61,7 +59,8 @@ detray::io::transform_payload convertTransform(const Transform3& t);
 /// @param portal the flag for conversion into detray portal format
 ///
 /// @return the mask_payload representing the bounds
-detray::io::mask_payload convertMask(const SurfaceBounds& bounds, bool portal = false);
+detray::io::mask_payload convertMask(const SurfaceBounds& bounds,
+                                     bool portal = false);
 
 /// Conversion method for surface objects to detray::surface payloads
 ///
@@ -71,7 +70,8 @@ detray::io::mask_payload convertMask(const SurfaceBounds& bounds, bool portal = 
 ///
 /// @return the surface_payload for portals and volumes by @param Surface acts object
 detray::io::surface_payload convertSurface(const GeometryContext& gctx,
-                                   const Surface& surface, bool portal = false);
+                                           const Surface& surface,
+                                           bool portal = false);
 /// Conversion method for Portal object to detray::portal payloads
 ///
 /// @param gctx the geometry context

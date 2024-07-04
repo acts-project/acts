@@ -49,8 +49,8 @@ void Acts::DetrayConverter::writeToJson(
     const DetrayDetector& dDetector,
     const typename DetrayDetector::name_map& names,
     detray::io::detector_writer_config writer_cfg) {
-    writer_cfg.format(detray::io::format::json);
-    detray::io::write_detector(dDetector, names, writer_cfg);
+  writer_cfg.format(detray::io::format::json);
+  detray::io::write_detector(dDetector, names, writer_cfg);
 }
 
 detray::io::transform_payload Acts::DetrayConverter::convertTransform(
@@ -73,7 +73,7 @@ detray::io::mask_payload Acts::DetrayConverter::convertMask(
       DetrayConversionHelper::maskFromBounds(bounds, portal);
   maskPayload.shape = static_cast<io::mask_payload::mask_shape>(shape);
   maskPayload.boundaries = static_cast<std::vector<real_io>>(boundaries);
-  //default maskPayload.volume_link
+  // default maskPayload.volume_link
 
   return maskPayload;
 }
@@ -89,7 +89,10 @@ detray::io::surface_payload Acts::DetrayConverter::convertSurface(
   surfacePayload.source = surface.geometryId().value();
   surfacePayload.barcode = std::nullopt;
   surfacePayload.type = static_cast<detray::surface_id>(
-      portal ? surface_id::e_portal : (surface.geometryId().sensitive() > 0 ? detray::surface_id::e_sensitive : detray::surface_id::e_passive));
+      portal ? surface_id::e_portal
+             : (surface.geometryId().sensitive() > 0
+                    ? detray::surface_id::e_sensitive
+                    : detray::surface_id::e_passive));
   surfacePayload.mask = convertMask(surface.bounds());
   return surfacePayload;
 }
@@ -183,7 +186,8 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
         throw std::runtime_error(
-            "PortalDetrayConverter: surface type not (yet) supported for detray "
+            "PortalDetrayConverter: surface type not (yet) supported for "
+            "detray "
             "conversion, only cylinder and disc are currently supported.");
       }
 
@@ -264,9 +268,10 @@ std::vector<detray::io::surface_payload> Acts::DetrayConverter::convertPortal(
       // End of world portal
       // Write surface with invalid link
       auto portalPayload = convertSurface(gctx, *surfaceAdjusted, true);
-      using NavigationLink = typename DetrayDetector::surface_type::navigation_link;  
-      portalPayload.mask.volume_link.link =  
-          std::numeric_limits<NavigationLink>::max();  
+      using NavigationLink =
+          typename DetrayDetector::surface_type::navigation_link;
+      portalPayload.mask.volume_link.link =
+          std::numeric_limits<NavigationLink>::max();
 
       portals.push_back(portalPayload);
     }
