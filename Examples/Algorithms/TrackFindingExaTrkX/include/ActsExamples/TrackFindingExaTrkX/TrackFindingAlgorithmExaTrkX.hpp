@@ -55,32 +55,26 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
-
-    /// Input cluster information (Optional). If given, the following features
-    /// are added:
-    /// * cell count
-    /// * sum cell activations
-    /// * cluster size in local x
-    /// * cluster size in local y
+    /// Input cluster information (Optional).
     std::string inputClusters;
-
     /// Input simhits (Optional).
     std::string inputSimHits;
     /// Input measurement simhit map (Optional).
     std::string inputParticles;
     /// Input measurement simhit map (Optional).
     std::string inputMeasurementSimhitsMap;
-
     /// Output protoTracks collection.
     std::string outputProtoTracks;
-
     /// Output graph (optional)
     std::string outputGraph;
 
+    /// Graph constructor
     std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
 
+    /// List of edge classifiers
     std::vector<std::shared_ptr<Acts::EdgeClassificationBase>> edgeClassifiers;
 
+    /// The track builder
     std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
 
     /// Node features

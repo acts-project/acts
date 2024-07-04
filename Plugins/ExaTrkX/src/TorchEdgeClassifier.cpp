@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #ifndef ACTS_EXATRKX_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
@@ -77,13 +78,13 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
   auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
 
-  ACTS_DEBUG("nodeFeatures: " << nodeFeatures.sizes() << " [" << nodeFeatures.dtype() << "]"
-                            << ", edgeIndex: " << edgeIndex.sizes() << " [" << edgeIndex.dtype() << "]");
+  ACTS_DEBUG("nodeFeatures: " << detail::TensorDetails{nodeFeatures});
+  ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   std::optional<torch::Tensor> edgeFeatures;
   if (inEdgeFeatures.has_value()) {
     edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(device);
-    ACTS_DEBUG("edgeFeatures: " << edgeFeatures->sizes() << " ["  << edgeFeatures->dtype() << "]");
+    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
   }
 
   auto model = m_model->clone();
