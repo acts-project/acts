@@ -103,8 +103,8 @@ class SeedingAlgorithm final : public IAlgorithm {
     float RMin = 50.;
     float CotThetaMax = 1.5;
     
-    if (bottomRadius < RMin and
-	(cotTheta > CotThetaMax or cotTheta < -CotThetaMax)) {
+    if (bottomRadius < RMin &&
+	(cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
       return false;
     }
     return true;
