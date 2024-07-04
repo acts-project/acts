@@ -148,10 +148,18 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
     // Edge features
     // See https://gitlab.cern.ch/gnn4itkteam/acorn/-/blob/dev/acorn/utils/loading_utils.py?ref_type=heads#L288
-    const float deltaR = (dst.r() - src.r()) / m_cfg.rScale;
-    const float deltaPhi = resetAngle(dst.phi() - src.phi()) / m_cfg.phiScale;
-    const float deltaZ = dst.z() - src.z() / m_cfg.zScale;
-    const float deltaEta = dst.eta() - src.eta() / m_cfg.etaScale;
+    // Also, moduleMapGraph seems to scale the features internally, only for phi this must be redone
+#if 1
+    const float deltaR = graph.graph_impl()[edge].dr();
+    const float deltaPhi = graph.graph_impl()[edge].dPhi();
+    const float deltaZ = graph.graph_impl()[edge].dz();
+    const float deltaEta = graph.graph_impl()[edge].dEta();
+#else
+    const float deltaR = (dst.r() - src.r());
+    const float deltaPhi = resetAngle(dst.phi() * m_cfg.phiScale - src.phi() * m_cfg.phiScale) / m_cfg.phiScale;
+    const float deltaZ = dst.z() - src.z();
+    const float deltaEta = dst.eta() - src.eta();
+#endif
 
     // In acorn, nan gets converted to 0
     float phiSlope = 0.f;
@@ -159,7 +167,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
     if (deltaR != 0) {
       phiSlope = deltaPhi / deltaR;
-      const float avgR = 0.5f * (dst.r() + src.r()) / m_cfg.rScale;
+      const float avgR = 0.5f * (dst.r() + src.r());
       rPhiSlope = avgR * phiSlope;
     }
 
