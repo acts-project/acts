@@ -41,12 +41,20 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   const auto &prototracks = m_inputProtoTracks(ctx);
   ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
 
+  float avgSize = 0;
+  std::size_t minSize = std::numeric_limits<std::size_t>::max();
+  std::size_t maxSize = 0;
+
   for (const auto& protoTrack : prototracks) {
     if( protoTrack.empty() ) {
         continue;
     }
 
-    std::size_t tip = std::decay_t<decltype(*mtj)>::kInvalid;
+    avgSize += protoTrack.size();
+    minSize = std::min(minSize, protoTrack.size());
+    maxSize = std::max(maxSize, protoTrack.size());
+
+    std::size_t tip = Acts::kTrackIndexInvalid;
     for (auto idx : protoTrack) {
       auto trackStateProxy = mtj->makeTrackState(
           Acts::TrackStatePropMask::Calibrated, tip);
@@ -75,6 +83,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
           std::move(*mtj))};
 
   ACTS_DEBUG("Produced " << constTracks.size() << " tracks");
+  ACTS_DEBUG("Avg track size: " << avgSize / constTracks.size());
+  ACTS_DEBUG("Min track size: " << minSize << ", max track size " << maxSize); 
 
   m_outputTracks(ctx, std::move(constTracks));
 
