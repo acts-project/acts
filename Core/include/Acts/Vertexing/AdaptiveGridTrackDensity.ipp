@@ -48,38 +48,38 @@ std::int32_t AdaptiveGridTrackDensity<trkGridSize>::getBin(double value) const {
 
 template <int trkGridSize>
 Result<double> AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
-    MainDensityMap& densityMap) const {
-  if (densityMap.empty()) {
+    MainDensityMap& mainDensityMap) const {
+  if (mainDensityMap.empty()) {
     return VertexingError::EmptyInput;
   }
 
   std::int32_t zBinIndex = 0;
   if (!m_cfg.useHighestSumZPosition) {
-    zBinIndex = std::distance(
-        densityMap.density.begin(),
-        std::max_element(densityMap.density.begin(), densityMap.density.end()));
+    zBinIndex = std::distance(mainDensityMap.density.begin(),
+                              std::max_element(mainDensityMap.density.begin(),
+                                               mainDensityMap.density.end()));
   } else {
     // Get z position with highest density sum of surrounding bins
-    zBinIndex = highestDensitySumBin(densityMap);
+    zBinIndex = highestDensitySumBin(mainDensityMap);
   }
 
-  std::int32_t zBin = densityMap.zBin[zBinIndex];
+  std::int32_t zBin = mainDensityMap.zBin[zBinIndex];
   return getBinCenter(zBin);
 }
 
 template <int trkGridSize>
 Result<typename AdaptiveGridTrackDensity<trkGridSize>::ZPositionAndWidth>
 AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
-    MainDensityMap& densityMap) const {
+    MainDensityMap& mainDensityMap) const {
   // Get z maximum value
-  auto maxZRes = getMaxZPosition(densityMap);
+  auto maxZRes = getMaxZPosition(mainDensityMap);
   if (not maxZRes.ok()) {
     return maxZRes.error();
   }
   double maxZ = *maxZRes;
 
   // Get seed width estimate
-  auto widthRes = estimateSeedWidth(densityMap, maxZ);
+  auto widthRes = estimateSeedWidth(mainDensityMap, maxZ);
   if (not widthRes.ok()) {
     return widthRes.error();
   }
@@ -91,7 +91,7 @@ AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
 template <int trkGridSize>
 typename AdaptiveGridTrackDensity<trkGridSize>::TrackDensityMap
 AdaptiveGridTrackDensity<trkGridSize>::addTrack(
-    const BoundTrackParameters& trk, MainDensityMap& densityMap) const {
+    const BoundTrackParameters& trk, MainDensityMap& mainDensityMap) const {
   ActsVector<2> impactParams = trk.spatialImpactParameters();
   ActsSquareMatrix<2> cov = trk.spatialImpactParameterCovariance().value();
 
@@ -120,20 +120,22 @@ AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     std::int32_t zBin = firstZBin + i;
 
     // Check if track density already exists at current z position
-    if (auto findIter =
-            std::find(densityMap.zBin.begin(), densityMap.zBin.end(), zBin);
-        findIter != densityMap.zBin.end()) {
+    if (auto findIter = std::find(mainDensityMap.zBin.begin(),
+                                  mainDensityMap.zBin.end(), zBin);
+        findIter != mainDensityMap.zBin.end()) {
       // z bin already exists
-      std::size_t zBinIndex = std::distance(densityMap.zBin.begin(), findIter);
-      densityMap.density[zBinIndex] += trackDensityMap.density[i];
+      std::size_t zBinIndex =
+          std::distance(mainDensityMap.zBin.begin(), findIter);
+      mainDensityMap.density[zBinIndex] += trackDensityMap.density[i];
     } else {
       // Create new z bin
-      auto it = std::upper_bound(densityMap.zBin.begin(), densityMap.zBin.end(),
-                                 zBin);
-      densityMap.density.insert(densityMap.density.begin() +
-                                    std::distance(densityMap.zBin.begin(), it),
-                                trackDensityMap.density[i]);
-      densityMap.zBin.insert(it, zBin);
+      auto it = std::upper_bound(mainDensityMap.zBin.begin(),
+                                 mainDensityMap.zBin.end(), zBin);
+      mainDensityMap.density.insert(
+          mainDensityMap.density.begin() +
+              std::distance(mainDensityMap.zBin.begin(), it),
+          trackDensityMap.density[i]);
+      mainDensityMap.zBin.insert(it, zBin);
     }
   }
 

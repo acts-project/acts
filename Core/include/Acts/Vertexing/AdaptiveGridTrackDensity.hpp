@@ -96,22 +96,22 @@ class AdaptiveGridTrackDensity {
   /// @brief Returns the z coordinate of maximum (surrounding)
   /// track density
   ///
-  /// @param densityMap Map between bins and corresponding density
+  /// @param mainDensityMap Map between bins and corresponding density
   /// values
   ///
   /// @return The z coordinate of maximum track density
-  Result<double> getMaxZPosition(MainDensityMap& densityMap) const;
+  Result<double> getMaxZPosition(MainDensityMap& mainDensityMap) const;
 
   /// @brief Returns the z position of maximum track density
   /// and the estimated width of the maximum
   ///
-  /// @param densityMap Map between bins and corresponding density
+  /// @param mainDensityMap Map between bins and corresponding density
   /// values
   ///
   /// @return The z position of the maximum track density and
   /// its width
   Result<ZPositionAndWidth> getMaxZPositionAndWidth(
-      MainDensityMap& densityMap) const;
+      MainDensityMap& mainDensityMap) const;
 
   /// @brief Adds a single track to the overall grid density
   ///
@@ -148,7 +148,7 @@ class AdaptiveGridTrackDensity {
   /// @brief Function that creates a track density map, i.e., a map from bins
   /// to the corresponding density values for a single track.
   ///
-  /// @param centralBin Central z bin of the track (where its
+  /// @param centralZBin Central z bin of the track (where its
   /// density is the highest)
   /// @param impactParams vector containing d0, z0 of the track
   /// @param cov 2x2 impact parameter covariance matrix
@@ -164,11 +164,11 @@ class AdaptiveGridTrackDensity {
   /// overlapping neighboring peaks might lead to an overestimation of the
   /// seed width.
   ///
-  /// @param densityMap Map from bins to corresponding track density
+  /// @param mainDensityMap Map from bins to corresponding track density
   /// @param maxZ z position of the maximum density value
   ///
   /// @return The width
-  Result<double> estimateSeedWidth(const MainDensityMap& mainGrid,
+  Result<double> estimateSeedWidth(const MainDensityMap& mainDensityMap,
                                    double maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
@@ -179,19 +179,19 @@ class AdaptiveGridTrackDensity {
   /// global maximum. Returns the bin of the maximum that has the
   /// highest surrounding density in z direction.
   ///
-  /// @param densityMap Map between bins and corresponding density values
+  /// @param mainDensityMap Map between bins and corresponding density values
   ///
   /// @return The bin corresponding to the highest surrounding density
-  std::int32_t highestDensitySumBin(MainDensityMap& densityMap) const;
+  std::int32_t highestDensitySumBin(MainDensityMap& mainDensityMap) const;
 
   /// @brief Calculates the density sum of a bin and its two neighboring bins
   /// in z direction
   ///
-  /// @param densityMap Map between bins and corresponding density values
+  /// @param mainDensityMap Map between bins and corresponding density values
   /// @param zBinIndex Bin index whose neighbors in z we want to sum up
   ///
   /// @return The density sum
-  double getDensitySum(const MainDensityMap& mainGrid,
+  double getDensitySum(const MainDensityMap& mainDensityMap,
                        std::size_t zBinIndex) const;
 };
 
