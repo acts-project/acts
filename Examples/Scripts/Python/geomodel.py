@@ -145,6 +145,7 @@ def main():
     gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
 
     # Construct the building hierarchy
+<<<<<<< HEAD
     # if the blueprint is enabled
     if args.enable_blueprint:
         gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
