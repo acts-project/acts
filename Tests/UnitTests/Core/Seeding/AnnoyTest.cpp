@@ -71,8 +71,7 @@ std::vector<std::array<double, 2>> test_vector{
     {6.55276593, -7.81387909},  {-1.79854507, -2.10170986}};
 }  // namespace
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(AnnoySetSeedTest) {
   using AnnoyMetric = Annoy::Euclidean;
@@ -197,5 +196,4 @@ BOOST_AUTO_TEST_CASE(AnnoyDistanceTest) {
   BOOST_CHECK_CLOSE(distance, expected_distance, 1e-5);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test
