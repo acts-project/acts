@@ -192,9 +192,12 @@ class GridPortalLinkT : public GridPortalLink {
 
  private:
   void checkConsistency(const CylinderSurface& cyl) const {
+    constexpr auto tolerance = s_onSurfaceTolerance;
+    auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
+
     auto checkZ = [&](const auto& axis) {
       ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
-      if (axis.getMin() != -hlZ || axis.getMax() != hlZ) {
+      if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid length setup.");
       }
@@ -210,15 +213,17 @@ class GridPortalLinkT : public GridPortalLink {
       ActsScalar r = cyl.bounds().get(CylinderBounds::eR);
       ActsScalar hlRPhi = r * hlPhi;
 
-      if (axis.getMin() != -hlRPhi || axis.getMax() != hlRPhi) {
+      if (!same(axis.getMin(), -hlRPhi) || !same(axis.getMax(), hlRPhi)) {
+        std::cout << "axis.getMin(): " << axis.getMin() << std::endl;
+        std::cout << "axis.getMax(): " << axis.getMax() << std::endl;
+        std::cout << "hlRPhi: " << hlRPhi << std::endl;
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
             "don't match bounds");
       }
 
-      constexpr auto tolerance = s_onSurfaceTolerance;
       // If full cylinder, make sure axis wraps around
-      if (std::abs(hlPhi - M_PI) < tolerance &&
+      if (same(hlPhi, M_PI) &&
           axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid phi sector setup: axis is "
