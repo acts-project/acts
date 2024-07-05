@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
   AdaptiveGridDensity::Config adaptiveDensityConfig;
-  adaptiveDensityConfig.binSize = 2. / 30. * 1_mm;
+  adaptiveDensityConfig.binSize = 2. / 30.01 * 1_mm;
   AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
   AdapticeGridDensity::Config adaptiveDensityConfig;
-  adaptiveDensityConfig.binSize = 2. / 30. * 1_mm;
+  adaptiveDensityConfig.binSize = 2. / 30.01 * 1_mm;
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
   AdapticeGridDensity::Config adaptiveDensityConfig;
-  adaptiveDensityConfig.binSize = 2. / 30. * 1_mm;
+  adaptiveDensityConfig.binSize = 2. / 30.01 * 1_mm;
   AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;

@@ -563,6 +563,7 @@ BOOST_AUTO_TEST_CASE(
   using SeedFinder = AdaptiveGridDensityVertexFinder<55>;
   SeedFinder::Config seedFinderCfg(0.05);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
+  seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
   auto seedFinder = std::make_shared<SeedFinder>(seedFinderCfg);
 
