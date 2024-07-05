@@ -124,10 +124,13 @@ A set of container images is available through the [ACTS container
 registry][acts_containers]. The following containers are used as part of the
 continuous integration setup and come with all dependencies pre-installed.
 
--   `centos7-lcg101-gcc11`: based on CentOS 7 with HEP-specific software from
-    LCG 101 using the GCC 11 compiler
--   `ubuntu2204`: based on Ubuntu 22.04 with manual installation of HEP-specific
-    software
+- `ubuntu2204`
+- `ubuntu2404`
+
+Furthermore, we are also testing on, but do not provide the corresponding containers:
+
+- `alma9` (HEP-specific software from LCG 104 or 105 and gcc13 or clang16)
+- `macOS-10.15`
 
 :::{attention}
 We stopped producing fully-contained LCG containers in favor of running LCG
@@ -141,13 +144,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-$ docker search --list-tags ghcr.io/acts-project/ubuntu2004
+$ docker search --list-tags ghcr.io/acts-project/ubuntu2404
 ```
 
-The following command then downloads a stable tag of the `ubuntu2004` image:
+The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-$ docker pull ghcr.io/acts-project/ubuntu2004:v9
+$ docker pull ghcr.io/acts-project/ubuntu2404:51
 ```
 
 This should print the image id as part of the output. You can also find out the

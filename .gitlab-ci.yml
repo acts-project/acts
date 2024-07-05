@@ -6,7 +6,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v41
+  image: ghcr.io/acts-project/ubuntu2404:51
   tags:
     - large
   artifacts:
@@ -20,23 +20,17 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common
-        && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
-        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main'
-        && apt-get install -y clang-17 clang-tidy-17
-        && ln -s /usr/bin/clang++-17 /usr/bin/clang++
-        && ln -s /usr/bin/clang-17 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-17 /usr/bin/clang-tidy
-        && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/
-        && clang++ --gcc-toolchain=/opt -v
+        && apt-get install -y clang-tidy-18
+        && ln -sf /usr/bin/clang++-18 /usr/bin/clang++
+        && ln -sf /usr/bin/clang-18 /usr/bin/clang
+        && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
     - >
         cmake -B build -S .
         -GNinja
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
+        -DCMAKE_CXX_FLAGS="-Werror"
         -DACTS_BUILD_EVERYTHING=on
         -DACTS_RUN_CLANG_TIDY=on
 
@@ -138,7 +132,7 @@ test_exatrkx_python:
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204:v41
+  image: ghcr.io/acts-project/ubuntu2404:51
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -189,7 +183,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2204:v41
+  image: ghcr.io/acts-project/ubuntu2404:51
   needs: [build_linux_ubuntu]
 
   script:
@@ -210,7 +204,7 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2204:v41
+  image: ghcr.io/acts-project/ubuntu2404:51
   needs: [build_linux_ubuntu]
 
   artifacts:
@@ -230,7 +224,7 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - pip3 install histcmp==0.6.6 spyral-cli==1.1.0 matplotlib
+    - pip3 install histcmp==0.6.6 matplotlib
     - pip3 install -r src/Examples/Scripts/requirements.txt
     - /usr/local/bin/geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
@@ -304,11 +298,11 @@ linux_physmon:
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
 
-linux_ubuntu_2004_cpp17:
+linux_ubuntu_2404_cpp17:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 17
-  image: ghcr.io/acts-project/ubuntu2004:v41
+  image: ghcr.io/acts-project/ubuntu2404:51
 
 linux_ubuntu_2204_cpp20:
   <<: *linux_ubuntu_extra
@@ -413,17 +407,6 @@ linux_ubuntu_2204_clang:
 
     - ctest --test-dir build -j$(nproc)
 
-
-lcg_102b:
-  <<: *lcg_base_job
-
-  variables:
-    LCG_VERSION: "102b"
-
-  parallel:
-    matrix:
-      - OS: [centos7]
-        COMPILER: [gcc11]
 
 lcg_104:
   <<: *lcg_base_job
