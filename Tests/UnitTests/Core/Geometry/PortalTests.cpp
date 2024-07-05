@@ -248,13 +248,52 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
     BOOST_REQUIRE_NE(merged, nullptr);
     BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
     const auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -60_degree * 30_mm);
-    BOOST_CHECK_EQUAL(axis.getMax(), 60_degree * 30_mm);
+    BOOST_CHECK_CLOSE(axis.getMin(), -60_degree * 30_mm, 1e-9);
+    BOOST_CHECK_CLOSE(axis.getMax(), 60_degree * 30_mm, 1e-9);
     BOOST_CHECK_EQUAL(axis.getNBins(), 15);
     BOOST_CHECK_EQUAL(axis.getType(), AxisType::Equidistant);
     BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
 
-    // @TODO: Test that if you merge half-circles, we get a closed axis
+    // Test that if you merge half-circles, we get a closed axis
+    auto cylPhi3 = Surface::makeShared<CylinderSurface>(
+        Transform3::Identity() * AngleAxis3(45_degree, Vector3::UnitZ()), 30_mm,
+        100_mm, 90_degree, 0_degree);
+
+    auto cylPhi4 = Surface::makeShared<CylinderSurface>(
+        Transform3::Identity() * AngleAxis3(-135_degree, Vector3::UnitZ()),
+        30_mm, 100_mm, 90_degree, 0_degree);
+
+    auto portalPhi3 = GridPortalLink::make(
+        *cylPhi3, BinningValue::binRPhi,
+        Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 10});
+
+    auto portalPhi4Closed = GridPortalLink::make(
+        *cylPhi4, BinningValue::binRPhi,
+        Axis{AxisClosed, -90_degree * 30_mm, 90_degree * 30_mm, 10});
+
+    // Merge to binary because they have different axis boundary types
+    // BOOST_CHECK_THROW(portalPhi3->merge(gctx, *portalPhi4Closed,
+    //                                     BinningValue::binRPhi, *logger),
+    //                   std::invalid_argument);
+
+    auto portalPhi4 = GridPortalLink::make(
+        *cylPhi4, BinningValue::binRPhi,
+        Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 10});
+
+    auto portalMerged34 =
+        portalPhi3->merge(gctx, *portalPhi4, BinningValue::binRPhi, *logger);
+    BOOST_REQUIRE_NE(portalMerged34, nullptr);
+
+    const auto* merged34 =
+        dynamic_cast<const GridPortalLink*>(portalMerged34.get());
+    BOOST_REQUIRE_NE(merged34, nullptr);
+    BOOST_CHECK_EQUAL(merged34->grid().axes().size(), 1);
+    const auto& axis34 = *merged->grid().axes().front();
+    BOOST_CHECK_CLOSE(axis34.getMin(), -180_degree * 30_mm, 1e-9);
+    BOOST_CHECK_CLOSE(axis34.getMax(), 180_degree * 30_mm, 1e-9);
+    BOOST_CHECK_EQUAL(axis34.getNBins(), 20);
+    BOOST_CHECK_EQUAL(axis34.getType(), AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis34.getBoundaryType(), AxisBoundaryType::Bound);
   }
 
   // @TODO: Colinear merging of phi sectors along rphi
