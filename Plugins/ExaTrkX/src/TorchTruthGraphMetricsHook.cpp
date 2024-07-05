@@ -55,12 +55,16 @@ void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
                                                   const std::any&) const {
   auto edgeIndexTensor = std::any_cast<torch::Tensor>(edges);
   ACTS_VERBOSE("edge index tensor: " << detail::TensorDetails{edgeIndexTensor});
-  ACTS_VERBOSE("Edge index slice:\n" << edgeIndexTensor.index({Slice(0,2), Slice(0, 9)}));
+  ACTS_VERBOSE("Edge index slice:\n"
+               << edgeIndexTensor.index({Slice(0, 2), Slice(0, 9)}));
 
   // We need to transpose the edges here for the right memory layout
-  const auto edgeIndex = Acts::detail::tensor2DToVector<std::int64_t>(edgeIndexTensor.t().clone());
+  const auto edgeIndex =
+      Acts::detail::tensor2DToVector<std::int64_t>(edgeIndexTensor.t().clone());
 
-  ACTS_VERBOSE("Edge vector:\n" << (detail::RangePrinter{edgeIndex.begin(), edgeIndex.begin()+10}));
+  ACTS_VERBOSE("Edge vector:\n"
+               << (detail::RangePrinter{edgeIndex.begin(),
+                                        edgeIndex.begin() + 10}));
 
   auto predGraphCantor = cantorize(edgeIndex, logger());
 

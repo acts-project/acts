@@ -15,8 +15,6 @@
 #include <map>
 #include <module_map_triplet>
 
-
-
 using namespace torch::indexing;
 
 namespace Acts {
@@ -28,15 +26,15 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
       m_cfg.moduleMapPath, 10,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
 
-  if( m_cfg.checkModuleConsistencyPerEvent ) {
+  if (m_cfg.checkModuleConsistencyPerEvent) {
     for (const auto &[doublet, _] :
-        m_graphCreator->get_module_map_triplet().map_doublet()) {
+         m_graphCreator->get_module_map_triplet().map_doublet()) {
       m_uniqueDoupletModuleIds.push_back(doublet[0]);
       m_uniqueDoupletModuleIds.push_back(doublet[1]);
     }
     std::sort(m_uniqueDoupletModuleIds.begin(), m_uniqueDoupletModuleIds.end());
     auto end = std::unique(m_uniqueDoupletModuleIds.begin(),
-                          m_uniqueDoupletModuleIds.end());
+                           m_uniqueDoupletModuleIds.end());
     m_uniqueDoupletModuleIds.erase(end, m_uniqueDoupletModuleIds.end());
 
     ACTS_DEBUG(
@@ -54,7 +52,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
         "Module Ids do not match number of graph nodes");
   }
 
-  if(m_cfg.checkModuleConsistencyPerEvent) {
+  if (m_cfg.checkModuleConsistencyPerEvent) {
     ACTS_DEBUG("Perform consistency check...");
     auto uniqueModuleIds = moduleIds;
     std::sort(uniqueModuleIds.begin(), uniqueModuleIds.end());
@@ -188,7 +186,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   auto nodeFeatures =
       detail::vectorToTensor2D(inputValues, numFeatures).clone();
   assert(edgeIndexVector.size() % numEdges == 0);
-  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, 2).t()
+  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, 2)
+                       .t()
                        .clone()
                        .to(torch::kInt64);
 
@@ -201,8 +200,11 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
   ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeFeatures});
 
-  ACTS_VERBOSE("Edge vector:\n" << (detail::RangePrinter{edgeIndexVector.begin(), edgeIndexVector.begin()+10}));
-  ACTS_VERBOSE("Edge index slice:\n" << edgeIndex.index({Slice(0,2), Slice(0, 9)}));
+  ACTS_VERBOSE("Edge vector:\n"
+               << (detail::RangePrinter{edgeIndexVector.begin(),
+                                        edgeIndexVector.begin() + 10}));
+  ACTS_VERBOSE("Edge index slice:\n"
+               << edgeIndex.index({Slice(0, 2), Slice(0, 9)}));
 
   return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
                          std::move(edgeFeatures));

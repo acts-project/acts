@@ -29,8 +29,7 @@ inline std::ostream &operator<<(std::ostream &os, const TensorDetails &t) {
   return os;
 }
 
-
-template<typename It>
+template <typename It>
 struct RangePrinter {
   It begin;
   It end;
@@ -38,13 +37,12 @@ struct RangePrinter {
   RangePrinter(It a, It b) : begin(a), end(b) {}
 };
 
-template<class It>
+template <class It>
 RangePrinter(It b, It e) -> RangePrinter<It>;
 
-
-template<typename It>
+template <typename It>
 inline std::ostream &operator<<(std::ostream &os, const RangePrinter<It> &r) {
-  for(auto it = r.begin; it != r.end; ++it) {
+  for (auto it = r.begin; it != r.end; ++it) {
     os << *it << " ";
   }
   return os;
