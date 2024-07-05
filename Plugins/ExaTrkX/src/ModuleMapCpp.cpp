@@ -15,6 +15,10 @@
 #include <map>
 #include <module_map_triplet>
 
+
+
+using namespace torch::indexing;
+
 namespace Acts {
 
 ModuleMapCpp::ModuleMapCpp(const Config &cfg,
@@ -24,18 +28,20 @@ ModuleMapCpp::ModuleMapCpp(const Config &cfg,
       m_cfg.moduleMapPath, 10,
       std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
 
-  for (const auto &[doublet, _] :
-       m_graphCreator->get_module_map_triplet().map_doublet()) {
-    m_uniqueDoupletModuleIds.push_back(doublet[0]);
-    m_uniqueDoupletModuleIds.push_back(doublet[1]);
-  }
-  std::sort(m_uniqueDoupletModuleIds.begin(), m_uniqueDoupletModuleIds.end());
-  auto end = std::unique(m_uniqueDoupletModuleIds.begin(),
-                         m_uniqueDoupletModuleIds.end());
-  m_uniqueDoupletModuleIds.erase(end, m_uniqueDoupletModuleIds.end());
+  if( m_cfg.checkModuleConsistencyPerEvent ) {
+    for (const auto &[doublet, _] :
+        m_graphCreator->get_module_map_triplet().map_doublet()) {
+      m_uniqueDoupletModuleIds.push_back(doublet[0]);
+      m_uniqueDoupletModuleIds.push_back(doublet[1]);
+    }
+    std::sort(m_uniqueDoupletModuleIds.begin(), m_uniqueDoupletModuleIds.end());
+    auto end = std::unique(m_uniqueDoupletModuleIds.begin(),
+                          m_uniqueDoupletModuleIds.end());
+    m_uniqueDoupletModuleIds.erase(end, m_uniqueDoupletModuleIds.end());
 
-  ACTS_DEBUG(
-      "Unique module IDs in doublets: " << m_uniqueDoupletModuleIds.size());
+    ACTS_DEBUG(
+        "Unique module IDs in doublets: " << m_uniqueDoupletModuleIds.size());
+  }
 }
 
 ModuleMapCpp::~ModuleMapCpp() {}
@@ -48,7 +54,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
         "Module Ids do not match number of graph nodes");
   }
 
-  {
+  if(m_cfg.checkModuleConsistencyPerEvent) {
+    ACTS_DEBUG("Perform consistency check...");
     auto uniqueModuleIds = moduleIds;
     std::sort(uniqueModuleIds.begin(), uniqueModuleIds.end());
     auto end = std::unique(uniqueModuleIds.begin(), uniqueModuleIds.end());
@@ -133,19 +140,12 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     return angle;
   };
 
-  std::map<std::pair<uint64_t, uint64_t>, uint64_t> dupCount;
-  std::map<std::pair<uint64_t, uint64_t>, uint64_t> sortDupCount;
-
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {
     const auto &edge = *it;
 
     auto src = graph.graph_impl()[boost::source(edge, graph.graph_impl())];
     auto dst = graph.graph_impl()[boost::target(edge, graph.graph_impl())];
-
-    dupCount[{src.hit_id(), dst.hit_id()}]++;
-    sortDupCount[{std::min(src.hit_id(), dst.hit_id()),
-                  std::max(src.hit_id(), dst.hit_id())}]++;
 
     // Edge index
     assert(src.hit_id() >= 0 && src.hit_id() < static_cast<int>(numNodes));
@@ -182,29 +182,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
     }
   }
 
-  std::size_t dupEdges = 0;
-  for (const auto &[e, c] : dupCount) {
-    if (c > 1) {
-      dupEdges++;
-    };
-  }
-  ACTS_DEBUG("MM duplicate edges: " << dupEdges);
-
-  std::size_t sortDupEdges = 0;
-  for (const auto &[e, c] : sortDupCount) {
-    if (c > 1) {
-      sortDupEdges++;
-    };
-  }
-  ACTS_DEBUG("MM duplicate edges (w sort): " << sortDupEdges);
-
   // Build final tensors
   ACTS_DEBUG("Construct final tensors...");
   assert(inputValues.size() % numFeatures == 0);
   auto nodeFeatures =
       detail::vectorToTensor2D(inputValues, numFeatures).clone();
   assert(edgeIndexVector.size() % numEdges == 0);
-  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, numEdges)
+  auto edgeIndex = detail::vectorToTensor2D(edgeIndexVector, 2).t()
                        .clone()
                        .to(torch::kInt64);
 
@@ -216,6 +200,9 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
   ACTS_DEBUG("nodeFeatures: " << detail::TensorDetails{nodeFeatures});
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
   ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeFeatures});
+
+  ACTS_VERBOSE("Edge vector:\n" << (detail::RangePrinter{edgeIndexVector.begin(), edgeIndexVector.begin()+10}));
+  ACTS_VERBOSE("Edge index slice:\n" << edgeIndex.index({Slice(0,2), Slice(0, 9)}));
 
   return std::make_tuple(std::move(nodeFeatures), std::move(edgeIndex),
                          std::move(edgeFeatures));

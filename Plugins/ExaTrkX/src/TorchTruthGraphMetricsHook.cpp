@@ -13,6 +13,8 @@
 
 #include <torch/torch.h>
 
+using namespace torch::indexing;
+
 namespace {
 
 auto cantorize(std::vector<std::int64_t> edgeIndex,
@@ -22,35 +24,8 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
   std::vector<Acts::detail::CantorEdge<std::int64_t>> cantorEdgeIndex;
   cantorEdgeIndex.reserve(edgeIndex.size() / 2);
 
-  std::map<std::pair<std::int64_t, std::int64_t>, std::size_t> dupCount;
-  std::map<std::pair<std::int64_t, std::int64_t>, std::size_t> sDupCount;
-
   for (auto it = edgeIndex.begin(); it != edgeIndex.end(); it += 2) {
     cantorEdgeIndex.emplace_back(*it, *std::next(it));
-    dupCount[{*it, *(it + 1)}]++;
-    sDupCount[{std::min(*it, *(it + 1)), std::max(*it, *(it + 1))}]++;
-  }
-
-  {
-    std::size_t dcount = 0;
-    for (const auto& [edge, count] : dupCount) {
-      assert(count >= 1);
-      if (count > 1) {
-        dcount++;
-      }
-    }
-    ACTS_DEBUG("map based dup count: " << dcount);
-  }
-
-  {
-    std::size_t dcount = 0;
-    for (const auto& [edge, count] : sDupCount) {
-      assert(count >= 1);
-      if (count > 1) {
-        dcount++;
-      }
-    }
-    ACTS_DEBUG("map based dup count (sort): " << dcount);
   }
 
   std::sort(cantorEdgeIndex.begin(), cantorEdgeIndex.end());
@@ -78,12 +53,14 @@ Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
 void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
                                                   const std::any& edges,
                                                   const std::any&) const {
-  ACTS_DEBUG("edge index: "
-             << detail::TensorDetails{std::any_cast<torch::Tensor>(edges)});
+  auto edgeIndexTensor = std::any_cast<torch::Tensor>(edges);
+  ACTS_VERBOSE("edge index tensor: " << detail::TensorDetails{edgeIndexTensor});
+  ACTS_VERBOSE("Edge index slice:\n" << edgeIndexTensor.index({Slice(0,2), Slice(0, 9)}));
 
   // We need to transpose the edges here for the right memory layout
-  const auto edgeIndex = Acts::detail::tensor2DToVector<std::int64_t>(
-      std::any_cast<torch::Tensor>(edges).t().clone());
+  const auto edgeIndex = Acts::detail::tensor2DToVector<std::int64_t>(edgeIndexTensor.t().clone());
+
+  ACTS_VERBOSE("Edge vector:\n" << (detail::RangePrinter{edgeIndex.begin(), edgeIndex.begin()+10}));
 
   auto predGraphCantor = cantorize(edgeIndex, logger());
 

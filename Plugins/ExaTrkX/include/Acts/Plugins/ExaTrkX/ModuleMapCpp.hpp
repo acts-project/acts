@@ -27,6 +27,7 @@ class ModuleMapCpp : public GraphConstructionBase {
     float phiScale = 1.0;
     float zScale = 1.0;
     float etaScale = 1.0;
+    bool checkModuleConsistencyPerEvent = false;
   };
 
  private:
