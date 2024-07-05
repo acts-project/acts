@@ -80,7 +80,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
         std::move(surfacesUpdater));
   }
   // All portals are defined and build the current shell
-  for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
+  for (const auto& [ip, p] : enumerate(dVolume->portalPtrs())) {
     portalContainer[ip] = p;
   }
 
@@ -92,7 +92,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   }
 
   // Assign the proto material if configured to do so
-  for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
+  for (const auto& [ip, bDescription] : m_cfg.portalMaterialBinning) {
     if (portalContainer.find(ip) != portalContainer.end()) {
       auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
           gctx, portalContainer[ip]->surface(), bDescription);
