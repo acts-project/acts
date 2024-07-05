@@ -24,7 +24,7 @@ target_include_directories(
   ActsPluginJson
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-    $<INSTALL_INTERFACE:include>)
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsPluginJson PUBLIC ActsCore)
 acts_target_link_libraries_system(
