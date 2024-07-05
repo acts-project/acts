@@ -9,6 +9,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
+#include <ostream>
 #include <stdexcept>
 
 namespace Acts {
