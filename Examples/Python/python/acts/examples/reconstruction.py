@@ -205,7 +205,7 @@ CkfConfig = namedtuple(
         "seedDeduplication",
         "stayOnSeed",
     ],
-    defaults=[15.0, 10, None, None, None],
+    defaults=[15.0, 10, None, False, False],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -486,8 +486,7 @@ def addSeeding(
                 initialSigmas=initialSigmas,
                 initialVarInflation=initialVarInflation,
                 particleHypothesis=particleHypothesis,
-                verbose=False,
-                truthSeeding= seedingAlgorithm == SeedingAlgorithm.TruthEstimated
+                verbose=True
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -497,8 +496,7 @@ def addSeeding(
             acts.examples.SeedsToPrototracks(
                 level=logLevel,
                 inputSeeds=seeds,
-                outputProtoTracks=prototracks,
-                suffix=suffix
+                outputProtoTracks=prototracks
             )
         )
 
@@ -512,6 +510,7 @@ def addSeeding(
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
+                suffix
             )
 
         if outputDirCsv is not None:
@@ -566,6 +565,7 @@ def addNewSeeding(
     verbose: bool = False,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     inputSourceLinks="sourcelinks",
     inputMeasurements="measurements",
@@ -627,23 +627,20 @@ def addNewSeeding(
         seedFilterConfigArg,
         spacePointGridConfigArg,
         logLevel,
-        suffixSeed=suffix,
-        outputDirRoot=outputDirRoot
+        suffixSeed=suffix
     )
 
     parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
         level=logLevel,
         inputSeeds=seeds,
         outputTrackParameters=suffix+"estimatedparameters",
+        outputSeeds=suffix+"estimatedseeds",
         trackingGeometry=trackingGeometry,
         magneticField=field,
         **acts.examples.defaultKWArgs(
             initialSigmas=initialSigmas,
             initialVarInflation=initialVarInflation,
-            particleHypothesis=particleHypothesis,
-            verbose=False,
-            truthSeeding= False
-
+            particleHypothesis=particleHypothesis
         ),
     )
     s.addAlgorithm(parEstimateAlg)
@@ -653,7 +650,7 @@ def addNewSeeding(
         acts.examples.SeedsToPrototracks(
             level=logLevel,
             inputSeeds=seeds,
-            outputProtoTracks=prototracks,
+            outputProtoTracks=prototracks
         )
     )
 
@@ -667,10 +664,26 @@ def addNewSeeding(
             inputParticles,
             parEstimateAlg.config.outputTrackParameters,
             logLevel,
-            suffix=suffix
+            suffix
         )
 
-    return s
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+
+        csvSeedWriter = acts.examples.CsvSeedWriter(
+            level=logLevel,
+            inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+            inputSimSeeds=seeds,
+            inputSimHits="simhits",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputDir=str(outputDirCsv),
+            fileName=str(f"seed.csv"),
+        )
+        s.addWriter(csvSeedWriter)
 
 
 def addSeedingTruthSelection(
@@ -965,6 +978,7 @@ def addStandardSeeding(
         gridOptions=gridOptions,
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
+        seedFinderOptions=seedFinderOptions,
         inputPrimaryVertex=outputPrimaryVertex
     )
     sequence.addAlgorithm(seedingAlg)
@@ -981,8 +995,7 @@ def addStandardSeedingNA60(
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
     outputPrimaryVertex: str="OutputRecPrimaryVertex",
-    suffixSeed= "",
-    outputDirRoot = None
+    suffixSeed= ""
 ):
     """adds standard seeding
     For parameters description see addSeeding
@@ -1082,31 +1095,17 @@ def addStandardSeedingNA60(
         )
     )
 
-    gridConfig = acts.SpacePointGridConfig(
+    gridConfig = acts.PlanarSpacePointGridConfig(
         **acts.examples.defaultKWArgs(
-            minPt=seedFinderConfig.minPt,
-            rMax=(
-                seedFinderConfig.rMax
-                if spacePointGridConfigArg.rMax is None
-                else spacePointGridConfigArg.rMax
-            ),
             zMax=seedFinderConfig.zMax,
             zMin=seedFinderConfig.zMin,
-            deltaRMax=(
-                seedFinderConfig.deltaYMax
-                if spacePointGridConfigArg.deltaRMax is None
-                else spacePointGridConfigArg.deltaRMax
-            ),
-            cotThetaMax=seedFinderConfig.cotThetaMax,
-            phiMin=spacePointGridConfigArg.phi[0],
-            phiMax=spacePointGridConfigArg.phi[1],
-            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
-            impactMax=spacePointGridConfigArg.impactMax,
+            xMax=seedFinderConfig.zMax,
+            xMin=seedFinderConfig.zMin,
             zBinEdges=spacePointGridConfigArg.zBinEdges,
-            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
+            xBinEdges=spacePointGridConfigArg.zBinEdges,
         )
     )
-    gridOptions = acts.SpacePointGridOptions(
+    gridOptions = acts.PlanarSpacePointGridOptions(
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderOptions.bFieldInZ,
         )
@@ -1120,7 +1119,8 @@ def addStandardSeedingNA60(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
             zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
-            numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
+            xBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
+            xBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom
         ),
         gridConfig=gridConfig,
         gridOptions=gridOptions,
@@ -1128,8 +1128,8 @@ def addStandardSeedingNA60(
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         inputPrimaryVertex=outputPrimaryVertex
-     )
-     sequence.addAlgorithm(seedingAlg)
+    )
+    sequence.addAlgorithm(seedingAlg)
     return seedingAlg.config.outputSeeds
 
 
@@ -1357,7 +1357,7 @@ def addSeedPerformanceWriters(
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDirRoot / "performance_seeding")+suffix+".root",
-            verbose=True
+            verbose=False
         )
     )
 
@@ -1589,7 +1589,6 @@ def addTruthTrackingGsf(
 
     return s
 
-
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
     ckfConfig=CkfConfig,
@@ -1602,14 +1601,14 @@ def addCKFTracks(
         Union[TrackSelectorConfig, List[TrackSelectorConfig]]
     ] = None,
     ckfConfig: CkfConfig = CkfConfig(),
-    twoWay: bool = True,
+    twoWay: bool = False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
     outputPrimaryVertex: str="OutputRecPrimaryVertex",
-    suffixOut ="",
+    suffixOut = "",
     suffixIn = ""
 ) -> None:
     """This function steers the seeding
@@ -1750,6 +1749,7 @@ def addCKFTracks(
         writeCKFperformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
+        suffix=suffixOut
     )
 
     return s
@@ -1826,6 +1826,7 @@ def addTrackWriters(
     writeCKFperformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
+    suffix = ""
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1875,8 +1876,8 @@ def addTrackWriters(
                 level=customLogLevel(),
                 inputTracks=tracks,
                 inputParticles="truth_seeds_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                inputParticleTrackMatching="particle_track_matching",
+                inputTrackParticleMatching= suffix+"track_particle_matching",
+                inputParticleTrackMatching= suffix+"particle_track_matching",
                 filePath=str(outputDirRoot / f"performance_{name}.root"),
             )
             s.addWriter(ckfPerfWriter)
@@ -2081,7 +2082,6 @@ def addExaTrkX(
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
-    tracks: str = "tracks",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -2097,7 +2097,7 @@ def addAmbiguityResolution(
     alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=suffixIn+"tracks",
-        outputTracks=suffixOut+"Tracks"
+        outputTracks=suffixOut+"tracks",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -2105,7 +2105,7 @@ def addAmbiguityResolution(
         ),
     )
     s.addAlgorithm(alg)
-    s.addWhiteboardAlias("tracks", alg.config.outputTracks)
+    s.addWhiteboardAlias(suffixOut+"tracks", alg.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
@@ -2126,7 +2126,7 @@ def addAmbiguityResolution(
     addTrackWriters(
         s,
         name=suffixOut,
-        tracks=alg.config.outputTracks,
+        tracks=suffixOut+"tracks",
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
@@ -2134,6 +2134,7 @@ def addAmbiguityResolution(
         writeCKFperformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
+        suffix =  suffixOut
     )
 
     return s
@@ -2353,7 +2354,7 @@ def addVertexFitting(
         trackSelector = addTrackSelection(
             s,
             trackSelectorConfig,
-            inputTracks=tracks,
+            inputTracks=suffixIn+tracks,
             outputTracks="selectedTracksVertexing",
             logLevel=customLogLevel(),
         )
@@ -2362,7 +2363,7 @@ def addVertexFitting(
     if trackParameters is None:
         converter = acts.examples.TracksToParameters(
             level=customLogLevel(),
-            inputTracks=tracks,
+            inputTracks=suffixIn+tracks,
             outputTrackParameters="selectedTracksParametersVertexing",
         )
         s.addAlgorithm(converter)
@@ -2376,7 +2377,7 @@ def addVertexFitting(
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
-            inputTracks=tracks,
+            inputTracks=suffixIn+tracks,
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
             outputProtoVertices=outputProtoVertices,
@@ -2426,7 +2427,7 @@ def addVertexFitting(
             VertexPerformanceWriter(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
-                inputTracks=tracks,
+                inputTracks=suffixIn+tracks,
                 inputTruthVertices=inputVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,

@@ -268,12 +268,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithmNA60::execute(
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+      std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2);
 
 
   /// variable middle SP radial region of interest
   const Acts::Range1D<float> yMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+      std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaYMiddleMinSPRange,
       up - m_cfg.seedFinderConfig.deltaYMiddleMaxSPRange);
 
