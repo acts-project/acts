@@ -22,9 +22,7 @@ namespace Acts::detail::GeoModelBinningHelper {
 /// @brief Helper to transform binning string to BinningValue enum
 ///
 /// @param binning the binning string
-/// @param texecpt throw an exception if needed
-inline BinningValue toBinningValue(const std::string& binning,
-                                   bool texcept = true) {
+inline BinningValue toBinningValue(const std::string& binning) {
   if (binning == "x") {
     return BinningValue::binX;
   } else if (binning == "y") {
@@ -35,11 +33,9 @@ inline BinningValue toBinningValue(const std::string& binning,
     return BinningValue::binR;
   } else if (binning == "phi") {
     return BinningValue::binPhi;
-  } else if (texcept) {
-    throw std::invalid_argument(
-        "GeoModelBinningHelper: Unknown binning value '" + binning + "'");
   }
-  return BinningValue::numBinningValues();
+  throw std::invalid_argument("GeoModelBinningHelper: Unknown binning value '" +
+                              binning + "'");
 }
 
 /// @brief Convert a binning string into a ProtoiBinning description
