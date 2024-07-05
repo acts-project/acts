@@ -156,12 +156,14 @@ Acts::PortalJsonConverter::toJsonDetray(
       // Pick the surface dimension - via poly
       std::array<ActsScalar, 2u> clipRange = {0., 0.};
       std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
-      if (surfaceType == Surface::SurfaceType::Cylinder && cast == binZ) {
+      if (surfaceType == Surface::SurfaceType::Cylinder &&
+          cast == BinningValue::binZ) {
         ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
-      } else if (surfaceType == Surface::SurfaceType::Disc && cast == binR) {
+      } else if (surfaceType == Surface::SurfaceType::Disc &&
+                 cast == BinningValue::binR) {
         clipRange = {boundValues[RadialBounds::BoundValues::eMinR],
                      boundValues[RadialBounds::BoundValues::eMaxR]};
       } else {
