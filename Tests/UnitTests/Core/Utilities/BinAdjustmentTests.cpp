@@ -27,8 +27,8 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
   RadialBounds bound(50, 75, M_PI, 0);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binR);
-  bu += BinUtility(1, 0, 1, Acts::closed, Acts::binPhi);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binR);
+  bu += BinUtility(1, 0, 1, Acts::closed, Acts::BinningValue::binPhi);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
   CylinderBounds bound(25, 50, M_PI / 4, 0);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binPhi);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binPhi);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binZ);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
   RectangleBounds bound(20, 30);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binX);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binY);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binX);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binY);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Trapezoid) {
   TrapezoidBounds bound(5, 15, 30);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binX);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::binY);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binX);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binY);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 

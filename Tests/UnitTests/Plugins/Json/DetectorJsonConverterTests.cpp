@@ -169,7 +169,8 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
     lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
     lsConfig.surfacesProvider = endcapSurfaces;
     lsConfig.binnings = {Acts::Experimental::ProtoBinning(
-        Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 22u, 1u)};
+        Acts::BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI,
+        22u, 1u)};
 
     auto layerBuilder =
         std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -230,10 +231,12 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {
-      Acts::Experimental::ProtoBinning{
-          Acts::binZ, Acts::AxisBoundaryType::Bound, -480., 480., 14u, 1u},
-      Acts::Experimental::ProtoBinning(
-          Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 32u, 1u)};
+      Acts::Experimental::ProtoBinning{Acts::BinningValue::binZ,
+                                       Acts::AxisBoundaryType::Bound, -480.,
+                                       480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(Acts::BinningValue::binPhi,
+                                       Acts::AxisBoundaryType::Closed, -M_PI,
+                                       M_PI, 32u, 1u)};
 
   auto barrelBuilder =
       std::make_shared<Acts::Experimental::LayerStructureBuilder>(
@@ -277,7 +280,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   // Build the combined barrel
   Acts::Experimental::CylindricalContainerBuilder::Config ccBarrelBuilderCfg;
   ccBarrelBuilderCfg.builders = {ivBuilder, dvBuilder, ovBuilder};
-  ccBarrelBuilderCfg.binning = {Acts::binR};
+  ccBarrelBuilderCfg.binning = {Acts::BinningValue::binR};
 
   auto ccBarrelBuilder =
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
@@ -288,7 +291,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   Acts::Experimental::CylindricalContainerBuilder::Config ccBarrelEcBuilderCfg;
   ccBarrelEcBuilderCfg.builders = {endcapBuilders[0u], ccBarrelBuilder,
                                    endcapBuilders[1u]};
-  ccBarrelEcBuilderCfg.binning = {Acts::binZ};
+  ccBarrelEcBuilderCfg.binning = {Acts::BinningValue::binZ};
 
   auto ccBarrelEndcapBuilder =
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
@@ -315,7 +318,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   // Full detector
   Acts::Experimental::CylindricalContainerBuilder::Config detCompBuilderCfg;
   detCompBuilderCfg.builders = {bpBuilder, ccBarrelEndcapBuilder};
-  detCompBuilderCfg.binning = {Acts::binR};
+  detCompBuilderCfg.binning = {Acts::BinningValue::binR};
 
   auto detCompBuilder =
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(

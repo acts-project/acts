@@ -7,19 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <std::size_t DIM>
-template <typename... args>
-Acts::GridBinFinder<DIM>::GridBinFinder(args&&... vals) {
-  static_assert(sizeof...(args) == DIM);
-  static_assert(
-      std::conjunction<std::disjunction<
-          std::is_same<int, typename std::decay<args>::type>,
-          std::is_same<std::pair<int, int>, typename std::decay<args>::type>,
-          std::is_same<std::vector<std::pair<int, int>>,
-                       typename std::decay<args>::type>>...>::value);
-  storeValue(std::forward<args>(vals)...);
-}
-
-template <std::size_t DIM>
 template <typename first_value_t, typename... vals>
 void Acts::GridBinFinder<DIM>::storeValue(first_value_t&& fv,
                                           vals&&... others) {

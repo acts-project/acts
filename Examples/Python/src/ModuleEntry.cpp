@@ -72,6 +72,7 @@ void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addGeoModel(Context& ctx);
 void addJson(Context& ctx);
+void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addSvg(Context& ctx);
@@ -134,6 +135,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addPythia8(ctx);
   addJson(ctx);
   addGeoModel(ctx);
+  addDetray(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addObj(ctx);
