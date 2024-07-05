@@ -147,8 +147,8 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     // arbitrary range. do the equivalent grouping manually
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
-    for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
-      for (auto& sourceLink : moduleSourceLinks) {
+    for (const auto& [moduleGeoId, moduleSourceLinks] : groupedByModule) {
+      for (const auto& sourceLink : moduleSourceLinks) {
         m_spacePointBuilder.buildSpacePoint(
             ctx.geoContext, {Acts::SourceLink{sourceLink}}, spOpt,
             std::back_inserter(spacePoints));
