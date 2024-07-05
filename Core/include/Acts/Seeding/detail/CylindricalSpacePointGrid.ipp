@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/container/flat_set.hpp>
-
 template <typename SpacePoint>
 Acts::CylindricalSpacePointGrid<SpacePoint>
 Acts::CylindricalSpacePointGridCreator::createGrid(
@@ -99,9 +97,8 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     }
   }
 
-  Acts::detail::Axis<detail::AxisType::Equidistant,
-                     detail::AxisBoundaryType::Closed>
-      phiAxis(config.phiMin, config.phiMax, phiBins);
+  Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<AxisScalar> zValues;
@@ -131,8 +128,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     }
   }
 
-  detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
-      zAxis(std::move(zValues));
+  Axis<AxisType::Variable, AxisBoundaryType::Bound> zAxis(std::move(zValues));
   return Acts::CylindricalSpacePointGrid<SpacePoint>(
       std::make_tuple(std::move(phiAxis), std::move(zAxis)));
 }
@@ -167,12 +163,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
-  // get region of interest (or full detector if configured accordingly)
-  float phiMin = config.phiMin;
-  float phiMax = config.phiMax;
-  float zMin = config.zMin;
-  float zMax = config.zMax;
-
   // sort by radius
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
@@ -182,7 +172,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
       (config.rMax + options.beamPos.norm()) / config.binSizeR);
 
   // keep track of changed bins while sorting
-  boost::container::flat_set<std::size_t> rBinsIndex;
+  std::vector<bool> usedBinIndex(grid.size(), false);
+  std::vector<std::size_t> rBinsIndex;
+  rBinsIndex.reserve(grid.size());
 
   std::size_t counter = 0ul;
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
@@ -202,11 +194,12 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     rRangeSPExtent.extend({spX, spY, spZ});
 
     // remove SPs outside z and phi region
-    if (spZ > zMax || spZ < zMin) {
+    if (spZ > config.zMax || spZ < config.zMin) {
       continue;
     }
+
     float spPhi = std::atan2(spY, spX);
-    if (spPhi > phiMax || spPhi < phiMin) {
+    if (spPhi > config.phiMax || spPhi < config.phiMin) {
       continue;
     }
 
@@ -222,23 +215,25 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     // fill rbins into grid
-    Acts::Vector2 spLocation(isp->phi(), isp->z());
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = grid.atPosition(spLocation);
+    std::size_t globIndex =
+        grid.globalBinFromPosition(Acts::Vector2{isp->phi(), isp->z()});
+    auto& rbin = grid.at(globIndex);
     rbin.push_back(std::move(isp));
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
-    if (rbin.size() > 1) {
-      rBinsIndex.insert(grid.globalBinFromPosition(spLocation));
+    if (rbin.size() > 1 && !usedBinIndex[globIndex]) {
+      usedBinIndex[globIndex] = true;
+      rBinsIndex.push_back(globIndex);
     }
   }
 
   /// sort SPs in R for each filled bin
-  for (auto& binIndex : rBinsIndex) {
+  for (std::size_t binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
-    std::sort(rbin.begin(), rbin.end(), [](const auto& a, const auto& b) {
-      return a->radius() < b->radius();
-    });
+    std::sort(rbin.begin(), rbin.end(),
+              [](const auto& a, const auto& b) -> bool {
+                return a->radius() < b->radius();
+              });
   }
 }

@@ -19,9 +19,9 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/TransformRange.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -51,14 +51,14 @@ TrackingVolume::TrackingVolume(
 TrackingVolume::TrackingVolume(const Volume& volume,
                                const std::string& volumeName)
     : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
+                     nullptr, nullptr, MutableTrackingVolumeVector{},
                      volumeName) {}
 
-TrackingVolume::TrackingVolume(
-    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
-    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
-    const std::string& volumeName)
-    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr,
-                     containedVolumeArray, {}, volumeName) {}
+TrackingVolume::TrackingVolume(const Transform3& transform,
+                               std::shared_ptr<const VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
+                     {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() = default;
 
@@ -153,10 +153,11 @@ void TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
                                         BoundarySurfaceFace bsfMine,
                                         TrackingVolume* neighbor,
                                         BoundarySurfaceFace bsfNeighbor) {
-  // Find the connection of the two tracking volumes: binR returns the center
-  // except for cylindrical volumes
-  Vector3 bPosition(binningPosition(gctx, binR));
-  Vector3 distance = Vector3(neighbor->binningPosition(gctx, binR) - bPosition);
+  // Find the connection of the two tracking volumes: BinningValue::binR returns
+  // the center except for cylindrical volumes
+  Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
+  Vector3 distance =
+      Vector3(neighbor->binningPosition(gctx, BinningValue::binR) - bPosition);
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);
@@ -196,14 +197,14 @@ void TrackingVolume::glueTrackingVolumes(
     const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
     BoundarySurfaceFace bsfNeighbor) {
-  // find the connection of the two tracking volumes : binR returns the center
-  // except for cylindrical volumes
+  // find the connection of the two tracking volumes : BinningValue::binR
+  // returns the center except for cylindrical volumes
   std::shared_ptr<const TrackingVolume> nRefVolume =
       neighbors->arrayObjects().at(0);
   // get the distance
-  Vector3 bPosition(binningPosition(gctx, binR));
-  Vector3 distance =
-      Vector3(nRefVolume->binningPosition(gctx, binR) - bPosition);
+  Vector3 bPosition(binningPosition(gctx, BinningValue::binR));
+  Vector3 distance = Vector3(
+      nRefVolume->binningPosition(gctx, BinningValue::binR) - bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
       boundarySurfaces().at(bsfMine);

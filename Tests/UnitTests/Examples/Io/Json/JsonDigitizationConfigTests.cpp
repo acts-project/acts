@@ -44,7 +44,7 @@ struct Fixture {
   // hit information
   ActsFatras::Hit hit;
 
-  Fixture(uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
+  Fixture(std::uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
       : rng(rngSeed),
         gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
             3)),
@@ -156,8 +156,10 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   ActsExamples::GeometricConfig gdc;
 
   Acts::BinUtility segmentation;
-  segmentation += Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::binX);
-  segmentation += Acts::BinUtility(1280, -36, 36, Acts::open, Acts::binY);
+  segmentation +=
+      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::BinningValue::binX);
+  segmentation +=
+      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::BinningValue::binY);
 
   gdc.segmentation = segmentation;
   gdc.threshold = 0.01;
