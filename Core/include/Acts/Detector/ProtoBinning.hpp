@@ -28,7 +28,7 @@ namespace Acts::Experimental {
 /// translated into concrete axis types
 struct ProtoBinning {
   /// The binning value of this
-  BinningValue binValue = BinningValue::binValues;
+  BinningValue binValue;
   /// The axis type: equidistant or variable
   Acts::AxisType axisType = Acts::AxisType::Equidistant;
   /// The axis boundary type: Open, Bound or Closed
@@ -73,7 +73,7 @@ struct ProtoBinning {
       : binValue(bValue), boundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
       std::string msg = "ProtoBinning: Invalid binning for value '";
-      msg += binningValueNames()[bValue];
+      msg += binningValueName(bValue);
       msg += "', min edge (" + std::to_string(minE) + ") ";
       msg += " needs to be smaller than max edge (";
       msg += std::to_string(maxE) + ").";
@@ -116,7 +116,7 @@ struct ProtoBinning {
   std::string toString() const {
     std::stringstream ss;
     ss << "ProtoBinning: " << bins() << " bins in "
-       << binningValueNames()[binValue];
+       << binningValueName(binValue);
     ss << (axisType == Acts::AxisType::Variable ? ", variable "
                                                 : ", equidistant ");
     if (!autorange) {

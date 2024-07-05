@@ -234,14 +234,21 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 
   auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
 
-  CHECK_CLOSE_ABS(planeExtent.min(binZ), -rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binZ), rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.min(binX), -rHy, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binX), rHy, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.min(binY), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binY), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.min(binR), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binR), std::hypot(yPs, rHy),
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binZ), -rHx,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binZ), rHx,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binX), -rHy,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binX), rHy,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binY), yPs,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binY), yPs,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.min(BinningValue::binR), yPs,
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtent.max(BinningValue::binR), std::hypot(yPs, rHy),
                   s_onSurfaceTolerance);
 
   // Now rotate
@@ -253,17 +260,19 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 
   auto planeExtentRot =
       planeRot->polyhedronRepresentation(tgContext, 1).extent();
-  CHECK_CLOSE_ABS(planeExtentRot.min(binZ), -rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binZ), rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binX), -rHy * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binZ), -rHx,
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binX), rHy * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.max(BinningValue::binZ), rHx,
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binY), yPs - rHy * std::sin(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binX),
+                  -rHy * std::cos(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(BinningValue::binX), rHy * std::cos(alpha),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binY), yPs + rHy * std::sin(alpha),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binR), yPs * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binY),
+                  yPs - rHy * std::sin(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.max(BinningValue::binY),
+                  yPs + rHy * std::sin(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.min(BinningValue::binR), yPs * std::cos(alpha),
                   s_onSurfaceTolerance);
 }
 
