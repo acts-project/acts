@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2404:51
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -117,7 +117,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2404:51
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -154,7 +154,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2404:51
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -187,7 +187,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.6.6 spyral-cli==1.1.1 matplotlib
+          && pip3 install histcmp==0.6.6 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source build/this_acts_withdeps.sh
@@ -207,7 +207,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Install dependencies
-        run: pip3 install spyral-cli==1.1.0
+        run: pip3 install spyral-cli==1.1.2
 
       - uses: actions/download-artifact@v4
         with:
@@ -234,13 +234,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2004
+          - image: ubuntu2404
             std: 17
           - image: ubuntu2204_cpp20
             std: 20
           - image: ubuntu2204_clang
             std: 17
-    container: ghcr.io/acts-project/${{ matrix.image }}:v41
+    container: ghcr.io/acts-project/${{ matrix.image }}:51
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -321,115 +321,6 @@ jobs:
 
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
-
-  linux-nodeps:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v41
-    strategy:
-      matrix:
-        image:
-          # Note: We only want the centos8 base here, and so we do not
-          # setup the lcg environment below
-          - centos8-lcg100-gcc10
-    env:
-      # NOTE: we setup the ROOT from LCG even though this is a
-      # "nodeps" build. This is because we want to test that the boost
-      # dependency is handled correctly when building the examples
-      # (same for tbb below). ROOT is available from the "epel"
-      # official centos8 repo, but to save hundreds of MB's of package
-      # download we simply use lcg for this one package.
-      SETUP: source /opt/lcg/ROOT/v6.24.00-e7098/x86_64-centos8-gcc10-opt/bin/thisroot.sh
-      PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
-      INSTALL_DIR: ${{ github.workspace }}/install
-      ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies
-          # Install tbb-devel also to build the examples
-        run: >
-          dnf -y install ninja-build tbb-devel ccache
-          && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
-
-      - name: Restore ccache
-        uses: actions/cache/restore@v4
-        id: ccache-restore
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_UNITTESTS=ON
-          -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_PLUGIN_JSON=ON
-      - name: Build
-        run: ${SETUP} && ( cmake --build build || cmake --build build )
-      # The above line is required as a sort of retry mechanism. Without it,
-      # the build fails for technical reasons.
-      - name: ccache stats
-        run: ccache -s
-      - name: Save ccache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-      - name: Unit tests
-        run: ${SETUP} && cmake --build build --target test
-      - name: Integration tests
-        run: ${SETUP} && cmake --build build --target integrationtests
-      - name: Install
-        run: ${SETUP} && cmake --build build --target install
-      # For some reasons, this version of ROOT complains that it
-      # cannot find the nlohmann::json config before we even installed
-      # it. So we have to do the examples in separate step.
-      - name: Configure Examples
-        run: >
-          ${SETUP} &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-          -DACTS_FORCE_ASSERTIONS=ON
-          -DACTS_USE_SYSTEM_BOOST=OFF
-          -DACTS_USE_SYSTEM_EIGEN3=OFF
-          -DACTS_BUILD_EXAMPLES=ON
-      - name: Build Examples
-        run: ${SETUP} && ${PRELOAD} && cmake --build build
-      - name: Install Examples
-        run: ${SETUP} && cmake --build build --target install
-      - name: Run Examples
-        # Run a single example to be sure that the boost dependencies
-        # got linked correctly
-        run: ${SETUP} && ${PRELOAD} && "${INSTALL_DIR}/bin/ActsExampleHelloWorld" -n 1
-      - name: Downstream configure
-        run: >
-          ${SETUP} &&
-          cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      - name: Downstream build
-        run: cmake --build build-downstream-nodeps
-      - name: Downstream run
-        run: ./build-downstream-nodeps/bin/ShowActsVersion
-             && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
 
   macos:
     runs-on: macos-13
