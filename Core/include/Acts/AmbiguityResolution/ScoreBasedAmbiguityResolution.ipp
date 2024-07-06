@@ -413,7 +413,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       score = score * fac;
       ACTS_DEBUG("Modifier for chi2 = " << chi2 << " and NDF = " << indf
                                         << " is : " << fac
-                                        << "  New score now: " << score)
+                                        << "  New score now: " << score);
     }
     iTrack++;
 

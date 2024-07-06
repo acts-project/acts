@@ -45,8 +45,8 @@ std::string Acts::PerigeeSurface::name() const {
   return "Acts::PerigeeSurface";
 }
 
-std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
-                                             std::ostream& sl) const {
+std::ostream& Acts::PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
+                                                 std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;

@@ -55,12 +55,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR && bval != binPhi) {
+    } else if (bval != BinningValue::binR && bval != BinningValue::binPhi) {
       throw std::invalid_argument("Disc binning must be: phi, r");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binPhi) {
+    if (bval == BinningValue::binPhi) {
       min = minPhi;
       max = maxPhi;
     } else {
@@ -106,15 +106,16 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binRPhi && bval != binPhi && bval != binZ) {
+    } else if (bval != BinningValue::binRPhi && bval != BinningValue::binPhi &&
+               bval != BinningValue::binZ) {
       throw std::invalid_argument("Cylinder binning must be: rphi, phi, z");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binPhi) {
+    if (bval == BinningValue::binPhi) {
       min = minPhi;
       max = maxPhi;
-    } else if (bval == binRPhi) {
+    } else if (bval == BinningValue::binRPhi) {
       min = cR * minPhi;
       max = cR * maxPhi;
     } else {
@@ -158,12 +159,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX && bval != binY) {
+    } else if (bval != BinningValue::binX && bval != BinningValue::binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binX) {
+    if (bval == BinningValue::binX) {
       min = minX;
       max = maxX;
     } else {
@@ -208,12 +209,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX && bval != binY) {
+    } else if (bval != BinningValue::binX && bval != BinningValue::binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
     float min = 0., max = 0.;
     // Perform the value adjustment
-    if (bval == binX) {
+    if (bval == BinningValue::binX) {
       min = -1 * halfX;
       max = halfX;
     } else {

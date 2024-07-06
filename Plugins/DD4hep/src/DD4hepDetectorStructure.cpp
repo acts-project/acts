@@ -56,21 +56,21 @@ Acts::Experimental::DD4hepDetectorStructure::construct(
 
   // Draw the raw graph
   if (!options.emulateToGraph.empty()) {
-    ACTS_DEBUG("Writing the initial bluepring to file before gap filling.")
+    ACTS_DEBUG("Writing the initial bluepring to file before gap filling.");
     std::ofstream bpi(options.emulateToGraph + "_initial.dot");
     detail::BlueprintDrawer::dotStream(bpi, *dd4hepBlueprint);
     bpi.close();
   }
 
   if (dd4hepBlueprint->boundsType == VolumeBounds::eCylinder) {
-    ACTS_DEBUG("Cylindrical detector building detected.")
+    ACTS_DEBUG("Cylindrical detector building detected.");
 
     // Now fill the gaps
     detail::BlueprintHelper::fillGaps(*dd4hepBlueprint);
 
     // Draw the synchronized graph
     if (!options.emulateToGraph.empty()) {
-      ACTS_DEBUG("Writing the final bluepring to file.")
+      ACTS_DEBUG("Writing the final bluepring to file.");
       std::ofstream bpf(options.emulateToGraph + "_final.dot");
       detail::BlueprintDrawer::dotStream(bpf, *dd4hepBlueprint);
       bpf.close();

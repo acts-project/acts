@@ -29,10 +29,11 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface
-                          .intersect(gctx, params.position(gctx),
-                                     params.direction(), BoundaryCheck(false))
-                          .closest();
+  auto intersection =
+      perigeeSurface
+          .intersect(gctx, params.position(gctx), params.direction(),
+                     BoundaryTolerance::Infinite())
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -95,7 +96,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   if (paramVec(eLinTheta) + m_cfg.delta > M_PI) {
     ACTS_ERROR(
         "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)! "
-        "You might need to decrease targetTolerance as well.")
+        "You might need to decrease targetTolerance as well.");
   }
 
   // Wiggling each of the parameters at the PCA and computing the Perigee
@@ -119,7 +120,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     // Obtain propagation direction
     intersection = perigeeSurface
                        .intersect(gctx, paramVecCopy.template head<3>(),
-                                  wiggledDir, BoundaryCheck(false))
+                                  wiggledDir, BoundaryTolerance::Infinite())
                        .closest();
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
