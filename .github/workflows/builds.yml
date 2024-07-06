@@ -64,8 +64,9 @@ jobs:
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions such as the one installed via homebrew
         run: >
-          ccache -z &&
-          cmake -B build -S .
+          ccache -z
+          && source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}python/3.12.2/bin/python3
