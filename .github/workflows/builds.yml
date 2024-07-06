@@ -65,11 +65,11 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z
-          && INSTALL_DIR=${{ env.DEPENDENCY_DIR }} source CI/macos_deps_setup.sh
+          && source CI/macos_deps_setup.sh
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}python/3.12.2/bin/python3
+          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/python/3.12.2/bin/python3
           -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
