@@ -2,8 +2,6 @@
 set -e
 set -u
 
-DEPENDENCY_DIR=$1
-
 CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-}
 
 function add_dep() {
