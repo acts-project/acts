@@ -72,11 +72,15 @@ const auto defaultNullBField = std::make_shared<NullBField>();
 const auto particleHypothesis = ParticleHypothesis::pion();
 
 struct Options {
-  double stepTolerance = 1e-4;
-  double stepSizeCutOff = 0.0;
-  std::size_t maxRungeKuttaStepTrials = 10;
   Direction direction = defaultNDir;
+
   const Acts::Logger &logger = Acts::getDummyLogger();
+
+  struct {
+    double stepTolerance = 1e-4;
+    double stepSizeCutOff = 0.0;
+    std::size_t maxRungeKuttaStepTrials = 10;
+  } stepping;
 };
 
 struct MockNavigator {};
@@ -730,6 +734,8 @@ void propagator_instatiation_test_function() {
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
+  using PropagatorOptions =
+      typename Propagator<multi_stepper_t, Navigator>::template Options<>;
   PropagatorOptions options(geoCtx, magCtx);
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>

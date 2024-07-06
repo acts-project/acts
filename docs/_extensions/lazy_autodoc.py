@@ -74,11 +74,11 @@ def run() -> None:
     }
 
     role_instances["struct"] |= {
-        "Acts::DenseStepperPropagatorOptions",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
         "Acts::OrientedSurface",
+        "Acts::BasePropagatorOptions",
     }
 
     role_instances["class"] |= {

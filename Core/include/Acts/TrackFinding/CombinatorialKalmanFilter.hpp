@@ -668,7 +668,7 @@ class CombinatorialKalmanFilter {
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
                          currentState.referenceSurface(),
-                         state.options.maxStepSize);
+                         state.options.stepping.maxStepSize);
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
@@ -1205,8 +1205,8 @@ class CombinatorialKalmanFilter {
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
-                                                    tfOptions.magFieldContext);
+    typename propagator_t::template Options<Actors, Aborters> propOptions(
+        tfOptions.geoContext, tfOptions.magFieldContext);
 
     // Set the trivial propagator options
     propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
