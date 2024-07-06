@@ -49,7 +49,7 @@ std::int32_t SparseGridTrackDensity::getBin(double value, double binExtent) {
 std::uint32_t SparseGridTrackDensity::getTrkGridSize(
     double sigma, double nTrkSigmas, double binExtent,
     const GridSizeRange& trkGridSizeRange) {
-  std::uint32_t size =
+  auto size =
       static_cast<std::uint32_t>(std::ceil(2 * nTrkSigmas * sigma / binExtent));
   // Make sure the grid size is odd
   if (size % 2 == 0) {
@@ -388,7 +388,7 @@ double SparseGridTrackDensity::getDensitySum(const DensityMap& densityMap,
     if (auto it = densityMap.find(b); it != densityMap.end()) {
       return it->second;
     }
-    return 0.0f;
+    return 0.0;
   };
 
   // Add density from the bin.

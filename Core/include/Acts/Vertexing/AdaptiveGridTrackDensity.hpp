@@ -181,8 +181,8 @@ class AdaptiveGridTrackDensity {
   ///
   /// @param mainDensityMap Map between bins and corresponding density values
   ///
-  /// @return The bin corresponding to the highest surrounding density
-  std::int32_t highestDensitySumBin(MainDensityMap& mainDensityMap) const;
+  /// @return The bin index corresponding to the highest surrounding density
+  std::size_t highestDensitySumBinIndex(MainDensityMap& mainDensityMap) const;
 
   /// @brief Calculates the density sum of a bin and its two neighboring bins
   /// in z direction

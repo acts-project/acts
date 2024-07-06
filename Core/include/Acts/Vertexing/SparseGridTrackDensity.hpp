@@ -33,7 +33,7 @@ class SparseGridTrackDensity {
   /// The first (second) integer indicates the bin's z (t) position
   using Bin = std::pair<std::int32_t, std::int32_t>;
   /// Mapping between bins and track densities
-  using DensityMap = boost::container::flat_map<Bin, float>;
+  using DensityMap = boost::container::flat_map<Bin, double>;
   /// Coordinates in the z-t plane; the t value will be set to 0 if time
   /// vertex seeding is disabled
   using ZTPosition = std::pair<double, double>;

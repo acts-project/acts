@@ -53,14 +53,14 @@ Result<double> AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
     return VertexingError::EmptyInput;
   }
 
-  std::int32_t zBinIndex = 0;
+  std::size_t zBinIndex = 0;
   if (!m_cfg.useHighestSumZPosition) {
     zBinIndex = std::distance(mainDensityMap.density.begin(),
                               std::max_element(mainDensityMap.density.begin(),
                                                mainDensityMap.density.end()));
   } else {
     // Get z position with highest density sum of surrounding bins
-    zBinIndex = highestDensitySumBin(mainDensityMap);
+    zBinIndex = highestDensitySumBinIndex(mainDensityMap);
   }
 
   std::int32_t zBin = mainDensityMap.zBin[zBinIndex];
@@ -73,14 +73,14 @@ AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
     MainDensityMap& mainDensityMap) const {
   // Get z maximum value
   auto maxZRes = getMaxZPosition(mainDensityMap);
-  if (not maxZRes.ok()) {
+  if (!maxZRes.ok()) {
     return maxZRes.error();
   }
   double maxZ = *maxZRes;
 
   // Get seed width estimate
   auto widthRes = estimateSeedWidth(mainDensityMap, maxZ);
-  if (not widthRes.ok()) {
+  if (!widthRes.ok()) {
     return widthRes.error();
   }
   double width = *widthRes;
@@ -147,7 +147,7 @@ void AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
     const TrackDensityMap& trackDensityMap,
     MainDensityMap& mainDensityMap) const {
   // Calculate corresponding index in mainDensityMap
-  std::int32_t centralZIndex = std::distance(
+  std::size_t centralZIndex = std::distance(
       mainDensityMap.zBin.begin(),
       std::find(mainDensityMap.zBin.begin(), mainDensityMap.zBin.end(),
                 trackDensityMap.centralZBin));
@@ -255,12 +255,12 @@ Result<double> AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   } else {
     leftDensity = 0;
   }
-  float deltaZ2 = m_cfg.binSize * (rightDensity - maxValue / 2) /
-                  (rightDensity - leftDensity);
+  double deltaZ2 = m_cfg.binSize * (rightDensity - maxValue / 2) /
+                   (rightDensity - leftDensity);
 
   // Approximate FWHM
-  double fwhm =
-      rhmIndex * m_cfg.binSize - deltaZ1 - lhmIndex * m_cfg.binSize - deltaZ2;
+  double fwhm = static_cast<double>(rhmIndex) * m_cfg.binSize - deltaZ1 -
+                static_cast<double>(lhmIndex) * m_cfg.binSize - deltaZ2;
 
   // FWHM = 2.355 * sigma
   double width = fwhm / 2.355f;
@@ -269,7 +269,7 @@ Result<double> AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
 }
 
 template <int trkGridSize>
-std::int32_t AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
+std::size_t AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBinIndex(
     MainDensityMap& mainDensityMap) const {
   // Checks the first (up to) 3 density maxima, if they are close, checks which
   // one has the highest surrounding density sum (the two neighboring bins)

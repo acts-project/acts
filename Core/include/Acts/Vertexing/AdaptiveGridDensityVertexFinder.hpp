@@ -47,11 +47,11 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   /// @brief The Config struct
   struct Config {
     /// @param binSize Bin size of grid in mm
-    Config(double binSize = 0.1)
+    explicit Config(double binSize = 0.1)
         : gridDensity(typename GridDensity::Config(binSize)) {}
 
     /// @param gDensity The grid density
-    Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
+    explicit Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
     /// The grid density object
     GridDensity gridDensity;

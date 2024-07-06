@@ -38,7 +38,8 @@ class SparseGridDensityVertexFinder final : public IVertexFinder {
   /// @brief The Config struct
   struct Config {
     ///@param gDensity The grid density
-    Config(const SparseGridTrackDensity& gDensity) : gridDensity(gDensity) {}
+    explicit Config(const SparseGridTrackDensity& gDensity)
+        : gridDensity(gDensity) {}
 
     // The grid density object
     SparseGridTrackDensity gridDensity;

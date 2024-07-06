@@ -81,8 +81,6 @@ Acts::SparseGridDensityVertexFinder::find(
   Vector4 seedPos =
       vertexingOptions.constraint.fullPosition() + Vector4(0., 0., z, t);
 
-  Vertex returnVertex = Vertex(seedPos);
-
   SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
 
   if (zWidth != 0.) {
@@ -90,8 +88,8 @@ Acts::SparseGridDensityVertexFinder::find(
     seedCov(2, 2) = zWidth * zWidth;
   }
 
+  Vertex returnVertex = seedPos;
   returnVertex.setFullCovariance(seedCov);
-
   return std::vector<Vertex>{returnVertex};
 }
 
@@ -121,12 +119,12 @@ bool Acts::SparseGridDensityVertexFinder::doesPassTrackSelection(
 
   // Calculate track density quantities to check if track can easily
   // be considered as 2-dim Gaussian distribution without causing problems
-  double constantTerm =
+  const double constantTerm =
       -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
       (2. * covDeterminant);
   const double linearTerm = (d0 * covDZ + z0 * covDD) / covDeterminant;
   const double quadraticTerm = -covDD / (2. * covDeterminant);
-  double discriminant =
+  const double discriminant =
       linearTerm * linearTerm -
       4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
   if (discriminant < 0) {
