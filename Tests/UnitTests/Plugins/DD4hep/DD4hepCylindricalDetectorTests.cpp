@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorStructure) {
   BOOST_CHECK_EQUAL(detectorStore.size(), 6u);
 
   int elements = 0;
-  for (auto [key, value] : detectorStore) {
+  for (const auto& [key, value] : detectorStore) {
     elements += value.size();
   }
 
