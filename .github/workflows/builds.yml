@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: >
           brew install cmake ninja ccache xerces-c
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.521a754.tar.zst
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.ece4acf.tar.zst
           && mkdir ${{ env.DEPENDENCY_DIR }}
           && ls ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
