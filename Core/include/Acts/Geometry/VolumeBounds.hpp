@@ -124,7 +124,8 @@ class VolumeBounds {
   /// returns the bounding box binning. Individual shapes
   /// should override this method
   virtual std::vector<Acts::BinningValue> canonicalBinning() const {
-    return {Acts::binX, Acts::binY, Acts::binZ};
+    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
+            Acts::BinningValue::binZ};
   };
 
   /// Binning offset - overloaded for some R-binning types

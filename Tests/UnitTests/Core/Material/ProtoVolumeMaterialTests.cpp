@@ -18,9 +18,9 @@ namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoVolumeMaterial_construction_test) {
-  BinUtility vmpBU(10, -10., 10., open, binX);
-  vmpBU += BinUtility(10, -10., 10., open, binY);
-  vmpBU += BinUtility(10, -10., 10., open, binZ);
+  BinUtility vmpBU(10, -10., 10., open, BinningValue::binX);
+  vmpBU += BinUtility(10, -10., 10., open, BinningValue::binY);
+  vmpBU += BinUtility(10, -10., 10., open, BinningValue::binZ);
 
   // Constructor from arguments
   ProtoVolumeMaterial vmp(vmpBU);
