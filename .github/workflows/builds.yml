@@ -65,7 +65,7 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z
-          && source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          && INSTALL_DIR=${{ env.DEPENDENCY_DIR }} source CI/macos_deps_setup.sh
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
