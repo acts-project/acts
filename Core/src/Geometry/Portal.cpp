@@ -114,6 +114,37 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
 
 namespace {
 
+template <BinningValue direction, class surface_t, typename... Args>
+std::unique_ptr<GridPortalLink> makeAxis(const surface_t& surface,
+                                         const Logger& logger, Args&&... args) {
+  static_assert(std::is_same_v<CylinderSurface, surface_t> ||
+                std::is_same_v<DiscSurface, surface_t>);
+  // @TODO: PlaneSurface support
+
+  auto makeAxis = [&](auto boundaryType) {
+    Axis merged{boundaryType, std::forward<Args>(args)...};
+    ACTS_VERBOSE("    ~> merged axis: " << merged);
+
+    return GridPortalLink::make(surface, direction, std::move(merged));
+  };
+
+  if constexpr (direction == BinningValue::binPhi ||
+                direction == BinningValue::binRPhi) {
+    if constexpr (std::is_same_v<CylinderSurface, surface_t>) {
+      if (surface.bounds().coversFullAzimuth()) {
+        return makeAxis(AxisClosed);
+      }
+    } else if (std::is_same_v<DiscSurface, surface_t>) {
+      if (dynamic_cast<const RadialBounds&>(surface.bounds())
+              .coversFullAzimuth()) {
+        return makeAxis(AxisClosed);
+      }
+    }
+  }
+
+  return makeAxis(AxisBound);
+}
+
 template <BinningValue direction, class surface_t>
 std::unique_ptr<GridPortalLink> mergeVariable(const surface_t& mergedSurface,
                                               const IAxis& axisA,
@@ -139,28 +170,7 @@ std::unique_ptr<GridPortalLink> mergeVariable(const surface_t& mergedSurface,
       std::next(edgesB.begin()), edgesB.end(), std::back_inserter(binEdges),
       [&](ActsScalar edge) { return edge - axisB.getMin() + stitchPoint; });
 
-  auto makeAxis = [&](auto boundaryType) {
-    Axis merged{boundaryType, std::move(binEdges)};
-    ACTS_VERBOSE("    ~> merged axis: " << merged);
-
-    return GridPortalLink::make(mergedSurface, direction, std::move(merged));
-  };
-
-  if constexpr (direction == BinningValue::binPhi ||
-                direction == BinningValue::binRPhi) {
-    if constexpr (std::is_same_v<CylinderSurface, surface_t>) {
-      if (mergedSurface.bounds().coversFullAzimuth()) {
-        return makeAxis(AxisClosed);
-      }
-    } else if (std::is_same_v<DiscSurface, surface_t>) {
-      if (dynamic_cast<const RadialBounds&>(mergedSurface.bounds())
-              .coversFullAzimuth()) {
-        return makeAxis(AxisClosed);
-      }
-    }
-  }
-
-  return makeAxis(AxisBound);
+  return makeAxis<direction>(mergedSurface, logger, std::move(binEdges));
 }
 
 template <BinningValue direction, class surface_t>
@@ -183,30 +193,8 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(const surface_t& mergedSurface,
         (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) /
         2.0;
 
-    auto makeAxis = [&](auto boundaryType) {
-      Axis merged{boundaryType, -halfWidth, halfWidth,
-                  axisA.getNBins() + axisB.getNBins()};
-
-      ACTS_VERBOSE("    ~> merged axis: " << merged);
-
-      return GridPortalLink::make(mergedSurface, direction, std::move(merged));
-    };
-
-    if constexpr (direction == BinningValue::binPhi ||
-                  direction == BinningValue::binRPhi) {
-      if constexpr (std::is_same_v<CylinderSurface, surface_t>) {
-        if (mergedSurface.bounds().coversFullAzimuth()) {
-          return makeAxis(AxisClosed);
-        }
-      } else if (std::is_same_v<DiscSurface, surface_t>) {
-        if (dynamic_cast<const RadialBounds&>(mergedSurface.bounds())
-                .coversFullAzimuth()) {
-          return makeAxis(AxisClosed);
-        }
-      }
-    }
-
-    return makeAxis(AxisBound);
+    return makeAxis<direction>(mergedSurface, logger, -halfWidth, halfWidth,
+                               axisA.getNBins() + axisB.getNBins());
 
   } else {
     ACTS_VERBOSE("==> binWidths differ: " << binsWidthA << " vs " << binsWidthB
