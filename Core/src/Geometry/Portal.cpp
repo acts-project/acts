@@ -116,18 +116,28 @@ namespace {
 
 template <BinningValue direction, class surface_t, typename... Args>
 std::unique_ptr<GridPortalLink> makeAxis(const surface_t& surface,
-                                         const Logger& logger, Args&&... args) {
+                                         const Logger& logger,
+                                         std::tuple<Args...> args) {
   static_assert(std::is_same_v<CylinderSurface, surface_t> ||
                 std::is_same_v<DiscSurface, surface_t>);
   // @TODO: PlaneSurface support
 
+  // This is to make it possible to construct Axis with the tuple arguments
+  auto axisFactory = [](auto&&... axisArgs) {
+    return Axis{std::forward<decltype(axisArgs)>(axisArgs)...};
+  };
+
+  // Avoid copy-pasting identical code twice below
   auto makeAxis = [&](auto boundaryType) {
-    Axis merged{boundaryType, std::forward<Args>(args)...};
+    auto axisArgs = std::tuple_cat(std::tuple{boundaryType}, std::move(args));
+    auto merged = std::apply(axisFactory, std::move(axisArgs));
     ACTS_VERBOSE("    ~> merged axis: " << merged);
 
     return GridPortalLink::make(surface, direction, std::move(merged));
   };
 
+  // Check if we're in the cylinder or disc case, and the resulting bounds wrap
+  // around and should have closed binning
   if constexpr (direction == BinningValue::binPhi ||
                 direction == BinningValue::binRPhi) {
     if constexpr (std::is_same_v<CylinderSurface, surface_t>) {
@@ -170,7 +180,8 @@ std::unique_ptr<GridPortalLink> mergeVariable(const surface_t& mergedSurface,
       std::next(edgesB.begin()), edgesB.end(), std::back_inserter(binEdges),
       [&](ActsScalar edge) { return edge - axisB.getMin() + stitchPoint; });
 
-  return makeAxis<direction>(mergedSurface, logger, std::move(binEdges));
+  return makeAxis<direction>(mergedSurface, logger,
+                             std::tuple{std::move(binEdges)});
 }
 
 template <BinningValue direction, class surface_t>
@@ -193,8 +204,9 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(const surface_t& mergedSurface,
         (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) /
         2.0;
 
-    return makeAxis<direction>(mergedSurface, logger, -halfWidth, halfWidth,
-                               axisA.getNBins() + axisB.getNBins());
+    return makeAxis<direction>(
+        mergedSurface, logger,
+        std::tuple{-halfWidth, halfWidth, axisA.getNBins() + axisB.getNBins()});
 
   } else {
     ACTS_VERBOSE("==> binWidths differ: " << binsWidthA << " vs " << binsWidthB
