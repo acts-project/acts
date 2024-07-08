@@ -21,12 +21,7 @@
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
-struct GraphData {
-  std::int64_t edge0;
-  std::int64_t edge1;
-  float weight;
-  DFE_NAMEDTUPLE(GraphData, edge0, edge1, weight);
-};
+#include "CsvOutputData.hpp"
 
 ActsExamples::CsvExaTrkXGraphWriter::CsvExaTrkXGraphWriter(
     const ActsExamples::CsvExaTrkXGraphWriter::Config& config,

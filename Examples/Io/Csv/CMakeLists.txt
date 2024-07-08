@@ -15,10 +15,11 @@ add_library(
   src/CsvSeedWriter.cpp 
   src/CsvTrackWriter.cpp 
   src/CsvDriftCircleReader.cpp 
-  src/CsvMuonSimHitReader.cpp 
+  src/CsvMuonSimHitReader.cpp
   src/CsvProtoTrackWriter.cpp
   src/CsvSpacePointWriter.cpp
   src/CsvExaTrkXGraphWriter.cpp
+  src/CsvExaTrkXGraphReader.cpp
   src/CsvBFieldWriter.cpp)
 target_include_directories(
   ActsExamplesIoCsv
