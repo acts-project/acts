@@ -59,11 +59,13 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
 
   // Collect edges for truth graph and target graph
   std::vector<std::int64_t> graph;
+  std::size_t notFoundParticles = 0;
 
   for (auto& [pid, track] : tracks) {
     auto found = particles.find(pid);
     if (found == particles.end()) {
-      ACTS_WARNING("Did not find " << pid << ", skip track");
+      ACTS_VERBOSE("Did not find " << pid << ", skip track");
+      notFoundParticles++;
       continue;
     }
 
@@ -72,9 +74,15 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
       continue;
     }
 
+    const Acts::Vector3 vtx = found->fourPosition().segment<3>(0);
+    auto radiusForOrdering = [&](std::size_t i) {
+      const auto& sp = spacepoints[i];
+      return std::hypot(sp.x() - vtx[0], sp.y() - vtx[1], sp.z() - vtx[2]);
+    };
+
     // Sort by radius (this breaks down if the particle has to low momentum)
     std::sort(track.begin(), track.end(), [&](const auto& a, const auto& b) {
-      return spacepoints[a].r() < spacepoints[b].r();
+      return radiusForOrdering(a) < radiusForOrdering(b);
     });
 
     for (auto i = 0ul; i < track.size() - 1; ++i) {
@@ -82,6 +90,8 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
       graph.push_back(track[i + 1]);
     }
   }
+
+  ACTS_DEBUG("Did not find particles for " << notFoundParticles << " tracks");
 
   return graph;
 }
