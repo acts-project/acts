@@ -21,6 +21,53 @@
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
 
+class BarcodeConstructor {
+  /// Particles with barcodes larger then this value are considered to be
+  /// secondary particles
+  constexpr static int s_maxBarcodeForPrimary = 200000;
+
+  std::uint16_t m_primaryCount = 0;
+  std::uint16_t m_secondaryCount = 0;
+  std::unordered_map<std::uint64_t, ActsFatras::Barcode> m_barcodeMap;
+
+  static std::uint64_t concatInts(int a, int b) {
+    auto va = static_cast<std::uint32_t>(a);
+    auto vb = static_cast<std::uint32_t>(b);
+    std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
+    return value;
+  }
+
+ public:
+  ActsFatras::Barcode getBarcode(int barcode, int evtnumber) {
+    auto v = concatInts(barcode, evtnumber);
+    auto found = m_barcodeMap.find(v);
+    if (found != m_barcodeMap.end()) {
+      return found->second;
+    }
+
+    auto primary = (barcode < s_maxBarcodeForPrimary);
+
+    ActsFatras::Barcode fBarcode;
+
+    // vertex primary shouldn't be zero for a valid particle
+    fBarcode.setVertexPrimary(1);
+    if (primary) {
+      fBarcode.setVertexSecondary(0);
+      fBarcode.setParticle(m_primaryCount);
+      assert(m_primaryCount < std::numeric_limits<std::uint16_t>::max());
+      m_primaryCount++;
+    } else {
+      fBarcode.setVertexSecondary(1);
+      fBarcode.setParticle(m_secondaryCount);
+      assert(m_primaryCount < std::numeric_limits<std::uint16_t>::max());
+      m_secondaryCount++;
+    }
+
+    m_barcodeMap[v] = fBarcode;
+    return fBarcode;
+  }
+};
+
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
 ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
@@ -221,19 +268,17 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   m_inputchain->GetEntry(entry);
 
   // Concat the two 32bit integers from athena to a Fatras barcode
-  auto makeBarcode = [&](std::uint32_t subevt, std::uint32_t barcode) {
-    std::uint64_t value = (static_cast<std::uint64_t>(subevt) << 32) | barcode;
-    return ActsFatras::Barcode(value);
-  };
 
   SimParticleContainer particles;
+  BarcodeConstructor barcodeConstructor;
 
   for (auto ip = 0; ip < nPartEVT; ++ip) {
-    if (m_cfg.onlyPassedParticles && static_cast<bool>(Part_passed[ip])) {
+    if (m_cfg.onlyPassedParticles && !static_cast<bool>(Part_passed[ip])) {
       continue;
     }
 
-    auto barcode = makeBarcode(Part_event_number[ip], Part_barcode[ip]);
+    auto barcode =
+        barcodeConstructor.getBarcode(Part_barcode[ip], Part_event_number[ip]);
     SimParticle particle(barcode,
                          static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
@@ -332,7 +377,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     // Create measurement particles map and particles container
     for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
                                               CLparticleLink_barcode->at(im))) {
-      auto barcode = makeBarcode(subevt, bc);
+      auto barcode = barcodeConstructor.getBarcode(bc, subevt);
       measPartMap.insert({im, barcode});
     }
   }
