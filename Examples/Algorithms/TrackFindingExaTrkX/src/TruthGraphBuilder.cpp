@@ -60,6 +60,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
   // Collect edges for truth graph and target graph
   std::vector<std::int64_t> graph;
   std::size_t notFoundParticles = 0;
+  std::size_t moduleDuplicatesRemoved = 0;
 
   for (auto& [pid, track] : tracks) {
     auto found = particles.find(pid);
@@ -85,6 +86,23 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
       return radiusForOrdering(a) < radiusForOrdering(b);
     });
 
+    if (m_cfg.uniqueModules) {
+      auto newEnd = std::unique(
+          track.begin(), track.end(), [&](const auto& a, const auto& b) {
+            auto gidA = spacepoints[a]
+                            .sourceLinks()[0]
+                            .template get<IndexSourceLink>()
+                            .geometryId();
+            auto gidB = spacepoints[b]
+                            .sourceLinks()[0]
+                            .template get<IndexSourceLink>()
+                            .geometryId();
+            return gidA == gidB;
+          });
+      moduleDuplicatesRemoved += std::distance(newEnd, track.end());
+      track.erase(newEnd, track.end());
+    }
+
     for (auto i = 0ul; i < track.size() - 1; ++i) {
       graph.push_back(track[i]);
       graph.push_back(track[i + 1]);
@@ -92,6 +110,11 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
   }
 
   ACTS_DEBUG("Did not find particles for " << notFoundParticles << " tracks");
+  if (moduleDuplicatesRemoved > 0) {
+    ACTS_DEBUG(
+        "Removed " << moduleDuplicatesRemoved
+                   << " hit to ensure a unique hit per track and module");
+  }
 
   return graph;
 }

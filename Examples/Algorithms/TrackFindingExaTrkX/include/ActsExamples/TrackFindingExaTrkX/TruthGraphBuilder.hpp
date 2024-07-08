@@ -42,6 +42,9 @@ class TruthGraphBuilder final : public IAlgorithm {
 
     double targetMinPT = 0.5;
     std::size_t targetMinSize = 3;
+
+    /// Only allow one hit per track & module
+    bool uniqueModules = false;
   };
 
   TruthGraphBuilder(Config cfg, Acts::Logging::Level lvl);
