@@ -178,7 +178,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     Acts::ExaTrkXTiming timing;
     auto res =
-        m_pipeline.run(features, moduleIds, spacepointIDs, hook, &timing);
+        m_pipeline.run(features, spacepointIDs, hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
