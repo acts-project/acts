@@ -28,6 +28,7 @@ jobs:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       DEPENDENCY_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
+      DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.8e12bbf.tar.zst
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: >
           brew install cmake ninja ccache xerces-c
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.ece4acf.tar.zst
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst ${{ env.DEPENDENCY_URL }}
           && mkdir ${{ env.DEPENDENCY_DIR }}
           && ls ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
@@ -64,6 +65,7 @@ jobs:
         run: >
           ccache -z
           && source CI/macos_deps_setup.sh
+          # Works around an issue during dict generation, where ROOT does not find the tbb dylib.
           && export DYLD_LIBRARY_PATH=${{ env.DEPENDENCY_DIR }}/tbb/2021.11.0/lib:${DYLD_LIBRARY_PATH:-}
           && cmake -B build -S .
           -GNinja
