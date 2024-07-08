@@ -70,7 +70,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
 #ifndef ACTS_EXATRKX_CPUONLY
   std::optional<c10::cuda::CUDAGuard> device_guard;
   if (device.is_cuda()) {
-    device_guard = c10::cuda::CUDAGuard(device.index());
+    device_guard.emplace(device.index());
   }
 #endif
 
