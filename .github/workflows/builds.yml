@@ -115,4 +115,6 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
       - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+        run: |
+          source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          ./build-downstream/bin/ShowActsVersion
