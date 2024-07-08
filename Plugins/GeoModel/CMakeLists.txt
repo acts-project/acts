@@ -4,9 +4,11 @@ add_library(
   ActsPluginGeoModel SHARED
   src/GeoModelBlueprintCreater.cpp
   src/GeoModelConversionError.cpp
+  src/GeoModelToDetVol.cpp
   src/GeoModelReader.cpp
   src/GeoModelDetectorElement.cpp
   src/GeoModelDetectorSurfaceFactory.cpp
+  src/GeoModelMaterialConverter.cpp
   src/detail/GeoBoxConverter.cpp
   src/detail/GeoTrdConverter.cpp
   src/detail/GeoTubeConverter.cpp
