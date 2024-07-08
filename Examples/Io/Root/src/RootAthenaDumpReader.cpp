@@ -229,6 +229,10 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   SimParticleContainer particles;
 
   for (auto ip = 0; ip < nPartEVT; ++ip) {
+    if (m_cfg.onlyPassedParticles && static_cast<bool>(Part_passed[ip])) {
+      continue;
+    }
+
     auto barcode = makeBarcode(Part_event_number[ip], Part_barcode[ip]);
     SimParticle particle(barcode,
                          static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));

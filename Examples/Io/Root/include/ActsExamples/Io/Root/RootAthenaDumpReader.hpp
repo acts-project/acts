@@ -61,6 +61,11 @@ class RootAthenaDumpReader : public IReader {
     std::string outputMeasurementParticlesMap = "athena_meas_parts_map";
     // name of the track parameters (fitted by athena?)
     std::string outputTrackParameters = "athena_track_parameters";
+
+    /// Only extract particles that passed the tracking requirements, for
+    /// details see:
+    /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
+    bool onlyPassedParticles = false;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
