@@ -64,7 +64,7 @@ jobs:
         run: >
           ccache -z
           && source CI/macos_deps_setup.sh
-          && export DYLD_LIBRARY_PATH=${{ env.DEPENDENCY_DIR }}/tbb/2021.11.0/lib:$DYLD_LIBRARY_PATH
+          && export DYLD_LIBRARY_PATH=${{ env.DEPENDENCY_DIR }}/tbb/2021.11.0/lib:${DYLD_LIBRARY_PATH:-}
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
