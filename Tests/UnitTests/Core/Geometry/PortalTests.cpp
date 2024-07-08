@@ -82,128 +82,132 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
       grid1dCyl->merge(gctx, *grid1dCyl2, BinningValue::binRPhi, *logger),
       SurfaceMergingException);
 
-  BOOST_TEST_CONTEXT("Consistent equidistant") {
-    auto mergedPtr =
-        grid1dCyl->merge(gctx, *grid1dCyl2, BinningValue::binZ, *logger);
-    BOOST_REQUIRE_NE(mergedPtr, nullptr);
-    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
-    BOOST_REQUIRE_NE(merged, nullptr);
-    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-    const auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
-    BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
-    BOOST_CHECK_EQUAL(axis.getNBins(), 15);
-    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Equidistant);
-    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_TEST_CONTEXT("Colinear merge") {
+    BOOST_TEST_CONTEXT("Consistent equidistant") {
+      auto mergedPtr =
+          grid1dCyl->merge(gctx, *grid1dCyl2, BinningValue::binZ, *logger);
+      BOOST_REQUIRE_NE(mergedPtr, nullptr);
+      const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+      BOOST_REQUIRE_NE(merged, nullptr);
+      BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+      const auto& axis = *merged->grid().axes().front();
+      BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
+      BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
+      BOOST_CHECK_EQUAL(axis.getNBins(), 15);
+      BOOST_CHECK_EQUAL(axis.getType(), AxisType::Equidistant);
+      BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+    }
+
+    BOOST_TEST_CONTEXT("Inconsistent equidistant") {
+      std::unique_ptr<GridPortalLink> grid1dCyl2BinWidthChanged =
+          GridPortalLink::make(*cyl2, BinningValue::binZ,
+                               Axis{AxisBound, -50_mm, 50_mm, 6});
+
+      auto mergedPtr = grid1dCyl->merge(gctx, *grid1dCyl2BinWidthChanged,
+                                        BinningValue::binZ, *logger);
+      BOOST_REQUIRE_NE(mergedPtr, nullptr);
+      const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+      BOOST_REQUIRE_NE(merged, nullptr);
+      BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+      const auto& axis = *merged->grid().axes().front();
+      BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
+      BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
+      BOOST_CHECK_EQUAL(axis.getNBins(), 16);
+      BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
+      BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+    }
+
+    BOOST_TEST_CONTEXT("Right Variable") {
+      std::unique_ptr<GridPortalLink> gridLeft = GridPortalLink::make(
+          *cyl, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
+
+      std::unique_ptr<GridPortalLink> gridRight =
+          GridPortalLink::make(*cyl2, BinningValue::binZ,
+                               Axis{AxisBound, {-50_mm, -10_mm, 10_mm, 50_mm}});
+
+      auto mergedPtr =
+          gridLeft->merge(gctx, *gridRight, BinningValue::binZ, *logger);
+      BOOST_REQUIRE_NE(mergedPtr, nullptr);
+      const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+      BOOST_REQUIRE_NE(merged, nullptr);
+      BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+      const auto& axis = *merged->grid().axes().front();
+      BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
+      BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
+      BOOST_CHECK_EQUAL(axis.getNBins(), 13);
+      BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
+      BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+    }
+
+    BOOST_TEST_CONTEXT("Left Variable") {
+      std::unique_ptr<GridPortalLink> gridLeft = GridPortalLink::make(
+          *cyl, BinningValue::binZ,
+          Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
+
+      std::unique_ptr<GridPortalLink> gridRight = GridPortalLink::make(
+          *cyl2, BinningValue::binZ, Axis{AxisBound, -50_mm, 50_mm, 8});
+
+      auto mergedPtr =
+          gridLeft->merge(gctx, *gridRight, BinningValue::binZ, *logger);
+      BOOST_REQUIRE_NE(mergedPtr, nullptr);
+      const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+      BOOST_REQUIRE_NE(merged, nullptr);
+      BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+      const auto& axis = *merged->grid().axes().front();
+      BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
+      BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
+      BOOST_CHECK_EQUAL(axis.getNBins(), 11);
+      BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
+      BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+    }
+
+    BOOST_TEST_CONTEXT("Both Variable") {
+      std::unique_ptr<GridPortalLink> gridLeft = GridPortalLink::make(
+          *cyl, BinningValue::binZ,
+          Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
+
+      std::unique_ptr<GridPortalLink> gridRight =
+          GridPortalLink::make(*cyl2, BinningValue::binZ,
+                               Axis{AxisBound, {-50_mm, -10_mm, 10_mm, 50_mm}});
+
+      auto mergedPtr =
+          gridLeft->merge(gctx, *gridRight, BinningValue::binZ, *logger);
+      BOOST_REQUIRE_NE(mergedPtr, nullptr);
+      const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+      BOOST_REQUIRE_NE(merged, nullptr);
+      BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+      const auto& axis = *merged->grid().axes().front();
+      BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
+      BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
+      BOOST_CHECK_EQUAL(axis.getNBins(), 6);
+      BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
+      BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+    }
+
+    BOOST_TEST_CONTEXT("Non bound axis") {
+      std::unique_ptr<GridPortalLink> gridLeft = GridPortalLink::make(
+          *cyl, BinningValue::binZ,
+          Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
+      std::unique_ptr<GridPortalLink> gridRightClosed = GridPortalLink::make(
+          *cyl2, BinningValue::binZ,
+          Axis{AxisClosed, {-50_mm, -10_mm, 10_mm, 50_mm}});
+      std::unique_ptr<GridPortalLink> gridRightOpen =
+          GridPortalLink::make(*cyl2, BinningValue::binZ,
+                               Axis{AxisOpen, {-50_mm, -10_mm, 10_mm, 50_mm}});
+
+      // @TODO: Implement fallback to binary for this
+      BOOST_CHECK_THROW(
+          gridLeft->merge(gctx, *gridRightClosed, BinningValue::binZ, *logger),
+          std::logic_error);
+      BOOST_CHECK_THROW(
+          gridLeft->merge(gctx, *gridRightOpen, BinningValue::binZ, *logger),
+          std::logic_error);
+    }
   }
 
-  BOOST_TEST_CONTEXT("Inconsistent equidistant") {
-    std::unique_ptr<GridPortalLink> grid1dCyl2BinWidthChanged =
-        GridPortalLink::make(*cyl2, BinningValue::binZ,
-                             Axis{AxisBound, -50_mm, 50_mm, 6});
-
-    auto mergedPtr = grid1dCyl->merge(gctx, *grid1dCyl2BinWidthChanged,
-                                      BinningValue::binZ, *logger);
-    BOOST_REQUIRE_NE(mergedPtr, nullptr);
-    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
-    BOOST_REQUIRE_NE(merged, nullptr);
-    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-    const auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
-    BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
-    BOOST_CHECK_EQUAL(axis.getNBins(), 16);
-    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
-    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_TEST_CONTEXT("Perpendicular merge") {
+    // @TODO: Merge in z direction with phi sectors
   }
-
-  BOOST_TEST_CONTEXT("Right Variable") {
-    std::unique_ptr<GridPortalLink> gridLeft = GridPortalLink::make(
-        *cyl, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
-
-    std::unique_ptr<GridPortalLink> gridRight =
-        GridPortalLink::make(*cyl2, BinningValue::binZ,
-                             Axis{AxisBound, {-50_mm, -10_mm, 10_mm, 50_mm}});
-
-    auto mergedPtr =
-        gridLeft->merge(gctx, *gridRight, BinningValue::binZ, *logger);
-    BOOST_REQUIRE_NE(mergedPtr, nullptr);
-    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
-    BOOST_REQUIRE_NE(merged, nullptr);
-    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-    const auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
-    BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
-    BOOST_CHECK_EQUAL(axis.getNBins(), 13);
-    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
-    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
-  }
-
-  BOOST_TEST_CONTEXT("Left Variable") {
-    std::unique_ptr<GridPortalLink> gridLeft =
-        GridPortalLink::make(*cyl, BinningValue::binZ,
-                             Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
-
-    std::unique_ptr<GridPortalLink> gridRight = GridPortalLink::make(
-        *cyl2, BinningValue::binZ, Axis{AxisBound, -50_mm, 50_mm, 8});
-
-    auto mergedPtr =
-        gridLeft->merge(gctx, *gridRight, BinningValue::binZ, *logger);
-    BOOST_REQUIRE_NE(mergedPtr, nullptr);
-    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
-    BOOST_REQUIRE_NE(merged, nullptr);
-    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-    const auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
-    BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
-    BOOST_CHECK_EQUAL(axis.getNBins(), 11);
-    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
-    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
-  }
-
-  BOOST_TEST_CONTEXT("Both Variable") {
-    std::unique_ptr<GridPortalLink> gridLeft =
-        GridPortalLink::make(*cyl, BinningValue::binZ,
-                             Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
-
-    std::unique_ptr<GridPortalLink> gridRight =
-        GridPortalLink::make(*cyl2, BinningValue::binZ,
-                             Axis{AxisBound, {-50_mm, -10_mm, 10_mm, 50_mm}});
-
-    auto mergedPtr =
-        gridLeft->merge(gctx, *gridRight, BinningValue::binZ, *logger);
-    BOOST_REQUIRE_NE(mergedPtr, nullptr);
-    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
-    BOOST_REQUIRE_NE(merged, nullptr);
-    BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-    const auto& axis = *merged->grid().axes().front();
-    BOOST_CHECK_EQUAL(axis.getMin(), -150_mm);
-    BOOST_CHECK_EQUAL(axis.getMax(), 150_mm);
-    BOOST_CHECK_EQUAL(axis.getNBins(), 6);
-    BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
-    BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
-  }
-
-  BOOST_TEST_CONTEXT("Non bound axis") {
-    std::unique_ptr<GridPortalLink> gridLeft =
-        GridPortalLink::make(*cyl, BinningValue::binZ,
-                             Axis{AxisBound, {-100_mm, -80_mm, 10_mm, 100_mm}});
-    std::unique_ptr<GridPortalLink> gridRightClosed =
-        GridPortalLink::make(*cyl2, BinningValue::binZ,
-                             Axis{AxisClosed, {-50_mm, -10_mm, 10_mm, 50_mm}});
-    std::unique_ptr<GridPortalLink> gridRightOpen =
-        GridPortalLink::make(*cyl2, BinningValue::binZ,
-                             Axis{AxisOpen, {-50_mm, -10_mm, 10_mm, 50_mm}});
-
-    // @TODO: Implement fallback to binary for this
-    BOOST_CHECK_THROW(
-        gridLeft->merge(gctx, *gridRightClosed, BinningValue::binZ, *logger),
-        std::logic_error);
-    BOOST_CHECK_THROW(
-        gridLeft->merge(gctx, *gridRightOpen, BinningValue::binZ, *logger),
-        std::logic_error);
-  }
-
-  // @TODO: Merge phi sectors with z binning
 }
 
 BOOST_AUTO_TEST_CASE(RPhiDirection) {
@@ -265,41 +269,81 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
 
     auto portalPhi3 = GridPortalLink::make(
         *cylPhi3, BinningValue::binRPhi,
-        Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 10});
+        Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 5});
 
     auto portalPhi4Closed = GridPortalLink::make(
         *cylPhi4, BinningValue::binRPhi,
-        Axis{AxisClosed, -90_degree * 30_mm, 90_degree * 30_mm, 10});
+        Axis{AxisClosed, -90_degree * 30_mm, 90_degree * 30_mm, 5});
 
+    // @TODO: Cross check binary merging of different boundary types
     // Merge to binary because they have different axis boundary types
     // BOOST_CHECK_THROW(portalPhi3->merge(gctx, *portalPhi4Closed,
     //                                     BinningValue::binRPhi, *logger),
     //                   std::invalid_argument);
 
-    auto portalPhi4 = GridPortalLink::make(
-        *cylPhi4, BinningValue::binRPhi,
-        Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 10});
+    BOOST_TEST_CONTEXT("Consistent equidistant") {
+      auto portalPhi4 = GridPortalLink::make(
+          *cylPhi4, BinningValue::binRPhi,
+          Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 5});
 
-    auto portalMerged34 =
-        portalPhi3->merge(gctx, *portalPhi4, BinningValue::binRPhi, *logger);
-    BOOST_REQUIRE_NE(portalMerged34, nullptr);
+      auto portalMerged34 =
+          portalPhi3->merge(gctx, *portalPhi4, BinningValue::binRPhi, *logger);
+      BOOST_REQUIRE_NE(portalMerged34, nullptr);
 
-    const auto* merged34 =
-        dynamic_cast<const GridPortalLink*>(portalMerged34.get());
-    BOOST_REQUIRE_NE(merged34, nullptr);
-    BOOST_CHECK_EQUAL(merged34->grid().axes().size(), 1);
-    const auto& axis34 = *merged->grid().axes().front();
-    BOOST_CHECK_CLOSE(axis34.getMin(), -180_degree * 30_mm, 1e-9);
-    BOOST_CHECK_CLOSE(axis34.getMax(), 180_degree * 30_mm, 1e-9);
-    BOOST_CHECK_EQUAL(axis34.getNBins(), 20);
-    BOOST_CHECK_EQUAL(axis34.getType(), AxisType::Equidistant);
-    BOOST_CHECK_EQUAL(axis34.getBoundaryType(), AxisBoundaryType::Bound);
+      const auto* merged34 =
+          dynamic_cast<const GridPortalLink*>(portalMerged34.get());
+      BOOST_REQUIRE_NE(merged34, nullptr);
+      BOOST_CHECK_EQUAL(merged34->grid().axes().size(), 1);
+      const auto& axis34 = *merged34->grid().axes().front();
+      BOOST_CHECK_CLOSE(axis34.getMin(), -180_degree * 30_mm, 1e-9);
+      BOOST_CHECK_CLOSE(axis34.getMax(), 180_degree * 30_mm, 1e-9);
+      BOOST_CHECK_EQUAL(axis34.getNBins(), 10);
+      BOOST_CHECK_EQUAL(axis34.getType(), AxisType::Equidistant);
+      BOOST_CHECK_EQUAL(axis34.getBoundaryType(), AxisBoundaryType::Closed);
+    }
+
+    BOOST_TEST_CONTEXT("Inconsistent equidistant") {
+      auto portalPhi2Mod = GridPortalLink::make(
+          *cylPhi2, BinningValue::binRPhi,
+          Axis{AxisBound, -40_degree * 30_mm, 40_degree * 30_mm, 3});
+
+      auto portalMergedMod = portalPhi1->merge(gctx, *portalPhi2Mod,
+                                               BinningValue::binRPhi, *logger);
+      BOOST_REQUIRE_NE(portalMergedMod, nullptr);
+
+      const auto* merged12 =
+          dynamic_cast<const GridPortalLink*>(portalMergedMod.get());
+      BOOST_REQUIRE_NE(merged12, nullptr);
+      BOOST_CHECK_EQUAL(merged12->grid().axes().size(), 1);
+      const auto& axis12 = *merged12->grid().axes().front();
+      BOOST_CHECK_CLOSE(axis12.getMin(), -60_degree * 30_mm, 1e-9);
+      BOOST_CHECK_CLOSE(axis12.getMax(), 60_degree * 30_mm, 1e-9);
+      BOOST_CHECK_EQUAL(axis12.getNBins(), 8);
+      BOOST_CHECK_EQUAL(axis12.getType(), AxisType::Variable);
+      BOOST_CHECK_EQUAL(axis12.getBoundaryType(), AxisBoundaryType::Bound);
+
+      auto portalPhi4Mod = GridPortalLink::make(
+          *cylPhi4, BinningValue::binRPhi,
+          Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 3});
+
+      auto portalMerged34 = portalPhi3->merge(gctx, *portalPhi4Mod,
+                                              BinningValue::binRPhi, *logger);
+      BOOST_REQUIRE_NE(portalMerged34, nullptr);
+
+      const auto* merged34 =
+          dynamic_cast<const GridPortalLink*>(portalMerged34.get());
+      BOOST_REQUIRE_NE(merged34, nullptr);
+      BOOST_CHECK_EQUAL(merged34->grid().axes().size(), 1);
+      const auto& axis34 = *merged34->grid().axes().front();
+      BOOST_CHECK_CLOSE(axis34.getMin(), -180_degree * 30_mm, 1e-9);
+      BOOST_CHECK_CLOSE(axis34.getMax(), 180_degree * 30_mm, 1e-9);
+      BOOST_CHECK_EQUAL(axis34.getNBins(), 8);
+      BOOST_CHECK_EQUAL(axis34.getType(), AxisType::Variable);
+      BOOST_CHECK_EQUAL(axis34.getBoundaryType(), AxisBoundaryType::Closed);
+    }
+
+    // @TODO: Merge in phi direction with z binning
   }
-
-  // @TODO: Colinear merging of phi sectors along rphi
-  // @TODO: Test what happens with surfaces that cover the 0 or 180deg line
-  // @TODO: Perpendicular merging (should only be possible with full phi, should not care about axis type)
-}
 }
 
 BOOST_AUTO_TEST_CASE(Make2DCylinderPortal) {
@@ -368,6 +412,7 @@ BOOST_AUTO_TEST_CASE(Make2DCylinderPortal) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

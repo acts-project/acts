@@ -84,9 +84,9 @@ class PortalLinkBase {
 
  protected:
   virtual std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GeometryContext& gctx, const PortalLinkBase& other,
-      const RegularSurface& surfaceA, const RegularSurface& surfaceB,
-      BinningValue direction, const Logger& logger = getDummyLogger()) const;
+      const PortalLinkBase& other, const RegularSurface& surfaceA,
+      const RegularSurface& surfaceB, BinningValue direction,
+      const Logger& logger = getDummyLogger()) const;
 
   const RegularSurface* m_surface;
 };
@@ -149,9 +149,8 @@ class GridPortalLink : public PortalLinkBase {
   }
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GeometryContext& gctx, const PortalLinkBase& other,
-      const RegularSurface& surfaceA, const RegularSurface& surfaceB,
-      BinningValue direction,
+      const PortalLinkBase& other, const RegularSurface& surfaceA,
+      const RegularSurface& surfaceB, BinningValue direction,
       const Logger& logger = getDummyLogger()) const override;
 
   virtual const IGrid& grid() const = 0;
@@ -214,9 +213,6 @@ class GridPortalLinkT : public GridPortalLink {
       ActsScalar hlRPhi = r * hlPhi;
 
       if (!same(axis.getMin(), -hlRPhi) || !same(axis.getMax(), hlRPhi)) {
-        std::cout << "axis.getMin(): " << axis.getMin() << std::endl;
-        std::cout << "axis.getMax(): " << axis.getMax() << std::endl;
-        std::cout << "hlRPhi: " << hlRPhi << std::endl;
         throw std::invalid_argument(
             "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
             "don't match bounds");
