@@ -66,7 +66,7 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z
-          && source CI/macos_deps_setup.sh
+          && source ${{ env.DEPENDENCY_DIR }}/setup.sh
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -105,7 +105,8 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          cmake -B build-downstream -S Tests/DownstreamProject
+          source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          && cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
