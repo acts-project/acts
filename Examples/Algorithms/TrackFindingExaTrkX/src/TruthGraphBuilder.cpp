@@ -149,6 +149,8 @@ ActsExamples::ProcessCode ActsExamples::TruthGraphBuilder::execute(
                    : buildFromSimhits(spacepoints, m_inputMeasSimhitMap(ctx),
                                       m_inputSimhits(ctx), particles);
 
+  ACTS_DEBUG("Truth track edges: " << graph.size() / 2);
+
   m_outputGraph(ctx, std::move(graph));
 
   return ProcessCode::SUCCESS;

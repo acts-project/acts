@@ -85,6 +85,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCpp::operator()(
 
     int hitId = static_cast<int>(i);
 
+    // Needs to be rescaled because ModuleMapGraph expects unscaled features
     float r = hitFeatures[0] * m_cfg.rScale;
     float phi = hitFeatures[1] * m_cfg.phiScale;
     float z = hitFeatures[2] * m_cfg.zScale;
