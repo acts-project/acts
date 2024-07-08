@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -18,8 +19,6 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
-
-using TruthGraph = std::vector<std::int64_t>;
 
 /// Algorithm to create a truth graph for computing truth metrics
 /// Requires spacepoints and particles collection
@@ -57,15 +56,15 @@ class TruthGraphBuilder final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  TruthGraph buildFromMeasurements(
+  std::vector<std::int64_t> buildFromMeasurements(
       const SimSpacePointContainer& spacepoints,
       const SimParticleContainer& particles,
       const IndexMultimap<ActsFatras::Barcode>& measPartMap) const;
 
-  TruthGraph buildFromSimhits(const SimSpacePointContainer& spacepoints,
-                              const IndexMultimap<Index>& measHitMap,
-                              const SimHitContainer& simhits,
-                              const SimParticleContainer& particles) const;
+  std::vector<std::int64_t> buildFromSimhits(
+      const SimSpacePointContainer& spacepoints,
+      const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
+      const SimParticleContainer& particles) const;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
@@ -76,6 +75,6 @@ class TruthGraphBuilder final : public IAlgorithm {
   ReadDataHandle<IndexMultimap<Index>> m_inputMeasSimhitMap{
       this, "InputMeasSimhitMap"};
 
-  WriteDataHandle<TruthGraph> m_outputGraph{this, "OutputGraph"};
+  WriteDataHandle<Graph> m_outputGraph{this, "OutputGraph"};
 };
 }  // namespace ActsExamples

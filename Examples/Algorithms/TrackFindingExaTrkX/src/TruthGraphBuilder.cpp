@@ -34,7 +34,7 @@ ActsExamples::TruthGraphBuilder::TruthGraphBuilder(Config config,
   }
 }
 
-TruthGraph TruthGraphBuilder::buildFromMeasurements(
+std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
     const SimSpacePointContainer& spacepoints,
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
@@ -91,7 +91,7 @@ struct HitInfo {
   std::int32_t hitIndex;
 };
 
-TruthGraph TruthGraphBuilder::buildFromSimhits(
+std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
     const SimSpacePointContainer& spacepoints,
     const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
     const SimParticleContainer& particles) const {
@@ -143,15 +143,18 @@ ActsExamples::ProcessCode ActsExamples::TruthGraphBuilder::execute(
   const auto& spacepoints = m_inputSpacePoints(ctx);
   const auto& particles = m_inputParticles(ctx);
 
-  auto graph = (m_inputMeasParticlesMap.isInitialized())
+  auto edges = (m_inputMeasParticlesMap.isInitialized())
                    ? buildFromMeasurements(spacepoints, particles,
                                            m_inputMeasParticlesMap(ctx))
                    : buildFromSimhits(spacepoints, m_inputMeasSimhitMap(ctx),
                                       m_inputSimhits(ctx), particles);
 
-  ACTS_DEBUG("Truth track edges: " << graph.size() / 2);
+  ACTS_DEBUG("Truth track edges: " << edges.size() / 2);
 
-  m_outputGraph(ctx, std::move(graph));
+  Graph g;
+  g.edges = std::move(edges);
+
+  m_outputGraph(ctx, std::move(g));
 
   return ProcessCode::SUCCESS;
 }

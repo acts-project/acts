@@ -122,7 +122,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> truthGraphHook;
   if (m_inputTruthGraph.isInitialized()) {
     truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
-        m_inputTruthGraph(ctx), this->logger().clone());
+        m_inputTruthGraph(ctx).edges, this->logger().clone());
     hook.hooks.push_back(&*truthGraphHook);
   }
 
@@ -269,7 +269,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     std::transform(
         graph.first.begin(), graph.first.end(), graph.first.begin(),
         [&](const auto& a) -> std::int64_t { return spacepointIDs.at(a); });
-    m_outputGraph(ctx, std::move(graph));
+    m_outputGraph(ctx, {graph.first, graph.second});
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
