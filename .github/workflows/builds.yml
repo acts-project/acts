@@ -30,7 +30,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
       DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/macOS/cmake/deps.8e12bbf.tar.zst
       # Works around an issue where root's RPATH is wrong for tbb, thus won't find it
-      DYLD_LIBRARY_PATH: "${{ env.DEPENDENCY_DIR }}/tbb/2021.11.0/lib"
+      DYLD_LIBRARY_PATH: "${{ github.workspace }}/install/tbb/2021.11.0/lib"
     steps:
       - uses: actions/checkout@v4
         with:
