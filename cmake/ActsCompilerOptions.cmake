@@ -21,7 +21,7 @@ if(DEFINED CMAKE_CXX_STANDARD)
     set(ACTS_CXX_STANDARD ${CMAKE_CXX_STANDARD})
     set(ACTS_CXX_STANDARD_FEATURE "cxx_std_${CMAKE_CXX_STANDARD}")
   else()
-    message(ERROR "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but ACTS requires C++ >=20")
+    message(SEND_ERROR "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}, but ACTS requires C++ >=20")
   endif()
 endif()
 
