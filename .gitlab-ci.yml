@@ -61,7 +61,7 @@ build_exatrkx_cpu:
     - large
 
   cache:
-    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+    key: ccache-exatrkx-cpu-$CI_COMMIT_REF_SLUG
     paths:
       - ${CI_PROJECT_DIR}/ccache
 
