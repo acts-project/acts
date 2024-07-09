@@ -188,12 +188,19 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getStripCenterDistance;
   /// Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
+  /// Delegate for specifying experiment specific cuts on space points
+  /// before filling the grid. Currently accepts three parameters
+  Delegate<bool(const SpacePoint&)> spacePointSelector{
+      DelegateFuncTag<voidSpacePointSelector>{}};
+
+  static bool voidSpacePointSelector(const SpacePoint& /*sp*/) { return true; }
+
   /// Tolerance parameter used to check the compatibility of space-point
   /// coordinates in xyz. This is only used in a detector specific check for
   /// strip modules
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
-  // Delegate to apply experiment specific cuts
+  // Delegate to apply experiment specific cuts during doublet finding
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 
