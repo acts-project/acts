@@ -48,7 +48,13 @@ def assert_csv_output(csv_path, stem):
     __tracebackhide__ = True
     # print(list(csv_path.iterdir()))
     assert len([f for f in csv_path.iterdir() if f.name.endswith(stem + ".csv")]) > 0
-    assert all([f.stat().st_size > 100 for f in csv_path.iterdir()])
+    assert all(
+        [
+            f.stat().st_size > 100
+            for f in csv_path.iterdir()
+            if f.name.endswith(stem + ".csv")
+        ]
+    )
 
 
 def assert_entries(root_file, tree_name, exp=None, non_zero=False):
@@ -242,6 +248,66 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
     assert_csv_output(csv, "particles")
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
+
+
+def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
+    from hashing_seeding import runHashingSeeding, Config
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        (
+            "estimatedparams.root",
+            "estimatedparams",
+        ),
+        (
+            "performance_seeding.root",
+            None,
+        ),
+    ]
+
+    for fn, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists(), f"{fp} exists"
+
+    config = Config(
+        mu=50,
+    )
+
+    _, _, digiConfig, geoSelectionConfigFile = config.getDetectorInfo()
+
+    runHashingSeeding(
+        10,
+        trk_geo,
+        field,
+        outputDir=str(tmp_path),
+        saveFiles=True,
+        npileup=config.mu,
+        seedingAlgorithm=config.seedingAlgorithm,
+        maxSeedsPerSpM=config.maxSeedsPerSpM,
+        digiConfig=digiConfig,
+        geoSelectionConfigFile=geoSelectionConfigFile,
+        config=config,
+        s=seq,
+    ).run()
+
+    del seq
+
+    for fn, tn in root_files:
+        fp = tmp_path / fn
+        assert fp.exists(), f"{fp} does not exist"
+        assert fp.stat().st_size > 100, f"{fp} is too small: {fp.stat().st_size} bytes"
+
+        if tn is not None:
+            assert_has_entries(fp, tn)
+            assert_root_hash(fn, fp)
+
+    assert_csv_output(tmp_path, "particles_final")
+    assert_csv_output(tmp_path, "particles_initial")
+    assert_csv_output(tmp_path, "buckets")
+    assert_csv_output(tmp_path, "seed")
 
 
 def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
