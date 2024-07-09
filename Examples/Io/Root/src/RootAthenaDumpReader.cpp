@@ -361,12 +361,9 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
       assert(locCov.size() == 4);
       digiPars.variances = {locCov[0], locCov[3]};
     } else {
-      // TODO is this correct ???
-      digiPars.values = {CLloc_direction2[im]};
-      digiPars.indices = {Acts::eBoundLoc1};
-
-      // why is this 4
-      // assert(locCov.size() == 1);
+      digiPars.values = {CLloc_direction1[im]};
+      digiPars.indices = {Acts::eBoundLoc0};
+      assert(locCov.size() >= 1);
       digiPars.variances = {locCov[0]};
     }
 
