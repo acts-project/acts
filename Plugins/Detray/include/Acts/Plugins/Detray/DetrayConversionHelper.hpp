@@ -95,19 +95,19 @@ inline static std::size_t accelerationLink(const binning_values_t& casts) {
   // Default is `brute_force`
   std::size_t accLink = detray::io::accel_id::brute_force;
   if (casts.size() == 2u) {
-    if (casts[0u] == binX && casts[1u] == binY) {
+    if (casts[0u] == Acts::BinningValue::binX && casts[1u] == Acts::BinningValue::binY) {
       accLink = detray::io::accel_id::cartesian2_grid;
-    } else if (casts[0u] == binR && casts[1u] == binPhi) {
+    } else if (casts[0u] == Acts::BinningValue::binR && casts[1u] == Acts::BinningValue::binPhi) {
       accLink = detray::io::accel_id::polar2_grid;
-    } else if (casts[0u] == binZ && casts[1u] == binPhi) {
+    } else if (casts[0u] == Acts::BinningValue::binZ && casts[1u] == Acts::BinningValue::binPhi) {
       accLink = detray::io::accel_id::cylinder2_grid;
-    } else if (casts[0u] == binZ && casts[1u] == binR) {
+    } else if (casts[0u] == Acts::BinningValue::binZ && casts[1u] == Acts::BinningValue::binR) {
       accLink = detray::io::accel_id::cylinder3_grid;
     }
   } else if (casts.size() == 3u) {
-    if (casts[0u] == binX && casts[1u] == binY && casts[2u] == binZ) {
+    if (casts[0u] == Acts::BinningValue::binX && casts[1u] == Acts::BinningValue::binY && casts[2u] == Acts::BinningValue::binZ) {
       accLink = detray::io::accel_id::cuboid3_grid;
-    } else if (casts[0u] == binZ && casts[1u] == binPhi && casts[2u] == binR) {
+    } else if (casts[0u] == Acts::BinningValue::binZ && casts[1u] == Acts::BinningValue::binPhi && casts[2u] == Acts::BinningValue::binR) {
       accLink = detray::io::accel_id::cylinder3_grid;
     }
   }
