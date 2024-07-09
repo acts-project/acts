@@ -18,6 +18,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -71,7 +72,7 @@ class BinUtility {
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
   BinUtility(std::size_t bins, float min, float max, BinningOption opt = open,
-             BinningValue value = binX,
+             BinningValue value = BinningValue::binX,
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
@@ -85,7 +86,7 @@ class BinUtility {
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
   BinUtility(std::vector<float>& bValues, BinningOption opt = open,
-             BinningValue value = binPhi,
+             BinningValue value = BinningValue::binPhi,
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
@@ -122,7 +123,7 @@ class BinUtility {
     m_transform = m_transform * gbu.transform();
     m_itransform = m_transform.inverse();
     if (m_binningData.size() + bData.size() > 3) {
-      throw "BinUtility does not support dim > 3";
+      throw std::runtime_error{"BinUtility does not support dim > 3"};
     }
     m_binningData.insert(m_binningData.end(), bData.begin(), bData.end());
     return (*this);
@@ -268,7 +269,7 @@ class BinUtility {
   /// @return the binning value of the accessor entry
   BinningValue binningValue(std::size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
-      throw "dimension out of bounds";
+      throw std::runtime_error{"Dimension out of bounds"};
     }
     return (m_binningData[ba].binvalue);
   }

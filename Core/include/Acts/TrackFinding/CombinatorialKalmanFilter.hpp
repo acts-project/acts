@@ -30,7 +30,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
@@ -768,14 +768,14 @@ class CombinatorialKalmanFilter {
 
         if (!tsRes.ok()) {
           ACTS_ERROR(
-              "Processing of selected track states failed: " << tsRes.error())
+              "Processing of selected track states failed: " << tsRes.error());
           return tsRes.error();
         }
         Result<std::tuple<unsigned int, bool>> procRes = processNewTrackStates(
             state.geoContext, prevTipState, *tsRes, result);
         if (!procRes.ok()) {
-          ACTS_ERROR(
-              "Processing of selected track states failed: " << procRes.error())
+          ACTS_ERROR("Processing of selected track states failed: "
+                     << procRes.error());
           return procRes.error();
         }
         auto [nNewBranchesOnSurface, isOutlier] = *procRes;

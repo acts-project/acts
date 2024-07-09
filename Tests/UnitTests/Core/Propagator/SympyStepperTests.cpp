@@ -42,7 +42,7 @@
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
-                         BoundaryCheck(false));
+                         BoundaryTolerance::None());
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
       esState,
       targetSurface
           ->intersect(esState.geoContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryCheck(false))
+                      navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
       navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
       esState,
       targetSurface
           ->intersect(esState.geoContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryCheck(false))
+                      navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
       navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
