@@ -16,7 +16,7 @@ namespace ActsExamples {
 /// Lightweight graph representation for GNN debugging
 ///
 struct Graph {
-  /// The edges-vector contains flattened edge-pairs.Usually, the indices
+  /// The edges-vector contains flattened edge-pairs. Usually, the indices
   /// refer to a spacepoint collection.
   ///
   /// Structure: [ source0, dest0, source1, dest1, ..., sourceN, destN ]

@@ -13,7 +13,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-ActsExamples::TruthGraphBuilder::TruthGraphBuilder(Config config,
+TruthGraphBuilder::TruthGraphBuilder(Config config,
                                                    Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TruthGraphBuilder", level),
       m_cfg(std::move(config)) {
@@ -170,7 +170,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
   return truthGraph;
 }
 
-ActsExamples::ProcessCode ActsExamples::TruthGraphBuilder::execute(
+ProcessCode TruthGraphBuilder::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);
