@@ -388,6 +388,15 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
   // Loop on space points
   for (int isp = 0; isp < nSP; isp++) {
+    auto isPhiOverlap = (SPisOverlap[isp] == 2) || (SPisOverlap[isp] == 3);
+    auto isEtaOverlap = (SPisOverlap[isp] == 1) || (SPisOverlap[isp] == 3);
+    if (m_cfg.skipOverlapSPsPhi && isPhiOverlap) {
+      continue;
+    }
+    if (m_cfg.skipOverlapSPsEta && isEtaOverlap) {
+      continue;
+    }
+
     Acts::Vector3 globalPos{SPx[isp], SPy[isp], SPz[isp]};
     double sp_covr = SPcovr[isp];
     double sp_covz = SPcovz[isp];

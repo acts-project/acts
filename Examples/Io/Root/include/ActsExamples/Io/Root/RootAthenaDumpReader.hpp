@@ -66,6 +66,9 @@ class RootAthenaDumpReader : public IReader {
     /// details see:
     /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
     bool onlyPassedParticles = false;
+
+    bool skipOverlapSPsPhi = false;
+    bool skipOverlapSPsEta = false;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
