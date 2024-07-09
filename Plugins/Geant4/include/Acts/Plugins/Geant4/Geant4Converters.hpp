@@ -16,9 +16,14 @@
 #include <memory>
 #include <tuple>
 
-#include "G4RotationMatrix.hh"
-#include "G4ThreeVector.hh"
-#include "G4Transform3D.hh"
+namespace CLHEP {
+class Hep3Vector;
+class HepRotation;
+}  // namespace CLHEP
+
+namespace HepGeom {
+class Transform3D;
+}
 
 class G4Box;
 class G4Material;
@@ -27,9 +32,11 @@ class G4Trap;
 class G4Tubs;
 class G4VSolid;
 class G4VPhysicalVolume;
+using G4ThreeVector = CLHEP::Hep3Vector;
+using G4RotationMatrix = CLHEP::HepRotation;
+using G4Transform3D = HepGeom::Transform3D;
 
 namespace Acts {
-
 struct Geant4AlgebraConverter {
   // A potential scalar between Geant4 and ACTS
   ActsScalar scale = 1.;
