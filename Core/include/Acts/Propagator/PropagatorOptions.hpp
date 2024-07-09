@@ -112,7 +112,7 @@ struct PropagatorOptions : public BasePropagatorOptions {
         eoptions(geoContext, magFieldContext);
 
     // Copy the base options
-    static_cast<BasePropagatorOptions&>(eoptions) = *this;
+    eoptions.setPlainOptions(*this);
 
     // Stepper / Navigator options
     eoptions.stepping = stepping;
