@@ -40,8 +40,6 @@ class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
     std::size_t nMeasurementsMin = 7;
     /// Construct the ML ambiguity resolution configuration.
     AmbiguityResolution::Config toAmbiguityResolutionMLConfig() const {
-      std::cout << "bip" << std::endl;
-      std::cout << inputDuplicateNN << std::endl;
       return {inputDuplicateNN, nMeasurementsMin};
     }
   };
