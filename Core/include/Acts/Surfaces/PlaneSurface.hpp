@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
@@ -177,7 +177,7 @@ class PlaneSurface : public RegularSurface {
   /// @param position The start position of the intersection attempt
   /// @param direction The direction of the intersection attempt,
   /// (@note expected to be normalized)
-  /// @param bcheck The boundary check directive
+  /// @param boundaryTolerance The boundary check directive
   /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
@@ -201,7 +201,8 @@ class PlaneSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
