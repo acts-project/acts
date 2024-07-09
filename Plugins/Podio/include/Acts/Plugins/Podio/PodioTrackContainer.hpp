@@ -74,9 +74,9 @@ class PodioTrackContainerBase {
                        ActsPodioEdm::TrackInfo*>
         dataPtr;
     if constexpr (EnsureConst) {
-      dataPtr = &track.getData();
+      dataPtr = &PodioUtil::getData(track);
     } else {
-      dataPtr = &track.data();
+      dataPtr = &PodioUtil::getDataMutable(track);
     }
     auto& data = *dataPtr;
     switch (key) {
