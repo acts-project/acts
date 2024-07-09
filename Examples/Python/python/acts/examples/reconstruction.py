@@ -1318,6 +1318,8 @@ def addCKFTracks(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
+        writeTrackFinderPerformance=True,
+        writeTrackFitterPerformance=True,
         writeCKFperformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
@@ -1394,6 +1396,8 @@ def addTrackWriters(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeStates: bool = True,
     writeSummary: bool = True,
+    writeTrackFinderPerformance: bool = False,
+    writeTrackFitterPerformance: bool = False,
     writeCKFperformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
@@ -1406,7 +1410,7 @@ def addTrackWriters(
             outputDirRoot.mkdir()
 
         if writeStates:
-            # write track states from CKF
+            # Write track states
             trackStatesWriter = acts.examples.RootTrackStatesWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
@@ -1424,7 +1428,7 @@ def addTrackWriters(
             s.addWriter(trackStatesWriter)
 
         if writeSummary:
-            # write track summary from CKF
+            # Write track summary
             trackSummaryWriter = acts.examples.RootTrackSummaryWriter(
                 level=customLogLevel(),
                 inputTracks=tracks,
@@ -1439,6 +1443,30 @@ def addTrackWriters(
                 writeCovMat=writeCovMat,
             )
             s.addWriter(trackSummaryWriter)
+
+        if writeTrackFinderPerformance:
+            # Write track finder performance data
+            trackFinderPerfWriter = acts.examples.TrackFinderPerformanceWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles="particles_selected",
+                inputTrackParticleMatching="track_particle_matching",
+                inputParticleTrackMatching="particle_track_matching",
+                filePath=str(outputDirRoot / f"performance_finder_{name}.root"),
+            )
+            s.addWriter(trackFinderPerfWriter)
+
+        if writeTrackFitterPerformance:
+            # Write track fitter performance data
+            trackFitterPerfWriter = acts.examples.TrackFitterPerformanceWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles="particles_selected",
+                inputTrackParticleMatching="track_particle_matching",
+                inputParticleTrackMatching="particle_track_matching",
+                filePath=str(outputDirRoot / f"performance_fitter_{name}.root"),
+            )
+            s.addWriter(trackFitterPerfWriter)
 
         if writeCKFperformance:
             # Write CKF performance data
@@ -1700,6 +1728,8 @@ def addAmbiguityResolution(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
+        writeTrackFinderPerformance=True,
+        writeTrackFitterPerformance=True,
         writeCKFperformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
@@ -1754,6 +1784,8 @@ def addScoreBasedAmbiguityResolution(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
+        writeTrackFinderPerformance=True,
+        writeTrackFitterPerformance=True,
         writeCKFperformance=True,
         logLevel=logLevel,
         writeCovMat=writeCovMat,
@@ -1811,6 +1843,8 @@ def addAmbiguityResolutionML(
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
+        writeTrackFinderPerformance=True,
+        writeTrackFitterPerformance=True,
         writeCKFperformance=True,
         logLevel=logLevel,
     )
@@ -1855,6 +1889,8 @@ def addAmbiguityResolutionMLDBScan(
         outputDirCsv=outputDirCsv,
         writeStates=writeTrajectories,
         writeSummary=writeTrajectories,
+        writeTrackFinderPerformance=True,
+        writeTrackFitterPerformance=True,
         writeCKFperformance=True,
         logLevel=logLevel,
     )

@@ -354,7 +354,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_histcmp \
         $outdir/performance_ambi_ttbar.root \
         $refdir/performance_ambi_ttbar.root \
-        "Ambisolver " \
+        "Ambisolver ttbar" \
         ambi_ttbar
 
     run Examples/Scripts/generic_plotter.py \
@@ -408,6 +408,15 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         amvf_gridseeder_ttbar
 fi
 
+if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
+    run_histcmp \
+        $outdir/performance_truth_tracking.root \
+        $refdir/performance_truth_tracking.root \
+        "Truth tracking (KF)" \
+        truth_tracking \
+        -c CI/physmon/truth_tracking.yml
+fi
+
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_histcmp \
         $outdir/performance_gsf.root \
@@ -415,15 +424,6 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
         "Truth tracking (GSF)" \
         gsf \
         -c CI/physmon/gsf.yml
-fi
-
-if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-    run_histcmp \
-        $outdir/performance_truth_tracking.root \
-        $refdir/performance_truth_tracking.root \
-        "Truth tracking" \
-        truth_tracking \
-        -c CI/physmon/truth_tracking.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
