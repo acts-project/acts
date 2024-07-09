@@ -35,10 +35,10 @@ if (NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     add_dependencies(ActsUnitTest${_test} Components_ActsTestsDD4hepFactories)
     if(APPLE)
       set_property(TEST ${_test} PROPERTY ENVIRONMENT 
-        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}") 
+        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:$ENV{DYLD_LIBRARY_PATH}") 
     else()
       set_property(TEST ${_test} PROPERTY ENVIRONMENT 
-        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}")
+        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:$ENV{LD_LIBRARY_PATH}")
     endif()
   endforeach()
 else()
