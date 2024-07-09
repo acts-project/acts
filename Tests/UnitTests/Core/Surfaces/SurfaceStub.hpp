@@ -86,7 +86,8 @@ class SurfaceStub : public RegularSurface {
   /// Surface intersction
   SurfaceMultiIntersection intersect(
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
-      const Vector3& /*direction*/, const BoundaryCheck& /*bcheck*/,
+      const Vector3& /*direction*/,
+      const BoundaryTolerance& /*boundaryTolerance*/,
       const ActsScalar /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     Intersection3D::Status::reachable);

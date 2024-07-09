@@ -11,7 +11,7 @@
 #include <any>
 #include <vector>
 
-#include <torch/script.h>
+#include <torch/torch.h>
 
 namespace Acts {
 

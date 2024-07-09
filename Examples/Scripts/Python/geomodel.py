@@ -176,48 +176,53 @@ def main():
         gmDetectorConfig.materialDecorator = materialDecorator
         gmDetectorConfig.auxiliary = (
             "GeoModel based Acts::Detector from '" + args.input + "'"
-        )
+
 
         gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
         detector = gmDetectorBuilder.construct(gContext)
-
+        
         materialSurfaces = detector.extractMaterialSurfaces()
         print("Found ", len(materialSurfaces), " material surfaces")
 
+
         # Output the detector to SVG
         if args.output_svg:
-            surfaceStyle = acts.svg.Style()
-            surfaceStyle.fillColor = [5, 150, 245]
-            surfaceStyle.fillOpacity = 0.5
+          surfaceStyle = acts.svg.Style()
+          surfaceStyle.fillColor = [5, 150, 245]
+          surfaceStyle.fillOpacity = 0.5
 
-            surfaceOptions = acts.svg.SurfaceOptions()
-            surfaceOptions.style = surfaceStyle
+          surfaceOptions = acts.svg.SurfaceOptions()
+          surfaceOptions.style = surfaceStyle
 
-            viewRange = acts.Extent([])
-            volumeOptions = acts.svg.DetectorVolumeOptions()
-            volumeOptions.surfaceOptions = surfaceOptions
+          viewRange = acts.Extent([])
+          volumeOptions = acts.svg.DetectorVolumeOptions()
+          volumeOptions.surfaceOptions = surfaceOptions
 
-            xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
-            zrRange = acts.Extent([[acts.Binning.phi, [-0.8, 0.8]]])
+          xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
+          zrRange = acts.Extent([[acts.Binning.phi, [-0.8, 0.8]]])
 
-            acts.svg.viewDetector(
-                gContext,
-                detector,
-                args.top_node,
-                [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
-                [
-                    ["xy", ["sensitives", "portals"], xyRange],
-                    ["zr", ["", "", "materials"], zrRange],
-                ],
-                args.output + "_detector",
-            )
+          acts.svg.viewDetector(
+              gContext,
+              detector,
+              args.top_node,
+              [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
+              [
+                  ["xy", ["sensitives", "portals"], xyRange],
+                  ["zr", ["sensitives", "portals", "materials"], zrRange],
+              ],
+              args.output + "_detector",
+
+          )
 
             # Output the internal navigation to SVG
-            if args.output_internals_svg:
-                for vol in detector.volumes():
-                    acts.svg.viewInternalNavigation(
-                        gContext, vol, [66, 111, 245, 245, 203, 66, 0.8], "/;:"
-                    )
+           if args.output_internals_svg:
+            for vol in detector.volumes():
+              acts.svg.viewInternalNavigation(
+                gContext, vol, [66, 111, 245, 245, 203, 66, 0.8], "/;:"
+              )
+           # Output to a JSON file
+          if args.output_json:
+            acts.examples.writeDetectorToJsonDetray(gContext, detector, args.output)
 
     # Output the surface to an OBJ file
     if args.output_obj:
@@ -230,9 +235,6 @@ def main():
             segments,
             args.output + "_sensitives.obj",
         )
-    # Output to a JSON file
-    if args.output_json:
-        acts.examples.writeDetectorToJsonDetray(gContext, detector, args.output)
 
     return
 
