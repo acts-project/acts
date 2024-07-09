@@ -240,7 +240,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // TODO this makes it a bit useless, refactor so we do not need to pass this
     // to the pipeline
     spacepointIDs.push_back(isp);
-    moduleIds.push_back(sl1.geometryId().value());
 
     // This should be fine, because check in constructor
     Cluster* cl1 = clusters ? &clusters->at(sl1.index()) : nullptr;
