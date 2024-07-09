@@ -26,7 +26,7 @@
 #include <GeoModelKernel/Units.h>
 
 Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoTubeConverter::operator()(PVConstLink geoPV,
+Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
                                            const GeoTube& geoTube,
                                            const Transform3& absTransform,
                                            bool sensitive) const {

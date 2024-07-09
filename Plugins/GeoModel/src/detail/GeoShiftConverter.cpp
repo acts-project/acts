@@ -20,7 +20,7 @@ namespace Acts::detail {
 
 template <typename ContainedShape, typename Converter, typename Surface,
           typename Bounds>
-Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
+Result<GeoModelSensitiveSurface> impl(const PVConstLink& geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
                                       bool sensitive) {
@@ -59,7 +59,7 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
 }
 
 Result<GeoModelSensitiveSurface> GeoShiftConverter::operator()(
-    PVConstLink geoPV, const GeoShapeShift& geoShift,
+    const PVConstLink& geoPV, const GeoShapeShift& geoShift,
     const Transform3& absTransform, bool sensitive) const {
   auto r = impl<GeoTrd, detail::GeoTrdConverter, PlaneSurface, TrapezoidBounds>(
       geoPV, geoShift, absTransform, sensitive);

@@ -50,7 +50,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @return a shared pointer to an instance of the detector element
   template <typename SurfaceType, typename BoundsType>
   static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
-      PVConstLink geoPhysVol, const std::shared_ptr<BoundsType> bounds,
+      const PVConstLink& geoPhysVol, const std::shared_ptr<BoundsType> bounds,
       const Transform3& sfTransform, ActsScalar thickness) {
     // First create the detector element with a nullptr
     auto detElement = std::make_shared<GeoModelDetectorElement>(
@@ -66,7 +66,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @param surface the representing surface
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
-  GeoModelDetectorElement(PVConstLink geoPhysVol,
+  GeoModelDetectorElement(const PVConstLink& geoPhysVol,
                           std::shared_ptr<Surface> surface,
                           const Transform3& sfTransform, ActsScalar thickness);
 
@@ -96,7 +96,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   }
 
   /// The GeoModel full physical volume
-  PVConstLink m_geoPhysVol{nullptr};
+  PVConstLink m_geoPhysVol;
   /// The surface
   std::shared_ptr<Surface> m_surface;
   /// The global transformation before the volume

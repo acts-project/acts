@@ -13,7 +13,7 @@
 #include <utility>
 
 Acts::GeoModelDetectorElement::GeoModelDetectorElement(
-    PVConstLink geoPhysVol, std::shared_ptr<Surface> surface,
+    const PVConstLink& geoPhysVol, std::shared_ptr<Surface> surface,
     const Transform3& sfTransform, ActsScalar thickness)
     : m_geoPhysVol(geoPhysVol),
       m_surface(std::move(surface)),
