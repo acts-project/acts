@@ -14,7 +14,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,7 +43,8 @@ class TryAllNavigatorBase {
     bool resolvePassive = false;
 
     /// Which boundary checks to perform for surface approach
-    BoundaryCheck boundaryCheckSurfaceApproach = BoundaryCheck(true);
+    BoundaryTolerance boundaryToleranceSurfaceApproach =
+        BoundaryTolerance::None();
   };
 
   /// @brief Nested State struct
@@ -191,10 +192,10 @@ class TryAllNavigatorBase {
       return;
     }
 
-    emplaceAllVolumeCandidates(state.navigation.navigationCandidates, *volume,
-                               m_cfg.resolveSensitive, m_cfg.resolveMaterial,
-                               m_cfg.resolvePassive,
-                               m_cfg.boundaryCheckSurfaceApproach, logger());
+    emplaceAllVolumeCandidates(
+        state.navigation.navigationCandidates, *volume, m_cfg.resolveSensitive,
+        m_cfg.resolveMaterial, m_cfg.resolvePassive,
+        m_cfg.boundaryToleranceSurfaceApproach, logger());
   }
 
   template <typename propagator_state_t>
@@ -308,10 +309,11 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       const Surface& surface = *previousIntersection.intersection.object();
       std::uint8_t index = previousIntersection.intersection.index();
-      BoundaryCheck boundaryCheck = previousIntersection.boundaryCheck;
+      BoundaryTolerance boundaryTolerance =
+          previousIntersection.boundaryTolerance;
 
       auto intersection = surface.intersect(
-          state.geoContext, position, direction, boundaryCheck,
+          state.geoContext, position, direction, boundaryTolerance,
           state.options.surfaceTolerance)[index];
 
       if (intersection.pathLength() < 0) {
@@ -337,7 +339,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
         }
         // store candidate
         intersectionCandidates.emplace_back(intersection, intersections.second,
-                                            candidate.boundaryCheck);
+                                            candidate.boundaryTolerance);
       }
     }
 
@@ -350,11 +352,11 @@ class TryAllNavigator : public TryAllNavigatorBase {
     for (const auto& candidate : intersectionCandidates) {
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
-      BoundaryCheck boundaryCheck = candidate.boundaryCheck;
+      BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, boundaryCheck,
+          state.options.direction, boundaryTolerance,
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -416,7 +418,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryCheck(false),
+          state.options.direction, BoundaryTolerance::Infinite(),
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -445,7 +447,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryCheck(true),
+          state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -670,7 +672,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       const auto& candidate = state.navigation.activeCandidate();
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
-      BoundaryCheck boundaryCheck = candidate.boundaryCheck;
+      BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
@@ -679,7 +681,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       // Estimate the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, boundaryCheck,
+          state.options.direction, boundaryTolerance,
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
@@ -775,7 +777,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
           }
           // store candidate
           state.navigation.activeCandidates.emplace_back(
-              intersection, intersections.second, candidate.boundaryCheck);
+              intersection, intersections.second, candidate.boundaryTolerance);
         }
       }
 
@@ -804,7 +806,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
         Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
-            state.options.direction, BoundaryCheck(false),
+            state.options.direction, BoundaryTolerance::Infinite(),
             state.options.surfaceTolerance, logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -831,7 +833,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
         Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
-            state.options.direction, BoundaryCheck(true),
+            state.options.direction, BoundaryTolerance::None(),
             state.options.surfaceTolerance, logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {

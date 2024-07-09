@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
-
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #ifndef ACTS_EXATRKX_CPUONLY
@@ -71,9 +70,10 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
 
   // add a protection to avoid calling for kCPU
 #ifndef ACTS_EXATRKX_CPUONLY
-//  if (device.is_cuda()) {
-//    c10::cuda::CUDAGuard device_guard(device.index());
-//  }
+  std::optional<c10::cuda::CUDAGuard> device_guard;
+  if (device.is_cuda()) {
+    device_guard.emplace(device.index());
+  }
 #endif
 
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);

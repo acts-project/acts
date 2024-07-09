@@ -256,10 +256,11 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   // Set up the propagator options (they are the same with and without B field)
   PropagatorOptions pOptions(geoContext, magFieldContext);
-  auto intersection = refPerigeeSurface
-                          ->intersect(geoContext, params.position(geoContext),
-                                      params.direction(), BoundaryCheck(false))
-                          .closest();
+  auto intersection =
+      refPerigeeSurface
+          ->intersect(geoContext, params.position(geoContext),
+                      params.direction(), BoundaryTolerance::Infinite())
+          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

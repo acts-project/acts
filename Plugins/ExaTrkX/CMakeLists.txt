@@ -36,26 +36,6 @@ add_library(
   ${SOURCES}
 )
 
-set_target_properties(ActsPluginExaTrkX
-  PROPERTIES  
-    BUILD_RPATH                         "\$ORIGIN"
-    INSTALL_RPATH                       "\$ORIGIN"
-    CXX_STANDARD                        17
-    CXX_STANDARD_REQUIRED               ON
-    CUDA_STANDARD                       17
-    CUDA_STANDARD_REQUIRED              ON
-    INTERFACE_POSITION_INDEPENDENT_CODE ON
-    CUDA_SEPARABLE_COMPILATION          ON
-)
-
-target_compile_options(ActsPluginExaTrkX
-    PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${EXATRKX_CXX_FLAGS}>"
-            "$<$<COMPILE_LANGUAGE:CUDA>:${EXATRKX_CUDA_FLAGS}>")
-            
-target_compile_definitions(ActsPluginExaTrkX PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
-target_compile_definitions(ActsPluginExaTrkX PUBLIC TRITON_ENABLE_GPU)
-target_compile_definitions(ActsPluginExaTrkX PUBLIC NO_CUGRAPH_OPS)
-
 target_include_directories(
   ActsPluginExaTrkX
   PUBLIC 
@@ -68,18 +48,24 @@ target_link_libraries(
   PUBLIC
     ActsCore
     Boost::boost
-  # PRIVATE   -- TODO make torch private again
-    ${TORCH_LIBRARIES}
+    ${TORCH_LIBRARIES} # TODO try to make this private again (torch::Device is leaking)
     std::filesystem
 )
 
-if(CUDAToolkit_FOUND)
+if(ACTS_EXATRKX_ENABLE_CUDA)
   target_link_libraries(
     ActsPluginExaTrkX
     PRIVATE
       frnn
   )
-  message(WARNING "Build with CUDA")
+  set_target_properties(ActsPluginExaTrkX
+    PROPERTIES
+      CUDA_STANDARD                       17
+      CUDA_STANDARD_REQUIRED              ON
+      CUDA_SEPARABLE_COMPILATION          ON
+  )
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC NO_CUGRAPH_OPS)
 else()
   target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
   message(WARNING "Build CPUONLY")

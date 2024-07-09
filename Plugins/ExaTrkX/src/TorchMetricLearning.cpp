@@ -73,8 +73,9 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
 
   // add a protection to avoid calling for kCPU
 #ifndef ACTS_EXATRKX_CPUONLY
+  std::optional<c10::cuda::CUDAGuard> device_guard;
   if (device.is_cuda()) {
-    c10::cuda::CUDAGuard device_guard(device.index());
+    device_guard.emplace(device.index());
   }
 #endif
 
