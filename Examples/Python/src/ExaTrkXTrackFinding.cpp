@@ -191,12 +191,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
       .value("Cluster2Eta",
              TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-                                "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
-                                inputParticles, inputClusters, inputMeasurementSimhitsMap,
-                                outputProtoTracks, outputGraph,
-                                graphConstructor, edgeClassifiers, trackBuilder,
-                                nodeFeatures, featureScales, filterShortTracks);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
+      inputParticles, inputClusters, inputMeasurementSimhitsMap,
+      outputProtoTracks, outputGraph, graphConstructor, edgeClassifiers,
+      trackBuilder, nodeFeatures, featureScales, filterShortTracks);
 
   {
     auto cls =
