@@ -172,7 +172,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
       ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
       inputSpacePoints, inputSimHits, inputParticles,
       inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
-      targetMinPT, targetMinSize);
+      targetMinPT, targetMinSize, uniqueModules);
 
   {
     auto cls =

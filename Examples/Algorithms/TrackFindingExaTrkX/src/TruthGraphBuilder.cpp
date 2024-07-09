@@ -34,7 +34,7 @@ ActsExamples::TruthGraphBuilder::TruthGraphBuilder(Config config,
   }
 }
 
-TruthGraph TruthGraphBuilder::buildFromMeasurements(
+std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
     const SimSpacePointContainer& spacepoints,
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
@@ -59,11 +59,14 @@ TruthGraph TruthGraphBuilder::buildFromMeasurements(
 
   // Collect edges for truth graph and target graph
   std::vector<std::int64_t> graph;
+  std::size_t notFoundParticles = 0;
+  std::size_t moduleDuplicatesRemoved = 0;
 
   for (auto& [pid, track] : tracks) {
     auto found = particles.find(pid);
     if (found == particles.end()) {
-      ACTS_WARNING("Did not find " << pid << ", skip track");
+      ACTS_VERBOSE("Did not find " << pid << ", skip track");
+      notFoundParticles++;
       continue;
     }
 
@@ -72,15 +75,45 @@ TruthGraph TruthGraphBuilder::buildFromMeasurements(
       continue;
     }
 
+    const Acts::Vector3 vtx = found->fourPosition().segment<3>(0);
+    auto radiusForOrdering = [&](std::size_t i) {
+      const auto& sp = spacepoints[i];
+      return std::hypot(sp.x() - vtx[0], sp.y() - vtx[1], sp.z() - vtx[2]);
+    };
+
     // Sort by radius (this breaks down if the particle has to low momentum)
     std::sort(track.begin(), track.end(), [&](const auto& a, const auto& b) {
-      return spacepoints[a].r() < spacepoints[b].r();
+      return radiusForOrdering(a) < radiusForOrdering(b);
     });
+
+    if (m_cfg.uniqueModules) {
+      auto newEnd = std::unique(
+          track.begin(), track.end(), [&](const auto& a, const auto& b) {
+            auto gidA = spacepoints[a]
+                            .sourceLinks()[0]
+                            .template get<IndexSourceLink>()
+                            .geometryId();
+            auto gidB = spacepoints[b]
+                            .sourceLinks()[0]
+                            .template get<IndexSourceLink>()
+                            .geometryId();
+            return gidA == gidB;
+          });
+      moduleDuplicatesRemoved += std::distance(newEnd, track.end());
+      track.erase(newEnd, track.end());
+    }
 
     for (auto i = 0ul; i < track.size() - 1; ++i) {
       graph.push_back(track[i]);
       graph.push_back(track[i + 1]);
     }
+  }
+
+  ACTS_DEBUG("Did not find particles for " << notFoundParticles << " tracks");
+  if (moduleDuplicatesRemoved > 0) {
+    ACTS_DEBUG(
+        "Removed " << moduleDuplicatesRemoved
+                   << " hit to ensure a unique hit per track and module");
   }
 
   return graph;
@@ -91,7 +124,7 @@ struct HitInfo {
   std::int32_t hitIndex;
 };
 
-TruthGraph TruthGraphBuilder::buildFromSimhits(
+std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
     const SimSpacePointContainer& spacepoints,
     const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
     const SimParticleContainer& particles) const {
@@ -143,13 +176,18 @@ ActsExamples::ProcessCode ActsExamples::TruthGraphBuilder::execute(
   const auto& spacepoints = m_inputSpacePoints(ctx);
   const auto& particles = m_inputParticles(ctx);
 
-  auto graph = (m_inputMeasParticlesMap.isInitialized())
+  auto edges = (m_inputMeasParticlesMap.isInitialized())
                    ? buildFromMeasurements(spacepoints, particles,
                                            m_inputMeasParticlesMap(ctx))
                    : buildFromSimhits(spacepoints, m_inputMeasSimhitMap(ctx),
                                       m_inputSimhits(ctx), particles);
 
-  m_outputGraph(ctx, std::move(graph));
+  ACTS_DEBUG("Truth track edges: " << edges.size() / 2);
+
+  Graph g;
+  g.edges = std::move(edges);
+
+  m_outputGraph(ctx, std::move(g));
 
   return ProcessCode::SUCCESS;
 }
