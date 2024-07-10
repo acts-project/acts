@@ -91,7 +91,8 @@ inline static std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
 ///
 /// @return the acceleration link idnetifier
 template <typename binning_values_t>
-inline static detray::io::accel_id accelerationLink(const binning_values_t& casts) {
+inline static detray::io::accel_id accelerationLink(
+    const binning_values_t& casts) {
   // Default is `brute_force`
   detray::io::accel_id accLink = detray::io::accel_id::brute_force;
   if (casts.size() == 2u) {
