@@ -54,20 +54,18 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     minSize = std::min(minSize, protoTrack.size());
     maxSize = std::max(maxSize, protoTrack.size());
 
-    std::size_t tip = Acts::kTrackIndexInvalid;
+    auto track = tracks.makeTrack();
     for (auto idx : protoTrack) {
       auto trackStateProxy =
-          mtj->makeTrackState(Acts::TrackStatePropMask::Calibrated, tip);
-      tip = trackStateProxy.index();
+          track.appendTrackState(Acts::TrackStatePropMask::Calibrated);
 
       IndexSourceLink sl(Acts::GeometryIdentifier{}, idx);
 
-      calibrator.calibrate({}, {}, Acts::SourceLink{sl}, trackStateProxy);
+      calibrator.calibrate(ctx.geoContext, ctx.calibContext,
+                           Acts::SourceLink{sl}, trackStateProxy);
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
     }
 
-    auto track = tracks.makeTrack();
-    track.tipIndex() = tip;
     track.nMeasurements() = protoTrack.size();
     track.nHoles() = 0;
     track.nOutliers() = 0;
