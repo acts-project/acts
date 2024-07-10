@@ -18,7 +18,8 @@
 #include <memory>
 
 #include <podio/podioVersion.h>
-#if PODIO_VERSION_MAJOR >= 1
+
+#if podio_VERSION_MAJOR >= 1
 #include <podio/ROOTReader.h>
 #include <podio/ROOTWriter.h>
 #else
@@ -40,34 +41,31 @@ namespace PodioUtil {
 // We want to support podio 0.16 and 1.x for now
 
 // See https://github.com/AIDASoft/podio/pull/549
-#if PODIO_VERSION_MAJOR >= 1
+#if podio_VERSION_MAJOR >= 1
 using ROOTWriter = podio::ROOTWriter;
 using ROOTReader = podio::ROOTReader;
-
-template <typename T>
-auto getData(T& object) {
-  return object.getData();
-}
-
 #else
-using ROOTWriter = podio::ROOTWriter;
-using ROOTReader = podio::ROOTReader;
-
+using ROOTWriter = podio::ROOTFrameWriter;
+using ROOTReader = podio::ROOTFrameReader;
 #endif
 
 // See https://github.com/AIDASoft/podio/pull/553
 template <typename T>
-decltype(auto) getData(const T& object) {
-  return object.getData();
+decltype(auto) getDataMutable(T&& object) {
+  if constexpr (podio::version::build_version.major >= 1) {
+    return object.getData();
+  } else {
+    return object.data();
+  }
 }
 
 template <typename T>
-decltype(auto) getDataMutable(T& object) {
-#if PODIO_VERSION_MAJOR >= 1
-  return object.getData();
-#else
-  return object.data();
-#endif
+decltype(auto) getReferenceSurfaceMutable(T&& object) {
+  if constexpr (podio::version::build_version.major >= 1) {
+    return object.getReferenceSurface();
+  } else {
+    return object.referenceSurface();
+  }
 }
 
 using Identifier = std::uint64_t;
