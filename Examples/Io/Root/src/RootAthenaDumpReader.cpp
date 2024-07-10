@@ -24,6 +24,7 @@
 class BarcodeConstructor {
   /// Particles with barcodes larger then this value are considered to be
   /// secondary particles
+  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
   constexpr static int s_maxBarcodeForPrimary = 200000;
 
   std::uint16_t m_primaryCount = 0;
@@ -387,13 +388,16 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   SimSpacePointContainer spacePoints;
 
   // Loop on space points
+  std::size_t skippedSpacePoints = 0;
   for (int isp = 0; isp < nSP; isp++) {
     auto isPhiOverlap = (SPisOverlap[isp] == 2) || (SPisOverlap[isp] == 3);
     auto isEtaOverlap = (SPisOverlap[isp] == 1) || (SPisOverlap[isp] == 3);
     if (m_cfg.skipOverlapSPsPhi && isPhiOverlap) {
+      ++skippedSpacePoints;
       continue;
     }
     if (m_cfg.skipOverlapSPsEta && isEtaOverlap) {
+      ++skippedSpacePoints;
       continue;
     }
 
@@ -440,6 +444,10 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
+  if (m_cfg.skipOverlapSPsEta || m_cfg.skipOverlapSPsPhi) {
+    ACTS_DEBUG("Skipped " << skippedSpacePoints
+                          << " because of eta/phi overlaps");
+  }
   ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
