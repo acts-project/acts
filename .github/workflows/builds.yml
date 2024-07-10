@@ -50,7 +50,10 @@ jobs:
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions
+        # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
+          git config --global user.name 'CI' && 
+          git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
           -GNinja
@@ -68,6 +71,7 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
           -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
 
       - name: Build
         run: cmake --build build
