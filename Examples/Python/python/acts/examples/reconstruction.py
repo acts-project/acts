@@ -140,8 +140,12 @@ CkfConfig = namedtuple(
         "maxSteps",
         "seedDeduplication",
         "stayOnSeed",
+        "pixelVolumes",
+        "stripVolumes",
+        "maxPixelHoles",
+        "maxStripHoles",
     ],
-    defaults=[15.0, 10, None, None, None],
+    defaults=[15.0, 10, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -1291,6 +1295,10 @@ def addCKFTracks(
             twoWay=twoWay,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
+            pixelVolumes=ckfConfig.pixelVolumes,
+            stripVolumes=ckfConfig.stripVolumes,
+            maxPixelHoles=ckfConfig.maxPixelHoles,
+            maxStripHoles=ckfConfig.maxStripHoles,
         ),
     )
     s.addAlgorithm(trackFinder)
