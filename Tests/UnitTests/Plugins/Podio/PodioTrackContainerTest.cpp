@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK_EQUAL(pTrack.getData().tipIndex, 2);
 
     t.parameters() << 1, 2, 3, 4, 5, 6;
-    Eigen::Map<BoundVector> pars{pTrack.getData().parameters.data()};
+    Eigen::Map<const BoundVector> pars{pTrack.getData().parameters.data()};
     BoundVector bv;
     bv << 1, 2, 3, 4, 5, 6;
     BOOST_CHECK_EQUAL(pars, bv);
