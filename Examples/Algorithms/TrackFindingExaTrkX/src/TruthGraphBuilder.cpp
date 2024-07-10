@@ -75,6 +75,9 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
       continue;
     }
 
+    std::sort(track.begin(), track.end());
+    track.erase(std::unique(track.begin(), track.end()), track.end());
+
     const Acts::Vector3 vtx = found->fourPosition().segment<3>(0);
     auto radiusForOrdering = [&](std::size_t i) {
       const auto& sp = spacepoints[i];
