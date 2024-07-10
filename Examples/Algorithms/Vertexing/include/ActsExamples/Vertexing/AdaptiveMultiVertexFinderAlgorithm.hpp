@@ -61,6 +61,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   enum class SeedFinder {
     GaussianSeeder,
+    GridSeeder,
     AdaptiveGridSeeder,
     SparseGridSeeder
   };

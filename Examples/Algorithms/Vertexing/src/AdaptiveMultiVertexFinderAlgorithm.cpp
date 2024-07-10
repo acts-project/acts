@@ -19,7 +19,9 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
+#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/SparseGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/SparseGridTrackDensity.hpp"
@@ -91,6 +93,19 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const {
     trkDensityCfg.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
     seedFinder = std::make_shared<Seeder>(Seeder::Config{trkDensityCfg});
+  } else if (m_cfg.seedFinder == SeedFinder::GridSeeder) {
+    // Set up track density used during vertex seeding
+    using Density = Acts::GaussianGridTrackDensity;
+    Density::Config trkDensityCfg;
+    trkDensityCfg.binSize = m_cfg.spatialBinExtent;
+    Density trkDensity(trkDensityCfg);
+
+    // Set up vertex seeder and finder
+    using Seeder = Acts::GridDensityVertexFinder;
+    Seeder::Config seederConfig(trkDensity);
+    seederConfig.extractParameters
+        .connect<&Acts::InputTrack::extractParameters>();
+    seedFinder = std::make_shared<Seeder>(seederConfig);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     constexpr int trkGridSize = 15;
 
