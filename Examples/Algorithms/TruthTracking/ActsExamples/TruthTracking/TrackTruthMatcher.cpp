@@ -69,6 +69,7 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
 
   for (const auto& track : tracks) {
     // Get the majority truth particle to this track
+    particleHitCounts.clear();
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
     if (particleHitCounts.empty()) {
       ACTS_DEBUG(
@@ -106,7 +107,8 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
         (m_cfg.doubleMatching && recoMatched && truthMatched)) {
       auto& trackParticleMatch = trackParticleMatching[track.index()] = {
           TrackMatchClassification::Matched, majorityParticleId,
-          particleHitCounts};
+          TrackMatchEntry::ContributingParticles(particleHitCounts.begin(),
+                                                 particleHitCounts.end())};
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       if (!particleTrackMatch.track) {
@@ -130,8 +132,10 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
         ++particleTrackMatch.duplicates;
       }
     } else {
-      trackParticleMatching[track.index()] = {TrackMatchClassification::Fake,
-                                              std::nullopt, particleHitCounts};
+      trackParticleMatching[track.index()] = {
+          TrackMatchClassification::Fake, std::nullopt,
+          TrackMatchEntry::ContributingParticles(particleHitCounts.begin(),
+                                                 particleHitCounts.end())};
 
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       ++particleTrackMatch.fakes;

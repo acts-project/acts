@@ -182,7 +182,7 @@ void addOutput(Context& ctx) {
                              fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderPerformanceWriter, mex,
-                             "TrackFinderPerformanceWriter", inputProtoTracks,
+                             "TrackFinderPerformanceWriter", inputTracks,
                              inputParticles, inputTrackParticleMatching,
                              filePath, fileMode, treeNameTracks,
                              treeNameParticles);

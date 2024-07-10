@@ -18,6 +18,8 @@
 #include <optional>
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 namespace ActsExamples {
 
 enum class TrackMatchClassification {
@@ -31,13 +33,16 @@ enum class TrackMatchClassification {
 };
 
 struct TrackMatchEntry {
+  using ContributingParticles =
+      boost::container::small_vector<ParticleHitCount, 3>;
+
   TrackMatchClassification classification{TrackMatchClassification::Unknown};
 
   std::optional<SimBarcode> particle;
 
   /// Number of hits on the track that are associated to a particle
   /// Sorted by decreasing number of hits
-  std::vector<ParticleHitCount> contributingParticles;
+  ContributingParticles contributingParticles;
 };
 
 struct ParticleMatchEntry {

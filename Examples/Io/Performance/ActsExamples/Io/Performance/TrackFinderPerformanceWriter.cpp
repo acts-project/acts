@@ -36,6 +36,20 @@
 
 namespace ActsExamples {
 
+namespace {
+
+using ParticleOnTracksCount =
+    std::unordered_map<ActsFatras::Barcode, std::size_t>;
+
+std::size_t getParticleCountOnTracks(
+    const ParticleOnTracksCount& particleOnTracksCount,
+    const ActsFatras::Barcode& particleId) {
+  auto it = particleOnTracksCount.find(particleId);
+  return it != particleOnTracksCount.end() ? it->second : 0;
+}
+
+}  // namespace
+
 struct TrackFinderPerformanceWriter::Impl {
   Config cfg;
 
@@ -48,7 +62,7 @@ struct TrackFinderPerformanceWriter::Impl {
 
   TFile* file = nullptr;
 
-  /// per-prototrack tree
+  /// per-track tree
   TTree* trkTree = nullptr;
   std::mutex trkMutex;
   // track identification
@@ -126,8 +140,8 @@ struct TrackFinderPerformanceWriter::Impl {
         m_fakeRatePlotTool(cfg.fakeRatePlotToolConfig, level),
         m_duplicationPlotTool(cfg.duplicationPlotToolConfig, level),
         m_trackSummaryPlotTool(cfg.trackSummaryPlotToolConfig, level) {
-    if (cfg.inputProtoTracks.empty()) {
-      throw std::invalid_argument("Missing proto tracks input collection");
+    if (cfg.inputTracks.empty()) {
+      throw std::invalid_argument("Missing tracks input collection");
     }
     if (cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
@@ -203,58 +217,10 @@ struct TrackFinderPerformanceWriter::Impl {
 
   const Acts::Logger& logger() const { return _logger; }
 
-  void writePrototrackPeformance(
-      std::uint64_t eventId, const ProtoTrackContainer& protoTracks,
-      const TrackParticleMatching& protoTrackParticleMatching) {
-    // write per-prototrack performance measures
-    {
-      std::lock_guard<std::mutex> guardTrk(trkMutex);
-      for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
-        const auto& track = protoTracks[itrack];
-
-        // Counting number of total tracks
-        m_nTotalTracks += 1;
-
-        // Get the truth-matched particle
-        auto imatched = protoTrackParticleMatching.find(itrack);
-        if (imatched == protoTrackParticleMatching.end()) {
-          ACTS_DEBUG(
-              "No truth particle associated with this proto track, index = "
-              << itrack);
-          continue;
-        }
-        const auto& particleMatch = imatched->second;
-
-        if (particleMatch.classification == TrackMatchClassification::Fake) {
-          m_nTotalFakeTracks++;
-        }
-
-        if (particleMatch.classification ==
-            TrackMatchClassification::Duplicate) {
-          m_nTotalDuplicateTracks++;
-        }
-
-        trkEventId = eventId;
-        trkTrackId = itrack;
-        trkNumHits = track.size();
-        trkNumParticles = particleMatch.contributingParticles.size();
-        trkParticleId.clear();
-        trkParticleNumHitsTotal.clear();
-        trkParticleNumHitsOnTrack.clear();
-        for (const auto& phc : particleMatch.contributingParticles) {
-          trkParticleId.push_back(phc.particleId.value());
-          trkParticleNumHitsTotal.push_back(phc.hitCount);
-          trkParticleNumHitsOnTrack.push_back(phc.hitCount);
-        }
-
-        trkTree->Fill();
-      }
-    }
-  }
-
-  void writeTrackPerformance(
-      std::uint64_t eventId, const TrackContainer& tracks,
-      const TrackParticleMatching& trackParticleMatching) {
+  void writeTrackPerformance(std::uint64_t eventId,
+                             const TrackContainer& tracks,
+                             const TrackParticleMatching& trackParticleMatching,
+                             ParticleOnTracksCount& particleOnTracksCount) {
     // write per-track performance measures
     {
       std::lock_guard<std::mutex> guardTrk(trkMutex);
@@ -287,6 +253,10 @@ struct TrackFinderPerformanceWriter::Impl {
         }
 
         const auto& particleMatch = imatched->second;
+
+        for (const auto& phc : particleMatch.contributingParticles) {
+          ++particleOnTracksCount[phc.particleId];
+        }
 
         if (particleMatch.classification == TrackMatchClassification::Fake) {
           m_nTotalFakeTracks++;
@@ -327,7 +297,8 @@ struct TrackFinderPerformanceWriter::Impl {
 
   void writeParticlePerformance(
       std::uint64_t eventId, const SimParticleContainer& particles,
-      const ParticleTrackMatching& particleTrackMatching) {
+      const ParticleTrackMatching& particleTrackMatching,
+      const ParticleOnTracksCount& particleOnTracksCount) {
     // write per-particle performance measures
     {
       std::lock_guard<std::mutex> guardPrt(prtMutex);
@@ -352,14 +323,6 @@ struct TrackFinderPerformanceWriter::Impl {
         prtPz = p * particle.direction().z();
         prtM = particle.mass() / Acts::UnitConstants::GeV;
         prtQ = particle.charge() / Acts::UnitConstants::e;
-        // reconstruction
-        prtNumHits = particle.numberOfHits();
-        auto nt = reconCount.find(particleId);
-        prtNumTracks = (nt != reconCount.end()) ? nt->second : 0u;
-        auto nm = majorityCount.find(particleId);
-        prtNumTracksMajority = (nm != majorityCount.end()) ? nm->second : 0u;
-
-        prtTree->Fill();
 
         // Investigate the truth-matched tracks
         std::size_t nMatchedTracks = 0;
@@ -388,6 +351,14 @@ struct TrackFinderPerformanceWriter::Impl {
             m_nTotalFakeParticles += 1;
           }
         }
+
+        // reconstruction
+        prtNumHits = particle.numberOfHits();
+        prtNumTracks = getParticleCountOnTracks(particleOnTracksCount,
+                                                particle.particleId());
+        prtNumTracksMajority = nMatchedTracks;
+
+        prtTree->Fill();
 
         // update the performance plots
 
@@ -423,15 +394,19 @@ struct TrackFinderPerformanceWriter::Impl {
     }
   }
 
-  void write(std::uint64_t eventId, const ProtoTrackContainer& protoTracks,
+  void write(std::uint64_t eventId, const TrackContainer& tracks,
              const SimParticleContainer& particles,
              const TrackParticleMatching& trackParticleMatching,
              const ParticleTrackMatching& particleTrackMatching) {
-    writePrototrackPeformance(eventId, protoTracks, trackParticleMatching);
+    // How often a particle was seen across different tracks.
+    ParticleOnTracksCount particleOnTracksCount;
+    particleOnTracksCount.reserve(particles.size());
 
-    // writeTrackPerformance(eventId, protoTracks, particleTrackMatching);
+    writeTrackPerformance(eventId, tracks, trackParticleMatching,
+                          particleOnTracksCount);
 
-    writeParticlePerformance(eventId, particles, particleTrackMatching);
+    writeParticlePerformance(eventId, particles, particleTrackMatching,
+                             particleOnTracksCount);
   }
 
   /// Write everything to disk and close the file.
@@ -496,13 +471,13 @@ struct TrackFinderPerformanceWriter::Impl {
 
 TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     const Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputProtoTracks, "TrackFinderPerformanceWriter", level),
+    : WriterT(config.inputTracks, "TrackFinderPerformanceWriter", level),
       m_impl(std::make_unique<Impl>(this, config, level)) {}
 
 TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() = default;
 
-ProcessCode TrackFinderPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const ProtoTrackContainer& tracks) {
+ProcessCode TrackFinderPerformanceWriter::writeT(const AlgorithmContext& ctx,
+                                                 const TrackContainer& tracks) {
   const auto& particles = m_impl->inputParticles(ctx);
   const auto& trackParticleMatching = m_impl->inputTrackParticleMatching(ctx);
   const auto& particleTrackMatching = m_impl->inputParticleTrackMatching(ctx);
