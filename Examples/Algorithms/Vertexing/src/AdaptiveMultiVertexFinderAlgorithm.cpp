@@ -94,9 +94,19 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const {
         .connect<&Acts::InputTrack::extractParameters>();
     seedFinder = std::make_shared<Seeder>(Seeder::Config{trkDensityCfg});
   } else if (m_cfg.seedFinder == SeedFinder::GridSeeder) {
+    // magic numbers for now
+    double zMinMax = 100;
+    int trkGridSize = 15;
+
+    // config given
+    double binSize = m_cfg.spatialBinExtent;
+
+    // inverse of binSize = 2. * zMinMax / mainGridSize;
+    int mainGridSize = static_cast<int>(2. * zMinMax / binSize);
+
     // Set up track density used during vertex seeding
     using Density = Acts::GaussianGridTrackDensity;
-    Density::Config trkDensityCfg;
+    Density::Config trkDensityCfg(zMinMax, mainGridSize, trkGridSize);
     trkDensityCfg.binSize = m_cfg.spatialBinExtent;
     Density trkDensity(trkDensityCfg);
 
@@ -107,6 +117,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const {
         .connect<&Acts::InputTrack::extractParameters>();
     seedFinder = std::make_shared<Seeder>(seederConfig);
   } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
+    // magic numbers for now
     constexpr int trkGridSize = 15;
 
     // Set up track density used during vertex seeding

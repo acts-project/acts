@@ -25,8 +25,8 @@ namespace Acts {
 /// Single tracks can be cached and removed from the overall density.
 class GaussianGridTrackDensity {
  public:
-  using MainGridVector = Eigen::Matrix<float, Eigen::Dynamic, 1>;
-  using TrackGridVector = Eigen::Matrix<float, Eigen::Dynamic, 1>;
+  using MainGridVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+  using TrackGridVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 
   /// The configuration struct
   struct Config {
@@ -39,7 +39,7 @@ class GaussianGridTrackDensity {
     /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
     /// @note The value of @p zMinMax_ together with @p mainGridSize_ determines the
     /// overall bin size to be used as seen below
-    Config(float zMinMax_ = 100, int mainGridSize_ = 2000,
+    Config(double zMinMax_ = 100, int mainGridSize_ = 2000,
            int trkGridSize_ = 15)
         : mainGridSize(mainGridSize_),
           trkGridSize(trkGridSize_),
@@ -61,10 +61,10 @@ class GaussianGridTrackDensity {
     int trkGridSize;
 
     // Min and max z value of big grid
-    float zMinMax;  // mm
+    double zMinMax;  // mm
 
     // Z size of one single bin in grid
-    float binSize;  // mm
+    double binSize;  // mm
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check the (up to)
@@ -77,7 +77,7 @@ class GaussianGridTrackDensity {
     // The maximum relative density deviation from the main
     // maximum to consider the second and third maximum for
     // the highest-sum approach from above
-    float maxRelativeDensityDev = 0.01;
+    double maxRelativeDensityDev = 0.01;
   };
 
   GaussianGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
@@ -87,7 +87,7 @@ class GaussianGridTrackDensity {
   /// @param mainGrid The main 1-dim density grid along the z-axis
   ///
   /// @return The z position of maximum track density
-  Result<float> getMaxZPosition(MainGridVector& mainGrid) const;
+  Result<double> getMaxZPosition(MainGridVector& mainGrid) const;
 
   /// @brief Returns the z position of maximum track density and
   /// the estimated width
@@ -95,7 +95,7 @@ class GaussianGridTrackDensity {
   /// @param mainGrid The main 1-dim density grid along the z-axis
   ///
   /// @return The z position of maximum track density and width
-  Result<std::pair<float, float>> getMaxZPositionAndWidth(
+  Result<std::pair<double, double>> getMaxZPositionAndWidth(
       MainGridVector& mainGrid) const;
 
   /// @brief Adds a single track to the overall grid density
@@ -149,7 +149,7 @@ class GaussianGridTrackDensity {
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
   /// @param cov The track covariance matrix
-  TrackGridVector createTrackGrid(float d0, float distCtrZ,
+  TrackGridVector createTrackGrid(double d0, double distCtrZ,
                                   const Acts::SquareMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the FWHM of
@@ -162,11 +162,11 @@ class GaussianGridTrackDensity {
   /// @param maxZ z-position of the maximum density value
   ///
   /// @return The width
-  Result<float> estimateSeedWidth(MainGridVector& mainGrid, float maxZ) const;
+  Result<double> estimateSeedWidth(MainGridVector& mainGrid, double maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
   /// @note This function is defined in coordinate system centered around d0 and z0
-  float normal2D(float d, float z, const SquareMatrix2& cov) const;
+  double normal2D(double d, double z, const SquareMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main
