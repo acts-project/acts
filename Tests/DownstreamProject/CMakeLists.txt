@@ -12,7 +12,8 @@ find_package(
     PluginLegacy
     PluginTGeo
     PluginCovfie
-    PluginDetray)
+    PluginDetray
+    PluginTraccc)
 
 # place artifacts in GNU-like paths, e.g. binaries in `<build>/bin`
 include(GNUInstallDirs)
@@ -31,7 +32,8 @@ target_link_libraries(
     ActsPluginLegacy
     ActsPluginTGeo
     ActsPluginCovfie
-    ActsPluginDetray)
+    ActsPluginDetray
+    ActsPluginTraccc)
 
 option(DD4HEP "Build with DD4hep" ON)
 if(DD4HEP)
