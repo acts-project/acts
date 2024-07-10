@@ -1,9 +1,11 @@
 import pathlib, acts, acts.examples
-from acts import covfie
+import pytest
 
 
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")
 def test_constant_field_conversion():
+    from acts import covfie
+
     v = acts.Vector3(1, 2, 3)
     af = acts.ConstantBField(v)
     cf = covfie.covfieField(af)
@@ -15,6 +17,8 @@ def test_constant_field_conversion():
 
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")
 def test_root_field_conversion():
+    from acts import covfie
+
     current_file_path = pathlib.Path(__file__).resolve().parent
     p = (
         current_file_path.parent.parent.parent
