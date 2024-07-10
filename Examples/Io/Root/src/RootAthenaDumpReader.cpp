@@ -283,8 +283,9 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     SimParticle particle(barcode,
                          static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
-    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
+    Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} * Acts::UnitConstants::MeV;
     particle.setAbsoluteMomentum(p.norm());
+
     particle.setDirection(p.normalized());
 
     auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
