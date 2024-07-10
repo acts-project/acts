@@ -56,7 +56,7 @@ inline auto generateParametersCovariance(generator_t& rng)
     params[i] = stddev[i] * distNormal(rng);
   }
 
-  return std::make_pair(params, cov);
+  return {params, cov};
 }
 
 /// Generate a random bound parameters vector and covariance matrix.
