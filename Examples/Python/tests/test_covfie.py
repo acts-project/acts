@@ -1,6 +1,8 @@
 import pathlib, acts, acts.examples
 import pytest
 
+from helpers import covfieEnabled
+
 
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")
 def test_constant_field_conversion():
