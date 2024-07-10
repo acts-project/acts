@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -48,8 +47,8 @@ class TrajectoriesToPrototracks final : public IAlgorithm {
   ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
       this, "InputTrajectories"};
 
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -24,17 +24,17 @@ struct AlgorithmContext;
 ///
 /// Only considers the track finding itself, i.e. grouping of hits into tracks,
 /// and computes relevant per-track and per-particles statistics.
-class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
+class TrackFinderPerformanceWriter final : public WriterT<TrackContainer> {
  public:
   struct Config {
-    /// Input reconstructed proto tracks collection.
-    std::string inputProtoTracks;
+    /// Input reconstructed (proto) tracks collection.
+    std::string inputTracks;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Input proto track-particle matching.
-    std::string inputProtoTrackParticleMatching;
+    std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "performance_track_finder.root";
     /// Output file mode
@@ -59,7 +59,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) override;
+                     const TrackContainer& tracks) override;
 
   struct Impl;
 

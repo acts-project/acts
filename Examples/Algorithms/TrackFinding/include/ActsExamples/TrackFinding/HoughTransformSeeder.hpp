@@ -77,7 +77,6 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -271,8 +270,8 @@ class HoughTransformSeeder final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_logger;
   const Acts::Logger& logger() const { return *m_logger; }
 
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
 

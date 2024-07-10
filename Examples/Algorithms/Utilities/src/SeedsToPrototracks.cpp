@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
@@ -26,7 +25,7 @@ SeedsToPrototracks::SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
 ProcessCode SeedsToPrototracks::execute(const AlgorithmContext& ctx) const {
   const auto seeds = m_inputSeeds(ctx);
 
-  ProtoTrackContainer tracks;
+  TrackContainer tracks;
   tracks.reserve(seeds.size());
 
   std::transform(seeds.begin(), seeds.end(), std::back_inserter(tracks),

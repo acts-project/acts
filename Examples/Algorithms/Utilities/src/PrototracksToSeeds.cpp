@@ -9,7 +9,6 @@
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"

@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -118,12 +117,12 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
-  ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  WriteDataHandle<ProtoTrackContainer> m_outputTracks{this, "OutputTracks"};
+  WriteDataHandle<TrackContainer> m_outputTracks{this, "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

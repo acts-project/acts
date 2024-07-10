@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -58,8 +57,8 @@ class TruthTrackFinder final : public IAlgorithm {
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
 
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

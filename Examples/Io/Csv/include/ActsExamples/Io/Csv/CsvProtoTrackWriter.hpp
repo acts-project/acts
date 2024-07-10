@@ -15,8 +15,8 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -25,7 +25,7 @@ namespace ActsExamples {
 
 /// @class CsvProtoTrackWriter
 ///
-class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
+class CsvProtoTrackWriter final : public WriterT<TrackContainer> {
  public:
   struct Config {
     /// Which prototracks to write
@@ -59,7 +59,7 @@ class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) override;
+                     const TrackContainer& tracks) override;
 
  private:
   Config m_cfg;

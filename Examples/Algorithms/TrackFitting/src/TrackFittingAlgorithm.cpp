@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 

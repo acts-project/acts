@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -43,12 +42,11 @@ class PrototracksToSeeds final : public IAlgorithm {
   Config m_cfg;
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
-  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
 };
 
 }  // namespace ActsExamples

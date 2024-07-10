@@ -14,7 +14,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"

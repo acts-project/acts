@@ -51,21 +51,6 @@ inline void sortHitCount(
 
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const ProtoTrack& protoTrack,
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
-  particleHitCounts.clear();
-
-  for (auto hitIndex : protoTrack) {
-    // register all particles that generated this hit
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
-    }
-  }
-  sortHitCount(particleHitCounts);
-}
-
-void ActsExamples::identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const Trajectories& trajectories, std::size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();

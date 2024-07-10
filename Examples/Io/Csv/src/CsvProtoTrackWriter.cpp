@@ -42,7 +42,7 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::finalize() {
 }
 
 ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
-    const AlgorithmContext& ctx, const ProtoTrackContainer& tracks) {
+    const AlgorithmContext& ctx, const TrackContainer& tracks) {
   const auto& spacepoints = m_inputSpacepoints(ctx);
 
   // Open per-event file for all components

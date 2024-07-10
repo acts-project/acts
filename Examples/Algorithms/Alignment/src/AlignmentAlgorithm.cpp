@@ -12,7 +12,6 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 

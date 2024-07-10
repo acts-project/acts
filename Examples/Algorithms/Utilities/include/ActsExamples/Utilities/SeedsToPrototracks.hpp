@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -46,8 +45,8 @@ class SeedsToPrototracks final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

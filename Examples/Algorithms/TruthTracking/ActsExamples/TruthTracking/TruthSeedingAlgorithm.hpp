@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -87,8 +86,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 };
 

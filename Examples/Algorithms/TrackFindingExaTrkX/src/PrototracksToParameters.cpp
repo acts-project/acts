@@ -16,7 +16,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
@@ -73,7 +72,7 @@ ProcessCode PrototracksToParameters::execute(
     }
   }
 
-  ProtoTrackContainer seededTracks;
+  TrackContainer seededTracks;
   seededTracks.reserve(prototracks.size());
 
   SimSeedContainer seeds;

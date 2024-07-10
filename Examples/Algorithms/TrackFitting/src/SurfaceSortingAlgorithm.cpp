@@ -8,7 +8,6 @@
 
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
@@ -51,7 +50,7 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
   const auto& simHits = m_inputSimHits(ctx);
   const auto& simHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
-  ProtoTrackContainer sortedTracks;
+  TrackContainer sortedTracks;
   sortedTracks.reserve(protoTracks.size());
   TrackHitList trackHitList;
 

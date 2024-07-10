@@ -101,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
 
   SimParticleContainer seededParticles;
   SimSeedContainer seeds;
-  ProtoTrackContainer tracks;
+  TrackContainer tracks;
 
   seededParticles.reserve(particles.size());
   seeds.reserve(particles.size());

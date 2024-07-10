@@ -12,7 +12,6 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -52,13 +51,12 @@ class SurfaceSortingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

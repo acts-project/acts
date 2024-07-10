@@ -13,7 +13,6 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -137,8 +136,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
       this, "InputSourceLinks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
-  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
   WriteDataHandle<AlignmentParameters> m_outputAlignmentParameters{
       this, "OutputAlignmentParameters"};
 };

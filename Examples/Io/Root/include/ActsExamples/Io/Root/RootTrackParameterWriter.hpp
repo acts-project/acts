@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -86,8 +85,7 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
  private:
   Config m_cfg;  ///< The config class
 
-  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{

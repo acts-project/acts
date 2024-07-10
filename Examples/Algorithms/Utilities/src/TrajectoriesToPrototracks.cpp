@@ -9,7 +9,6 @@
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 
 #include <utility>
@@ -30,7 +29,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
     const AlgorithmContext& ctx) const {
   const auto trajectories = m_inputTrajectories(ctx);
 
-  ProtoTrackContainer tracks;
+  TrackContainer tracks;
 
   for (const auto& trajectory : trajectories) {
     for (const auto tip : trajectory.tips()) {

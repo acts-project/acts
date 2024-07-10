@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -53,7 +52,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
 
   // prepare output collection
-  ProtoTrackContainer tracks;
+  TrackContainer tracks;
   tracks.reserve(particles.size());
 
   ACTS_VERBOSE("Create prototracks for " << particles.size() << " particles");

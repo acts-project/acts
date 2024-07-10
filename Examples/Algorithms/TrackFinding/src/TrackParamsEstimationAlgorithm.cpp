@@ -106,8 +106,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     outputSeeds.reserve(seeds.size());
   }
 
-  const ProtoTrackContainer* inputTracks = nullptr;
-  ProtoTrackContainer outputTracks;
+  const TrackContainer* inputTracks = nullptr;
+  TrackContainer outputTracks;
   if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
     const auto& inputTracksRef = m_inputTracks(ctx);
     if (seeds.size() != inputTracksRef.size()) {

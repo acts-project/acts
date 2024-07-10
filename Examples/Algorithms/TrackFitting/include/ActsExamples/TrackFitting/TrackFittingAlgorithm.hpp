@@ -12,7 +12,6 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -76,8 +75,7 @@ class TrackFittingAlgorithm final : public IAlgorithm {
                                                            "InputMeasurements"};
   ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
       this, "InputSourceLinks"};
-  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
 

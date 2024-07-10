@@ -13,7 +13,6 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -119,8 +118,8 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
                                                             "InputSpacePoints"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
   WriteDataHandle<Acts::TorchGraphStoreHook::Graph> m_outputGraph{
       this, "OutputGraph"};
 

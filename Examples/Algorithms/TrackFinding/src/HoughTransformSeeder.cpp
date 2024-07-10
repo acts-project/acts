@@ -19,7 +19,6 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
@@ -167,7 +166,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
   // add ACTS measurements
   addMeasurements(ctx);
 
-  static thread_local ProtoTrackContainer protoTracks;
+  static thread_local TrackContainer protoTracks;
   protoTracks.clear();
 
   // loop over our subregions and run the Hough Transform on each
@@ -212,7 +211,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
   }
   ACTS_DEBUG("Created " << protoTracks.size() << " proto track");
 
-  m_outputProtoTracks(ctx, ProtoTrackContainer{protoTracks});
+  m_outputProtoTracks(ctx, TrackContainer{protoTracks});
   // clear the vector
   houghMeasurementStructs.clear();
   return ActsExamples::ProcessCode::SUCCESS;

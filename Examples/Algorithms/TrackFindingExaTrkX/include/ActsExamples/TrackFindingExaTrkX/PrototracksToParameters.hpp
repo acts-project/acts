@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -87,14 +86,13 @@ class PrototracksToParameters final : public IAlgorithm {
   Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<TrackContainer> m_outputProtoTracks{this,
+                                                      "OutputProtoTracks"};
   WriteDataHandle<TrackParametersContainer> m_outputParameters{
       this, "OutputParameters"};
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
-  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackContainer> m_inputProtoTracks{this, "InputProtoTracks"};
 };
 
 }  // namespace ActsExamples
