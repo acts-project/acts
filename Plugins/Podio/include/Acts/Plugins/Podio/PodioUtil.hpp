@@ -13,12 +13,18 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <limits>
 #include <memory>
 
 #include <podio/podioVersion.h>
+#if PODIO_VERSION_MAJOR >= 1
+#include <podio/ROOTReader.h>
+#include <podio/ROOTWriter.h>
+#else
+#include <podio/ROOTFrameReader.h>
+#include <podio/ROOTFrameWriter.h>
+#endif
 
 namespace ActsPodioEdm {
 class Surface;
@@ -35,10 +41,6 @@ namespace PodioUtil {
 
 // See https://github.com/AIDASoft/podio/pull/549
 #if PODIO_VERSION_MAJOR >= 1
-namespace podio {
-class ROOTWriter;
-class ROOTReader;
-}  // namespace podio
 using ROOTWriter = podio::ROOTWriter;
 using ROOTReader = podio::ROOTReader;
 
@@ -48,12 +50,8 @@ auto getData(T& object) {
 }
 
 #else
-namespace podio {
-class ROOTFrameWriter;
-class ROOTFrameReader;
-}  // namespace podio
-using ROOTWriter = podio::ROOTFrameWriter;
-using ROOTReader = podio::ROOTFrameReader;
+using ROOTWriter = podio::ROOTWriter;
+using ROOTReader = podio::ROOTReader;
 
 #endif
 

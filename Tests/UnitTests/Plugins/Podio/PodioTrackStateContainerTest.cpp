@@ -26,8 +26,6 @@
 
 #include <filesystem>
 
-#include <podio/ROOTFrameReader.h>
-#include <podio/ROOTFrameWriter.h>
 #include <podio/UserDataCollection.h>
 
 namespace {
