@@ -211,8 +211,8 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ProtoTrackTruthMatcher, mex, "ProtoTrackTruthMatcher",
       inputProtoTracks, inputParticles, inputMeasurementParticlesMap,
-      outputProtoTrackParticleMatching, outputParticleProtoTrackMatching,
-      matchingRatio, doubleMatching);
+      outputTrackParticleMatching, outputParticleTrackMatching, matchingRatio,
+      doubleMatching);
 }
 
 }  // namespace Acts::Python

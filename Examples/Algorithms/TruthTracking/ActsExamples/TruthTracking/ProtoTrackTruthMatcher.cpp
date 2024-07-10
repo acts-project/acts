@@ -31,21 +31,19 @@ ProtoTrackTruthMatcher::ProtoTrackTruthMatcher(const Config& config,
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing input measurement particles map");
   }
-  if (m_cfg.outputProtoTrackParticleMatching.empty()) {
+  if (m_cfg.outputTrackParticleMatching.empty()) {
     throw std::invalid_argument(
         "Missing output proto track particles matching");
   }
-  if (m_cfg.outputParticleProtoTrackMatching.empty()) {
+  if (m_cfg.outputParticleTrackMatching.empty()) {
     throw std::invalid_argument("Missing output particle proto track matching");
   }
 
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
-  m_outputProtoTrackParticleMatching.initialize(
-      m_cfg.outputProtoTrackParticleMatching);
-  m_outputParticleProtoTrackMatching.initialize(
-      m_cfg.outputParticleProtoTrackMatching);
+  m_outputTrackParticleMatching.initialize(m_cfg.outputTrackParticleMatching);
+  m_outputParticleTrackMatching.initialize(m_cfg.outputParticleTrackMatching);
 }
 
 ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
@@ -57,8 +55,8 @@ ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
-  ProtoTrackParticleMatching protoTrackParticleMatching;
-  ParticleProtoTrackMatching particleProtoTrackMatching;
+  TrackParticleMatching trackParticleMatching;
+  ParticleTrackMatching particleTrackMatching;
 
   // TODO this may be computed in a separate algorithm
   // TODO can we wire this through?
@@ -107,11 +105,11 @@ ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
 
     if ((!m_cfg.doubleMatching && recoMatched) ||
         (m_cfg.doubleMatching && recoMatched && truthMatched)) {
-      auto& trackParticleMatch = protoTrackParticleMatching[index] = {
+      auto& trackParticleMatch = trackParticleMatching[index] = {
           TrackMatchClassification::Matched, majorityParticleId,
           particleHitCounts};
 
-      auto& particleTrackMatch = particleProtoTrackMatching[majorityParticleId];
+      auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       if (!particleTrackMatch.track) {
         particleTrackMatch.track = index;
       } else {
@@ -121,7 +119,7 @@ ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
         const auto& otherProtoTrack =
             protoTracks.at(particleTrackMatch.track.value());
         if (otherProtoTrack.size() < protoTrack.size()) {
-          protoTrackParticleMatching[particleTrackMatch.track.value()]
+          trackParticleMatching[particleTrackMatch.track.value()]
               .classification = TrackMatchClassification::Duplicate;
           particleTrackMatch.track = index;
         } else {
@@ -132,18 +130,16 @@ ActsExamples::ProcessCode ProtoTrackTruthMatcher::execute(
         ++particleTrackMatch.duplicates;
       }
     } else {
-      protoTrackParticleMatching[index] = {TrackMatchClassification::Fake,
-                                           std::nullopt, particleHitCounts};
+      trackParticleMatching[index] = {TrackMatchClassification::Fake,
+                                      std::nullopt, particleHitCounts};
 
-      auto& particleTrackMatch = particleProtoTrackMatching[majorityParticleId];
+      auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       ++particleTrackMatch.fakes;
     }
   }
 
-  m_outputProtoTrackParticleMatching(ctx,
-                                     std::move(protoTrackParticleMatching));
-  m_outputParticleProtoTrackMatching(ctx,
-                                     std::move(particleProtoTrackMatching));
+  m_outputTrackParticleMatching(ctx, std::move(trackParticleMatching));
+  m_outputParticleTrackMatching(ctx, std::move(particleTrackMatching));
 
   return ProcessCode::SUCCESS;
 }

@@ -33,10 +33,10 @@ class ProtoTrackTruthMatcher final : public IAlgorithm {
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output proto track-particle matching.
-    std::string outputProtoTrackParticleMatching;
-    /// Output particle-proto track matching.
-    std::string outputParticleProtoTrackMatching;
+    /// Output track-particle matching.
+    std::string outputTrackParticleMatching;
+    /// Output particle-track matching.
+    std::string outputParticleTrackMatching;
 
     /// Matching ratio for track to particle matching
     double matchingRatio = 0.5;
@@ -59,9 +59,9 @@ class ProtoTrackTruthMatcher final : public IAlgorithm {
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
-  WriteDataHandle<TrackParticleMatching> m_outputProtoTrackParticleMatching{
+  WriteDataHandle<TrackParticleMatching> m_outputTrackParticleMatching{
       this, "OutputProtoTrackParticleMatching"};
-  WriteDataHandle<ParticleTrackMatching> m_outputParticleProtoTrackMatching{
+  WriteDataHandle<ParticleTrackMatching> m_outputParticleTrackMatching{
       this, "OutputParticleProtoTrackMatching"};
 };
 

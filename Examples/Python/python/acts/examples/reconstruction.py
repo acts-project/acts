@@ -1468,18 +1468,6 @@ def addTrackWriters(
             )
             s.addWriter(trackFitterPerfWriter)
 
-        if writeCKFperformance:
-            # Write CKF performance data
-            ckfPerfWriter = acts.examples.CKFPerformanceWriter(
-                level=customLogLevel(),
-                inputTracks=tracks,
-                inputParticles="truth_seeds_selected",
-                inputTrackParticleMatching="track_particle_matching",
-                inputParticleTrackMatching="particle_track_matching",
-                filePath=str(outputDirRoot / f"performance_{name}.root"),
-            )
-            s.addWriter(ckfPerfWriter)
-
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
