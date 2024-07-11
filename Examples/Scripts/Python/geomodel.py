@@ -145,17 +145,9 @@ def main():
     gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
 
     # Construct the building hierarchy
-<<<<<<< Updated upstream
     gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
     gmBlueprintConfig.detectorSurfaces = gmSurfaces
     gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
-=======
-    # if the blueprint is enabled
-    if args.enable_blueprint:
-        gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
-        gmBlueprintConfig.detectorSurfaces = gmSurfaces
-        gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
->>>>>>> Stashed changes
 
     gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
     gmBlueprintOptions.table = args.table_name
