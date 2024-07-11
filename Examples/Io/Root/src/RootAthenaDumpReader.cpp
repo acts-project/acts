@@ -24,6 +24,7 @@
 class BarcodeConstructor {
   /// Particles with barcodes larger then this value are considered to be
   /// secondary particles
+  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
   constexpr static int s_maxBarcodeForPrimary = 200000;
 
   std::uint16_t m_primaryCount = 0;
@@ -282,8 +283,10 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     SimParticle particle(barcode,
                          static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
-    auto p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]};
+    Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} *
+                      Acts::UnitConstants::MeV;
     particle.setAbsoluteMomentum(p.norm());
+
     particle.setDirection(p.normalized());
 
     auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
@@ -387,7 +390,19 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   SimSpacePointContainer spacePoints;
 
   // Loop on space points
+  std::size_t skippedSpacePoints = 0;
   for (int isp = 0; isp < nSP; isp++) {
+    auto isPhiOverlap = (SPisOverlap[isp] == 2) || (SPisOverlap[isp] == 3);
+    auto isEtaOverlap = (SPisOverlap[isp] == 1) || (SPisOverlap[isp] == 3);
+    if (m_cfg.skipOverlapSPsPhi && isPhiOverlap) {
+      ++skippedSpacePoints;
+      continue;
+    }
+    if (m_cfg.skipOverlapSPsEta && isEtaOverlap) {
+      ++skippedSpacePoints;
+      continue;
+    }
+
     Acts::Vector3 globalPos{SPx[isp], SPy[isp], SPz[isp]};
     double sp_covr = SPcovr[isp];
     double sp_covz = SPcovz[isp];
@@ -431,6 +446,10 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
+  if (m_cfg.skipOverlapSPsEta || m_cfg.skipOverlapSPsPhi) {
+    ACTS_DEBUG("Skipped " << skippedSpacePoints
+                          << " because of eta/phi overlaps");
+  }
   ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
