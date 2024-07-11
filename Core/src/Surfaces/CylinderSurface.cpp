@@ -448,19 +448,25 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
         "CylinderSurface::merge: surfaces have relative translation in x/y");
   }
 
+  ActsScalar hlZ = bounds().get(CylinderBounds::eHalfLengthZ);
+  ActsScalar minZ = -hlZ;
+  ActsScalar maxZ = hlZ;
+
+  ActsScalar zShift = translation[2];
+  ActsScalar otherHlZ = other.bounds().get(CylinderBounds::eHalfLengthZ);
+  ActsScalar otherMinZ = -otherHlZ + zShift;
+  ActsScalar otherMaxZ = otherHlZ + zShift;
+
+  ActsScalar hlPhi = bounds().get(CylinderBounds::eHalfPhiSector);
+  ActsScalar avgPhi = bounds().get(CylinderBounds::eAveragePhi);
+
+  ActsScalar otherHlPhi = other.bounds().get(CylinderBounds::eHalfPhiSector);
+  ActsScalar otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
+
   if (direction == Acts::BinningValue::binZ) {
     // z shift must match the bounds
 
-    ActsScalar hlZ = bounds().get(CylinderBounds::eHalfLengthZ);
-    ActsScalar minZ = -hlZ;
-    ActsScalar maxZ = hlZ;
-
-    ActsScalar zShift = translation[2];
-    ActsScalar otherHlZ = other.bounds().get(CylinderBounds::eHalfLengthZ);
-    ActsScalar otherMinZ = -otherHlZ + zShift;
-    ActsScalar otherMaxZ = otherHlZ + zShift;
-
-    if (std::abs(otherLocal.linear().col(eZ)[eZ]) >= tolerance &&
+    if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
         (!bounds().coversFullAzimuth() ||
          !other.bounds().coversFullAzimuth())) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
@@ -475,13 +481,18 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
     ACTS_VERBOSE("other: [" << otherMinZ << ", " << otherMaxZ << "] ~> "
                             << (otherMinZ + otherMaxZ) / 2.0 << " +- "
                             << otherHlZ);
-
     if (std::abs(maxZ - otherMinZ) > tolerance &&
         std::abs(minZ - otherMaxZ) > tolerance) {
       ACTS_ERROR("CylinderSurface::merge: surfaces have incompatible z bounds");
       throw SurfaceMergingException(
           getSharedPtr(), other.getSharedPtr(),
           "CylinderSurface::merge: surfaces have incompatible z bounds");
+    }
+
+    if (hlPhi != otherHlPhi || avgPhi != otherAvgPhi) {
+      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                    "CylinderSurface::merge: surfaces have "
+                                    "different phi sectors");
     }
 
     ActsScalar newMaxZ = std::max(maxZ, otherMaxZ);
@@ -491,7 +502,7 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
     ACTS_VERBOSE("merged: [" << newMinZ << ", " << newMaxZ << "] ~> " << newMidZ
                              << " +- " << newHlZ);
 
-    auto newBounds = std::make_shared<CylinderBounds>(r, newHlZ);
+    auto newBounds = std::make_shared<CylinderBounds>(r, newHlZ, hlPhi, avgPhi);
 
     Transform3 newTransform =
         *m_transform * Translation3{Vector3::UnitZ() * newMidZ};
@@ -511,11 +522,11 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
           "rPhi merging");
     }
 
-    ActsScalar hlPhi = bounds().get(CylinderBounds::eHalfPhiSector);
-    ActsScalar avgPhi = bounds().get(CylinderBounds::eAveragePhi);
-
-    ActsScalar otherHlPhi = other.bounds().get(CylinderBounds::eHalfPhiSector);
-    ActsScalar otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
+    if (hlZ != otherHlZ) {
+      throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
+                                    "CylinderSurface::merge: surfaces have "
+                                    "different z bounds");
+    }
 
     // Figure out signed relative rotation
     Vector2 rotatedX = otherLocal.linear().col(eX).head<2>();

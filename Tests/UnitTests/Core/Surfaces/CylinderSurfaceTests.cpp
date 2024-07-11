@@ -462,6 +462,8 @@ BOOST_DATA_TEST_CASE(ZDirection,
 
   BOOST_CHECK_EQUAL(bounds.get(CylinderBounds::eR), 30_mm);
   BOOST_CHECK_EQUAL(bounds.get(CylinderBounds::eHalfLengthZ), 200_mm);
+  BOOST_CHECK_EQUAL(bounds.get(CylinderBounds::eAveragePhi), 0_degree);
+  BOOST_CHECK_EQUAL(bounds.get(CylinderBounds::eHalfPhiSector), 180_degree);
 
   // Rotation in z depends on the ordering, the left side "wins"
   Transform3 expected12 = base * Translation3{Vector3::UnitZ() * 100_mm};
@@ -471,6 +473,22 @@ BOOST_DATA_TEST_CASE(ZDirection,
                           Translation3{Vector3::UnitZ() * 100_mm};
   CHECK_CLOSE_OR_SMALL(cyl3Reversed->transform(testContext).matrix(),
                        expected21.matrix(), 1e-6, 1e-10);
+
+  auto cylPhi1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                      30_mm, 100_mm, 45_degree);
+  auto cylPhi2 = Surface::makeShared<CylinderSurface>(
+      Transform3{Translation3{Vector3::UnitZ() * 150_mm}}, 30_mm, 50_mm,
+      45_degree);
+
+  auto [cylPhi12, reversedPhy12] =
+      cylPhi1->mergedWith(*cylPhi2, Acts::BinningValue::binZ, false, *logger);
+
+  BOOST_REQUIRE_NE(cylPhi12, nullptr);
+  auto boundsPhi12 = cylPhi12->bounds();
+  BOOST_CHECK_EQUAL(boundsPhi12.get(CylinderBounds::eR), 30_mm);
+  BOOST_CHECK_EQUAL(boundsPhi12.get(CylinderBounds::eHalfLengthZ), 150_mm);
+  BOOST_CHECK_EQUAL(boundsPhi12.get(CylinderBounds::eAveragePhi), 0_degree);
+  BOOST_CHECK_EQUAL(boundsPhi12.get(CylinderBounds::eHalfPhiSector), 45_degree);
 }
 
 BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
