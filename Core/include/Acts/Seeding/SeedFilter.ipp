@@ -308,15 +308,15 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     spacePointData.setQuality(top->index(), bestSeedQuality);
 
 #if defined(__cpp_concepts)
-    Acts::Utils::insert(std::forward<collection_t>(outIt), Seed<external_spacepoint_t>{
-                                   bottom->sp(), medium->sp(), top->sp(),
-                                   zOrigin, bestSeedQuality});
+    Acts::Utils::insert(
+        std::forward<collection_t>(outIt),
+        Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
+                                    zOrigin, bestSeedQuality});
 #else
-    outIt = Seed<external_spacepoint_t>{
-      bottom->sp(), medium->sp(), top->sp(),
-      zOrigin, bestSeedQuality};
+    outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
+                                        zOrigin, bestSeedQuality};
 #endif
-    
+
     ++numTotalSeeds;
   }
 }
