@@ -39,7 +39,7 @@ set( DETRAY_SETUP_GOOGLETEST OFF CACHE BOOL
    "Do not set up GoogleTest as part of Detray" )
 set( DETRAY_SETUP_BENCHMARK OFF CACHE BOOL
    "Do not set up Google Benchmark as part of Detray" )
-set( DETRAY_SETUP_THRUST ON CACHE BOOL
+set( DETRAY_SETUP_THRUST OFF CACHE BOOL
    "Set up Thrust as part of Detray" )
 set( DETRAY_SETUP_COVFIE OFF CACHE BOOL
    "Do not set up covfie as part of Detray" )
