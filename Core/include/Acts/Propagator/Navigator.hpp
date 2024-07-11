@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -410,7 +411,8 @@ class Navigator {
     // (b) Status call within propagation loop
     // Try finding status of surfaces
     if (surfaceStatus(state, stepper, state.navigation.navSurfaces,
-                      state.navigation.navSurfaceIndex)) {
+                      state.navigation.navSurfaceIndex,
+                      state.options.boundaryTolerance)) {
       ACTS_VERBOSE(volInfo(state) << "Post step: in surface handling.");
       if (state.navigation.currentSurface != nullptr) {
         ACTS_VERBOSE(volInfo(state)
@@ -432,7 +434,8 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       // Try finding status of layer
     } else if (surfaceStatus(state, stepper, state.navigation.navLayers,
-                             state.navigation.navLayerIndex)) {
+                             state.navigation.navLayerIndex,
+                             BoundaryTolerance::None())) {
       ACTS_VERBOSE(volInfo(state) << "Post step: in layer handling.");
       if (state.navigation.currentSurface != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "On layer: update layer information.");
@@ -449,7 +452,8 @@ class Navigator {
       }
       // Try finding status of boundaries
     } else if (surfaceStatus(state, stepper, state.navigation.navBoundaries,
-                             state.navigation.navBoundaryIndex)) {
+                             state.navigation.navBoundaryIndex,
+                             BoundaryTolerance::None())) {
       ACTS_VERBOSE(volInfo(state) << "Post step: in boundary handling.");
 
       // Are we on the boundary - then overwrite the stage
@@ -541,7 +545,8 @@ class Navigator {
             typename navigation_surfaces_t>
   bool surfaceStatus(propagator_state_t& state, const stepper_t& stepper,
                      const navigation_surfaces_t& navSurfaces,
-                     std::size_t navIndex) const {
+                     std::size_t navIndex,
+                     BoundaryTolerance boundaryTolerance) const {
     // No surfaces, status check will be done on layer
     if (navSurfaces.empty() || navIndex == navSurfaces.size()) {
       return false;
@@ -554,7 +559,7 @@ class Navigator {
     // it the current one to pass it to the other actors
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
-        BoundaryTolerance::None(), state.options.surfaceTolerance, logger());
+        boundaryTolerance, state.options.surfaceTolerance, logger());
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -635,7 +640,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
       // Estimate the surface status
-      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+      BoundaryTolerance boundaryTolerance = state.options.boundaryTolerance;
       for (auto it = externalSurfaceRange.first;
            it != externalSurfaceRange.second; it++) {
         if (surface->geometryId() == it->second) {
@@ -1023,6 +1028,7 @@ class Navigator {
     const Surface* layerSurface = &currentLayer->surfaceRepresentation();
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts;
+    navOpts.boundaryTolerance = state.options.boundaryTolerance;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
     navOpts.resolveMaterial = m_cfg.resolveMaterial;
     navOpts.resolvePassive = m_cfg.resolvePassive;

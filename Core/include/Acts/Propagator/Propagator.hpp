@@ -27,6 +27,7 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Propagator/detail/ParameterTraits.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -98,6 +99,11 @@ struct PropagatorPlainOptions {
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
+
+  // Configuration for Navigator
+
+  /// Boundary tolerance for sensitive surfaces
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 };
 
 /// @brief Options for propagate() call
