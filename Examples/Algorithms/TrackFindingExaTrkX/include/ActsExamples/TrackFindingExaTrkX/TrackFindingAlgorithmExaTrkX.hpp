@@ -13,12 +13,14 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TruthGraphBuilder.hpp"
 
 #include <mutex>
 #include <string>
@@ -57,15 +59,9 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     std::string inputSpacePoints;
     /// Input cluster information (Optional).
     std::string inputClusters;
-
-    /// Input simhits (Optional).
-    std::string inputSimHits;
-    /// Input measurement simhit map (Optional).
-    std::string inputParticles;
-    /// Input measurement simhit map (Optional).
-    std::string inputMeasurementSimhitsMap;
-
-    /// Output protoTracks collection.
+    /// Input truth graph (Optional).
+    std::string inputTruthGraph;
+    /// Output prototracks
     std::string outputProtoTracks;
 
     /// Output graph (optional)
@@ -86,10 +82,6 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
     /// Remove track candidates with 2 or less hits
     bool filterShortTracks = false;
-
-    /// Target graph properties
-    std::size_t targetMinHits = 3;
-    double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 
   /// Constructor of the track finding algorithm
@@ -132,16 +124,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
                                                             "InputSpacePoints"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
+  ReadDataHandle<Graph> m_inputTruthGraph{this, "InputTruthGraph"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
-  WriteDataHandle<Acts::TorchGraphStoreHook::Graph> m_outputGraph{
-      this, "OutputGraph"};
-
-  // for truth graph
-  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementMap{
-      this, "InputMeasurementMap"};
+  WriteDataHandle<Graph> m_outputGraph{this, "OutputGraph"};
 };
 
 }  // namespace ActsExamples
