@@ -142,8 +142,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
-                maxHoles=2,
-                maxOutliers=2,
+                maxHoles=100,
+                maxOutliers=100,
             ),
             CkfConfig(
                 seedDeduplication=False if truthSmearedSeeded else True,
