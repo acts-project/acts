@@ -58,6 +58,39 @@ class IAxis {
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
+  /// Helper function that dispatches from the @c IAxis base class
+  /// to a concrete axis type. It will call the provided @p callable
+  /// with a const reference to the concrete axis type.
+  /// @tparam callable_t the callable type
+  /// @param callable the callable object
+  template <typename callable_t>
+  decltype(auto) visit(const callable_t& callable) const {
+    auto switchOnType = [this, &callable](auto bdtTag) {
+      constexpr auto bdt = decltype(bdtTag)::value;
+      switch (getType()) {
+        case AxisType::Equidistant:
+          return callable(
+              dynamic_cast<const Axis<AxisType::Equidistant, bdt>&>(*this));
+        case AxisType::Variable:
+          return callable(
+              dynamic_cast<const Axis<AxisType::Variable, bdt>&>(*this));
+        default:
+          throw std::logic_error{"Unknown type case"};
+      }
+    };
+
+    switch (getBoundaryType()) {
+      case AxisBoundaryType::Open:
+        return switchOnType(AxisOpen);
+      case AxisBoundaryType::Bound:
+        return switchOnType(AxisBound);
+      case AxisBoundaryType::Closed:
+        return switchOnType(AxisClosed);
+      default:
+        throw std::logic_error{"Unknown boundary type case"};
+    }
+  }
+
   /// Check if two axes are equal
   /// @param lhs first axis
   /// @param rhs second axis
