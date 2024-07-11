@@ -200,7 +200,7 @@ def addParticleReader(
     s: Sequencer
         the sequencer module to which we add the particle gun steps (returned from addParticleGun)
     inputDirCsv : Path|str, path, None
-        the intput folder for the Csv input, None triggers no output
+        the input folder for the Csv input, None triggers no output
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
@@ -215,7 +215,8 @@ def addParticleReader(
             acts.logging.WARNING,
             inputDir=str(inputDir),
             inputStem="particles",
-            outputParticles="particles_input"
+            outputParticles="particles_input",
+            outputVertices="vertices_input",
         )
     
     s.addReader(evReader)

@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
 
-  finderCfg.maxVertices = 200;
+  finderCfg.maxVertices = 1;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
   finderCfg.field = m_cfg.bField;

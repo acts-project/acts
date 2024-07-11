@@ -4819,7 +4819,8 @@ std::vector<std::vector<std::vector<float>>>  deltahits4 = {
   }
   
   m_outputFitPrimaryVertex(ctx, std::move(zPV));
-  auto zPVId = zPV -0.83; //shift in the distribution
+  
+  auto zPVId = zPV; //shift in the distribution
   if(zPVId >-7.5)
     zPVId = -0.75;
   else if(zPVId > -21)
@@ -4830,6 +4831,7 @@ std::vector<std::vector<std::vector<float>>>  deltahits4 = {
     zPVId = -41.25;
   else
     zPVId = -54.75;
+  
   m_outputRecPrimaryVertex(ctx, std::move(zPVId));
 
   return ActsExamples::ProcessCode::SUCCESS;

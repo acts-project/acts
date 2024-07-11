@@ -2431,7 +2431,7 @@ def addVertexFitting(
                 inputTruthVertices=inputVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
-                inputTrackParticleMatching="track_particle_matching",
+                inputTrackParticleMatching=suffixIn+"track_particle_matching",
                 bField=field,
                 vertexMatchThreshold=0.0,
                 treeName="vertexing",
