@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/Io/Csv/CsvDriftCircleReader.hpp"
+#include "ActsExamples/Io/Csv/CsvExaTrkXGraphReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMuonSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
@@ -97,6 +98,10 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
                              outputSimHits);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvExaTrkXGraphReader, mex,
+                             "CsvExaTrkXGraphReader", inputDir, inputStem,
+                             outputGraph);
 }
 
 }  // namespace Acts::Python
