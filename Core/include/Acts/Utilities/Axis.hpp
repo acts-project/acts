@@ -400,6 +400,9 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     return os;
   }
 
+ protected:
+  void toStream(std::ostream& os) const override { os << *this; }
+
  private:
   /// minimum of binning range
   ActsScalar m_min{};
@@ -712,6 +715,9 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
     os << ")";
     return os;
   }
+
+ protected:
+  void toStream(std::ostream& os) const override { os << *this; }
 
  private:
   /// vector of bin edges (sorted in ascending order)

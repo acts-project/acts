@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 
+#include <iosfwd>
 #include <vector>
 
 namespace Acts {
@@ -56,6 +57,17 @@ class IAxis {
   ///
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
+
+  /// Output stream operator
+  /// @param os output stream
+  /// @param axis the axis to be printed
+  /// @return the output stream
+  friend std::ostream& operator<<(std::ostream& os, const IAxis& axis);
+
+ protected:
+  /// Dispatch to the correct stream operator
+  /// @param os output stream
+  virtual void toStream(std::ostream& os) const = 0;
 };
 
 }  // namespace Acts
