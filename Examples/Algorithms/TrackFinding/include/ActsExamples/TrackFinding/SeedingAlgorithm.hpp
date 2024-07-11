@@ -64,6 +64,10 @@ class SeedingAlgorithm final : public IAlgorithm {
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
     int numPhiNeighbors = 1;
+
+    // Connect custom selections on the space points or to the doublet
+    // compatibility
+    bool useExtraCuts = false;
   };
 
   /// Construct the seeding algorithm.
@@ -94,6 +98,34 @@ class SeedingAlgorithm final : public IAlgorithm {
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
+  static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
+    float RMin = 50.;
+    float CotThetaMax = 1.5;
+
+    if (bottomRadius < RMin &&
+        (cotTheta > CotThetaMax || cotTheta < -CotThetaMax)) {
+      return false;
+    }
+    return true;
+  }
+
+  static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
+    // At small r we remove points beyond |z| > 200.
+    float r = sp.r();
+    float zabs = std::abs(sp.z());
+    if (zabs > 200. && r < 50.) {
+      return false;
+    }
+
+    /// Remove space points beyond eta=4 if their z is
+    /// larger than the max seed z0 (150.)
+    float cotTheta = 27.2899;  // corresponds to eta=4
+    if ((zabs - 150.) > cotTheta * r) {
+      return false;
+    }
+    return true;
+  }
 };
 
 }  // namespace ActsExamples

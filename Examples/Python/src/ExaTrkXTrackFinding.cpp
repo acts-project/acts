@@ -70,6 +70,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
+    ACTS_PYTHON_MEMBER(deviceID);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -93,6 +94,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
+    ACTS_PYTHON_MEMBER(deviceID);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -165,14 +167,36 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 #endif
 
+  py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
+      .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
+      .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
+      .value("Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eZ)
+      .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
+      .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
+      .value("Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eEta)
+      .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterX)
+      .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterY)
+      .value("CellCount", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
+      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellSum)
+      .value("Cluster1R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1R)
+      .value("Cluster2R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2R)
+      .value("Cluster1Phi",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Phi)
+      .value("Cluster2Phi",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Phi)
+      .value("Cluster1Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Z)
+      .value("Cluster2Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Z)
+      .value("Cluster1Eta",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Eta)
+      .value("Cluster2Eta",
+             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
       inputParticles, inputClusters, inputMeasurementSimhitsMap,
       outputProtoTracks, outputGraph, graphConstructor, edgeClassifiers,
-      trackBuilder, rScale, phiScale, zScale, cellCountScale, cellSumScale,
-      clusterXScale, clusterYScale, filterShortTracks, targetMinHits,
-      targetMinPT);
+      trackBuilder, nodeFeatures, featureScales, filterShortTracks);
 
   {
     auto cls =
@@ -185,11 +209,11 @@ void addExaTrkXTrackFinding(Context &ctx) {
 
     auto cls = py::class_<Class, Acts::ExaTrkXHook, std::shared_ptr<Class>>(
                    mex, "TorchTruthGraphMetricsHook")
-                   .def(py::init(
-                       [](const std::vector<int64_t> &g, Logging::Level lvl) {
-                         return std::make_shared<Class>(
-                             g, getDefaultLogger("PipelineHook", lvl));
-                       }));
+                   .def(py::init([](const std::vector<std::int64_t> &g,
+                                    Logging::Level lvl) {
+                     return std::make_shared<Class>(
+                         g, getDefaultLogger("PipelineHook", lvl));
+                   }));
   }
 
   {
@@ -208,8 +232,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
-                 py::arg("spacepoints"), py::arg("deviceHint") = -1,
-                 py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("spacepoints"), py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }
 

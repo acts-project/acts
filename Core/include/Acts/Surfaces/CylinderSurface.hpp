@@ -14,7 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -187,7 +187,7 @@ class CylinderSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param bcheck the Boundary Check
+  /// @param boundaryTolerance the Boundary Check Tolerance
   /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
@@ -196,7 +196,8 @@ class CylinderSurface : public RegularSurface {
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track

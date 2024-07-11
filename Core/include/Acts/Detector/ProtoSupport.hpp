@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -47,7 +47,7 @@ struct ProtoSupport {
 
   /// The volume envelope/clearance parameters: these are chosen such that the
   /// support surface does not touch the volume extent
-  ExtentEnvelope volumeClearance = zeroEnvelopes;
+  ExtentEnvelope volumeClearance = ExtentEnvelope::Zero();
 
   /// The constrain(s) from the internal surfaces, done by parsing
   /// the polyhedron vertices of the internal objects before support building
@@ -69,7 +69,7 @@ struct ProtoSupport {
   unsigned int splits = 1u;
 
   /// Planar placement (only valid for planar support surfaces)
-  BinningValue pPlacement = binZ;
+  BinningValue pPlacement = BinningValue::binZ;
 
   /// Indicate if the support surface(s) should always be addressed in
   /// navigation

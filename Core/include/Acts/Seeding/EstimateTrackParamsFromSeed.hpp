@@ -55,7 +55,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
-    ACTS_ERROR("At least three space points are required.")
+    ACTS_ERROR("At least three space points are required.");
     return std::nullopt;
   }
 
@@ -67,7 +67,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.")
+      ACTS_ERROR("Empty space point found. This should not happen.");
       return std::nullopt;
     }
     const auto& sp = *it;
@@ -158,7 +158,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Check the number of provided space points
   std::size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {
-    ACTS_ERROR("There should be exactly three space points provided.")
+    ACTS_ERROR("There should be exactly three space points provided.");
     return std::nullopt;
   }
 
@@ -171,7 +171,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
     // case?
     ACTS_WARNING("The magnetic field at the bottom space point: B = "
                  << bFieldInTesla << " T is smaller than |B|_min = "
-                 << bFieldMinInTesla << " T. Estimation is not performed.")
+                 << bFieldMinInTesla << " T. Estimation is not performed.");
     return std::nullopt;
   }
 
@@ -185,7 +185,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   for (std::size_t isp = 0; isp < 3; ++isp) {
     spacepoint_iterator_t it = std::next(spBegin, isp);
     if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.")
+      ACTS_ERROR("Empty space point found. This should not happen.");
       return std::nullopt;
     }
     const auto& sp = *it;

@@ -353,8 +353,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           // Filling loop
           for (const auto& elay : endcapConfig.layers) {
             // Getting the reference radius
-            double test =
-                elay->surfaceRepresentation().binningPositionValue(gctx, binR);
+            double test = elay->surfaceRepresentation().binningPositionValue(
+                gctx, BinningValue::binR);
             // Find the right bin
             auto ringVolume = std::find_if(
                 volumeRminRmax.begin(), volumeRminRmax.end(),

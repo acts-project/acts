@@ -120,7 +120,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
         "newVertex does not have any associated tracks (i.e., its trackLinks "
-        "are empty).")
+        "are empty).");
     return VertexingError::EmptyInput;
   }
 

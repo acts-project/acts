@@ -28,10 +28,11 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface
-                          .intersect(gctx, params.position(gctx),
-                                     params.direction(), BoundaryCheck(false))
-                          .closest();
+  auto intersection =
+      perigeeSurface
+          .intersect(gctx, params.position(gctx), params.direction(),
+                     BoundaryTolerance::Infinite())
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above

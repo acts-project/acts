@@ -158,6 +158,19 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
+  if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
+    // check that the bins required in the custom bin looping
+    // are contained in the bins defined by the total number of edges
+
+    for (std::size_t i : m_cfg.seedFinderConfig.zBinsCustomLooping) {
+      if (i >= m_cfg.gridConfig.zBinEdges.size()) {
+        throw std::invalid_argument(
+            "Inconsistent config zBinsCustomLooping does not contain a subset "
+            "of bins defined by zBinEdges");
+      }
+    }
+  }
+
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
     m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
         [](const void*, const SimSpacePoint& sp) -> float {
@@ -188,6 +201,15 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
           return sp.topStripCenterPosition();
         });
+  }
+
+  if (m_cfg.useExtraCuts) {
+    // This function will be applied to select space points during grid filling
+    m_cfg.seedFinderConfig.spacePointSelector
+        .connect<itkFastTrackingSPselect>();
+
+    // This function will be applied to the doublet compatibility selection
+    m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
 
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
@@ -253,11 +275,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+      std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2);
 
   /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+      std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
       up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 

@@ -152,7 +152,7 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     // The volume collection results
     auto vcResult =
         result.template get<InteractionVolumeCollector::result_type>();
-    for (auto [geoId, vIntersection] : vcResult.collected) {
+    for (const auto& [geoId, vIntersection] : vcResult.collected) {
       candidates.second.push_back(vIntersection);
     }
 

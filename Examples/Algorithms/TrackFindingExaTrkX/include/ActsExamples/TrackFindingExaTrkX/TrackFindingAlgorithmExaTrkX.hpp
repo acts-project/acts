@@ -31,16 +31,31 @@ namespace ActsExamples {
 
 class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
  public:
+  enum class NodeFeature {
+    eR,
+    ePhi,
+    eX,
+    eY,
+    eZ,
+    eEta,
+    eCellCount,
+    eCellSum,
+    eClusterX,
+    eClusterY,
+    eCluster1R,
+    eCluster2R,
+    eCluster1Phi,
+    eCluster2Phi,
+    eCluster1Z,
+    eCluster2Z,
+    eCluster1Eta,
+    eCluster2Eta,
+  };
+
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
-
-    /// Input cluster information (Optional). If given, the following features
-    /// are added:
-    /// * cell count
-    /// * sum cell activations
-    /// * cluster size in local x
-    /// * cluster size in local y
+    /// Input cluster information (Optional).
     std::string inputClusters;
 
     /// Input simhits (Optional).
@@ -62,14 +77,12 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
     std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
 
-    /// Scaling of the input features
-    float rScale = 1.f;
-    float phiScale = 1.f;
-    float zScale = 1.f;
-    float cellCountScale = 1.f;
-    float cellSumScale = 1.f;
-    float clusterXScale = 1.f;
-    float clusterYScale = 1.f;
+    /// Node features
+    std::vector<NodeFeature> nodeFeatures = {NodeFeature::eR, NodeFeature::ePhi,
+                                             NodeFeature::eZ};
+
+    /// Feature scales
+    std::vector<float> featureScales = {1.f, 1.f, 1.f};
 
     /// Remove track candidates with 2 or less hits
     bool filterShortTracks = false;

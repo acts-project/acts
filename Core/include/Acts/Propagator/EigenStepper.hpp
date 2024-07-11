@@ -163,10 +163,7 @@ class EigenStepper {
 
   /// Constructor requires knowledge of the detector's magnetic field
   /// @param bField The magnetic field provider
-  /// @param overstepLimit The limit for the overstep check
-  /// @note `overstepLimit` will be removed in a future release
-  explicit EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-                        double overstepLimit = 100 * UnitConstants::um);
+  explicit EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -257,16 +254,17 @@ class EigenStepper {
   /// @param [in] surface The surface provided
   /// @param [in] index The surface intersection index
   /// @param [in] navDir The navigation direction
-  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryCheck& bcheck,
+      Direction navDir, const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
-        *this, state, surface, index, navDir, bcheck, surfaceTolerance, logger);
+        *this, state, surface, index, navDir, boundaryTolerance,
+        surfaceTolerance, logger);
   }
 
   /// Update step size
