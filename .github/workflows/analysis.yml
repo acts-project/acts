@@ -29,7 +29,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2404:51
     steps:
 
       - uses: actions/checkout@v4
@@ -53,6 +53,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=on
           -DACTS_BUILD_EXAMPLES_UNITTESTS=off
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_EXAMPLES_UNIT_TESTS=ON
           -DACTS_BUILD_ODD=OFF
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
@@ -97,7 +98,7 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
+    container: ghcr.io/acts-project/ubuntu2404:51
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4

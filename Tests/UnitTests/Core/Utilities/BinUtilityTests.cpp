@@ -26,12 +26,12 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   Vector3 edgePosition(0.5, 0.5, 0.5);
 
   // | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-  BinUtility xUtil_eq(10, 0., 10., open, binX);
-  BinUtility yUtil_eq(10, 0., 10., open, binY);
-  BinUtility zUtil_eq(10, 0., 10., open, binZ);
+  BinUtility xUtil_eq(10, 0., 10., open, BinningValue::binX);
+  BinUtility yUtil_eq(10, 0., 10., open, BinningValue::binY);
+  BinUtility zUtil_eq(10, 0., 10., open, BinningValue::binZ);
   BOOST_CHECK_EQUAL(xUtil_eq.bins(), std::size_t{10});
   // make it 2-dim
-  BinUtility xyUtil_eq(10, 0., 10., open, binX);
+  BinUtility xyUtil_eq(10, 0., 10., open, BinningValue::binX);
   xyUtil_eq += yUtil_eq;
   BOOST_CHECK_EQUAL(xyUtil_eq.bins(), 100u);
   // make it 3-dim
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
   BOOST_CHECK_EQUAL(xyzUtil_eq.dimensions(), 3u);
 
   // check equality operator
-  BinUtility xUtil_eq_copy(10, 0., 10., open, binX);
+  BinUtility xUtil_eq_copy(10, 0., 10., open, BinningValue::binX);
   BOOST_CHECK_EQUAL(xUtil_eq_copy, xUtil_eq);
   BOOST_CHECK_NE(yUtil_eq, xUtil_eq);
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 // OPEN - equidistant binning tests
 BOOST_AUTO_TEST_CASE(BinUtility_arbitrary_binning) {
   std::vector<float> bvalues = {-5., 0., 1., 1.1, 8.};
-  BinUtility xUtil(bvalues, Acts::open, Acts::binX);
+  BinUtility xUtil(bvalues, Acts::open, Acts::BinningValue::binX);
 
   // Underflow
   BOOST_CHECK_EQUAL(xUtil.bin(Vector3(-6., 0., 0.)), 0u);
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(BinUtility_transform) {
 
   Transform3 transform_GtoL = transform_LtoG.inverse();
 
-  BinUtility rUtil(10, 0., 100., open, binR);
-  BinUtility phiUtil(10, -M_PI, M_PI, closed, binPhi);
-  BinUtility zUtil(10, -100., 100., open, binZ);
+  BinUtility rUtil(10, 0., 100., open, BinningValue::binR);
+  BinUtility phiUtil(10, -M_PI, M_PI, closed, BinningValue::binPhi);
+  BinUtility zUtil(10, -100., 100., open, BinningValue::binZ);
 
   BinUtility noTranform;
   noTranform += rUtil;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
@@ -251,21 +251,22 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global position to be evaludated
   /// @param direction global momentum direction (required for line-type surfaces)
-  /// @param bcheck BoundaryCheck directive for this onSurface check
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
                    const Vector3& direction,
-                   const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+                   const BoundaryTolerance& boundaryTolerance =
+                       BoundaryTolerance::None()) const;
 
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check
-  /// @param bcheck BoundaryCheck directive for this onSurface check
+  /// @param boundaryTolerance BoundaryTolerance directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(
-      const Vector2& lposition,
-      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  virtual bool insideBounds(const Vector2& lposition,
+                            const BoundaryTolerance& boundaryTolerance =
+                                BoundaryTolerance::None()) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -391,14 +392,15 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to start from
   /// @param direction The direction at start
-  /// @param bcheck the Boundary Check
+  /// @param boundaryTolerance the BoundaryTolerance
   /// @param tolerance the tolerance used for the intersection
   ///
   /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
   virtual SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryCheck& bcheck = BoundaryCheck(false),
+      const BoundaryTolerance& boundaryTolerance =
+          BoundaryTolerance::Infinite(),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Helper method for printing: the returned object captures the
@@ -490,7 +492,7 @@ class Surface : public virtual GeometryObject,
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  Transform3 m_transform = Transform3::Identity();
+  std::unique_ptr<const Transform3> m_transform{};
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement{nullptr};

@@ -203,6 +203,15 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
+  if (m_cfg.useExtraCuts) {
+    // This function will be applied to select space points during grid filling
+    m_cfg.seedFinderConfig.spacePointSelector
+        .connect<itkFastTrackingSPselect>();
+
+    // This function will be applied to the doublet compatibility selection
+    m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
+  }
+
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
@@ -266,11 +275,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+      std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2);
 
   /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+      std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
       up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 

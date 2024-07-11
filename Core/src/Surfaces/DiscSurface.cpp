@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
@@ -215,7 +215,7 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -251,7 +251,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
-  assert(isOnSurface(gctx, position, direction, BoundaryCheck(false)));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -283,7 +283,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
 
 Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck,
+    const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     ActsScalar tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
@@ -293,19 +293,20 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status() != Intersection3D::Status::unreachable &&
-      bcheck.isEnabled() && m_bounds != nullptr) {
+      m_bounds != nullptr && !boundaryTolerance.isInfinite()) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
-    if (bcheck.type() == BoundaryCheck::Type::eAbsolute &&
-        m_bounds->coversFullAzimuth()) {
-      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
+    if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
+        absoluteBound.has_value() && m_bounds->coversFullAzimuth()) {
+      double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
         status = Intersection3D::Status::missed;
       }
-    } else if (!insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
+    } else if (!insideBounds(localCartesianToPolar(lcartesian),
+                             boundaryTolerance)) {
       status = Intersection3D::Status::missed;
     }
   }
@@ -351,7 +352,7 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
 
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
-  if (bValue == binR || bValue == binPhi) {
+  if (bValue == BinningValue::binR || bValue == BinningValue::binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
@@ -361,10 +362,10 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
 
 double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
                                                BinningValue bValue) const {
-  if (bValue == binR) {
+  if (bValue == BinningValue::binR) {
     return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
-  if (bValue == binPhi) {
+  if (bValue == BinningValue::binPhi) {
     return VectorHelpers::phi(binningPosition(gctx, bValue));
   }
 
@@ -383,7 +384,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
     BinningValue direction, const Logger& logger) const {
   using namespace Acts::UnitLiterals;
 
-  ACTS_DEBUG("Merging disc surfaces in " << binningValueNames()[direction]
+  ACTS_DEBUG("Merging disc surfaces in " << binningValueName(direction)
                                          << " direction");
 
   Transform3 otherLocal = transform(gctx).inverse() * other.transform(gctx);
@@ -447,7 +448,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
                                 << otherAvgPhi / 1_degree << " +- "
                                 << otherHlPhi / 1_degree);
 
-  if (direction == Acts::binR) {
+  if (direction == Acts::BinningValue::binR) {
     if (std::abs(minR - otherMaxR) > tolerance &&
         std::abs(maxR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces are not touching r");
@@ -479,7 +480,7 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
 
     return Surface::makeShared<DiscSurface>(transform(gctx), newBounds);
 
-  } else if (direction == Acts::binPhi) {
+  } else if (direction == Acts::BinningValue::binPhi) {
     if (std::abs(maxR - otherMaxR) > tolerance ||
         std::abs(minR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
@@ -503,10 +504,9 @@ std::shared_ptr<Acts::DiscSurface> Acts::DiscSurface::mergedWith(
 
   } else {
     ACTS_ERROR("DiscSurface::merge: invalid direction "
-               << binningValueNames()[direction]);
-
-    throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
-                                  "DiscSurface::merge: invalid direction " +
-                                      binningValueNames()[direction]);
+               << binningValueName(direction));
+    throw SurfaceMergingException(
+        getSharedPtr(), other.getSharedPtr(),
+        "DiscSurface::merge: invalid direction " + binningValueName(direction));
   }
 }

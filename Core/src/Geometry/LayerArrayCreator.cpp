@@ -179,19 +179,19 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
   // switching he binnig values
   switch (bValue) {
     // case x
-    case binX: {
+    case BinningValue::binX: {
       translation = Vector3(offset, 0., 0.);
     } break;
     // case y
-    case binY: {
+    case BinningValue::binY: {
       translation = Vector3(0., offset, 0.);
     } break;
     // case z
-    case binZ: {
+    case BinningValue::binZ: {
       translation = Vector3(0., 0., offset);
     } break;
     // case R
-    case binR: {
+    case BinningValue::binR: {
       // binning in R and cylinder surface means something different
       if (layerSurface.type() == Surface::Cylinder) {
         break;

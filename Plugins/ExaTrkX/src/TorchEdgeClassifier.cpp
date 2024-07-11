@@ -8,7 +8,10 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
+#ifndef ACTS_EXATRKX_CPUONLY
 #include <c10/cuda/CUDAGuard.h>
+#endif
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -64,9 +67,12 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
+#ifndef ACTS_EXATRKX_CPUONLY
+  std::optional<c10::cuda::CUDAGuard> device_guard;
   if (device.is_cuda()) {
-    c10::cuda::CUDAGuard device_guard(device.index());
+    device_guard.emplace(device.index());
   }
+#endif
 
   auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);

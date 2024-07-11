@@ -32,14 +32,15 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in "
-                        << binningValueNames()[bValue] << ".");
+                        << binningValueName(bValue) << ".");
 
   // Check transform for consistency
   auto centerDistances =
       DetectorVolumeConsistency::checkCenterAlignment(gctx, volumes, bValue);
 
   // Assign the portal indices according to the volume bounds definition
-  std::array<BinningValue, 3u> possibleValues = {binX, binY, binZ};
+  std::array<BinningValue, 3u> possibleValues = {
+      BinningValue::binX, BinningValue::binY, BinningValue::binZ};
   // 1 -> [ 2,3 ] for binX connection (cylclic one step)
   // 2 -> [ 4,5 ] for binY connection (cylclic two steps)
   // 0 -> [ 0,1 ] for binZ connection (to be in line with cylinder covnention)
@@ -48,7 +49,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       {PortalSet{2, 3}, PortalSet{4, 5}, PortalSet{0, 1}}};
 
   // This is the picked set for fusing
-  auto [sIndex, fIndex] = portalSets[bValue];
+  auto [sIndex, fIndex] = portalSets[toUnderlying(bValue)];
 
   // Log the merge splits, i.e. the boundaries of the volumes
   std::array<std::vector<ActsScalar>, 3u> mergeSplits;
@@ -77,21 +78,22 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   // Values
   const auto firstBoundValues = firstVolume->volumeBounds().values();
   const auto lastBoundValues = lastVolume->volumeBounds().values();
-  Vector3 stepDirection = firstVolume->transform(gctx).rotation().col(bValue);
+  Vector3 stepDirection =
+      firstVolume->transform(gctx).rotation().col(toUnderlying(bValue));
 
   for (auto [im, mergeValue] : enumerate(possibleValues)) {
     // Skip the bin value itself, fusing will took care of that
     if (mergeValue == bValue) {
       continue;
     }
-    for (auto [is, index] : enumerate(portalSets[mergeValue])) {
+    for (auto [is, index] : enumerate(portalSets[toUnderlying(mergeValue)])) {
       // Take rotation from first volume
       auto rotation = firstVolume->portalPtrs()[index]
                           ->surface()
                           .transform(gctx)
                           .rotation();
-      ActsScalar stepDown = firstBoundValues[bValue];
-      ActsScalar stepUp = lastBoundValues[bValue];
+      ActsScalar stepDown = firstBoundValues[toUnderlying(bValue)];
+      ActsScalar stepUp = lastBoundValues[toUnderlying(bValue)];
       // Take translation from first and last volume
       auto translationF = firstVolume->portalPtrs()[index]
                               ->surface()
@@ -110,7 +112,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       portalTransform.prerotate(rotation);
       portalTransform.pretranslate(translation);
       // The half length to be kept
-      ActsScalar keepHalfLength = firstBoundValues[counterPart(mergeValue)];
+      ActsScalar keepHalfLength =
+          firstBoundValues[toUnderlying(counterPart(mergeValue))];
       mergeParameters[index] = MergeParameters(keepHalfLength, portalTransform);
     }
   }
@@ -147,8 +150,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
         continue;
       }
       // Record the merge splits
-      mergeSplits[im].push_back(2 * boundValues[bValue]);
-      mergeHalfLengths[im] += boundValues[bValue];
+      mergeSplits[im].push_back(2 * boundValues[toUnderlying(bValue)]);
+      mergeHalfLengths[im] += boundValues[toUnderlying(bValue)];
     }
   }
 
@@ -165,14 +168,14 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     // - this is an anticyclic swap
     bool mergedInX = true;
     switch (bValue) {
-      case binZ: {
-        mergedInX = (mergeValue == binY);
+      case BinningValue::binZ: {
+        mergedInX = (mergeValue == BinningValue::binY);
       } break;
-      case binY: {
-        mergedInX = (mergeValue == binX);
+      case BinningValue::binY: {
+        mergedInX = (mergeValue == BinningValue::binX);
       } break;
-      case binX: {
-        mergedInX = (mergeValue == binZ);
+      case BinningValue::binX: {
+        mergedInX = (mergeValue == BinningValue::binZ);
       } break;
       default:
         break;
@@ -185,7 +188,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       stitchBoundaries.push_back(stitchBoundaries.back() + step);
     }
 
-    for (auto [is, index] : enumerate(portalSets[mergeValue])) {
+    for (auto [is, index] : enumerate(portalSets[toUnderlying(mergeValue)])) {
       // Check if you need to skip due to selections
       if (!selectedOnly.empty() &&
           std::find(selectedOnly.begin(), selectedOnly.end(), index) ==
@@ -210,7 +213,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
       // Make the stitch boundaries
       pReplacements.push_back(PortalReplacement(
-          portal, index, dir, stitchBoundaries, (mergedInX ? binX : binY)));
+          portal, index, dir, stitchBoundaries,
+          (mergedInX ? BinningValue::binX : BinningValue::binY)));
     }
   }
 
@@ -246,20 +250,21 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   ACTS_DEBUG("Connect " << containers.size() << " containers in "
-                        << binningValueNames()[bValue] << ".");
+                        << binningValueName(bValue) << ".");
 
   // Return the new container
   DetectorComponent::PortalContainer dShell;
 
   // The possible bin values
-  std::array<BinningValue, 3u> possibleValues = {binX, binY, binZ};
+  std::array<BinningValue, 3u> possibleValues = {
+      BinningValue::binX, BinningValue::binY, BinningValue::binZ};
   // And their associated portal sets, see above
   using PortalSet = std::array<std::size_t, 2u>;
   std::vector<PortalSet> portalSets = {
       {PortalSet{2, 3}, PortalSet{4, 5}, PortalSet{0, 1}}};
 
   // This is the picked set for refubishing
-  auto [endIndex, startIndex] = portalSets[bValue];
+  auto [endIndex, startIndex] = portalSets[toUnderlying(bValue)];
 
   // Fusing along the connection direction (bValue)
   for (std::size_t ic = 1; ic < containers.size(); ++ic) {
@@ -307,8 +312,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   std::vector<unsigned int> sidePortals = {};
   for (auto sVals : possibleValues) {
     if (sVals != bValue) {
-      sidePortals.push_back(portalSets[sVals][0]);
-      sidePortals.push_back(portalSets[sVals][1]);
+      sidePortals.push_back(portalSets[toUnderlying(sVals)][0]);
+      sidePortals.push_back(portalSets[toUnderlying(sVals)][1]);
     }
   }
 

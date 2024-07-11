@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <cstddef>
@@ -45,7 +45,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
     return m_values;
   }
   bool inside(const Vector2& /*lpos*/,
-              const BoundaryCheck& /*bcheck*/) const final {
+              const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;
   }
 

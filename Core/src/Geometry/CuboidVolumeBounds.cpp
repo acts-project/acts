@@ -103,12 +103,14 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
 }
 
 ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue <= binZ) {
-    return m_values[bValue];
+  if (bValue <= BinningValue::binZ) {
+    return m_values[toUnderlying(bValue)];
   }
-  if (bValue == binR) {
-    return std::sqrt(m_values[binX] * m_values[binX] +
-                     m_values[binY] * m_values[binY]);
+  if (bValue == BinningValue::binR) {
+    return std::sqrt(m_values[toUnderlying(BinningValue::binX)] *
+                         m_values[toUnderlying(BinningValue::binX)] +
+                     m_values[toUnderlying(BinningValue::binY)] *
+                         m_values[toUnderlying(BinningValue::binY)]);
   }
   return 0.0;
 }
