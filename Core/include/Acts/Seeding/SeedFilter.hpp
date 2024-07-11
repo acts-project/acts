@@ -77,7 +77,7 @@ class SeedFilter final {
   /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates_collector collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
-  /// @param outIt Output iterator for the seeds
+  /// @param outIt Output container/iterator for the seeds
   /// for all seeds with the same middle space point
   template <typename collection_t>
   void filterSeeds_1SpFixed(
@@ -90,7 +90,7 @@ class SeedFilter final {
   /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
-  /// @param outIt Output iterator for the seeds
+  /// @param outIt Output container/iterator for the seeds
   /// for all seeds with the same middle space point
   template <typename collection_t>
   void filterSeeds_1SpFixed(
