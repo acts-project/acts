@@ -10,7 +10,6 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -23,8 +22,8 @@ namespace ActsExamples {
 PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("PrototracksToTracks", lvl), m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
-  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 }
 
 ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
@@ -32,12 +31,13 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, mtj);
 
-  PassThroughCalibrator calibratorImpl;
-  MeasurementCalibratorAdapter calibrator(calibratorImpl,
-                                          m_inputMeasurements(ctx));
+  // Move from a GeoId-based structure to an index-based one to speed things up
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  boost::container::flat_map<Index, IndexSourceLink> slMap;
+  for(const auto &sl : sourceLinks) {
+    slMap.insert({sl.index(), sl});
+  }
 
-  auto refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
   const auto& prototracks = m_inputProtoTracks(ctx);
   ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
 
@@ -50,7 +50,7 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       continue;
     }
 
-    avgSize += protoTrack.size();
+    avgSize += static_cast<float>(protoTrack.size());
     minSize = std::min(minSize, protoTrack.size());
     maxSize = std::max(maxSize, protoTrack.size());
 
@@ -59,19 +59,14 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       auto trackStateProxy =
           track.appendTrackState(Acts::TrackStatePropMask::Calibrated);
 
-      IndexSourceLink sl(Acts::GeometryIdentifier{}, idx);
-
-      calibrator.calibrate(ctx.geoContext, ctx.calibContext,
-                           Acts::SourceLink{sl}, trackStateProxy);
+      auto sl = slMap.at(idx);
+      trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink{sl});
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
     }
 
-    track.nMeasurements() = protoTrack.size();
+    track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
     track.nHoles() = 0;
     track.nOutliers() = 0;
-    track.setReferenceSurface(refSurface->getSharedPtr());
-    track.parameters() = Acts::BoundVector::Ones();
-    track.covariance() = Acts::BoundSquareMatrix::Identity();
   }
 
   ConstTrackContainer constTracks{

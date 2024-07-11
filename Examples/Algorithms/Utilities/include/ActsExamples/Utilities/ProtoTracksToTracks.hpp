@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -20,7 +21,7 @@ class PrototracksToTracks final : public IAlgorithm {
  public:
   struct Config {
     std::string inputProtoTracks;
-    std::string inputMeasurements;
+    std::string inputSourceLinks;
     std::string outputTracks = "tracks_from_prototracks";
   };
 
@@ -43,8 +44,8 @@ class PrototracksToTracks final : public IAlgorithm {
   Config m_cfg;
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{this,
+                                                           "InputSourceLinks"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
 };
