@@ -378,7 +378,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
                                               CLparticleLink_barcode->at(im))) {
       auto barcode = barcodeConstructor.getBarcode(bc, subevt);
-      measPartMap.insert({im, barcode});
+      measPartMap.insert(std::pair<Index, ActsFatras::Barcode>{im, barcode});
     }
   }
 
