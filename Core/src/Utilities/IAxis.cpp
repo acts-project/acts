@@ -10,6 +10,14 @@
 
 namespace Acts {
 
+bool operator==(const IAxis& lhs, const IAxis& rhs) {
+  return lhs.getType() == rhs.getType() &&
+         lhs.getBoundaryType() == rhs.getBoundaryType() &&
+         lhs.getMin() == rhs.getMin() && lhs.getMax() == rhs.getMax() &&
+         lhs.getNBins() == rhs.getNBins() &&
+         lhs.getBinEdges() == rhs.getBinEdges();
+}
+
 std::ostream& operator<<(std::ostream& os, const IAxis& axis) {
   axis.toStream(os);
   return os;

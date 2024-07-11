@@ -58,6 +58,20 @@ class IAxis {
   /// @return total number of bins (excluding under-/overflow bins)
   virtual std::size_t getNBins() const = 0;
 
+  /// Check if two axes are equal
+  /// @param lhs first axis
+  /// @param rhs second axis
+  /// @return true if the axes are equal
+  friend bool operator==(const IAxis& lhs, const IAxis& rhs);
+
+  /// Check if two axes are not equal
+  /// @param lhs first axis
+  /// @param rhs second axis
+  /// @return true if the axes are not equal
+  friend bool operator!=(const IAxis& lhs, const IAxis& rhs) {
+    return !(lhs == rhs);
+  }
+
   /// Output stream operator
   /// @param os output stream
   /// @param axis the axis to be printed
