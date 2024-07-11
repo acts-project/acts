@@ -173,7 +173,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
       inputSpacePoints, inputSimHits, inputParticles,
       inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
       targetMinPT, targetMinSize, uniqueModules);
-  
+
   py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
       .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
       .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)

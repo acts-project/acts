@@ -13,8 +13,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-TruthGraphBuilder::TruthGraphBuilder(Config config,
-                                                   Acts::Logging::Level level)
+TruthGraphBuilder::TruthGraphBuilder(Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TruthGraphBuilder", level),
       m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
