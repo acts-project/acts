@@ -145,38 +145,74 @@ def main():
     gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
 
     # Construct the building hierarchy
-<<<<<<< HEAD
+<<<<<<< Updated upstream
+    gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
+    gmBlueprintConfig.detectorSurfaces = gmSurfaces
+    gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
+=======
     # if the blueprint is enabled
     if args.enable_blueprint:
         gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
         gmBlueprintConfig.detectorSurfaces = gmSurfaces
         gmBlueprintConfig.kdtBinning = [acts.Binning.z, acts.Binning.r]
+>>>>>>> Stashed changes
 
-        gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
-        gmBlueprintOptions.table = args.table_name
-        gmBlueprintOptions.topEntry = args.top_node
-        if len(args.top_node_bounds) > 0:
-            gmBlueprintOptions.topBoundsOverride = args.top_node_bounds
+    gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()
+    gmBlueprintOptions.table = args.table_name
+    gmBlueprintOptions.topEntry = args.top_node
+    if len(args.top_node_bounds) > 0:
+        gmBlueprintOptions.topBoundsOverride = args.top_node_bounds
 
-        gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logLevel)
-        gmBlueprint = gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
+    gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logLevel)
+    gmBlueprint = gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
 
-        gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
+    gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
 
-        # Top level geo id generator
-        gmGeoIdConfig = GeometryIdGenerator.Config()
-        gmGeoIdGenerator = GeometryIdGenerator(
-            gmGeoIdConfig, "GeoModelGeoIdGenerator", logLevel
-        )
+    # Top level geo id generator
+    gmGeoIdConfig = GeometryIdGenerator.Config()
+    gmGeoIdGenerator = GeometryIdGenerator(
+        gmGeoIdConfig, "GeoModelGeoIdGenerator", logLevel
+    )
 
-        # Create the detector builder
-        gmDetectorConfig = DetectorBuilder.Config()
-        gmDetectorConfig.name = args.top_node + "_DetectorBuilder"
-        gmDetectorConfig.builder = gmCylindricalBuilder
-        gmDetectorConfig.geoIdGenerator = gmGeoIdGenerator
-        gmDetectorConfig.materialDecorator = materialDecorator
-        gmDetectorConfig.auxiliary = (
-            "GeoModel based Acts::Detector from '" + args.input + "'"
+    # Create the detector builder
+    gmDetectorConfig = DetectorBuilder.Config()
+    gmDetectorConfig.name = args.top_node + "_DetectorBuilder"
+    gmDetectorConfig.builder = gmCylindricalBuilder
+    gmDetectorConfig.geoIdGenerator = gmGeoIdGenerator
+    gmDetectorConfig.materialDecorator = materialDecorator
+    gmDetectorConfig.auxiliary = (
+        "GeoModel based Acts::Detector from '" + args.input + "'"
+    )
+
+    gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
+    detector = gmDetectorBuilder.construct(gContext)
+
+    # Output the detector to SVG
+    if args.output_svg:
+        surfaceStyle = acts.svg.Style()
+        surfaceStyle.fillColor = [5, 150, 245]
+        surfaceStyle.fillOpacity = 0.5
+
+        surfaceOptions = acts.svg.SurfaceOptions()
+        surfaceOptions.style = surfaceStyle
+
+        viewRange = acts.Extent([])
+        volumeOptions = acts.svg.DetectorVolumeOptions()
+        volumeOptions.surfaceOptions = surfaceOptions
+
+        xyRange = acts.Extent([[acts.Binning.z, [-50, 50]]])
+        zrRange = acts.Extent([[acts.Binning.phi, [-0.8, 0.8]]])
+
+        acts.svg.viewDetector(
+            gContext,
+            detector,
+            args.top_node,
+            [[ivol, volumeOptions] for ivol in range(detector.numberVolumes())],
+            [
+                ["xy", ["sensitives", "portals"], xyRange],
+                ["zr", ["sensitives", "portals", "materials"], zrRange],
+            ],
+            args.output + "_detector",
         )
 
         gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
