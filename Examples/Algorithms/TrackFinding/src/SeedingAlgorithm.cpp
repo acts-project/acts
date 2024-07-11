@@ -203,6 +203,15 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
+  if (m_cfg.useExtraCuts) {
+    // This function will be applied to select space points during grid filling
+    m_cfg.seedFinderConfig.spacePointSelector
+        .connect<itkFastTrackingSPselect>();
+
+    // This function will be applied to the doublet compatibility selection
+    m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
+  }
+
   m_bottomBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsBottom);
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<2ul>>(
