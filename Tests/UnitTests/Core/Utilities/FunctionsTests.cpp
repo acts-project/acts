@@ -19,6 +19,7 @@
 
 namespace Acts::Test {
 
+#if defined(__cpp_concepts)
 BOOST_AUTO_TEST_CASE(insert_vector) {
   std::vector<std::size_t> coll;
   Acts::Utils::insert(coll, 2);
@@ -124,5 +125,21 @@ BOOST_AUTO_TEST_CASE(emplace_vector) {
   BOOST_CHECK_EQUAL(coll[1].valB, b);
   BOOST_CHECK_EQUAL(coll[1].valC, c);
 }
+#else
+BOOST_AUTO_TEST_CASE(insert_back_iterator) {
+  std::vector<std::size_t> coll;
+  std::back_insert_iterator<decltype(coll)> backItr(coll);
+  Acts::Utils::insert(backItr, 2);
+  BOOST_CHECK(coll.size() == 1ul);
+  Acts::Utils::insert(backItr, 5ul);
+  BOOST_CHECK(coll.size() == 2ul);
+  std::size_t val = 1ul;
+  Acts::Utils::insert(backItr, val);
+  BOOST_CHECK(coll.size() == 3ul);
 
+  BOOST_CHECK_EQUAL(coll[0], 2ul);
+  BOOST_CHECK_EQUAL(coll[1], 5ul);
+  BOOST_CHECK_EQUAL(coll[2], 1ul);
+}
+#endif
 }  // namespace Acts::Test
