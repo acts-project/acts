@@ -22,10 +22,12 @@
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -58,11 +60,14 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   using VertexCollection = std::vector<Acts::Vertex>;
 
-  enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
+  enum class SeedFinder { TruthSeeder, GaussianSeeder, AdaptiveGridSeeder };
 
   struct Config {
     /// Input track parameters collection
     std::string inputTrackParameters;
+    /// Optional: Input truth vertex collection. This will only be used if
+    /// `seedFinder == SeedFinder::TruthSeeder`.
+    std::string inputTruthVertices;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
@@ -96,21 +101,24 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::AdaptiveMultiVertexFinder makeVertexFinder() const;
+  std::unique_ptr<Acts::IVertexFinder> makeVertexSeeder() const;
+  Acts::AdaptiveMultiVertexFinder makeVertexFinder(
+      std::shared_ptr<const Acts::IVertexFinder> seedFinder) const;
 
   Config m_cfg;
 
   std::shared_ptr<const Acts::BasePropagator> m_propagator;
   Acts::ImpactPointEstimator m_ipEstimator;
   Linearizer m_linearizer;
+  std::shared_ptr<Acts::IVertexFinder> m_vertexSeeder;
   Acts::AdaptiveMultiVertexFinder m_vertexFinder;
 
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
-
+  ReadDataHandle<SimVertexContainer> m_inputTruthVertices{this,
+                                                          "InputTruthVertices"};
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
-
   WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
 };
 

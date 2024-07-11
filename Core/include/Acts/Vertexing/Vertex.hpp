@@ -76,8 +76,7 @@ class Vertex {
   /// @brief Set position and time
   ///
   /// @param position Vertex position
-  /// @param time The time
-  void setPosition(const Vector3& position, ActsScalar time = 0);
+  void setPosition(const Vector3& position);
 
   /// @brief Set position and time
   ///

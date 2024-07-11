@@ -32,6 +32,7 @@ void addVertexing(Context& ctx) {
   auto& m = ctx.get("main");
 
   py::enum_<Seeder>(m, "VertexSeedFinder")
+      .value("TruthSeeder", Seeder::TruthSeeder)
       .value("GaussianSeeder", Seeder::GaussianSeeder)
       .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder);
 

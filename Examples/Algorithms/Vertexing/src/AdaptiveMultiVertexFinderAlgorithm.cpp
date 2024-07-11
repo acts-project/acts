@@ -33,13 +33,16 @@
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
+#include <utility>
 
+#include "TruthVertexFinder.hpp"
 #include "VertexingHelpers.hpp"
 
-ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
-    AdaptiveMultiVertexFinderAlgorithm(const Config& config,
-                                       Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("AdaptiveMultiVertexFinder", level),
+namespace ActsExamples {
+
+AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
+    const Config& config, Acts::Logging::Level level)
+    : IAlgorithm("AdaptiveMultiVertexFinder", level),
       m_cfg(config),
       m_propagator{[&]() {
         // Set up EigenStepper
@@ -63,7 +66,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
         return Linearizer(ltConfig,
                           logger().cloneWithSuffix("HelicalTrackLinearizer"));
       }()},
-      m_vertexFinder{makeVertexFinder()} {
+      m_vertexSeeder{makeVertexSeeder()},
+      m_vertexFinder{makeVertexFinder(m_vertexSeeder)} {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameter collection");
   }
@@ -73,22 +77,43 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   if (m_cfg.outputVertices.empty()) {
     throw std::invalid_argument("Missing output vertices collection");
   }
+  if (m_cfg.seedFinder == SeedFinder::TruthSeeder &&
+      m_cfg.inputTruthVertices.empty()) {
+    throw std::invalid_argument("Missing input truth vertex collection");
+  }
+
+  // Sanitize the configuration
+  if (m_cfg.seedFinder != SeedFinder::TruthSeeder &&
+      !m_cfg.inputTruthVertices.empty()) {
+    ACTS_INFO(
+        "Ignoring input truth vertices as seed finder is not TruthSeeder");
+    m_cfg.inputTruthVertices.clear();
+  }
 
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
-    -> Acts::AdaptiveMultiVertexFinder {
-  std::shared_ptr<const Acts::IVertexFinder> seedFinder;
+std::unique_ptr<Acts::IVertexFinder>
+AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
+  if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
+    // Note that the default config will not generate any vertices. We need the
+    // event context to get the truth vertices.
+    using Seeder = TruthVertexFinder;
+    Seeder::Config seederConfig;
+    return std::make_unique<Seeder>(seederConfig);
+  }
+
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
     using Seeder = Acts::TrackDensityVertexFinder;
     Acts::GaussianTrackDensity::Config trkDensityCfg;
     trkDensityCfg.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
-    seedFinder = std::make_shared<Seeder>(Seeder::Config{trkDensityCfg});
-  } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
+    return std::make_unique<Seeder>(Seeder::Config{trkDensityCfg});
+  }
+
+  if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     // Set up track density used during vertex seeding
     Acts::AdaptiveGridTrackDensity::Config trkDensityCfg;
     // Bin extent in z-direction
@@ -103,11 +128,15 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
     Seeder::Config seederConfig(trkDensity);
     seederConfig.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
-    seedFinder = std::make_shared<Seeder>(seederConfig);
-  } else {
-    throw std::invalid_argument("Unknown seed finder");
+    return std::make_unique<Seeder>(seederConfig);
   }
 
+  throw std::invalid_argument("Unknown seed finder");
+}
+
+Acts::AdaptiveMultiVertexFinder
+AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder(
+    std::shared_ptr<const Acts::IVertexFinder> seedFinder) const {
   // Set up deterministic annealing with user-defined temperatures
   Acts::AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = {1.};
@@ -125,7 +154,7 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
                 logger().cloneWithSuffix("AdaptiveMultiVertexFitter"));
 
   Acts::AdaptiveMultiVertexFinder::Config finderConfig(
-      std::move(fitter), seedFinder, m_ipEstimator, m_cfg.bField);
+      std::move(fitter), std::move(seedFinder), m_ipEstimator, m_cfg.bField);
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
@@ -158,13 +187,10 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
                                          logger().clone());
 }
 
-ActsExamples::ProcessCode
-ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
-  // retrieve input tracks and convert into the expected format
-
+ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
-  // TODO change this from pointers to tracks parameters to actual tracks
+
   auto inputTracks = makeInputTracks(inputTrackParameters);
 
   if (inputTrackParameters.size() != inputTracks.size()) {
@@ -181,12 +207,32 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     }
   }
 
-  //////////////////////////////////////////////
-  /* Full tutorial example code for reference */
-  //////////////////////////////////////////////
+  const Acts::AdaptiveMultiVertexFinder* vertexFinder = &m_vertexFinder;
+
+  // Temporary vertex finder for the truth seeder
+  std::optional<Acts::AdaptiveMultiVertexFinder> temporaryVertexFinder;
+  if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
+    // In case of the truth seeder, we need to wire the truth vertices into the
+    // vertex finder
+
+    // Get the truth vertices
+    const auto& truthVertices = m_inputTruthVertices(ctx);
+
+    // Build a new vertex seeder with the truth vertices
+    using Seeder = TruthVertexFinder;
+    Seeder::Config seederConfig;
+    seederConfig.vertices =
+        makeVertexSeedsFromTruth(truthVertices, m_cfg.useTime);
+    auto vertexSeeder = std::make_unique<Seeder>(seederConfig);
+
+    // Build a new vertex finder with the new seeder
+    temporaryVertexFinder.emplace(makeVertexFinder(std::move(vertexSeeder)));
+
+    vertexFinder = &temporaryVertexFinder.value();
+  }
 
   // The vertex finder state
-  auto state = m_vertexFinder.makeState(ctx.magFieldContext);
+  auto state = vertexFinder->makeState(ctx.magFieldContext);
 
   // Default vertexing options, this is where e.g. a constraint could be set
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
@@ -199,7 +245,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = m_vertexFinder.find(inputTracks, finderOpts, state);
+    auto result = vertexFinder->find(inputTracks, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());
@@ -221,5 +267,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
