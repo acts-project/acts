@@ -35,7 +35,7 @@
 #include <system_error>
 #include <utility>
 
-#include "TruthVertexFinder.hpp"
+#include "TruthVertexSeeder.hpp"
 #include "VertexingHelpers.hpp"
 
 namespace ActsExamples {
@@ -91,6 +91,7 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
   }
 
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+  m_inputTruthVertices.maybeInitialize(m_cfg.inputTruthVertices);
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
@@ -100,7 +101,7 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
   if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
     // Note that the default config will not generate any vertices. We need the
     // event context to get the truth vertices.
-    using Seeder = TruthVertexFinder;
+    using Seeder = TruthVertexSeeder;
     Seeder::Config seederConfig;
     return std::make_unique<Seeder>(seederConfig);
   }
@@ -219,7 +220,7 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     const auto& truthVertices = m_inputTruthVertices(ctx);
 
     // Build a new vertex seeder with the truth vertices
-    using Seeder = TruthVertexFinder;
+    using Seeder = TruthVertexSeeder;
     Seeder::Config seederConfig;
     seederConfig.vertices =
         makeVertexSeedsFromTruth(truthVertices, m_cfg.useTime);

@@ -16,7 +16,7 @@
 
 namespace ActsExamples {
 
-class TruthVertexFinder final : public Acts::IVertexFinder {
+class TruthVertexSeeder final : public Acts::IVertexFinder {
  public:
   struct Config {
     std::vector<Acts::Vertex> vertices;
@@ -26,7 +26,7 @@ class TruthVertexFinder final : public Acts::IVertexFinder {
     std::size_t nextVertexIndex = 0;
   };
 
-  explicit TruthVertexFinder(const Config& cfg);
+  explicit TruthVertexSeeder(const Config& cfg);
 
   Acts::Result<std::vector<Acts::Vertex>> find(
       const std::vector<Acts::InputTrack>& trackVector,

@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "TruthVertexFinder.hpp"
+#include "TruthVertexSeeder.hpp"
 
 namespace ActsExamples {
 
-TruthVertexFinder::TruthVertexFinder(const Config &cfg) : m_cfg(cfg) {}
+TruthVertexSeeder::TruthVertexSeeder(const Config &cfg) : m_cfg(cfg) {}
 
-Acts::Result<std::vector<Acts::Vertex>> TruthVertexFinder::find(
+Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
     const std::vector<Acts::InputTrack> & /*trackVector*/,
     const Acts::VertexingOptions & /*vertexingOptions*/,
     Acts::IVertexFinder::State &anyState) const {
@@ -23,18 +23,19 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexFinder::find(
   }
 
   const auto &nextVertex = m_cfg.vertices[state.nextVertexIndex];
+  ++state.nextVertexIndex;
 
   std::vector<Acts::Vertex> vertices;
   vertices.push_back(nextVertex);
   return vertices;
 }
 
-Acts::IVertexFinder::State TruthVertexFinder::makeState(
+Acts::IVertexFinder::State TruthVertexSeeder::makeState(
     const Acts::MagneticFieldContext & /*mctx*/) const {
   return Acts::IVertexFinder::State{State{}};
 }
 
-void TruthVertexFinder::setTracksToRemove(
+void TruthVertexSeeder::setTracksToRemove(
     Acts::IVertexFinder::State & /*anyState*/,
     const std::vector<Acts::InputTrack> & /*removedTracks*/) const {
   // nothing to do
