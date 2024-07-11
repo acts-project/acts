@@ -46,7 +46,7 @@ void emplace(Acts::isCollectionThatSupportsEmplace<value_t...> auto& storage,
 namespace Acts::Utils {
 
 template <template <typename...> typename container_t, typename value_t>
-void insert(std::back_insert_iterator<container_t<value_t> > storage,
+void insert(std::back_insert_iterator<container_t<std::decay_t<value_t>> > storage,
             value_t&& value) {
   storage = std::forward<value_t>(value);
 }
