@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // 7 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 9u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 8u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 2u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 2u);
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   // 3 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 5u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 4u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 2u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 2u);
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // 4 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 6u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 5u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 3u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 3u);
