@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -17,7 +18,6 @@
 
 #include <edm4hep/MCParticleCollection.h>
 #include <edm4hep/SimTrackerHitCollection.h>
-#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -65,7 +65,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTFrameWriter m_writer;
+  Acts::PodioUtil::ROOTWriter m_writer;
 
   std::mutex m_writeMutex;
 
