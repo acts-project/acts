@@ -53,18 +53,18 @@ using ROOTReader = podio::ROOTFrameReader;
 template <typename T>
 decltype(auto) getDataMutable(T&& object) {
   if constexpr (podio::version::build_version.major >= 1) {
-    return object.getData();
+    return std::forward<T>(object).getData();
   } else {
-    return object.data();
+    return std::forward<T>(object).data();
   }
 }
 
 template <typename T>
 decltype(auto) getReferenceSurfaceMutable(T&& object) {
   if constexpr (podio::version::build_version.major >= 1) {
-    return object.getReferenceSurface();
+    return std::forward<T>(object).getReferenceSurface();
   } else {
-    return object.referenceSurface();
+    return std::forward<T>(object).referenceSurface();
   }
 }
 
