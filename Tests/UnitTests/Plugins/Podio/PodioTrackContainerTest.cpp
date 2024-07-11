@@ -205,8 +205,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     t.nOutliers() = 77;
     BOOST_CHECK_EQUAL(pTrack.getData().nOutliers, 77);
 
-    BOOST_CHECK_EQUAL(pTrack.getData().nSharedHits, 99);
     t.nSharedHits() = 99;
+    BOOST_CHECK_EQUAL(pTrack.getData().nSharedHits, 99);
 
     Acts::GeometryContext gctx;
     t.setReferenceSurface(free);

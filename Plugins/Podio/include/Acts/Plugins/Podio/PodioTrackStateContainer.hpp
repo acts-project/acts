@@ -462,8 +462,8 @@ class MutablePodioTrackStateContainer final
     }
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
       m_params->create();
+      data.ifiltered = m_params->size() - 1;
     }
-    data.ifiltered = m_params->size() - 1;
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
       m_params->create();
       data.ismoothed = m_params->size() - 1;
