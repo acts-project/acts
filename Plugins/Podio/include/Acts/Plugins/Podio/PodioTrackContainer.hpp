@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Plugins/Podio/PodioDynamicColumns.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
@@ -45,14 +46,14 @@ class PodioTrackContainerBase {
       MultiTrajectoryTraits::MeasurementSizeMax;
 
   using Parameters =
-      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
  protected:
   PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
