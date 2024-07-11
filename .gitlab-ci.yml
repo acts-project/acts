@@ -352,7 +352,7 @@ linux_ubuntu_2204_cpp20:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2204_cpp20:v41
+  image: ghcr.io/acts-project/ubuntu2204_cpp20:51
 
 linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
