@@ -13,13 +13,17 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 
 namespace ActsExamples {
 
 class TruthVertexSeeder final : public Acts::IVertexFinder {
  public:
   struct Config {
-    std::vector<Acts::Vertex> vertices;
+    std::vector<SimVertex> vertices;
+
+    bool useXY = false;
+    bool useTime = false;
   };
 
   struct State {

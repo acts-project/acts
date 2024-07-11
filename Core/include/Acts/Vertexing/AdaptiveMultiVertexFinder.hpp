@@ -148,6 +148,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     // true, and time seeding should be enabled.
     bool useTime = false;
 
+    /// If set to true, the vertex finder will not break the finding loop.
+    /// Some seeders are not able to cope with this therefore this is
+    /// disabled by default.
+    bool doNotBreakWhileSeeding = false;
+
     // Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
   };  // Config struct

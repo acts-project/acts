@@ -25,6 +25,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -39,6 +40,33 @@
 #include "VertexingHelpers.hpp"
 
 namespace ActsExamples {
+
+namespace {
+
+std::unique_ptr<ActsExamples::TruthVertexSeeder> makeTruthVertexSeeder(
+    const AdaptiveMultiVertexFinderAlgorithm::Config& cfg,
+    const SimVertexContainer& truthVertices, const Acts::Logger& logger) {
+  using Seeder = ActsExamples::TruthVertexSeeder;
+
+  Seeder::Config seederConfig;
+  seederConfig.useXY = false;
+  seederConfig.useTime = cfg.useTime;
+
+  for (const auto& truthVertex : truthVertices) {
+    // Skip secondary vertices
+    if (truthVertex.vertexId().vertexSecondary() != 0) {
+      continue;
+    }
+    seederConfig.vertices.push_back(truthVertex);
+  }
+
+  ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "
+                   << seederConfig.vertices.size() << " in event");
+
+  return std::make_unique<Seeder>(seederConfig);
+}
+
+}  // namespace
 
 AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
@@ -101,9 +129,7 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
   if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
     // Note that the default config will not generate any vertices. We need the
     // event context to get the truth vertices.
-    using Seeder = TruthVertexSeeder;
-    Seeder::Config seederConfig;
-    return std::make_unique<Seeder>(seederConfig);
+    return makeTruthVertexSeeder(m_cfg, {}, logger());
   }
 
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
@@ -183,6 +209,10 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder(
   finderConfig.extractParameters
       .template connect<&Acts::InputTrack::extractParameters>();
 
+  if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
+    finderConfig.doNotBreakWhileSeeding = true;
+  }
+
   // Instantiate the finder
   return Acts::AdaptiveMultiVertexFinder(std::move(finderConfig),
                                          logger().clone());
@@ -216,15 +246,10 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     // In case of the truth seeder, we need to wire the truth vertices into the
     // vertex finder
 
-    // Get the truth vertices
     const auto& truthVertices = m_inputTruthVertices(ctx);
 
     // Build a new vertex seeder with the truth vertices
-    using Seeder = TruthVertexSeeder;
-    Seeder::Config seederConfig;
-    seederConfig.vertices =
-        makeVertexSeedsFromTruth(truthVertices, m_cfg.useTime);
-    auto vertexSeeder = std::make_unique<Seeder>(seederConfig);
+    auto vertexSeeder = makeTruthVertexSeeder(m_cfg, truthVertices, logger());
 
     // Build a new vertex finder with the new seeder
     temporaryVertexFinder.emplace(makeVertexFinder(std::move(vertexSeeder)));

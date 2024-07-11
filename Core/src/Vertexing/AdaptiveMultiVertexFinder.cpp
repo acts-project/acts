@@ -91,7 +91,11 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
           "Could not prepare for fit. Discarding the vertex candindate.");
       allVertices.pop_back();
       allVerticesPtr.pop_back();
-      break;
+      if (m_cfg.doNotBreakWhileSeeding) {
+        continue;
+      } else {
+        break;
+      }
     }
     // Update fitter state with all vertices
     fitterState.addVertexToMultiMap(vtxCandidate);

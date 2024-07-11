@@ -10,7 +10,6 @@
 
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -68,25 +67,6 @@ inline ProtoVertexContainer makeProtoVertices(
   }
 
   return protoVertices;
-}
-
-inline std::vector<Acts::Vertex> makeVertexSeedsFromTruth(
-    const SimVertexContainer& truthVertices, bool useTime) {
-  std::vector<Acts::Vertex> seeds;
-  seeds.reserve(truthVertices.size());
-
-  for (const auto& truthVertex : truthVertices) {
-    Acts::Vertex vertex;
-
-    vertex.setPosition(truthVertex.position());
-    if (useTime) {
-      vertex.setTime(truthVertex.time());
-    }
-
-    seeds.push_back(vertex);
-  }
-
-  return seeds;
 }
 
 }  // namespace ActsExamples
