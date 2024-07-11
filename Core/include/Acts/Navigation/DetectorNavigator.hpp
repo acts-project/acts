@@ -201,8 +201,9 @@ class DetectorNavigator {
 
       // If no Volume is found, we are at the end of the world
       if (nState.currentVolume == nullptr) {
-        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
-                                    << "no volume after Portal update");
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper)
+                     << "no volume after Portal update, end of world.");
         nState.navigationBreak = true;
         return;
       }
@@ -404,8 +405,6 @@ class DetectorNavigator {
 
     // Here we get the candidate surfaces
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
-
-    ACTS_VERBOSE("SURFACE CANDIDATES: " << nState.surfaceCandidates.size());
 
     // Sort properly the surface candidates
     auto& nCandidates = nState.surfaceCandidates;
