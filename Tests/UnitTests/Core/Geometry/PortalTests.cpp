@@ -546,7 +546,11 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(Make2DCylinderPortal) {
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(Merging2dCylinder)
+
+BOOST_AUTO_TEST_CASE(CompatibleMerging) {
   auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
                                                   100_mm, 45_degree);
 
@@ -568,9 +572,26 @@ BOOST_AUTO_TEST_CASE(Make2DCylinderPortal) {
       std::invalid_argument);
 
   // z good, rphi good
-  BOOST_CHECK_NO_THROW(GridPortalLink::make(
+  auto grid1 = GridPortalLink::make(
       *cyl, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
-      Axis{AxisBound, -100_mm, 100_mm, 5}));
+      Axis{AxisBound, -100_mm, 100_mm, 5});
+
+  auto trf2 = Transform3{Translation3{Vector3::UnitZ() * 150_mm}};
+  auto cyl2 =
+      Surface::makeShared<CylinderSurface>(trf2, 30_mm, 50_mm, 45_degree);
+
+  // Second grid portal with compatible phi binning
+  auto grid2 = GridPortalLink::make(
+      *cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+      Axis{AxisBound, -50_mm, 50_mm, 5});
+
+  // We're merging in z direction, so the phi binnings need to be the same
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binZ, *logger);
+  BOOST_REQUIRE_NE(mergedPtr, nullptr);
+
+  // @TODO: Check wraparound for full circle in phi
+  // @TODO: Merge in phi direction with z binning
 }
 
 // std::unique_ptr<PortalLinkBase> grid1d1 =
@@ -611,7 +632,6 @@ BOOST_AUTO_TEST_CASE(Make2DCylinderPortal) {
 // grid2d1->merge(*grid1d1);
 
 BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
