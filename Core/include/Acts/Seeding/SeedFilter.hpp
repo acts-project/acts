@@ -84,7 +84,7 @@ class SeedFilter final {
       Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
-      const std::size_t numQualitySeeds, collection_t&& outIt) const;
+      const std::size_t numQualitySeeds, collection_t& outIt) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param spacePointData Auxiliary variables used by the seeding
@@ -98,7 +98,7 @@ class SeedFilter final {
       std::vector<typename CandidatesForMiddleSp<
           const InternalSpacePoint<external_spacepoint_t>>::value_type>&
           candidates,
-      const std::size_t numQualitySeeds, collection_t&& outIt) const;
+      const std::size_t numQualitySeeds, collection_t& outIt) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {

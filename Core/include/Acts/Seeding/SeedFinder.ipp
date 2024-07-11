@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -36,10 +37,23 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
+template <typename sp_range_t>
+void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
+    const Acts::SeedFinderOptions& options, SeedingState& state,
+    const grid_t& grid,
+    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>&& outIt,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs,
+    const Acts::Range1D<float>& rMiddleSPRange) const {
+  createSeedsForGroup(options, state, grid, outIt, bottomSPs, middleSPs, topSPs,
+                      rMiddleSPRange);
+}
+
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid, container_t&& outIt, const sp_range_t& bottomSPsIdx,
+    const grid_t& grid, container_t& outIt, const sp_range_t& bottomSPsIdx,
     const std::size_t middleSPsIdx, const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
   if (!options.isInInternalUnits) {
@@ -199,7 +213,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     m_config.seedFilter->filterSeeds_1SpFixed(
         state.spacePointData, state.candidates_collector,
-        seedFilterState.numQualitySeeds, std::forward<container_t>(outIt));
+        seedFilterState.numQualitySeeds, outIt);
 
   }  // loop on mediums
 }

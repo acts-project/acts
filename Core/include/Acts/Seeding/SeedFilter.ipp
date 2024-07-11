@@ -252,13 +252,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     Acts::SpacePointData& spacePointData,
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
-    const std::size_t numQualitySeeds, collection_t&& outIt) const {
+    const std::size_t numQualitySeeds, collection_t& outIt) const {
   // retrieve all candidates
   // this collection is already sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
   filterSeeds_1SpFixed(spacePointData, extended_collection, numQualitySeeds,
-                       std::forward<collection_t>(outIt));
+                       outIt);
 }
 
 template <typename external_spacepoint_t>
@@ -268,7 +268,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<typename CandidatesForMiddleSp<
         const InternalSpacePoint<external_spacepoint_t>>::value_type>&
         candidates,
-    const std::size_t numQualitySeeds, collection_t&& outIt) const {
+    const std::size_t numQualitySeeds, collection_t& outIt) const {
   if (m_experimentCuts != nullptr) {
     candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
   }
@@ -307,10 +307,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     spacePointData.setQuality(medium->index(), bestSeedQuality);
     spacePointData.setQuality(top->index(), bestSeedQuality);
 
-    Acts::Utils::insert(
-        std::forward<collection_t>(outIt),
-        Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
-                                    zOrigin, bestSeedQuality});
+    Acts::Utils::insert(outIt, Seed<external_spacepoint_t>{
+                                   bottom->sp(), medium->sp(), top->sp(),
+                                   zOrigin, bestSeedQuality});
 
     ++numTotalSeeds;
   }
