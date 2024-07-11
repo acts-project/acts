@@ -21,7 +21,6 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
   auto &state = anyState.template as<State>();
 
   if (state.nextVertexIndex >= m_cfg.vertices.size()) {
-    std::cout << "TruthVertexSeeder: no more vertices to seed" << std::endl;
     return std::vector<Acts::Vertex>();
   }
 
@@ -43,8 +42,6 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
 
   std::vector<Acts::Vertex> vertices;
   vertices.push_back(converted);
-  std::cout << "TruthVertexSeeder: seeded vertex at "
-            << converted.position().transpose() << std::endl;
   return vertices;
 }
 
