@@ -34,9 +34,7 @@ struct StepperPlainOptions {
 
     /// Cut-off value for the momentum in SI units
     double momentumCutOff = 0.;
-  };
-
-  Dense dense;
+  } dense;
 };
 
 }  // namespace Acts
