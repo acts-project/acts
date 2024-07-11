@@ -145,15 +145,11 @@ class SympyStepper {
 
   /// Constructor requires knowledge of the detector's magnetic field
   /// @param bField The magnetic field provider
-  /// @param overstepLimit The limit for the overstep check
-  /// @note `overstepLimit` will be removed in a future release
-  explicit SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField,
-                        double overstepLimit = 100 * UnitConstants::um);
+  explicit SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField);
 
   /// @brief Constructor with configuration
-  ///
-  /// @param [in] config The configuration of the stepper
-  explicit SympyStepper(const Config& config) : m_bField(config.bField) {}
+  /// @param config The configuration of the stepper
+  explicit SympyStepper(const Config& config);
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,

@@ -257,7 +257,9 @@ class MultiEigenStepperLoop
   /// @brief How many components can this stepper manage?
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
-  struct Config {};
+  struct Config {
+    std::shared_ptr<const MagneticFieldProvider> bField;
+  };
 
   struct Options : public StepperPlainOptions {
     void setPlainOptions(const StepperPlainOptions& options) {
@@ -339,6 +341,13 @@ class MultiEigenStepperLoop
                         std::unique_ptr<const Logger> logger =
                             getDefaultLogger("GSF", Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
+        m_logger(std::move(logger)) {}
+
+  /// Constructor from a configuration and optionally provided Logger
+  MultiEigenStepperLoop(const Config& config,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("GSF", Logging::INFO))
+      : EigenStepper<extensionlist_t, auctioneer_t>(config),
         m_logger(std::move(logger)) {}
 
   /// Construct and initialize a state

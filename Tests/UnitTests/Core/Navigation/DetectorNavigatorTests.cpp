@@ -76,14 +76,14 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   using AbortList = Acts::AbortList<>;
   using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  auto options = PropagatorOptions(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
 
-  auto stepper = Stepper();
+  Stepper stepper;
 
   Acts::Vector4 pos(-2, 0, 0, 0);
-  auto start = Acts::CurvilinearTrackParameters(
-      pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-      Acts::ParticleHypothesis::electron());
+  Acts::CurvilinearTrackParameters start(pos, 0_degree, 90_degree, 1_e / 1_GeV,
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::electron());
 
   //
   // (1) Test for inactivity
@@ -95,9 +95,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
     navCfg.resolveMaterial = false;
     navCfg.resolvePassive = false;
 
-    auto navigator = Navigator(navCfg);
+    Navigator navigator(navCfg);
 
-    auto propagator = Propagator(stepper, navigator);
+    Propagator propagator(stepper, navigator);
 
     BOOST_CHECK_THROW(propagator.makeState(start, options),
                       std::invalid_argument);
@@ -111,11 +111,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
     navCfg.resolvePassive = false;
     navCfg.detector = detector.get();
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Acts::Experimental::DetectorNavigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Acts::Propagator<Acts::StraightLineStepper,
+                     Acts::Experimental::DetectorNavigator>
+        propagator(stepper, navigator);
 
     auto state = propagator.makeState(start, options);
 
@@ -138,18 +138,18 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   // Run from endOfWorld
   {
     Acts::Vector4 posEoW(-20, 0, 0, 0);
-    auto startEoW = Acts::CurvilinearTrackParameters(
+    Acts::CurvilinearTrackParameters startEoW(
         posEoW, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
         Acts::ParticleHypothesis::electron());
 
     Acts::Experimental::DetectorNavigator::Config navCfg;
     navCfg.detector = detector.get();
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Acts::Experimental::DetectorNavigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Acts::Propagator<Acts::StraightLineStepper,
+                     Acts::Experimental::DetectorNavigator>
+        propagator(stepper, navigator);
 
     BOOST_CHECK_THROW(propagator.makeState(startEoW, options),
                       std::invalid_argument);
@@ -160,11 +160,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
     Acts::Experimental::DetectorNavigator::Config navCfg;
     navCfg.detector = detector.get();
 
-    auto navigator = Acts::Experimental::DetectorNavigator(navCfg);
+    Acts::Experimental::DetectorNavigator navigator(navCfg);
 
-    auto propagator = Acts::Propagator<Acts::StraightLineStepper,
-                                       Acts::Experimental::DetectorNavigator>(
-        stepper, navigator);
+    Acts::Propagator<Acts::StraightLineStepper,
+                     Acts::Experimental::DetectorNavigator>
+        propagator(stepper, navigator);
 
     auto state = propagator.makeState(start, options);
 
@@ -275,23 +275,23 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Stepper();
+  Stepper stepper;
 
-  auto navigator =
-      Navigator(navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                               Acts::Logging::Level::VERBOSE));
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
 
-  auto options = PropagatorOptions(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Propagator(
+  Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
   // Forward and backward propagation
   // should be consistent between each other
   Acts::Vector4 posFwd(-2, 0, 0, 0);
-  auto startFwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startFwd(
       posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   options.direction = Acts::Direction::Backward;
 
   Acts::Vector4 posBwd(14, 0, 0, 0);
-  auto startBwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startBwd(
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -430,25 +430,25 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Stepper();
+  Stepper stepper;
 
-  auto navigator =
-      Navigator(navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                               Acts::Logging::Level::VERBOSE));
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
 
-  auto options = PropagatorOptions(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Propagator(
+  Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
   // Depending on the direction, the same surface
   // may be reached in different points
   Acts::Vector4 pos(0, 0, 0, 0);
-  auto start = Acts::CurvilinearTrackParameters(
-      pos, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
-      Acts::ParticleHypothesis::electron());
+  Acts::CurvilinearTrackParameters start(pos, 0_degree, 90_degree, 1_e / 1_GeV,
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::electron());
 
   // Has to properly handle propagation in the
   // forward and backward direction
@@ -544,16 +544,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   Navigator::Config navCfg;
   navCfg.detector = detector.get();
 
-  auto stepper = Stepper();
+  Stepper stepper;
 
-  auto navigator =
-      Navigator(navCfg, Acts::getDefaultLogger("DetectorNavigator",
-                                               Acts::Logging::Level::VERBOSE));
+  Navigator navigator(navCfg,
+                      Acts::getDefaultLogger("DetectorNavigator",
+                                             Acts::Logging::Level::VERBOSE));
 
-  auto options = PropagatorOptions(geoContext, mfContext);
+  PropagatorOptions options(geoContext, mfContext);
   options.direction = Acts::Direction::Forward;
 
-  auto propagator = Propagator(
+  Propagator propagator(
       stepper, navigator,
       Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // and the cylindrical surface should be
   // reached in two points during navigation
   Acts::Vector4 posFwd(-5, 0, 0, 0);
-  auto startFwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startFwd(
       posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
 
   options.direction = Acts::Direction::Backward;
   Acts::Vector4 posBwd(5, 0, 0, 0);
-  auto startBwd = Acts::CurvilinearTrackParameters(
+  Acts::CurvilinearTrackParameters startBwd(
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
