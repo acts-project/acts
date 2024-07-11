@@ -42,7 +42,7 @@ struct SeedFilterState {
 /// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_spacepoint_t>
-class SeedFilter {
+class SeedFilter final {
  public:
   SeedFilter(SeedFilterConfig config,
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
@@ -79,13 +79,12 @@ class SeedFilter {
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(
+  template <typename collection_t>
+  void filterSeeds_1SpFixed(
       Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
-      const std::size_t numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-      const;
+      const std::size_t numQualitySeeds, collection_t& outIt) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param spacePointData Auxiliary variables used by the seeding
@@ -93,14 +92,13 @@ class SeedFilter {
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(
+  template <typename collection_t>
+  void filterSeeds_1SpFixed(
       Acts::SpacePointData& spacePointData,
       std::vector<typename CandidatesForMiddleSp<
           const InternalSpacePoint<external_spacepoint_t>>::value_type>&
           candidates,
-      const std::size_t numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-      const;
+      const std::size_t numQualitySeeds, collection_t& outIt) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {

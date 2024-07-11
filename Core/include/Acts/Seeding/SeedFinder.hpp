@@ -99,14 +99,13 @@ class SeedFinder {
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
-  template <template <typename...> typename container_t, typename sp_range_t>
-  void createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, SeedingState& state,
-      const grid_t& grid,
-      std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
+  template <typename container_t, typename sp_range_t>
+  void createSeedsForGroup(const Acts::SeedFinderOptions& options,
+                           SeedingState& state, const grid_t& grid,
+                           container_t& outIt, const sp_range_t& bottomSPs,
+                           const std::size_t middleSPs,
+                           const sp_range_t& topSPs,
+                           const Acts::Range1D<float>& rMiddleSPRange) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
   ///
