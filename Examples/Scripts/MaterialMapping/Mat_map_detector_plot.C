@@ -113,10 +113,10 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
   std::vector<float> *mat_L0   = 0;
   std::vector<float> *mat_step_length = 0;
 
-  std::vector<uint64_t> *sur_id = 0;
-  std::vector<int32_t> *sur_type = 0;
+  std::vector<std::uint64_t> *sur_id = 0;
+  std::vector<std::int32_t> *sur_type = 0;
 
-  std::vector<uint64_t> *vol_id = 0;
+  std::vector<std::uint64_t> *vol_id = 0;
 
   tree->SetBranchAddress("v_phi",&v_phi);
   tree->SetBranchAddress("v_eta",&v_eta);

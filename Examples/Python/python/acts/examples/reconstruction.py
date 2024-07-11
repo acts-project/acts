@@ -53,9 +53,8 @@ SeedFinderConfigArg = namedtuple(
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
         "z",  # (min,max)
-        "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 18 + [(None, None)] * 8,
+    defaults=[None] * 18 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -100,8 +99,9 @@ SeedingAlgorithmConfigArg = namedtuple(
         "zBinNeighborsTop",
         "zBinNeighborsBottom",
         "numPhiNeighbors",
+        "useExtraCuts",
     ],
-    defaults=[None] * 4,
+    defaults=[None] * 5,
 )
 
 TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
@@ -140,8 +140,12 @@ CkfConfig = namedtuple(
         "maxSteps",
         "seedDeduplication",
         "stayOnSeed",
+        "pixelVolumes",
+        "stripVolumes",
+        "maxPixelHoles",
+        "maxStripHoles",
     ],
-    defaults=[15.0, 10, None, None, None],
+    defaults=[15.0, 10, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -257,8 +261,8 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
-        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
+        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z.
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
@@ -267,7 +271,7 @@ def addSeeding(
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
-    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
+    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
@@ -618,18 +622,6 @@ def addStandardSeeding(
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
-            zOutermostLayers=(
-                (
-                    seedFinderConfigArg.zOutermostLayers[0]
-                    if seedFinderConfigArg.zOutermostLayers[0] is not None
-                    else seedFinderConfigArg.z[0]
-                ),
-                (
-                    seedFinderConfigArg.zOutermostLayers[1]
-                    if seedFinderConfigArg.zOutermostLayers[1] is not None
-                    else seedFinderConfigArg.z[1]
-                ),
-            ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
@@ -724,6 +716,7 @@ def addStandardSeeding(
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
             zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
         ),
         gridConfig=gridConfig,
         gridOptions=gridOptions,
@@ -776,18 +769,6 @@ def addOrthogonalSeeding(
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
-            zOutermostLayers=(
-                (
-                    seedFinderConfigArg.zOutermostLayers[0]
-                    if seedFinderConfigArg.zOutermostLayers[0] is not None
-                    else seedFinderConfigArg.z[0]
-                ),
-                (
-                    seedFinderConfigArg.zOutermostLayers[1]
-                    if seedFinderConfigArg.zOutermostLayers[1] is not None
-                    else seedFinderConfigArg.z[1]
-                ),
-            ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
@@ -1314,6 +1295,10 @@ def addCKFTracks(
             twoWay=twoWay,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
+            pixelVolumes=ckfConfig.pixelVolumes,
+            stripVolumes=ckfConfig.stripVolumes,
+            maxPixelHoles=ckfConfig.maxPixelHoles,
+            maxStripHoles=ckfConfig.maxStripHoles,
         ),
     )
     s.addAlgorithm(trackFinder)
@@ -1900,6 +1885,8 @@ def addVertexFitting(
     seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     vertexFinder: VertexFinder = VertexFinder.Truth,
     useTime: Optional[bool] = False,
+    spatialBinExtent: Optional[float] = None,
+    temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1919,10 +1906,14 @@ def addVertexFitting(
         acts.seeder.AdaptiveGridSeeder
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
-    useTime : bool
+    useTime : bool, False
         determines whether time information is used in vertex seeder, finder,
         and fitter
         only implemented for the AMVF and the AdaptiveGridSeeder
+    spatialBinExtent : float, None
+        spatial bin extent for the AdaptiveGridSeeder
+    temporalBinExtent : float, None
+        temporal bin extent for the AdaptiveGridSeeder
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
@@ -1991,11 +1982,15 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             seedFinder=seeder,
-            useTime=useTime,
             bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
+            **acts.examples.defaultKWArgs(
+                useTime=useTime,
+                spatialBinExtent=spatialBinExtent,
+                temporalBinExtent=temporalBinExtent,
+            ),
         )
         s.addAlgorithm(findVertices)
     else:

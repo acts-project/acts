@@ -22,22 +22,22 @@ template <typename T>
 struct TorchTypeMap {};
 
 template <>
-struct TorchTypeMap<int64_t> {
+struct TorchTypeMap<std::int64_t> {
   constexpr static torch::Dtype type = torch::kInt64;
 };
 
 template <>
-struct TorchTypeMap<int32_t> {
+struct TorchTypeMap<std::int32_t> {
   constexpr static torch::Dtype type = torch::kInt32;
 };
 
 template <>
-struct TorchTypeMap<int16_t> {
+struct TorchTypeMap<std::int16_t> {
   constexpr static torch::Dtype type = torch::kInt16;
 };
 
 template <>
-struct TorchTypeMap<int8_t> {
+struct TorchTypeMap<std::int8_t> {
   constexpr static torch::Dtype type = torch::kInt8;
 };
 

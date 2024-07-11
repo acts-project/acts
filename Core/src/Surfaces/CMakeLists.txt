@@ -2,6 +2,7 @@ target_sources(
   ActsCore
   PRIVATE
     AnnulusBounds.cpp
+    BoundaryTolerance.cpp
     ConeBounds.cpp
     ConeSurface.cpp
     ConvexPolygonBounds.cpp
@@ -28,4 +29,5 @@ target_sources(
     CurvilinearSurface.cpp
     detail/AlignmentHelper.cpp
     detail/AnnulusBoundsHelper.cpp
+    detail/MergeHelper.cpp
 )

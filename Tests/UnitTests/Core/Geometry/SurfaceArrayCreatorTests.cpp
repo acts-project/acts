@@ -19,13 +19,13 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -78,8 +78,7 @@ struct SurfaceArrayCreatorFixture {
     return m_SAC.createVariableAxis(std::forward<Args>(args)...);
   }
 
-  template <detail::AxisBoundaryType bdtA, detail::AxisBoundaryType bdtB,
-            typename... Args>
+  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB, typename... Args>
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup2D(
       Args&&... args) {
     return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
@@ -564,10 +563,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
   draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
 
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, 30u);
-  detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-      zAxis(-14, 14, 7u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI,
+                                                                30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
   double R = 10.;
   auto globalToLocal = [](const Vector3& pos) {
@@ -592,7 +590,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   // actually filled SA
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->binningPosition(tgContext, binR);
+    Vector3 ctr = srf->binningPosition(tgContext, BinningValue::binR);
     auto binContent = sa.at(ctr);
 
     BOOST_CHECK_EQUAL(binContent.size(), 1u);
@@ -628,8 +626,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     return itr * Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
-  auto sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
-                                    detail::AxisBoundaryType::Bound>(
+  auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
+                                    AxisBoundaryType::Bound>(
       globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
@@ -642,7 +640,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto A = pr.first;
     auto B = pr.second;
 
-    Vector3 ctr = A->binningPosition(tgContext, binR);
+    Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
     auto binContent = sa.at(ctr);
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;
@@ -675,8 +673,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       return itr * Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
     };
 
-    auto sl2 = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
-                                       detail::AxisBoundaryType::Bound>(
+    auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
+                                       AxisBoundaryType::Bound>(
         globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
@@ -712,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto A = pr.first;
       auto B = pr.second;
 
-      Vector3 ctr = A->binningPosition(tgContext, binR);
+      Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
       auto binContent = sa2.at(ctr);
       BOOST_CHECK_EQUAL(binContent.size(), 2u);
       std::set<const Surface*> act;
