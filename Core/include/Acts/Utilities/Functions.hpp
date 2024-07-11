@@ -26,7 +26,7 @@ void insert(Acts::isCollectionThatSupportsPushBack auto& storage,
 
 template <std::ranges::range storage_t, typename value_t>
   requires(!Acts::isCollectionThatSupportsPushBack<storage_t> &&
-	   Acts::isCollectionThatSupportsInsert<storage_t>)
+           Acts::isCollectionThatSupportsInsert<storage_t>)
 void insert(storage_t& storage, value_t&& value) {
   storage.insert(std::ranges::end(storage), std::forward<value_t>(value));
 }
@@ -37,7 +37,7 @@ void emplace(Acts::isCollectionThatSupportsEmplace<value_t...> auto& storage,
   storage.emplace_back(std::forward<value_t>(args)...);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Utils
 
 #else
 
@@ -45,11 +45,11 @@ void emplace(Acts::isCollectionThatSupportsEmplace<value_t...> auto& storage,
 
 namespace Acts::Utils {
 
-  template <typename value_t>
-  void insert(std::back_insert_iterator<value_t> storage, value_t&& value) {
-    storage = std::forward<value_t>(value);
-  }
-  
+template <typename value_t>
+void insert(std::back_insert_iterator<value_t> storage, value_t&& value) {
+  storage = std::forward<value_t>(value);
 }
+
+}  // namespace Acts::Utils
 
 #endif
