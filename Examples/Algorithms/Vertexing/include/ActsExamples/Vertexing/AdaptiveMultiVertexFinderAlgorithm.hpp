@@ -27,6 +27,7 @@
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -65,6 +66,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input track parameters collection
     std::string inputTrackParameters;
+    /// Optional
+    std::string inputTruthParticles;
     /// Optional: Input truth vertex collection. This will only be used if
     /// `seedFinder == SeedFinder::TruthSeeder`.
     std::string inputTruthVertices;
@@ -115,6 +118,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
+  ReadDataHandle<SimParticleContainer> m_inputTruthParticles{
+      this, "InputTruthParticles"};
   ReadDataHandle<SimVertexContainer> m_inputTruthVertices{this,
                                                           "InputTruthVertices"};
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
