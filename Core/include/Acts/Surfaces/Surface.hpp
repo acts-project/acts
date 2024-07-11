@@ -528,4 +528,6 @@ class Surface : public virtual GeometryObject,
       const Vector3& direction) const;
 };
 
+std::ostream& operator<<(std::ostream& os, const Surface& srf);
+
 }  // namespace Acts

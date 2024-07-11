@@ -423,11 +423,12 @@ BOOST_AUTO_TEST_CASE(IncompatibleBounds) {
 
   BOOST_CHECK_THROW(
       discRadial->mergedWith(*discTrap, BinningValue::binR, false, *logger),
-      
+
       SurfaceMergingException);
 
-  BOOST_CHECK_THROW(discTrap2->mergedWith(*discTrap, BinningValue::binR, false, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      discTrap2->mergedWith(*discTrap, BinningValue::binR, false, *logger),
+      SurfaceMergingException);
 }
 
 BOOST_DATA_TEST_CASE(IncompatibleRDirection,
@@ -447,34 +448,51 @@ BOOST_DATA_TEST_CASE(IncompatibleRDirection,
 
   // Disc with overlap in r
   auto discOverlap = makeDisc(base, 90_mm, 150_mm);
-  BOOST_CHECK_THROW(disc->mergedWith(*discOverlap, Acts::BinningValue::binR, false, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(*discOverlap, Acts::BinningValue::binR, false, *logger),
+      SurfaceMergingException);
 
   // Disc with gap in r
   auto discGap = makeDisc(base, 110_mm, 150_mm);
-  BOOST_CHECK_THROW(disc->mergedWith(*discGap, Acts::BinningValue::binR, false, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(*discGap, Acts::BinningValue::binR, false, *logger),
+      SurfaceMergingException);
 
   auto discShiftedZ = Surface::makeShared<DiscSurface>(
       base * Translation3{Vector3::UnitZ() * 10_mm}, 100_mm, 150_mm);
-  BOOST_CHECK_THROW(disc->mergedWith(*discShiftedZ, Acts::BinningValue::binR, false, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(*discShiftedZ, Acts::BinningValue::binR, false, *logger),
+      SurfaceMergingException);
 
   auto discShiftedXy = makeDisc(
       base * Translation3{Vector3{1_mm, 2_mm, 200_mm}}, 100_mm, 150_mm);
-  BOOST_CHECK_THROW(
-      disc->mergedWith(*discShiftedXy, Acts::BinningValue::binZ, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(disc->mergedWith(*discShiftedXy, Acts::BinningValue::binZ,
+                                     false, *logger),
+                    SurfaceMergingException);
 
   auto discRotatedZ = makeDisc(base * AngleAxis3{10_degree, Vector3::UnitZ()},
                                100_mm, 150_mm, 60_degree, 0_degree);
-  BOOST_CHECK_THROW(disc->mergedWith(*discRotatedZ, Acts::BinningValue::binR, false, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(*discRotatedZ, Acts::BinningValue::binR, false, *logger),
+      SurfaceMergingException);
 
   auto discRotatedX =
       makeDisc(base * AngleAxis3{10_degree, Vector3::UnitX()}, 100_mm, 150_mm);
-  BOOST_CHECK_THROW(disc->mergedWith(*discRotatedX, Acts::BinningValue::binR, false, *logger),
-                    SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      disc->mergedWith(*discRotatedX, Acts::BinningValue::binR, false, *logger),
+      SurfaceMergingException);
+
+  // Test not same phi sector
+  auto discPhi1 = makeDisc(base, 30_mm, 100_mm, 10_degree, 40_degree);
+  auto discPhi2 = makeDisc(base, 100_mm, 160_mm, 20_degree, 40_degree);
+  auto discPhi3 = makeDisc(base, 100_mm, 160_mm, 10_degree, 50_degree);
+  BOOST_CHECK_THROW(
+      discPhi1->mergedWith(*discPhi2, BinningValue::binR, false, *logger),
+      SurfaceMergingException);
+
+  BOOST_CHECK_THROW(
+      discPhi1->mergedWith(*discPhi3, BinningValue::binR, false, *logger),
+      SurfaceMergingException);
 }
 
 BOOST_DATA_TEST_CASE(RDirection,
@@ -493,7 +511,8 @@ BOOST_DATA_TEST_CASE(RDirection,
   auto disc2 =
       makeDisc(base * AngleAxis3(14_degree, Vector3::UnitZ()), 100_mm, 150_mm);
 
-  auto [disc3, reversed] = disc->mergedWith(*disc2, Acts::BinningValue::binR, false, *logger);
+  auto [disc3, reversed] =
+      disc->mergedWith(*disc2, Acts::BinningValue::binR, false, *logger);
   BOOST_REQUIRE_NE(disc3, nullptr);
   BOOST_CHECK(!reversed);
 
@@ -519,6 +538,21 @@ BOOST_DATA_TEST_CASE(RDirection,
   Transform3 expected21 = base * AngleAxis3(14_degree, Vector3::UnitZ());
   CHECK_CLOSE_OR_SMALL(disc3Reversed->transform(tgContext).matrix(),
                        expected21.matrix(), 1e-6, 1e-10);
+
+  // Test r merging with phi sectors (matching)
+  auto discPhi1 = makeDisc(base, 30_mm, 100_mm, 10_degree, 40_degree);
+  auto discPhi2 = makeDisc(base, 100_mm, 160_mm, 10_degree, 40_degree);
+  auto [discPhi12, reversedPhi12] =
+      discPhi1->mergedWith(*discPhi2, BinningValue::binR, false, *logger);
+  BOOST_REQUIRE_NE(discPhi12, nullptr);
+
+  const auto* boundsPhi12 =
+      dynamic_cast<const RadialBounds*>(&discPhi12->bounds());
+  BOOST_REQUIRE_NE(boundsPhi12, nullptr);
+
+  BOOST_CHECK_EQUAL(boundsPhi12->get(RadialBounds::eMinR), 30_mm);
+  BOOST_CHECK_EQUAL(boundsPhi12->get(RadialBounds::eMaxR), 160_mm);
+  BOOST_CHECK_EQUAL(boundsPhi12->get(RadialBounds::eHalfPhiSector), 10_degree);
 }
 
 BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
@@ -542,28 +576,30 @@ BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
 
   // Disc with overlap in phi
   auto discPhi2 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(85_degree));
-  BOOST_CHECK_THROW(
-      discPhi->mergedWith(*discPhi2, Acts::BinningValue::binPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(discPhi->mergedWith(*discPhi2, Acts::BinningValue::binPhi,
+                                        false, *logger),
+                    SurfaceMergingException);
 
   // Disc with gap in phi
   auto discPhi3 = makeDisc(base, 30_mm, 100_mm, 45_degree, a(105_degree));
-  BOOST_CHECK_THROW(
-      discPhi->mergedWith(*discPhi3, Acts::BinningValue::binPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(discPhi->mergedWith(*discPhi3, Acts::BinningValue::binPhi,
+                                        false, *logger),
+                    SurfaceMergingException);
 
   // Disc with a z shift
   auto discPhi4 = makeDisc(base * Translation3{Vector3::UnitZ() * 20_mm}, 30_mm,
                            100_mm, 45_degree, a(95_degree));
-  BOOST_CHECK_THROW(
-      discPhi->mergedWith(*discPhi4, Acts::BinningValue::binPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(discPhi->mergedWith(*discPhi4, Acts::BinningValue::binPhi,
+                                        false, *logger),
+                    SurfaceMergingException);
 
   // Disc with different r bounds: could be merged in r but not in phi
   auto discPhi5 = makeDisc(base, 100_mm, 150_mm, 45_degree, a(95_degree));
-  BOOST_CHECK_THROW(
-      discPhi->mergedWith(*discPhi5, Acts::BinningValue::binPhi, false, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(discPhi->mergedWith(*discPhi5, Acts::BinningValue::binPhi,
+                                        false, *logger),
+                    SurfaceMergingException);
+
+  // @TODO: Test phi sector with different radii
 }
 
 BOOST_DATA_TEST_CASE(PhiDirection,

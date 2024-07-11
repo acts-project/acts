@@ -427,6 +427,15 @@ BOOST_DATA_TEST_CASE(IncompatibleZDirection,
   BOOST_CHECK_THROW(
       cyl->mergedWith(*cyl8, Acts::BinningValue::binZ, false, *logger),
       SurfaceMergingException);
+
+  auto cylPhi1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                      30_mm, 100_mm, 45_degree);
+  auto cylPhi2 = Surface::makeShared<CylinderSurface>(
+      Transform3{Translation3{Vector3::UnitZ() * 150_mm}}, 30_mm, 50_mm,
+      55_degree);
+  BOOST_CHECK_THROW(
+      cylPhi1->mergedWith(*cylPhi2, Acts::BinningValue::binZ, false, *logger),
+      SurfaceMergingException);
 }
 
 BOOST_DATA_TEST_CASE(ZDirection,
@@ -531,6 +540,13 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
       a(95_degree));
   BOOST_CHECK_THROW(
       cylPhi->mergedWith(*cylPhi4, Acts::BinningValue::binRPhi, false, *logger),
+      SurfaceMergingException);
+
+  // Test phi sector with different z halflengths
+  auto cylPhi5 = Surface::makeShared<CylinderSurface>(base, 30_mm, 110_mm,
+                                                      45_degree, a(95_degree));
+  BOOST_CHECK_THROW(
+      cylPhi->mergedWith(*cylPhi5, Acts::BinningValue::binRPhi, false, *logger),
       SurfaceMergingException);
 }
 

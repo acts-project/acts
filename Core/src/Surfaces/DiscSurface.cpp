@@ -458,7 +458,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                                 << otherHlPhi / 1_degree);
 
   if (direction == Acts::BinningValue::binR) {
-    if (std::abs(otherLocal.linear().col(eZ)[eZ]) >= tolerance &&
+    if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
         (!bounds->coversFullAzimuth() || !otherBounds->coversFullAzimuth())) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                     "DiscSurface::merge: surfaces have "
