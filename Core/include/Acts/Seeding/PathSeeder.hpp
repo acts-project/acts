@@ -69,7 +69,7 @@ class PathSeeder {
     /// First layer extent
     Extent firstLayerExtent;
     /// Direction of the telescope extent
-    BinningValue orientation = binX;
+    BinningValue orientation = BinningValue::binX;
   };
 
   /// @brief Constructor
@@ -92,14 +92,14 @@ class PathSeeder {
 
     // Get plane of the telescope
     // sensitive surfaces
-    BinningValue bin0 = binX;
-    BinningValue bin1 = binY;
-    if (m_cfg.orientation == binX) {
-      bin0 = binY;
-      bin1 = binZ;
-    } else if (m_cfg.orientation == binY) {
-      bin0 = binX;
-      bin1 = binZ;
+    int bin0 = static_cast<int>(BinningValue::binX);
+    int bin1 = static_cast<int>(BinningValue::binY);
+    if (m_cfg.orientation == BinningValue::binX) {
+      bin0 = static_cast<int>(BinningValue::binY);
+      bin1 = static_cast<int>(BinningValue::binZ);
+    } else if (m_cfg.orientation == BinningValue::binY) {
+      bin0 = static_cast<int>(BinningValue::binX);
+      bin1 = static_cast<int>(BinningValue::binZ);
     }
 
     // Create the seeds

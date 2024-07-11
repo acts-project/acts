@@ -24,6 +24,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Seeding/PathSeeder.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
@@ -34,7 +35,7 @@ BOOST_AUTO_TEST_SUITE(PathSeeder)
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-using Axis = Acts::detail::EquidistantAxis;
+using Axis = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 
 GeometryContext gctx;
 
@@ -63,8 +64,9 @@ class NoFieldIntersectionFinder {
     // Intersect the surfaces
     for (auto& surface : m_surfaces) {
       // Get the intersection
-      auto sMultiIntersection = surface->intersect(geoCtx, position, direction,
-                                                   BoundaryCheck(true), tol);
+      auto sMultiIntersection =
+          surface->intersect(geoCtx, position, direction,
+                             BoundaryTolerance::AbsoluteCartesian(tol, tol));
 
       // Take the closest
       auto closestForward = sMultiIntersection.closestForward();
@@ -385,9 +387,9 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
 
   // First tracking layer
   Extent firstLayerExtent;
-  firstLayerExtent.set(Acts::binX, -0.1, 0.1);
-  firstLayerExtent.set(Acts::binY, -halfY - deltaYZ, halfY + deltaYZ);
-  firstLayerExtent.set(Acts::binZ, -halfZ - deltaYZ, halfZ + deltaYZ);
+  firstLayerExtent.set(BinningValue::binX, -0.1, 0.1);
+  firstLayerExtent.set(BinningValue::binY, -halfY - deltaYZ, halfY + deltaYZ);
+  firstLayerExtent.set(BinningValue::binZ, -halfZ - deltaYZ, halfZ + deltaYZ);
 
   pathSeederCfg.firstLayerExtent = firstLayerExtent;
 
