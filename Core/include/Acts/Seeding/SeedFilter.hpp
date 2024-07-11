@@ -48,7 +48,7 @@ class SeedFilter final {
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
 
   SeedFilter() = delete;
-  virtual ~SeedFilter() = default;
+  ~SeedFilter() = default;
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
@@ -61,7 +61,7 @@ class SeedFilter final {
   /// @param impactParametersVec vector containing the impact parameters
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
-  virtual void filterSeeds_2SpFixed(
+  void filterSeeds_2SpFixed(
       Acts::SpacePointData& spacePointData,
       const InternalSpacePoint<external_spacepoint_t>& bottomSP,
       const InternalSpacePoint<external_spacepoint_t>& middleSP,
