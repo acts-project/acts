@@ -171,6 +171,8 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     stepSizeCutOff = pOptions.stepSizeCutOff;
     maxStepSize = pOptions.maxStepSize;
     maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
+
+    boundaryTolerance = pOptions.boundaryTolerance;
   }
 
   /// List of actions
