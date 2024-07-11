@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -44,6 +45,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs,
     const Acts::Range1D<float>& rMiddleSPRange) const {
+  // We pass outIt on purpose as an lvalue
   createSeedsForGroup(options, state, grid, outIt, bottomSPs, middleSPs, topSPs,
                       rMiddleSPRange);
 }

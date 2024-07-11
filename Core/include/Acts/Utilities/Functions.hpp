@@ -14,7 +14,7 @@
 namespace Acts::Utils {
 
 template <typename value_t>
-void insert(std::output_iterator<value_t> auto storage, value_t&& value) {
+void insert(std::output_iterator<value_t> auto& storage, value_t&& value) {
   storage = std::forward<value_t>(value);
 }
 
