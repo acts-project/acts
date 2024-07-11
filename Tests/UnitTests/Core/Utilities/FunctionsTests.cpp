@@ -22,7 +22,7 @@ namespace Acts::Test {
 #if defined(__cpp_concepts)
 BOOST_AUTO_TEST_CASE(insert_vector) {
   std::vector<std::size_t> coll;
-  Acts::Utils::insert(coll, 2);
+  Acts::Utils::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
   Acts::Utils::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(insert_vector) {
 
 BOOST_AUTO_TEST_CASE(insert_list) {
   std::list<std::size_t> coll;
-  Acts::Utils::insert(coll, 2);
+  Acts::Utils::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
   Acts::Utils::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(insert_list) {
 
 BOOST_AUTO_TEST_CASE(insert_set) {
   std::set<std::size_t> coll;
-  Acts::Utils::insert(coll, 2);
+  Acts::Utils::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
   Acts::Utils::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(insert_set) {
 
 BOOST_AUTO_TEST_CASE(insert_unordered_set) {
   std::unordered_set<std::size_t> coll;
-  Acts::Utils::insert(coll, 2);
+  Acts::Utils::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
   Acts::Utils::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(insert_unordered_set) {
 BOOST_AUTO_TEST_CASE(insert_back_iterator) {
   std::vector<std::size_t> coll;
   std::back_insert_iterator<decltype(coll)> backItr(coll);
-  Acts::Utils::insert(backItr, 2);
+  Acts::Utils::insert(backItr, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
   Acts::Utils::insert(backItr, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(emplace_vector) {
 BOOST_AUTO_TEST_CASE(insert_back_iterator) {
   std::vector<std::size_t> coll;
   std::back_insert_iterator<decltype(coll)> backItr(coll);
-  Acts::Utils::insert(backItr, 2);
+  Acts::Utils::insert(backItr, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
   Acts::Utils::insert(backItr, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
