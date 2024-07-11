@@ -110,16 +110,16 @@ class SourceLinkGrid : public ISourceLinkGrid<Axis> {
     }
     // Fill the grid with source links
     for (auto& sl : sourceLinks) {
-      auto ssl = sl.get<Acts::detail::Test::TestSourceLink>();
+      auto ssl = sl.get<detail::Test::TestSourceLink>();
       auto id = ssl.m_geometryId;
 
       // Grid works with global positions
-      Acts::Vector3 globalPos = m_surfaceAccessor(sl)->localToGlobal(
-          geoCtx, ssl.parameters, Acts::Vector3{0, 1, 0});
+      Vector3 globalPos = m_surfaceAccessor(sl)->localToGlobal(
+          geoCtx, ssl.parameters, Vector3{0, 1, 0});
 
-      auto bin = lookupTable.at(id.sensitive())
-                     .localBinsFromPosition(
-                         Acts::Vector2(globalPos.y(), globalPos.z()));
+      auto bin =
+          lookupTable.at(id.sensitive())
+              .localBinsFromPosition(Vector2(globalPos.y(), globalPos.z()));
       lookupTable.at(id.sensitive()).atLocalBins(bin).push_back(sl);
     }
 
@@ -127,8 +127,7 @@ class SourceLinkGrid : public ISourceLinkGrid<Axis> {
   };
 
   // Get the source link grid for a given geometry id
-  eGrid getSourceLinkTable(
-      const Acts::GeometryIdentifier& geoId) const override {
+  eGrid getSourceLinkTable(const GeometryIdentifier& geoId) const override {
     return m_lookupTables.at(geoId.sensitive());
   }
 };
@@ -153,12 +152,11 @@ class SourceLinkCalibrator {
  public:
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
-  Acts::Vector3 operator()(const GeometryContext& geoCtx,
-                           const Acts::SourceLink& sourceLink) const {
-    auto ssl = sourceLink.get<Acts::detail::Test::TestSourceLink>();
-    auto res =
-        m_surfaceAccessor(sourceLink)
-            ->localToGlobal(geoCtx, ssl.parameters, Acts::Vector3{0, 1, 0});
+  Vector3 operator()(const GeometryContext& geoCtx,
+                     const SourceLink& sourceLink) const {
+    auto ssl = sourceLink.get<detail::Test::TestSourceLink>();
+    auto res = m_surfaceAccessor(sourceLink)
+                   ->localToGlobal(geoCtx, ssl.parameters, Vector3{0, 1, 0});
     return res;
   }
 };
@@ -318,17 +316,16 @@ std::vector<SourceLink> createSourceLinks(
 
     auto intersections = intersectionFinder(geoCtx, vertex, direction);
 
-    SquareMatrix2 cov = Acts::SquareMatrix2::Identity();
+    SquareMatrix2 cov = SquareMatrix2::Identity();
 
     for (auto& [id, refPoint] : intersections) {
       auto surf = *detector.sensitiveHierarchyMap().find(id);
-      Acts::Vector2 val =
-          surf->globalToLocal(geoCtx, refPoint, direction).value();
+      Vector2 val = surf->globalToLocal(geoCtx, refPoint, direction).value();
 
-      Acts::detail::Test::TestSourceLink sourceLink(eBoundLoc0, eBoundLoc1, val,
-                                                    cov, id, id.value());
+      detail::Test::TestSourceLink sourceLink(eBoundLoc0, eBoundLoc1, val, cov,
+                                              id, id.value());
 
-      Acts::SourceLink sl{sourceLink};
+      SourceLink sl{sourceLink};
       sourceLinks.push_back(sl);
     }
   }
@@ -347,12 +344,12 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto pathSeederCfg = Acts::PathSeeder<Axis>::Config();
 
   // Grid to bin the source links
-  Acts::detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor;
+  detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor;
   surfaceAccessor.detector = detector.get();
   auto sourceLinkGrid = std::make_shared<SourceLinkGrid>();
-  sourceLinkGrid->m_surfaceAccessor.connect<
-      &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
-      &surfaceAccessor);
+  sourceLinkGrid->m_surfaceAccessor
+      .connect<&detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+          &surfaceAccessor);
   pathSeederCfg.sourceLinkGrid = sourceLinkGrid;
 
   // Estimator of the IP and first hit
