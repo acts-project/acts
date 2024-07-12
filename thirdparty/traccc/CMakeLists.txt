@@ -42,5 +42,8 @@ set( TRACCC_BUILD_TESTING OFF CACHE BOOL
 set( TRACCC_BUILD_EXAMPLES OFF CACHE BOOL
     "Turn off the build of the Traccc examples" ) 
 
+set ( TRACCC_BUILD_CUDA ${ACTS_BUILD_CUDA} CACHE BOOL
+    "Turn on/off the traccc cuda build")
+
 # Now set up its build.
 FetchContent_MakeAvailable( traccc )
