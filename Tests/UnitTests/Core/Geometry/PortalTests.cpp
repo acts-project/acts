@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 }
 
 BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
-  // @TODO: Merge in phi direction with z binning
+  // Merge in phi direction with z binning
   auto cylPhi1 = Surface::makeShared<CylinderSurface>(
       Transform3::Identity() * AngleAxis3(45_degree, Vector3::UnitZ()), 30_mm,
       100_mm, 20_degree, 0_degree);
@@ -736,7 +736,6 @@ BOOST_AUTO_TEST_CASE(CompatibleMerging) {
   BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
   // @TODO: Check wraparound for full circle in phi
-  // @TODO: Merge in phi direction with z binning
 }
 
 // std::unique_ptr<PortalLinkBase> grid1d1 =
