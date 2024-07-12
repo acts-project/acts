@@ -6,7 +6,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
   tags:
     - large
   artifacts:
@@ -56,7 +56,7 @@ clang_tidy:
 
 build_exatrkx_cpu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:52
   tags:
     - large
 
@@ -96,7 +96,7 @@ build_exatrkx_cpu:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:52
   tags:
     - large
 
@@ -147,7 +147,7 @@ test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:52
   tags:
     - docker-gpu-nvidia
   script:
@@ -157,7 +157,7 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:52
   tags:
     - docker-gpu-nvidia
   script:
@@ -173,7 +173,7 @@ test_exatrkx_python:
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -224,7 +224,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
   needs: [build_linux_ubuntu]
 
   script:
@@ -245,7 +245,7 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
   needs: [build_linux_ubuntu]
 
   artifacts:
@@ -343,13 +343,13 @@ linux_ubuntu_2404:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
 
 linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2204_clang:v41
+  image: ghcr.io/acts-project/ubuntu2204_clang:52
 
 
 ######################
@@ -357,7 +357,7 @@ linux_ubuntu_2204_clang:
 ######################
 
 .lcg: &lcg_base_job
-  image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
+  image: ghcr.io/acts-project/${OS}-base:52
   stage: build
   tags:
     - cvmfs
