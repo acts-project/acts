@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Seeding/detail/Functions.hpp"
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <iterator>
 #include <list>
