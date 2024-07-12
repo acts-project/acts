@@ -44,10 +44,6 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
       // Pre-Stepping: target setting
       state.stage = PropagatorStage::preStep;
       m_navigator.preStep(state, m_stepper);
-      if (state.options.abortList(state, m_stepper, m_navigator, logger())) {
-        terminatedNormally = true;
-        break;
-      }
       // Perform a propagation step - it takes the propagation state
       Result<double> res = m_stepper.step(state, m_navigator);
       if (res.ok()) {
