@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -6,7 +7,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Functions.hpp"
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <algorithm>
 #include <numeric>
@@ -307,9 +308,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     spacePointData.setQuality(medium->index(), bestSeedQuality);
     spacePointData.setQuality(top->index(), bestSeedQuality);
 
-    Acts::Utils::insert(outIt, Seed<external_spacepoint_t>{
-                                   bottom->sp(), medium->sp(), top->sp(),
-                                   zOrigin, bestSeedQuality});
+    Acts::details::insert(outIt, Seed<external_spacepoint_t>{
+                                     bottom->sp(), medium->sp(), top->sp(),
+                                     zOrigin, bestSeedQuality});
 
     ++numTotalSeeds;
   }
