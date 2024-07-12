@@ -59,7 +59,6 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
   for (const auto &q : options.queries) {
     ACTS_VERBOSE("Constructing detector elements for query " << q);
-    //ACTS_INFO("Constructing  " << typeid(q).name()); TODO delete
     auto qFPV = geoModelTree.geoReader
                     ->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
     auto matches = [&](const std::string &name, PVConstLink physvol) {

@@ -16,6 +16,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorSurfaceFactory.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorVolumeFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
@@ -94,6 +95,44 @@ void addGeoModel(Context& ctx) {
         .def(py::init<>())
         .def("toSensitiveSurface", &Acts::GeoShiftConverter::toSensitiveSurface)
         .def("toPassiveSurface", &Acts::GeoShiftConverter::toPassiveSurface);
+  }
+
+  // Volume factory
+  {
+    auto a =
+        py::class_<Acts::GeoModelDetectorVolumeFactory,
+                   std::shared_ptr<Acts::GeoModelDetectorVolumeFactory>>(
+            gm, "GeoModelDetectorVolumeFactory")
+            .def(py::init(
+                [](const Acts::GeoModelDetectorVolumeFactory::Config& cfg,
+                   Acts::Logging::Level level) {
+                  return std::make_shared<Acts::GeoModelDetectorVolumeFactory>(
+                      cfg, Acts::getDefaultLogger(
+                               "GeoModelDetectorVolumeFactory", level));
+                }));
+            //.def("construct", &Acts::GeoModelDetectorVolumeFactory::construct);
+
+    py::class_<Acts::GeoModelDetectorVolumeFactory::Config>(a, "Config")
+        .def(py::init<>())
+        .def_readwrite(
+            "convertSubVolumes",
+            &Acts::GeoModelDetectorVolumeFactory::Config::convertSubVolumes)
+        .def_readwrite("nameList",
+                       &Acts::GeoModelDetectorVolumeFactory::Config::nameList)
+        .def_readwrite(
+            "materialList",
+            &Acts::GeoModelDetectorVolumeFactory::Config::materialList);
+
+    py::class_<Acts::GeoModelDetectorVolumeFactory::Cache>(a, "Cache")
+        .def(py::init<>())
+        .def_readwrite(
+            "sensitiveVolumes",
+            &Acts::GeoModelDetectorVolumeFactory::Cache::sensitiveSurfaces);
+
+    py::class_<Acts::GeoModelDetectorVolumeFactory::Options>(a, "Options")
+        .def(py::init<>())
+        .def_readwrite("queries",
+                       &Acts::GeoModelDetectorVolumeFactory::Options::queries);
   }
 
   // Surface factory
