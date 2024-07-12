@@ -22,6 +22,7 @@
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -56,6 +57,16 @@ class EigenStepper {
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+
+  struct Config {
+    std::shared_ptr<const MagneticFieldProvider> bField;
+  };
+
+  struct Options : public StepperPlainOptions {
+    void setPlainOptions(const StepperPlainOptions& options) {
+      static_cast<StepperPlainOptions&>(*this) = options;
+    }
+  };
 
   /// @brief State for track parameter propagation
   ///
@@ -164,6 +175,11 @@ class EigenStepper {
   /// Constructor requires knowledge of the detector's magnetic field
   /// @param bField The magnetic field provider
   explicit EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
+
+  /// @brief Constructor with configuration
+  ///
+  /// @param [in] config The configuration of the stepper
+  explicit EigenStepper(const Config& config) : m_bField(config.bField) {}
 
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
