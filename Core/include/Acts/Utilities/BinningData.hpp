@@ -269,7 +269,7 @@ class BinningData {
       return (eta(position));
     }
     if (toUnderlying(binvalue) < 3) {
-      return position[toUnderlying(binvalue)];
+      return static_cast<float>(position[toUnderlying(binvalue)]);
     }
     // phi gauging
     return phi(position);
