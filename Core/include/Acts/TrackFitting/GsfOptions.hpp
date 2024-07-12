@@ -116,9 +116,12 @@ struct GsfOptions {
 
   ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;
 
-#if __cplusplus < 202002L
-  GsfOptions() = delete;
-#endif
+  GsfOptions(const GeometryContext &geoCtxt,
+             const MagneticFieldContext &magFieldCtxt,
+             const CalibrationContext &calibCtxt)
+      : geoContext(geoCtxt),
+        magFieldContext(magFieldCtxt),
+        calibrationContext(calibCtxt) {}
 };
 
 }  // namespace Acts
