@@ -25,97 +25,16 @@ using namespace Acts::UnitLiterals;
 
 namespace {
 
-class ExamplesEdmHook : public Acts::ExaTrkXHook {
-  double m_targetPT = 0.5_GeV;
-  std::size_t m_targetSize = 3;
+struct LoopHook : public Acts::ExaTrkXHook {
+  std::vector<Acts::ExaTrkXHook*> hooks;
 
-  std::unique_ptr<const Acts::Logger> m_logger;
-  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
-  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_targetGraphHook;
-  std::unique_ptr<Acts::TorchGraphStoreHook> m_graphStoreHook;
-
-  const Acts::Logger& logger() const { return *m_logger; }
-
-  struct HitInfo {
-    std::size_t spacePointIndex;
-    std::int32_t hitIndex;
-  };
-
- public:
-  ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
-                  const IndexMultimap<Index>& measHitMap,
-                  const SimHitContainer& simhits,
-                  const SimParticleContainer& particles,
-                  std::size_t targetMinHits, double targetMinPT,
-                  const Acts::Logger& logger)
-      : m_targetPT(targetMinPT),
-        m_targetSize(targetMinHits),
-        m_logger(logger.clone("MetricsHook")) {
-    // Associate tracks to graph, collect momentum
-    std::unordered_map<ActsFatras::Barcode, std::vector<HitInfo>> tracks;
-
-    for (auto i = 0ul; i < spacepoints.size(); ++i) {
-      const auto measId = spacepoints[i]
-                              .sourceLinks()[0]
-                              .template get<IndexSourceLink>()
-                              .index();
-
-      auto [a, b] = measHitMap.equal_range(measId);
-      for (auto it = a; it != b; ++it) {
-        const auto& hit = *simhits.nth(it->second);
-
-        tracks[hit.particleId()].push_back({i, hit.index()});
-      }
-    }
-
-    // Collect edges for truth graph and target graph
-    std::vector<std::int64_t> truthGraph;
-    std::vector<std::int64_t> targetGraph;
-
-    for (auto& [pid, track] : tracks) {
-      // Sort by hit index, so the edges are connected correctly
-      std::sort(track.begin(), track.end(), [](const auto& a, const auto& b) {
-        return a.hitIndex < b.hitIndex;
-      });
-
-      auto found = particles.find(pid);
-      if (found == particles.end()) {
-        ACTS_WARNING("Did not find " << pid << ", skip track");
-        continue;
-      }
-
-      for (auto i = 0ul; i < track.size() - 1; ++i) {
-        truthGraph.push_back(track[i].spacePointIndex);
-        truthGraph.push_back(track[i + 1].spacePointIndex);
-
-        if (found->transverseMomentum() > m_targetPT &&
-            track.size() >= m_targetSize) {
-          targetGraph.push_back(track[i].spacePointIndex);
-          targetGraph.push_back(track[i + 1].spacePointIndex);
-        }
-      }
-    }
-
-    m_truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
-        truthGraph, logger.clone());
-    m_targetGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
-        targetGraph, logger.clone());
-    m_graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
-  }
-
-  ~ExamplesEdmHook() {}
-
-  auto storedGraph() const { return m_graphStoreHook->storedGraph(); }
+  ~LoopHook() {}
 
   void operator()(const std::any& nodes, const std::any& edges,
                   const std::any& weights) const override {
-    ACTS_INFO("Metrics for total graph:");
-    (*m_truthGraphHook)(nodes, edges, weights);
-    ACTS_INFO("Metrics for target graph (pT > "
-              << m_targetPT / Acts::UnitConstants::GeV
-              << " GeV, nHits >= " << m_targetSize << "):");
-    (*m_targetGraphHook)(nodes, edges, weights);
-    (*m_graphStoreHook)(nodes, edges, weights);
+    for (auto hook : hooks) {
+      (*hook)(nodes, edges, weights);
+    }
   }
 };
 
@@ -164,10 +83,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
-  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
-  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
-
+  m_inputTruthGraph.maybeInitialize(m_cfg.inputTruthGraph);
   m_outputGraph.maybeInitialize(m_cfg.outputGraph);
 
   // reserve space for timing
@@ -200,16 +116,24 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  // Setup hooks
+  LoopHook hook;
+
+  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> truthGraphHook;
+  if (m_inputTruthGraph.isInitialized()) {
+    truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+        m_inputTruthGraph(ctx).edges, this->logger().clone());
+    hook.hooks.push_back(&*truthGraphHook);
+  }
+
+  std::unique_ptr<Acts::TorchGraphStoreHook> graphStoreHook;
+  if (m_outputGraph.isInitialized()) {
+    graphStoreHook = std::make_unique<Acts::TorchGraphStoreHook>();
+    hook.hooks.push_back(&*graphStoreHook);
+  }
+
   // Read input data
   auto spacepoints = m_inputSpacePoints(ctx);
-
-  auto hook = std::make_unique<Acts::ExaTrkXHook>();
-  if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
-    hook = std::make_unique<ExamplesEdmHook>(
-        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx),
-        m_inputParticles(ctx), m_cfg.targetMinHits, m_cfg.targetMinPT,
-        logger());
-  }
 
   std::optional<ClusterContainer> clusters;
   if (m_inputClusters.isInitialized()) {
@@ -288,7 +212,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     std::lock_guard<std::mutex> lock(m_mutex);
 
     Acts::ExaTrkXTiming timing;
-    auto res = m_pipeline.run(features, spacepointIDs, *hook, &timing);
+    auto res = m_pipeline.run(features, spacepointIDs, hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
@@ -329,13 +253,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
-  if (auto dhook = dynamic_cast<ExamplesEdmHook*>(&*hook);
-      dhook && m_outputGraph.isInitialized()) {
-    auto graph = dhook->storedGraph();
+  if (m_outputGraph.isInitialized()) {
+    auto graph = graphStoreHook->storedGraph();
     std::transform(
         graph.first.begin(), graph.first.end(), graph.first.begin(),
         [&](const auto& a) -> std::int64_t { return spacepointIDs.at(a); });
-    m_outputGraph(ctx, std::move(graph));
+    m_outputGraph(ctx, {graph.first, graph.second});
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
