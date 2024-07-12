@@ -107,7 +107,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         options.calibrationContext};
     gsfOptions.extensions = extensions;
     gsfOptions.propagatorPlainOptions = options.propOptions;
-    gsfOptions.referenceSurface = &(*options.referenceSurface);
+    gsfOptions.referenceSurface = options.referenceSurface;
     gsfOptions.maxComponents = maxComponents;
     gsfOptions.weightCutoff = weightCutoff;
     gsfOptions.abortOnError = abortOnError;
