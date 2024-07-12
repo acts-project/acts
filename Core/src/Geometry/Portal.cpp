@@ -149,7 +149,7 @@ template <BinningValue direction, class surface_t, typename... Args,
 std::unique_ptr<GridPortalLink> makeGrid(const surface_t& surface,
                                          const Logger& logger,
                                          std::tuple<Args...> args,
-                                         other_axis_t&& otherAxis) {
+                                         const other_axis_t& otherAxis) {
   static_assert(std::is_same_v<CylinderSurface, surface_t> ||
                 std::is_same_v<DiscSurface, surface_t>);
   // @TODO: PlaneSurface support
@@ -166,7 +166,7 @@ std::unique_ptr<GridPortalLink> makeGrid(const surface_t& surface,
     auto axisArgs = std::tuple_cat(std::tuple{boundaryType}, std::move(args));
     auto merged = std::apply(axisFactory, std::move(axisArgs));
 
-    if constexpr (!other_axis_t::value) {
+    if constexpr (!std::decay_t<other_axis_t>::value) {
       // No other axis
       ACTS_VERBOSE("    ~> merged axis: " << merged);
       return GridPortalLink::make(surface, direction, std::move(merged));
@@ -174,12 +174,14 @@ std::unique_ptr<GridPortalLink> makeGrid(const surface_t& surface,
       // Prepend other axis
       ACTS_VERBOSE("    ~> other axis (prepend): " << otherAxis.m_axis);
       ACTS_VERBOSE("    ~> merged axis: " << merged);
-      return GridPortalLink::make(surface, otherAxis.m_axis, std::move(merged));
+      return GridPortalLink::make(surface, Axis{otherAxis.m_axis},
+                                  std::move(merged));
     } else {
       // Append other axis
       ACTS_VERBOSE("    ~> merged axis: " << merged);
       ACTS_VERBOSE("    ~> other axis (append): " << otherAxis.axis);
-      return GridPortalLink::make(surface, std::move(merged), otherAxis.axis);
+      return GridPortalLink::make(surface, std::move(merged),
+                                  Axis{otherAxis.axis});
     }
   };
 
@@ -203,9 +205,12 @@ std::unique_ptr<GridPortalLink> makeGrid(const surface_t& surface,
 }
 
 template <BinningValue direction, class surface_t, typename other_axis_t>
-std::unique_ptr<GridPortalLink> mergeVariable(
-    const surface_t& mergedSurface, const IAxis& axisA, const IAxis& axisB,
-    ActsScalar /*tolerance*/, const Logger& logger, other_axis_t&& otherAxis) {
+std::unique_ptr<GridPortalLink> mergeVariable(const surface_t& mergedSurface,
+                                              const IAxis& axisA,
+                                              const IAxis& axisB,
+                                              ActsScalar /*tolerance*/,
+                                              const Logger& logger,
+                                              const other_axis_t& otherAxis) {
   ActsScalar halfWidth =
       (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) / 2.0;
 
@@ -226,14 +231,13 @@ std::unique_ptr<GridPortalLink> mergeVariable(
       [&](ActsScalar edge) { return edge - axisB.getMin() + stitchPoint; });
 
   return makeGrid<direction>(mergedSurface, logger,
-                             std::tuple{std::move(binEdges)},
-                             std::forward<other_axis_t>(otherAxis));
+                             std::tuple{std::move(binEdges)}, otherAxis);
 }
 
 template <BinningValue direction, class surface_t, typename other_axis_t>
 std::unique_ptr<GridPortalLink> mergeEquidistant(
     const surface_t& mergedSurface, const IAxis& axisA, const IAxis& axisB,
-    ActsScalar tolerance, const Logger& logger, other_axis_t&& otherAxis) {
+    ActsScalar tolerance, const Logger& logger, other_axis_t otherAxis) {
   ACTS_VERBOSE("===> potentially equidistant merge: checking bin widths");
 
   ActsScalar binsWidthA = (axisA.getMax() - axisA.getMin()) / axisA.getNBins();
@@ -251,7 +255,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
     return makeGrid<direction>(
         mergedSurface, logger,
         std::tuple{-halfWidth, halfWidth, axisA.getNBins() + axisB.getNBins()},
-        std::forward<other_axis_t>(otherAxis));
+        otherAxis);
 
   } else {
     ACTS_VERBOSE("==> binWidths differ: " << binsWidthA << " vs " << binsWidthB
@@ -259,7 +263,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
 
     std::unique_ptr<GridPortalLink> mergedPortalLink =
         mergeVariable<direction>(mergedSurface, axisA, axisB, tolerance, logger,
-                                 std::forward<other_axis_t>(otherAxis));
+                                 other_axis_t(otherAxis));
     return mergedPortalLink;
   }
 }
@@ -267,7 +271,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
 template <BinningValue direction, class surface_t, typename other_axis_t>
 std::unique_ptr<GridPortalLink> colinearMerge(
     const surface_t& mergedSurface, const IAxis& axisA, const IAxis& axisB,
-    ActsScalar tolerance, const Logger& logger, other_axis_t&& otherAxis) {
+    ActsScalar tolerance, const Logger& logger, const other_axis_t& otherAxis) {
   AxisType aType = axisA.getType();
   AxisType bType = axisB.getType();
   if (axisA.getBoundaryType() != axisB.getBoundaryType()) {
@@ -283,14 +287,13 @@ std::unique_ptr<GridPortalLink> colinearMerge(
   // convenience only
   auto mergeVariableLocal = [&] {
     return mergeVariable<direction>(mergedSurface, axisA, axisB, tolerance,
-                                    logger,
-                                    std::forward<other_axis_t>(otherAxis));
+                                    logger, otherAxis);
   };
 
   if (aType == AxisType::Equidistant && bType == AxisType::Equidistant) {
-    auto mergedPortalLink = mergeEquidistant<direction>(
-        mergedSurface, axisA, axisB, tolerance, logger,
-        std::forward<other_axis_t>(otherAxis));
+    auto mergedPortalLink =
+        mergeEquidistant<direction>(mergedSurface, axisA, axisB, tolerance,
+                                    logger, other_axis_t(otherAxis));
     // @TODO: Sync bin contents
     return mergedPortalLink;
   } else if (aType == AxisType::Variable && bType == AxisType::Variable) {
@@ -354,7 +357,14 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
       } else {
         ACTS_VERBOSE("=> perpendicular merge");
-        throw std::logic_error{"Not implemented"};
+        // Convert both 1D grids to 2D and merge those
+        auto a2D = a->make2DGrid();
+        auto b2D = b->make2DGrid();
+        assert(a2D != nullptr);
+        assert(b2D != nullptr);
+        // Call this function again, but with 2D grids
+        return mergeGridPortals(a2D.get(), b2D.get(), surfaceA, surfaceB,
+                                direction, logger);
       }
 
     } else if (direction == BinningValue::binRPhi) {
@@ -399,8 +409,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       ACTS_VERBOSE("    ~> they are!");
 
       return rPhiAxisA.visit(
-          [&,
-           mergedSurface](const auto& axis) -> std::unique_ptr<GridPortalLink> {
+          [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
             using axis_type = std::decay_t<decltype(axis)>;
             ACTS_VERBOSE("    ~> rPhi axis: " << axis);
 
