@@ -30,7 +30,6 @@
 #include <edm4hep/SimTrackerHitCollection.h>
 #include <podio/Frame.h>
 #include <podio/ObjectID.h>
-#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -82,7 +81,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
   });
 }
 
-podio::ROOTFrameReader& EDM4hepReader::reader() {
+Acts::PodioUtil::ROOTReader& EDM4hepReader::reader() {
   bool exists = false;
   auto& reader = m_reader.local(exists);
   if (!exists) {
