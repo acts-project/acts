@@ -14,9 +14,60 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include <ActsExamples/Digitization/MeasurementCreation.hpp>
+
+#include <cmath>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
+
+class BarcodeConstructor {
+  /// Particles with barcodes larger then this value are considered to be
+  /// secondary particles
+  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
+  constexpr static int s_maxBarcodeForPrimary = 200000;
+
+  std::uint16_t m_primaryCount = 0;
+  std::uint16_t m_secondaryCount = 0;
+  std::unordered_map<std::uint64_t, ActsFatras::Barcode> m_barcodeMap;
+
+  static std::uint64_t concatInts(int a, int b) {
+    auto va = static_cast<std::uint32_t>(a);
+    auto vb = static_cast<std::uint32_t>(b);
+    std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
+    return value;
+  }
+
+ public:
+  ActsFatras::Barcode getBarcode(int barcode, int evtnumber) {
+    auto v = concatInts(barcode, evtnumber);
+    auto found = m_barcodeMap.find(v);
+    if (found != m_barcodeMap.end()) {
+      return found->second;
+    }
+
+    auto primary = (barcode < s_maxBarcodeForPrimary);
+
+    ActsFatras::Barcode fBarcode;
+
+    // vertex primary shouldn't be zero for a valid particle
+    fBarcode.setVertexPrimary(1);
+    if (primary) {
+      fBarcode.setVertexSecondary(0);
+      fBarcode.setParticle(m_primaryCount);
+      assert(m_primaryCount < std::numeric_limits<std::uint16_t>::max());
+      m_primaryCount++;
+    } else {
+      fBarcode.setVertexSecondary(1);
+      fBarcode.setParticle(m_secondaryCount);
+      assert(m_primaryCount < std::numeric_limits<std::uint16_t>::max());
+      m_secondaryCount++;
+    }
+
+    m_barcodeMap[v] = fBarcode;
+    return fBarcode;
+  }
+};
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
@@ -39,6 +90,9 @@ ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputClusters.initialize(m_cfg.outputClusters);
+  m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
 
   // Set the branches
 
@@ -214,23 +268,47 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
   m_inputchain->GetEntry(entry);
 
-  // Loop on clusters (measurements)
-  ACTS_DEBUG("Found " << nSP << " space points");
-  ACTS_DEBUG("Found " << nCL << " clusters / measurements");
+  // Concat the two 32bit integers from athena to a Fatras barcode
 
-  ClusterContainer clusters;
-  clusters.resize(nCL);
+  SimParticleContainer particles;
+  BarcodeConstructor barcodeConstructor;
+
+  for (auto ip = 0; ip < nPartEVT; ++ip) {
+    if (m_cfg.onlyPassedParticles && !static_cast<bool>(Part_passed[ip])) {
+      continue;
+    }
+
+    auto barcode =
+        barcodeConstructor.getBarcode(Part_barcode[ip], Part_event_number[ip]);
+    SimParticle particle(barcode,
+                         static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+
+    Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} *
+                      Acts::UnitConstants::MeV;
+    particle.setAbsoluteMomentum(p.norm());
+
+    particle.setDirection(p.normalized());
+
+    auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
+    particle.setPosition4(x);
+
+    particles.insert(particle);
+  }
+
+  ClusterContainer clusters(nCL);
+  MeasurementContainer measurements;
+  measurements.reserve(nCL);
+
+  IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   for (int im = 0; im < nCL; im++) {
-    int bec = CLbarrel_endcap[im];
-    int lydisk = CLlayer_disk[im];
-    int etamod = CLeta_module[im];
-    int phimod = CLphi_module[im];
-    int side = CLside[im];
-    // ULong64_t moduleID = CLmoduleID     [im];
+    if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
+      ACTS_ERROR("hardware is neither 'PIXEL' or 'STRIP'");
+      return ActsExamples::ProcessCode::ABORT;
+    }
+    ACTS_VERBOSE("Cluster " << im << ": " << CLhardware->at(im));
 
-    ACTS_VERBOSE(bec << " " << lydisk << " " << etamod << " " << phimod << " "
-                     << side << " ");
+    auto type = (CLhardware->at(im) == "PIXEL") ? ePixel : eStrip;
 
     // Make cluster
     // TODO refactor ActsExamples::Cluster class so it is not so tedious
@@ -265,11 +343,43 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
                                     activation);
     }
 
-    ACTS_VERBOSE("Cluster " << im << ": " << cluster.channels.size()
-                            << "cells, dimensions: " << cluster.sizeLoc0 << ", "
-                            << cluster.sizeLoc1);
+    cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
+
+    ACTS_VERBOSE("CL shape: " << cluster.channels.size()
+                              << "cells, dimensions: " << cluster.sizeLoc0
+                              << ", " << cluster.sizeLoc1);
 
     clusters[im] = cluster;
+
+    // Measurement creation
+    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", "
+                                << CLloc_direction2[im] << ", "
+                                << CLloc_direction3[im]);
+    const auto& locCov = CLlocal_cov->at(im);
+
+    DigitizedParameters digiPars;
+    if (type == ePixel) {
+      digiPars.indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+      digiPars.values = {CLloc_direction1[im], CLloc_direction2[im]};
+      assert(locCov.size() == 4);
+      digiPars.variances = {locCov[0], locCov[3]};
+    } else {
+      digiPars.values = {CLloc_direction1[im]};
+      digiPars.indices = {Acts::eBoundLoc0};
+      assert(locCov.size() >= 1);
+      digiPars.variances = {locCov[0]};
+    }
+
+    IndexSourceLink sl(Acts::GeometryIdentifier{CLmoduleID[im]}, im);
+
+    measurements.push_back(createMeasurement(digiPars, sl));
+
+    // Create measurement particles map and particles container
+    for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
+                                              CLparticleLink_barcode->at(im))) {
+      auto barcode = barcodeConstructor.getBarcode(bc, subevt);
+      measPartMap.insert(std::pair<Index, ActsFatras::Barcode>{im, barcode});
+    }
   }
 
   // Prepare pixel space points
@@ -280,7 +390,19 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   SimSpacePointContainer spacePoints;
 
   // Loop on space points
+  std::size_t skippedSpacePoints = 0;
   for (int isp = 0; isp < nSP; isp++) {
+    auto isPhiOverlap = (SPisOverlap[isp] == 2) || (SPisOverlap[isp] == 3);
+    auto isEtaOverlap = (SPisOverlap[isp] == 1) || (SPisOverlap[isp] == 3);
+    if (m_cfg.skipOverlapSPsPhi && isPhiOverlap) {
+      ++skippedSpacePoints;
+      continue;
+    }
+    if (m_cfg.skipOverlapSPsEta && isEtaOverlap) {
+      ++skippedSpacePoints;
+      continue;
+    }
+
     Acts::Vector3 globalPos{SPx[isp], SPy[isp], SPz[isp]};
     double sp_covr = SPcovr[isp];
     double sp_covz = SPcovz[isp];
@@ -323,14 +445,21 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     spacePoints.push_back(sp);
   }
 
+  ACTS_DEBUG("Created " << particles.size() << " particles");
+  if (m_cfg.skipOverlapSPsEta || m_cfg.skipOverlapSPsPhi) {
+    ACTS_DEBUG("Skipped " << skippedSpacePoints
+                          << " because of eta/phi overlaps");
+  }
+  ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
-
-  ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
   m_outputSpacePoints(ctx, std::move(spacePoints));
   m_outputClusters(ctx, std::move(clusters));
+  m_outputParticles(ctx, std::move(particles));
+  m_outputMeasParticleMap(ctx, std::move(measPartMap));
+  m_outputMeasurements(ctx, std::move(measurements));
 
   return ProcessCode::SUCCESS;
 }
