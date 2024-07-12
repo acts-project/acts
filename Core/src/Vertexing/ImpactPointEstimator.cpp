@@ -367,7 +367,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
           .closest();
 
   // Create propagator options
-  BasePropagatorOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
@@ -423,7 +423,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  BasePropagatorOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   auto intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
@@ -507,7 +507,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  BasePropagatorOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
@@ -546,7 +546,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  BasePropagatorOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee

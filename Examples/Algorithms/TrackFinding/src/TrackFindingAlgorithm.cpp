@@ -346,11 +346,13 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions firstPropOptions;
+  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
+                                                ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
   firstPropOptions.direction = Acts::Direction::Forward;
 
-  Acts::PropagatorPlainOptions secondPropOptions;
+  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
+                                                 ctx.magFieldContext);
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
 

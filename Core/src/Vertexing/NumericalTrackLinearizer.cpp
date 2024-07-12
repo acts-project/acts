@@ -20,7 +20,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& /*fieldCache*/) const {
   // Create propagator options
-  BasePropagatorOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions(gctx, mctx);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.

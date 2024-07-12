@@ -46,7 +46,7 @@ namespace Acts {
 class BasePropagator {
  public:
   /// Base propagator options
-  using Options = BasePropagatorOptions;
+  using Options = PropagatorPlainOptions;
 
   /// Method to propagate start bound track parameters to a target surface.
   /// @param start The start bound track parameters.
