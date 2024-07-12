@@ -72,7 +72,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
+  using Options =
+      typename propagator_t::template Options<ActionListType, AbortListType>;
 
   // forward surface test
   Options fwdOptions(tgContext, mfContext);
@@ -257,13 +258,16 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
   // Action list and abort list
   using ActionListType = ActionList<SurfaceCollector>;
   using AbortListType = AbortList<>;
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
 
   auto run = [&](const auto& prop) {
+    using propagator_t = std::decay_t<decltype(prop)>;
+    using Options =
+        typename propagator_t::template Options<ActionListType, AbortListType>;
+
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
     fwdOptions.pathLimit = 25_cm;
-    fwdOptions.maxStepSize = 1_cm;
+    fwdOptions.stepping.maxStepSize = 1_cm;
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =

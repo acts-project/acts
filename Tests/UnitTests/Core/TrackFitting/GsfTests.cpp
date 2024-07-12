@@ -101,7 +101,8 @@ auto makeDefaultGsfOptions() {
   GsfOptions<VectorMultiTrajectory> opts{tester.geoCtx, tester.magCtx,
                                          tester.calCtx};
   opts.extensions = getExtensions();
-  opts.propagatorPlainOptions = PropagatorPlainOptions();
+  opts.propagatorPlainOptions =
+      PropagatorPlainOptions(tester.geoCtx, tester.magCtx);
   return opts;
 }
 

@@ -78,7 +78,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  Acts::PropagatorPlainOptions pOptions;
+  Acts::PropagatorPlainOptions pOptions(ctx.geoContext, ctx.magFieldContext);
   pOptions.maxSteps = 10000;
 
   PassThroughCalibrator pcalibrator;
