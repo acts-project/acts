@@ -213,6 +213,12 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/TracccChainConfigStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_TRACCC AND ACTS_BUILD_CUDA)
+  target_sources(ActsPythonBindings PRIVATE src/TracccChainCuda.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/TracccChainCudaStub.cpp)
+endif()
+
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES ${_python_dir}/setup.sh DESTINATION "python")
 
