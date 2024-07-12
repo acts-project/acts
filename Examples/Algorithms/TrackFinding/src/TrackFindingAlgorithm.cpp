@@ -351,13 +351,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   firstPropOptions.maxSteps = m_cfg.maxSteps;
   firstPropOptions.direction = Acts::Direction::Forward;
   firstPropOptions.boundaryTolerance =
-      Acts::BoundaryTolerance::AbsoluteEuclidean(1 * Acts::UnitConstants::mm);
+      Acts::BoundaryTolerance::AbsoluteCartesian(1 * Acts::UnitConstants::mm,
+                                                 1 * Acts::UnitConstants::mm);
 
   Acts::PropagatorPlainOptions secondPropOptions;
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
   secondPropOptions.boundaryTolerance =
-      Acts::BoundaryTolerance::AbsoluteEuclidean(1 * Acts::UnitConstants::mm);
+      Acts::BoundaryTolerance::AbsoluteCartesian(1 * Acts::UnitConstants::mm,
+                                                 1 * Acts::UnitConstants::mm);
 
   // Set the CombinatorialKalmanFilter options
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
