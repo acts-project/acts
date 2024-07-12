@@ -28,6 +28,7 @@
   - changed-files:
     - any-glob-to-any-file:
       - docs/**
+      - '**/*.rst'
 'Changes Performance':
   - changed-files:
     - any-glob-to-any-file:
