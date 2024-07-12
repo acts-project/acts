@@ -51,7 +51,8 @@ set( DETRAY_SETUP_DFELIBS OFF CACHE BOOL
    "Do not set up Dfelibs as part of Detray" )
 set( DETRAY_SVG_DISPLAY ${ACTS_BUILD_PLUGIN_ACTSVG} CACHE BOOL
     "Build the ActSVG display module depending on the ACTS_BUILD_PLUGIN_ACTSVG" )
-
+set ( DETRAY_BUILD_CUDA OFF CACHE BOOL
+    "Do not build Cuda sources in Detray" )
 
 #Now set up its build.
 FetchContent_MakeAvailable(Detray)
