@@ -57,8 +57,6 @@ class Portal {
 };
 
 class GridPortalLink;
-class GridPortalLink1;
-class GridPortalLink2;
 
 // template <std::size_t N>
 // class GridPortalLinkN;
@@ -155,6 +153,7 @@ class GridPortalLink : public PortalLinkBase {
 
   virtual const IGrid& grid() const = 0;
   virtual unsigned int dim() const = 0;
+  virtual std::unique_ptr<GridPortalLink> make2DGrid() const = 0;
 
   BinningValue direction() const { return m_direction; }
 
@@ -187,6 +186,20 @@ class GridPortalLinkT : public GridPortalLink {
 
   void toStream(std::ostream& os) const override {
     os << "GridPortalLink<dim=" << dim() << ">";
+  }
+
+  std::unique_ptr<GridPortalLink> make2DGrid() const override {
+    if constexpr (DIM == 2) {
+      return std::make_unique<GridPortalLinkT<Axes...>>(*this);
+    } else {
+      if (const auto* cylinder =
+              dynamic_cast<const CylinderSurface*>(m_surface)) {
+        return extendTo2D(*cylinder);
+      } else {
+        throw std::logic_error{
+            "Surface type is not supported (this should not happen)"};
+      }
+    }
   }
 
  private:
@@ -238,6 +251,36 @@ class GridPortalLinkT : public GridPortalLink {
       auto [axisLoc0, axisLoc1] = m_grid.axesTuple();
       checkRPhi(axisLoc0);
       checkZ(axisLoc1);
+    }
+  }
+
+  std::unique_ptr<GridPortalLink> extendTo2D(
+      const CylinderSurface& surface) const {
+    if (direction() == BinningValue::binRPhi) {
+      auto [axisRPhi] = m_grid.axesTuple();
+      // 1D direction is binRPhi, so add a Z axis
+      ActsScalar hlZ = surface.bounds().get(CylinderBounds::eHalfLengthZ);
+
+      Axis axisZ{AxisBound, -hlZ, hlZ, 1};
+      return GridPortalLink::make(surface, std::move(axisRPhi),
+                                  std::move(axisZ));
+    } else {
+      auto [axisZ] = m_grid.axesTuple();
+      // 1D direction is binZ, so add an rPhi axis
+      ActsScalar r = surface.bounds().get(CylinderBounds::eR);
+      ActsScalar hlPhi = surface.bounds().get(CylinderBounds::eHalfPhiSector);
+      ActsScalar hlRPhi = r * hlPhi;
+
+      auto axis = [&](auto bdt) {
+        return GridPortalLink::make(surface, Axis{bdt, -hlRPhi, hlRPhi, 1},
+                                    std::move(axisZ));
+      };
+
+      if (surface.bounds().coversFullAzimuth()) {
+        return axis(AxisClosed);
+      } else {
+        return axis(AxisBound);
+      }
     }
   }
 

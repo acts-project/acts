@@ -398,12 +398,6 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       }
       ACTS_VERBOSE("    ~> they are!");
 
-      // pack colinear merge call so that it can be reused
-      // auto colinearMergeZ = [&](auto passthroughAxis) {
-      //   return colinearMerge<BinningValue::binZ>(*surfaceA, zAxisA, zAxisB,
-      //                                            tolerance, logger);
-      // };
-
       return rPhiAxisA.visit(
           [&,
            mergedSurface](const auto& axis) -> std::unique_ptr<GridPortalLink> {
