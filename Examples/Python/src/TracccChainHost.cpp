@@ -24,9 +24,9 @@ void addTracccChainHost(Context& ctx) {
   auto m = ctx.get("examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-     ActsExamples::Traccc::Host::TracccChainAlgorithm, m,
-    "TracccChainAlgorithmHost", inputCells, inputMeasurements,
-    outputTracks, trackingGeometry, field, digitizationConfigs, chainConfig);
+      ActsExamples::Traccc::Host::TracccChainAlgorithm, m,
+      "TracccChainAlgorithmHost", inputCells, inputMeasurements, outputTracks,
+      trackingGeometry, field, digitizationConfigs, chainConfig);
 }
 
 }  // namespace Acts::Python

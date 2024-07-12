@@ -6,10 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/Traccc/Common/TracccChainConfig.hpp"
+
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/Traccc/Common/TracccChainConfig.hpp"
 
 #include <memory>
 
@@ -20,11 +21,11 @@ namespace py = pybind11;
 
 namespace Acts::Python {
 
-void addSeedFinderConfig(pybind11::module_ m){
-  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::SeedfinderConfigType;
+void addSeedFinderConfig(pybind11::module_ m) {
+  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::
+      SeedfinderConfigType;
 
-  auto c = py::class_<Config>(m, "SeedFinderConfig")
-        .def(py::init<>());
+  auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(zMin);
@@ -60,10 +61,12 @@ void addSeedFinderConfig(pybind11::module_ m){
 }
 
 void addSpacePointGridConfig(py::module_ m) {
-  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::SpacepointGridConfigType;
+  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::
+      SpacepointGridConfigType;
 
   auto c = py::class_<Config>(m, "SpacePointGridConfig")
-    .def(py::init<const typename ActsExamples::Traccc::Common::TracccChainConfig::SeedfinderConfigType&>());
+               .def(py::init<const typename ActsExamples::Traccc::Common::
+                                 TracccChainConfig::SeedfinderConfigType&>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(bFieldInZ);
@@ -81,10 +84,10 @@ void addSpacePointGridConfig(py::module_ m) {
 }
 
 void addSeedFilterConfig(py::module_ m) {
-  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::SeedfilterConfigType;
+  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::
+      SeedfilterConfigType;
 
-  auto c = py::class_<Config>(m, "SeedFilterConfig")
-    .def(py::init<>());
+  auto c = py::class_<Config>(m, "SeedFilterConfig").def(py::init<>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(deltaInvHelixDiameter);
@@ -105,10 +108,10 @@ void addSeedFilterConfig(py::module_ m) {
 }
 
 void addFindingConfig(py::module_ m) {
-  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::FindingConfigType;
+  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::
+      FindingConfigType;
 
-  auto c = py::class_<Config>(m, "FindingConfig")
-    .def(py::init<>());
+  auto c = py::class_<Config>(m, "FindingConfig").def(py::init<>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(max_num_branches_per_seed);
@@ -126,10 +129,10 @@ void addFindingConfig(py::module_ m) {
 }
 
 void addFittingConfig(py::module_ m) {
-  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::FittingConfigType;
+  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::
+      FittingConfigType;
 
-  auto c = py::class_<Config>(m, "FittingConfig")
-    .def(py::init<>());
+  auto c = py::class_<Config>(m, "FittingConfig").def(py::init<>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(n_iterations);
@@ -138,10 +141,11 @@ void addFittingConfig(py::module_ m) {
 }
 
 void addGreedyAmbiguityResolutionAlgorithmConfig(py::module_ m) {
-  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::AmbiguityResolutionConfigType;
+  using Config = typename ActsExamples::Traccc::Common::TracccChainConfig::
+      AmbiguityResolutionConfigType;
 
   auto c = py::class_<Config>(m, "GreedyAmbiguityResolutionAlgorithmConfig")
-    .def(py::init<>());
+               .def(py::init<>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(maximum_shared_hits);
@@ -169,7 +173,7 @@ void addTracccChainConfig(Context& ctx) {
   using Config = typename ActsExamples::Traccc::Common::TracccChainConfig;
 
   auto c = py::class_<Config, std::shared_ptr<Config>>(m, "TracccChainConfig")
-  .def(py::init<>());
+               .def(py::init<>());
 
   ACTS_PYTHON_STRUCT_BEGIN(c, Config);
   ACTS_PYTHON_MEMBER(seedfinderConfig);

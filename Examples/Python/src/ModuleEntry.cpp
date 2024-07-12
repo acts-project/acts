@@ -82,7 +82,6 @@ void addCovfie(Context& ctx);
 void addTracccChainConfig(Context& ctx);
 void addTracccChainHost(Context& ctx);
 
-
 }  // namespace Acts::Python
 
 PYBIND11_MODULE(ActsPythonBindings, m) {

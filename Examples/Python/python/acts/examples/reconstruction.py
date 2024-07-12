@@ -2063,16 +2063,15 @@ def addSingleSeedVertexFinding(
     return s
 
 
-
 def addTracccChain(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Union[Path, str],
     chainConfig,
-    inputCells:  Optional[str]= "cells", #"InputCells",
-    inputMeasurements:  Optional[str]= "measurements",
-    outputTracks: Optional[str]="traccc_tracks",
+    inputCells: Optional[str] = "cells",  # "InputCells",
+    inputMeasurements: Optional[str] = "measurements",
+    outputTracks: Optional[str] = "traccc_tracks",
     outputDirRoot: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -2093,7 +2092,7 @@ def addTracccChain(
         digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
-        chainConfig=chainConfig
+        chainConfig=chainConfig,
     )
 
     s.addAlgorithm(alg)

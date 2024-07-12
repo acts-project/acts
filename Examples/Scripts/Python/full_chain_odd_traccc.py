@@ -148,7 +148,7 @@ rnd = acts.examples.RandomNumbers(seed=args.rnd_seed)
 s = acts.examples.Sequencer(
     events=args.events,
     skip=args.skip,
-    numThreads= 1 if args.geant4 else -1,
+    numThreads=1 if args.geant4 else -1,
     outputDir=str(outputDir),
     trackFpes=False,
 )
@@ -210,9 +210,11 @@ if args.geant4:
         outputDirRoot=outputDir,
         outputDirCsv=outputDir,
         rnd=rnd,
-        killVolume=recoGeometry.worldVolume
-        if isinstance(recoGeometry, acts.TrackingGeometry)
-        else None,
+        killVolume=(
+            recoGeometry.worldVolume
+            if isinstance(recoGeometry, acts.TrackingGeometry)
+            else None
+        ),
         killAfterTime=25 * u.ns,
     )
 elif isinstance(recoGeometry, acts.TrackingGeometry):
@@ -220,15 +222,17 @@ elif isinstance(recoGeometry, acts.TrackingGeometry):
         s,
         recoGeometry,
         field,
-        preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-            removeNeutral=True,
-        )
-        if args.ttbar
-        else ParticleSelectorConfig(),
+        preSelectParticles=(
+            ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            )
+            if args.ttbar
+            else ParticleSelectorConfig()
+        ),
         enableInteractions=True,
         outputDirRoot=outputDir,
         outputDirCsv=outputDir,
@@ -260,8 +264,8 @@ addTracccChain(
     inputCells="cells",
     outputDirRoot=outputDir,
     chainConfig=chainConfig,
-    logLevel=acts.logging.DEBUG
-    #outputDirCsv=outputDir,
+    logLevel=acts.logging.DEBUG,
+    # outputDirCsv=outputDir,
 )
 
 s.run()

@@ -88,7 +88,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   using Digitizer = std::variant<CombinedDigitizer<0>, CombinedDigitizer<1>,
                                  CombinedDigitizer<2>, CombinedDigitizer<3>,
                                  CombinedDigitizer<4>>;
-                                 
+
   /// Configuration of the Algorithm
   DigitizationConfig m_cfg;
   /// Digitizers within geometry hierarchy

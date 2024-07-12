@@ -9,8 +9,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addTracccChainHost(Context& /* ctx */) {
-
-}
+void addTracccChainHost(Context& /* ctx */) {}
 
 }  // namespace Acts::Python
