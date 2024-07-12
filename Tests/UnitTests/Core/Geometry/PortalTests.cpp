@@ -318,6 +318,15 @@ BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
   BOOST_REQUIRE_NE(merged12Ptr, nullptr);
   auto merged12 = dynamic_cast<const GridPortalLink*>(merged12Ptr.get());
   BOOST_REQUIRE_NE(merged12, nullptr);
+
+  BOOST_REQUIRE_EQUAL(merged12->grid().axes().size(), 2);
+
+  const auto& axis1 = merged12->grid().axes().front();
+  const auto& axis2 = merged12->grid().axes().back();
+  Axis axis1Expected{AxisBound, -35_degree * 30_mm, 35_degree * 30_mm, 3};
+  BOOST_CHECK_EQUAL(*axis1, axis1Expected);
+  Axis axis2Expected{AxisBound, {-150_mm, 50_mm, 150_mm}};
+  BOOST_CHECK_EQUAL(*axis2, axis2Expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -706,7 +715,25 @@ BOOST_AUTO_TEST_CASE(CompatibleMerging) {
   // We're merging in z direction, so the phi binnings need to be the same
 
   auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binZ, *logger);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
   BOOST_REQUIRE_NE(mergedPtr, nullptr);
+
+  std::cout << merged->grid() << std::endl;
+
+  const auto& axis1 = *merged->grid().axes().front();
+  const auto& axis2 = *merged->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1.getMin(), -45_degree * 30_mm);
+  BOOST_CHECK_EQUAL(axis1.getMax(), 45_degree * 30_mm);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 5);
+  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+
+  BOOST_CHECK_EQUAL(axis2.getMin(), -150_mm);
+  BOOST_CHECK_EQUAL(axis2.getMax(), 150_mm);
+  BOOST_CHECK_EQUAL(axis2.getNBins(), 10);
+  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Variable);
+  BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
   // @TODO: Check wraparound for full circle in phi
   // @TODO: Merge in phi direction with z binning
