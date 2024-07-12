@@ -90,7 +90,14 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
 
  private:
   enum ParameterType { ePredicted = 0, eFiltered, eSmoothed, eUnbiased, eSize };
-  enum StateType { eMeasurement = 0, eOutlier, eHole, eMaterial, eUnknown, eSizeState };
+  enum StateType {
+    eMeasurement = 0,
+    eOutlier,
+    eHole,
+    eMaterial,
+    eUnknown,
+    eSizeState
+  };
 
   static StateType getStateType(ConstTrackStateProxy state);
 
