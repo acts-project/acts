@@ -121,7 +121,8 @@ struct GsfOptions {
              const CalibrationContext &calibCtxt)
       : geoContext(geoCtxt),
         magFieldContext(magFieldCtxt),
-        calibrationContext(calibCtxt) {}
+        calibrationContext(calibCtxt),
+        propagatorPlainOptions(geoCtxt, magFieldCtxt) {}
 };
 
 }  // namespace Acts
