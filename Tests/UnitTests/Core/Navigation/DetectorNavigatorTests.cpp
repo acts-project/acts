@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // 7 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 9u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 8u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 2u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 2u);
@@ -324,8 +324,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(), 12);
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
 
-  // Step to the volume1|volume2 boundary
-  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 1);
+  // Step to the volume1|volume2 boundary (portal has witched volume id)
+  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 2);
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 7);
 
@@ -334,8 +334,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[3].currentSurface->geometryId(), 13);
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal, nullptr);
 
-  // Step to the volume2|volume3 boundary
-  BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(), 2);
+  // Step to the volume2|volume3 boundary - volume has switched
+  BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(), 3);
   BOOST_CHECK_EQUAL(statesFwd[4].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[4].currentPortal->surface().geometryId(), 10);
 
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesFwd[5].currentPortal, nullptr);
 
   // Step to the volume3|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesFwd[6].currentVolume->geometryId(), 3);
+  BOOST_CHECK_EQUAL(statesFwd[6].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[6].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[6].currentPortal->surface().geometryId(), 11);
 
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Action list call before the first step
   // Starting in the volume3
-  BOOST_CHECK_EQUAL(statesBwd[6].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[6].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[6].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[6].currentPortal->surface().geometryId(), 6);
 
@@ -364,8 +364,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesBwd[5].currentSurface->geometryId(), 12);
   BOOST_CHECK_EQUAL(statesBwd[5].currentPortal, nullptr);
 
-  // Step to the volume1|volume2 boundary
-  BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(), 2);
+  // Step to the volume1|volume2 boundary / preStep not yet set
+  BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(), 1);
   BOOST_CHECK_EQUAL(statesBwd[4].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[4].currentPortal->surface().geometryId(), 7);
 
@@ -374,8 +374,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesBwd[3].currentSurface->geometryId(), 13);
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal, nullptr);
 
-  // Step to the volume2|volume3 boundary
-  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 3);
+  // Step to the volume2|volume3 boundary / pre-step not yet set
+  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 2);
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 10);
   BOOST_CHECK_EQUAL(statesBwd[2].surfaceCandidates.size(), 2u);
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   // 3 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 5u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 4u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 2u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 2u);
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   CHECK_CLOSE_REL(statesFwd[1].position.x(), 4, 1e-6);
 
   // Step to the volume|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 6);
 
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   BOOST_CHECK(navigator.endOfWorldReached(statesBwd[3]));
 
   // Step to the endOfWorld|volume boundary
-  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 5);
 
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   // 4 steps to reach the end of world
   // + 1 recording in the post-step
   // + 1 recording before the stepping loop
-  BOOST_CHECK_EQUAL(statesFwd.size(), 6u);
+  BOOST_CHECK_EQUAL(statesFwd.size(), 5u);
   BOOST_CHECK_EQUAL(statesFwd.size(), statesBwd.size());
   BOOST_CHECK_EQUAL(statesFwd[0].surfaceCandidates.size(), 3u);
   BOOST_CHECK_EQUAL(statesBwd[0].surfaceCandidates.size(), 3u);
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   CHECK_CLOSE_REL(statesFwd[2].position.x(), 4, 1e-6);
 
   // Step to the volume|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesFwd[3].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesFwd[3].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[3].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal->surface().geometryId(), 6);
 
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK(navigator.endOfWorldReached(statesBwd[4]));
 
   // Step to the endOfWorld|volume boundary
-  BOOST_CHECK_EQUAL(statesBwd[3].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[3].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[3].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal->surface().geometryId(), 5);
 

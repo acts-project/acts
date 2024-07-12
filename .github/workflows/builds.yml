@@ -50,7 +50,10 @@ jobs:
         # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions
+        # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
+          git config --global user.name 'CI' && 
+          git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
           -GNinja
@@ -61,6 +64,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
@@ -68,6 +72,7 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
           -DACTS_BUILD_PLUGIN_ACTSVG=ON
+          -DACTS_BUILD_PLUGIN_GEOMODEL=ON
 
       - name: Build
         run: cmake --build build
@@ -276,6 +281,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
@@ -376,6 +382,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_FORCE_ASSERTIONS=ON
