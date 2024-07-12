@@ -297,9 +297,7 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
             key=lambda m: (
                 (2, m[0])
                 if m[0] == "ActsPythonBindings"
-                else (1, m[0])
-                if m[0].startswith("_")
-                else (0, m[0])
+                else (1, m[0]) if m[0].startswith("_") else (0, m[0])
             ),
         ):
             if (
@@ -353,8 +351,7 @@ class CustomLogLevel(Protocol):
         self,
         minLevel: acts.logging.Level = acts.logging.VERBOSE,
         maxLevel: acts.logging.Level = acts.logging.FATAL,
-    ) -> acts.logging.Level:
-        ...
+    ) -> acts.logging.Level: ...
 
 
 def defaultLogging(
