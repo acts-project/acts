@@ -21,12 +21,12 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(insert_vector) {
   std::vector<std::size_t> coll;
-  Acts::details::insert(coll, 2ul);
+  Acts::detail::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::details::insert(coll, 5ul);
+  Acts::detail::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::details::insert(coll, val);
+  Acts::detail::insert(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK_EQUAL(coll[0], 2ul);
@@ -36,12 +36,12 @@ BOOST_AUTO_TEST_CASE(insert_vector) {
 
 BOOST_AUTO_TEST_CASE(insert_list) {
   std::list<std::size_t> coll;
-  Acts::details::insert(coll, 2ul);
+  Acts::detail::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::details::insert(coll, 5ul);
+  Acts::detail::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::details::insert(coll, val);
+  Acts::detail::insert(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK_EQUAL(coll.front(), 2ul);
@@ -54,12 +54,12 @@ BOOST_AUTO_TEST_CASE(insert_list) {
 
 BOOST_AUTO_TEST_CASE(insert_set) {
   std::set<std::size_t> coll;
-  Acts::details::insert(coll, 2ul);
+  Acts::detail::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::details::insert(coll, 5ul);
+  Acts::detail::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::details::insert(coll, val);
+  Acts::detail::insert(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK(coll.find(2ul) != coll.end());
@@ -69,12 +69,12 @@ BOOST_AUTO_TEST_CASE(insert_set) {
 
 BOOST_AUTO_TEST_CASE(insert_unordered_set) {
   std::unordered_set<std::size_t> coll;
-  Acts::details::insert(coll, 2ul);
+  Acts::detail::insert(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::details::insert(coll, 5ul);
+  Acts::detail::insert(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::details::insert(coll, val);
+  Acts::detail::insert(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK(coll.find(2ul) != coll.end());
@@ -85,12 +85,12 @@ BOOST_AUTO_TEST_CASE(insert_unordered_set) {
 BOOST_AUTO_TEST_CASE(insert_back_iterator) {
   std::vector<std::size_t> coll;
   std::back_insert_iterator<decltype(coll)> backItr(coll);
-  Acts::details::insert(backItr, 2ul);
+  Acts::detail::insert(backItr, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::details::insert(backItr, 5ul);
+  Acts::detail::insert(backItr, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::details::insert(backItr, val);
+  Acts::detail::insert(backItr, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK_EQUAL(coll[0], 2ul);
@@ -109,12 +109,12 @@ BOOST_AUTO_TEST_CASE(emplace_vector) {
   };
 
   std::vector<A> coll;
-  Acts::details::emplace(coll, 2ul, 4.5f, "A");
+  Acts::detail::emplace(coll, 2ul, 4.5f, "A");
   BOOST_CHECK(coll.size() == 1ul);
   std::size_t a = 5ul;
   float b = 0.25f;
   std::string c = "B";
-  Acts::details::emplace(coll, a, b, c);
+  Acts::detail::emplace(coll, a, b, c);
   BOOST_CHECK(coll.size() == 2ul);
 
   BOOST_CHECK_EQUAL(coll[0].valA, 2ul);

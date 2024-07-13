@@ -307,9 +307,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     spacePointData.setQuality(medium->index(), bestSeedQuality);
     spacePointData.setQuality(top->index(), bestSeedQuality);
 
-    Acts::details::insert(outIt, Seed<external_spacepoint_t>{
-                                     bottom->sp(), medium->sp(), top->sp(),
-                                     zOrigin, bestSeedQuality});
+    Acts::detail::insert(outIt, Seed<external_spacepoint_t>{
+                                    bottom->sp(), medium->sp(), top->sp(),
+                                    zOrigin, bestSeedQuality});
 
     ++numTotalSeeds;
   }
