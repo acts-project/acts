@@ -136,26 +136,26 @@ function run_physmon_gen() {
 }
 
 echo "::group::Generate validation dataset"
-# if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-#     run_physmon_gen "Truth Tracking KF" "truth_tracking_kalman"
-# fi
-# if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
-#     run_physmon_gen "Truth Tracking GSF" "truth_tracking_gsf"
-# fi
-# if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
-#     run_physmon_gen "Truth Tracking GX2F" "truth_tracking_gx2f"
-# fi
+if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
+    run_physmon_gen "Truth Tracking KF" "truth_tracking_kalman"
+fi
+if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
+    run_physmon_gen "Truth Tracking GSF" "truth_tracking_gsf"
+fi
+if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
+    run_physmon_gen "Truth Tracking GX2F" "truth_tracking_gx2f"
+fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    # run_physmon_gen "CKF Tracking" "ckf_tracking"
+    run_physmon_gen "CKF Tracking" "ckf_tracking"
     run_physmon_gen "Track finding ttbar" "track_finding_ttbar"
 
 fi
-# if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
-#     run_physmon_gen "Vertexing" "vertexing"
-# fi
-# if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
-#     run_physmon_gen "Simulation" "simulation"
-# fi
+if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
+    run_physmon_gen "Vertexing" "vertexing"
+fi
+if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
+    run_physmon_gen "Simulation" "simulation"
+fi
 echo "::endgroup::"
 
 
