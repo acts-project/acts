@@ -54,6 +54,8 @@ class BasePropagator {
   /// @param options The propagation options.
   /// @return The end bound track parameters.
   virtual Result<BoundTrackParameters> propagateToSurface(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const = 0;
 
@@ -67,6 +69,8 @@ template <typename derived_t>
 class BasePropagatorHelper : public BasePropagator {
  public:
   Result<BoundTrackParameters> propagateToSurface(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const override;
 };
@@ -257,7 +261,9 @@ class Propagator final
   Result<
       action_list_t_result_t<StepperCurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start, const propagator_options_t& options,
+  propagate(const GeometryContext& geoContext,
+            const MagneticFieldContext& magFieldContext,
+            const parameters_t& start, const propagator_options_t& options,
             bool makeCurvilinear = true) const;
 
   /// @brief Propagate track parameters - User method
@@ -284,7 +290,9 @@ class Propagator final
   Result<
       action_list_t_result_t<StepperBoundTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start, const Surface& target,
+  propagate(const GeometryContext& geoContext,
+            const MagneticFieldContext& magFieldContext,
+            const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
   /// @brief Builds the propagator state object
@@ -304,7 +312,9 @@ class Propagator final
   /// @return Propagator state object
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start,
+  auto makeState(const GeometryContext& geoContext,
+                 const MagneticFieldContext& magFieldContext,
+                 const parameters_t& start,
                  const propagator_options_t& options) const;
 
   /// @brief Builds the propagator state object
@@ -327,7 +337,9 @@ class Propagator final
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  auto makeState(const parameters_t& start, const Surface& target,
+  auto makeState(const GeometryContext& geoContext,
+                 const MagneticFieldContext& magFieldContext,
+                 const parameters_t& start, const Surface& target,
                  const propagator_options_t& options) const;
 
   /// @brief Propagate track parameters

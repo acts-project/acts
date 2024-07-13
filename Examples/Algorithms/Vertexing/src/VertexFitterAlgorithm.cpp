@@ -61,7 +61,6 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ltConfig.propagator = propagator;
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   vertexFitterCfg.extractParameters

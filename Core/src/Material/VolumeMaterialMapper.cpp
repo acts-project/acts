@@ -377,11 +377,13 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  StraightLinePropagator::Options<ActionList, AbortList> options(
-      mState.geoContext, mState.magFieldContext);
+  StraightLinePropagator::Options<ActionList, AbortList> options;
 
   // Now collect the material volume by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
+  const auto& result =
+      m_propagator
+          .propagate(mState.geoContext, mState.magFieldContext, start, options)
+          .value();
   auto mcResult = result.get<BoundSurfaceCollector::result_type>();
   auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
 

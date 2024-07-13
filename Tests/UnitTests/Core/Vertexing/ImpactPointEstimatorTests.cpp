@@ -257,7 +257,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   auto refPerigeeSurface = Surface::makeShared<PerigeeSurface>(refPoint);
 
   // Set up the propagator options (they are the same with and without B field)
-  PropagatorOptions pOptions(geoContext, magFieldContext);
+  PropagatorOptions pOptions;
   auto intersection =
       refPerigeeSurface
           ->intersect(geoContext, params.position(geoContext),
@@ -267,13 +267,14 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the 2D PCA of the reference point in a constant B field
-  auto result = propagator->propagate(params, *refPerigeeSurface, pOptions);
+  auto result = propagator->propagate(geoContext, magFieldContext, params,
+                                      *refPerigeeSurface, pOptions);
   BOOST_CHECK(result.ok());
   const auto& refParams = *result->endParameters;
 
   // Propagate to the 2D PCA of the reference point when B = 0
-  auto zeroFieldResult =
-      straightLinePropagator->propagate(params, *refPerigeeSurface, pOptions);
+  auto zeroFieldResult = straightLinePropagator->propagate(
+      geoContext, magFieldContext, params, *refPerigeeSurface, pOptions);
   BOOST_CHECK(zeroFieldResult.ok());
   const auto& zeroFieldRefParams = *zeroFieldResult->endParameters;
 

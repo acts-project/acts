@@ -20,7 +20,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& /*fieldCache*/) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions;
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -44,8 +44,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  auto result =
-      m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->propagateToSurface(gctx, mctx, params,
+                                                     perigeeSurface, pOptions);
   if (!result.ok()) {
     return result.error();
   }
@@ -128,7 +128,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
 
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagateToSurface(
-        wiggledCurvilinearParams, perigeeSurface, pOptions);
+        gctx, mctx, wiggledCurvilinearParams, perigeeSurface, pOptions);
     if (!newResult.ok()) {
       return newResult.error();
     }

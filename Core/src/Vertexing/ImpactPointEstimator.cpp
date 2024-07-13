@@ -367,14 +367,14 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
           .closest();
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions;
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the surface; intersection corresponds to an estimate of the 3D
   // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
-  auto result =
-      m_cfg.propagator->propagateToSurface(trkParams, *planeSurface, pOptions);
+  auto result = m_cfg.propagator->propagateToSurface(gctx, mctx, trkParams,
+                                                     *planeSurface, pOptions);
   if (result.ok()) {
     return *result;
   } else {
@@ -423,7 +423,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions;
   auto intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
@@ -433,8 +433,8 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPoint
-  auto result =
-      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->propagateToSurface(gctx, mctx, track,
+                                                     *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     ACTS_ERROR("Error during propagation in getImpactParameters.");
@@ -507,12 +507,12 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions;
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result =
-      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->propagateToSurface(gctx, mctx, track,
+                                                     *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();
@@ -546,12 +546,12 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions;
   pOptions.direction = Direction::Backward;
 
   // Do the propagation to the perigeee
-  auto result =
-      m_cfg.propagator->propagateToSurface(track, *perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->propagateToSurface(gctx, mctx, track,
+                                                     *perigeeSurface, pOptions);
 
   if (!result.ok()) {
     return result.error();

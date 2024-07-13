@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -626,8 +626,8 @@ class KalmanFitter {
                        << trackStateProxy.filtered().transpose());
           // update stepping state using filtered parameters after kalman
           stepper.update(state.stepping,
-                         MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, trackStateProxy),
+                         MultiTrajectoryHelpers::freeFiltered(state.geoContext,
+                                                              trackStateProxy),
                          trackStateProxy.filtered(),
                          trackStateProxy.filteredCovariance(), *surface);
           // We count the state with measurement
@@ -793,8 +793,8 @@ class KalmanFitter {
           // update We need to (re-)construct a BoundTrackParameters instance
           // here, which is a bit awkward.
           stepper.update(state.stepping,
-                         MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, trackStateProxy),
+                         MultiTrajectoryHelpers::freeFiltered(state.geoContext,
+                                                              trackStateProxy),
                          trackStateProxy.filtered(),
                          trackStateProxy.filteredCovariance(), *surface);
 
@@ -975,9 +975,9 @@ class KalmanFitter {
       // The smoothed free params at the first/last measurement state.
       // (the first state can also be a material state)
       auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, firstCreatedState);
+          state.geoContext, firstCreatedState);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
-          state.options.geoContext, lastCreatedMeasurement);
+          state.geoContext, lastCreatedMeasurement);
       // Get the intersections of the smoothed free parameters with the target
       // surface
       const auto firstIntersection = target(firstParams);
@@ -1122,8 +1122,7 @@ class KalmanFitter {
         typename propagator_t::template Options<Actors, Aborters>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions propagatorOptions(kfOptions.geoContext,
-                                        kfOptions.magFieldContext);
+    PropagatorOptions propagatorOptions;
 
     // Set the trivial propagator options
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
@@ -1145,8 +1144,9 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t, holder_t>(sParameters, propagatorOptions,
-                                                 trackContainer);
+                    track_container_t, holder_t>(
+        kfOptions.geoContext, kfOptions.magFieldContext, sParameters,
+        propagatorOptions, trackContainer);
   }
 
   /// Fit implementation of the forward filter, calls the
@@ -1206,8 +1206,7 @@ class KalmanFitter {
         typename propagator_t::template Options<Actors, Aborters>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions propagatorOptions(kfOptions.geoContext,
-                                        kfOptions.magFieldContext);
+    PropagatorOptions propagatorOptions;
 
     // Set the trivial propagator options
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
@@ -1232,8 +1231,9 @@ class KalmanFitter {
     dInitializer.navSurfaces = sSequence;
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t, holder_t>(sParameters, propagatorOptions,
-                                                 trackContainer);
+                    track_container_t, holder_t>(
+        kfOptions.geoContext, kfOptions.magFieldContext, sParameters,
+        propagatorOptions, trackContainer);
   }
 
  private:
@@ -1255,13 +1255,14 @@ class KalmanFitter {
             typename kalman_result_t, typename track_container_t,
             template <typename> class holder_t>
   auto fit_impl(
+      const GeometryContext& geoContext, const MagneticFieldContext& magField,
       const start_parameters_t& sParameters,
       const propagator_options_t& propagatorOptions,
       TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
       -> Result<typename TrackContainer<track_container_t, traj_t,
                                         holder_t>::TrackProxy> {
-    auto propagatorState =
-        m_propagator.template makeState(sParameters, propagatorOptions);
+    auto propagatorState = m_propagator.template makeState(
+        geoContext, magField, sParameters, propagatorOptions);
 
     auto& kalmanResult =
         propagatorState.template get<KalmanFitterResult<traj_t>>();

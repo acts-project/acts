@@ -109,7 +109,7 @@ struct GaussianSumFitter {
       using PropagatorOptions =
           typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions propOptions;
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -132,7 +132,7 @@ struct GaussianSumFitter {
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions propOptions;
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -166,7 +166,7 @@ struct GaussianSumFitter {
       using PropagatorOptions =
           typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions propOptions;
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -183,7 +183,7 @@ struct GaussianSumFitter {
       using PropagatorOptions =
           typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+      PropagatorOptions propOptions;
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -295,7 +295,8 @@ struct GaussianSumFitter {
         params = sParameters;
       }
 
-      auto state = m_propagator.makeState(*params, fwdPropOptions);
+      auto state = m_propagator.makeState(
+          options.geoContext, options.magFieldContext, *params, fwdPropOptions);
 
       auto& r = state.template get<typename GsfActor::result_type>();
       r.fittedStates = &trackContainer.trackStateContainer();
@@ -358,7 +359,8 @@ struct GaussianSumFitter {
           m_propagator.template makeState<MultiComponentBoundTrackParameters,
                                           decltype(bwdPropOptions),
                                           MultiStepperSurfaceReached>(
-              params, target, bwdPropOptions);
+              options.geoContext, options.magFieldContext, params, target,
+              bwdPropOptions);
 
       assert(
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&

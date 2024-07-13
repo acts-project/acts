@@ -112,12 +112,13 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
                                    ParticleHypothesis::pion());
 
-  EigenPropagatorType::Options<> options(tgContext, mfContext);
+  EigenPropagatorType::Options<> options;
   options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
-  BOOST_CHECK(
-      epropagator.propagate(start, options).value().endParameters.has_value());
+  BOOST_CHECK(epropagator.propagate(tgContext, mfContext, start, options)
+                  .value()
+                  .endParameters.has_value());
 }
 
 // This test case checks that no segmentation fault appears
@@ -157,17 +158,17 @@ BOOST_DATA_TEST_CASE(
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-  EigenPropagatorType::Options<ActionList<PlaneCollector>> options(tgContext,
-                                                                   mfContext);
+  EigenPropagatorType::Options<ActionList<PlaneCollector>> options;
 
   options.stepping.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
-  const auto& result = epropagator.propagate(start, options).value();
+  const auto& result =
+      epropagator.propagate(tgContext, mfContext, start, options).value();
   auto collector_result = result.get<PlaneCollector::result_type>();
 
   // step through the surfaces and go step by step
-  EigenPropagatorType::Options<> optionsEmpty(tgContext, mfContext);
+  EigenPropagatorType::Options<> optionsEmpty;
 
   optionsEmpty.stepping.maxStepSize = 25_cm;
   // Try propagation from start to each surface
@@ -179,9 +180,11 @@ BOOST_DATA_TEST_CASE(
       continue;
     }
     // Extrapolate & check
-    const auto& cresult = epropagator.propagate(start, *csurface, optionsEmpty)
-                              .value()
-                              .endParameters;
+    const auto& cresult =
+        epropagator
+            .propagate(tgContext, mfContext, start, *csurface, optionsEmpty)
+            .value()
+            .endParameters;
     BOOST_CHECK(cresult.has_value());
   }
 }
@@ -220,12 +223,12 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
                                    ParticleHypothesis::pion());
 
-  EigenPropagatorType::Options<ActionList<MaterialInteractor>> options(
-      tgContext, mfContext);
+  EigenPropagatorType::Options<ActionList<MaterialInteractor>> options;
   options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
 
-  const auto& result = epropagator.propagate(start, options).value();
+  const auto& result =
+      epropagator.propagate(tgContext, mfContext, start, options).value();
   if (result.endParameters) {
     // test that you actually lost some energy
     BOOST_CHECK_LT(result.endParameters->absoluteMomentum(),
@@ -268,12 +271,12 @@ BOOST_DATA_TEST_CASE(
                                    ParticleHypothesis::pion());
 
   // Action list and abort list
-  EigenPropagatorType::Options<ActionList<MaterialInteractor>> options(
-      tgContext, mfContext);
+  EigenPropagatorType::Options<ActionList<MaterialInteractor>> options;
   options.stepping.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
 
-  const auto& status = epropagator.propagate(start, options).value();
+  const auto& status =
+      epropagator.propagate(tgContext, mfContext, start, options).value();
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
   auto bCache = bField->makeCache(mfContext);

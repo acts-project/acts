@@ -113,7 +113,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Options definition
   using Options = typename rpropagator_t::template Options<RefereceActionList,
                                                            ReferenceAbortList>;
-  Options pOptions(tgContext, mfContext);
+  Options pOptions;
   if (oversteppingTest) {
     pOptions.stepping.maxStepSize = oversteppingMaxStepSize;
   }
@@ -124,7 +124,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   sCollector.selector.selectMaterial = true;
 
   // Result is immediately used, non-valid result would indicate failure
-  const auto& pResult = rprop.propagate(start, pOptions).value();
+  const auto& pResult =
+      rprop.propagate(tgContext, mfContext, start, pOptions).value();
   auto& cSurfaces = pResult.template get<SurfaceCollector<>::result_type>();
   auto& cMaterial = pResult.template get<MaterialInteractor::result_type>();
   const Surface& destination = pResult.endParameters->referenceSurface();
@@ -147,7 +148,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     // Direct options definition
     using DirectOptions =
         typename dpropagator_t::template Options<DirectActionList, AbortList<>>;
-    DirectOptions dOptions(tgContext, mfContext);
+    DirectOptions dOptions;
     // Set the surface sequence
     auto& dInitializer =
         dOptions.actionList.template get<DirectNavigator::Initializer>();
@@ -159,7 +160,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
     // Now redo the propagation with the direct propagator
     const auto& ddResult =
-        dprop.propagate(start, destination, dOptions).value();
+        dprop.propagate(tgContext, mfContext, start, destination, dOptions)
+            .value();
     auto& ddSurfaces = ddResult.template get<SurfaceCollector<>::result_type>();
     auto& ddMaterial = ddResult.template get<MaterialInteractor::result_type>();
 
@@ -168,7 +170,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     CHECK_CLOSE_REL(cMaterial.materialInX0, ddMaterial.materialInX0, 1e-3);
 
     // Now redo the propagation with the direct propagator - without destination
-    const auto& dwResult = dprop.propagate(start, dOptions).value();
+    const auto& dwResult =
+        dprop.propagate(tgContext, mfContext, start, dOptions).value();
     auto& dwSurfaces = dwResult.template get<SurfaceCollector<>::result_type>();
 
     // CHECK if you have as many surfaces collected as the default navigator

@@ -87,7 +87,7 @@ struct SingleParticleSimulation {
         typename propagator_t::template Options<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx);
+    PropagatorOptions options;
     options.stepping.maxStepSize = maxStepSize;
     options.pathLimit = pathLimit;
     // setup the interactor as part of the propagator options
@@ -100,7 +100,7 @@ struct SingleParticleSimulation {
 
     if (particle.hasReferenceSurface()) {
       auto result = propagator.propagate(
-          particle.boundParameters(geoCtx).value(), options);
+          geoCtx, magCtx, particle.boundParameters(geoCtx).value(), options);
       if (!result.ok()) {
         return result.error();
       }
@@ -108,8 +108,8 @@ struct SingleParticleSimulation {
       return std::move(value);
     }
 
-    auto result =
-        propagator.propagate(particle.curvilinearParameters(), options);
+    auto result = propagator.propagate(
+        geoCtx, magCtx, particle.curvilinearParameters(), options);
     if (!result.ok()) {
       return result.error();
     }

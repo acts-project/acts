@@ -768,10 +768,10 @@ class CombinatorialKalmanFilter {
           // Update stepping state using filtered parameters of last track
           // state on this surface
           auto ts = result.activeBranches.back().outermostTrackState();
-          stepper.update(state.stepping,
-                         MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, ts),
-                         ts.filtered(), ts.filteredCovariance(), *surface);
+          stepper.update(
+              state.stepping,
+              MultiTrajectoryHelpers::freeFiltered(state.geoContext, ts),
+              ts.filtered(), ts.filteredCovariance(), *surface);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
           ACTS_VERBOSE("-> " << ts.filtered().transpose()
                              << " of track state with tip = " << ts.index());
@@ -1205,8 +1205,7 @@ class CombinatorialKalmanFilter {
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
-    typename propagator_t::template Options<Actors, Aborters> propOptions(
-        tfOptions.geoContext, tfOptions.magFieldContext);
+    typename propagator_t::template Options<Actors, Aborters> propOptions;
 
     // Set the trivial propagator options
     propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
@@ -1238,8 +1237,9 @@ class CombinatorialKalmanFilter {
               source_link_iterator_t>>(&defaultTrackStateCreator);
     }
 
-    auto propState =
-        m_propagator.template makeState(initialParameters, propOptions);
+    auto propState = m_propagator.template makeState(
+        tfOptions.geoContext, tfOptions.magFieldContext, initialParameters,
+        propOptions);
 
     auto& r =
         propState

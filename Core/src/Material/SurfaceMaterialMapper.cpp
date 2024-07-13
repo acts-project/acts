@@ -244,11 +244,13 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
       ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  StraightLinePropagator::Options<ActionList, AbortList> options(
-      mState.geoContext, mState.magFieldContext);
+  StraightLinePropagator::Options<ActionList, AbortList> options;
 
   // Now collect the material layers by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
+  const auto& result =
+      m_propagator
+          .propagate(mState.geoContext, mState.magFieldContext, start, options)
+          .value();
   auto mcResult = result.get<MaterialSurfaceCollector::result_type>();
   auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
 

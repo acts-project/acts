@@ -140,19 +140,21 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
 
   // Create some options
   using StepWiseOptions = Propagator::Options<StepWiseActors, Aborters>;
-  StepWiseOptions swOptions(tgContext, mfContext);
+  StepWiseOptions swOptions;
 
   using PlainActors = ActionList<>;
   using PlainOptions = Propagator::Options<PlainActors, Aborters>;
-  PlainOptions pOptions(tgContext, mfContext);
+  PlainOptions pOptions;
 
   // Run the standard propagation
-  const auto& pResult = propagator.propagate(start, pOptions).value();
+  const auto& pResult =
+      propagator.propagate(tgContext, mfContext, start, pOptions).value();
   // Let's get the end parameters and jacobian matrix
   const auto& pJacobian = *(pResult.transportJacobian);
 
   // Run the stepwise propagation
-  const auto& swResult = propagator.propagate(start, swOptions).value();
+  const auto& swResult =
+      propagator.propagate(tgContext, mfContext, start, swOptions).value();
   auto swJacobianTest = swResult.template get<StepWiseResult>();
 
   // (1) Path length test

@@ -15,6 +15,7 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -50,6 +51,7 @@ namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
+MagneticFieldContext mfContext = MagneticFieldContext();
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -321,11 +323,12 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
       Vector4::Zero(), Vector3::Zero(), 1, std::nullopt,
       ParticleHypothesis::pion()};
   {
-    PropagatorOptions options(tgContext, {});
+    PropagatorOptions options;
     options.direction = Acts::Direction::Backward;
     options.pathLimit = pathLimit;
 
-    auto result = propagator.propagate(initialParams, options);
+    auto result =
+        propagator.propagate(tgContext, mfContext, initialParams, options);
     BOOST_CHECK(result.ok());
     BOOST_CHECK(result.value().endParameters);
 
@@ -342,11 +345,12 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
                                      ParticleHypothesis::pion()};
   {
-    PropagatorOptions options(tgContext, {});
+    PropagatorOptions options;
     options.direction = Acts::Direction::Forward;
     options.stepping.maxStepSize = 1_mm;
 
-    auto result = propagator.propagate(displacedParameters, *surface, options);
+    auto result = propagator.propagate(tgContext, mfContext,
+                                       displacedParameters, *surface, options);
     BOOST_CHECK(result.ok());
     BOOST_CHECK(result.value().endParameters);
     CHECK_CLOSE_ABS(result.value().pathLength, pathLimit, eps);

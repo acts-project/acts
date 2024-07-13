@@ -42,12 +42,13 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   /// @param topts The options handed over by the propagate call
   /// @param steppingIn Stepper state instance to begin with
   /// @param navigationIn Navigator state instance to begin with
-  PropagatorState(const propagator_options_t& topts, stepper_state_t steppingIn,
+  PropagatorState(const GeometryContext& gctx,
+                  const propagator_options_t& topts, stepper_state_t steppingIn,
                   navigator_state_t navigationIn)
       : options(topts),
         stepping{std::move(steppingIn)},
         navigation{std::move(navigationIn)},
-        geoContext(topts.geoContext) {}
+        geoContext(gctx) {}
 
   using detail::Extendable<extension_state_t...>::get;
   using detail::Extendable<extension_state_t...>::tuple;

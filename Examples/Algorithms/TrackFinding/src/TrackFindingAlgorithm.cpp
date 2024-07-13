@@ -346,13 +346,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       slAccessorDelegate;
   slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
 
-  Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
-                                                ctx.magFieldContext);
+  Acts::PropagatorPlainOptions firstPropOptions;
   firstPropOptions.maxSteps = m_cfg.maxSteps;
   firstPropOptions.direction = Acts::Direction::Forward;
 
-  Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
-                                                 ctx.magFieldContext);
+  Acts::PropagatorPlainOptions secondPropOptions;
   secondPropOptions.maxSteps = m_cfg.maxSteps;
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
@@ -377,7 +375,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                       logger().cloneWithSuffix("Navigator")),
       logger().cloneWithSuffix("Propagator"));
 
-  ExtrapolatorOptions extrapolationOptions(ctx.geoContext, ctx.magFieldContext);
+  ExtrapolatorOptions extrapolationOptions;
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -568,9 +566,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               //      implementation
               auto secondExtrapolationResult =
                   Acts::extrapolateTrackToReferenceSurface(
-                      trackCandidate, *pSurface, extrapolator,
-                      extrapolationOptions, m_cfg.extrapolationStrategy,
-                      logger());
+                      ctx.geoContext, ctx.magFieldContext, trackCandidate,
+                      *pSurface, extrapolator, extrapolationOptions,
+                      m_cfg.extrapolationStrategy, logger());
               if (!secondExtrapolationResult.ok()) {
                 m_nFailedExtrapolation++;
                 ACTS_ERROR("Second extrapolation for seed "
@@ -597,8 +595,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       if (nSecond == 0) {
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
-                trackCandidate, *pSurface, extrapolator, extrapolationOptions,
-                m_cfg.extrapolationStrategy, logger());
+                ctx.geoContext, ctx.magFieldContext, trackCandidate, *pSurface,
+                extrapolator, extrapolationOptions, m_cfg.extrapolationStrategy,
+                logger());
         if (!firstExtrapolationResult.ok()) {
           m_nFailedExtrapolation++;
           ACTS_ERROR("Extrapolation for seed "

@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -285,13 +286,14 @@ findTrackStateForExtrapolation(
 template <typename track_proxy_t, typename propagator_t,
           typename propagator_options_t>
 Result<void> extrapolateTrackToReferenceSurface(
-    track_proxy_t &track, const Surface &referenceSurface,
-    const propagator_t &propagator, propagator_options_t options,
-    TrackExtrapolationStrategy strategy,
+    const GeometryContext &geoContext,
+    const MagneticFieldContext &magFieldContext, track_proxy_t &track,
+    const Surface &referenceSurface, const propagator_t &propagator,
+    propagator_options_t options, TrackExtrapolationStrategy strategy,
     const Logger &logger = *getDefaultLogger("TrackExtrapolation",
                                              Logging::INFO)) {
   auto findResult = findTrackStateForExtrapolation(
-      options.geoContext, track, referenceSurface, strategy, logger);
+      geoContext, track, referenceSurface, strategy, logger);
 
   if (!findResult.ok()) {
     ACTS_ERROR("failed to find track state for extrapolation");
@@ -310,7 +312,7 @@ Result<void> extrapolateTrackToReferenceSurface(
   auto propagateResult =
       propagator.template propagate<BoundTrackParameters, propagator_options_t,
                                     ForcedSurfaceReached>(
-          parameters, referenceSurface, options);
+          geoContext, magFieldContext, parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
     ACTS_ERROR("failed to extrapolate track: " << propagateResult.error());

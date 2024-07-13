@@ -19,7 +19,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache) const {
   // Create propagator options
-  PropagatorPlainOptions pOptions(gctx, mctx);
+  PropagatorPlainOptions pOptions;
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -43,8 +43,8 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
-  const auto res =
-      m_cfg.propagator->propagateToSurface(params, perigeeSurface, pOptions);
+  const auto res = m_cfg.propagator->propagateToSurface(
+      gctx, mctx, params, perigeeSurface, pOptions);
   if (!res.ok()) {
     return res.error();
   }

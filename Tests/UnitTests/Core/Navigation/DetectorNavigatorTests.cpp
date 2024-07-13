@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
   using AbortList = Acts::AbortList<>;
   using PropagatorOptions = Propagator::Options<ActionList, AbortList>;
 
-  PropagatorOptions options(geoContext, mfContext);
+  PropagatorOptions options;
 
   Stepper stepper;
 
@@ -99,8 +99,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     Propagator propagator(stepper, navigator);
 
-    BOOST_CHECK_THROW(propagator.makeState(start, options),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        propagator.makeState(geoContext, mfContext, start, options),
+        std::invalid_argument);
   }
 
   // Run with geometry but without resolving
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(geoContext, mfContext, start, options);
 
     navigator.initialize(state, stepper);
 
@@ -151,8 +152,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    BOOST_CHECK_THROW(propagator.makeState(startEoW, options),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        propagator.makeState(geoContext, mfContext, startEoW, options),
+        std::invalid_argument);
   }
 
   // Initialize properly
@@ -166,7 +168,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(geoContext, mfContext, start, options);
 
     navigator.initialize(state, stepper);
     auto initState = state.navigation;
@@ -281,7 +283,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
                       Acts::getDefaultLogger("DetectorNavigator",
                                              Acts::Logging::Level::VERBOSE));
 
-  PropagatorOptions options(geoContext, mfContext);
+  PropagatorOptions options;
   options.direction = Acts::Direction::Forward;
 
   Propagator propagator(
@@ -295,7 +297,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
       posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
-  auto resultFwd = propagator.propagate(startFwd, options).value();
+  auto resultFwd =
+      propagator.propagate(geoContext, mfContext, startFwd, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
   options.direction = Acts::Direction::Backward;
@@ -305,7 +308,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
-  auto resultBwd = propagator.propagate(startBwd, options).value();
+  auto resultBwd =
+      propagator.propagate(geoContext, mfContext, startBwd, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
 
   // 7 steps to reach the end of world
@@ -436,7 +440,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
                       Acts::getDefaultLogger("DetectorNavigator",
                                              Acts::Logging::Level::VERBOSE));
 
-  PropagatorOptions options(geoContext, mfContext);
+  PropagatorOptions options;
   options.direction = Acts::Direction::Forward;
 
   Propagator propagator(
@@ -452,12 +456,14 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
 
   // Has to properly handle propagation in the
   // forward and backward direction
-  auto resultFwd = propagator.propagate(start, options).value();
+  auto resultFwd =
+      propagator.propagate(geoContext, mfContext, start, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
   options.direction = Acts::Direction::Backward;
 
-  auto resultBwd = propagator.propagate(start, options).value();
+  auto resultBwd =
+      propagator.propagate(geoContext, mfContext, start, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
 
   // 3 steps to reach the end of world
@@ -550,7 +556,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
                       Acts::getDefaultLogger("DetectorNavigator",
                                              Acts::Logging::Level::VERBOSE));
 
-  PropagatorOptions options(geoContext, mfContext);
+  PropagatorOptions options;
   options.direction = Acts::Direction::Forward;
 
   Propagator propagator(
@@ -566,7 +572,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
       posFwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
-  auto resultFwd = propagator.propagate(startFwd, options).value();
+  auto resultFwd =
+      propagator.propagate(geoContext, mfContext, startFwd, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
   options.direction = Acts::Direction::Backward;
@@ -575,7 +582,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
       Acts::ParticleHypothesis::electron());
 
-  auto resultBwd = propagator.propagate(startBwd, options).value();
+  auto resultBwd =
+      propagator.propagate(geoContext, mfContext, startBwd, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
 
   // 4 steps to reach the end of world

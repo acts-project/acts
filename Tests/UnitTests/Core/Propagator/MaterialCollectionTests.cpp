@@ -91,7 +91,7 @@ void runTest(const propagator_t& prop,
 
   using Options =
       typename propagator_t::template Options<ActionListType, AbortListType>;
-  Options fwdOptions(tgContext, mfContext);
+  Options fwdOptions;
   fwdOptions.stepping.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
 
@@ -106,7 +106,8 @@ void runTest(const propagator_t& prop,
     std::cout << ">>> Forward Propagation : start." << std::endl;
   }
   // forward material test
-  const auto& fwdResult = prop.propagate(start, fwdOptions).value();
+  const auto& fwdResult =
+      prop.propagate(tgContext, mfContext, start, fwdOptions).value();
   const auto& fwdMaterial =
       fwdResult.template get<MaterialInteractor::result_type>();
   // check that the collected material is not zero
@@ -134,7 +135,7 @@ void runTest(const propagator_t& prop,
   }
 
   // backward material test
-  Options bwdOptions(tgContext, mfContext);
+  Options bwdOptions;
   bwdOptions.stepping.maxStepSize = 25_cm;
   bwdOptions.pathLimit = -25_cm;
   bwdOptions.direction = Direction::Backward;
@@ -152,7 +153,8 @@ void runTest(const propagator_t& prop,
     std::cout << ">>> Backward Propagation : start." << std::endl;
   }
   const auto& bwdResult =
-      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
+      prop.propagate(tgContext, mfContext, *fwdResult.endParameters,
+                     startSurface, bwdOptions)
           .value();
   if (debugMode) {
     std::cout << ">>> Backward Propagation : end." << std::endl;
@@ -192,7 +194,7 @@ void runTest(const propagator_t& prop,
 
   // stepping from one surface to the next
   // now go from surface to surface and check
-  Options fwdStepOptions(tgContext, mfContext);
+  Options fwdStepOptions;
   fwdStepOptions.stepping.maxStepSize = 25_cm;
   fwdStepOptions.pathLimit = 25_cm;
 
@@ -227,9 +229,9 @@ void runTest(const propagator_t& prop,
     }
 
     // make a forward step
-    const auto& fwdStep =
-        prop.propagate(sParameters, (*fwdSteps.surface), fwdStepOptions)
-            .value();
+    const auto& fwdStep = prop.propagate(tgContext, mfContext, sParameters,
+                                         (*fwdSteps.surface), fwdStepOptions)
+                              .value();
 
     auto& fwdStepMaterial =
         fwdStep.template get<typename MaterialInteractor::result_type>();
@@ -251,8 +253,9 @@ void runTest(const propagator_t& prop,
               << dSurface.geometryId() << std::endl;
   }
 
-  const auto& fwdStepFinal =
-      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
+  const auto& fwdStepFinal = prop.propagate(tgContext, mfContext, sParameters,
+                                            dSurface, fwdStepOptions)
+                                 .value();
 
   auto& fwdStepMaterial =
       fwdStepFinal.template get<typename MaterialInteractor::result_type>();
@@ -265,7 +268,7 @@ void runTest(const propagator_t& prop,
 
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
-  Options bwdStepOptions(tgContext, mfContext);
+  Options bwdStepOptions;
   bwdStepOptions.stepping.maxStepSize = 25_cm;
   bwdStepOptions.pathLimit = -25_cm;
   bwdStepOptions.direction = Direction::Backward;
@@ -299,9 +302,9 @@ void runTest(const propagator_t& prop,
                 << bwdSteps.surface->geometryId() << std::endl;
     }
     // make a forward step
-    const auto& bwdStep =
-        prop.propagate(sParameters, (*bwdSteps.surface), bwdStepOptions)
-            .value();
+    const auto& bwdStep = prop.propagate(tgContext, mfContext, sParameters,
+                                         (*bwdSteps.surface), bwdStepOptions)
+                              .value();
 
     auto& bwdStepMaterial =
         bwdStep.template get<typename MaterialInteractor::result_type>();
@@ -323,8 +326,9 @@ void runTest(const propagator_t& prop,
               << dSurface.geometryId() << std::endl;
   }
 
-  const auto& bwdStepFinal =
-      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
+  const auto& bwdStepFinal = prop.propagate(tgContext, mfContext, sParameters,
+                                            dbSurface, bwdStepOptions)
+                                 .value();
 
   auto& bwdStepMaterial =
       bwdStepFinal.template get<typename MaterialInteractor::result_type>();
@@ -344,7 +348,8 @@ void runTest(const propagator_t& prop,
   covfwdMaterialInteractor.multipleScattering = true;
 
   // forward material test
-  const auto& covfwdResult = prop.propagate(start, fwdOptions).value();
+  const auto& covfwdResult =
+      prop.propagate(tgContext, mfContext, start, fwdOptions).value();
 
   BOOST_CHECK_LE(
       start.covariance()->determinant(),

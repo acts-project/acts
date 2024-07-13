@@ -270,11 +270,11 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Launch propagation and gather result
   using PropagatorOptions = Propagator<StraightLineStepper, Navigator>::Options<
       ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>;
-  PropagatorOptions po(gc, mc);
+  PropagatorOptions po;
   po.stepping.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
 
-  const auto& result = prop.propagate(sctp, po).value();
+  const auto& result = prop.propagate(gc, mc, sctp, po).value();
   const MaterialCollector::this_result& stepResult =
       result.get<typename MaterialCollector::result_type>();
 

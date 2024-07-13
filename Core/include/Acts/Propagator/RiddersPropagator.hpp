@@ -120,7 +120,9 @@ class RiddersPropagator {
   Result<
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start,
+  propagate(const GeometryContext& geoContext,
+            const MagneticFieldContext& magFieldContext,
+            const parameters_t& start,
             const propagator_options_t& options) const;
 
   /// @brief Propagation method targeting bound parameters
@@ -138,7 +140,9 @@ class RiddersPropagator {
   template <typename parameters_t, typename propagator_options_t>
   Result<action_list_t_result_t<
       BoundTrackParameters, typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start, const Surface& target,
+  propagate(const GeometryContext& geoContext,
+            const MagneticFieldContext& magFieldContext,
+            const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
  private:
@@ -151,9 +155,11 @@ class RiddersPropagator {
   /// @param [in] nominalResult The result of the nominal propagation
   template <typename propagator_options_t, typename parameters_t,
             typename result_t>
-  Jacobian wiggleAndCalculateJacobian(const propagator_options_t& options,
-                                      const parameters_t& start,
-                                      result_t& nominalResult) const;
+  Jacobian wiggleAndCalculateJacobian(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
+      const propagator_options_t& options, const parameters_t& start,
+      result_t& nominalResult) const;
 
   /// @brief This function tests whether the variations on a disc as target
   /// surface lead to results on different sides wrt the center of the disc.
@@ -184,6 +190,8 @@ class RiddersPropagator {
   /// @return Vector containing each slope
   template <typename propagator_options_t, typename parameters_t>
   std::vector<BoundVector> wiggleParameter(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const propagator_options_t& options, const parameters_t& start,
       unsigned int param, const Surface& target, const BoundVector& nominal,
       const std::vector<double>& deviations) const;

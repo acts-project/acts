@@ -747,14 +747,15 @@ class Gx2Fitter {
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      PropagatorOptions propagatorOptions;
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
 
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+      auto propagatorState =
+          m_propagator.makeState(geoCtx, magCtx, params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
@@ -979,14 +980,15 @@ class Gx2Fitter {
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx, magCtx);
+      PropagatorOptions propagatorOptions;
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
 
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+      auto propagatorState =
+          m_propagator.makeState(geoCtx, magCtx, params, propagatorOptions);
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();

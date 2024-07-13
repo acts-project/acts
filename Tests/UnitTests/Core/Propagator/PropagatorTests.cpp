@@ -154,7 +154,7 @@ const int ntests = 5;
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
   using null_optionsType = EigenPropagatorType::Options<>;
-  null_optionsType null_options(tgContext, mfContext);
+  [[maybe_unused]] null_optionsType null_options;
   // todo write null options test
 
   using ActionListType = ActionList<PerpendicularMeasure>;
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 
   using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
 
-  optionsType options(tgContext, mfContext);
+  [[maybe_unused]] optionsType options;
 }
 
 BOOST_DATA_TEST_CASE(
@@ -195,8 +195,7 @@ BOOST_DATA_TEST_CASE(
   using AbortConditionsType = AbortList<>;
 
   // setup propagation options
-  EigenPropagatorType::Options<ActionListType, AbortConditionsType> options(
-      tgContext, mfContext);
+  EigenPropagatorType::Options<ActionListType, AbortConditionsType> options;
 
   options.pathLimit = 20_m;
   options.stepping.maxStepSize = 1_cm;
@@ -220,7 +219,9 @@ BOOST_DATA_TEST_CASE(
                                    q / mom.norm(), std::nullopt,
                                    ParticleHypothesis::pion());
   // propagate to the cylinder surface
-  const auto& result = epropagator.propagate(start, *cSurface, options).value();
+  const auto& result =
+      epropagator.propagate(tgContext, mfContext, start, *cSurface, options)
+          .value();
   auto& sor = result.get<so_result>();
 
   BOOST_CHECK_EQUAL(sor.surfaces_passed, 1u);
@@ -253,7 +254,7 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - the tow step options
-  EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_2s;
   options_2s.pathLimit = 50_cm;
   options_2s.stepping.maxStepSize = 1_cm;
 
@@ -278,17 +279,23 @@ BOOST_DATA_TEST_CASE(
                                    ParticleHypothesis::pion());
   // propagate to a path length of 100 with two steps of 50
   const auto& mid_parameters =
-      epropagator.propagate(start, options_2s).value().endParameters;
+      epropagator.propagate(tgContext, mfContext, start, options_2s)
+          .value()
+          .endParameters;
   const auto& end_parameters_2s =
-      epropagator.propagate(*mid_parameters, options_2s).value().endParameters;
+      epropagator.propagate(tgContext, mfContext, *mid_parameters, options_2s)
+          .value()
+          .endParameters;
 
   // setup propagation options - the one step options
-  EigenPropagatorType::Options<> options_1s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_1s;
   options_1s.pathLimit = 100_cm;
   options_1s.stepping.maxStepSize = 1_cm;
   // propagate to a path length of 100 in one step
   const auto& end_parameters_1s =
-      epropagator.propagate(start, options_1s).value().endParameters;
+      epropagator.propagate(tgContext, mfContext, start, options_1s)
+          .value()
+          .endParameters;
 
   // test that the propagation is additive
   CHECK_CLOSE_REL(end_parameters_1s->position(tgContext),
@@ -333,7 +340,7 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - 2 setp options
-  EigenPropagatorType::Options<> options_2s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_2s;
   options_2s.pathLimit = 10_m;
   options_2s.stepping.maxStepSize = 1_cm;
 
@@ -358,20 +365,26 @@ BOOST_DATA_TEST_CASE(
                                    ParticleHypothesis::pion());
   // propagate to a final surface with one stop in between
   const auto& mid_parameters =
-      epropagator.propagate(start, *mSurface, options_2s).value().endParameters;
+      epropagator.propagate(tgContext, mfContext, start, *mSurface, options_2s)
+          .value()
+          .endParameters;
 
   const auto& end_parameters_2s =
-      epropagator.propagate(*mid_parameters, *cSurface, options_2s)
+      epropagator
+          .propagate(tgContext, mfContext, *mid_parameters, *cSurface,
+                     options_2s)
           .value()
           .endParameters;
 
   // setup propagation options - one step options
-  EigenPropagatorType::Options<> options_1s(tgContext, mfContext);
+  EigenPropagatorType::Options<> options_1s;
   options_1s.pathLimit = 10_m;
   options_1s.stepping.maxStepSize = 1_cm;
   // propagate to a final surface in one stop
   const auto& end_parameters_1s =
-      epropagator.propagate(start, *cSurface, options_1s).value().endParameters;
+      epropagator.propagate(tgContext, mfContext, start, *cSurface, options_1s)
+          .value()
+          .endParameters;
 
   // test that the propagation is additive
   CHECK_CLOSE_REL(end_parameters_1s->position(tgContext),
@@ -412,7 +425,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
 
   GeometryContext gctx;
   MagneticFieldContext mctx;
-  EigenPropagatorType::Options<> options{gctx, mctx};
+  EigenPropagatorType::Options<> options;
 
   {
     Propagator propagator{eigenStepper, navigator};
@@ -422,14 +435,14 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
         static_cast<const BasePropagator*>(&propagator);
 
     // Ensure the propagation does the same thing
-    auto result =
-        propagator.propagate(startParameters, *targetSurface, options);
+    auto result = propagator.propagate(gctx, mctx, startParameters,
+                                       *targetSurface, options);
     BOOST_REQUIRE(result.ok());
     BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
                       targetSurface.get());
 
-    auto resultBase =
-        base->propagateToSurface(startParameters, *targetSurface, options);
+    auto resultBase = base->propagateToSurface(gctx, mctx, startParameters,
+                                               *targetSurface, options);
 
     BOOST_REQUIRE(resultBase.ok());
     BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
@@ -439,8 +452,8 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                       resultBase.value().parameters());
 
     // Propagation call with curvilinear also works
-    auto resultCurv =
-        base->propagateToSurface(startCurv, *targetSurface, options);
+    auto resultCurv = base->propagateToSurface(gctx, mctx, startCurv,
+                                               *targetSurface, options);
     BOOST_CHECK(resultCurv.ok());
   }
 
@@ -453,14 +466,14 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
         static_cast<const BasePropagator*>(&propagator);
 
     // Ensure the propagation does the same thing
-    auto result =
-        propagator.propagate(startParameters, *targetSurface, options);
+    auto result = propagator.propagate(gctx, mctx, startParameters,
+                                       *targetSurface, options);
     BOOST_REQUIRE(result.ok());
     BOOST_CHECK_EQUAL(&result.value().endParameters.value().referenceSurface(),
                       targetSurface.get());
 
-    auto resultBase =
-        base->propagateToSurface(startParameters, *targetSurface, options);
+    auto resultBase = base->propagateToSurface(gctx, mctx, startParameters,
+                                               *targetSurface, options);
 
     BOOST_REQUIRE(resultBase.ok());
     BOOST_CHECK_EQUAL(&resultBase.value().referenceSurface(),
@@ -470,8 +483,8 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
                       resultBase.value().parameters());
 
     // Propagation call with curvilinear also works
-    auto resultCurv =
-        base->propagateToSurface(startCurv, *targetSurface, options);
+    auto resultCurv = base->propagateToSurface(gctx, mctx, startCurv,
+                                               *targetSurface, options);
     BOOST_CHECK(resultCurv.ok());
   }
 

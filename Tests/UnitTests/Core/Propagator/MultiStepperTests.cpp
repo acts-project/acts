@@ -736,7 +736,7 @@ void propagator_instatiation_test_function() {
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
   using PropagatorOptions =
       typename Propagator<multi_stepper_t, Navigator>::template Options<>;
-  PropagatorOptions options(geoCtx, magCtx);
+  PropagatorOptions options;
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),
@@ -750,10 +750,10 @@ void propagator_instatiation_test_function() {
   using type_a =
       decltype(propagator.template propagate<decltype(pars), decltype(options),
                                              MultiStepperSurfaceReached>(
-          pars, *surface, options));
+          geoCtx, magCtx, pars, *surface, options));
 
   // Instantiate without target
-  using tybe_b = decltype(propagator.propagate(pars, options));
+  using tybe_b = decltype(propagator.propagate(geoCtx, magCtx, pars, options));
 }
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {

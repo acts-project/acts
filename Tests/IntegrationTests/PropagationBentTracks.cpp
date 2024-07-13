@@ -58,9 +58,9 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 
   Propagator::Options<Acts::ActionList<Acts::detail::SteppingLogger>,
                       Acts::AbortList<Acts::EndOfWorldReached>>
-      opts(geoCtx, magCtx);
+      opts;
 
-  auto res = propagator.propagate(start, opts);
+  auto res = propagator.propagate(geoCtx, magCtx, start, opts);
 
   BOOST_CHECK(res.ok());
 

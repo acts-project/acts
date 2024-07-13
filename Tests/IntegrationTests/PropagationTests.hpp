@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -243,13 +243,13 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
-  options_t options(geoCtx, magCtx);
+  options_t options;
   options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
   options.surfaceTolerance = 1_nm;
   options.stepping.stepTolerance = 1_nm;
 
-  auto result = propagator.propagate(initialParams, options);
+  auto result = propagator.propagate(geoCtx, magCtx, initialParams, options);
   BOOST_CHECK(result.ok());
   BOOST_CHECK(result.value().endParameters);
 
@@ -267,13 +267,14 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
-  options_t options(geoCtx, magCtx);
+  options_t options;
   options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
   options.surfaceTolerance = 1_nm;
   options.stepping.stepTolerance = 1_nm;
 
-  auto result = propagator.propagate(initialParams, targetSurface, options);
+  auto result = propagator.propagate(geoCtx, magCtx, initialParams,
+                                     targetSurface, options);
   BOOST_CHECK(result.ok());
   BOOST_CHECK(result.value().endParameters);
 

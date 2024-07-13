@@ -161,14 +161,15 @@ Measurements createMeasurements(const propagator_t& propagator,
       typename propagator_t::template Options<Actions, Aborters>;
 
   // Set options for propagator
-  PropagatorOptions options(geoCtx, magCtx);
+  PropagatorOptions options;
   auto& creator = options.actionList.template get<MeasurementsCreator>();
   creator.resolutions = resolutions;
   creator.rng = &rng;
   creator.sourceId = sourceId;
 
   // Launch and collect the measurements
-  auto result = propagator.propagate(trackParameters, options).value();
+  auto result =
+      propagator.propagate(geoCtx, magCtx, trackParameters, options).value();
   return std::move(result.template get<Measurements>());
 }
 

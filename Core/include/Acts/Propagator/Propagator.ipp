@@ -97,9 +97,10 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
-                                       const propagator_options_t& options,
-                                       bool makeCurvilinear) const
+auto Acts::Propagator<S, N>::propagate(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const parameters_t& start,
+    const propagator_options_t& options, bool makeCurvilinear) const
     -> Result<action_list_t_result_t<
         StepperCurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
@@ -107,7 +108,7 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
       std::is_copy_constructible<StepperCurvilinearTrackParameters>::value,
       "return track parameter type must be copy-constructible");
 
-  auto state = makeState(start, options);
+  auto state = makeState(geoContext, magFieldContext, start, options);
 
   // Perform the actual propagation
   auto propagationResult = propagate(state);
@@ -120,8 +121,9 @@ template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const parameters_t& start,
+    const Surface& target, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         StepperBoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
@@ -129,7 +131,8 @@ auto Acts::Propagator<S, N>::propagate(
                 "Parameters do not fulfill bound parameters concept.");
 
   auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
-                         path_aborter_t>(start, target, options);
+                         path_aborter_t>(geoContext, magFieldContext, start,
+                                         target, options);
 
   // Perform the actual propagation
   auto propagationResult = propagate(state);
@@ -141,7 +144,9 @@ template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
-    const parameters_t& start, const propagator_options_t& options) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const parameters_t& start,
+    const propagator_options_t& options) const {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -154,21 +159,19 @@ auto Acts::Propagator<S, N>::makeState(
   // Expand the abort list with a path aborter
   path_aborter_t pathAborter;
   pathAborter.internalLimit = options.pathLimit;
-
   auto abortList = options.abortList.append(pathAborter);
 
-  // The expanded options (including path limit)
+  // Create the extended options and declare their type
   auto eOptions = options.extend(abortList);
   using OptionsType = decltype(eOptions);
   // Initialize the internal propagator state
   using StateType =
       action_list_t_state_t<OptionsType,
                             typename propagator_options_t::action_list_type>;
-  StateType state{
-      eOptions,
-      m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.stepping.maxStepSize),
-      m_navigator.makeState(&start.referenceSurface(), nullptr)};
+  StateType state{geoContext, eOptions,
+                  m_stepper.makeState(geoContext, magFieldContext, start,
+                                      eOptions.stepping.maxStepSize),
+                  m_navigator.makeState(&start.referenceSurface(), nullptr)};
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
@@ -185,12 +188,13 @@ template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const parameters_t& start,
+    const Surface& target, const propagator_options_t& options) const {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
-  // Type of provided options
+  // Expand the abort list with a target and path aborter
   target_aborter_t targetAborter;
   targetAborter.surface = &target;
   path_aborter_t pathAborter;
@@ -200,16 +204,14 @@ auto Acts::Propagator<S, N>::makeState(
   // Create the extended options and declare their type
   auto eOptions = options.extend(abortList);
   using OptionsType = decltype(eOptions);
-
   // Initialize the internal propagator state
   using StateType =
       action_list_t_state_t<OptionsType,
                             typename propagator_options_t::action_list_type>;
-  StateType state{
-      eOptions,
-      m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.stepping.maxStepSize),
-      m_navigator.makeState(&start.referenceSurface(), &target)};
+  StateType state{geoContext, eOptions,
+                  m_stepper.makeState(geoContext, magFieldContext, start,
+                                      eOptions.stepping.maxStepSize),
+                  m_navigator.makeState(&start.referenceSurface(), &target)};
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
@@ -335,6 +337,8 @@ void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
 template <typename derived_t>
 Acts::Result<Acts::BoundTrackParameters>
 Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const BoundTrackParameters& start, const Surface& target,
     const Options& options) const {
   using ResultType = Result<typename derived_t::template action_list_t_result_t<
@@ -352,12 +356,12 @@ Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
     res = static_cast<const derived_t*>(this)
               ->template propagate<BoundTrackParameters, DerivedOptions,
                                    ForcedSurfaceReached, PathLimitReached>(
-                  start, target, derivedOptions);
+                  geoContext, magFieldContext, start, target, derivedOptions);
   } else {
     res = static_cast<const derived_t*>(this)
               ->template propagate<BoundTrackParameters, DerivedOptions,
                                    SurfaceReached, PathLimitReached>(
-                  start, target, derivedOptions);
+                  geoContext, magFieldContext, start, target, derivedOptions);
   }
 
   if (res.ok()) {

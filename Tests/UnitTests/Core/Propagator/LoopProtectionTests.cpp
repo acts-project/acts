@@ -199,9 +199,10 @@ BOOST_DATA_TEST_CASE(
                                    std::nullopt, ParticleHypothesis::pion());
 
   using PropagatorOptions = EigenPropagator::Options<ActionList<>, AbortList<>>;
-  PropagatorOptions options(tgContext, mfContext);
+  PropagatorOptions options;
   options.maxSteps = 1e6;
-  const auto& result = epropagator.propagate(start, options).value();
+  const auto& result =
+      epropagator.propagate(tgContext, mfContext, start, options).value();
 
   // this test assumes state.options.loopFraction = 0.5
   CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);

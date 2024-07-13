@@ -777,11 +777,12 @@ ProcessCode VertexPerformanceWriter::writeT(
 
       // Setting the geometry/magnetic field context for the event
       using PropagatorOptions = Propagator::Options<>;
-      PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+      PropagatorOptions pOptions;
       pOptions.direction =
           Acts::Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
-      auto result = propagator->propagate(params, *perigeeSurface, pOptions);
+      auto result = propagator->propagate(ctx.geoContext, ctx.magFieldContext,
+                                          params, *perigeeSurface, pOptions);
       if (!result.ok()) {
         ACTS_ERROR("Propagation to true vertex position failed.");
         return std::nullopt;

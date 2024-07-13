@@ -137,9 +137,10 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     using PropagatorOptions =
         typename propagator_t::template Options<ActionList, AbortList>;
 
-    PropagatorOptions options(gctx, mctx);
+    PropagatorOptions options;
 
-    const auto& result = m_propagator.propagate(start, options).value();
+    const auto& result =
+        m_propagator.propagate(gctx, mctx, start, options).value();
 
     // The surface collection results
     auto scResult =

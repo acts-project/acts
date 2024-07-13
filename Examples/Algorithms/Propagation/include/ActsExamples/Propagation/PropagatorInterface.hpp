@@ -88,7 +88,7 @@ class ConcretePropagator : public PropagatorInterface {
       using PropagatorOptions =
           typename propagator_t::template Options<ActionList, AbortList>;
 
-      PropagatorOptions options(context.geoContext, context.magFieldContext);
+      PropagatorOptions options;
       options.pathLimit = pathLength;
 
       // Activate loop protection at some pt value
@@ -108,7 +108,9 @@ class ConcretePropagator : public PropagatorInterface {
       options.stepping.maxStepSize = cfg.maxStepSize;
 
       // Propagate using the propagator
-      auto result = m_propagator.propagate(startParameters, options);
+      auto result =
+          m_propagator.propagate(context.geoContext, context.magFieldContext,
+                                 startParameters, options);
       if (result.ok()) {
         const auto& resultValue = result.value();
         auto steppingResults =

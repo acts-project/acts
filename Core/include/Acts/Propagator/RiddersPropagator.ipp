@@ -11,7 +11,9 @@
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
-    const parameters_t& start, const propagator_options_t& options) const
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const parameters_t& start,
+    const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         CurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
@@ -25,7 +27,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   startWithoutCov.covariance() = std::nullopt;
 
   // Propagate the nominal parameters
-  auto result = m_propagator.propagate(startWithoutCov, options);
+  auto result = m_propagator.propagate(geoContext, magFieldContext,
+                                       startWithoutCov, options);
   if (!result.ok()) {
     return ThisResult::failure(result.error());
   }
@@ -34,7 +37,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   assert(nominalResult.endParameters);
   const auto& nominalFinalParameters = *nominalResult.endParameters;
 
-  Jacobian jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
+  Jacobian jacobian = wiggleAndCalculateJacobian(geoContext, magFieldContext,
+                                                 options, start, nominalResult);
   nominalResult.transportJacobian = jacobian;
 
   if (start.covariance()) {
@@ -42,7 +46,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
     // replace the covariance of the nominal result w/ the ridders covariance
     nominalResult.endParameters = CurvilinearTrackParameters(
-        nominalFinalParameters.fourPosition(options.geoContext),
+        nominalFinalParameters.fourPosition(geoContext),
         nominalFinalParameters.direction(), nominalFinalParameters.qOverP(),
         std::move(cov), nominalFinalParameters.particleHypothesis());
   }
@@ -53,8 +57,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const parameters_t& start,
+    const Surface& target, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         BoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
@@ -67,7 +72,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   startWithoutCov.covariance() = std::nullopt;
 
   // Propagate the nominal parameters
-  auto result = m_propagator.propagate(startWithoutCov, target, options);
+  auto result = m_propagator.propagate(geoContext, magFieldContext,
+                                       startWithoutCov, target, options);
   if (!result.ok()) {
     return ThisResult::failure(result.error());
   }
@@ -76,7 +82,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   assert(nominalResult.endParameters);
   const auto& nominalFinalParameters = *nominalResult.endParameters;
 
-  Jacobian jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
+  Jacobian jacobian = wiggleAndCalculateJacobian(geoContext, magFieldContext,
+                                                 options, start, nominalResult);
   nominalResult.transportJacobian = jacobian;
 
   if (start.covariance()) {
@@ -96,6 +103,8 @@ template <typename propagator_t>
 template <typename propagator_options_t, typename parameters_t,
           typename result_t>
 auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const propagator_options_t& options, const parameters_t& start,
     result_t& nominalResult) const -> Jacobian {
   auto nominalFinalParameters = *nominalResult.endParameters;
@@ -128,7 +137,7 @@ auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
   // Wiggle each dimension individually
   for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
-        wiggleParameter(opts, start, i, target,
+        wiggleParameter(geoContext, magFieldContext, opts, start, i, target,
                         nominalFinalParameters.parameters(), *deviations);
   }
 
@@ -169,6 +178,8 @@ template <typename propagator_t>
 template <typename propagator_options_t, typename parameters_t>
 std::vector<Acts::BoundVector>
 Acts::RiddersPropagator<propagator_t>::wiggleParameter(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const propagator_options_t& options, const parameters_t& start,
     const unsigned int param, const Surface& target,
     const Acts::BoundVector& nominal,
@@ -195,7 +206,9 @@ Acts::RiddersPropagator<propagator_t>::wiggleParameter(
     // Propagate with updated start parameters
     BoundTrackParameters tp(start.referenceSurface().getSharedPtr(), values,
                             start.covariance(), start.particleHypothesis());
-    const auto& r = m_propagator.propagate(tp, target, options).value();
+    const auto& r =
+        m_propagator.propagate(geoContext, magFieldContext, tp, target, options)
+            .value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 

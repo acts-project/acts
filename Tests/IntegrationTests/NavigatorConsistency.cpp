@@ -76,7 +76,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
       typename propagator_t::template Options<ActionListType, AbortListType>;
 
   // forward surface test
-  Options fwdOptions(tgContext, mfContext);
+  Options fwdOptions;
   fwdOptions.pathLimit = 25_cm;
 
   // get the surface collector and configure it
@@ -87,7 +87,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
   fwdSurfaceCollector.selector.selectPassive = true;
 
   ACTS_DEBUG(">>> Forward Propagation : start.");
-  auto fwdResult = prop.propagate(start, fwdOptions).value();
+  auto fwdResult =
+      prop.propagate(tgContext, mfContext, start, fwdOptions).value();
   auto fwdSurfaceHits =
       fwdResult.template get<SurfaceCollector::result_type>().collected;
   auto fwdSurfaces = collectRelevantGeoIds(
@@ -100,7 +101,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
   ACTS_DEBUG(">>> Forward Propagation : end.");
 
   // backward surface test
-  Options bwdOptions(tgContext, mfContext);
+  Options bwdOptions;
   bwdOptions.pathLimit = 25_cm;
   bwdOptions.direction = Direction::Backward;
 
@@ -115,7 +116,8 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   ACTS_DEBUG(">>> Backward Propagation : start.");
   auto bwdResult =
-      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
+      prop.propagate(tgContext, mfContext, *fwdResult.endParameters,
+                     startSurface, bwdOptions)
           .value();
   auto bwdSurfaceHits =
       bwdResult.template get<SurfaceCollector::result_type>().collected;
@@ -137,7 +139,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // stepping from one surface to the next
   // now go from surface to surface and check
-  Options fwdStepOptions(tgContext, mfContext);
+  Options fwdStepOptions;
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
@@ -157,8 +159,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
                << fwdSteps.surface->geometryId());
 
     // make a forward step
-    auto fwdStep =
-        prop.propagate(sParameters, *fwdSteps.surface, fwdStepOptions).value();
+    auto fwdStep = prop.propagate(tgContext, mfContext, sParameters,
+                                  *fwdSteps.surface, fwdStepOptions)
+                       .value();
 
     auto fwdStepSurfacesTmp = collectRelevantGeoIds(
         fwdStep.template get<SurfaceCollector::result_type>());
@@ -176,8 +179,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   ACTS_DEBUG(">>> Forward step : "
              << sParameters.referenceSurface().geometryId() << " --> "
              << dSurface.geometryId());
-  auto fwdStepFinal =
-      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
+  auto fwdStepFinal = prop.propagate(tgContext, mfContext, sParameters,
+                                     dSurface, fwdStepOptions)
+                          .value();
   auto fwdStepSurfacesTmp = collectRelevantGeoIds(
       fwdStepFinal.template get<SurfaceCollector::result_type>());
   fwdStepSurfaces.insert(fwdStepSurfaces.end(), fwdStepSurfacesTmp.begin(),
@@ -187,7 +191,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
-  Options bwdStepOptions(tgContext, mfContext);
+  Options bwdStepOptions;
   bwdStepOptions.direction = Direction::Backward;
 
   // get the surface collector and configure it
@@ -207,8 +211,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
                << bwdSteps.surface->geometryId());
 
     // make a forward step
-    auto bwdStep =
-        prop.propagate(sParameters, *bwdSteps.surface, bwdStepOptions).value();
+    auto bwdStep = prop.propagate(tgContext, mfContext, sParameters,
+                                  *bwdSteps.surface, bwdStepOptions)
+                       .value();
 
     auto bwdStepSurfacesTmp = collectRelevantGeoIds(
         bwdStep.template get<SurfaceCollector::result_type>());
@@ -226,8 +231,9 @@ void runSelfConsistencyTest(const propagator_t& prop,
   ACTS_DEBUG(">>> Backward step : "
              << sParameters.referenceSurface().geometryId() << " --> "
              << dSurface.geometryId());
-  auto bwdStepFinal =
-      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
+  auto bwdStepFinal = prop.propagate(tgContext, mfContext, sParameters,
+                                     dbSurface, bwdStepOptions)
+                          .value();
   auto bwdStepSurfacesTmp = collectRelevantGeoIds(
       bwdStepFinal.template get<SurfaceCollector::result_type>());
   bwdStepSurfaces.insert(bwdStepSurfaces.end(), bwdStepSurfacesTmp.begin(),
@@ -265,7 +271,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
         typename propagator_t::template Options<ActionListType, AbortListType>;
 
     // forward surface test
-    Options fwdOptions(tgContext, mfContext);
+    Options fwdOptions;
     fwdOptions.pathLimit = 25_cm;
     fwdOptions.stepping.maxStepSize = 1_cm;
 
@@ -276,7 +282,8 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
     fwdSurfaceCollector.selector.selectMaterial = true;
     fwdSurfaceCollector.selector.selectPassive = true;
 
-    auto fwdResult = prop.propagate(start, fwdOptions).value();
+    auto fwdResult =
+        prop.propagate(tgContext, mfContext, start, fwdOptions).value();
     auto fwdSurfaces = collectRelevantGeoIds(
         fwdResult.template get<SurfaceCollector::result_type>());
 

@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  PropagatorOptions propOpts(tgContext, mfContext);
+  PropagatorOptions propOpts;
   propOpts.maxSteps = 100;
   propOpts.stepping.maxStepSize = 1.5_m;
 
@@ -603,7 +603,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   Propagator prop(es, naviVac);
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  const auto& result =
+      prop.propagate(tgContext, mfContext, sbtp, propOpts).value();
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
@@ -627,7 +628,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
       DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  DefPropagatorOptions propOptsDef(tgContext, mfContext);
+  DefPropagatorOptions propOptsDef;
   propOptsDef.maxSteps = 100;
   propOptsDef.stepping.maxStepSize = 1.5_m;
 
@@ -635,7 +636,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   DefPropagator propDef(esDef, naviVac);
 
   // Launch and collect results
-  const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
+  const auto& resultDef =
+      propDef.propagate(tgContext, mfContext, sbtp, propOptsDef).value();
   const StepCollector::this_result& stepResultDef =
       resultDef.get<typename StepCollector::result_type>();
 
@@ -692,7 +694,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  PropagatorOptions propOpts(tgContext, mfContext);
+  PropagatorOptions propOpts;
   propOpts.maxSteps = 10000;
   propOpts.stepping.maxStepSize = 1.5_m;
 
@@ -703,7 +705,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                   Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  const auto& result =
+      prop.propagate(tgContext, mfContext, sbtp, propOpts).value();
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
@@ -737,7 +740,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Rebuild and check the choice of extension
   // Set options for propagator
-  DensePropagatorOptions propOptsDense(tgContext, mfContext);
+  DensePropagatorOptions propOptsDense;
   propOptsDense.maxSteps = 1000;
   propOptsDense.stepping.maxStepSize = 1.5_m;
 
@@ -746,7 +749,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   DensePropagator propDense(esDense, naviMat);
 
   // Launch and collect results
-  const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
+  const auto& resultDense =
+      propDense.propagate(tgContext, mfContext, sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultDense =
       resultDense.get<typename StepCollector::result_type>();
 
@@ -770,7 +774,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   Stepper esB(bField);
   Propagator propB(esB, naviMat);
 
-  const auto& resultB = propB.propagate(sbtp, propOptsDense).value();
+  const auto& resultB =
+      propB.propagate(tgContext, mfContext, sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultB =
       resultB.get<typename StepCollector::result_type>();
 
@@ -842,7 +847,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       Propagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  PropagatorOptions propOpts(tgContext, mfContext);
+  PropagatorOptions propOpts;
   propOpts.abortList.get<EndOfWorld>().maxX = 3_m;
   propOpts.maxSteps = 1000;
   propOpts.stepping.maxStepSize = 1.5_m;
@@ -853,7 +858,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   Propagator prop(es, naviDet);
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  const auto& result =
+      prop.propagate(tgContext, mfContext, sbtp, propOpts).value();
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
@@ -895,7 +901,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   using DefPropagatorOptions =
       DefPropagator::Options<ActionList<StepCollector>, AbortList<EndOfWorld>>;
 
-  DefPropagatorOptions propOptsDef(tgContext, mfContext);
+  DefPropagatorOptions propOptsDef;
   propOptsDef.abortList.get<EndOfWorld>().maxX = 3_m;
   propOptsDef.maxSteps = 1000;
   propOptsDef.stepping.maxStepSize = 1.5_m;
@@ -905,7 +911,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   DefPropagator propDef(esDef, naviDet);
 
   // Launch and collect results
-  const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
+  const auto& resultDef =
+      propDef.propagate(tgContext, mfContext, sbtp, propOptsDef).value();
   const StepCollector::this_result& stepResultDef =
       resultDef.get<typename StepCollector::result_type>();
 
@@ -948,7 +955,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  DensePropagatorOptions propOptsDense(tgContext, mfContext);
+  DensePropagatorOptions propOptsDense;
   propOptsDense.abortList.get<EndOfWorld>().maxX = 3_m;
   propOptsDense.maxSteps = 1000;
   propOptsDense.stepping.maxStepSize = 1.5_m;
@@ -958,7 +965,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   DensePropagator propDense(esDense, naviDet);
 
   // Launch and collect results
-  const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
+  const auto& resultDense =
+      propDense.propagate(tgContext, mfContext, sbtp, propOptsDense).value();
   const StepCollector::this_result& stepResultDense =
       resultDense.get<typename StepCollector::result_type>();
 
@@ -1080,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                           AbortList<EndOfWorld>>;
 
   // Set options for propagator
-  PropagatorOptions propOpts(tgContext, mfContext);
+  PropagatorOptions propOpts;
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 
@@ -1090,7 +1098,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Propagator prop(es, naviVac);
 
   // Launch and collect results
-  const auto& result = prop.propagate(sbtp, propOpts).value();
+  const auto& result =
+      prop.propagate(tgContext, mfContext, sbtp, propOpts).value();
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 

@@ -240,7 +240,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       using PropagatorOptions = typename Propagator::template Options<>;
 
       // configure propagator for tiny step size
-      PropagatorOptions null_propagation_options(geoCtx, magFieldContext);
+      PropagatorOptions null_propagation_options;
 
       null_propagation_options.pathLimit =
           i == 0 ? 0 : 1e-12 * 1_m * std::pow(10, i - 1);
@@ -258,8 +258,8 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       // curvilinear parameterisation
       Propagator propagator(std::move(stepper), Acts::VoidNavigator(),
                             Acts::getDefaultLogger("Propagator", log_level));
-      auto result =
-          propagator.propagate(params, null_propagation_options, true);
+      auto result = propagator.propagate(geoCtx, magFieldContext, params,
+                                         null_propagation_options, true);
       {
         const auto &curvilinear_parameters = result.value().endParameters;
         if (curvilinear_parameters.has_value() &&

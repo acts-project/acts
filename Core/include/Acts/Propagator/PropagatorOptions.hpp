@@ -47,17 +47,6 @@ struct PurePropagatorPlainOptions {
 
 /// @brief Holds the generic propagator options
 struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
-  /// PropagatorPlainOptions with context
-  PropagatorPlainOptions(const GeometryContext& gctx,
-                         const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
-
-  /// The context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
-
-  /// The context object for the magnetic field
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-
   /// Stepper plain options
   StepperPlainOptions stepping;
 
@@ -82,21 +71,17 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   using action_list_type = action_list_t;
   using aborter_list_type = aborter_list_t;
 
-  /// PropagatorOptions with context
-  PropagatorOptions(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+  /// Default constructor
+  PropagatorOptions() = default;
 
   /// PropagatorOptions with context and plain options
-  PropagatorOptions(const PropagatorPlainOptions& pOptions)
-      : geoContext(pOptions.geoContext),
-        magFieldContext(pOptions.magFieldContext) {
+  PropagatorOptions(const PropagatorPlainOptions& pOptions) {
     setPlainOptions(pOptions);
   }
 
   /// @brief Convert to plain options
   operator PropagatorPlainOptions() const {
-    PropagatorPlainOptions pOptions(geoContext, magFieldContext);
+    PropagatorPlainOptions pOptions;
     static_cast<PurePropagatorPlainOptions&>(pOptions) =
         static_cast<const PurePropagatorPlainOptions&>(*this);
     pOptions.stepping = static_cast<const StepperPlainOptions&>(stepping);
@@ -115,7 +100,7 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   extend(extended_aborter_list_t aborters) const {
     PropagatorOptions<stepper_options_t, navigator_options_t, action_list_t,
                       extended_aborter_list_t>
-        eoptions(geoContext, magFieldContext);
+        eoptions;
 
     // Copy the base options
     static_cast<PurePropagatorPlainOptions&>(eoptions) =
@@ -143,12 +128,6 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
     stepping.setPlainOptions(pOptions.stepping);
     navigation.setPlainOptions(pOptions.navigation);
   }
-
-  /// The context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
-
-  /// The context object for the magnetic field
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 
   /// Stepper options
   stepper_options_t stepping;

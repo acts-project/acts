@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -121,8 +121,7 @@ struct GsfOptions {
              const CalibrationContext &calibCtxt)
       : geoContext(geoCtxt),
         magFieldContext(magFieldCtxt),
-        calibrationContext(calibCtxt),
-        propagatorPlainOptions(geoCtxt, magFieldCtxt) {}
+        calibrationContext(calibCtxt) {}
 };
 
 }  // namespace Acts
