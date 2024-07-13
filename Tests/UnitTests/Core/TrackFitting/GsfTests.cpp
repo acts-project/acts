@@ -98,9 +98,12 @@ const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions<VectorMultiTrajectory>{
-      tester.geoCtx, tester.magCtx, tester.calCtx, getExtensions(),
-      PropagatorPlainOptions(tester.geoCtx, tester.magCtx)};
+  GsfOptions<VectorMultiTrajectory> opts{tester.geoCtx, tester.magCtx,
+                                         tester.calCtx};
+  opts.extensions = getExtensions();
+  opts.propagatorPlainOptions =
+      PropagatorPlainOptions(tester.geoCtx, tester.magCtx);
+  return opts;
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
