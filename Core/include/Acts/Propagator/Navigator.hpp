@@ -118,7 +118,7 @@ class Navigator {
 
     void insertExternalSurface(GeometryIdentifier geoid) {
       externalSurfaces.insert(
-          std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
     }
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
