@@ -1,0 +1,66 @@
+histograms:
+  outgoing_particles:
+    nbins: 100
+    min: 0
+    max: 1e13
+
+  vt:
+    nbins: 100
+    min: 0
+    max: 1e6
+
+  "vx|vy":
+    nbins: 100
+    min: -300
+    max: 300
+
+  vz:
+    nbins: 100
+    min: -0.3e6
+    max: 0.3e6
+
+  eta:
+    nbins: 100
+    min: -15
+    max: 15
+
+  m:
+    nbins: 100
+    min: 0
+    max: 2
+
+  "p|pt":
+    nbins: 100
+    min: 0.3
+    max: 1000
+
+  phi:
+    nbins: 100
+    min: -4.0
+    max: 4.0
+
+  "px|py":
+    nbins: 100
+    min: -10.0
+    max: 20.0
+
+  pz:
+    nbins: 100
+    min: -2000
+    max: 2000
+
+  q:
+    nbins: 100
+    min: -2.0
+    max: 2.0
+
+exclude:
+  - event_id
+  - particle_id
+  - particle_type
+  - process
+  - vertex_primary
+  - vertex_secondary
+  - particle
+  - generation
+  - sub_particle

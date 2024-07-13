@@ -411,7 +411,8 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         $outdir/pythia8_particles_ttbar.root \
         particles \
         $outdir/particles_ttbar_hist.root \
-        --silent
+        --silent \
+        --config CI/physmon/pythia8_ttbar_config.yml
 
     run_histcmp \
       $outdir/particles_ttbar_hist.root \
@@ -423,7 +424,8 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         $outdir/pythia8_vertices_ttbar.root \
         vertices \
         $outdir/vertices_ttbar_hist.root \
-        --silent
+        --silent \
+        --config CI/physmon/pythia8_ttbar_config.yml
 
     run_histcmp \
       $outdir/vertices_ttbar_hist.root \
