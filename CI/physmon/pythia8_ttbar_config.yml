@@ -59,6 +59,7 @@ exclude:
   - particle_id
   - particle_type
   - process
+  - vertex_id
   - vertex_primary
   - vertex_secondary
   - particle
