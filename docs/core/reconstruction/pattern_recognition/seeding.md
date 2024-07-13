@@ -74,9 +74,6 @@ compatibility with interaction point).
 :::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, SeedingState &state, const grid_t &grid, std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> &&outIt, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs, const Acts::Range1D<float> &rMiddleSPRange) const
 :::
 
-:::{doxygenfunction} Acts::SeedFinder::createSeedsForGroup(const Acts::SeedFinderOptions &options, const grid_t &grid, const sp_range_t &bottomSPs, const std::size_t middleSPs, const sp_range_t &topSPs) const
-:::
-
 
 For all pairs passing the selection the triplets of bottom-middle-top SPs are formed.
 Each triplet is then confronted with the helix hypothesis. In order to perform calculations

@@ -843,19 +843,4 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   }  // loop on bottoms
 }
 
-template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename sp_range_t>
-std::vector<Seed<external_spacepoint_t>>
-SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, const grid_t& grid,
-    const sp_range_t& bottomSPs, const std::size_t middleSPs,
-    const sp_range_t& topSPs) const {
-  SeedingState state;
-  const Acts::Range1D<float> rMiddleSPRange;
-  std::vector<Seed<external_spacepoint_t>> ret;
-  createSeedsForGroup(options, state, grid, std::back_inserter(ret), bottomSPs,
-                      middleSPs, topSPs, rMiddleSPRange);
-
-  return ret;
-}
 }  // namespace Acts
