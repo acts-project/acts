@@ -7,17 +7,17 @@ histograms:
   vt:
     nbins: 100
     min: 0
-    max: 1e6
+    max: 1e5
 
   "vx|vy":
     nbins: 100
-    min: -300
-    max: 300
+    min: -100
+    max: 100
 
   vz:
     nbins: 100
-    min: -0.3e6
-    max: 0.3e6
+    min: -1e4
+    max: 1e4
 
   eta:
     nbins: 100
@@ -31,8 +31,8 @@ histograms:
 
   "p|pt":
     nbins: 100
-    min: 0.3
-    max: 1000
+    min: 0.0
+    max: 200
 
   phi:
     nbins: 100
@@ -41,13 +41,13 @@ histograms:
 
   "px|py":
     nbins: 100
-    min: -10.0
-    max: 20.0
+    min: -5.0
+    max: 5.0
 
   pz:
     nbins: 100
-    min: -2000
-    max: 2000
+    min: -1000
+    max: 1000
 
   q:
     nbins: 100
