@@ -170,7 +170,11 @@ with tempfile.TemporaryDirectory() as temp:
         "tracksummary_ckf",
         "performance_amvf",
         "performance_amvf_gridseeder",
-    ] + (["performance_seeding", "performance_ambi"]):
+        "performance_seeding",
+        "performance_ambi",
+        "pythia8_particles",
+        "pythia8_vertices",
+    ]:
         perf_file = tp / f"{stem}.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, setup.outdir / f"{stem}_ttbar.root")

@@ -408,7 +408,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         amvf_gridseeder_ttbar
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/pythia8_particles.root \
+        $outdir/pythia8_particles_ttbar.root \
         particles \
         $outdir/particles_ttbar_hist.root \
         --silent
@@ -420,7 +420,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
       particles_ttbar
 
     run Examples/Scripts/generic_plotter.py \
-        $outdir/pythia8_vertices.root \
+        $outdir/pythia8_vertices_ttbar.root \
         vertices \
         $outdir/vertices_ttbar_hist.root \
         --silent
