@@ -348,7 +348,6 @@ linux_ubuntu_2404:
     CXXSTD: 20
   image: ghcr.io/acts-project/ubuntu2404:52
 
-
 linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
   variables:
