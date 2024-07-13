@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:51
+    container: ghcr.io/acts-project/ubuntu2404:52
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -47,7 +47,7 @@ jobs:
             ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions
         # Need to set git user & email for patching to work (GeoModel plugin)
@@ -60,7 +60,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
           -DACTS_BUILD_EVERYTHING=ON
@@ -111,7 +111,7 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
@@ -122,7 +122,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:51
+    container: ghcr.io/acts-project/ubuntu2404:52
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -159,7 +159,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:51
+    container: ghcr.io/acts-project/ubuntu2404:52
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -239,13 +239,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2404
-            std: 17
-          - image: ubuntu2204_cpp20
+          - image: ubuntu2204
             std: 20
           - image: ubuntu2204_clang
-            std: 17
-    container: ghcr.io/acts-project/${{ matrix.image }}:51
+            std: 20
+    container: ghcr.io/acts-project/${{ matrix.image }}:52
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -269,7 +267,7 @@ jobs:
 
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions
         run: >
@@ -319,7 +317,7 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
@@ -367,7 +365,7 @@ jobs:
             ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions such as the one installed via homebrew
         run: >
@@ -380,7 +378,7 @@ jobs:
           -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
@@ -417,7 +415,7 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
         run: cmake --build build-downstream
