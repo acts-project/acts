@@ -100,7 +100,8 @@ BOOST_AUTO_TEST_CASE(insert_back_iterator) {
 
 BOOST_AUTO_TEST_CASE(emplace_vector) {
   struct A {
-    A(std::size_t a, float b, std::string c) : valA(a), valB(b), valC(c) {}
+    A(std::size_t a, float b, std::string c)
+        : valA(a), valB(b), valC(std::move(c)) {}
 
     std::size_t valA;
     float valB;

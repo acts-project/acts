@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#if defined(__cpp_concepts)
 
 #include <ranges>
 
@@ -62,3 +63,5 @@ void emplace(
 }
 
 }  // namespace Acts::details
+
+#endif
