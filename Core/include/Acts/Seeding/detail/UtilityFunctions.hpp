@@ -16,23 +16,24 @@ namespace Acts::detail {
 template <typename external_t>
 concept isCollectionThatSupportsPushBack =
     std::ranges::range<external_t> && requires {
-      typename external_t::value_type;
-    } && requires(external_t coll, typename external_t::value_type val) {
-      coll.push_back(val);
-    };
+  typename external_t::value_type;
+} && requires(external_t coll, typename external_t::value_type val) {
+  coll.push_back(val);
+};
 
 template <typename external_t>
 concept isCollectionThatSupportsInsert =
     std::ranges::range<external_t> && requires {
-      typename external_t::value_type;
-    } && requires(external_t coll, typename external_t::value_type val) {
-      coll.insert(std::ranges::end(coll), val);
-    };
+  typename external_t::value_type;
+} && requires(external_t coll, typename external_t::value_type val) {
+  coll.insert(std::ranges::end(coll), val);
+};
 
 template <typename external_t, typename... args_t>
-concept isCollectionThatSupportsEmplace =
-    std::ranges::range<external_t> &&
-    requires(external_t coll, args_t... vals) { coll.emplace_back(vals...); };
+concept isCollectionThatSupportsEmplace = std::ranges::range<external_t> &&
+    requires(external_t coll, args_t... vals) {
+  coll.emplace_back(vals...);
+};
 
 // Define some functions
 template <typename value_t>
@@ -47,9 +48,9 @@ void insert(Acts::detail::isCollectionThatSupportsPushBack auto& storage,
 }
 
 template <std::ranges::range storage_t, typename value_t>
-  requires(!Acts::detail::isCollectionThatSupportsPushBack<storage_t> &&
-           Acts::detail::isCollectionThatSupportsInsert<storage_t>)
-void insert(storage_t& storage, value_t&& value) {
+requires(!Acts::detail::isCollectionThatSupportsPushBack<storage_t> &&
+         Acts::detail::isCollectionThatSupportsInsert<
+             storage_t>) void insert(storage_t& storage, value_t&& value) {
   storage.insert(std::ranges::end(storage), std::forward<value_t>(value));
 }
 
