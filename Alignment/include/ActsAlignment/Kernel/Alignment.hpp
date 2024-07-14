@@ -160,7 +160,8 @@ struct Alignment {
   template <typename source_link_t, typename start_parameters_t,
             typename fit_options_t>
   Acts::Result<detail::TrackAlignmentState> evaluateTrackAlignmentState(
-      const Acts::GeometryContext& gctx,
+      const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const Acts::CalibrationContext& cctx,
       const std::vector<source_link_t>& sourcelinks,
       const start_parameters_t& sParameters, const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, std::size_t>&
@@ -183,6 +184,8 @@ struct Alignment {
   template <typename trajectory_container_t,
             typename start_parameters_container_t, typename fit_options_t>
   void calculateAlignmentParameters(
+      const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const Acts::CalibrationContext& cctx,
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
@@ -216,6 +219,8 @@ struct Alignment {
   template <typename trajectory_container_t,
             typename start_parameters_container_t, typename fit_options_t>
   Acts::Result<AlignmentResult> align(
+      const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const Acts::CalibrationContext& cctx,
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const AlignmentOptions<fit_options_t>& alignOptions) const;

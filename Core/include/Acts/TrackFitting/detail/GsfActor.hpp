@@ -23,6 +23,7 @@
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <ios>
@@ -786,14 +787,15 @@ struct GsfActor {
 
   /// Set the relevant options that can be set from the Options struct all in
   /// one place
-  void setOptions(const Acts::GsfOptions<traj_t>& options) {
+  void setOptions(const CalibrationContext* calibrationContext,
+                  const Acts::GsfOptions<traj_t>& options) {
     m_cfg.maxComponents = options.maxComponents;
     m_cfg.extensions = options.extensions;
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
     m_cfg.mergeMethod = options.componentMergeMethod;
-    m_cfg.calibrationContext = &options.calibrationContext.get();
+    m_cfg.calibrationContext = calibrationContext;
   }
 };
 

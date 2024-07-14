@@ -72,6 +72,9 @@ class AlignmentAlgorithm final : public IAlgorithm {
    public:
     virtual ~AlignmentFunction() = default;
     virtual AlignmentResult operator()(
+        const Acts::GeometryContext& gctx,
+        const Acts::MagneticFieldContext& mctx,
+        const Acts::CalibrationContext& cctx,
         const std::vector<std::vector<IndexSourceLink>>&,
         const TrackParametersContainer&,
         const ActsAlignment::AlignmentOptions<TrackFitterOptions>&) const = 0;

@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -92,8 +93,9 @@ struct GaussianSumFitter {
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
             typename track_container_t, template <typename> class holder_t>
-  auto fit(source_link_it_t begin, source_link_it_t end,
-           const start_parameters_t& sParameters,
+  auto fit(const GeometryContext& geoContext,
+           const MagneticFieldContext& magFieldContext, source_link_it_t begin,
+           source_link_it_t end, const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
            const std::vector<const Surface*>& sSequence,
            TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
@@ -144,15 +146,18 @@ struct GaussianSumFitter {
       return propOptions;
     };
 
-    return fit_impl(begin, end, sParameters, options, fwdPropInitializer,
+    return fit_impl(geoContext, magFieldContext, nullptr, begin, end,
+                    sParameters, options, fwdPropInitializer,
                     bwdPropInitializer, trackContainer);
   }
 
   /// @brief The fit function for the standard navigator
   template <typename source_link_it_t, typename start_parameters_t,
             typename track_container_t, template <typename> class holder_t>
-  auto fit(source_link_it_t begin, source_link_it_t end,
-           const start_parameters_t& sParameters,
+  auto fit(const GeometryContext& geoContext,
+           const MagneticFieldContext& magFieldContext,
+           const CalibrationContext& calibrationContext, source_link_it_t begin,
+           source_link_it_t end, const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
            TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
       const {
@@ -193,7 +198,8 @@ struct GaussianSumFitter {
       return propOptions;
     };
 
-    return fit_impl(begin, end, sParameters, options, fwdPropInitializer,
+    return fit_impl(geoContext, magFieldContext, &calibrationContext, begin,
+                    end, sParameters, options, fwdPropInitializer,
                     bwdPropInitializer, trackContainer);
   }
 
@@ -205,8 +211,10 @@ struct GaussianSumFitter {
             typename track_container_t, template <typename> class holder_t>
   Acts::Result<
       typename TrackContainer<track_container_t, traj_t, holder_t>::TrackProxy>
-  fit_impl(source_link_it_t begin, source_link_it_t end,
-           const start_parameters_t& sParameters,
+  fit_impl(const GeometryContext& geoContext,
+           const MagneticFieldContext& magFieldContext,
+           const CalibrationContext* calibrationContext, source_link_it_t begin,
+           source_link_it_t end, const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
            const fwd_prop_initializer_t& fwdPropInitializer,
            const bwd_prop_initializer_t& bwdPropInitializer,
@@ -269,7 +277,7 @@ struct GaussianSumFitter {
 
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
-      actor.setOptions(options);
+      actor.setOptions(calibrationContext, options);
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
@@ -295,8 +303,8 @@ struct GaussianSumFitter {
         params = sParameters;
       }
 
-      auto state = m_propagator.makeState(
-          options.geoContext, options.magFieldContext, *params, fwdPropOptions);
+      auto state = m_propagator.makeState(geoContext, magFieldContext, *params,
+                                          fwdPropOptions);
 
       auto& r = state.template get<typename GsfActor::result_type>();
       r.fittedStates = &trackContainer.trackStateContainer();
@@ -341,7 +349,7 @@ struct GaussianSumFitter {
       auto bwdPropOptions = bwdPropInitializer(options);
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
-      actor.setOptions(options);
+      actor.setOptions(calibrationContext, options);
       actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
       actor.m_cfg.logger = m_actorLogger.get();
@@ -359,8 +367,7 @@ struct GaussianSumFitter {
           m_propagator.template makeState<MultiComponentBoundTrackParameters,
                                           decltype(bwdPropOptions),
                                           MultiStepperSurfaceReached>(
-              options.geoContext, options.magFieldContext, params, target,
-              bwdPropOptions);
+              geoContext, magFieldContext, params, target, bwdPropOptions);
 
       assert(
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&

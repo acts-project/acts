@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,9 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -104,7 +106,6 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
             &reverseFilteringLogic);
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
-        options.geoContext, options.magFieldContext, options.calibrationContext,
         extensions, options.propOptions, &(*options.referenceSurface));
 
     kfOptions.referenceSurfaceStrategy =
@@ -121,17 +122,24 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     return kfOptions;
   }
 
-  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
-                               const TrackParameters& initialParameters,
-                               const GeneralFitterOptions& options,
-                               const MeasurementCalibratorAdapter& calibrator,
-                               TrackContainer& tracks) const override {
+  TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
+      const Acts::CalibrationContext& calibrationContext,
+      const std::vector<Acts::SourceLink>& sourceLinks,
+      const TrackParameters& initialParameters,
+      const GeneralFitterOptions& options,
+      const MeasurementCalibratorAdapter& calibrator,
+      TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options, calibrator);
-    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+    return fitter.fit(geoContext, magFieldContext, calibrationContext,
+                      sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       kfOptions, tracks);
   }
 
   TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
       const std::vector<Acts::SourceLink>& sourceLinks,
       const TrackParameters& initialParameters,
       const GeneralFitterOptions& options,
@@ -139,9 +147,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options, calibrator);
-    return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                            initialParameters, kfOptions, surfaceSequence,
-                            tracks);
+    return directFitter.fit(geoContext, magFieldContext, sourceLinks.begin(),
+                            sourceLinks.end(), initialParameters, kfOptions,
+                            surfaceSequence, tracks);
   }
 };
 

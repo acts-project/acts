@@ -91,7 +91,6 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
             &m_slSurfaceAccessor);
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
-        options.geoContext, options.magFieldContext, options.calibrationContext,
         extensions, options.propOptions, &(*options.referenceSurface),
         multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
         relChi2changeCutOff);
@@ -99,19 +98,26 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
     return gx2fOptions;
   }
 
-  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
-                               const TrackParameters& initialParameters,
-                               const GeneralFitterOptions& options,
-                               const MeasurementCalibratorAdapter& calibrator,
-                               TrackContainer& tracks) const override {
+  TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
+      const Acts::CalibrationContext& calibrationContext,
+      const std::vector<Acts::SourceLink>& sourceLinks,
+      const TrackParameters& initialParameters,
+      const GeneralFitterOptions& options,
+      const MeasurementCalibratorAdapter& calibrator,
+      TrackContainer& tracks) const override {
     const auto gx2fOptions = makeGx2fOptions(options, calibrator);
-    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+    return fitter.fit(geoContext, magFieldContext, calibrationContext,
+                      sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gx2fOptions, tracks);
   }
 
   // We need a placeholder for the directNavigator overload. Otherwise, we would
   // have an unimplemented pure virtual method in a final class.
   TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
       const std::vector<Acts::SourceLink>& /*sourceLinks*/,
       const TrackParameters& /*initialParameters*/,
       const GeneralFitterOptions& /*options*/,

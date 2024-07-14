@@ -356,15 +356,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       .connect<&detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
           &surfaceAccessor);
 
-  KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                PropagatorPlainOptions(), rSurface);
+  KalmanFitterOptions kfOptions(extensions, PropagatorPlainOptions(), rSurface);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
-                            kfOptions, tracks);
+  auto fitRes =
+      kFitter.fit(tgContext, mfContext, calContext, sourcelinks.begin(),
+                  sourcelinks.end(), rStart, kfOptions, tracks);
   if (!fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();

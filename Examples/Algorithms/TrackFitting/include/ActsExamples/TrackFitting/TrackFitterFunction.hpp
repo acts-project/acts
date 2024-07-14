@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,27 +35,26 @@ class TrackFitterFunction {
   using TrackFitterResult = Acts::Result<TrackContainer::TrackProxy>;
 
   struct GeneralFitterOptions {
-    std::reference_wrapper<const Acts::GeometryContext> geoContext;
-    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
-    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
     const Acts::Surface* referenceSurface = nullptr;
     Acts::PropagatorPlainOptions propOptions;
   };
 
   virtual ~TrackFitterFunction() = default;
 
-  virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
-                                       const TrackParameters&,
-                                       const GeneralFitterOptions&,
-                                       const MeasurementCalibratorAdapter&,
-                                       TrackContainer&) const = 0;
+  virtual TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
+      const Acts::CalibrationContext& calibrationContext,
+      const std::vector<Acts::SourceLink>&, const TrackParameters&,
+      const GeneralFitterOptions&, const MeasurementCalibratorAdapter&,
+      TrackContainer&) const = 0;
 
-  virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
-                                       const TrackParameters&,
-                                       const GeneralFitterOptions&,
-                                       const RefittingCalibrator&,
-                                       const std::vector<const Acts::Surface*>&,
-                                       TrackContainer&) const = 0;
+  virtual TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
+      const std::vector<Acts::SourceLink>&, const TrackParameters&,
+      const GeneralFitterOptions&, const RefittingCalibrator&,
+      const std::vector<const Acts::Surface*>&, TrackContainer&) const = 0;
 };
 
 /// Makes a fitter function object for the Kalman Filter

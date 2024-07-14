@@ -110,11 +110,6 @@ struct KalmanFitterExtensions {
 /// @tparam traj_t The trajectory type
 template <typename traj_t>
 struct KalmanFitterOptions {
-  /// PropagatorOptions with context.
-  ///
-  /// @param gctx The geometry context for this fit
-  /// @param mctx The magnetic context for this fit
-  /// @param cctx The calibration context for this fit
   /// @param extensions_ The KF extensions
   /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
@@ -123,20 +118,14 @@ struct KalmanFitterOptions {
   /// @param rFiltering Whether to run filtering in reversed direction as smoothing
   /// @param rfScaling Scale factor for the covariance matrix before the backward filtering
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
-  KalmanFitterOptions(const GeometryContext& gctx,
-                      const MagneticFieldContext& mctx,
-                      std::reference_wrapper<const CalibrationContext> cctx,
-                      KalmanFitterExtensions<traj_t> extensions_,
+  KalmanFitterOptions(KalmanFitterExtensions<traj_t> extensions_,
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool rFiltering = false, double rfScaling = 1.0,
                       const FreeToBoundCorrection& freeToBoundCorrection_ =
                           FreeToBoundCorrection(false))
-      : geoContext(gctx),
-        magFieldContext(mctx),
-        calibrationContext(cctx),
-        extensions(extensions_),
+      : extensions(extensions_),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
@@ -146,13 +135,6 @@ struct KalmanFitterOptions {
         freeToBoundCorrection(freeToBoundCorrection_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
-
-  /// Context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
-  /// Context object for the magnetic field
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  /// context object for the calibration
-  std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   KalmanFitterExtensions<traj_t> extensions;
 
@@ -1090,11 +1072,14 @@ class KalmanFitter {
             typename parameters_t = BoundTrackParameters,
             typename track_container_t, template <typename> class holder_t,
             bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
+  auto fit(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
+      const CalibrationContext& calibrationContext, source_link_iterator_t it,
+      source_link_iterator_t end, const start_parameters_t& sParameters,
+      const KalmanFitterOptions<traj_t>& kfOptions,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> std::enable_if_t<
           !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                  holder_t>::TrackProxy>> {
     // To be able to find measurements later, we put them into a map
@@ -1139,14 +1124,14 @@ class KalmanFitter {
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
-    kalmanActor.calibrationContext = &kfOptions.calibrationContext.get();
+    kalmanActor.calibrationContext = &calibrationContext;
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t, holder_t>(
-        kfOptions.geoContext, kfOptions.magFieldContext, sParameters,
-        propagatorOptions, trackContainer);
+                    track_container_t, holder_t>(geoContext, magFieldContext,
+                                                 sParameters, propagatorOptions,
+                                                 trackContainer);
   }
 
   /// Fit implementation of the forward filter, calls the
@@ -1174,12 +1159,14 @@ class KalmanFitter {
             typename parameters_t = BoundTrackParameters,
             typename track_container_t, template <typename> class holder_t,
             bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions,
-           const std::vector<const Surface*>& sSequence,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
+  auto fit(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext, source_link_iterator_t it,
+      source_link_iterator_t end, const start_parameters_t& sParameters,
+      const KalmanFitterOptions<traj_t>& kfOptions,
+      const std::vector<const Surface*>& sSequence,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> std::enable_if_t<
           _isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                 holder_t>::TrackProxy>> {
     // To be able to find measurements later, we put them into a map
@@ -1231,9 +1218,9 @@ class KalmanFitter {
     dInitializer.navSurfaces = sSequence;
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
-                    track_container_t, holder_t>(
-        kfOptions.geoContext, kfOptions.magFieldContext, sParameters,
-        propagatorOptions, trackContainer);
+                    track_container_t, holder_t>(geoContext, magFieldContext,
+                                                 sParameters, propagatorOptions,
+                                                 trackContainer);
   }
 
  private:

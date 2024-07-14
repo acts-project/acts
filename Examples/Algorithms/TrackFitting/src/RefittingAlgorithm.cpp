@@ -68,7 +68,6 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
     }
 
     TrackFitterFunction::GeneralFitterOptions options{
-        ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
         &track.referenceSurface(), Acts::PropagatorPlainOptions()};
 
     const Acts::BoundTrackParameters initialParams(
@@ -99,8 +98,9 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
                  << " -> " << initialParams.direction().transpose());
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
-    auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                               calibrator, surfSequence, tracks);
+    auto result =
+        (*m_cfg.fit)(ctx.geoContext, ctx.magFieldContext, trackSourceLinks,
+                     initialParams, options, calibrator, surfSequence, tracks);
 
     if (result.ok()) {
       // Get the fit output object

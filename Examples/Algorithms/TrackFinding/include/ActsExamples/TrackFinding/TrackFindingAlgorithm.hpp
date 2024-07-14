@@ -67,9 +67,12 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   class TrackFinderFunction {
    public:
     virtual ~TrackFinderFunction() = default;
-    virtual TrackFinderResult operator()(const TrackParameters&,
-                                         const TrackFinderOptions&,
-                                         TrackContainer&) const = 0;
+    virtual TrackFinderResult operator()(
+        const Acts::GeometryContext& geoContext,
+        const Acts::MagneticFieldContext& magFieldContext,
+        const Acts::CalibrationContext& calibrationContext,
+        const TrackParameters&, const TrackFinderOptions&,
+        TrackContainer&) const = 0;
   };
 
   /// Create the track finder function implementation.

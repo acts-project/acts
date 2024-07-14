@@ -102,9 +102,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &updater);
 
-    Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
-        options.geoContext, options.magFieldContext,
-        options.calibrationContext};
+    Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions;
     gsfOptions.extensions = extensions;
     gsfOptions.propagatorPlainOptions = options.propOptions;
     gsfOptions.referenceSurface = options.referenceSurface;
@@ -133,11 +131,15 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     return gsfOptions;
   }
 
-  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
-                               const TrackParameters& initialParameters,
-                               const GeneralFitterOptions& options,
-                               const MeasurementCalibratorAdapter& calibrator,
-                               TrackContainer& tracks) const override {
+  TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
+      const Acts::CalibrationContext& calibrationContext,
+      const std::vector<Acts::SourceLink>& sourceLinks,
+      const TrackParameters& initialParameters,
+      const GeneralFitterOptions& options,
+      const MeasurementCalibratorAdapter& calibrator,
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
     using namespace Acts::GsfConstants;
@@ -154,11 +156,14 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       tracks.template addColumn<double>(std::string(kFwdSumMaterialXOverX0));
     }
 
-    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+    return fitter.fit(geoContext, magFieldContext, calibrationContext,
+                      sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gsfOptions, tracks);
   }
 
   TrackFitterResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
       const std::vector<Acts::SourceLink>& sourceLinks,
       const TrackParameters& initialParameters,
       const GeneralFitterOptions& options,
@@ -173,9 +178,9 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
 
-    return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                            initialParameters, gsfOptions, surfaceSequence,
-                            tracks);
+    return directFitter.fit(geoContext, magFieldContext, sourceLinks.begin(),
+                            sourceLinks.end(), initialParameters, gsfOptions,
+                            surfaceSequence, tracks);
   }
 };
 

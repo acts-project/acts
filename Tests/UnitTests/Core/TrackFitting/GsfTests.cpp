@@ -98,8 +98,7 @@ const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  GsfOptions<VectorMultiTrajectory> opts{tester.geoCtx, tester.magCtx,
-                                         tester.calCtx};
+  GsfOptions<VectorMultiTrajectory> opts;
   opts.extensions = getExtensions();
   opts.propagatorPlainOptions = PropagatorPlainOptions();
   return opts;
@@ -244,7 +243,8 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
 
   options.referenceSurface = targetSurface.get();
 
-  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+  auto res = gsfZero.fit(tester.geoCtx, tester.magCtx, tester.calCtx,
+                         sourceLinks.begin(), sourceLinks.end(), multi_pars,
                          options, tracks);
 
   BOOST_REQUIRE(res.ok());

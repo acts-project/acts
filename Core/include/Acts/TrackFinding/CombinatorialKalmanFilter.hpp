@@ -139,27 +139,17 @@ struct CombinatorialKalmanFilterOptions {
   using SourceLinkIterator = source_link_iterator_t;
   using SourceLinkAccessor = SourceLinkAccessorDelegate<source_link_iterator_t>;
 
-  /// PropagatorOptions with context
-  ///
-  /// @param gctx The geometry context for this track finding/fitting
-  /// @param mctx The magnetic context for this track finding/fitting
-  /// @param cctx The calibration context for this track finding/fitting
   /// @param accessor_ The source link accessor
   /// @param extensions_ The extension struct
   /// @param pOptions The plain propagator options
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   CombinatorialKalmanFilterOptions(
-      const GeometryContext& gctx, const MagneticFieldContext& mctx,
-      std::reference_wrapper<const CalibrationContext> cctx,
       SourceLinkAccessor accessor_,
       CombinatorialKalmanFilterExtensions<track_container_t> extensions_,
       const PropagatorPlainOptions& pOptions, bool mScattering = true,
       bool eLoss = true)
-      : geoContext(gctx),
-        magFieldContext(mctx),
-        calibrationContext(cctx),
-        sourcelinkAccessor(std::move(accessor_)),
+      : sourcelinkAccessor(std::move(accessor_)),
         extensions(extensions_),
         propagatorPlainOptions(pOptions),
         multipleScattering(mScattering),
@@ -167,13 +157,6 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Contexts are required and the options must not be default-constructible.
   CombinatorialKalmanFilterOptions() = delete;
-
-  /// Context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
-  /// Context object for the magnetic field
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  /// context object for the calibration
-  std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   /// The source link accessor
   SourceLinkAccessor sourcelinkAccessor;
@@ -1186,7 +1169,10 @@ class CombinatorialKalmanFilter {
   /// parameters
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters>
-  auto findTracks(const start_parameters_t& initialParameters,
+  auto findTracks(const GeometryContext& geoContext,
+                  const MagneticFieldContext& magFieldContext,
+                  const CalibrationContext& calibrationContext,
+                  const start_parameters_t& initialParameters,
                   const CombinatorialKalmanFilterOptions<
                       source_link_iterator_t, track_container_t>& tfOptions,
                   track_container_t& trackContainer) const
@@ -1218,7 +1204,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
-    combKalmanActor.calibrationContextPtr = &tfOptions.calibrationContext.get();
+    combKalmanActor.calibrationContextPtr = &calibrationContext;
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
@@ -1238,8 +1224,7 @@ class CombinatorialKalmanFilter {
     }
 
     auto propState = m_propagator.template makeState(
-        tfOptions.geoContext, tfOptions.magFieldContext, initialParameters,
-        propOptions);
+        geoContext, magFieldContext, initialParameters, propOptions);
 
     auto& r =
         propState

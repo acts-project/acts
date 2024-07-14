@@ -113,9 +113,8 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
       &kfSmoother);
 
   // Set the KalmanFitter options
-  TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
-                               ctx.calibContext, extensions,
-                               Acts::PropagatorPlainOptions(), &(*pSurface));
+  TrackFitterOptions kfOptions(extensions, Acts::PropagatorPlainOptions(),
+                               &(*pSurface));
 
   // Set the alignment options
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(
@@ -125,7 +124,8 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   ACTS_DEBUG("Invoke track-based alignment with " << numTracksUsed
                                                   << " input tracks");
   auto result =
-      (*m_cfg.align)(sourceLinkTrackContainer, initialParameters, alignOptions);
+      (*m_cfg.align)(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+                     sourceLinkTrackContainer, initialParameters, alignOptions);
   if (result.ok()) {
     const auto& alignOutput = result.value();
     alignedParameters = alignOutput.alignedParameters;

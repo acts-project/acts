@@ -299,8 +299,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
-  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
-                                PropagatorPlainOptions());
+  KalmanFitterOptions kfOptions(extensions, PropagatorPlainOptions());
 
   // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
@@ -330,7 +329,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   kfOptions.referenceSurface = &(*inputTraj.startParameters).referenceSurface();
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
-      kfOptions.geoContext, inputTraj.sourcelinks, *inputTraj.startParameters,
+      geoCtx, magCtx, calCtx, inputTraj.sourcelinks, *inputTraj.startParameters,
       kfOptions, idxedAlignSurfaces, AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
@@ -379,8 +378,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
     trajCollection.push_back(traj.sourcelinks);
     sParametersCollection.push_back(*traj.startParameters);
   }
-  auto alignRes =
-      alignZero.align(trajCollection, sParametersCollection, alignOptions);
+  auto alignRes = alignZero.align(geoCtx, magCtx, calCtx, trajCollection,
+                                  sParametersCollection, alignOptions);
 
   // BOOST_CHECK(alignRes.ok());
 }

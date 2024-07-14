@@ -101,11 +101,6 @@ struct Gx2FitterExtensions {
 /// @tparam traj_t The trajectory type
 template <typename traj_t>
 struct Gx2FitterOptions {
-  /// PropagatorOptions with context.
-  ///
-  /// @param gctx The geometry context for this fit
-  /// @param mctx The magnetic context for this fit
-  /// @param cctx The calibration context for this fit
   /// @param extensions_ The KF extensions
   /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
@@ -114,10 +109,7 @@ struct Gx2FitterOptions {
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   /// @param nUpdateMax_ Max number of iterations for updating the parameters
   /// @param relChi2changeCutOff_ Check for convergence (abort condition). Set to 0 to skip.
-  Gx2FitterOptions(const GeometryContext& gctx,
-                   const MagneticFieldContext& mctx,
-                   std::reference_wrapper<const CalibrationContext> cctx,
-                   Gx2FitterExtensions<traj_t> extensions_,
+  Gx2FitterOptions(Gx2FitterExtensions<traj_t> extensions_,
                    const PropagatorPlainOptions& pOptions,
                    const Surface* rSurface = nullptr, bool mScattering = false,
                    bool eLoss = false,
@@ -125,10 +117,7 @@ struct Gx2FitterOptions {
                        FreeToBoundCorrection(false),
                    const std::size_t nUpdateMax_ = 5,
                    double relChi2changeCutOff_ = 1e-5)
-      : geoContext(gctx),
-        magFieldContext(mctx),
-        calibrationContext(cctx),
-        extensions(extensions_),
+      : extensions(extensions_),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
@@ -139,13 +128,6 @@ struct Gx2FitterOptions {
 
   /// Contexts are required and the options must not be default-constructible.
   Gx2FitterOptions() = delete;
-
-  /// Context object for the geometry
-  std::reference_wrapper<const GeometryContext> geoContext;
-  /// Context object for the magnetic field
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  /// context object for the calibration
-  std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   Gx2FitterExtensions<traj_t> extensions;
 
@@ -668,11 +650,14 @@ class Gx2Fitter {
             typename parameters_t = BoundTrackParameters,
             typename track_container_t, template <typename> class holder_t,
             bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const Gx2FitterOptions<traj_t>& gx2fOptions,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
+  auto fit(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
+      const CalibrationContext& calibrationContext, source_link_iterator_t it,
+      source_link_iterator_t end, const start_parameters_t& sParameters,
+      const Gx2FitterOptions<traj_t>& gx2fOptions,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> std::enable_if_t<
           !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
                                                  holder_t>::TrackProxy>> {
     // Preprocess Measurements (SourceLinks -> map)
@@ -744,14 +729,14 @@ class Gx2Fitter {
       ACTS_VERBOSE("updated params:\n" << params);
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
+      Acts::GeometryContext geoCtx = geoContext;
+      Acts::MagneticFieldContext magCtx = magFieldContext;
       // Set options for propagator
       PropagatorOptions propagatorOptions;
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
-      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
+      gx2fActor.calibrationContext = &calibrationContext;
       gx2fActor.actorLogger = m_actorLogger.get();
 
       auto propagatorState =
@@ -977,14 +962,14 @@ class Gx2Fitter {
       params.covariance() = fullCovariancePredicted;
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
-      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
+      Acts::GeometryContext geoCtx = geoContext;
+      Acts::MagneticFieldContext magCtx = magFieldContext;
       // Set options for propagator
       PropagatorOptions propagatorOptions;
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
-      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
+      gx2fActor.calibrationContext = &calibrationContext;
       gx2fActor.actorLogger = m_actorLogger.get();
 
       auto propagatorState =

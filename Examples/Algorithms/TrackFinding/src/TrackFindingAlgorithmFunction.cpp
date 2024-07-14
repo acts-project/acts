@@ -51,10 +51,15 @@ struct TrackFinderFunctionImpl
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext,
+      const Acts::CalibrationContext& calibrationContext,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
       ActsExamples::TrackContainer& tracks) const override {
-    return trackFinder.findTracks(initialParameters, options, tracks);
+    return trackFinder.findTracks(geoContext, magFieldContext,
+                                  calibrationContext, initialParameters,
+                                  options, tracks);
   };
 };
 

@@ -95,8 +95,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                                                         measurements, clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
-      Acts::PropagatorPlainOptions()};
+      pSurface.get(), Acts::PropagatorPlainOptions()};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -142,8 +141,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     }
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
-    auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                               calibrator, tracks);
+    auto result = (*m_cfg.fit)(ctx.geoContext, ctx.magFieldContext,
+                               ctx.calibContext, trackSourceLinks,
+                               initialParams, options, calibrator, tracks);
 
     if (result.ok()) {
       // Get the fit output object

@@ -94,10 +94,6 @@ struct GsfExtensions {
 
 template <typename traj_t>
 struct GsfOptions {
-  std::reference_wrapper<const GeometryContext> geoContext;
-  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  std::reference_wrapper<const CalibrationContext> calibrationContext;
-
   GsfExtensions<traj_t> extensions;
 
   PropagatorPlainOptions propagatorPlainOptions;
@@ -115,13 +111,6 @@ struct GsfOptions {
   std::string_view finalMultiComponentStateColumn = "";
 
   ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;
-
-  GsfOptions(const GeometryContext &geoCtxt,
-             const MagneticFieldContext &magFieldCtxt,
-             const CalibrationContext &calibCtxt)
-      : geoContext(geoCtxt),
-        magFieldContext(magFieldCtxt),
-        calibrationContext(calibCtxt) {}
 };
 
 }  // namespace Acts

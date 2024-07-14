@@ -355,13 +355,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   secondPropOptions.direction = firstPropOptions.direction.invert();
 
   // Set the CombinatorialKalmanFilter options
-  TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
-                                  ctx.calibContext, slAccessorDelegate,
-                                  extensions, firstPropOptions);
+  TrackFinderOptions firstOptions(slAccessorDelegate, extensions,
+                                  firstPropOptions);
 
-  TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
-                                   ctx.calibContext, slAccessorDelegate,
-                                   extensions, secondPropOptions);
+  TrackFinderOptions secondOptions(slAccessorDelegate, extensions,
+                                   secondPropOptions);
   secondOptions.targetSurface = pSurface.get();
 
   using Extrapolator = Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator>;
@@ -462,8 +460,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
 
-    auto firstResult =
-        (*m_cfg.findTracks)(firstInitialParameters, firstOptions, tracksTemp);
+    auto firstResult = (*m_cfg.findTracks)(
+        ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+        firstInitialParameters, firstOptions, tracksTemp);
     nSeed++;
 
     if (!firstResult.ok()) {
@@ -519,8 +518,9 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           Acts::BoundTrackParameters secondInitialParameters =
               trackCandidate.createParametersFromState(*firstMeasurement);
 
-          auto secondResult = (*m_cfg.findTracks)(secondInitialParameters,
-                                                  secondOptions, tracksTemp);
+          auto secondResult = (*m_cfg.findTracks)(
+              ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+              secondInitialParameters, secondOptions, tracksTemp);
 
           if (!secondResult.ok()) {
             ACTS_WARNING("Second track finding failed for seed "

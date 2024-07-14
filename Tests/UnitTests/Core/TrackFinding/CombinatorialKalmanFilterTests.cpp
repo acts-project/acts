@@ -290,7 +290,6 @@ struct Fixture {
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     // leave the accessor empty, this will have to be set before running the CKF
     return CombinatorialKalmanFilterOptions(
-        geoCtx, magCtx, calCtx,
         Acts::SourceLinkAccessorDelegate<TestSourceLinkAccessor::Iterator>{},
         getExtensions(), Acts::PropagatorPlainOptions());
   }
@@ -321,7 +320,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // run the CKF for all initial track states
   for (std::size_t trackId = 0u; trackId < f.startParameters.size();
        ++trackId) {
-    auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
+    auto res = f.ckf.findTracks(f.geoCtx, f.magCtx, f.calCtx,
+                                f.startParameters.at(trackId), options, tc);
     if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
@@ -378,7 +378,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   // run the CKF for all initial track states
   for (std::size_t trackId = 0u; trackId < f.startParameters.size();
        ++trackId) {
-    auto res = f.ckf.findTracks(f.endParameters.at(trackId), options, tc);
+    auto res = f.ckf.findTracks(f.geoCtx, f.magCtx, f.calCtx,
+                                f.endParameters.at(trackId), options, tc);
     if (!res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }

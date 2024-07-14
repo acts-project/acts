@@ -14,7 +14,8 @@ template <typename source_link_t, typename start_parameters_t,
           typename fit_options_t>
 Acts::Result<ActsAlignment::detail::TrackAlignmentState>
 ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
-    const Acts::GeometryContext& gctx,
+    const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const Acts::CalibrationContext& cctx,
     const std::vector<source_link_t>& sourcelinks,
     const start_parameters_t& sParameters, const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
@@ -28,7 +29,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   Acts::SourceLinkAdapterIterator end{sourcelinks.end()};
 
   // Perform the fit
-  auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
+  auto fitRes = m_fitter.fit(gctx, mctx, cctx, begin, end, sParameters,
+                             fitOptions, tracks);
 
   if (!fitRes.ok()) {
     ACTS_WARNING("Fit failure");
@@ -55,6 +57,8 @@ template <typename fitter_t>
 template <typename trajectory_container_t,
           typename start_parameters_container_t, typename fit_options_t>
 void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
+    const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const Acts::CalibrationContext& cctx,
     const trajectory_container_t& trajectoryCollection,
     const start_parameters_container_t& startParametersCollection,
     const fit_options_t& fitOptions,
@@ -88,8 +92,8 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     fitOptionsWithRefSurface.referenceSurface = &sParameters.referenceSurface();
     // The result for one single track
     auto evaluateRes = evaluateTrackAlignmentState(
-        fitOptions.geoContext, sourcelinks, sParameters,
-        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
+        gctx, mctx, cctx, sourcelinks, sParameters, fitOptionsWithRefSurface,
+        alignResult.idxedAlignSurfaces, alignMask);
     if (!evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
@@ -215,6 +219,8 @@ template <typename trajectory_container_t,
           typename start_parameters_container_t, typename fit_options_t>
 Acts::Result<ActsAlignment::AlignmentResult>
 ActsAlignment::Alignment<fitter_t>::align(
+    const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+    const Acts::CalibrationContext& cctx,
     const trajectory_container_t& trajectoryCollection,
     const start_parameters_container_t& startParametersCollection,
     const ActsAlignment::AlignmentOptions<fit_options_t>& alignOptions) const {
@@ -247,7 +253,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     }
     // Calculate the alignment parameters delta etc.
     calculateAlignmentParameters(
-        trajectoryCollection, startParametersCollection,
+        gctx, mctx, cctx, trajectoryCollection, startParametersCollection,
         alignOptions.fitOptions, alignResult, alignMask);
     // Screen out the information
     ACTS_INFO("iIter = " << iIter << ", total chi2 = " << alignResult.chi2
@@ -288,7 +294,7 @@ ActsAlignment::Alignment<fitter_t>::align(
               << alignResult.deltaAlignmentParameters);
     // Not coveraged yet, update the detector element alignment parameters
     auto updateRes = updateAlignmentParameters(
-        alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
+        gctx, alignOptions.alignedDetElements,
         alignOptions.alignedTransformUpdater, alignResult);
     if (!updateRes.ok()) {
       ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
@@ -308,8 +314,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   if (alignmentParametersUpdated) {
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
-      const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+      const auto& transform = det->transform(gctx);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();

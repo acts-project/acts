@@ -239,8 +239,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 0, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 0, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -248,8 +248,9 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -326,8 +327,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -335,8 +336,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -431,8 +433,8 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -440,8 +442,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -526,8 +529,8 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -535,8 +538,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -623,8 +627,8 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 500, 1e-5);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 500, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -632,8 +636,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -723,8 +728,8 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   // Since we didn't break due to convergence, we reach nUpdatesMax and
   // therefore fail the fit.
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 6, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 6, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -732,8 +737,9 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(!res.ok());
   BOOST_CHECK_EQUAL(
@@ -791,8 +797,8 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 6, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 6, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -800,8 +806,9 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(!res.ok());
   BOOST_CHECK_EQUAL(
@@ -879,8 +886,8 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 20, 1e-5);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 20, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -888,8 +895,9 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -984,8 +992,8 @@ BOOST_AUTO_TEST_CASE(Material) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      extensions, PropagatorPlainOptions(), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -993,8 +1001,9 @@ BOOST_AUTO_TEST_CASE(Material) {
   ACTS_DEBUG("Fit the track");
   ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
   ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
-  const auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              startParametersFit, gx2fOptions, tracks);
+  const auto res =
+      fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(), sourceLinks.end(),
+                 startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 

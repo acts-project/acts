@@ -34,13 +34,16 @@ struct AlignmentFunctionImpl
   AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
 
   ActsExamples::AlignmentAlgorithm::AlignmentResult operator()(
+      const Acts::GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const Acts::CalibrationContext& cctx,
       const std::vector<std::vector<ActsExamples::IndexSourceLink>>&
           sourceLinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsAlignment::AlignmentOptions<
           ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
       const override {
-    return align.align(sourceLinks, initialParameters, options);
+    return align.align(gctx, mctx, cctx, sourceLinks, initialParameters,
+                       options);
   };
 };
 }  // namespace

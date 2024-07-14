@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -191,8 +191,8 @@ struct FitterTester {
         BOOST_CHECK(tracks.hasColumn("smoothed"));
       }
 
-      auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                            options, tracks);
+      auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                            sourceLinks.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
       const auto track = res.value();
@@ -237,8 +237,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                          options, tracks);
+    auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                          sourceLinks.end(), start, options, tracks);
     BOOST_REQUIRE(res.ok());
 
     const auto& track = res.value();
@@ -296,8 +296,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter,
-                          options, tracks);
+    auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                          sourceLinks.end(), startOuter, options, tracks);
     BOOST_CHECK(res.ok());
 
     const auto& track = res.value();
@@ -349,8 +349,8 @@ struct FitterTester {
     tracks.addColumn<bool>("reversed");
     tracks.addColumn<bool>("smoothed");
 
-    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                          options, tracks);
+    auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                          sourceLinks.end(), start, options, tracks);
     BOOST_REQUIRE(res.ok());
 
     const auto& track = res.value();
@@ -394,8 +394,8 @@ struct FitterTester {
 
     // fit w/ all hits in order
     {
-      auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                            options, tracks);
+      auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                            sourceLinks.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
@@ -415,7 +415,7 @@ struct FitterTester {
     {
       decltype(sourceLinks) shuffledSourceLinks = sourceLinks;
       std::shuffle(shuffledSourceLinks.begin(), shuffledSourceLinks.end(), rng);
-      auto res = fitter.fit(shuffledSourceLinks.begin(),
+      auto res = fitter.fit(geoCtx, magCtx, calCtx, shuffledSourceLinks.begin(),
                             shuffledSourceLinks.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
@@ -461,8 +461,8 @@ struct FitterTester {
       BOOST_REQUIRE_EQUAL(withHole.size() + 1u, sourceLinks.size());
       BOOST_TEST_INFO("Removed measurement " << i);
 
-      auto res =
-          fitter.fit(withHole.begin(), withHole.end(), start, options, tracks);
+      auto res = fitter.fit(geoCtx, magCtx, calCtx, withHole.begin(),
+                            withHole.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
@@ -509,8 +509,8 @@ struct FitterTester {
       BOOST_REQUIRE_EQUAL(withOutlier.size(), sourceLinks.size());
       BOOST_TEST_INFO("Replaced measurement " << i << " with outlier");
 
-      auto res = fitter.fit(withOutlier.begin(), withOutlier.end(), start,
-                            options, tracks);
+      auto res = fitter.fit(geoCtx, magCtx, calCtx, withOutlier.begin(),
+                            withOutlier.end(), start, options, tracks);
       BOOST_REQUIRE(res.ok());
 
       const auto& track = res.value();
@@ -565,8 +565,8 @@ struct FitterTester {
 
     options.referenceSurface = targetSurface.get();
 
-    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                          options, tracks);
+    auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                          sourceLinks.end(), start, options, tracks);
     BOOST_REQUIRE(res.ok());
     const auto& track = res.value();
 
@@ -591,8 +591,8 @@ struct FitterTester {
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
 
-    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                          options, tracks);
+    auto res = fitter.fit(geoCtx, magCtx, calCtx, sourceLinks.begin(),
+                          sourceLinks.end(), start, options, tracks);
     BOOST_REQUIRE(res.ok());
 
     // Calculate global track parameters covariance matrix
