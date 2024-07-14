@@ -52,7 +52,7 @@ jobs:
         # versions
         # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
-          git config --global user.name 'CI' && 
+          git config --global user.name 'CI' &&
           git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
@@ -198,7 +198,10 @@ jobs:
           && source build/this_acts_withdeps.sh
           && echo "::endgroup::"
           && CI/physmon/phys_perf_mon.sh all physmon
-          && cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Post step summary
+        if: always()
+        run: cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
       - uses: actions/upload-artifact@v4
         if: always()
