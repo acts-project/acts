@@ -177,6 +177,11 @@ struct SeedFinderConfig {
   /// Enables setting of the following delegates.
   bool useDetailedDoubleMeasurementInfo = false;
 
+  Delegate<bool(const SpacePoint&)> spacePointSelector{
+      DelegateFuncTag<voidSpacePointSelector>{}};
+
+  static bool voidSpacePointSelector(const SpacePoint& /*sp*/) { return true; }
+  
   /// Tolerance parameter used to check the compatibility of space-point
   /// coordinates in xyz. This is only used in a detector specific check for
   /// strip modules

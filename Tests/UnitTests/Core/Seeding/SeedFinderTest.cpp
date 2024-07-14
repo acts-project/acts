@@ -192,8 +192,8 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
       Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
-  Acts::SeedFinder<value_type> a;  // test creation of unconfigured finder
-  a = Acts::SeedFinder<value_type>(config);
+  Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>> a;  // test creation of unconfigured finder
+  a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(config);
 
   // setup spacepoint grid config
   Acts::CylindricalSpacePointGridConfig gridConf;
@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
 
-  Acts::SpacePointGrid<value_type> grid =
+  Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
   Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spContainer.begin(),
                                         spContainer.end(), rRangeSPExtent);

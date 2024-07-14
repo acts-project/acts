@@ -7,8 +7,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename SpacePoint>
-Acts::CylindricalSpacePointGrid<SpacePoint>
+template <typename external_spacepoint_t>
+Acts::CylindricalSpacePointGrid<external_spacepoint_t>
 Acts::CylindricalSpacePointGridCreator::createGrid(
     const Acts::CylindricalSpacePointGridConfig& config,
     const Acts::CylindricalSpacePointGridOptions& options) {
@@ -214,9 +214,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     }
 
     // fill rbins into grid
-    Acts::Vector2 spLocation(spPhi, spZ);
-    std::vector<const external_spacepoint_t*>&
-        rbin = grid.atPosition(spLocation);
+    std::size_t globIndex =
+      grid.globalBinFromPosition(Acts::Vector2{sp.phi(), sp.z()});
+    auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
 
     // keep track of the bins we modify so that we can later sort the SPs in
