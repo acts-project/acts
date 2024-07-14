@@ -89,7 +89,7 @@ struct BenchmarkStepper {
 
     Propagator propagator(std::move(stepper));
 
-    PropagatorOptions options(tgContext, mfContext);
+    PropagatorOptions options;
     options.pathLimit = maxPathInM * UnitConstants::m;
 
     Vector4 pos4(0, 0, 0, 0);
@@ -117,7 +117,8 @@ struct BenchmarkStepper {
     std::size_t numIters = 0;
     const auto propagationBenchResult = Acts::Test::microBenchmark(
         [&] {
-          auto state = propagator.makeState(pars, options);
+          auto state =
+              propagator.makeState(tgContext, mfContext, pars, options);
           auto tmp = propagator.propagate(state);
           auto r = propagator.makeResult(state, tmp, options, true).value();
           if (totalPathLength == 0.) {
