@@ -406,6 +406,32 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         $refdir/performance_amvf_gridseeder_ttbar_hist.root \
         "AMVF (+grid seeder) ttbar" \
         amvf_gridseeder_ttbar
+
+    run Examples/Scripts/generic_plotter.py \
+        $outdir/pythia8_particles_ttbar.root \
+        particles \
+        $outdir/particles_ttbar_hist.root \
+        --silent \
+        --config CI/physmon/pythia8_ttbar_config.yml
+
+    run_histcmp \
+      $outdir/particles_ttbar_hist.root \
+      $refdir/particles_ttbar_hist.root \
+      "Particles ttbar" \
+      particles_ttbar
+
+    run Examples/Scripts/generic_plotter.py \
+        $outdir/pythia8_vertices_ttbar.root \
+        vertices \
+        $outdir/vertices_ttbar_hist.root \
+        --silent \
+        --config CI/physmon/pythia8_ttbar_config.yml
+
+    run_histcmp \
+      $outdir/vertices_ttbar_hist.root \
+      $refdir/vertices_ttbar_hist.root \
+      "Vertices ttbar" \
+      vertices_ttbar
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then

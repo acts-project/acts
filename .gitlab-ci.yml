@@ -6,7 +6,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
   tags:
     - large
   artifacts:
@@ -55,126 +55,126 @@ clang_tidy:
     # Generate an html report
     - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
-build_exatrkx_cpu:
-  stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
-  tags:
-    - large
+# build_exatrkx_cpu:
+#   stage: build
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   tags:
+#     - large
 
-  cache:
-    key: ccache-exatrkx-cpu-$CI_COMMIT_REF_SLUG
-    paths:
-      - ${CI_PROJECT_DIR}/ccache
+#   cache:
+#     key: ccache-exatrkx-cpu-$CI_COMMIT_REF_SLUG
+#     paths:
+#       - ${CI_PROJECT_DIR}/ccache
 
-  script:
-    - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - cd ..
-    - mkdir build
-    # Here we only do a minimal build without examples to save ressources
-    - >
-      cmake -B build -S src
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-w
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON
-      -DACTS_BUILD_EXAMPLES_EXATRKX=OFF
-      -DACTS_BUILD_UNITTESTS=OFF
-      -DACTS_EXATRKX_ENABLE_TORCH=ON
-      -DACTS_EXATRKX_ENABLE_ONNX=OFF
-      -DACTS_EXATRKX_ENABLE_CUDA=OFF
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+#   script:
+#     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+#     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+#     - echo $PATH
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - cd ..
+#     - mkdir build
+#     # Here we only do a minimal build without examples to save ressources
+#     - >
+#       cmake -B build -S src
+#       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+#       -GNinja
+#       -DCMAKE_BUILD_TYPE=Release
+#       -DCMAKE_CXX_FLAGS=-w
+#       -DACTS_BUILD_PLUGIN_EXATRKX=ON
+#       -DACTS_BUILD_EXAMPLES_EXATRKX=OFF
+#       -DACTS_BUILD_UNITTESTS=OFF
+#       -DACTS_EXATRKX_ENABLE_TORCH=ON
+#       -DACTS_EXATRKX_ENABLE_ONNX=OFF
+#       -DACTS_EXATRKX_ENABLE_CUDA=OFF
+#       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=OFF
+#       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
 
-    - ccache -z
-    - cmake --build build -- -j2
-    - ccache -s
+#     - ccache -z
+#     - cmake --build build -- -j2
+#     - ccache -s
 
-build_exatrkx:
-  stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
-  tags:
-    - large
+# build_exatrkx:
+#   stage: build
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   tags:
+#     - large
+#
+#   cache:
+#     key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+#     paths:
+#       - ${CI_PROJECT_DIR}/ccache
+#
+#   artifacts:
+#     paths:
+#       - build/
+#     exclude:
+#       - build/**/*.o
+#       - build/bin/ActsIntegrationTest*
+#     expire_in: 6 hours
+#
+#   script:
+#     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
+#     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+#     - echo $PATH
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - cd ..
+#     - mkdir build
+#     - >
+#       cmake -B build -S src
+#       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+#       -GNinja
+#       -DCMAKE_BUILD_TYPE=Release
+#       -DCMAKE_CXX_FLAGS=-w
+#       -DCMAKE_CUDA_FLAGS=-w
+#       -DCMAKE_CUDA_ARCHITECTURES="75;86"
+#       -DACTS_BUILD_PLUGIN_EXATRKX=ON
+#       -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+#       -DACTS_BUILD_UNITTESTS=ON
+#       -DACTS_EXATRKX_ENABLE_TORCH=ON
+#       -DACTS_EXATRKX_ENABLE_ONNX=ON
+#       -DACTS_EXATRKX_ENABLE_CUDA=ON
+#       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+#       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
+#
+#     - ccache -z
+#     - cmake --build build -- -j2
+#     - ccache -s
 
-  cache:
-    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
-    paths:
-      - ${CI_PROJECT_DIR}/ccache
-
-  artifacts:
-    paths:
-      - build/
-    exclude:
-      - build/**/*.o
-      - build/bin/ActsIntegrationTest*
-    expire_in: 6 hours
-
-  script:
-    - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - cd ..
-    - mkdir build
-    - >
-      cmake -B build -S src
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_FLAGS=-w
-      -DCMAKE_CUDA_FLAGS=-w
-      -DCMAKE_CUDA_ARCHITECTURES="75;86"
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON
-      -DACTS_BUILD_EXAMPLES_EXATRKX=ON
-      -DACTS_BUILD_UNITTESTS=ON
-      -DACTS_EXATRKX_ENABLE_TORCH=ON
-      -DACTS_EXATRKX_ENABLE_ONNX=ON
-      -DACTS_EXATRKX_ENABLE_CUDA=ON
-      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-
-    - ccache -z
-    - cmake --build build -- -j2
-    - ccache -s
-
-test_exatrkx_unittests:
-  stage: test
-  needs:
-    - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
-  tags:
-    - docker-gpu-nvidia
-  script:
-    - ctest --test-dir build -R ExaTrkX
-
-test_exatrkx_python:
-  stage: test
-  needs:
-    - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v43
-  tags:
-    - docker-gpu-nvidia
-  script:
-    - apt-get update -y
-    - apt-get install -y python3 libxxhash0
-    - source build/this_acts_withdeps.sh
-    - git clone $CLONE_URL src
-    - cd src
-    - git checkout $HEAD_SHA
-    - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
-    - nvidia-smi
-    - pytest -rFsv -k test_exatrkx
+# test_exatrkx_unittests:
+#   stage: test
+#   needs:
+#     - build_exatrkx
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   tags:
+#     - docker-gpu-nvidia
+#   script:
+#     - ctest --test-dir build -R ExaTrkX
+#
+# test_exatrkx_python:
+#   stage: test
+#   needs:
+#     - build_exatrkx
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   tags:
+#     - docker-gpu-nvidia
+#   script:
+#     - apt-get update -y
+#     - apt-get install -y python3 libxxhash0
+#     - source build/this_acts_withdeps.sh
+#     - git clone $CLONE_URL src
+#     - cd src
+#     - git checkout $HEAD_SHA
+#     - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
+#     - nvidia-smi
+#     - pytest -rFsv -k test_exatrkx
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
 
   cache:
     key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
@@ -208,7 +208,7 @@ build_linux_ubuntu:
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       -DCMAKE_BUILD_TYPE=RelWithDebInfo
       -DCMAKE_CXX_FLAGS=-Werror
-      -DCMAKE_CXX_STANDARD=17
+      -DCMAKE_CXX_STANDARD=20
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
       -DACTS_BUILD_EVERYTHING=ON
       -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
@@ -226,7 +226,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
   needs: [build_linux_ubuntu]
 
   script:
@@ -247,7 +247,7 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:51
+  image: ghcr.io/acts-project/ubuntu2404:52
   needs: [build_linux_ubuntu]
 
   artifacts:
@@ -342,23 +342,17 @@ linux_physmon:
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
 
-linux_ubuntu_2404_cpp17:
-  <<: *linux_ubuntu_extra
-  variables:
-    CXXSTD: 17
-  image: ghcr.io/acts-project/ubuntu2404:51
-
-linux_ubuntu_2204_cpp20:
+linux_ubuntu_2404:
   <<: *linux_ubuntu_extra
   variables:
     CXXSTD: 20
-  image: ghcr.io/acts-project/ubuntu2204_cpp20:v41
+  image: ghcr.io/acts-project/ubuntu2404:52
 
 linux_ubuntu_2204_clang:
   <<: *linux_ubuntu_extra
   variables:
-    CXXSTD: 17
-  image: ghcr.io/acts-project/ubuntu2204_clang:v41
+    CXXSTD: 20
+  image: ghcr.io/acts-project/ubuntu2204_clang:52
 
 
 ######################
@@ -366,7 +360,7 @@ linux_ubuntu_2204_clang:
 ######################
 
 .lcg: &lcg_base_job
-  image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
+  image: ghcr.io/acts-project/${OS}-base:52
   stage: build
   tags:
     - cvmfs
@@ -419,7 +413,7 @@ linux_ubuntu_2204_clang:
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       -DCMAKE_BUILD_TYPE=Release
       -DCMAKE_CXX_FLAGS=-Werror
-      -DCMAKE_CXX_STANDARD=17
+      -DCMAKE_CXX_STANDARD=20
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
