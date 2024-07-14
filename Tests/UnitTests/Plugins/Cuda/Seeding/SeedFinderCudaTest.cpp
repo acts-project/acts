@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/EventData/Seed.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
@@ -29,7 +29,6 @@
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
-#include "SpacePointContainer.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -165,26 +164,10 @@ int main(int argc, char** argv) {
 
   std::vector<const SpacePoint*> spVec = readFile(file);
 
-  // Config
-  Acts::SpacePointContainerConfig spConfig;
-  // Options
-  Acts::SpacePointContainerOptions spOptions;
-  spOptions.beamPos = {-.5_mm, -.5_mm};
-
-  // Prepare interface SpacePoint backend-ACTS
-  ActsExamples::SpacePointContainer container(spVec);
-  // Prepare Acts API
-  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-      spContainer(spConfig, spOptions, container);
-
-  using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
-  using seed_type = Acts::Seed<value_type>;
-
-  std::cout << "read " << spContainer.size() << " SP from file " << file
-            << std::endl;
+  std::cout << "read " << spVec.size() << " SP from file " << file << std::endl;
 
   // Set seed finder configuration
-  Acts::SeedFinderConfig<value_type> config;
+  Acts::SeedFinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -236,12 +219,20 @@ int main(int argc, char** argv) {
   auto topBinFinder = std::make_unique<Acts::GridBinFinder<2ul>>(
       Acts::GridBinFinder<2ul>(numPhiNeighbors, zBinNeighborsTop));
   Acts::SeedFilterConfig sfconf;
+  Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
+  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
+      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
+  Acts::SeedFinder<SpacePoint, Acts::CylindricalSpacePointGrid<SpacePoint>>
+      seedFinder_cpu(config);
+  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config, options);
 
-  Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
-      Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
-  Acts::SeedFinder<value_type> seedFinder_cpu(config);
-  Acts::SeedFinder<value_type, Acts::Cuda> seedFinder_cuda(config, options);
+  // covariance tool, sets covariances per spacepoint as required
+  auto ct = [=](const SpacePoint& sp, float, float, float)
+      -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
+    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
+    Acts::Vector2 variance(sp.varianceR, sp.varianceZ);
+    return std::make_tuple(position, variance, std::nullopt);
+  };
 
   // setup spacepoint grid config
   Acts::CylindricalSpacePointGridConfig gridConf;
@@ -255,13 +246,13 @@ int main(int argc, char** argv) {
   Acts::CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
+  Acts::CylindricalSpacePointGrid<SpacePoint> grid =
+      Acts::CylindricalSpacePointGridCreator::createGrid<SpacePoint>(gridConf,
+                                                                     gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(
+      config, options, grid, spVec.begin(), spVec.end(), ct, rRangeSPExtent);
 
-  Acts::CylindricalSpacePointGrid<value_type> grid =
-      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
-  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spVec.begin(),
-                                        spVec.end(), ct, rRangeSPExtent);
-
-  auto spGroup = Acts::BinnedSPGroup<value_type>(
+  auto spGroup = Acts::CylindricalBinnedGroup<SpacePoint>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
   auto end_pre = std::chrono::system_clock::now();
@@ -285,17 +276,16 @@ int main(int argc, char** argv) {
       spGroup.grid().localBinsFromGlobalBin(skip);
 
   int group_count;
-
-  auto groupIt = Acts::CylindricalBinnedSPGroupIterator<value_type>(spGroup, localPosition,
-                                                         navigation);
+  auto groupIt = Acts::CylindricalBinnedGroupIterator<SpacePoint>(
+      spGroup, localPosition, navigation);
 
   //----------- CPU ----------//
   group_count = 0;
-  std::vector<std::vector<seed_type>> seedVector_cpu;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
   if (do_cpu) {
     decltype(seedFinder_cpu)::SeedingState state;
-
+    state.spacePointData.resize(spVec.size());
     for (; groupIt != spGroup.end(); ++groupIt) {
       const auto [bottom, middle, top] = *groupIt;
       seedFinder_cpu.createSeedsForGroup(
@@ -322,16 +312,17 @@ int main(int argc, char** argv) {
   auto start_cuda = std::chrono::system_clock::now();
 
   group_count = 0;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
+  groupIt = Acts::CylindricalBinnedGroupIterator<SpacePoint>(
+      spGroup, localPosition, navigation);
 
-
-  std::vector<std::vector<seed_type>> seedVector_cuda;
-  groupIt = Acts::CylindricalBinnedSPGroupIterator<value_type>(spGroup, localPosition,
-                                                    navigation);
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spVec.size());
 
   for (; groupIt != spGroup.end(); ++groupIt) {
     const auto [bottom, middle, top] = *groupIt;
     seedVector_cuda.push_back(seedFinder_cuda.createSeedsForGroup(
-        spGroup.grid(), bottom, middle, top));
+        spacePointData, spGroup.grid(), bottom, middle, top));
     group_count++;
     if (allgroup == false) {
       if (group_count >= nGroupToIterate)
@@ -386,12 +377,12 @@ int main(int argc, char** argv) {
     auto regionVec_cpu = seedVector_cpu[i];
     auto regionVec_cuda = seedVector_cuda[i];
 
-    std::vector<std::vector<value_type>> seeds_cpu;
-    std::vector<std::vector<value_type>> seeds_cuda;
+    std::vector<std::vector<SpacePoint>> seeds_cpu;
+    std::vector<std::vector<SpacePoint>> seeds_cuda;
 
     // for (std::size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
     for (auto sd : regionVec_cpu) {
-      std::vector<value_type> seed_cpu;
+      std::vector<SpacePoint> seed_cpu;
       seed_cpu.push_back(*(sd.sp()[0]));
       seed_cpu.push_back(*(sd.sp()[1]));
       seed_cpu.push_back(*(sd.sp()[2]));
@@ -400,7 +391,7 @@ int main(int argc, char** argv) {
     }
 
     for (auto sd : regionVec_cuda) {
-      std::vector<value_type> seed_cuda;
+      std::vector<SpacePoint> seed_cuda;
       seed_cuda.push_back(*(sd.sp()[0]));
       seed_cuda.push_back(*(sd.sp()[1]));
       seed_cuda.push_back(*(sd.sp()[2]));
@@ -410,9 +401,7 @@ int main(int argc, char** argv) {
 
     for (auto seed : seeds_cpu) {
       for (auto other : seeds_cuda) {
-        if (*seed[0].sp() == *other[0].sp() and
-            *seed[1].sp() == *other[1].sp() and
-            *seed[2].sp() == *other[2].sp()) {
+        if (seed[0] == other[0] && seed[1] == other[1] && seed[2] == other[2]) {
           nMatch++;
           break;
         }
@@ -431,17 +420,17 @@ int main(int argc, char** argv) {
       std::cout << "CPU Seed result:" << std::endl;
 
       for (auto& regionVec : seedVector_cpu) {
-        for (size_t i = 0; i < regionVec.size(); i++) {
-          const Acts::Seed<value_type>* seed = &regionVec[i];
-          const value_type* sp = seed->sp()[0];
+        for (std::size_t i = 0; i < regionVec.size(); i++) {
+          const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+          const SpacePoint* sp = seed->sp()[0];
           std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                     << ") ";
           sp = seed->sp()[1];
-          std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
-                    << ", " << sp->z() << ") ";
+          std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                    << sp->z() << ") ";
           sp = seed->sp()[2];
-          std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
-                    << ", " << sp->z() << ") ";
+          std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                    << sp->z() << ") ";
           std::cout << std::endl;
         }
       }
@@ -451,17 +440,17 @@ int main(int argc, char** argv) {
     std::cout << "CUDA Seed result:" << std::endl;
 
     for (auto& regionVec : seedVector_cuda) {
-      for (size_t i = 0; i < regionVec.size(); i++) {
-        const Acts::Seed<value_type>* seed = &regionVec[i];
-        const value_type* sp = seed->sp()[0];
+      for (std::size_t i = 0; i < regionVec.size(); i++) {
+        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
+        const SpacePoint* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
         sp = seed->sp()[1];
-        std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
-                  << ", " << sp->z() << ") ";
+        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
         sp = seed->sp()[2];
-        std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
-                  << ", " << sp->z() << ") ";
+        std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", "
+                  << sp->z() << ") ";
         std::cout << std::endl;
       }
     }
