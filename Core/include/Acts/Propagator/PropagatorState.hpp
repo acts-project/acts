@@ -39,6 +39,7 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   ///
   /// @tparam propagator_options_t the type of the propagator options
   ///
+  /// @param gctx The geometry context
   /// @param topts The options handed over by the propagate call
   /// @param steppingIn Stepper state instance to begin with
   /// @param navigationIn Navigator state instance to begin with

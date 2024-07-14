@@ -1246,6 +1246,8 @@ class KalmanFitter {
   /// @tparam track_container_t Type of the track container backend
   /// @tparam holder_t Type defining track container backend ownership
   ///
+  /// @param geoContext The geometry context
+  /// @param magField The magnetic field context
   /// @param sParameters The initial track parameters
   /// @param propagatorOptions The Propagator Options
   /// @param trackContainer Input track container storage to append into

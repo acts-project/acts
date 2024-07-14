@@ -275,6 +275,8 @@ findTrackStateForExtrapolation(
 /// @tparam propagator_t The propagator type
 /// @tparam propagator_options_t The propagator options type
 ///
+/// @param geoContext The geometry context
+/// @param magFieldContext The magnetic field context
 /// @param track The track which is modified in-place
 /// @param referenceSurface The reference surface
 /// @param propagator The propagator

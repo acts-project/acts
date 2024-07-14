@@ -49,6 +49,8 @@ class BasePropagator {
   using Options = PropagatorPlainOptions;
 
   /// Method to propagate start bound track parameters to a target surface.
+  /// @param geoContext The geometry context.
+  /// @param magFieldContext The magnetic field context.
   /// @param start The start bound track parameters.
   /// @param target The target surface.
   /// @param options The propagation options.
@@ -249,6 +251,8 @@ class Propagator final
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam path_aborter_t The path aborter type to be added
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
   /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
@@ -278,6 +282,8 @@ class Propagator final
   /// @tparam target_aborter_t The target aborter type to be added
   /// @tparam path_aborter_t The path aborter type to be added
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
   /// @param [in] options Propagation options
@@ -306,6 +312,8 @@ class Propagator final
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam path_aborter_t The path aborter type to be added
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] options Propagation options
   ///
@@ -329,6 +337,8 @@ class Propagator final
   /// @tparam target_aborter_t The target aborter type to be added
   /// @tparam path_aborter_t The path aborter type to be added
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
   /// @param [in] options Propagation options

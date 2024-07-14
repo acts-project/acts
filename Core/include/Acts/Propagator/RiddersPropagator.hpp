@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -112,6 +112,8 @@ class RiddersPropagator {
   /// @tparam parameters_t Type of the start parameters
   /// @tparam propagator_options_t Type of the propagator options
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] start Start parameters
   /// @param [in] options Options of the propagations
   ///
@@ -130,6 +132,8 @@ class RiddersPropagator {
   /// @tparam parameters_t Type of the start parameters
   /// @tparam propagator_options_t Type of the propagator options
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] start Start parameters
   /// @param [in] target The target surface
   /// @param [in] options Options of the propagations
@@ -150,6 +154,8 @@ class RiddersPropagator {
   /// propagating again. This function is called from the different propagation
   /// overloads in order to deduplicate code.
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] options Options of the propagations
   /// @param [in] start Start parameters
   /// @param [in] nominalResult The result of the nominal propagation
@@ -180,6 +186,8 @@ class RiddersPropagator {
   /// @tparam options_t PropagatorOptions object
   /// @tparam parameters_t Type of the parameters to start the propagation with
   ///
+  /// @param [in] geoContext The geometry context
+  /// @param [in] magFieldContext The magnetic field context
   /// @param [in] options Options do define how to wiggle
   /// @param [in] start Start parameters which will be modified
   /// @param [in] param Index to get the parameter that will be modified
