@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
                                           55., 0., 2., 22u);
 
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {binPhi}};
+      irSurfaces{rSurfaces, {}, {BinningValue::binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   rSurfaces.push_back(dSurface.get());
 
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {rSurfaces.size() - 1u}, {binPhi}};
+      irSurfaces{rSurfaces, {rSurfaces.size() - 1u}, {BinningValue::binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
   PolyhedronReferenceGenerator<1u, true> rGenerator;
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
 
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {binR, binPhi}};
+      irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}};
 
   GridAxisGenerators::VarBoundEqClosed aGenerator{
       {24., 74., 110.}, {-M_PI, M_PI}, 44u};
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {binR, binPhi}};
+      irSurfaces{rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
@@ -190,7 +190,8 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
   IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {binR, binPhi}, {2u, 4u}};
+      irSurfaces{
+          rSurfaces, {}, {BinningValue::binR, BinningValue::binPhi}, {2u, 4u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {24., 152}, 8u, {-M_PI, M_PI}, 88u};
@@ -211,7 +212,8 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
                                              116., 3., 2., {52, 14});
 
   IndexedSurfacesGenerator<decltype(surfaces), IndexedSurfacesNavigation>
-      icSurfaces{surfaces, {}, {binZ, binPhi}, {1u, 1u}};
+      icSurfaces{
+          surfaces, {}, {BinningValue::binZ, BinningValue::binPhi}, {1u, 1u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {-500., 500}, 28, {-M_PI, M_PI}, 52u};

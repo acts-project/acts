@@ -181,8 +181,8 @@ struct SeedFinderConfig {
   /// coordinates in xyz. This is only used in a detector specific check for
   /// strip modules
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
-  
-  // Delegate to apply experiment specific cuts
+
+  // Delegate to apply experiment specific cuts during doublet finding
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
   

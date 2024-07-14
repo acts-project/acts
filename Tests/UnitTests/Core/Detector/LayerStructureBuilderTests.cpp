@@ -66,8 +66,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
-  lsConfig.binnings = {ProtoBinning(
-      Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 22u, 1u)};
+  lsConfig.binnings = {ProtoBinning(Acts::BinningValue::binPhi,
+                                    Acts::AxisBoundaryType::Closed, -M_PI, M_PI,
+                                    22u, 1u)};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
@@ -87,7 +88,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   LayerSupport supportDisc;
   supportDisc.type = Acts::Surface::SurfaceType::Disc;
   supportDisc.offset = 15.;
-  supportDisc.internalConstraints = {Acts::binZ, Acts::binR};
+  supportDisc.internalConstraints = {Acts::BinningValue::binZ,
+                                     Acts::BinningValue::binR};
 
   lsConfig.auxiliary =
       "*** Endcap with 22 surfaces + 1 support disc, "
@@ -115,9 +117,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   // clearance: z is still from internals, but r is from the volume/external
   //
   // Second test with one support disc, but external constraint
-  supportDisc.internalConstraints = {Acts::binZ};
-  supportDisc.volumeExtent.set(Acts::binR, 10., 120.);
-  supportDisc.volumeClearance[Acts::binR] = {2., 1.};
+  supportDisc.internalConstraints = {Acts::BinningValue::binZ};
+  supportDisc.volumeExtent.set(Acts::BinningValue::binR, 10., 120.);
+  supportDisc.volumeClearance[Acts::BinningValue::binR] = {2., 1.};
 
   lsConfig.supports = {supportDisc};
 
@@ -184,10 +186,12 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {
-      Acts::Experimental::ProtoBinning{
-          Acts::binZ, Acts::AxisBoundaryType::Bound, -480., 480., 14u, 1u},
-      Acts::Experimental::ProtoBinning(
-          Acts::binPhi, Acts::AxisBoundaryType::Closed, -M_PI, M_PI, 32u, 1u)};
+      Acts::Experimental::ProtoBinning{Acts::BinningValue::binZ,
+                                       Acts::AxisBoundaryType::Bound, -480.,
+                                       480., 14u, 1u},
+      Acts::Experimental::ProtoBinning(Acts::BinningValue::binPhi,
+                                       Acts::AxisBoundaryType::Closed, -M_PI,
+                                       M_PI, 32u, 1u)};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
@@ -206,7 +210,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   LayerSupport supportCylinder;
   supportCylinder.type = Acts::Surface::SurfaceType::Cylinder;
   supportCylinder.offset = 15.;
-  supportCylinder.internalConstraints = {Acts::binZ, Acts::binR};
+  supportCylinder.internalConstraints = {Acts::BinningValue::binZ,
+                                         Acts::BinningValue::binR};
   lsConfig.supports = {supportCylinder};
   lsConfig.auxiliary =
       "*** Barrel with 448 surfaces + 1 support cylinder, r/z evaluated ***";
@@ -223,9 +228,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   BOOST_CHECK(volumeUpdater1.connected());
 
   // Second test: z-range externally given
-  supportCylinder.internalConstraints = {Acts::binR};
-  supportCylinder.volumeExtent.set(Acts::binZ, -600., 600.);
-  supportCylinder.volumeClearance[Acts::binZ] = {2., 2.};
+  supportCylinder.internalConstraints = {Acts::BinningValue::binR};
+  supportCylinder.volumeExtent.set(Acts::BinningValue::binZ, -600., 600.);
+  supportCylinder.volumeClearance[Acts::BinningValue::binZ] = {2., 2.};
   lsConfig.supports = {supportCylinder};
   lsConfig.auxiliary =
       "*** Barrel with 448 surfaces + 1 support cylinder, r evaluated, z given "

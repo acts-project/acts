@@ -14,6 +14,7 @@
 #include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -105,9 +106,10 @@ struct GaussianSumFitter {
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<NavigationBreakAborter>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -123,13 +125,14 @@ struct GaussianSumFitter {
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
       std::vector<const Surface*> backwardSequence(
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -160,10 +163,13 @@ struct GaussianSumFitter {
     auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached, NavigationBreakAborter>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
+
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
+
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -174,9 +180,10 @@ struct GaussianSumFitter {
     auto bwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
+      using PropagatorOptions =
+          typename propagator_t::template Options<Actors, Aborters>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
-                                                      opts.magFieldContext);
+      PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -223,7 +230,7 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.direction(), BoundaryCheck(true))
+                       sParameters.direction(), BoundaryTolerance::None())
             .closest()
             .status();
 

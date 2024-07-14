@@ -7,10 +7,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/container/flat_set.hpp>
-
-template <typename external_spacepoint_t>
-Acts::CylindricalSpacePointGrid<external_spacepoint_t>
+template <typename SpacePoint>
+Acts::CylindricalSpacePointGrid<SpacePoint>
 Acts::CylindricalSpacePointGridCreator::createGrid(
     const Acts::CylindricalSpacePointGridConfig& config,
     const Acts::CylindricalSpacePointGridOptions& options) {
@@ -166,12 +164,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
 
-  // get region of interest (or full detector if configured accordingly)
-  float phiMin = config.phiMin;
-  float phiMax = config.phiMax;
-  float zMin = config.zMin;
-  float zMax = config.zMax;
-
   // sort by radius
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
@@ -181,7 +173,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
       (config.rMax + options.beamPos.norm()) / config.binSizeR);
 
   // keep track of changed bins while sorting
-  boost::container::flat_set<std::size_t> rBinsIndex;
+  std::vector<bool> usedBinIndex(grid.size(), false);
+  std::vector<std::size_t> rBinsIndex;
+  rBinsIndex.reserve(grid.size());
 
   std::size_t counter = 0ul;
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
@@ -195,12 +189,18 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
 
-    // remove SPs outside z and phi region
-    if (spZ > zMax || spZ < zMin) {
+    // remove SPs according to experiment specific cuts
+    if (!config.spacePointSelector(sp)) {
       continue;
     }
+
+    // remove SPs outside z and phi region
+    if (spZ > config.zMax || spZ < config.zMin) {
+      continue;
+    }
+
     float spPhi = std::atan2(spY, spX);
-    if (spPhi > phiMax || spPhi < phiMin) {
+    if (spPhi > config.phiMax || spPhi < config.phiMin) {
       continue;
     }
 
@@ -221,8 +221,9 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
-    if (rbin.size() > 1) {
-      rBinsIndex.insert(grid.globalBinFromPosition(spLocation));
+    if (rbin.size() > 1 && !usedBinIndex[globIndex]) {
+      usedBinIndex[globIndex] = true;
+      rBinsIndex.push_back(globIndex);
     }
   }
 

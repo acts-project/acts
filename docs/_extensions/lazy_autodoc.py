@@ -74,7 +74,6 @@ def run() -> None:
     }
 
     role_instances["struct"] |= {
-        "Acts::DenseStepperPropagatorOptions",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
@@ -88,7 +87,7 @@ def run() -> None:
         "Acts::Axis",
         "Acts::IAxis",
         "Acts::SeedFilter",
-        "Acts::BoundaryCheck",
+        "Acts::BoundaryTolerance",
         "Acts::ConeVolumeBounds",
         "Acts::CuboidVolumeBounds",
         "Acts::CylinderVolumeBounds",
