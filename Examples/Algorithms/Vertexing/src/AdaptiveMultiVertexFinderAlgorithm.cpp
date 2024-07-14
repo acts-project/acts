@@ -189,7 +189,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   auto state = m_vertexFinder.makeState(ctx.magFieldContext);
 
   // Default vertexing options, this is where e.g. a constraint could be set
-  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts;
 
   VertexCollection vertices;
 
@@ -199,7 +199,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = m_vertexFinder.find(inputTracks, finderOpts, state);
+    auto result = m_vertexFinder.find(ctx.geoContext, ctx.magFieldContext,
+                                      inputTracks, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());

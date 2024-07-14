@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   VertexFitter billoirFitter(vertexFitterCfg);
   auto fieldCache = bField->makeCache(magFieldContext);
   // Vertexing options for default tracks
-  VertexingOptions vfOptions(geoContext, magFieldContext);
-  VertexingOptions vfOptionsConstr(geoContext, magFieldContext, constraint);
+  VertexingOptions vfOptions;
+  VertexingOptions vfOptionsConstr(constraint);
 
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
@@ -163,9 +163,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       .connect<&HelicalTrackLinearizer::linearizeTrack>(&linearizer);
   VertexFitter customBilloirFitter(customVertexFitterCfg);
   // Vertexing options for custom tracks
-  VertexingOptions customVfOptions(geoContext, magFieldContext);
-  VertexingOptions customVfOptionsConstr(geoContext, magFieldContext,
-                                         customConstraint);
+  VertexingOptions customVfOptions;
+  VertexingOptions customVfOptionsConstr(customConstraint);
 
   BOOST_TEST_CONTEXT(
       "Testing FullBilloirVertexFitter when input track vector is empty.") {
@@ -173,8 +172,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     const std::vector<InputTrack> emptyVectorInput;
 
     // Without constraint
-    Vertex fittedVertex =
-        billoirFitter.fit(emptyVectorInput, vfOptions, fieldCache).value();
+    Vertex fittedVertex = billoirFitter
+                              .fit(geoContext, magFieldContext,
+                                   emptyVectorInput, vfOptions, fieldCache)
+                              .value();
 
     Vector3 origin(0., 0., 0.);
     SquareMatrix4 zeroMat = SquareMatrix4::Zero();
@@ -182,9 +183,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
     // With constraint
-    fittedVertex =
-        billoirFitter.fit(emptyVectorInput, vfOptionsConstr, fieldCache)
-            .value();
+    fittedVertex = billoirFitter
+                       .fit(geoContext, magFieldContext, emptyVectorInput,
+                            vfOptionsConstr, fieldCache)
+                       .value();
 
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
@@ -259,7 +261,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     auto fit = [&trueVertex, &nTracks, &fieldCache](const auto& fitter,
                                                     const auto& trksPtr,
                                                     const auto& vfOpts) {
-      auto fittedVertex = fitter.fit(trksPtr, vfOpts, fieldCache).value();
+      auto fittedVertex =
+          fitter.fit(geoContext, magFieldContext, trksPtr, vfOpts, fieldCache)
+              .value();
       if (!fittedVertex.tracks().empty()) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
         auto tracksAtVtx = fittedVertex.tracks();

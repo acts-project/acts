@@ -8,12 +8,15 @@
 
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
-    State& state, const VertexingOptions& vertexingOptions) const {
+    const Acts::GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, State& state) const {
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
 
@@ -51,11 +54,11 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
         // Recalculate the track impact parameters at the current vertex
         // position
         auto prepareVertexResult =
-            prepareVertexForFit(state, vtx, vertexingOptions);
+            prepareVertexForFit(geoContext, magFieldContext, state, vtx);
         if (!prepareVertexResult.ok()) {
           // Print vertices and associated tracks if logger is in debug mode
           if (logger().doPrint(Logging::DEBUG)) {
-            logDebugData(state, vertexingOptions.geoContext);
+            logDebugData(state, geoContext);
           }
           return prepareVertexResult.error();
         }
@@ -75,22 +78,23 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
       // Set vertexCompatibility for all TrackAtVertex objects
       // at the current vertex
       auto setCompatibilitiesResult =
-          setAllVertexCompatibilities(state, vtx, vertexingOptions);
+          setAllVertexCompatibilities(geoContext, magFieldContext, state, vtx);
       if (!setCompatibilitiesResult.ok()) {
         // Print vertices and associated tracks if logger is in debug mode
         if (logger().doPrint(Logging::DEBUG)) {
-          logDebugData(state, vertexingOptions.geoContext);
+          logDebugData(state, geoContext);
         }
         return setCompatibilitiesResult.error();
       }
     }  // End loop over vertex collection
 
     // Recalculate all track weights and update vertices
-    auto setWeightsResult = setWeightsAndUpdate(state, vertexingOptions);
+    auto setWeightsResult =
+        setWeightsAndUpdate(geoContext, magFieldContext, state);
     if (!setWeightsResult.ok()) {
       // Print vertices and associated tracks if logger is in debug mode
       if (logger().doPrint(Logging::DEBUG)) {
-        logDebugData(state, vertexingOptions.geoContext);
+        logDebugData(state, geoContext);
       }
       return setWeightsResult.error();
     }
@@ -115,8 +119,9 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
 }
 
 Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
-    State& state, Vertex& newVertex,
-    const VertexingOptions& vertexingOptions) const {
+    const Acts::GeometryContext& geoContext,
+    const Acts::MagneticFieldContext& magFieldContext, State& state,
+    Vertex& newVertex) const {
   if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
     ACTS_ERROR(
         "newVertex does not have any associated tracks (i.e., its trackLinks "
@@ -169,17 +174,18 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
   state.vertexCollection = verticesToFit;
 
   // Save the 3D impact parameters of all tracks associated with newVertex.
-  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
+  auto res =
+      prepareVertexForFit(geoContext, magFieldContext, state, &newVertex);
   if (!res.ok()) {
     // Print vertices and associated tracks if logger is in debug mode
     if (logger().doPrint(Logging::DEBUG)) {
-      logDebugData(state, vertexingOptions.geoContext);
+      logDebugData(state, geoContext);
     }
     return res.error();
   }
 
   // Perform fit on all added vertices
-  auto fitRes = fit(state, vertexingOptions);
+  auto fitRes = fit(geoContext, magFieldContext, state);
   if (!fitRes.ok()) {
     return fitRes.error();
   }
@@ -193,7 +199,9 @@ bool Acts::AdaptiveMultiVertexFitter::isAlreadyInList(
 }
 
 Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
-    State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
+    const Acts::GeometryContext& geoContext,
+    const Acts::MagneticFieldContext& magFieldContext, State& state,
+    Vertex* vtx) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
   // Vertex seed position
@@ -202,8 +210,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
   // Loop over all tracks at the vertex
   for (const auto& trk : vtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
-        vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-        m_cfg.extractParameters(trk), seedPos, state.ipState);
+        geoContext, magFieldContext, m_cfg.extractParameters(trk), seedPos,
+        state.ipState);
     if (!res.ok()) {
       return res.error();
     }
@@ -214,7 +222,9 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
 }
 
 Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
-    State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
+    const Acts::GeometryContext& geoContext,
+    const Acts::MagneticFieldContext& magFieldContext, State& state,
+    Vertex* vtx) const {
   VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
   // Loop over all tracks that are associated with vtx and estimate their
@@ -225,8 +235,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     // more tracks were added later on
     if (vtxInfo.impactParams3D.find(trk) == vtxInfo.impactParams3D.end()) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
-          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-          m_cfg.extractParameters(trk),
+          geoContext, magFieldContext, m_cfg.extractParameters(trk),
           VectorHelpers::position(vtxInfo.linPoint), state.ipState);
       if (!res.ok()) {
         return res.error();
@@ -238,14 +247,12 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     Acts::Result<double> compatibilityResult(0.);
     if (m_cfg.useTime) {
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
-          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-          vtxInfo.oldPosition);
+          geoContext, &(vtxInfo.impactParams3D.at(trk)), vtxInfo.oldPosition);
     } else {
       Acts::Vector3 vertexPosOnly =
           VectorHelpers::position(vtxInfo.oldPosition);
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
-          vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
-          vertexPosOnly);
+          geoContext, &(vtxInfo.impactParams3D.at(trk)), vertexPosOnly);
     }
 
     if (!compatibilityResult.ok()) {
@@ -257,7 +264,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
 }
 
 Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
-    State& state, const VertexingOptions& vertexingOptions) const {
+    const Acts::GeometryContext& geoContext,
+    const Acts::MagneticFieldContext& magFieldContext, State& state) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
@@ -283,8 +291,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
         if (!trkAtVtx.isLinearized || vtxInfo.relinearize) {
           auto result = m_cfg.trackLinearizer(
               m_cfg.extractParameters(trk), vtxInfo.linPoint[3],
-              *vtxPerigeeSurface, vertexingOptions.geoContext,
-              vertexingOptions.magFieldContext, state.fieldCache);
+              *vtxPerigeeSurface, geoContext, magFieldContext,
+              state.fieldCache);
           if (!result.ok()) {
             return result.error();
           }

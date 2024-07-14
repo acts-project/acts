@@ -8,21 +8,22 @@
 
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 namespace Acts {
 
 Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& allTracks,
     const VertexingOptions& vertexingOptions,
-    IVertexFinder::State& anyState) const {
+    IVertexFinder::State& /*anyState*/) const {
   if (allTracks.empty()) {
     ACTS_ERROR("Empty track collection handed to find method");
     return VertexingError::EmptyInput;
   }
-
-  State& state = anyState.template as<State>();
 
   // Original tracks
   const std::vector<InputTrack>& origTracks = allTracks;
@@ -30,9 +31,8 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
   // Seed tracks
   std::vector<InputTrack> seedTracks = allTracks;
 
-  VertexFitterState fitterState(*m_cfg.bField,
-                                vertexingOptions.magFieldContext);
-  auto seedFinderState = m_cfg.seedFinder->makeState(state.magContext);
+  VertexFitterState fitterState(*m_cfg.bField, magFieldContext);
+  auto seedFinderState = m_cfg.seedFinder->makeState(magFieldContext);
 
   std::vector<std::unique_ptr<Vertex>> allVertices;
 
@@ -45,8 +45,9 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
     Vertex currentConstraint = vertexingOptions.constraint;
 
     // Retrieve seed vertex from all remaining seedTracks
-    auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
-                                seedFinderState, removedSeedTracks);
+    auto seedResult =
+        doSeeding(geoContext, magFieldContext, seedTracks, currentConstraint,
+                  vertexingOptions, seedFinderState, removedSeedTracks);
     if (!seedResult.ok()) {
       return seedResult.error();
     }
@@ -79,9 +80,9 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
       searchTracks = seedTracks;
     }
 
-    auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
-                                             vtxCandidate, currentConstraint,
-                                             fitterState, vertexingOptions);
+    auto prepResult = canPrepareVertexForFit(
+        geoContext, magFieldContext, searchTracks, seedTracks, vtxCandidate,
+        currentConstraint, fitterState);
 
     if (!prepResult.ok()) {
       return prepResult.error();
@@ -97,8 +98,8 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
     fitterState.addVertexToMultiMap(vtxCandidate);
 
     // Perform the fit
-    auto fitResult = m_cfg.vertexFitter.addVtxToFit(fitterState, vtxCandidate,
-                                                    vertexingOptions);
+    auto fitResult = m_cfg.vertexFitter.addVtxToFit(geoContext, magFieldContext,
+                                                    fitterState, vtxCandidate);
     if (!fitResult.ok()) {
       return fitResult.error();
     }
@@ -115,8 +116,7 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
                                            fitterState, removedSeedTracks);
     } else {
       bool removedIncompatibleTrack = removeTrackIfIncompatible(
-          vtxCandidate, seedTracks, fitterState, removedSeedTracks,
-          vertexingOptions.geoContext);
+          vtxCandidate, seedTracks, fitterState, removedSeedTracks, geoContext);
       if (!removedIncompatibleTrack) {
         ACTS_DEBUG(
             "Could not remove any further track from seed tracks. Break.");
@@ -136,8 +136,8 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
     // Delete vertex from allVertices list again if it's not kept
     if (!keepVertex) {
       auto deleteVertexResult =
-          deleteLastVertex(vtxCandidate, allVertices, allVerticesPtr,
-                           fitterState, vertexingOptions);
+          deleteLastVertex(geoContext, magFieldContext, vtxCandidate,
+                           allVertices, allVerticesPtr, fitterState);
       if (!deleteVertexResult.ok()) {
         return deleteVertexResult.error();
       }
@@ -149,6 +149,8 @@ Acts::Result<std::vector<Acts::Vertex>> AdaptiveMultiVertexFinder::find(
 }
 
 auto AdaptiveMultiVertexFinder::doSeeding(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& seedFinderState,
@@ -160,8 +162,8 @@ auto AdaptiveMultiVertexFinder::doSeeding(
   m_cfg.seedFinder->setTracksToRemove(seedFinderState, removedSeedTracks);
 
   // Run seed finder
-  auto seedResult =
-      m_cfg.seedFinder->find(trackVector, seedOptions, seedFinderState);
+  auto seedResult = m_cfg.seedFinder->find(
+      geoContext, magFieldContext, trackVector, seedOptions, seedFinderState);
 
   if (!seedResult.ok()) {
     return seedResult.error();
@@ -202,8 +204,9 @@ void AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
 }
 
 Acts::Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
-    const InputTrack& track, const Vertex& vtx,
-    const VertexingOptions& vertexingOptions) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, const InputTrack& track,
+    const Vertex& vtx) const {
   // TODO: In original implementation the covariance of the given vertex is set
   // to zero. I did the same here now, but consider removing this and just
   // passing the vtx object to the estimator without changing its covariance.
@@ -215,8 +218,8 @@ Acts::Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
   }
 
   auto estRes = m_cfg.ipEstimator.getImpactParameters(
-      m_cfg.extractParameters(track), newVtx, vertexingOptions.geoContext,
-      vertexingOptions.magFieldContext, m_cfg.useTime);
+      m_cfg.extractParameters(track), newVtx, geoContext, magFieldContext,
+      m_cfg.useTime);
   if (!estRes.ok()) {
     return estRes.error();
   }
@@ -241,18 +244,19 @@ Acts::Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
 }
 
 Acts::Result<void> AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& tracks, Vertex& vtx,
-    VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const {
+    VertexFitterState& fitterState) const {
   for (const auto& trk : tracks) {
     auto params = m_cfg.extractParameters(trk);
-    auto pos = params.position(vertexingOptions.geoContext);
+    auto pos = params.position(geoContext);
     // If track is too far away from vertex, do not consider checking the IP
     // significance
     if (m_cfg.tracksMaxZinterval < std::abs(pos[eZ] - vtx.position()[eZ])) {
       continue;
     }
-    auto sigRes = getIPSignificance(trk, vtx, vertexingOptions);
+    auto sigRes = getIPSignificance(geoContext, magFieldContext, trk, vtx);
     if (!sigRes.ok()) {
       return sigRes.error();
     }
@@ -270,10 +274,11 @@ Acts::Result<void> AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
 }
 
 Acts::Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-    const Vertex& currentConstraint, VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const {
+    const Vertex& currentConstraint, VertexFitterState& fitterState) const {
   // Recover from cases where no compatible tracks to vertex
   // candidate were found
   // TODO: This is for now how it's done in athena... this look a bit
@@ -284,8 +289,7 @@ Acts::Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
     double newZ = 0;
     bool nearTrackFound = false;
     for (const auto& trk : seedTracks) {
-      auto pos =
-          m_cfg.extractParameters(trk).position(vertexingOptions.geoContext);
+      auto pos = m_cfg.extractParameters(trk).position(geoContext);
       auto zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
@@ -301,8 +305,8 @@ Acts::Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
           VertexInfo(currentConstraint, vtx.fullPosition());
 
       // Try to add compatible track with adapted vertex position
-      auto res = addCompatibleTracksToVertex(allTracks, vtx, fitterState,
-                                             vertexingOptions);
+      auto res = addCompatibleTracksToVertex(geoContext, magFieldContext,
+                                             allTracks, vtx, fitterState);
       if (!res.ok()) {
         return Result<bool>::failure(res.error());
       }
@@ -324,25 +328,26 @@ Acts::Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
 }
 
 Acts::Result<bool> AdaptiveMultiVertexFinder::canPrepareVertexForFit(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& allTracks,
     const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-    const Vertex& currentConstraint, VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const {
+    const Vertex& currentConstraint, VertexFitterState& fitterState) const {
   // Add vertex info to fitter state
   fitterState.vtxInfoMap[&vtx] =
       VertexInfo(currentConstraint, vtx.fullPosition());
 
   // Add all compatible tracks to vertex
-  auto resComp = addCompatibleTracksToVertex(allTracks, vtx, fitterState,
-                                             vertexingOptions);
+  auto resComp = addCompatibleTracksToVertex(geoContext, magFieldContext,
+                                             allTracks, vtx, fitterState);
   if (!resComp.ok()) {
     return Result<bool>::failure(resComp.error());
   }
 
   // Try to recover from cases where adding compatible track was not possible
-  auto resRec = canRecoverFromNoCompatibleTracks(allTracks, seedTracks, vtx,
-                                                 currentConstraint, fitterState,
-                                                 vertexingOptions);
+  auto resRec = canRecoverFromNoCompatibleTracks(
+      geoContext, magFieldContext, allTracks, seedTracks, vtx,
+      currentConstraint, fitterState);
   if (!resRec.ok()) {
     return Result<bool>::failure(resRec.error());
   }
@@ -578,9 +583,11 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
 }
 
 Acts::Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
-    Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
-    std::vector<Vertex*>& allVerticesPtr, VertexFitterState& fitterState,
-    const VertexingOptions& vertexingOptions) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, Vertex& vtx,
+    std::vector<std::unique_ptr<Vertex>>& allVertices,
+    std::vector<Vertex*>& allVerticesPtr,
+    VertexFitterState& fitterState) const {
   allVertices.pop_back();
   allVerticesPtr.pop_back();
 
@@ -608,7 +615,8 @@ Acts::Result<void> AdaptiveMultiVertexFinder::deleteLastVertex(
   }
 
   // Do the fit with removed vertex
-  auto fitResult = m_cfg.vertexFitter.fit(fitterState, vertexingOptions);
+  auto fitResult =
+      m_cfg.vertexFitter.fit(geoContext, magFieldContext, fitterState);
   if (!fitResult.ok()) {
     return fitResult.error();
   }
@@ -633,4 +641,5 @@ AdaptiveMultiVertexFinder::getVertexOutputList(
   }
   return Result<std::vector<Vertex>>(outputVec);
 }
+
 }  // namespace Acts

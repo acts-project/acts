@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -87,7 +88,9 @@ class FullBilloirVertexFitter {
   /// @param fieldCache The magnetic field cache
   ///
   /// @return Fitted vertex
-  Result<Vertex> fit(const std::vector<InputTrack>& paramVector,
+  Result<Vertex> fit(const GeometryContext& geoContext,
+                     const MagneticFieldContext& magFieldContext,
+                     const std::vector<InputTrack>& paramVector,
                      const VertexingOptions& vertexingOptions,
                      MagneticFieldProvider::Cache& fieldCache) const;
 

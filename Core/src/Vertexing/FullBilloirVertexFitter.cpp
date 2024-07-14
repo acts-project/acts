@@ -57,6 +57,8 @@ struct BilloirVertex {
 }  // namespace
 
 Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& paramVector,
     const VertexingOptions& vertexingOptions,
     MagneticFieldProvider::Cache& fieldCache) const {
@@ -113,8 +115,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
       auto result =
           m_cfg.trackLinearizer(trackParams, linPoint[3], *perigeeSurface,
-                                vertexingOptions.geoContext,
-                                vertexingOptions.magFieldContext, fieldCache);
+                                geoContext, magFieldContext, fieldCache);
       if (!result.ok()) {
         return result.error();
       }

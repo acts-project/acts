@@ -253,10 +253,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       inputTracks.emplace_back(trk.get());
     }
 
-    VertexingOptions vertexingOptions(geoContext, magFieldContext);
+    VertexingOptions vertexingOptions;
 
     // find vertices
-    auto res = finder.find(inputTracks, vertexingOptions, state);
+    auto res = finder.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state);
 
     if (!res.ok()) {
       BOOST_FAIL(res.error().message());
@@ -474,10 +475,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       inputTracks.emplace_back(trk.get());
     }
 
-    VertexingOptions vertexingOptionsUT(geoContext, magFieldContext);
+    VertexingOptions vertexingOptionsUT;
 
     // find vertices
-    auto res = finder.find(inputTracks, vertexingOptionsUT, state);
+    auto res = finder.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptionsUT, state);
 
     if (!res.ok()) {
       BOOST_FAIL(res.error().message());
@@ -609,10 +611,11 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   fullCovariance.topLeftCorner<3, 3>() = beamSpot.covariance();
   fullCovariance(eTime, eTime) = 100_ns;
   beamSpot.setFullCovariance(fullCovariance);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, beamSpot);
+  VertexingOptions vertexingOptions(beamSpot);
 
   // find vertices
-  auto findResult = finder.find(inputTracks, vertexingOptions, state);
+  auto findResult = finder.find(geoContext, magFieldContext, inputTracks,
+                                vertexingOptions, state);
 
   BOOST_CHECK(findResult.ok());
 

@@ -104,9 +104,10 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
 
     if (!m_cfg.doConstrainedFit) {
-      VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
+      VertexFitterOptions vfOptions;
 
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptions, fieldCache);
+      auto fitRes = vertexFitter.fit(ctx.geoContext, ctx.magFieldContext,
+                                     inputTracks, vfOptions, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -120,10 +121,10 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       theConstraint.setFullPosition(m_cfg.constraintPos);
 
       // Vertex fitter options
-      VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
-                                          theConstraint);
+      VertexFitterOptions vfOptionsConstr(theConstraint);
 
-      auto fitRes = vertexFitter.fit(inputTracks, vfOptionsConstr, fieldCache);
+      auto fitRes = vertexFitter.fit(ctx.geoContext, ctx.magFieldContext,
+                                     inputTracks, vfOptionsConstr, fieldCache);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {

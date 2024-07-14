@@ -107,10 +107,11 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Finder finder(std::move(finderCfg), logger().clone());
   Acts::IVertexFinder::State state{std::in_place_type<Finder::State>,
                                    *m_cfg.bField, ctx.magFieldContext};
-  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts;
 
   // find vertices
-  auto result = finder.find(inputTracks, finderOpts, state);
+  auto result = finder.find(ctx.geoContext, ctx.magFieldContext, inputTracks,
+                            finderOpts, state);
 
   VertexCollection vertices;
   if (result.ok()) {

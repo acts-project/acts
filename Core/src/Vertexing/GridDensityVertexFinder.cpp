@@ -10,10 +10,12 @@
 
 namespace Acts {
 
-auto GridDensityVertexFinder::find(const std::vector<InputTrack>& trackVector,
-                                   const VertexingOptions& vertexingOptions,
-                                   IVertexFinder::State& anyState) const
-    -> Result<std::vector<Vertex>> {
+auto GridDensityVertexFinder::find(
+    const GeometryContext& /*geoContext*/,
+    const MagneticFieldContext& /*magFieldContext*/,
+    const std::vector<InputTrack>& trackVector,
+    const VertexingOptions& vertexingOptions,
+    IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
   auto& state = anyState.as<State>();
   // Remove density contributions from tracks removed from track collection
   if (m_cfg.cacheGridStateForTrackRemoval && state.isInitialized &&

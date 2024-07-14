@@ -8,6 +8,8 @@
 
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -41,6 +43,8 @@ Acts::IterativeVertexFinder::IterativeVertexFinder(
 }
 
 auto Acts::IterativeVertexFinder::find(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const -> Result<std::vector<Vertex>> {
@@ -57,7 +61,8 @@ auto Acts::IterativeVertexFinder::find(
   // begin iterating
   while (seedTracks.size() > 1 && nInterations < m_cfg.maxVertices) {
     /// Do seeding
-    auto seedRes = getVertexSeed(state, seedTracks, vertexingOptions);
+    auto seedRes = getVertexSeed(geoContext, magFieldContext, seedTracks,
+                                 vertexingOptions);
 
     if (!seedRes.ok()) {
       return seedRes.error();
@@ -77,8 +82,8 @@ auto Acts::IterativeVertexFinder::find(
     std::vector<InputTrack> tracksToFitSplitVertex;
 
     // Fill vector with tracks to fit, only compatible with seed:
-    auto res = fillTracksToFit(seedTracks, seedVertex, tracksToFit,
-                               tracksToFitSplitVertex, vertexingOptions, state);
+    auto res = fillTracksToFit(geoContext, seedTracks, seedVertex, tracksToFit,
+                               tracksToFitSplitVertex, state);
 
     if (!res.ok()) {
       return res.error();
@@ -91,16 +96,18 @@ auto Acts::IterativeVertexFinder::find(
     Vertex currentSplitVertex;
 
     if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
-      auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fieldCache);
+      auto fitResult =
+          m_cfg.vertexFitter.fit(geoContext, magFieldContext, tracksToFit,
+                                 vertexingOptions, state.fieldCache);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
         return fitResult.error();
       }
     } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions,
-                                              state.fieldCache);
+      auto fitResult =
+          m_cfg.vertexFitter.fit(geoContext, magFieldContext, tracksToFit,
+                                 vertexingOptions, state.fieldCache);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -109,7 +116,8 @@ auto Acts::IterativeVertexFinder::find(
     }
     if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFitSplitVertex, vertexingOptions, state.fieldCache);
+          geoContext, magFieldContext, tracksToFitSplitVertex, vertexingOptions,
+          state.fieldCache);
       if (fitResult.ok()) {
         currentSplitVertex = std::move(*fitResult);
       } else {
@@ -141,8 +149,8 @@ auto Acts::IterativeVertexFinder::find(
         // but add tracks which may have been missed
 
         auto result = reassignTracksToNewVertex(
-            vertexCollection, currentVertex, tracksToFit, seedTracks,
-            origTracks, vertexingOptions, state);
+            geoContext, magFieldContext, vertexCollection, currentVertex,
+            tracksToFit, seedTracks, origTracks, vertexingOptions, state);
         if (!result.ok()) {
           return result.error();
         }
@@ -151,8 +159,8 @@ auto Acts::IterativeVertexFinder::find(
       }  // end reassignTracksAfterFirstFit case
          // still good vertex? might have changed in the meanwhile
       if (isGoodVertex) {
-        removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
-                                   vertexingOptions, state);
+        removeUsedCompatibleTracks(geoContext, magFieldContext, currentVertex,
+                                   tracksToFit, seedTracks, state);
 
         ACTS_DEBUG(
             "Number of seed tracks after removal of compatible tracks "
@@ -169,8 +177,9 @@ auto Acts::IterativeVertexFinder::find(
       if (!isGoodSplitVertex) {
         removeTracks(tracksToFitSplitVertex, seedTracks);
       } else {
-        removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
-                                   seedTracks, vertexingOptions, state);
+        removeUsedCompatibleTracks(geoContext, magFieldContext,
+                                   currentSplitVertex, tracksToFitSplitVertex,
+                                   seedTracks, state);
       }
     }
     // Now fill vertex collection with vertex
@@ -188,11 +197,14 @@ auto Acts::IterativeVertexFinder::find(
 }
 
 auto Acts::IterativeVertexFinder::getVertexSeed(
-    State& state, const std::vector<InputTrack>& seedTracks,
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
+    const std::vector<InputTrack>& seedTracks,
     const VertexingOptions& vertexingOptions) const
     -> Result<std::optional<Vertex>> {
-  auto finderState = m_cfg.seedFinder->makeState(state.magContext);
-  auto res = m_cfg.seedFinder->find(seedTracks, vertexingOptions, finderState);
+  auto finderState = m_cfg.seedFinder->makeState(magFieldContext);
+  auto res = m_cfg.seedFinder->find(geoContext, magFieldContext, seedTracks,
+                                    vertexingOptions, finderState);
 
   if (!res.ok()) {
     ACTS_ERROR("Internal seeding error. Number of input tracks: "
@@ -236,14 +248,14 @@ inline void Acts::IterativeVertexFinder::removeTracks(
 }
 
 Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const BoundTrackParameters& params, const Vertex& vertex,
-    const Surface& perigeeSurface, const VertexingOptions& vertexingOptions,
-    State& state) const {
+    const Surface& perigeeSurface, State& state) const {
   // Linearize track
   auto result =
       m_cfg.trackLinearizer(params, vertex.fullPosition()[3], perigeeSurface,
-                            vertexingOptions.geoContext,
-                            vertexingOptions.magFieldContext, state.fieldCache);
+                            geoContext, magFieldContext, state.fieldCache);
   if (!result.ok()) {
     return result.error();
   }
@@ -271,9 +283,10 @@ Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
 }
 
 Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
-    Vertex& vertex, std::vector<InputTrack>& tracksToFit,
-    std::vector<InputTrack>& seedTracks,
-    const VertexingOptions& vertexingOptions, State& state) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, Vertex& vertex,
+    std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
+    State& state) const {
   std::vector<TrackAtVertex> tracksAtVertex = vertex.tracks();
 
   for (const auto& trackAtVtx : tracksAtVertex) {
@@ -321,9 +334,9 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
 
   for (const auto& trk : tracksToFit) {
     // calculate chi2 w.r.t. last fitted vertex
-    auto result =
-        getCompatibility(m_cfg.extractParameters(trk), vertex,
-                         *vertexPerigeeSurface, vertexingOptions, state);
+    auto result = getCompatibility(geoContext, magFieldContext,
+                                   m_cfg.extractParameters(trk), vertex,
+                                   *vertexPerigeeSurface, state);
 
     if (!result.ok()) {
       return result.error();
@@ -362,10 +375,10 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
 }
 
 Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
+    const GeometryContext& geoContext,
     const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
     std::vector<InputTrack>& tracksToFitOut,
-    std::vector<InputTrack>& tracksToFitSplitVertexOut,
-    const VertexingOptions& vertexingOptions, State& state) const {
+    std::vector<InputTrack>& tracksToFitSplitVertexOut, State& state) const {
   int numberOfTracks = seedTracks.size();
 
   // Count how many tracks are used for fit
@@ -396,8 +409,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
       const BoundTrackParameters& sTrackParams =
           m_cfg.extractParameters(sTrack);
       auto distanceRes = m_cfg.ipEst.calculateDistance(
-          vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
-          state.ipState);
+          geoContext, sTrackParams, seedVertex.position(), state.ipState);
       if (!distanceRes.ok()) {
         return distanceRes.error();
       }
@@ -434,6 +446,8 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
 }
 
 Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
     std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
     const std::vector<InputTrack>& /* origTracks */,
@@ -468,17 +482,17 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
           m_cfg.extractParameters(tracksIter->originalParams);
 
       // compute compatibility
-      auto resultNew = getCompatibility(origParams, currentVertex,
-                                        *currentVertexPerigeeSurface,
-                                        vertexingOptions, state);
+      auto resultNew =
+          getCompatibility(geoContext, magFieldContext, origParams,
+                           currentVertex, *currentVertexPerigeeSurface, state);
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
       double chi2NewVtx = *resultNew;
 
       auto resultOld =
-          getCompatibility(origParams, vertexIt, *vertexItPerigeeSurface,
-                           vertexingOptions, state);
+          getCompatibility(geoContext, magFieldContext, origParams, vertexIt,
+                           *vertexItPerigeeSurface, state);
       if (!resultOld.ok()) {
         return Result<bool>::failure(resultOld.error());
       }
@@ -528,7 +542,8 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   currentVertex = Vertex();
   if (vertexingOptions.useConstraintInFit && !tracksToFit.empty()) {
     auto fitResult =
-        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
+        m_cfg.vertexFitter.fit(geoContext, magFieldContext, tracksToFit,
+                               vertexingOptions, state.fieldCache);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {
@@ -536,7 +551,8 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
     }
   } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
     auto fitResult =
-        m_cfg.vertexFitter.fit(tracksToFit, vertexingOptions, state.fieldCache);
+        m_cfg.vertexFitter.fit(geoContext, magFieldContext, tracksToFit,
+                               vertexingOptions, state.fieldCache);
     if (fitResult.ok()) {
       currentVertex = std::move(*fitResult);
     } else {

@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
 
   using Finder1 = GridDensityVertexFinder;
   Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
@@ -153,12 +153,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     inputTracks.emplace_back(&trk);
   }
 
-  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
+  auto res1 = finder1.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
 
-  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
+  auto res2 = finder2.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
@@ -204,7 +206,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
 
   using Finder1 = GridDensityVertexFinder;
   using GridDensity = GaussianGridTrackDensity;
@@ -278,7 +280,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   double zResult1 = 0;
   double zResult2 = 0;
 
-  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
+  auto res1 = finder1.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
@@ -293,7 +296,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
+  auto res2 = finder2.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }
@@ -322,7 +326,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   state1.as<Finder1::State>().tracksToRemove = removedTracks;
   state2.as<Finder2::State>().tracksToRemove = removedTracks;
 
-  auto res3 = finder1.find(inputTracks, vertexingOptions, state1);
+  auto res3 = finder1.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state1);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -338,7 +343,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-  auto res4 = finder2.find(inputTracks, vertexingOptions, state2);
+  auto res4 = finder2.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state2);
   if (!res4.ok()) {
     std::cout << res4.error().message() << std::endl;
   }
@@ -373,7 +379,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
   Vertex constraintVtx;
   constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.constraint = constraintVtx;
@@ -439,7 +445,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   }
 
   // Test finder 1
-  auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
+  auto res1 = finder1.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state1);
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
   }
@@ -457,7 +464,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   }
 
   // Test finder 2
-  auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
+  auto res2 = finder2.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state2);
   if (!res2.ok()) {
     std::cout << res2.error().message() << std::endl;
   }

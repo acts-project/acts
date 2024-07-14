@@ -96,12 +96,14 @@ class GridDensityVertexFinder final : public IVertexFinder {
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& anyState) const override;
 
   IVertexFinder::State makeState(
-      const Acts::MagneticFieldContext& /*mctx*/) const override {
+      const Acts::MagneticFieldContext& /*magFieldContext*/) const override {
     return IVertexFinder::State{
         std::in_place_type<State>,
         MainGridVector{m_cfg.gridDensity.config().mainGridSize}};

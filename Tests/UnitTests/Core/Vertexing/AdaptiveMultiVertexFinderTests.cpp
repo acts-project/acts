@@ -145,10 +145,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // TODO: test without using beam spot constraint
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(inputTracks, vertexingOptions, state);
+  auto findResult = finder.find(geoContext, magFieldContext, inputTracks,
+                                vertexingOptions, state);
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =
@@ -312,9 +313,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraintVtx);
+  VertexingOptions vertexingOptions(constraintVtx);
 
-  auto findResult = finder.find(userInputTracks, vertexingOptions, state);
+  auto findResult = finder.find(geoContext, magFieldContext, userInputTracks,
+                                vertexingOptions, state);
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
@@ -448,10 +450,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   // TODO: test using beam spot constraint
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(inputTracks, vertexingOptions, state);
+  auto findResult = finder.find(geoContext, magFieldContext, inputTracks,
+                                vertexingOptions, state);
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =
@@ -604,10 +607,11 @@ BOOST_AUTO_TEST_CASE(
   }
 
   Vertex bsConstr = std::get<BeamSpotData>(csvData);
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, bsConstr);
+  VertexingOptions vertexingOptions(bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
-  auto findResult = finder.find(inputTracks, vertexingOptions, state);
+  auto findResult = finder.find(geoContext, magFieldContext, inputTracks,
+                                vertexingOptions, state);
   auto t2 = std::chrono::system_clock::now();
 
   auto timediff =

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -117,13 +118,12 @@ class IterativeVertexFinder final : public IVertexFinder {
 
   /// State struct
   struct State {
-    State(const MagneticFieldProvider& field,
-          const Acts::MagneticFieldContext& _magContext)
-        : magContext(_magContext),
-          ipState{field.makeCache(magContext)},
-          fieldCache(field.makeCache(magContext)) {}
+    State() = default;
 
-    std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
+    State(const MagneticFieldProvider& field,
+          const Acts::MagneticFieldContext& magFieldContext)
+        : ipState{field.makeCache(magFieldContext)},
+          fieldCache(field.makeCache(magFieldContext)) {}
 
     /// The IP estimator state
     ImpactPointEstimator::State ipState;
@@ -147,13 +147,16 @@ class IterativeVertexFinder final : public IVertexFinder {
   ///
   /// @return Collection of vertices found by finder
   Result<std::vector<Vertex>> find(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& anyState) const override;
 
   IVertexFinder::State makeState(
-      const MagneticFieldContext& mctx) const override {
-    return IVertexFinder::State{State{*m_cfg.field, mctx}};
+      const MagneticFieldContext& magFieldContext) const override {
+    State state(*m_cfg.field, magFieldContext);
+    return IVertexFinder::State{state};
   }
 
   void setTracksToRemove(
@@ -180,7 +183,9 @@ class IterativeVertexFinder final : public IVertexFinder {
   ///
   /// @return Vertex seed
   Result<std::optional<Vertex>> getVertexSeed(
-      State& state, const std::vector<InputTrack>& seedTracks,
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
+      const std::vector<InputTrack>& seedTracks,
       const VertexingOptions& vertexingOptions) const;
 
   /// @brief Removes all tracks in tracksToRemove from seedTracks
@@ -198,10 +203,11 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param perigeeSurface The perigee surface at vertex position
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<double> getCompatibility(const BoundTrackParameters& params,
+  Result<double> getCompatibility(const GeometryContext& geoContext,
+                                  const MagneticFieldContext& magFieldContext,
+                                  const BoundTrackParameters& params,
                                   const Vertex& vertex,
                                   const Surface& perigeeSurface,
-                                  const VertexingOptions& vertexingOptions,
                                   State& state) const;
 
   /// @brief Function that removes used tracks compatible with
@@ -214,9 +220,10 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> removeUsedCompatibleTracks(
-      Vertex& vertex, std::vector<InputTrack>& tracksToFit,
-      std::vector<InputTrack>& seedTracks,
-      const VertexingOptions& vertexingOptions, State& state) const;
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext, Vertex& vertex,
+      std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
+      State& state) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
@@ -227,10 +234,10 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> fillTracksToFit(
+      const GeometryContext& geoContext,
       const std::vector<InputTrack>& seedTracks, const Vertex& seedVertex,
       std::vector<InputTrack>& tracksToFitOut,
-      std::vector<InputTrack>& tracksToFitSplitVertexOut,
-      const VertexingOptions& vertexingOptions, State& state) const;
+      std::vector<InputTrack>& tracksToFitSplitVertexOut, State& state) const;
 
   /// @brief Function that reassigns tracks from other vertices
   ///        to the current vertex if they are more compatible
@@ -245,6 +252,8 @@ class IterativeVertexFinder final : public IVertexFinder {
   ///
   /// @return Bool if currentVertex is still a good vertex
   Result<bool> reassignTracksToNewVertex(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       std::vector<Vertex>& vertexCollection, Vertex& currentVertex,
       std::vector<InputTrack>& tracksToFit, std::vector<InputTrack>& seedTracks,
       const std::vector<InputTrack>& origTracks,

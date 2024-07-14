@@ -175,8 +175,9 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> addVtxToFit(State& state, Vertex& newVertex,
-                           const VertexingOptions& vertexingOptions) const;
+  Result<void> addVtxToFit(const Acts::GeometryContext& geoContext,
+                           const Acts::MagneticFieldContext& magFieldContext,
+                           State& state, Vertex& newVertex) const;
 
   /// @brief Performs a simultaneous fit of all vertices in
   /// state.vertexCollection
@@ -185,8 +186,9 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> fit(State& state,
-                   const VertexingOptions& vertexingOptions) const;
+  Result<void> fit(const Acts::GeometryContext& geoContext,
+                   const Acts::MagneticFieldContext& magFieldContext,
+                   State& state) const;
 
  private:
   /// Configuration object
@@ -216,8 +218,9 @@ class AdaptiveMultiVertexFitter {
   /// @param vtx Vertex object
   /// @param vertexingOptions Vertexing options
   Result<void> prepareVertexForFit(
-      State& state, Vertex* vtx,
-      const VertexingOptions& vertexingOptions) const;
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext, State& state,
+      Vertex* vtx) const;
 
   /// @brief Sets the vertexCompatibility for all TrackAtVertex objects
   /// at the current vertex
@@ -226,8 +229,9 @@ class AdaptiveMultiVertexFitter {
   /// @param currentVtx Current vertex
   /// @param vertexingOptions Vertexing options
   Result<void> setAllVertexCompatibilities(
-      State& state, Vertex* currentVtx,
-      const VertexingOptions& vertexingOptions) const;
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext, State& state,
+      Vertex* currentVtx) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
   ///  and updates the vertices by calling the VertexUpdater
@@ -235,7 +239,8 @@ class AdaptiveMultiVertexFitter {
   /// @param state Fitter state
   /// @param vertexingOptions Vertexing options
   Result<void> setWeightsAndUpdate(
-      State& state, const VertexingOptions& vertexingOptions) const;
+      const Acts::GeometryContext& geoContext,
+      const Acts::MagneticFieldContext& magFieldContext, State& state) const;
 
   /// @brief Collects the compatibility values of the track `trk`
   /// wrt to all of its associated vertices

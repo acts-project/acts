@@ -19,6 +19,8 @@ Acts::ZScanVertexFinder::ZScanVertexFinder(const Config& cfg,
 }
 
 Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& /*state*/) const {
@@ -36,8 +38,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
     if (vertexingOptions.useConstraintInFit &&
         vertexingOptions.constraint.covariance()(0, 0) != 0) {
       auto estRes = m_cfg.ipEstimator.getImpactParameters(
-          params, vertexingOptions.constraint, vertexingOptions.geoContext,
-          vertexingOptions.magFieldContext);
+          params, vertexingOptions.constraint, geoContext, magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
       } else {
@@ -68,7 +69,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
           "Unable to compute IP significance. "
           "Setting IP weight to 1.");
 
-      z0AndWeight.first = params.position(vertexingOptions.geoContext)[eZ];
+      z0AndWeight.first = params.position(geoContext)[eZ];
       z0AndWeight.second = 1.;
     }
 

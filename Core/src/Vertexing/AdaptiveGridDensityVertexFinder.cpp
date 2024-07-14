@@ -10,6 +10,8 @@
 
 Acts::Result<std::vector<Acts::Vertex>>
 Acts::AdaptiveGridDensityVertexFinder::find(
+    const GeometryContext& /*geoContext*/,
+    const MagneticFieldContext& /*magFieldContext*/,
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& anyState) const {

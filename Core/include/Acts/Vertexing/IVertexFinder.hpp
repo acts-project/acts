@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Any.hpp"
@@ -34,13 +35,16 @@ class IVertexFinder {
   /// @param state The state object (needs to be created via @c makeState)
   /// @return The found vertex candidates
   virtual Result<std::vector<Vertex>> find(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions& vertexingOptions, State& state) const = 0;
 
   /// Function to create a state object for this concrete vertex finder
-  /// @param mctx The magnetic field context
+  /// @param magFieldContext The magnetic field context
   /// @return The state object
-  virtual State makeState(const MagneticFieldContext& mctx) const = 0;
+  virtual State makeState(
+      const MagneticFieldContext& magFieldContext) const = 0;
 
   /// For vertex finders that have an internal state of active tracks, this
   /// method instructs them to mark used tracks for removal

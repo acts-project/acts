@@ -166,10 +166,11 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     VertexFinder finder(cfg);
 
-    VertexingOptions vertexingOptions(geoContext, magFieldContext);
+    VertexingOptions vertexingOptions;
 
     auto state = finder.makeState(magFieldContext);
-    auto res = finder.find(inputTracks, vertexingOptions, state);
+    auto res = finder.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
 
@@ -291,9 +292,10 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     VertexFinder finder(cfg);
     auto state = finder.makeState(magFieldContext);
 
-    VertexingOptions vertexingOptions(geoContext, magFieldContext);
+    VertexingOptions vertexingOptions;
 
-    auto res = finder.find(inputTracks, vertexingOptions, state);
+    auto res = finder.find(geoContext, magFieldContext, inputTracks,
+                           vertexingOptions, state);
 
     BOOST_CHECK(res.ok());
 

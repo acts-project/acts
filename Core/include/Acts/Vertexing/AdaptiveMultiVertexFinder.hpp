@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -25,6 +26,7 @@
 #include <type_traits>
 
 namespace Acts {
+
 /// @brief Implements an iterative vertex finder
 class AdaptiveMultiVertexFinder final : public IVertexFinder {
   using VertexFitter = AdaptiveMultiVertexFitter;
@@ -152,9 +154,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   };  // Config struct
 
   /// State struct for fulfilling interface
-  struct State {
-    std::reference_wrapper<const MagneticFieldContext> magContext;
-  };
+  struct State {};
 
   /// @brief Constructor for user-defined InputTrack_t type !=
   /// BoundTrackParameters
@@ -191,13 +191,15 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @return Vector of all reconstructed vertices
   Result<std::vector<Vertex>> find(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& allTracks,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& anyState) const override;
 
   IVertexFinder::State makeState(
-      const Acts::MagneticFieldContext& mctx) const override {
-    return IVertexFinder::State{State{mctx}};
+      const MagneticFieldContext& /*magFieldContext*/) const override {
+    return IVertexFinder::State{};
   }
 
   void setTracksToRemove(
@@ -228,6 +230,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @return The seed vertex
   Result<std::optional<Vertex>> doSeeding(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& seedFinderState,
@@ -249,9 +253,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return The IP significance
-  Result<double> getIPSignificance(
-      const InputTrack& track, const Vertex& vtx,
-      const VertexingOptions& vertexingOptions) const;
+  Result<double> getIPSignificance(const GeometryContext& geoContext,
+                                   const MagneticFieldContext& magFieldContext,
+                                   const InputTrack& track,
+                                   const Vertex& vtx) const;
 
   /// @brief Adds compatible track to vertex candidate
   ///
@@ -260,9 +265,10 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param[out] fitterState The vertex fitter state
   /// @param vertexingOptions Vertexing options
   Result<void> addCompatibleTracksToVertex(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& tracks, Vertex& vtx,
-      VertexFitterState& fitterState,
-      const VertexingOptions& vertexingOptions) const;
+      VertexFitterState& fitterState) const;
 
   /// @brief Method that tries to recover from cases where no tracks
   /// were added to the vertex candidate after seeding
@@ -277,10 +283,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// return True if recovery was successful, false otherwise
   Result<bool> canRecoverFromNoCompatibleTracks(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-      const Vertex& currentConstraint, VertexFitterState& fitterState,
-      const VertexingOptions& vertexingOptions) const;
+      const Vertex& currentConstraint, VertexFitterState& fitterState) const;
 
   /// @brief Method that tries to prepare the vertex for the fit
   ///
@@ -294,10 +301,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   ///
   /// @return True if preparation was successful, false otherwise
   Result<bool> canPrepareVertexForFit(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& allTracks,
       const std::vector<InputTrack>& seedTracks, Vertex& vtx,
-      const Vertex& currentConstraint, VertexFitterState& fitterState,
-      const VertexingOptions& vertexingOptions) const;
+      const Vertex& currentConstraint, VertexFitterState& fitterState) const;
 
   /// @brief Method that checks if vertex is a good vertex and if
   /// compatible tracks are available
@@ -373,9 +381,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param fitterState The current vertex fitter state
   /// @param vertexingOptions Vertexing options
   Result<void> deleteLastVertex(
-      Vertex& vtx, std::vector<std::unique_ptr<Vertex>>& allVertices,
-      std::vector<Vertex*>& allVerticesPtr, VertexFitterState& fitterState,
-      const VertexingOptions& vertexingOptions) const;
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext, Vertex& vtx,
+      std::vector<std::unique_ptr<Vertex>>& allVertices,
+      std::vector<Vertex*>& allVerticesPtr,
+      VertexFitterState& fitterState) const;
 
   /// @brief Prepares the output vector of vertices
   ///

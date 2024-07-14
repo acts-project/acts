@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
@@ -48,7 +49,9 @@ class TrackDensityVertexFinder final : public IVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex>> find(const std::vector<InputTrack>& trackVector,
+  Result<std::vector<Vertex>> find(const GeometryContext& geoContext,
+                                   const MagneticFieldContext& magFieldContext,
+                                   const std::vector<InputTrack>& trackVector,
                                    const VertexingOptions& vertexingOptions,
                                    IVertexFinder::State& state) const override;
 

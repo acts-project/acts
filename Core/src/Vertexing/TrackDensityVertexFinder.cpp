@@ -9,6 +9,8 @@
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 
 Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
+    const GeometryContext& /*geoContext*/,
+    const MagneticFieldContext& /*magFieldContext*/,
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& /*state*/) const {

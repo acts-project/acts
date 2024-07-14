@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3 pos1c{1.69457_mm, -0.50837_mm, -7_mm};
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   TrackDensityVertexFinder finder{{{densityCfg}}};
@@ -99,8 +99,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   std::vector<InputTrack> vec2 = {InputTrack{&params1c}, InputTrack{&params1a},
                                   InputTrack{&params1b}};
 
-  auto res1 = finder.find(vec1, vertexingOptions, state);
-  auto res2 = finder.find(vec2, vertexingOptions, state);
+  auto res1 =
+      finder.find(geoContext, magFieldContext, vec1, vertexingOptions, state);
+  auto res2 =
+      finder.find(geoContext, magFieldContext, vec2, vertexingOptions, state);
 
   if (!res1.ok()) {
     std::cout << res1.error().message() << std::endl;
@@ -144,7 +146,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
+  VertexingOptions vertexingOptions(constraint);
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   TrackDensityVertexFinder finder{{{densityCfg}}};
@@ -176,7 +178,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   std::vector<InputTrack> vec1 = {InputTrack{&params1a}, InputTrack{&params1b},
                                   InputTrack{&params1c}};
 
-  auto res = finder.find(vec1, vertexingOptions, state);
+  auto res =
+      finder.find(geoContext, magFieldContext, vec1, vertexingOptions, state);
 
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;
@@ -220,7 +223,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   TrackDensityVertexFinder finder{{{densityCfg}}};
@@ -266,7 +269,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     inputTracks.emplace_back(&trk);
   }
 
-  auto res3 = finder.find(inputTracks, vertexingOptions, state);
+  auto res3 = finder.find(geoContext, magFieldContext, inputTracks,
+                          vertexingOptions, state);
   if (!res3.ok()) {
     std::cout << res3.error().message() << std::endl;
   }
@@ -315,7 +319,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   constraint.setCovariance(constrCov);
 
   // Finder options
-  VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
+  VertexingOptions vertexingOptions(constraint);
 
   auto extractParameters = [](const InputTrack& params) {
     return params.as<InputTrackStub>()->parameters();
@@ -352,7 +356,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   std::vector<InputTrack> vec1 = {InputTrack{&params1a}, InputTrack{&params1b},
                                   InputTrack{&params1c}};
 
-  auto res = finder.find(vec1, vertexingOptions, state);
+  auto res =
+      finder.find(geoContext, magFieldContext, vec1, vertexingOptions, state);
 
   if (!res.ok()) {
     std::cout << res.error().message() << std::endl;

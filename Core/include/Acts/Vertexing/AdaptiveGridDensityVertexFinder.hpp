@@ -91,6 +91,8 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
   Result<std::vector<Vertex>> find(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext,
       const std::vector<InputTrack>& trackVector,
       const VertexingOptions& vertexingOptions,
       IVertexFinder::State& anyState) const override;

@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
 
   // IP 3D Estimator
   ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
@@ -248,7 +248,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // list in order to be able to compare later
   std::vector<Vertex> seedListCopy = vtxList;
 
-  auto res1 = fitter.addVtxToFit(state, vtxList.at(0), vertexingOptions);
+  auto res1 =
+      fitter.addVtxToFit(geoContext, magFieldContext, state, vtxList.at(0));
   ACTS_DEBUG("Tracks linked to each vertex AFTER fit:");
   int c = 0;
   for (auto& vtx : vtxPtrList) {
@@ -292,7 +293,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   CHECK_CLOSE_ABS(vtxList.at(1).fullPosition(),
                   seedListCopy.at(1).fullPosition(), 1_mm);
 
-  auto res2 = fitter.addVtxToFit(state, vtxList.at(2), vertexingOptions);
+  auto res2 =
+      fitter.addVtxToFit(geoContext, magFieldContext, state, vtxList.at(2));
   BOOST_CHECK(res2.ok());
 
   // Now also the third vertex should have been modified and fitted
@@ -329,7 +331,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
 
   ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
   ImpactPointEstimator ip3dEst(ip3dEstCfg);
@@ -423,7 +425,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
 
   state.addVertexToMultiMap(vtx);
 
-  auto res = fitter.addVtxToFit(state, vtx, vertexingOptions);
+  auto res = fitter.addVtxToFit(geoContext, magFieldContext, state, vtx);
 
   BOOST_CHECK(res.ok());
 
@@ -464,7 +466,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  VertexingOptions vertexingOptions(geoContext, magFieldContext);
+  VertexingOptions vertexingOptions;
 
   ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
   ImpactPointEstimator ip3dEst(ip3dEstCfg);
@@ -644,7 +646,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   state.addVertexToMultiMap(vtx2);
 
   // Fit vertices
-  fitter.fit(state, vertexingOptions);
+  fitter.fit(geoContext, magFieldContext, state);
 
   auto vtx1Fitted = state.vertexCollection.at(0);
   auto vtx1PosFitted = vtx1Fitted->position();
