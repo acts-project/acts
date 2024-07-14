@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -301,8 +300,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     mutableData.setQuality(medium->index(), bestSeedQuality);
     mutableData.setQuality(top->index(), bestSeedQuality);
 
-    outIt = Acts::Seed<external_spacepoint_t>{*bottom, *medium, *top, zOrigin,
-                                              bestSeedQuality};
+    Acts::Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
+    seed.setZvertex(zOrigin);
+    seed.setQuality(bestSeedQuality);
+    outIt = std::move(seed);
+
     ++numTotalSeeds;
   }
 }

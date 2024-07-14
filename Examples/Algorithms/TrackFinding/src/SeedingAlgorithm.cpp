@@ -302,8 +302,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   for (const auto& seed : seeds) {
     const auto& sps = seed.sp();
     SeedContainerForStorage.emplace_back(*sps[0]->externalSpacePoint(), *sps[1]->externalSpacePoint(),
-                                         *sps[2]->externalSpacePoint(), seed.z(),
-                                         seed.seedQuality());
+                                         *sps[2]->externalSpacePoint());
+    SeedContainerForStorage.back().setZvertex(seed.z());
+    SeedContainerForStorage.back().setQuality(seed.seedQuality());
   }
 
   m_outputSeeds(ctx, std::move(SeedContainerForStorage));

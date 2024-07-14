@@ -11,12 +11,19 @@ namespace Acts {
 template <typename external_spacePoint_t>
 Seed<external_spacePoint_t>::Seed(const external_spacePoint_t& b,
                                   const external_spacePoint_t& m,
-                                  const external_spacePoint_t& u, float vertex,
-                                  float seedQuality)
-    : m_spacepoints({&b, &m, &u}),
-      m_zvertex(vertex),
-      m_seedQuality(seedQuality) {}
+                                  const external_spacePoint_t& u)
+  : m_spacepoints({&b, &m, &u}) {}
+  
+template <typename external_spacePoint_t>
+void Seed<external_spacePoint_t>::setZvertex(float vertex) {
+  m_zvertex = vertex;
+}
 
+template <typename external_spacePoint_t>
+void Seed<external_spacePoint_t>::setQuality(float seedQuality) {
+  m_seedQuality = seedQuality;
+}
+  
 template <typename external_spacePoint_t>
 const std::array<const external_spacePoint_t*, 3>&
 Seed<external_spacePoint_t>::sp() const {

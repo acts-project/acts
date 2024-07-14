@@ -108,8 +108,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   for (const auto &seed : seeds) {
     const auto &sps = seed.sp();
-    seedsToAdd.emplace_back(*sps[0]->externalSpacePoint(), *sps[1]->externalSpacePoint(), *sps[2]->externalSpacePoint(),
-                            seed.z(), seed.seedQuality());
+    seedsToAdd.emplace_back(*sps[0]->externalSpacePoint(), *sps[1]->externalSpacePoint(), *sps[2]->externalSpacePoint());
+    seedsToAdd.back().setZvertex(seed.z());
+    seedsToAdd.back().setQuality(seed.seedQuality());
   }
 
   m_outputSeeds(ctx, std::move(seedsToAdd));

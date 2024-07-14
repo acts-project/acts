@@ -78,5 +78,7 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
   const auto t = ps.front()->r() - m * ps.front()->z();
   const auto z_vertex = -t / m;
 
-  return SimSeed(*ps[0], *ps[s / 2], *ps[s - 1], z_vertex);
+  SimSeed seed(*ps[0], *ps[s / 2], *ps[s - 1]);
+  seed.setZvertex(z_vertex);
+  return seed;
 }
