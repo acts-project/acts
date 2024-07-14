@@ -80,10 +80,6 @@ class VolumeMaterialMapper {
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
-    /// Constructor of the State with contexts
-    State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
-        : geoContext(gctx), magFieldContext(mctx) {}
-
     /// The recorded material per geometry ID
     std::map<const GeometryIdentifier, Acts::AccumulatedVolumeMaterial>
         homogeneousGrid;
@@ -115,12 +111,6 @@ class VolumeMaterialMapper {
     /// The created volume material from it
     std::map<GeometryIdentifier, std::unique_ptr<const IVolumeMaterial>>
         volumeMaterial;
-
-    /// Reference to the geometry context for the mapping
-    std::reference_wrapper<const GeometryContext> geoContext;
-
-    /// Reference to the magnetic field context
-    std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   };
 
   /// Delete the Default constructor
@@ -144,9 +134,7 @@ class VolumeMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  State createState(const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -164,7 +152,9 @@ class VolumeMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  void mapMaterialTrack(const GeometryContext& geoContext,
+                        const MagneticFieldContext& magFieldContext,
+                        State& mState, RecordedMaterialTrack& mTrack) const;
 
  private:
   /// selector for finding surface

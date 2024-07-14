@@ -125,10 +125,7 @@ void addMaterial(Context& ctx) {
                    .def("scoringParameters", &Alg::scoringParameters)
                    .def_property_readonly("config", &Alg::config);
 
-    auto c = py::class_<Alg::Config>(alg, "Config")
-                 .def(py::init<const Acts::GeometryContext&,
-                               const Acts::MagneticFieldContext&>());
-
+    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
     ACTS_PYTHON_MEMBER(inputMaterialTracks);
     ACTS_PYTHON_MEMBER(mappingMaterialCollection);
@@ -136,8 +133,6 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(materialVolumeMapper);
     ACTS_PYTHON_MEMBER(materialWriters);
     ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(geoContext);
-    ACTS_PYTHON_MEMBER(magFieldContext);
     ACTS_PYTHON_STRUCT_END();
   }
 

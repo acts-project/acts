@@ -56,13 +56,12 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
       m_logger(std::move(slogger)) {}
 
 Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
 
   // The Surface material mapping state
-  State mState(gctx, mctx);
+  State mState;
   resolveMaterialVolume(mState, *world);
   collectMaterialSurfaces(mState, *world);
   return mState;
@@ -362,7 +361,9 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
 }
 
 void Acts::VolumeMaterialMapper::mapMaterialTrack(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, State& mState,
+    RecordedMaterialTrack& mTrack) const {
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
@@ -381,8 +382,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
 
   // Now collect the material volume by using the straight line propagator
   const auto& result =
-      m_propagator
-          .propagate(mState.geoContext, mState.magFieldContext, start, options)
+      m_propagator.propagate(geoContext, magFieldContext, start, options)
           .value();
   auto mcResult = result.get<BoundSurfaceCollector::result_type>();
   auto mvcResult = result.get<MaterialVolumeCollector::result_type>();

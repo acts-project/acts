@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -102,11 +102,6 @@ class SurfaceMaterialMapper {
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
-    /// @param [in] gctx The geometry context to use
-    /// @param [in] mctx The magnetic field context to use
-    State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
-        : geoContext(gctx), magFieldContext(mctx) {}
-
     /// The accumulated material per geometry ID
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
@@ -122,12 +117,6 @@ class SurfaceMaterialMapper {
     /// The volume material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
         volumeMaterial;
-
-    /// Reference to the geometry context for the mapping
-    std::reference_wrapper<const GeometryContext> geoContext;
-
-    /// Reference to the magnetic field context
-    std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   };
 
   /// Delete the Default constructor
@@ -145,15 +134,13 @@ class SurfaceMaterialMapper {
 
   /// @brief helper method that creates the cache for the mapping
   ///
-  /// @param [in] gctx The geometry context to use
-  /// @param [in] mctx The magnetic field context to use
+  /// @param [in] geoContext The geometry context to use
   /// @param[in] tGeometry The geometry which should be mapped
   ///
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
+  State createState(const GeometryContext& geoContext,
                     const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps
@@ -172,7 +159,9 @@ class SurfaceMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  void mapMaterialTrack(const GeometryContext& geoContext,
+                        const MagneticFieldContext& magFieldContext,
+                        State& mState, RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -180,7 +169,9 @@ class SurfaceMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  void mapInteraction(const GeometryContext& geoContext,
+                      const MagneticFieldContext& magFieldContext,
+                      State& mState, RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -197,14 +188,15 @@ class SurfaceMaterialMapper {
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
-  void resolveMaterialSurfaces(State& mState,
+  void resolveMaterialSurfaces(const GeometryContext& geoContext, State& mState,
                                const TrackingVolume& tVolume) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void checkAndInsert(State& mState, const Surface& surface) const;
+  void checkAndInsert(const GeometryContext& geoContext, State& mState,
+                      const Surface& surface) const;
 
   /// @brief check and insert
   ///
@@ -225,4 +217,5 @@ class SurfaceMaterialMapper {
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;
 };
+
 }  // namespace Acts

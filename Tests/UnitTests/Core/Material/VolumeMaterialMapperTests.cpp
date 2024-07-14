@@ -149,12 +149,8 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
       vmmConfig, std::move(propagator),
       getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
 
-  /// Create some contexts
-  GeometryContext gCtx;
-  MagneticFieldContext mfCtx;
-
   /// Now create the mapper state
-  auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
+  auto mState = vmMapper.createState(*tGeometry);
 
   /// Test if this is not null
   BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);

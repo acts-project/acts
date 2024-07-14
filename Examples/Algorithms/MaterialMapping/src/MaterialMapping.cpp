@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
@@ -20,10 +21,7 @@ namespace ActsExamples {
 
 MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
                                  Acts::Logging::Level level)
-    : IAlgorithm("MaterialMapping", level),
-      m_cfg(cfg),
-      m_mappingState(cfg.geoContext, cfg.magFieldContext),
-      m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {
+    : IAlgorithm("MaterialMapping", level), m_cfg(cfg) {
   if (!m_cfg.materialSurfaceMapper && !m_cfg.materialVolumeMapper) {
     throw std::invalid_argument("Missing material mapper");
   } else if (!m_cfg.trackingGeometry) {
@@ -36,15 +34,18 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
   ACTS_INFO("This algorithm requires inter-event information, "
             << "run in single-threaded mode!");
 
+  // TODO: This is a temporary solution to get the geometry context
+  Acts::GeometryContext geoContext;
+
   if (m_cfg.materialSurfaceMapper) {
     // Generate and retrieve the central cache object
     m_mappingState = m_cfg.materialSurfaceMapper->createState(
-        m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry);
+        geoContext, *m_cfg.trackingGeometry);
   }
   if (m_cfg.materialVolumeMapper) {
     // Generate and retrieve the central cache object
-    m_mappingStateVol = m_cfg.materialVolumeMapper->createState(
-        m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry);
+    m_mappingStateVol =
+        m_cfg.materialVolumeMapper->createState(*m_cfg.trackingGeometry);
   }
 }
 
@@ -106,7 +107,8 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
         const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
-      m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
+      m_cfg.materialSurfaceMapper->mapMaterialTrack(
+          context.geoContext, context.magFieldContext, *mappingState, mTrack);
     }
   }
   if (m_cfg.materialVolumeMapper) {
@@ -116,7 +118,8 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
 
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
-      m_cfg.materialVolumeMapper->mapMaterialTrack(*mappingState, mTrack);
+      m_cfg.materialVolumeMapper->mapMaterialTrack(
+          context.geoContext, context.magFieldContext, *mappingState, mTrack);
     }
   }
   // Write take the collection to the EventStore

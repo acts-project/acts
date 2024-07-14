@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,6 +45,7 @@ using VolumeMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
+
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -66,15 +67,8 @@ namespace ActsExamples {
 /// and is designed to be executed in a single threaded mode.
 class MaterialMapping : public IAlgorithm {
  public:
-  /// @class nested Config class
-  /// of the MaterialMapping algorithm
+  /// @class nested Config class of the MaterialMapping algorithm
   struct Config {
-    // Geometry context for the state creation
-    std::reference_wrapper<const Acts::GeometryContext> geoContext;
-
-    // MagneticField  context for the state creation
-    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
-
     /// Input collection
     std::string inputMaterialTracks = "material_tracks";
 
@@ -123,12 +117,12 @@ class MaterialMapping : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  //!< internal config object
-  Acts::SurfaceMaterialMapper::State
-      m_mappingState;  //!< Material mapping state
-  Acts::VolumeMaterialMapper::State
-      m_mappingStateVol;  //!< Material mapping state
-                          //
+  /// internal config object
+  Config m_cfg;
+  /// Material mapping state
+  Acts::SurfaceMaterialMapper::State m_mappingState;
+  /// Material mapping stateß
+  Acts::VolumeMaterialMapper::State m_mappingStateVol;
 
   ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
@@ -52,14 +53,14 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
       m_logger(std::move(slogger)) {}
 
 Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const GeometryContext& geoContext,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
 
   // The Surface material mapping state
-  State mState(gctx, mctx);
-  resolveMaterialSurfaces(mState, *world);
+  State mState;
+  resolveMaterialSurfaces(geoContext, mState, *world);
   collectMaterialVolumes(mState, *world);
 
   ACTS_DEBUG(mState.accumulatedMaterial.size()
@@ -71,14 +72,15 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
 }
 
 void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
-    State& mState, const TrackingVolume& tVolume) const {
+    const GeometryContext& geoContext, State& mState,
+    const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.");
 
   ACTS_VERBOSE("- boundary surfaces ...");
   // Check the boundary surfaces
   for (auto& bSurface : tVolume.boundarySurfaces()) {
-    checkAndInsert(mState, bSurface->surfaceRepresentation());
+    checkAndInsert(geoContext, mState, bSurface->surfaceRepresentation());
   }
 
   ACTS_VERBOSE("- confined layers ...");
@@ -88,13 +90,13 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
       // Take only layers that are not navigation layers
       if (cLayer->layerType() != navigation) {
         // Check the representing surface
-        checkAndInsert(mState, cLayer->surfaceRepresentation());
+        checkAndInsert(geoContext, mState, cLayer->surfaceRepresentation());
         // Get the approach surfaces if present
         if (cLayer->approachDescriptor() != nullptr) {
           for (auto& aSurface :
                cLayer->approachDescriptor()->containedSurfaces()) {
             if (aSurface != nullptr) {
-              checkAndInsert(mState, *aSurface);
+              checkAndInsert(geoContext, mState, *aSurface);
             }
           }
         }
@@ -103,7 +105,7 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
           // Sensitive surface loop
           for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
             if (sSurface != nullptr) {
-              checkAndInsert(mState, *sSurface);
+              checkAndInsert(geoContext, mState, *sSurface);
             }
           }
         }
@@ -114,13 +116,14 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
   if (tVolume.confinedVolumes()) {
     for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
       // Recursive call
-      resolveMaterialSurfaces(mState, *sVolume);
+      resolveMaterialSurfaces(geoContext, mState, *sVolume);
     }
   }
 }
 
-void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
-                                                 const Surface& surface) const {
+void Acts::SurfaceMaterialMapper::checkAndInsert(
+    const GeometryContext& geoContext, State& mState,
+    const Surface& surface) const {
   auto surfaceMaterial = surface.surfaceMaterial();
   // Check if the surface has a proxy
   if (surfaceMaterial != nullptr) {
@@ -143,7 +146,7 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
       // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, surface, mState.geoContext);
+      BinUtility buAdjusted = adjustBinUtility(*bu, surface, geoContext);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
       mState.accumulatedMaterial[geoID] =
@@ -203,7 +206,9 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 }
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, State& mState,
+    RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
@@ -221,12 +226,15 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     ACTS_VERBOSE(
         "Material interactions need to be associated with surfaces. Collecting "
         "all surfaces on the trajectory.");
-    mapInteraction(mState, mTrack);
+    mapInteraction(geoContext, magFieldContext, mState, mTrack);
     return;
   }
 }
+
 void Acts::SurfaceMaterialMapper::mapInteraction(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext, State& mState,
+    RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
@@ -248,8 +256,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 
   // Now collect the material layers by using the straight line propagator
   const auto& result =
-      m_propagator
-          .propagate(mState.geoContext, mState.magFieldContext, start, options)
+      m_propagator.propagate(geoContext, magFieldContext, start, options)
           .value();
   auto mcResult = result.get<MaterialSurfaceCollector::result_type>();
   auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
@@ -393,7 +400,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
       lastID = currentID;
       currentPos = (sfIter)->position;
       currentPathCorrection = sfIter->surface->pathCorrection(
-          mState.geoContext, currentPos, sfIter->direction);
+          geoContext, currentPos, sfIter->direction);
       currentAccMaterial = mState.accumulatedMaterial.find(currentID);
     }
     // Now assign the material for the accumulation process
