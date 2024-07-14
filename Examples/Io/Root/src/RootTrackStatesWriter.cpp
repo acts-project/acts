@@ -295,11 +295,11 @@ ProcessCode RootTrackStatesWriter::finalize() {
 
 RootTrackStatesWriter::StateType RootTrackStatesWriter::getStateType(
     ConstTrackStateProxy state) {
-  if (state.typeFlags().test(Acts::MeasurementFlag)) {
-    return StateType::eMeasurement;
-  }
   if (state.typeFlags().test(Acts::OutlierFlag)) {
     return StateType::eOutlier;
+  }
+  if (state.typeFlags().test(Acts::MeasurementFlag)) {
+    return StateType::eMeasurement;
   }
   if (state.typeFlags().test(Acts::HoleFlag)) {
     return StateType::eHole;
