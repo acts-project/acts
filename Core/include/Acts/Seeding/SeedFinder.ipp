@@ -36,25 +36,12 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <template <typename...> typename container_t, typename sp_range_t>
-void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid,
-    std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>>&& outIt,
-    const sp_range_t& bottomSPs, const std::size_t middleSPs,
-    const sp_range_t& topSPs,
-    const Acts::Range1D<float>& rMiddleSPRange) const {
-  // We pass outIt on purpose as an lvalue
-  createSeedsForGroup(options, state, grid, outIt, bottomSPs, middleSPs, topSPs,
-                      rMiddleSPRange);
-}
-
-template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 template <typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid, container_t& outIt, const sp_range_t& bottomSPsIdx,
-    const std::size_t middleSPsIdx, const sp_range_t& topSPsIdx,
+    const grid_t& grid, container_t& outputCollection,
+    const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
+    const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
@@ -213,7 +200,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     m_config.seedFilter->filterSeeds_1SpFixed(
         state.spacePointData, state.candidates_collector,
-        seedFilterState.numQualitySeeds, outIt);
+        seedFilterState.numQualitySeeds, outputCollection);
 
   }  // loop on mediums
 }

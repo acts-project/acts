@@ -92,7 +92,7 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param state State object that holds memory used
   /// @param grid The grid with space points
-  /// @param outIt Output container/iterator for the seeds in the group
+  /// @param outputCollection Output container for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
@@ -102,32 +102,11 @@ class SeedFinder {
   template <typename container_t, typename sp_range_t>
   void createSeedsForGroup(const Acts::SeedFinderOptions& options,
                            SeedingState& state, const grid_t& grid,
-                           container_t& outIt, const sp_range_t& bottomSPs,
+                           container_t& outputCollection,
+                           const sp_range_t& bottomSPs,
                            const std::size_t middleSPs,
                            const sp_range_t& topSPs,
                            const Acts::Range1D<float>& rMiddleSPRange) const;
-
-  /// Create all seeds from the space points in the three iterators.
-  /// Can be used to parallelize the seed creation
-  /// @param options frequently changing configuration (like beam position)
-  /// @param state State object that holds memory used
-  /// @param grid The grid with space points
-  /// @param outIt Output iterator for the seeds in the group
-  /// @param bottomSPs group of space points to be used as innermost SP in a seed.
-  /// @param middleSPs group of space points to be used as middle SP in a seed.
-  /// @param topSPs group of space points to be used as outermost SP in a seed.
-  /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
-  /// @note Ranges must return pointers.
-  /// @note Ranges must be separate objects for each parallel call.
-  template <template <typename...> typename container_t, typename sp_range_t>
-  void createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, SeedingState& state,
-      const grid_t& grid,
-      std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>>&&
-          outIt,
-      const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
 
  private:
   /// Iterates over dublets and tests the compatibility between them by applying

@@ -676,10 +676,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) ||
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    auto backIns = std::back_inserter(out_cont);
     m_config.seedFilter->filterSeeds_1SpFixed(
         spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
-        backIns);
+        out_cont);
   }
 }
 
