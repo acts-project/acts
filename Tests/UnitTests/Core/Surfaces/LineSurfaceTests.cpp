@@ -312,13 +312,16 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   BoundTrackParameters initialParams{surface, boundVector, std::nullopt,
                                      ParticleHypothesis::pion()};
 
-  Propagator<StraightLineStepper> propagator({});
+  using Propagator = Propagator<StraightLineStepper>;
+  using PropagatorOptions = Propagator::Options<>;
+
+  Propagator propagator({});
 
   CurvilinearTrackParameters displacedParameters{
       Vector4::Zero(), Vector3::Zero(), 1, std::nullopt,
       ParticleHypothesis::pion()};
   {
-    PropagatorOptions<> options(tgContext, {});
+    PropagatorOptions options(tgContext, {});
     options.direction = Acts::Direction::Backward;
     options.pathLimit = pathLimit;
 
@@ -339,9 +342,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
                                      ParticleHypothesis::pion()};
   {
-    PropagatorOptions<> options(tgContext, {});
+    PropagatorOptions options(tgContext, {});
     options.direction = Acts::Direction::Forward;
-    options.maxStepSize = 1_mm;
+    options.stepping.maxStepSize = 1_mm;
 
     auto result = propagator.propagate(displacedParameters, *surface, options);
     BOOST_CHECK(result.ok());
