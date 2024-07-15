@@ -673,8 +673,10 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
       // after smoothing
-      state.navigation =
-          navigator.makeState(&currentState.referenceSurface(), nullptr);
+      auto navigationOptions = state.navigation.options;
+      navigationOptions.startSurface = &currentState.referenceSurface();
+      navigationOptions.targetSurface = nullptr;
+      state.navigation = navigator.makeState(navigationOptions);
       navigator.initialize(state, stepper);
 
       // No Kalman filtering for the starting surface, but still need
