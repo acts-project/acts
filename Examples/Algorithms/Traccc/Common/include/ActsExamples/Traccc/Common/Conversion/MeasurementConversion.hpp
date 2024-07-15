@@ -14,9 +14,9 @@
 // Acts include(s)
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 
 // Acts Examples include(s)
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -62,8 +62,8 @@ inline ActsExamples::Measurement<Acts::BoundIndices, dim> measurement(
   auto cov = Eigen::DiagonalMatrix<Acts::ActsScalar, static_cast<int>(dim)>(
                  Acts::TracccPlugin::detail::toActsVector<dim>(m.variance))
                  .toDenseMatrix();
-  return ActsExamples::Measurement<Acts::BoundIndices, dim>(std::move(sl), indices,
-                                                    params, cov);
+  return ActsExamples::Measurement<Acts::BoundIndices, dim>(
+      std::move(sl), indices, params, cov);
 }
 
 /// @brief Creates an Acts bound variant measurement from a traccc measurement.
