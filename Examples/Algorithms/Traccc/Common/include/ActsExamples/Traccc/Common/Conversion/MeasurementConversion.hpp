@@ -43,7 +43,7 @@ namespace ActsExamples::Traccc::Common::Conversion {
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
-Acts::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
+ActsExamples::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
 
 /// @brief Creates an Acts measurement from a traccc measurement.
 /// @tparam the dimension of the Acts measurement (subspace size).
@@ -52,17 +52,17 @@ Acts::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
 /// @returns an Acts measurement with data copied from the traccc measurement
 /// and with its source link set to the one provided to the function.
 template <std::size_t dim>
-inline ActsExamples::Measurement<Acts::BoundIndices, dim> measurement(
+inline ActsExamples::Measurement<ActsExamples::BoundIndices, dim> measurement(
     const traccc::measurement& m, const Acts::SourceLink sl) {
   auto params = Acts::TracccPlugin::detail::toActsVector<dim>(m.local);
-  std::array<Acts::BoundIndices, dim> indices;
+  std::array<ActsExamples::BoundIndices, dim> indices;
   for (unsigned int i = 0; i < dim; i++) {
     indices[i] = boundIndex(traccc::bound_indices(m.subs.get_indices()[i]));
   }
   auto cov = Eigen::DiagonalMatrix<Acts::ActsScalar, static_cast<int>(dim)>(
                  Acts::TracccPlugin::detail::toActsVector<dim>(m.variance))
                  .toDenseMatrix();
-  return ActsExamples::Measurement<Acts::BoundIndices, dim>(
+  return ActsExamples::Measurement<Acts::ExamplesBoundIndices, dim>(
       std::move(sl), indices, params, cov);
 }
 
@@ -98,14 +98,14 @@ inline ActsExamples::BoundVariantMeasurement boundVariantMeasurement(
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 template <std::size_t dim>
 inline Acts::ActsVector<2> getLocal(
-    const ActsExamples::Measurement<Acts::BoundIndices, dim>& measurement) {
+    const ActsExamples::Measurement<ActsExamples::BoundIndices, dim>& measurement) {
   traccc::scalar loc0 = 0;
   traccc::scalar loc1 = 0;
-  if constexpr (dim > Acts::BoundIndices::eBoundLoc0) {
-    loc0 = measurement.parameters()(Acts::BoundIndices::eBoundLoc0);
+  if constexpr (dim > ActsExamples::BoundIndices::eBoundLoc0) {
+    loc0 = measurement.parameters()(ActsExamples::BoundIndices::eBoundLoc0);
   }
-  if constexpr (dim > Acts::BoundIndices::eBoundLoc1) {
-    loc1 = measurement.parameters()(Acts::BoundIndices::eBoundLoc1);
+  if constexpr (dim > ActsExamples::BoundIndices::eBoundLoc1) {
+    loc1 = measurement.parameters()(ActsExamples::BoundIndices::eBoundLoc1);
   }
   return Acts::ActsVector<2>(loc0, loc1);
 }
@@ -127,16 +127,16 @@ inline Acts::ActsVector<2> getLocal(
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 template <std::size_t dim>
 inline Acts::ActsVector<2> getVariance(
-    const ActsExamples::Measurement<Acts::BoundIndices, dim>& measurement) {
+    const ActsExamples::Measurement<ActsExamples::BoundIndices, dim>& measurement) {
   traccc::scalar var0 = 0;
   traccc::scalar var1 = 0;
-  if constexpr (dim >= Acts::BoundIndices::eBoundLoc0) {
-    var0 = measurement.covariance()(Acts::BoundIndices::eBoundLoc0,
-                                    Acts::BoundIndices::eBoundLoc0);
+  if constexpr (dim >= ActsExamples::BoundIndices::eBoundLoc0) {
+    var0 = measurement.covariance()(ActsExamples::BoundIndices::eBoundLoc0,
+                                    ActsExamples::BoundIndices::eBoundLoc0);
   }
-  if constexpr (dim > Acts::BoundIndices::eBoundLoc1) {
-    var1 = measurement.covariance()(Acts::BoundIndices::eBoundLoc1,
-                                    Acts::BoundIndices::eBoundLoc1);
+  if constexpr (dim > ActsExamples::BoundIndices::eBoundLoc1) {
+    var1 = measurement.covariance()(ActsExamples::BoundIndices::eBoundLoc1,
+                                    ActsExamples::BoundIndices::eBoundLoc1);
   }
   return Acts::ActsVector<2>(var0, var1);
 }
