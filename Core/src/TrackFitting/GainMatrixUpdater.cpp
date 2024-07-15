@@ -58,10 +58,11 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
     if (K.hasNaN()) {
+      // set to error abort execution
       error = (direction == Direction::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
-                  : KalmanFitterError::BackwardUpdateFailed;  // set to error
-      return false;                                           // abort execution
+                  : KalmanFitterError::BackwardUpdateFailed;
+      return false;
     }
 
     trackState.filtered =
@@ -71,13 +72,6 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 
-    // calculate filtered residual
-    //
-    // FIXME: Without separate residual construction and assignment, we
-    //        currently take a +0.7GB build memory consumption hit in the
-    //        EventDataView unit tests. Revisit this once Measurement
-    //        overhead problems (Acts issue #350) are sorted out.
-    //
     ParametersVector residual;
     residual = calibrated - H * trackState.filtered;
     ACTS_VERBOSE("Residual: " << residual.transpose());
@@ -88,7 +82,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     chi2 = (residual.transpose() * m.inverse() * residual).value();
 
     ACTS_VERBOSE("Chi2: " << chi2);
-    return true;  // continue execution
+    return true;
   });
 
   return {chi2, error};
