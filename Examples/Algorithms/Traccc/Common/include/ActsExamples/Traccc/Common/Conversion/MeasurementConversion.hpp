@@ -43,8 +43,7 @@ namespace ActsExamples::Traccc::Common::Conversion {
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
-Acts::BoundIndices boundIndex(
-    const traccc::bound_indices tracccBoundIndex);
+Acts::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
 
 /// @brief Creates an Acts measurement from a traccc measurement.
 /// @tparam the dimension of the Acts measurement (subspace size).
