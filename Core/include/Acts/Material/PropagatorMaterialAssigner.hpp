@@ -134,8 +134,10 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
     using ActionList =
         ActionList<MaterialSurfaceCollector, InteractionVolumeCollector>;
     using AbortList = AbortList<EndOfWorldReached>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<ActionList, AbortList>;
 
-    PropagatorOptions<ActionList, AbortList> options(gctx, mctx);
+    PropagatorOptions options(gctx, mctx);
 
     const auto& result = m_propagator.propagate(start, options).value();
 

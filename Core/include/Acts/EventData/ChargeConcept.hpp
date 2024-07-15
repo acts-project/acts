@@ -22,11 +22,11 @@
 namespace Acts {
 
 template <typename C>
-concept ChargeConcept = requires(C c, float f, double d) {
+concept ChargeConcept = requires(C c, C c2, float f, double d) {
   {C{f}};
 
-  { c == c } -> std::same_as<bool>;
-  { c != c } -> std::same_as<bool>;
+  { c == c2 } -> std::same_as<bool>;
+  { c != c2 } -> std::same_as<bool>;
 
   { c.absQ() } -> std::same_as<float>;
   { c.extractCharge(d) } -> std::same_as<float>;
