@@ -43,7 +43,8 @@ namespace ActsExamples::Traccc::Common::Conversion {
 /// @brief Converts a traccc bound index to an Acts bound index.
 /// @param tracccBoundIndex the traccc bound index.
 /// @returns an Acts bound index.
-ActsExamples::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
+ActsExamples::BoundIndices boundIndex(
+    const traccc::bound_indices tracccBoundIndex);
 
 /// @brief Creates an Acts measurement from a traccc measurement.
 /// @tparam the dimension of the Acts measurement (subspace size).
@@ -98,7 +99,8 @@ inline ActsExamples::BoundVariantMeasurement boundVariantMeasurement(
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 template <std::size_t dim>
 inline Acts::ActsVector<2> getLocal(
-    const ActsExamples::Measurement<ActsExamples::BoundIndices, dim>& measurement) {
+    const ActsExamples::Measurement<ActsExamples::BoundIndices, dim>&
+        measurement) {
   traccc::scalar loc0 = 0;
   traccc::scalar loc1 = 0;
   if constexpr (dim > ActsExamples::BoundIndices::eBoundLoc0) {
@@ -127,7 +129,8 @@ inline Acts::ActsVector<2> getLocal(
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 template <std::size_t dim>
 inline Acts::ActsVector<2> getVariance(
-    const ActsExamples::Measurement<ActsExamples::BoundIndices, dim>& measurement) {
+    const ActsExamples::Measurement<ActsExamples::BoundIndices, dim>&
+        measurement) {
   traccc::scalar var0 = 0;
   traccc::scalar var1 = 0;
   if constexpr (dim >= ActsExamples::BoundIndices::eBoundLoc0) {

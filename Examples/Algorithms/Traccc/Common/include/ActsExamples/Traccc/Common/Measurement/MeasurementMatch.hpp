@@ -48,9 +48,10 @@ inline Acts::GeometryIdentifier getGeometryID(
 /// The maximum distance between the local positions of the measurements must be
 /// less or equal to this value to be considered equal.
 /// @returns true or false depending on whether they are considered equal.
-inline bool measurementEqual(const ActsExamples::BoundVariantMeasurement& measurement1,
-                             const ActsExamples::BoundVariantMeasurement& measurement2,
-                             const double maxDistance = .001) {
+inline bool measurementEqual(
+    const ActsExamples::BoundVariantMeasurement& measurement1,
+    const ActsExamples::BoundVariantMeasurement& measurement2,
+    const double maxDistance = .001) {
   auto gidEq = getGeometryID(measurement1) == getGeometryID(measurement2);
 
   auto sqNorm =
@@ -89,8 +90,9 @@ const auto wrappedEq =
 /// measurements. However, equivalent measurements may be at different indices
 /// in the collections. This function determines which indexes correspond to
 /// matching measurements.
-inline auto matchMap(const std::vector<ActsExamples::BoundVariantMeasurement>& from,
-                     const std::vector<ActsExamples::BoundVariantMeasurement>& to) {
+inline auto matchMap(
+    const std::vector<ActsExamples::BoundVariantMeasurement>& from,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& to) {
   return Util::matchMap(from, to, wrappedHash, wrappedEq);
 }
 
