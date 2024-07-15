@@ -26,6 +26,11 @@ namespace ActsExamples::Digitization {
 /// Exact smearing of a single parameter.
 ///
 struct Exact {
+  double sigma;
+
+  /// Construct with a @param sigma standard deviation
+  Exact(double sigma_) : sigma{sigma_} {}
+
   /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
@@ -35,7 +40,7 @@ struct Exact {
   /// the value and a stddev of 0.0
   Acts::Result<std::pair<double, double>> operator()(
       double value, RandomEngine& /*rnd*/) const {
-    return std::pair{value, 0.0};
+    return std::pair{value, sigma};
   }
 };
 
@@ -58,7 +63,7 @@ struct Gauss {
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
     std::normal_distribution<> dist{0, sigma};
-    return std::pair{value + dist(rnd), dist.stddev()};
+    return std::pair{value + dist(rnd), sigma};
   }
 };
 
@@ -83,12 +88,13 @@ struct GaussTrunc {
   /// @return a Result that is ok() when inside range, other DigitizationError
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
-    std::normal_distribution<> dist{0., sigma};
-    double svalue = value + dist(rnd);
-    if (svalue >= range.first && svalue <= range.second) {
-      return std::pair{svalue, dist.stddev()};
+    std::normal_distribution<> dist{0., 1};
+    double x = dist(rnd);
+    if (x < range.first || x > range.second) {
+      return ActsFatras::DigitizationError::SmearingOutOfRange;
     }
-    return ActsFatras::DigitizationError::SmearingOutOfRange;
+    double svalue = value + sigma * x;
+    return std::pair{svalue, sigma};
   }
 };
 
@@ -118,11 +124,12 @@ struct GaussClipped {
   /// @return a Result that is ok() when inside range, other DigitizationError
   Acts::Result<std::pair<double, double>> operator()(double value,
                                                      RandomEngine& rnd) const {
-    std::normal_distribution<> dist{0., sigma};
+    std::normal_distribution<> dist{0., 1};
     for (std::size_t attempt = 0; attempt < maxAttemps; ++attempt) {
-      double svalue = value + dist(rnd);
-      if (svalue >= range.first && svalue <= range.second) {
-        return std::pair{svalue, dist.stddev()};
+      double x = dist(rnd);
+      if (x >= range.first && x <= range.second) {
+        double svalue = value + sigma * x;
+        return std::pair{svalue, sigma};
       }
     }
     return ActsFatras::DigitizationError::SmearingError;
