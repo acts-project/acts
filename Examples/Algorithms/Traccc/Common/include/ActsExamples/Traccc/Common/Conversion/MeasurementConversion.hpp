@@ -52,7 +52,7 @@ Acts::BoundIndices boundIndex(const traccc::bound_indices tracccBoundIndex);
 /// @returns an Acts measurement with data copied from the traccc measurement
 /// and with its source link set to the one provided to the function.
 template <std::size_t dim>
-inline Acts::Measurement<Acts::BoundIndices, dim> measurement(
+inline ActsExamples::Measurement<Acts::BoundIndices, dim> measurement(
     const traccc::measurement& m, const Acts::SourceLink sl) {
   auto params = Acts::TracccPlugin::detail::toActsVector<dim>(m.local);
   std::array<Acts::BoundIndices, dim> indices;
@@ -62,7 +62,7 @@ inline Acts::Measurement<Acts::BoundIndices, dim> measurement(
   auto cov = Eigen::DiagonalMatrix<Acts::ActsScalar, static_cast<int>(dim)>(
                  Acts::TracccPlugin::detail::toActsVector<dim>(m.variance))
                  .toDenseMatrix();
-  return Acts::Measurement<Acts::BoundIndices, dim>(std::move(sl), indices,
+  return ActsExamples::Measurement<Acts::BoundIndices, dim>(std::move(sl), indices,
                                                     params, cov);
 }
 
@@ -98,7 +98,7 @@ inline Acts::BoundVariantMeasurement boundVariantMeasurement(
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 template <std::size_t dim>
 inline Acts::ActsVector<2> getLocal(
-    const Acts::Measurement<Acts::BoundIndices, dim>& measurement) {
+    const ActsExamples::Measurement<Acts::BoundIndices, dim>& measurement) {
   traccc::scalar loc0 = 0;
   traccc::scalar loc1 = 0;
   if constexpr (dim > Acts::BoundIndices::eBoundLoc0) {
@@ -127,7 +127,7 @@ inline Acts::ActsVector<2> getLocal(
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 template <std::size_t dim>
 inline Acts::ActsVector<2> getVariance(
-    const Acts::Measurement<Acts::BoundIndices, dim>& measurement) {
+    const ActsExamples::Measurement<Acts::BoundIndices, dim>& measurement) {
   traccc::scalar var0 = 0;
   traccc::scalar var1 = 0;
   if constexpr (dim >= Acts::BoundIndices::eBoundLoc0) {
