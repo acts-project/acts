@@ -31,7 +31,7 @@ namespace ActsExamples::Traccc::Common::Measurement {
 /// @brief Get the geometry ID from the measurement through its source link.
 /// @note Sourcelink is assumed to be of type IndexSourceLink.
 inline Acts::GeometryIdentifier getGeometryID(
-    const Acts::BoundVariantMeasurement& measurement) {
+    const ActsExamples::BoundVariantMeasurement& measurement) {
   return std::visit(
       [](auto& m) {
         return m.sourceLink()
@@ -48,8 +48,8 @@ inline Acts::GeometryIdentifier getGeometryID(
 /// The maximum distance between the local positions of the measurements must be
 /// less or equal to this value to be considered equal.
 /// @returns true or false depending on whether they are considered equal.
-inline bool measurementEqual(const Acts::BoundVariantMeasurement& measurement1,
-                             const Acts::BoundVariantMeasurement& measurement2,
+inline bool measurementEqual(const ActsExamples::BoundVariantMeasurement& measurement1,
+                             const ActsExamples::BoundVariantMeasurement& measurement2,
                              const double maxDistance = .001) {
   auto gidEq = getGeometryID(measurement1) == getGeometryID(measurement2);
 
@@ -66,20 +66,20 @@ inline bool measurementEqual(const Acts::BoundVariantMeasurement& measurement1,
 /// map. Thus, this hash is not sensitive to small variations in position that
 /// could could from numerical errors.
 inline std::size_t measurementHash(
-    const Acts::BoundVariantMeasurement& measurement) {
+    const ActsExamples::BoundVariantMeasurement& measurement) {
   // The hash function can be optimized to reduce collisions.
   return static_cast<std::size_t>(getGeometryID(measurement).value());
 }
 
 namespace {
 const auto wrappedHash =
-    std::function<std::size_t(const Acts::BoundVariantMeasurement&)>(
+    std::function<std::size_t(const ActsExamples::BoundVariantMeasurement&)>(
         measurementHash);
 const auto wrappedEq =
-    std::function<bool(const Acts::BoundVariantMeasurement&,
-                       const Acts::BoundVariantMeasurement&)>(
-        [](const Acts::BoundVariantMeasurement& m1,
-           const Acts::BoundVariantMeasurement& m2) {
+    std::function<bool(const ActsExamples::BoundVariantMeasurement&,
+                       const ActsExamples::BoundVariantMeasurement&)>(
+        [](const ActsExamples::BoundVariantMeasurement& m1,
+           const ActsExamples::BoundVariantMeasurement& m2) {
           return measurementEqual(m1, m2);
         });
 }  // namespace
@@ -89,8 +89,8 @@ const auto wrappedEq =
 /// measurements. However, equivalent measurements may be at different indices
 /// in the collections. This function determines which indexes correspond to
 /// matching measurements.
-inline auto matchMap(const std::vector<Acts::BoundVariantMeasurement>& from,
-                     const std::vector<Acts::BoundVariantMeasurement>& to) {
+inline auto matchMap(const std::vector<ActsExamples::BoundVariantMeasurement>& from,
+                     const std::vector<ActsExamples::BoundVariantMeasurement>& to) {
   return Util::matchMap(from, to, wrappedHash, wrappedEq);
 }
 

@@ -76,7 +76,7 @@ inline ActsExamples::Measurement<Acts::BoundIndices, dim> measurement(
 /// @returns an Acts bound variant measurement with data copied from the traccc measurement
 /// and with its source link set to the one provided to the function.
 template <std::size_t max_dim = 4UL>
-inline Acts::BoundVariantMeasurement boundVariantMeasurement(
+inline ActsExamples::BoundVariantMeasurement boundVariantMeasurement(
     const traccc::measurement& m, const Acts::SourceLink sl) {
   if constexpr (max_dim == 0UL) {
     std::string errorMsg = "Invalid/mismatching measurement dimension: " +
@@ -116,7 +116,7 @@ inline Acts::ActsVector<2> getLocal(
 /// I.e., [local position (axis 0), local position (axis 1)].
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 inline Acts::ActsVector<2> getLocal(
-    const Acts::BoundVariantMeasurement& measurement) {
+    const ActsExamples::BoundVariantMeasurement& measurement) {
   return std::visit([](auto& m) { return getLocal(m); }, measurement);
 }
 
@@ -147,7 +147,7 @@ inline Acts::ActsVector<2> getVariance(
 /// I.e., [variance (axis 0), variance (axis 1)].
 /// @note if the dimension is less than 2 then the remaining values are set to 0.
 inline Acts::ActsVector<2> getVariance(
-    const Acts::BoundVariantMeasurement& measurement) {
+    const ActsExamples::BoundVariantMeasurement& measurement) {
   return std::visit([](auto& m) { return getVariance(m); }, measurement);
 }
 
@@ -160,7 +160,7 @@ template <typename detector_t, typename allocator_t>
 inline auto createActsMeasurements(
     const detector_t& detector,
     const std::vector<traccc::measurement, allocator_t>& measurements) {
-  std::vector<Acts::BoundVariantMeasurement> measurementContainer;
+  std::vector<ActsExamples::BoundVariantMeasurement> measurementContainer;
   for (const traccc::measurement& m : measurements) {
     Acts::GeometryIdentifier moduleGeoId(
         detector.surface(m.surface_link).source);

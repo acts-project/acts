@@ -70,7 +70,7 @@ class Converter {
   template <typename allocator_t>
   void logMeasurementCountComparison(
       const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-      const std::vector<Acts::BoundVariantMeasurement>& measurements) const {
+      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements) const {
     if (tracccMeasurements.size() != measurements.size()) {
       std::stringstream ss;
       ss << "Number of measurements do not match (traccc: "
@@ -95,10 +95,10 @@ class Converter {
   /// @param measurements the acts measurements.
   /// @return A map from traccc measurement to acts bound variant measurement.
   template <typename allocator_t>
-  std::map<traccc::measurement, Acts::BoundVariantMeasurement>
+  std::map<traccc::measurement, ActsExamples::BoundVariantMeasurement>
   measurementConversionMap(
       const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-      const std::vector<Acts::BoundVariantMeasurement>& measurements) const {
+      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements) const {
     logMeasurementCountComparison(tracccMeasurements, measurements);
 
     auto convertedMeasurements =
@@ -118,13 +118,13 @@ class Converter {
   void mapMeasurements(
       Acts::TrackContainer<track_container_t, trajectory_t, holder_t>&
           trackContainer,
-      const std::map<traccc::measurement, Acts::BoundVariantMeasurement> map)
+      const std::map<traccc::measurement, ActsExamples::BoundVariantMeasurement> map)
       const {
     for (auto track : trackContainer) {
       for (auto trackState : track.trackStates()) {
         const auto tracccMeasurement = trackState.getUncalibratedSourceLink()
                                            .template get<traccc::measurement>();
-        const Acts::BoundVariantMeasurement& measurement =
+        const ActsExamples::BoundVariantMeasurement& measurement =
             map.at(tracccMeasurement);
         std::visit(
             [&trackState](auto& m) {
@@ -186,7 +186,7 @@ class Converter {
   auto convertTracks(
       traccc_track_container_t& tracccTrackContainer,
       const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-      const std::vector<Acts::BoundVariantMeasurement>& measurements) const {
+      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements) const {
     auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
     auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
     TrackContainer tracks(trackContainer, trackStateContainer);

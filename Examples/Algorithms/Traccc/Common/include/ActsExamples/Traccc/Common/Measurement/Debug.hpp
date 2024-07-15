@@ -31,8 +31,8 @@ namespace ActsExamples::Traccc::Common::Measurement {
 /// collections.
 /// @return a string formatted as a table.
 std::string pairingStatistics(
-    const std::vector<Acts::BoundVariantMeasurement>& measurements1,
-    const std::vector<Acts::BoundVariantMeasurement>& measurements2,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements1,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements2,
     const std::map<std::size_t, std::size_t>& indexMap);
 
 }  // namespace ActsExamples::Traccc::Common::Measurement
