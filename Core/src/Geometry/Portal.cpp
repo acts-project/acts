@@ -120,29 +120,30 @@ struct NoOtherAxis : public std::false_type {};
 
 template <typename axis_t>
 struct OtherAxis : public std::true_type {
-  const axis_t& m_axis;
+  using AxisType = std::decay_t<axis_t>;
+  const AxisType& m_axis;
 
-  OtherAxis(const axis_t& axis) : m_axis(axis) {}
+  OtherAxis(const AxisType& axis) : m_axis(axis) {}
 };
 
 template <typename axis_t>
-OtherAxis(axis_t&&) -> OtherAxis<axis_t>;
+OtherAxis(axis_t&&) -> OtherAxis<std::decay_t<axis_t>>;
 
 template <typename axis_t>
-struct PrependAxis : public OtherAxis<axis_t> {
+struct PrependAxis : public OtherAxis<std::decay_t<axis_t>> {
   static constexpr bool prepend = true;
 };
 
 template <typename axis_t>
-PrependAxis(axis_t&&) -> PrependAxis<axis_t>;
+PrependAxis(axis_t&&) -> PrependAxis<std::decay_t<axis_t>>;
 
 template <typename axis_t>
-struct AppendAxis : public OtherAxis<axis_t> {
+struct AppendAxis : public OtherAxis<std::decay_t<axis_t>> {
   static constexpr bool prepend = false;
 };
 
 template <typename axis_t>
-AppendAxis(axis_t&&) -> AppendAxis<axis_t>;
+AppendAxis(axis_t&&) -> AppendAxis<std::decay_t<axis_t>>;
 
 template <BinningValue direction, class surface_t, typename... Args,
           typename other_axis_t>
@@ -179,9 +180,9 @@ std::unique_ptr<GridPortalLink> makeGrid(const surface_t& surface,
     } else {
       // Append other axis
       ACTS_VERBOSE("    ~> merged axis: " << merged);
-      ACTS_VERBOSE("    ~> other axis (append): " << otherAxis.axis);
+      ACTS_VERBOSE("    ~> other axis (append): " << otherAxis.m_axis);
       return GridPortalLink::make(surface, std::move(merged),
-                                  Axis{otherAxis.axis});
+                                  Axis{otherAxis.m_axis});
     }
   };
 
@@ -410,7 +411,6 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
       return rPhiAxisA.visit(
           [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
-            using axis_type = std::decay_t<decltype(axis)>;
             ACTS_VERBOSE("    ~> rPhi axis: " << axis);
 
             return colinearMerge<BinningValue::binZ>(*mergedSurface, zAxisA,
@@ -428,6 +428,13 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       }
       ACTS_VERBOSE("    ~> they are!");
 
+      // return zAxisA.visit(
+      //     [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
+      //       ACTS_VERBOSE("    ~> z axis: " << axis);
+      //       return colinearMerge<BinningValue::binRPhi>(
+      //           *mergedSurface, rPhiAxisA, rPhiAxisB, tolerance, logger,
+      //           AppendAxis{axis});
+      //     });
     } else {
       ACTS_ERROR("Invalid binning direction: " << a->direction());
       throw std::invalid_argument{"Invalid binning direction"};

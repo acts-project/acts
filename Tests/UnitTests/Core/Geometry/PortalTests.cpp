@@ -321,12 +321,12 @@ BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
 
   BOOST_REQUIRE_EQUAL(merged12->grid().axes().size(), 2);
 
-  const auto& axis1 = merged12->grid().axes().front();
-  const auto& axis2 = merged12->grid().axes().back();
+  const auto& axis1 = *merged12->grid().axes().front();
+  const auto& axis2 = *merged12->grid().axes().back();
   Axis axis1Expected{AxisBound, -35_degree * 30_mm, 35_degree * 30_mm, 3};
-  BOOST_CHECK_EQUAL(*axis1, axis1Expected);
+  BOOST_CHECK_EQUAL(axis1, axis1Expected);
   Axis axis2Expected{AxisBound, {-150_mm, 50_mm, 150_mm}};
-  BOOST_CHECK_EQUAL(*axis2, axis2Expected);
+  BOOST_CHECK_EQUAL(axis2, axis2Expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -673,8 +673,8 @@ BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
       100_mm, 20_degree, 0_degree);
 
   auto cylPhi2 = Surface::makeShared<CylinderSurface>(
-      Transform3::Identity() * AngleAxis3(105_degree, Vector3::UnitZ()), 30_mm,
-      100_mm, 40_degree, 0_degree);
+      Transform3::Identity() * AngleAxis3(85_degree, Vector3::UnitZ()), 30_mm,
+      100_mm, 20_degree, 0_degree);
 
   auto portalPhi1 = GridPortalLink::make(*cylPhi1, BinningValue::binZ,
                                          Axis{AxisBound, -100_mm, 100_mm, 5});
@@ -687,6 +687,14 @@ BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
   BOOST_REQUIRE_NE(merged12Ptr, nullptr);
   auto merged12 = dynamic_cast<const GridPortalLink*>(merged12Ptr.get());
   BOOST_REQUIRE_NE(merged12, nullptr);
+
+  const auto& axis1 = *merged12->grid().axes().front();
+  const auto& axis2 = *merged12->grid().axes().back();
+  // Phi sectors were same size, should give equidistant binning
+  Axis axis1Expected{AxisBound, -40_degree * 30_mm, 40_degree * 30_mm, 2};
+  BOOST_CHECK_EQUAL(axis1, axis1Expected);
+  Axis axis2Expected{AxisBound, -100_mm, 100_mm, 5};
+  BOOST_CHECK_EQUAL(axis2, axis2Expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -694,49 +702,89 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Merging2dCylinder)
 
-BOOST_AUTO_TEST_CASE(CompatibleMerging) {
-  auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(), 30_mm,
-                                                  100_mm, 45_degree);
+BOOST_AUTO_TEST_CASE(ZDirection) {
+  BOOST_TEST_CONTEXT("Phi sector") {
+    auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                     30_mm, 100_mm, 45_degree);
 
-  // z good, rphi good
-  auto grid1 = GridPortalLink::make(
-      *cyl, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
-      Axis{AxisBound, -100_mm, 100_mm, 5});
+    // z good, rphi good
+    auto grid1 = GridPortalLink::make(
+        *cyl1, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+        Axis{AxisBound, -100_mm, 100_mm, 5});
 
-  auto trf2 = Transform3{Translation3{Vector3::UnitZ() * 150_mm}};
-  auto cyl2 =
-      Surface::makeShared<CylinderSurface>(trf2, 30_mm, 50_mm, 45_degree);
+    auto trf2 = Transform3{Translation3{Vector3::UnitZ() * 150_mm}};
+    auto cyl2 =
+        Surface::makeShared<CylinderSurface>(trf2, 30_mm, 50_mm, 45_degree);
 
-  // Second grid portal with compatible phi binning
-  auto grid2 = GridPortalLink::make(
-      *cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
-      Axis{AxisBound, -50_mm, 50_mm, 5});
+    // Second grid portal with compatible phi binning
+    auto grid2 = GridPortalLink::make(
+        *cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+        Axis{AxisBound, -50_mm, 50_mm, 5});
 
-  // We're merging in z direction, so the phi binnings need to be the same
+    // We're merging in z direction, so the phi binnings need to be the same
 
-  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binZ, *logger);
-  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
-  BOOST_REQUIRE_NE(mergedPtr, nullptr);
+    auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binZ, *logger);
+    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+    BOOST_REQUIRE_NE(mergedPtr, nullptr);
 
-  std::cout << merged->grid() << std::endl;
+    const auto& axis1 = *merged->grid().axes().front();
+    const auto& axis2 = *merged->grid().axes().back();
 
-  const auto& axis1 = *merged->grid().axes().front();
-  const auto& axis2 = *merged->grid().axes().back();
+    BOOST_CHECK_EQUAL(axis1.getMin(), -45_degree * 30_mm);
+    BOOST_CHECK_EQUAL(axis1.getMax(), 45_degree * 30_mm);
+    BOOST_CHECK_EQUAL(axis1.getNBins(), 5);
+    BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
 
-  BOOST_CHECK_EQUAL(axis1.getMin(), -45_degree * 30_mm);
-  BOOST_CHECK_EQUAL(axis1.getMax(), 45_degree * 30_mm);
-  BOOST_CHECK_EQUAL(axis1.getNBins(), 5);
-  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
-  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+    BOOST_CHECK_EQUAL(axis2.getMin(), -150_mm);
+    BOOST_CHECK_EQUAL(axis2.getMax(), 150_mm);
+    BOOST_CHECK_EQUAL(axis2.getNBins(), 10);
+    BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Variable);
+    BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
-  BOOST_CHECK_EQUAL(axis2.getMin(), -150_mm);
-  BOOST_CHECK_EQUAL(axis2.getMax(), 150_mm);
-  BOOST_CHECK_EQUAL(axis2.getNBins(), 10);
-  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Variable);
-  BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+    auto grid3 = GridPortalLink::make(
+        *cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 3},
+        Axis{AxisBound, -50_mm, 50_mm, 5});
 
-  // @TODO: Check wraparound for full circle in phi
+    // @TODO: Change after binary merging is in
+    BOOST_CHECK_THROW(grid1->merge(gctx, *grid3, BinningValue::binZ, *logger),
+                      std::logic_error);
+  }
+
+  BOOST_TEST_CONTEXT("Check wraparound for full circle in phi") {
+    auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                     30_mm, 100_mm, 180_degree);
+
+    // z good, rphi good
+    auto grid1 = GridPortalLink::make(
+        *cyl1, Axis{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 5},
+        Axis{AxisBound, -100_mm, 100_mm, 5});
+
+    auto trf2 = Transform3{Translation3{Vector3::UnitZ() * 150_mm}};
+    auto cyl2 =
+        Surface::makeShared<CylinderSurface>(trf2, 30_mm, 50_mm, 180_degree);
+
+    // Second grid portal with compatible phi binning
+    auto grid2 = GridPortalLink::make(
+        *cyl2, Axis{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 5},
+        Axis{AxisBound, -50_mm, 50_mm, 5});
+
+    auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binZ, *logger);
+    const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+    BOOST_REQUIRE_NE(mergedPtr, nullptr);
+
+    const auto& axis1 = *merged->grid().axes().front();
+    const auto& axis2 = *merged->grid().axes().back();
+
+    Axis axis1Expected{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 5};
+    BOOST_CHECK_EQUAL(axis1, axis1Expected);
+    Axis axis2Expected{AxisBound,
+                       {-150, -110, -70, -30, 10, 50, 70, 90, 110, 130, 150}};
+    BOOST_CHECK_EQUAL(axis2, axis2Expected);
+  }
 }
+
+BOOST_AUTO_TEST_CASE(RPhiDirection) {}
 
 // std::unique_ptr<PortalLinkBase> grid1d1 =
 //     GridPortalLink::make(Axis{AxisBound{}, 0, 5, 5});
