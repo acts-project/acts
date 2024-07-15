@@ -12,7 +12,7 @@ concurrency:
 jobs:
   iwyu_ubuntu_2204:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204_clang:v41
+    container: ghcr.io/acts-project/ubuntu2204_clang:53
     steps:
       - name: Install git lfs and llvm dev
         run: apt-get update && apt-get install -y git-lfs llvm-dev libclang-dev clang
