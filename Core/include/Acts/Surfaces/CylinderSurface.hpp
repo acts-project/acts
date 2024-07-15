@@ -20,7 +20,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
@@ -304,6 +303,7 @@ class CylinderSurface : public RegularSurface {
       const Vector3& direction) const;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, CylinderSurface);
+static_assert(RegularSurfaceConcept<CylinderSurface>,
+              "CylinderSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts
