@@ -416,12 +416,13 @@ class AtlasStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
+      std::uint8_t index, Direction navDir,
+      const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, index, navDir, boundaryTolerance,
+        geoContext, *this, state, surface, index, navDir, boundaryTolerance,
         surfaceTolerance, logger);
   }
 

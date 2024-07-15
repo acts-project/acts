@@ -560,8 +560,9 @@ class Navigator {
     // If we are on the surface pointed at by the index, we can make
     // it the current one to pass it to the other actors
     auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, *surface, intersection.index(), state.options.direction,
-        BoundaryTolerance::None(), state.options.surfaceTolerance, logger());
+        state.geoContext, state.stepping, *surface, intersection.index(),
+        state.options.direction, BoundaryTolerance::None(),
+        state.options.surfaceTolerance, logger());
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -651,7 +652,7 @@ class Navigator {
         }
       }
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, *surface, intersection.index(),
+          state.geoContext, state.stepping, *surface, intersection.index(),
           state.options.direction, boundaryTolerance,
           state.options.surfaceTolerance, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
@@ -746,7 +747,7 @@ class Navigator {
       }
       // Try to step towards it
       auto layerStatus = stepper.updateSurfaceStatus(
-          state.stepping, *layerSurface, intersection.index(),
+          state.geoContext, state.stepping, *layerSurface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
       if (layerStatus == Intersection3D::Status::reachable) {
@@ -899,9 +900,9 @@ class Navigator {
       const auto* boundarySurface = intersection.object();
       // Step towards the boundary surfrace
       auto boundaryStatus = stepper.updateSurfaceStatus(
-          state.stepping, *boundarySurface, intersection.index(),
-          state.options.direction, BoundaryTolerance::None(),
-          state.options.surfaceTolerance, logger());
+          state.geoContext, state.stepping, *boundarySurface,
+          intersection.index(), state.options.direction,
+          BoundaryTolerance::None(), state.options.surfaceTolerance, logger());
       if (boundaryStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
@@ -1202,7 +1203,7 @@ class Navigator {
       }
       // TODO we do not know the intersection index - passing 0
       auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *state.navigation.targetSurface, 0,
+          state.geoContext, state.stepping, *state.navigation.targetSurface, 0,
           state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
       // the only advance could have been to the target

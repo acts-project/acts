@@ -480,8 +480,9 @@ class Gx2Fitter {
           {
             trackStateProxy.setReferenceSurface(surface->getSharedPtr());
             // Bind the transported state to the current surface
-            auto res = stepper.boundState(state.stepping, *surface, false,
-                                          freeToBoundCorrection);
+            auto res =
+                stepper.boundState(state.geoContext, state.stepping, *surface,
+                                   false, freeToBoundCorrection);
             if (!res.ok()) {
               result.result = res.error();
               return;
@@ -553,8 +554,9 @@ class Gx2Fitter {
               {
                 trackStateProxy.setReferenceSurface(surface->getSharedPtr());
                 // Bind the transported state to the current surface
-                auto res = stepper.boundState(state.stepping, *surface, false,
-                                              freeToBoundCorrection);
+                auto res =
+                    stepper.boundState(state.geoContext, state.stepping,
+                                       *surface, false, freeToBoundCorrection);
                 if (!res.ok()) {
                   result.result = res.error();
                   return;

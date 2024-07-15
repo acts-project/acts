@@ -609,7 +609,8 @@ class CombinatorialKalmanFilter {
           ACTS_VERBOSE("Target surface reached");
 
           // Bind the parameter to the target surface
-          auto res = stepper.boundState(state.stepping, *targetReached.surface);
+          auto res = stepper.boundState(state.geoContext, state.stepping,
+                                        *targetReached.surface);
           if (!res.ok()) {
             ACTS_ERROR("Error while acquiring bound state for target surface: "
                        << res.error() << " " << res.error().message());
@@ -665,10 +666,10 @@ class CombinatorialKalmanFilter {
       auto currentState = result.activeBranches.back().outermostTrackState();
 
       // Reset the stepping state
-      stepper.resetState(state.stepping, currentState.filtered(),
-                         currentState.filteredCovariance(),
-                         currentState.referenceSurface(),
-                         state.options.stepping.maxStepSize);
+      stepper.resetState(
+          state.geoContext, state.stepping, currentState.filtered(),
+          currentState.filteredCovariance(), currentState.referenceSurface(),
+          state.options.stepping.maxStepSize);
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
@@ -714,15 +715,16 @@ class CombinatorialKalmanFilter {
                                             << " detected.");
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface);
+        stepper.transportCovarianceToBound(state.geoContext, state.stepping,
+                                           *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
         // Bind the transported state to the current surface
-        auto boundStateRes =
-            stepper.boundState(state.stepping, *surface, false);
+        auto boundStateRes = stepper.boundState(
+            state.geoContext, state.stepping, *surface, false);
         if (!boundStateRes.ok()) {
           return boundStateRes.error();
         }
@@ -769,7 +771,7 @@ class CombinatorialKalmanFilter {
           // state on this surface
           auto ts = result.activeBranches.back().outermostTrackState();
           stepper.update(
-              state.stepping,
+              state.geoContext, state.stepping,
               MultiTrajectoryHelpers::freeFiltered(state.geoContext, ts),
               ts.filtered(), ts.filteredCovariance(), *surface);
           ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
@@ -816,8 +818,8 @@ class CombinatorialKalmanFilter {
                              MaterialUpdateStage::PreUpdate);
 
           // Transport & bind the state to the current surface
-          auto boundStateRes =
-              stepper.boundState(state.stepping, *surface, false);
+          auto boundStateRes = stepper.boundState(
+              state.geoContext, state.stepping, *surface, false);
           if (!boundStateRes.ok()) {
             return boundStateRes.error();
           }

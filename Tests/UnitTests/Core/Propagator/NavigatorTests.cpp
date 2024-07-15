@@ -98,12 +98,11 @@ struct PropagatorState {
 
       // Previous step size for overstep estimation (ignored here)
       double previousStepSize = 0.;
-
-      GeometryContext geoContext = GeometryContext();
     };
 
     /// State resetter
-    void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
+    void resetState(const GeometryContext& /*gctx*/, State& /*state*/,
+                    const BoundVector& /*boundParams*/,
                     const BoundSquareMatrix& /*cov*/,
                     const Surface& /*surface*/,
                     const double /*stepSize*/) const {}
@@ -139,11 +138,12 @@ struct PropagatorState {
     }
 
     Intersection3D::Status updateSurfaceStatus(
-        State& state, const Surface& surface, std::uint8_t index,
-        Direction navDir, const BoundaryTolerance& boundaryTolerance,
-        ActsScalar surfaceTolerance, const Logger& logger) const {
+        const GeometryContext& gctx, State& state, const Surface& surface,
+        std::uint8_t index, Direction navDir,
+        const BoundaryTolerance& boundaryTolerance, ActsScalar surfaceTolerance,
+        const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, index, navDir, boundaryTolerance,
+          gctx, *this, state, surface, index, navDir, boundaryTolerance,
           surfaceTolerance, logger);
     }
 
@@ -174,11 +174,12 @@ struct PropagatorState {
     }
 
     Result<BoundState> boundState(
-        State& state, const Surface& surface, bool /*transportCov*/,
+        const GeometryContext& gctx, State& state, const Surface& surface,
+        bool /*transportCov*/,
         const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
       auto bound = BoundTrackParameters::create(
-          surface.getSharedPtr(), tgContext, state.pos4, state.dir,
+          surface.getSharedPtr(), gctx, state.pos4, state.dir,
           state.q / state.p, std::nullopt, state.particleHypothesis);
       if (!bound.ok()) {
         return bound.error();
@@ -188,8 +189,8 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state, bool /*transportCov*/
-    ) const {
+    CurvilinearState curvilinearState(State& state,
+                                      bool /*transportCov*/) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir,
                                             state.q / state.p, std::nullopt,
                                             state.particleHypothesis);
@@ -199,7 +200,8 @@ struct PropagatorState {
       return curvState;
     }
 
-    void update(State& /*state*/, const FreeVector& /*freePars*/,
+    void update(const GeometryContext& /*gctx*/, State& /*state*/,
+                const FreeVector& /*freePars*/,
                 const BoundVector& /*boundPars*/, const Covariance& /*cov*/,
                 const Surface& /*surface*/) const {}
 
@@ -210,7 +212,8 @@ struct PropagatorState {
     void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
     void transportCovarianceToBound(
-        State& /*state*/, const Surface& /*surface*/,
+        const GeometryContext& /*gctx*/, State& /*state*/,
+        const Surface& /*surface*/,
         const FreeToBoundCorrection& /*freeToBoundCorrection*/) const {}
 
     Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {

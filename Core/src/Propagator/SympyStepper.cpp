@@ -24,19 +24,20 @@ SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
 
 SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
-SympyStepper::State SympyStepper::makeState(
-    std::reference_wrapper<const GeometryContext> gctx,
-    std::reference_wrapper<const MagneticFieldContext> mctx,
-    const BoundTrackParameters& par, double ssize) const {
+SympyStepper::State SympyStepper::makeState(const GeometryContext& gctx,
+                                            const MagneticFieldContext& mctx,
+                                            const BoundTrackParameters& par,
+                                            double ssize) const {
   return State{gctx, m_bField->makeCache(mctx), par, ssize};
 }
 
-void SympyStepper::resetState(State& state, const BoundVector& boundParams,
+void SympyStepper::resetState(const GeometryContext& geoContext, State& state,
+                              const BoundVector& boundParams,
                               const BoundSquareMatrix& cov,
                               const Surface& surface,
                               const double stepSize) const {
   FreeVector freeParams =
-      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
+      transformBoundToFreeParameters(surface, geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
@@ -46,7 +47,7 @@ void SympyStepper::resetState(State& state, const BoundVector& boundParams,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
@@ -55,10 +56,11 @@ void SympyStepper::resetState(State& state, const BoundVector& boundParams,
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
 SympyStepper::boundState(
-    State& state, const Surface& surface, bool transportCov,
+    const GeometryContext& geoContext, State& state, const Surface& surface,
+    bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::sympy::boundState(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated,
       freeToBoundCorrection);
@@ -72,14 +74,15 @@ SympyStepper::curvilinearState(State& state, bool transportCov) const {
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
-void SympyStepper::update(State& state, const FreeVector& freeParams,
+void SympyStepper::update(const GeometryContext& geoContext, State& state,
+                          const FreeVector& freeParams,
                           const BoundVector& /*boundParams*/,
                           const Covariance& covariance,
                           const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
 }
 
@@ -99,10 +102,10 @@ void SympyStepper::transportCovarianceToCurvilinear(State& state) const {
 }
 
 void SympyStepper::transportCovarianceToBound(
-    State& state, const Surface& surface,
+    const GeometryContext& geoContext, State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::sympy::transportCovarianceToBound(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, freeToBoundCorrection);
 }
 

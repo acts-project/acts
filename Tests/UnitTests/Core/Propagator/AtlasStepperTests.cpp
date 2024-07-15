@@ -244,7 +244,8 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   // example surface at the current state position
   auto plane = Surface::makeShared<PlaneSurface>(pos, unitDir);
 
-  auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
+  auto&& [pars, jac, pathLength] =
+      stepper.boundState(geoCtx, state, *plane).value();
   // check parameters
   CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);

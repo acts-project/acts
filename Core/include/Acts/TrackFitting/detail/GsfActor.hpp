@@ -244,7 +244,7 @@ struct GsfActor {
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       cmp.singleStepper(stepper).transportCovarianceToBound(
-          singleState.stepping, surface);
+          state.geoContext, singleState.stepping, surface);
     }
 
     if (haveMaterial) {
@@ -371,12 +371,12 @@ struct GsfActor {
 
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
-        old_bound.position(state.stepping.geoContext), state.options.direction,
+        old_bound.position(state.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
     const auto pathCorrection = surface.pathCorrection(
-        state.stepping.geoContext,
-        old_bound.position(state.stepping.geoContext), old_bound.direction());
+        state.geoContext, old_bound.position(state.geoContext),
+        old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     const double pathXOverX0 = slab.thicknessInX0();
@@ -520,7 +520,8 @@ struct GsfActor {
       BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
                                  stepper.particleHypothesis(state.stepping));
 
-      auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
+      auto res = stepper.addComponent(state.geoContext, state.stepping,
+                                      std::move(bound), weight);
 
       if (!res.ok()) {
         ACTS_ERROR("Error adding component to MultiStepper");

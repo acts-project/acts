@@ -13,8 +13,8 @@ namespace Acts {
 
 template <typename E, typename R, typename A>
 auto MultiEigenStepperLoop<E, R, A>::boundState(
-    State& state, const Surface& surface, bool transportCov,
-    const FreeToBoundCorrection& freeToBoundCorrection) const
+    const GeometryContext& geoContext, State& state, const Surface& surface,
+    bool transportCov, const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
   assert(!state.components.empty());
 
@@ -33,15 +33,14 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     // onSurface.
     cmpState.pars.template segment<3>(eFreePos0) =
         surface
-            .intersect(state.geoContext,
-                       cmpState.pars.template segment<3>(eFreePos0),
+            .intersect(geoContext, cmpState.pars.template segment<3>(eFreePos0),
                        cmpState.pars.template segment<3>(eFreeDir0),
                        BoundaryTolerance::Infinite())
             .closest()
             .position();
 
-    auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
-                                        freeToBoundCorrection);
+    auto bs = SingleStepper::boundState(geoContext, cmpState, surface,
+                                        transportCov, freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
@@ -78,9 +77,8 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     const auto [cp, jac, pl] = SingleStepper::curvilinearState(
         state.components[i].state, transportCov);
 
-    cmps.emplace_back(state.components[i].weight,
-                      cp.fourPosition(state.geoContext), cp.direction(),
-                      (cp.charge() / cp.absoluteMomentum()),
+    cmps.emplace_back(state.components[i].weight, cp.fourPosition(),
+                      cp.direction(), (cp.charge() / cp.absoluteMomentum()),
                       cp.covariance().value_or(BoundSquareMatrix::Zero()));
     accumulatedPathLength += state.components[i].weight * pl;
   }

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,10 +15,11 @@ namespace Acts {
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
 StraightLineStepper::boundState(
-    State& state, const Surface& surface, bool transportCov,
+    const GeometryContext& geoContext, State& state, const Surface& surface,
+    bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::boundState(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated,
       freeToBoundCorrection);
@@ -32,14 +33,15 @@ StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
-void StraightLineStepper::update(State& state, const FreeVector& freeParams,
+void StraightLineStepper::update(const GeometryContext& geoContext,
+                                 State& state, const FreeVector& freeParams,
                                  const BoundVector& /*boundParams*/,
                                  const Covariance& covariance,
                                  const Surface& surface) const {
   state.pars = freeParams;
   state.cov = covariance;
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
 }
 
@@ -59,20 +61,21 @@ void StraightLineStepper::transportCovarianceToCurvilinear(State& state) const {
 }
 
 void StraightLineStepper::transportCovarianceToBound(
-    State& state, const Surface& surface,
+    const GeometryContext& geoContext, State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, freeToBoundCorrection);
 }
 
-void StraightLineStepper::resetState(State& state,
+void StraightLineStepper::resetState(const GeometryContext& geoContext,
+                                     State& state,
                                      const BoundVector& boundParams,
                                      const BoundSquareMatrix& cov,
                                      const Surface& surface,
                                      const double stepSize) const {
   FreeVector freeParams =
-      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
+      transformBoundToFreeParameters(surface, geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
@@ -82,7 +85,7 @@ void StraightLineStepper::resetState(State& state,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();

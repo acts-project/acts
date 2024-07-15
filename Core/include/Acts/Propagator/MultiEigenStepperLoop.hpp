@@ -18,6 +18,7 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -285,12 +286,6 @@ class MultiEigenStepperLoop
     double pathAccumulated = 0.;
     std::size_t steps = 0;
 
-    /// geoContext
-    std::reference_wrapper<const GeometryContext> geoContext;
-
-    /// MagneticFieldContext
-    std::reference_wrapper<const MagneticFieldContext> magContext;
-
     /// Step-limit counter which limits the number of steps when one component
     /// reached a surface
     std::optional<std::size_t> stepCounterAfterFirstComponentOnSurface;
@@ -312,9 +307,7 @@ class MultiEigenStepperLoop
                    const std::shared_ptr<const MagneticFieldProvider>& bfield,
                    const MultiComponentBoundTrackParameters& multipars,
                    double ssize = std::numeric_limits<double>::max())
-        : particleHypothesis(multipars.particleHypothesis()),
-          geoContext(gctx),
-          magContext(mctx) {
+        : particleHypothesis(multipars.particleHypothesis()) {
       if (multipars.components().empty()) {
         throw std::invalid_argument(
             "Cannot construct MultiEigenStepperLoop::State with empty "
@@ -351,8 +344,7 @@ class MultiEigenStepperLoop
         m_logger(std::move(logger)) {}
 
   /// Construct and initialize a state
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
+  State makeState(const GeometryContext& gctx, const MagneticFieldContext& mctx,
                   const MultiComponentBoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max()) const {
     return State(gctx, mctx, SingleStepper::m_bField, par, ssize);
@@ -366,12 +358,13 @@ class MultiEigenStepperLoop
   /// @param [in] surface The reference surface of the bound parameters
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
+      const GeometryContext& geoContext, State& state,
+      const BoundVector& boundParams, const BoundSquareMatrix& cov,
+      const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     for (auto& component : state.components) {
-      SingleStepper::resetState(component.state, boundParams, cov, surface,
-                                stepSize);
+      SingleStepper::resetState(geoContext, component.state, boundParams, cov,
+                                surface, stepSize);
     }
   }
 
@@ -512,13 +505,13 @@ class MultiEigenStepperLoop
   /// valid in the end.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
-  Result<ComponentProxy> addComponent(State& state,
-                                      const BoundTrackParameters& pars,
-                                      double weight) const {
+  Result<ComponentProxy> addComponent(
+      const GeometryContext& geoContext,
+      const MagneticFieldContext& magFieldContext, State& state,
+      const BoundTrackParameters& pars, double weight) const {
     state.components.push_back(
-        {SingleState(state.geoContext,
-                     SingleStepper::m_bField->makeCache(state.magContext),
-                     pars),
+        {SingleState(geoContext,
+                     SingleStepper::m_bField->makeCache(magFieldContext), pars),
          weight, Intersection3D::Status::onSurface});
 
     return ComponentProxy{state.components.back(), state};
@@ -599,8 +592,9 @@ class MultiEigenStepperLoop
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
+      std::uint8_t index, Direction navDir,
+      const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
@@ -609,8 +603,8 @@ class MultiEigenStepperLoop
 
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          *this, component.state, surface, index, navDir, boundaryTolerance,
-          surfaceTolerance, logger);
+          geoContext, *this, component.state, surface, index, navDir,
+          boundaryTolerance, surfaceTolerance, logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
 
@@ -624,8 +618,7 @@ class MultiEigenStepperLoop
 
     ACTS_VERBOSE("Component status wrt "
                  << surface.geometryId() << " at {"
-                 << surface.center(state.geoContext).transpose() << "}:\t"
-                 << [&]() {
+                 << surface.center(geoContext).transpose() << "}:\t" << [&]() {
                       std::stringstream ss;
                       for (auto& component : state.components) {
                         ss << component.status << "\t";
@@ -765,7 +758,8 @@ class MultiEigenStepperLoop
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
+      bool transportCov = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
 
@@ -824,12 +818,12 @@ class MultiEigenStepperLoop
   /// to
   /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(
-      State& state, const Surface& surface,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
     for (auto& component : state.components) {
-      SingleStepper::transportCovarianceToBound(component.state, surface,
-                                                freeToBoundCorrection);
+      SingleStepper::transportCovarianceToBound(geoContext, component.state,
+                                                surface, freeToBoundCorrection);
     }
   }
 

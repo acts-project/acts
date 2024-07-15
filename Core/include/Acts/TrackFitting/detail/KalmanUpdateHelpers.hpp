@@ -56,8 +56,8 @@ auto kalmanHandleMeasurement(
   {
     trackStateProxy.setReferenceSurface(surface.getSharedPtr());
     // Bind the transported state to the current surface
-    auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                  freeToBoundCorrection);
+    auto res = stepper.boundState(state.geoContext, state.stepping, surface,
+                                  doCovTransport, freeToBoundCorrection);
     if (!res.ok()) {
       ACTS_ERROR("Propagate to surface " << surface.geometryId()
                                          << " failed: " << res.error());
@@ -151,8 +151,8 @@ auto kalmanHandleNoMeasurement(
   {
     trackStateProxy.setReferenceSurface(surface.getSharedPtr());
     // Bind the transported state to the current surface
-    auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                  freeToBoundCorrection);
+    auto res = stepper.boundState(state.geoContext, state.stepping, surface,
+                                  doCovTransport, freeToBoundCorrection);
     if (!res.ok()) {
       return res.error();
     }

@@ -367,7 +367,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
         std::in_place_type<typename field_t::Cache>,
         state.fieldCache.template as<typename field_t::Cache>());
 
-    copy.geoContext = state.geoContext;
     copy.extension = state.extension;
     copy.auctioneer = state.auctioneer;
     copy.stepData = state.stepData;
@@ -378,7 +377,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Reset all possible parameters
   EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
   BOOST_CHECK(cp2.covariance().has_value());
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
+  es.resetState(tgContext, esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), stepSize2);
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -401,7 +400,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset all possible parameters except the step size
   esStateCopy = copyState(*bField, ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
+  es.resetState(tgContext, esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -425,7 +424,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset the least amount of parameters
   esStateCopy = copyState(*bField, ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
+  es.resetState(tgContext, esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -459,7 +458,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the intersection in the context of a surface
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
-  es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
+  es.updateSurfaceStatus(tgContext, esState, *targetSurface, 0, navDir,
                          BoundaryTolerance::Infinite());
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
@@ -467,7 +466,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the step size modification in the context of a surface
   es.updateStepSize(esState,
                     targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
+                        ->intersect(tgContext, es.position(esState),
                                     navDir * es.direction(esState),
                                     BoundaryTolerance::Infinite())
                         .closest(),
@@ -476,7 +475,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   esState.stepSize.setUser(navDir * stepSize);
   es.updateStepSize(esState,
                     targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
+                        ->intersect(tgContext, es.position(esState),
                                     navDir * es.direction(esState),
                                     BoundaryTolerance::Infinite())
                         .closest(),
@@ -484,7 +483,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
-  auto boundState = es.boundState(esState, *plane).value();
+  auto boundState = es.boundState(tgContext, esState, *plane).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);
@@ -507,8 +506,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams = transformBoundToFreeParameters(bp.referenceSurface(), tgContext,
                                               bp.parameters());
 
-  es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
-            *plane);
+  es.update(tgContext, esState, freeParams, bp.parameters(),
+            2 * (*bp.covariance()), *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
   CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);

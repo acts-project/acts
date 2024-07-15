@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,20 +20,21 @@ Acts::EigenStepper<E, A>::EigenStepper(
 
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::makeState(
-    std::reference_wrapper<const GeometryContext> gctx,
-    std::reference_wrapper<const MagneticFieldContext> mctx,
+    const GeometryContext& geoContext,
+    const MagneticFieldContext& magFieldContext,
     const BoundTrackParameters& par, double ssize) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, ssize};
+  return State{geoContext, m_bField->makeCache(magFieldContext), par, ssize};
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::resetState(State& state,
+void Acts::EigenStepper<E, A>::resetState(const GeometryContext& geoContext,
+                                          State& state,
                                           const BoundVector& boundParams,
                                           const BoundSquareMatrix& cov,
                                           const Surface& surface,
                                           const double stepSize) const {
   FreeVector freeParams =
-      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
+      transformBoundToFreeParameters(surface, geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
@@ -43,7 +44,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
@@ -52,11 +53,11 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 
 template <typename E, typename A>
 auto Acts::EigenStepper<E, A>::boundState(
-    State& state, const Surface& surface, bool transportCov,
-    const FreeToBoundCorrection& freeToBoundCorrection) const
+    const GeometryContext& geoContext, State& state, const Surface& surface,
+    bool transportCov, const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
   return detail::boundState(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      geoContext, surface, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated,
       freeToBoundCorrection);
@@ -110,7 +111,8 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
 }
 
 template <typename E, typename A>
-void Acts::EigenStepper<E, A>::update(State& state,
+void Acts::EigenStepper<E, A>::update(const GeometryContext& geoContext,
+                                      State& state,
                                       const FreeVector& freeParams,
                                       const BoundVector& /*boundParams*/,
                                       const Covariance& covariance,
@@ -118,7 +120,7 @@ void Acts::EigenStepper<E, A>::update(State& state,
   state.pars = freeParams;
   state.cov = covariance;
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
 }
 
@@ -142,12 +144,11 @@ void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::transportCovarianceToBound(
-    State& state, const Surface& surface,
+    const GeometryContext& geoContext, State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
-  detail::transportCovarianceToBound(state.geoContext.get(), surface, state.cov,
-                                     state.jacobian, state.jacTransport,
-                                     state.derivative, state.jacToGlobal,
-                                     state.pars, freeToBoundCorrection);
+  detail::transportCovarianceToBound(
+      geoContext, surface, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, state.pars, freeToBoundCorrection);
 }
 
 template <typename E, typename A>

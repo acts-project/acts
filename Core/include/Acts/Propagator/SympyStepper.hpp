@@ -60,14 +60,13 @@ class SympyStepper {
     /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
-    explicit State(const GeometryContext& gctx,
-                   MagneticFieldProvider::Cache fieldCacheIn,
-                   const BoundTrackParameters& par,
-                   double ssize = std::numeric_limits<double>::max())
+    State(const GeometryContext& gctx,
+          MagneticFieldProvider::Cache fieldCacheIn,
+          const BoundTrackParameters& par,
+          double ssize = std::numeric_limits<double>::max())
         : particleHypothesis(par.particleHypothesis()),
           stepSize(ssize),
-          fieldCache(std::move(fieldCacheIn)),
-          geoContext(gctx) {
+          fieldCache(std::move(fieldCacheIn)) {
       Vector3 position = par.position(gctx);
       Vector3 direction = par.direction();
       pars.template segment<3>(eFreePos0) = position;
@@ -129,9 +128,6 @@ class SympyStepper {
     /// See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
 
-    /// The geometry context
-    std::reference_wrapper<const GeometryContext> geoContext;
-
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
       /// Magnetic field evaulations
@@ -151,8 +147,8 @@ class SympyStepper {
   /// @param config The configuration of the stepper
   explicit SympyStepper(const Config& config);
 
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
+  State makeState(const GeometryContext& geoContext,
+                  const MagneticFieldContext& magFieldContext,
                   const BoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max()) const;
 
@@ -164,8 +160,9 @@ class SympyStepper {
   /// @param [in] surface The reference surface of the bound parameters
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
+      const GeometryContext& geoContext, State& state,
+      const BoundVector& boundParams, const BoundSquareMatrix& cov,
+      const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, it checks first if the access is still
@@ -244,12 +241,13 @@ class SympyStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, std::uint8_t index,
-      Direction navDir, const BoundaryTolerance& boundaryTolerance,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
+      std::uint8_t index, Direction navDir,
+      const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<SympyStepper>(
-        *this, state, surface, index, navDir, boundaryTolerance,
+        geoContext, *this, state, surface, index, navDir, boundaryTolerance,
         surfaceTolerance, logger);
   }
 
@@ -321,7 +319,8 @@ class SympyStepper {
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   Result<BoundState> boundState(
-      State& state, const Surface& surface, bool transportCov = true,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
+      bool transportCov = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
 
@@ -362,9 +361,9 @@ class SympyStepper {
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
   /// @param [in] covariance The covariance that will be written into @p state
   /// @param [in] surface The surface used to update the jacToGlobal
-  void update(State& state, const FreeVector& freeParams,
-              const BoundVector& boundParams, const Covariance& covariance,
-              const Surface& surface) const;
+  void update(const GeometryContext& geoContext, State& state,
+              const FreeVector& freeParams, const BoundVector& boundParams,
+              const Covariance& covariance, const Surface& surface) const;
 
   /// Method to update the stepper state
   ///
@@ -394,7 +393,7 @@ class SympyStepper {
   /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   /// @note no check is done if the position is actually on the surface
   void transportCovarianceToBound(
-      State& state, const Surface& surface,
+      const GeometryContext& geoContext, State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
 

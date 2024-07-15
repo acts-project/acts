@@ -297,7 +297,7 @@ auto Acts::Propagator<S, N>::makeResult(
   moveStateToResult(state, result);
 
   // Compute the final results and mark the propagation as successful
-  auto bsRes = m_stepper.boundState(state.stepping, target);
+  auto bsRes = m_stepper.boundState(state.geoContext, state.stepping, target);
   if (!bsRes.ok()) {
     return bsRes.error();
   }

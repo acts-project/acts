@@ -478,8 +478,9 @@ class KalmanFitter {
         } else if (targetReached(state, stepper, navigator, logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
-          auto res = stepper.boundState(state.stepping, *targetReached.surface,
-                                        true, freeToBoundCorrection);
+          auto res = stepper.boundState(state.geoContext, state.stepping,
+                                        *targetReached.surface, true,
+                                        freeToBoundCorrection);
           if (!res.ok()) {
             ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
@@ -551,7 +552,7 @@ class KalmanFitter {
 
       // Update the stepping state
       stepper.resetState(
-          state.stepping, st.filtered(),
+          state.geoContext, state.stepping, st.filtered(),
           reversedFilteringCovarianceScaling * st.filteredCovariance(),
           st.referenceSurface(), state.options.stepping.maxStepSize);
 
@@ -597,8 +598,8 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           freeToBoundCorrection);
+        stepper.transportCovarianceToBound(state.geoContext, state.stepping,
+                                           *surface, freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, navigator,
@@ -625,7 +626,7 @@ class KalmanFitter {
           ACTS_VERBOSE("Filtering step successful, updated parameters are:\n"
                        << trackStateProxy.filtered().transpose());
           // update stepping state using filtered parameters after kalman
-          stepper.update(state.stepping,
+          stepper.update(state.geoContext, state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(state.geoContext,
                                                               trackStateProxy),
                          trackStateProxy.filtered(),
@@ -716,8 +717,8 @@ class KalmanFitter {
         }
 
         // Transport the covariance to the surface
-        stepper.transportCovarianceToBound(state.stepping, *surface,
-                                           freeToBoundCorrection);
+        stepper.transportCovarianceToBound(state.geoContext, state.stepping,
+                                           *surface, freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, navigator,
@@ -743,8 +744,8 @@ class KalmanFitter {
         {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // Bind the transported state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface, false,
-                                        freeToBoundCorrection);
+          auto res = stepper.boundState(state.geoContext, state.stepping,
+                                        *surface, false, freeToBoundCorrection);
           if (!res.ok()) {
             return res.error();
           }
@@ -792,7 +793,7 @@ class KalmanFitter {
           // update stepping state using filtered parameters after kalman
           // update We need to (re-)construct a BoundTrackParameters instance
           // here, which is a bit awkward.
-          stepper.update(state.stepping,
+          stepper.update(state.geoContext, state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(state.geoContext,
                                                               trackStateProxy),
                          trackStateProxy.filtered(),
@@ -809,7 +810,8 @@ class KalmanFitter {
           ACTS_VERBOSE("Detected hole on " << surface->geometryId()
                                            << " in reversed filtering");
           if (state.stepping.covTransport) {
-            stepper.transportCovarianceToBound(state.stepping, *surface);
+            stepper.transportCovarianceToBound(state.geoContext, state.stepping,
+                                               *surface);
           }
         } else if (surface->surfaceMaterial() != nullptr) {
           ACTS_VERBOSE("Detected in-sensitive surface "
@@ -1009,13 +1011,15 @@ class KalmanFitter {
       }
       bool reverseDirection = false;
       if (useFirstTrackState) {
-        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+        stepper.resetState(state.geoContext, state.stepping,
+                           firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
                            firstCreatedState.referenceSurface(),
                            state.options.stepping.maxStepSize);
         reverseDirection = firstIntersection.pathLength() < 0;
       } else {
-        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+        stepper.resetState(state.geoContext, state.stepping,
+                           lastCreatedMeasurement.smoothed(),
                            lastCreatedMeasurement.smoothedCovariance(),
                            lastCreatedMeasurement.referenceSurface(),
                            state.options.stepping.maxStepSize);

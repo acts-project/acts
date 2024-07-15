@@ -241,9 +241,9 @@ class DirectNavigator {
               state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, index, state.options.direction,
-          BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
-          *m_logger);
+          state.geoContext, state.stepping, surface, index,
+          state.options.direction, BoundaryTolerance::Infinite(),
+          state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -299,9 +299,9 @@ class DirectNavigator {
               state.options.surfaceTolerance)
               .index();
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, surface, index, state.options.direction,
-          BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
-          *m_logger);
+          state.geoContext, state.stepping, surface, index,
+          state.options.direction, BoundaryTolerance::Infinite(),
+          state.options.surfaceTolerance, *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;
