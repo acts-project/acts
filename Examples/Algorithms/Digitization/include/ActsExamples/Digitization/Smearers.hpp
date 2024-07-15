@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +29,7 @@ struct Exact {
   double sigma;
 
   /// Construct with a @param sigma standard deviation
-  Exact(double sigma_) : sigma{sigma_} {}
+  explicit Exact(double sigma_) : sigma{sigma_} {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -52,7 +52,7 @@ struct Gauss {
   double sigma;
 
   /// Construct with a @param sigma standard deviation
-  Gauss(double sigma_) : sigma{sigma_} {}
+  explicit Gauss(double sigma_) : sigma{sigma_} {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -190,7 +190,7 @@ struct Digital {
   /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility within hich the parameter is allowed
-  Digital(Acts::BinningData&& bd) : binningData(bd) {}
+  explicit Digital(const Acts::BinningData& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
