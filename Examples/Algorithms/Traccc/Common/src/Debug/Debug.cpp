@@ -27,7 +27,7 @@ namespace ActsExamples::Traccc::Common::Measurement {
 
 namespace {
 
-/// @returns a nicely formated string of a vector representing a point.
+/// @returns a nicely formatted string of a vector representing a point.
 std::string toString(const Acts::ActsVector<2>& vec) {
   std::stringstream ss;
   ss << "(" << vec[0] << ", " << vec[1] << ")";
