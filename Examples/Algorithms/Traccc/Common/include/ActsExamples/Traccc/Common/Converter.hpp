@@ -131,7 +131,15 @@ class Converter {
         std::visit(
             [&trackState](auto& m) {
               trackState.setUncalibratedSourceLink(m.sourceLink());
-              trackState.setCalibrated(m);
+
+              using MeasurementType = std::decay_t<decltype(m)>;
+              constexpr std::size_t size = MeasurementType::size();
+              trackState.allocateCalibrated(m.size());
+              assert(trackState.hasCalibrated());
+
+              trackState.template calibrated<size>() = m.parameters();
+              trackState.template calibratedCovariance<size>() = m.covariance();
+              trackState.setProjector(m.projector());
             },
             measurement);
       }
@@ -168,7 +176,7 @@ class Converter {
     ss << "Successfully converted Acts cells (obtained "
        << std::get<0>(res).size() << " traccc cells and "
        << std::get<1>(res).size() << " traccc modules)";
-    ACTS_INFO(ss.str())
+    ACTS_INFO(ss.str());
 
     return res;
   }
@@ -199,7 +207,7 @@ class Converter {
 
     std::stringstream ss;
     ss << "Converted " << tracccTrackContainer.size() << " traccc tracks";
-    ACTS_INFO(ss.str())
+    ACTS_INFO(ss.str());
 
     auto mcm = measurementConversionMap(tracccMeasurements, measurements);
 

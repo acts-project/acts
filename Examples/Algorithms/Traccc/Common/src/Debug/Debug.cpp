@@ -55,8 +55,8 @@ struct MeasurementMatchRow {
 /// collections.
 /// @return a vector of MeasurementMatchRow.
 auto createTable(
-    const std::vector<Acts::BoundVariantMeasurement>& measurements1,
-    const std::vector<Acts::BoundVariantMeasurement>& measurements2,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements1,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements2,
     const std::map<std::size_t, std::size_t>& indexMap) {
   std::vector<MeasurementMatchRow> table;
   for (std::size_t idx1 = 0; idx1 < measurements1.size(); ++idx1) {
@@ -88,8 +88,8 @@ auto createTable(
 /// collections.
 /// @return a string formatted as a table.
 std::string pairingStatistics(
-    const std::vector<Acts::BoundVariantMeasurement>& measurements1,
-    const std::vector<Acts::BoundVariantMeasurement>& measurements2,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements1,
+    const std::vector<ActsExamples::BoundVariantMeasurement>& measurements2,
     const std::map<std::size_t, std::size_t>& indexMap) {
   auto table = createTable(measurements1, measurements2, indexMap);
 
