@@ -64,13 +64,9 @@ Pythia8Generator::operator()(RandomEngine& rng) {
 
   // pythia8 is not thread safe and generation needs to be protected
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
-// use per-thread random engine also in pythia
-#if PYTHIA_VERSION_INTEGER >= 8310
-  m_pythia8->rndm.rndmEnginePtr(std::make_shared<FrameworkRndmEngine>(rng));
-#else
-  FrameworkRndmEngine rndmEngine(rng);
-  m_pythia8->rndm.rndmEnginePtr(&rndmEngine);
-#endif
+  // use per-thread random engine also in pythia
+  m_pythia8->setRndmEnginePtr(std::make_shared<FrameworkRndmEngine>(rng));
+
   {
     Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
     m_pythia8->next();
