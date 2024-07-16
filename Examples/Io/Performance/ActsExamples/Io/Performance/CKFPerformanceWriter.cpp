@@ -191,7 +191,7 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     // Check if the reco track has fitted track parameters
     if (!track.hasReferenceSurface()) {
       ACTS_DEBUG("No fitted track parameters for track, index = "
-                   << track.index() << " tip index = " << track.tipIndex());
+                 << track.index() << " tip index = " << track.tipIndex());
       continue;
     }
 
