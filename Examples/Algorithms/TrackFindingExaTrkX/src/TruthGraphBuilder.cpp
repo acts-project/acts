@@ -29,7 +29,7 @@ TruthGraphBuilder::TruthGraphBuilder(Config config, Acts::Logging::Level level)
       m_inputSimhits.isInitialized() && m_inputMeasSimhitMap.isInitialized();
 
   // Logical XOR operation
-  if (!a != !b) {
+  if (a == b) {
     throw std::invalid_argument("Missing inputs, cannot build truth graph");
   }
 }
