@@ -169,22 +169,6 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     // Counting number of total trajectories
     m_nTotalTracks++;
 
-    // Check if the reco track has fitted track parameters
-    if (!track.hasReferenceSurface()) {
-      ACTS_WARNING("No fitted track parameters for track, index = "
-                   << track.index() << " tip index = " << track.tipIndex());
-      continue;
-    }
-
-    Acts::BoundTrackParameters fittedParameters =
-        track.createParametersAtReference();
-
-    // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
-
     // Get the truth matching information
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
@@ -203,6 +187,22 @@ ProcessCode CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     if (particleMatch.classification == TrackMatchClassification::Duplicate) {
       m_nTotalDuplicateTracks++;
     }
+
+    // Check if the reco track has fitted track parameters
+    if (!track.hasReferenceSurface()) {
+      ACTS_DEBUG("No fitted track parameters for track, index = "
+                   << track.index() << " tip index = " << track.tipIndex());
+      continue;
+    }
+
+    Acts::BoundTrackParameters fittedParameters =
+        track.createParametersAtReference();
+
+    // Fill the trajectory summary info
+    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                track.nTrackStates(), track.nMeasurements(),
+                                track.nOutliers(), track.nHoles(),
+                                track.nSharedHits());
 
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(
