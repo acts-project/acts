@@ -1077,32 +1077,29 @@ class CombinatorialKalmanFilter {
       auto currentBranch = result.activeBranches.back();
       IndexType currentTip = currentBranch.tipIndex();
 
-      // @TODO: Keep information on tip state around so we don't have to
-      //        recalculate it later
       ACTS_VERBOSE("Find track with entry index = "
                    << currentTip << " and there are nMeasurements = "
                    << currentBranch.nMeasurements()
                    << ", nOutliers = " << currentBranch.nOutliers()
                    << ", nHoles = " << currentBranch.nHoles() << " on track");
 
-      std::optional<typename track_container_t::TrackStateProxy>
-          lastMeasurement;
+      std::optional<typename track_container_t::TrackStateProxy> lastTrackState;
       for (const auto& trackState : currentBranch.trackStatesReversed()) {
-        if (trackState.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-          lastMeasurement = trackState;
+        if (!trackState.typeFlags().test(TrackStateFlag::HoleFlag)) {
+          lastTrackState = trackState;
           break;
         }
       }
 
-      if (lastMeasurement.has_value()) {
-        currentBranch.tipIndex() = lastMeasurement->index();
+      if (lastTrackState.has_value()) {
+        currentBranch.tipIndex() = lastTrackState->index();
         result.collectedTracks.push_back(currentBranch);
-        ACTS_VERBOSE("Last measurement found on track with entry index = "
-                     << currentTip << " and measurement index = "
-                     << lastMeasurement->index());
+        ACTS_VERBOSE("Last track state found on track with entry index = "
+                     << currentTip
+                     << " and track state index = " << lastTrackState->index());
       } else {
-        ACTS_VERBOSE(
-            "No measurement found on track with entry index = " << currentTip);
+        ACTS_VERBOSE("No valid track state found on track with entry index = "
+                     << currentTip);
       }
     }
 
