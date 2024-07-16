@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
+
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -245,30 +247,28 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 // after creating all seeds with a common middle space point, filter again
 
 template <typename external_spacepoint_t>
+template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     Acts::SpacePointData& spacePointData,
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
-    const std::size_t numQualitySeeds,
-    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-    const {
+    const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   // retrieve all candidates
   // this collection is already sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
   filterSeeds_1SpFixed(spacePointData, extended_collection, numQualitySeeds,
-                       outIt);
+                       outputCollection);
 }
 
 template <typename external_spacepoint_t>
+template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     Acts::SpacePointData& spacePointData,
     std::vector<typename CandidatesForMiddleSp<
         const InternalSpacePoint<external_spacepoint_t>>::value_type>&
         candidates,
-    const std::size_t numQualitySeeds,
-    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-    const {
+    const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   if (m_experimentCuts != nullptr) {
     candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
   }
@@ -307,8 +307,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     spacePointData.setQuality(medium->index(), bestSeedQuality);
     spacePointData.setQuality(top->index(), bestSeedQuality);
 
-    outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
-                                        zOrigin, bestSeedQuality};
+    Acts::detail::pushBackOrInsertAtEnd(
+        outputCollection,
+        Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
+                                    zOrigin, bestSeedQuality});
+
     ++numTotalSeeds;
   }
 }

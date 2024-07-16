@@ -65,7 +65,7 @@ struct KalmanFitterExtensions {
                                          std::size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        Direction, const Logger&)>;
+                                        const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -455,7 +455,7 @@ class KalmanFitter {
                 "The target surface needed for aborting reversed propagation "
                 "is not provided");
             result.result =
-                Result<void>(KalmanFitterError::BackwardUpdateFailed);
+                Result<void>(KalmanFitterError::ReversePropagationFailed);
           } else {
             ACTS_VERBOSE(
                 "No target surface set. Completing without fitted track "
@@ -519,7 +519,7 @@ class KalmanFitter {
       if (result.lastMeasurementIndex ==
           Acts::MultiTrajectoryTraits::kInvalid) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
-        return KalmanFitterError::ReverseNavigationFailed;
+        return KalmanFitterError::ReversePropagationFailed;
       }
 
       // Remember the navigation direction has been reversed
@@ -755,8 +755,8 @@ class KalmanFitter {
                               sourcelink_it->second, trackStateProxy);
 
         // If the update is successful, set covariance and
-        auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                            state.options.direction, logger());
+        auto updateRes =
+            extensions.updater(state.geoContext, trackStateProxy, logger());
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -1200,7 +1200,7 @@ class KalmanFitter {
     using KalmanActor = Actor<parameters_t>;
 
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
+    using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
     using PropagatorOptions =
         typename propagator_t::template Options<Actors, Aborters>;
@@ -1227,9 +1227,7 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     // Set the surface sequence
-    auto& dInitializer = propagatorOptions.actionList
-                             .template get<DirectNavigator::Initializer>();
-    dInitializer.navSurfaces = sSequence;
+    propagatorOptions.navigation.surfaces = sSequence;
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
                     track_container_t, holder_t>(sParameters, propagatorOptions,

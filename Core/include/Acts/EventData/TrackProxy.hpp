@@ -14,7 +14,6 @@
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -23,8 +22,8 @@
 
 namespace Acts {
 
-template <ACTS_CONCEPT(Acts::TrackContainerBackend) track_container_t,
-          typename traj_t, template <typename> class holder_t>
+template <Acts::TrackContainerBackend track_container_t, typename traj_t,
+          template <typename> class holder_t>
 class TrackContainer;
 
 namespace detail_tc {
