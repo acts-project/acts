@@ -29,59 +29,32 @@ struct VoidNavigator {
 
   /// @brief Nested State struct, minimal requirement
   struct State {
-    /// Navigation state - external state: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation state - external state: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation state - external state: the target surface
-    const Surface* targetSurface = nullptr;
-
-    /// Indicator if the target is reached
-    bool targetReached = false;
-
-    /// Navigation state : a break has been detected
-    bool navigationBreak = false;
+    Options options;
   };
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    State state;
+    state.options = options;
+    return state;
   }
 
-  const Surface* currentSurface(const State& state) const {
-    return state.currentSurface;
+  const Surface* currentSurface(const State& /*state*/) const {
+    return nullptr;
   }
 
-  const Surface* startSurface(const State& state) const {
-    return state.startSurface;
-  }
+  const Surface* startSurface(const State& /*state*/) const { return nullptr; }
 
-  const Surface* targetSurface(const State& state) const {
-    return state.targetSurface;
-  }
+  const Surface* targetSurface(const State& /*state*/) const { return nullptr; }
 
-  bool targetReached(const State& state) const { return state.targetReached; }
+  bool targetReached(const State& /*state*/) const { return false; }
 
-  bool navigationBreak(const State& state) const {
-    return state.navigationBreak;
-  }
+  bool navigationBreak(const State& /*state*/) const { return false; }
 
-  void currentSurface(State& state, const Surface* surface) const {
-    state.currentSurface = surface;
-  }
+  void currentSurface(State& /*state*/, const Surface* /*surface*/) const {}
 
-  void targetReached(State& state, bool targetReached) const {
-    state.targetReached = targetReached;
-  }
+  void targetReached(State& /*state*/, bool /*targetReached*/) const {}
 
-  void navigationBreak(State& state, bool navigationBreak) const {
-    state.navigationBreak = navigationBreak;
-  }
+  void navigationBreak(State& /*state*/, bool /*navigationBreak*/) const {}
 
   /// Navigation call - void
   ///
