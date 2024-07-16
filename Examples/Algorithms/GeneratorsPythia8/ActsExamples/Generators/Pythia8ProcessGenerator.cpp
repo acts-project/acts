@@ -23,16 +23,35 @@
 
 namespace ActsExamples {
 
-namespace {
-struct FrameworkRndmEngine : public Pythia8::RndmEngine {
-  RandomEngine& rng;
+struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
+  RandomEngine* rng{nullptr};
 
-  FrameworkRndmEngine(RandomEngine& rng_) : rng(rng_) {}
+  struct {
+    std::size_t numUniformRandomNumbers = 0;
+    std::optional<double> first = std::nullopt;
+    double last = std::numeric_limits<double>::quiet_NaN();
+  } statistics;
+
+  Pythia8RandomEngineWrapper() = default;
+
   double flat() override {
-    return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
+    if (rng == nullptr) {
+      throw std::runtime_error(
+          "Pythia8RandomEngineWrapper: no random engine set");
+    }
+
+    statistics.numUniformRandomNumbers++;
+    double value = std::uniform_real_distribution<double>(0.0, 1.0)(*rng);
+    if (!statistics.first.has_value()) {
+      statistics.first = value;
+    }
+    statistics.last = value;
+    return value;
   }
+
+  void setRandomEngine(RandomEngine& rng_) { rng = &rng_; }
+  void clearRandomEngine() { rng = nullptr; }
 };
-}  // namespace
 
 Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg),
@@ -50,10 +69,26 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
   m_pythia8->settings.parm("Beams:eCM",
                            m_cfg.cmsEnergy / Acts::UnitConstants::GeV);
   m_pythia8->init();
+
+  m_pythia8RndmEngine = std::make_shared<Pythia8RandomEngineWrapper>();
+
+#if PYTHIA_VERSION_INTEGER >= 8310
+  m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine);
+#else
+  m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine.get());
+#endif
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
-Pythia8Generator::~Pythia8Generator() = default;
+Pythia8Generator::~Pythia8Generator() {
+  ACTS_INFO("Pythia8Generator produced "
+            << m_pythia8RndmEngine->statistics.numUniformRandomNumbers
+            << " uniform random numbers");
+  ACTS_INFO("                 first = "
+            << m_pythia8RndmEngine->statistics.first.value_or(-1.0));
+  ACTS_INFO(
+      "                  last = " << m_pythia8RndmEngine->statistics.last);
+}
 
 std::pair<SimVertexContainer, SimParticleContainer>
 Pythia8Generator::operator()(RandomEngine& rng) {
@@ -65,7 +100,8 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   // pythia8 is not thread safe and generation needs to be protected
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
   // use per-thread random engine also in pythia
-  m_pythia8->setRndmEnginePtr(std::make_shared<FrameworkRndmEngine>(rng));
+
+  m_pythia8RndmEngine->setRandomEngine(rng);
 
   {
     Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
@@ -153,6 +189,9 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   std::pair<SimVertexContainer, SimParticleContainer> out;
   out.first.insert(vertices.begin(), vertices.end());
   out.second.insert(particles.begin(), particles.end());
+
+  m_pythia8RndmEngine->clearRandomEngine();
+
   return out;
 }
 

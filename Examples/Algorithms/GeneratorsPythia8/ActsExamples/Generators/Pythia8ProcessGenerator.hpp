@@ -27,6 +27,8 @@ class Pythia;
 
 namespace ActsExamples {
 
+struct Pythia8RandomEngineWrapper;
+
 class Pythia8Generator : public EventGenerator::ParticlesGenerator {
  public:
   struct Config {
@@ -69,6 +71,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<::Pythia8::Pythia> m_pythia8;
+  std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
   std::mutex m_pythia8Mutex;
 };
 
