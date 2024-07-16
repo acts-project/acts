@@ -19,9 +19,6 @@
 
 #include <utility>
 
-#if defined(__cpp_concepts)
-#include <concepts>
-
 namespace Acts {
 
 namespace detail {
@@ -247,4 +244,3 @@ concept MutableTrackStateProxyConcept = TrackStateProxyConcept<T> &&
   { v.typeFlags() } -> std::same_as<TrackStateType>;
 };
 }  // namespace Acts
-#endif
