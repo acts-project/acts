@@ -8,8 +8,7 @@
 
 #pragma once
 
-#if defined(__cpp_concepts)
-#include <concepts>
+#include <utility>
 
 namespace Acts {
 
@@ -28,5 +27,3 @@ concept MutableDetectorVolumeVisitor = requires(T v) {
 };
 
 }  // namespace Acts
-
-#endif

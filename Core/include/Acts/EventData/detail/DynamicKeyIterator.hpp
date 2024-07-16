@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/detail/DynamicColumn.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <unordered_map>
@@ -55,7 +54,8 @@ class DynamicKeyIterator {
   typename map_t::const_iterator m_it;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(std::forward_iterator, DynamicKeyIterator<int>);
+static_assert(std::forward_iterator<DynamicKeyIterator<int>>,
+              "DynamicKeyIterator<int> does not fulfill std::forward_iterator");
 
 template <typename C>
 class DynamicKeyRange {

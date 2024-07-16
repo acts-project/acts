@@ -36,8 +36,7 @@ struct IsReadOnlyTrackContainer;
 /// @tparam track_container_t the track container backend
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
-template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
-          typename traj_t,
+template <TrackContainerBackend track_container_t, typename traj_t,
           template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
@@ -407,18 +406,15 @@ class TrackContainer {
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
-template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
-          typename traj_t>
+template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
-template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
-          typename traj_t>
+template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(const track_container_t& container, const traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
 
-template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
-          typename traj_t>
+template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 

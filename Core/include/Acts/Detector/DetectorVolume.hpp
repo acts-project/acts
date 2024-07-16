@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -291,7 +290,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param visitor will be called for each found surface,
   /// it will be handed down to contained volumes and portals
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     for (const auto& s : surfaces()) {
       visitor(s);
@@ -310,7 +309,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param visitor will be called for each found surface,
   /// it will be handed down to contained volumes and portals
-  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  template <MutableSurfaceVisitor visitor_t>
   void visitMutableSurfaces(visitor_t&& visitor) {
     for (auto& s : surfacePtrs()) {
       visitor(s.get());
@@ -333,7 +332,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
-  template <ACTS_CONCEPT(DetectorVolumeVisitor) visitor_t>
+  template <DetectorVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
     visitor(this);
     for (const auto& v : volumes()) {
@@ -351,7 +350,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @note if a context is needed for the visit, the vistitor has to provide
   /// it, e.g. as a private member
-  template <ACTS_CONCEPT(MutableDetectorVolumeVisitor) visitor_t>
+  template <MutableDetectorVolumeVisitor visitor_t>
   void visitMutableVolumes(visitor_t&& visitor) {
     visitor(this);
     for (auto& v : volumePtrs()) {
