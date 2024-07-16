@@ -13,8 +13,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-ActsExamples::TruthGraphBuilder::TruthGraphBuilder(Config config,
-                                                   Acts::Logging::Level level)
+TruthGraphBuilder::TruthGraphBuilder(Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TruthGraphBuilder", level),
       m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
@@ -29,7 +28,8 @@ ActsExamples::TruthGraphBuilder::TruthGraphBuilder(Config config,
   bool b =
       m_inputSimhits.isInitialized() && m_inputMeasSimhitMap.isInitialized();
 
-  if (!(a || b)) {
+  // Logical XOR operation
+  if (!a != !b) {
     throw std::invalid_argument("Missing inputs, cannot build truth graph");
   }
 }
@@ -173,7 +173,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
   return truthGraph;
 }
 
-ActsExamples::ProcessCode ActsExamples::TruthGraphBuilder::execute(
+ProcessCode TruthGraphBuilder::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);

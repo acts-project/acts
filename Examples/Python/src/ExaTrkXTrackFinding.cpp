@@ -192,6 +192,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
+      inputSpacePoints, inputSimHits, inputParticles,
+      inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
+      targetMinPT, targetMinSize, uniqueModules);
+
   py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
       .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
       .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
@@ -222,12 +228,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
                                 inputTruthGraph, outputProtoTracks, outputGraph,
                                 graphConstructor, edgeClassifiers, trackBuilder,
                                 nodeFeatures, featureScales, filterShortTracks);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TruthGraphBuilder, mex, "TruthGraphBuilder",
-      inputSpacePoints, inputSimHits, inputParticles,
-      inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
-      targetMinPT, targetMinSize, uniqueModules);
 
   {
     auto cls =

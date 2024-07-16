@@ -283,7 +283,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     SimParticle particle(barcode,
                          static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
-    Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} * Acts::UnitConstants::MeV;
+    Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} *
+                      Acts::UnitConstants::MeV;
     particle.setAbsoluteMomentum(p.norm());
 
     particle.setDirection(p.normalized());
@@ -377,7 +378,11 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
                                               CLparticleLink_barcode->at(im))) {
       auto barcode = barcodeConstructor.getBarcode(bc, subevt);
+<<<<<<< HEAD
       measPartMap.insert({im, barcode});
+=======
+      measPartMap.insert(std::pair<Index, ActsFatras::Barcode>{im, barcode});
+>>>>>>> main
     }
   }
 

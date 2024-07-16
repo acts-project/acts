@@ -350,9 +350,9 @@ struct ProtoTrackData {
 };
 
 struct GraphData {
-  std::int64_t edge0;
-  std::int64_t edge1;
-  float weight;
+  std::int64_t edge0 = 0;
+  std::int64_t edge1 = 0;
+  float weight = 0.0;
   DFE_NAMEDTUPLE(GraphData, edge0, edge1, weight);
 };
 

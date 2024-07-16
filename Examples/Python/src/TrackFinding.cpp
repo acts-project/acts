@@ -257,7 +257,7 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors);
+      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
@@ -328,6 +328,10 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(twoWay);
     ACTS_PYTHON_MEMBER(seedDeduplication);
     ACTS_PYTHON_MEMBER(stayOnSeed);
+    ACTS_PYTHON_MEMBER(pixelVolumes);
+    ACTS_PYTHON_MEMBER(stripVolumes);
+    ACTS_PYTHON_MEMBER(maxPixelHoles);
+    ACTS_PYTHON_MEMBER(maxStripHoles);
     ACTS_PYTHON_STRUCT_END();
   }
 
