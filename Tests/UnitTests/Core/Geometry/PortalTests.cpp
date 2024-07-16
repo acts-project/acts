@@ -784,44 +784,42 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(RPhiDirection) {}
+BOOST_AUTO_TEST_CASE(RPhiDirection) {
+  auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                   30_mm, 100_mm, 45_degree);
 
-// std::unique_ptr<PortalLinkBase> grid1d1 =
-//     GridPortalLink::make(Axis{AxisBound{}, 0, 5, 5});
-// std::unique_ptr<PortalLinkBase> grid1d2 =
-//     GridPortalLink::make(Axis{AxisBound{}, -1, 5, 6});
-//
-// // @TODO Equidistance different bin widths to variable
-// // @TODO Diagonal offset gives error
-// // @TODO Zero offset
-//
-// {
-//   auto mergedPtr = grid1d1->merge(*grid1d2, Vector2{5, 0}, *logger);
-//   auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
-//   BOOST_REQUIRE_NE(merged, nullptr);
-//   BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
-//   auto& axis = *merged->grid().axes().front();
-//   BOOST_CHECK_EQUAL(axis.getMin(), -1);
-//   BOOST_CHECK_EQUAL(axis.getMax(), 10);
-// }
-//
-// {
-//   auto mergedPtr = grid1d2->merge(*grid1d1, Vector2{6, 0}, *logger);
-//   auto* merged = dynamic_cast<GridPortalLink*>(mergedPtr.get());
-//   // BOOST_REQUIRE_NE(merged, nullptr);
-//   // merged->grid().axes();
-// }
+  // z good, rphi good
+  auto grid1 = GridPortalLink::make(
+      *cyl1, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+      Axis{AxisBound, -100_mm, 100_mm, 5});
+  BOOST_REQUIRE_NE(grid1, nullptr);
 
-// @TODO Check merge loc0 (closed + bound)
-// @TODO Check merge loc1 (bound only)
-// @TODO Check non-bound for same direction (error)
-// @TODO: Check inconsistent directions (error)
+  auto trf2 = Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}};
+  auto cyl2 =
+      Surface::makeShared<CylinderSurface>(trf2, 30_mm, 100_mm, 45_degree);
 
-// std::unique_ptr<PortalLinkBase> grid2d1 = GridPortalLink::make(
-//     Axis{AxisBound{}, 0, 5, 5}, Axis{AxisBound{}, 0, 5, 5});
-//
-// grid1d1->merge(*grid2d1);
-// grid2d1->merge(*grid1d1);
+  // Second grid portal with compatible phi binning
+  auto grid2 = GridPortalLink::make(
+      *cyl2, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
+      Axis{AxisBound, -100_mm, 100_mm, 5});
+  BOOST_REQUIRE_NE(grid2, nullptr);
+
+  // We're merging in z direction, so the phi binnings need to be the same
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binRPhi, *logger);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(mergedPtr, nullptr);
+
+  const auto& axis1 = *merged->grid().axes().front();
+  const auto& axis2 = *merged->grid().axes().back();
+  BOOST_CHECK_CLOSE(axis1.getMin(), -90_degree * 30_mm, 1e-8);
+  BOOST_CHECK_CLOSE(axis1.getMax(), 90_degree * 30_mm, 1e-8);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 10);
+  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+  Axis axis2Expected{AxisBound, -100_mm, 100_mm, 5};
+  BOOST_CHECK_EQUAL(axis2, axis2Expected);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
