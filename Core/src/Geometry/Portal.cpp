@@ -315,6 +315,13 @@ std::unique_ptr<GridPortalLink> colinearMerge(
   }
 }
 
+template <BinningValue direction, class surface_t>
+std::unique_ptr<PortalLinkBase> perpendicularMerge(const surface_t& surfaceA,
+                                                   const surface_t& surfaceB,
+                                                   const GridPortalLink& a,
+                                                   const GridPortalLink& b,
+                                                   const Logger& logger) {}
+
 std::unique_ptr<PortalLinkBase> mergeGridPortals(
     const GridPortalLink* a, const GridPortalLink* b,
     const CylinderSurface* surfaceA, const CylinderSurface* surfaceB,
@@ -358,12 +365,10 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
       } else {
         ACTS_VERBOSE("=> perpendicular merge");
-        // Convert both 1D grids to 2D and merge those
         auto a2D = a->make2DGrid();
         auto b2D = b->make2DGrid();
         assert(a2D != nullptr);
         assert(b2D != nullptr);
-        // Call this function again, but with 2D grids
         return mergeGridPortals(a2D.get(), b2D.get(), surfaceA, surfaceB,
                                 direction, logger);
       }
@@ -378,7 +383,13 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
       } else {
         ACTS_VERBOSE("=> perpendicular merge");
-        throw std::logic_error{"Not implemented"};
+
+        auto a2D = a->make2DGrid();
+        auto b2D = b->make2DGrid();
+        assert(a2D != nullptr);
+        assert(b2D != nullptr);
+        return mergeGridPortals(a2D.get(), b2D.get(), surfaceA, surfaceB,
+                                direction, logger);
       }
       // Linear merge along rphi will NOT wrap around (doesn't make sense)
       // Cross merge might have to wrap around
@@ -428,13 +439,13 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       }
       ACTS_VERBOSE("    ~> they are!");
 
-      // return zAxisA.visit(
-      //     [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
-      //       ACTS_VERBOSE("    ~> z axis: " << axis);
-      //       return colinearMerge<BinningValue::binRPhi>(
-      //           *mergedSurface, rPhiAxisA, rPhiAxisB, tolerance, logger,
-      //           AppendAxis{axis});
-      //     });
+      return zAxisA.visit(
+          [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
+            ACTS_VERBOSE("    ~> z axis: " << axis);
+            return colinearMerge<BinningValue::binRPhi>(
+                *mergedSurface, rPhiAxisA, rPhiAxisB, tolerance, logger,
+                AppendAxis{axis});
+          });
     } else {
       ACTS_ERROR("Invalid binning direction: " << a->direction());
       throw std::invalid_argument{"Invalid binning direction"};
