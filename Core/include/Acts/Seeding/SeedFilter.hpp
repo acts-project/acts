@@ -31,12 +31,6 @@ struct SeedFilterState {
   // compatible top required
   float rMaxSeedConf =
       std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
-  // number of high quality seeds in seed confirmation
-  std::size_t numQualitySeeds = 0;
-  // number of seeds that did not pass the quality confirmation but were still
-  // accepted, if quality confirmation is not used this is the total number of
-  // seeds
-  std::size_t numSeeds = 0;
 };
 
 /// Filter seeds at various stages with the currently
@@ -84,7 +78,7 @@ class SeedFilter final {
       Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
-      const std::size_t numQualitySeeds, collection_t& outputCollection) const;
+      collection_t& outputCollection) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param spacePointData Auxiliary variables used by the seeding
