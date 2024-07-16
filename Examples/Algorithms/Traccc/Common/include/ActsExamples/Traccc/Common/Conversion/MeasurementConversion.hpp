@@ -55,9 +55,9 @@ template <std::size_t dim>
 inline ActsExamples::FixedSizeMeasurement<Acts::BoundIndices, dim> measurement(
     const traccc::measurement& m, const Acts::SourceLink sl) {
   // Currently, all traccc measurements have dim 2.
-  if constexpr (dim != 2){
-    std::string errorMsg = "Dimension is not 2 (dimension = " +
-                           std::to_string(m.meas_dim) + ")";
+  if constexpr (dim != 2) {
+    std::string errorMsg =
+        "Dimension is not 2 (dimension = " + std::to_string(m.meas_dim) + ")";
     throw std::runtime_error(errorMsg.c_str());
   }
   auto params = Acts::TracccPlugin::detail::toActsVector<dim>(m.local);
