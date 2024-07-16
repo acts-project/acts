@@ -193,20 +193,20 @@ class TrackProxy {
   /// Map-type for a bound parameter vector. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
   using Parameters =
-      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
 
   /// Same as @ref Parameters, but with const semantics
   using ConstParameters =
-      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
 
   /// Map-type for a bound covariance. This has reference semantics, i.e.
   /// points at a matrix by an internal pointer.
   using Covariance =
-      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance =
-      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
+      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
 #ifndef DOXYGEN
   friend TrackContainer<Container, Trajectory, holder_t>;
@@ -552,6 +552,19 @@ class TrackProxy {
   /// Methods that give access to the track states of a track represented by @c TrackProxy.
   /// @{
 
+  /// Return a const track state proxy to the outermost track state
+  /// @return The outermost track state proxy
+  ConstTrackStateProxy outermostTrackState() const {
+    return m_container->trackStateContainer().getTrackState(tipIndex());
+  }
+
+  /// Return a mutable track state proxy to the outermost track state
+  /// @return The outermost track state proxy
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackStateProxy outermostTrackState() const {
+    return m_container->trackStateContainer().getTrackState(tipIndex());
+  }
+
   /// Return a const track state proxy to the innermost track state
   /// @note This is only available, if the track is forward linked
   /// @return The innermost track state proxy
@@ -865,4 +878,5 @@ class TrackProxy {
       m_container;
   IndexType m_index;
 };
+
 }  // namespace Acts

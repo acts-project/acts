@@ -3,6 +3,7 @@ add_library(
   src/TrackFindingAlgorithmExaTrkX.cpp
   src/PrototracksToParameters.cpp
   src/TrackFindingFromPrototrackAlgorithm.cpp
+  src/TruthGraphBuilder.cpp
 )
 
 target_include_directories(

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -41,7 +41,7 @@ struct Extendable {
   Extendable(const Extendable<extensions_t...>& extendable) = default;
 
   // Default move constructor
-  Extendable(Extendable<extensions_t...>&& extendable) = default;
+  Extendable(Extendable<extensions_t...>&& extendable) noexcept = default;
 
   /// Constructor from tuple
   ///
@@ -65,7 +65,7 @@ struct Extendable {
   ///
   /// @param extendable The source Extendable list
   Extendable<extensions_t...>& operator=(
-      Extendable<extensions_t...>&& extendable) = default;
+      Extendable<extensions_t...>&& extendable) noexcept = default;
 
   /// Append new entries and return a new condition
   ///
