@@ -93,16 +93,6 @@ class BinaryPortalLink : public PortalLinkBase {};
 
 class TrivialPortalLink : public PortalLinkBase {};
 
-namespace detail {
-#if defined(__cpp_concepts)
-template <typename S>
-concept RegularSurfaceConcept =
-    std::is_same_v<S, CylinderSurface> || std::is_same_v<S, DiscSurface> ||
-    std::is_same_v<S, PlaneSurface>;
-
-#endif
-}  // namespace detail
-
 template <typename... Axes>
 class GridPortalLinkT;
 
