@@ -77,7 +77,10 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
   m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine.get());
 #endif
 
+  RandomEngine rng{m_cfg.initializationSeed};
+  m_pythia8RndmEngine->setRandomEngine(rng);
   m_pythia8->init();
+  m_pythia8RndmEngine->clearRandomEngine();
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
