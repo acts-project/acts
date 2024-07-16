@@ -128,22 +128,34 @@ def main():
 
     # Read the geometry model from the database
     gmTree = acts.geomodel.readFromDb(args.input)
-    gmFactoryConfig = gm.GeoModelDetectorVolumeFactory.Config()
+    gmVolFactoryConfig = gm.GeoModelDetectorVolumeFactory.Config()
+    gmVolFactoryConfig.materialList = args.material_list
+    gmVolFactoryConfig.nameList = args.name_list
+    gmVolFactoryConfig.convertSubVolumes = args.convert_subvols
+    gmVolFactory = gm.GeoModelDetectorVolumeFactory(gmVolFactoryConfig, logLevel)
+    # The options
+    gmVolFactoryOptions = gm.GeoModelDetectorVolumeFactory.Options()
+    gmVolFactoryOptions.queries = args.queries
+    # The Cache & construct call
+    gmVolFactoryCache = gm.GeoModelDetectorVolumeFactory.Cache()
+    gmVolFactory.construct(gmVolFactoryCache, gContext, gmTree, gmVolFactoryOptions)
+
+    # All surfaces from GeoModel
+    gmBoxes = gmVolFactoryCache.boundingBoxes
+
+    #Surfaces
+    gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
     gmFactoryConfig.materialList = args.material_list
     gmFactoryConfig.nameList = args.name_list
     gmFactoryConfig.convertSubVolumes = args.convert_subvols
-    gmFactory = gm.GeoModelDetectorVolumeFactory(gmFactoryConfig, logLevel)
+    gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
     # The options
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
     gmFactoryOptions.queries = args.queries
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
-    #gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
+    gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
     '''
-
-    # All surfaces from GeoModel
-    gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
-
     # Construct the building hierarchy
     # if the blueprint is enabled
     if args.enable_blueprint:
@@ -219,9 +231,22 @@ def main():
                         gContext, vol, [66, 111, 245, 245, 203, 66, 0.8], "/;:"
                     )
 
+    '''
     # Output the surface to an OBJ file
     if args.output_obj:
         segments = 720
+        gmBoxes = gmVolFactoryCache.boundingBoxes
+        #ssurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
+        acts.examples.writeVolumesObj(
+            gmBoxes,
+            gContext,
+            [75, 220, 100],
+            segments,
+            args.output + "_vols.obj",
+        )
+    if args.output_obj:
+        segments = 720
+        #gmBoxes = gmVolFactoryCache.boundingBoxes
         ssurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
         acts.examples.writeSurfacesObj(
             ssurfaces,
@@ -230,6 +255,7 @@ def main():
             segments,
             args.output + "_sensitives.obj",
         )
+        '''
     # Output to a JSON file
     if args.output_json:
         acts.examples.writeDetectorToJsonDetray(gContext, detector, args.output)

@@ -10,6 +10,7 @@
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Plugins/Python/Utilities.hpp>
 #include <Acts/Surfaces/Surface.hpp>
+#include <Acts/Detector/DetectorVolume.hpp>
 #include <Acts/Visualization/GeometryView3D.hpp>
 #include <Acts/Visualization/ObjVisualization3D.hpp>
 #include <Acts/Visualization/ViewConfig.hpp>
@@ -49,6 +50,22 @@ void addObj(Context& ctx) {
 
               for (const auto& surface : surfaces) {
                 view3D.drawSurface(obj, *surface, viewContext,
+                                   Acts::Transform3::Identity(), sConfig);
+              }
+              obj.write(fileName);
+            });
+    mex.def("writeVolumesObj",
+            [](const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& Volumes,
+               const GeometryContext& viewContext,
+               const std::array<int, 3>& viewRgb, unsigned int viewSegements,
+               const std::string& fileName) {
+              Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
+              sConfig.nSegments = viewSegements;
+              Acts::GeometryView3D view3D;
+              Acts::ObjVisualization3D obj;
+
+              for (const auto& volume : Volumes) {
+                view3D.drawDetectorVolume(obj, *volume, viewContext,
                                    Acts::Transform3::Identity(), sConfig);
               }
               obj.write(fileName);

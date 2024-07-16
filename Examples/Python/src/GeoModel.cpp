@@ -109,8 +109,8 @@ void addGeoModel(Context& ctx) {
                   return std::make_shared<Acts::GeoModelDetectorVolumeFactory>(
                       cfg, Acts::getDefaultLogger(
                                "GeoModelDetectorVolumeFactory", level));
-                }));
-            //.def("construct", &Acts::GeoModelDetectorVolumeFactory::construct);
+                }))
+            .def("construct", &Acts::GeoModelDetectorVolumeFactory::construct);
 
     py::class_<Acts::GeoModelDetectorVolumeFactory::Config>(a, "Config")
         .def(py::init<>())
@@ -126,8 +126,11 @@ void addGeoModel(Context& ctx) {
     py::class_<Acts::GeoModelDetectorVolumeFactory::Cache>(a, "Cache")
         .def(py::init<>())
         .def_readwrite(
-            "sensitiveVolumes",
-            &Acts::GeoModelDetectorVolumeFactory::Cache::sensitiveSurfaces);
+            "sensitiveSurfaces",
+            &Acts::GeoModelDetectorVolumeFactory::Cache::sensitiveSurfaces)
+        .def_readwrite(
+            "boundingBoxes",
+            &Acts::GeoModelDetectorVolumeFactory::Cache::boundingBoxes);
 
     py::class_<Acts::GeoModelDetectorVolumeFactory::Options>(a, "Options")
         .def(py::init<>())

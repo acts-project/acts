@@ -156,9 +156,9 @@ def main():
         gmBlueprintOptions.topBoundsOverride = args.top_node_bounds
 
     gmBlueprintCreater = gm.GeoModelBlueprintCreater(gmBlueprintConfig, logLevel)
-    gmBlueprint = gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
+    #gmBlueprint = gmBlueprintCreater.create(gContext, gmTree, gmBlueprintOptions)
 
-    gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
+    #gmCylindricalBuilder = gmBlueprint.convertToBuilder(logLevel)
 
     # Top level geo id generator
     gmGeoIdConfig = GeometryIdGenerator.Config()
@@ -169,15 +169,15 @@ def main():
     # Create the detector builder
     gmDetectorConfig = DetectorBuilder.Config()
     gmDetectorConfig.name = args.top_node + "_DetectorBuilder"
-    gmDetectorConfig.builder = gmCylindricalBuilder
+    #gmDetectorConfig.builder = gmCylindricalBuilder
     gmDetectorConfig.geoIdGenerator = gmGeoIdGenerator
     gmDetectorConfig.materialDecorator = materialDecorator
     gmDetectorConfig.auxiliary = (
         "GeoModel based Acts::Detector from '" + args.input + "'"
     )
 
-    gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
-    detector = gmDetectorBuilder.construct(gContext)
+    #gmDetectorBuilder = DetectorBuilder(gmDetectorConfig, args.top_node, logLevel)
+    #detector = gmDetectorBuilder.construct(gContext)
 
     # Output the detector to SVG
     if args.output_svg:

@@ -1,3 +1,5 @@
+#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelToDetVol.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "GeoModelKernel/GeoDefinitions.h"
@@ -9,7 +11,7 @@ namespace Acts {
 class GeoModelDetectorVolumeFactory {
  public:
   using GeoModelSensitiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
-  using GeoModelPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
+  using GeoModelBoundingBox = std::shared_ptr<Experimental::DetectorVolume>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -26,18 +28,18 @@ class GeoModelDetectorVolumeFactory {
   struct Cache {
     /// The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
-    /// The created passive representation surfaces
-    std::vector<GeoModelPassiveSurface> passiveSurfaces;
+    /// The created representation of bounding box
+    std::vector<GeoModelBoundingBox> boundingBoxes;
   };
 
   GeoModelDetectorVolumeFactory(const Config& cfg, std::unique_ptr<const Logger> mlogger = getDefaultLogger( "GeoModelDetectorVolumeFactory", Acts::Logging::WARNING));
 
   void construct(Cache& cache, const GeometryContext& gctx, const GeoModelTree& geoModelTree, const Options& options);
 
-  //void print();
 
 
  private:
+  std::unique_ptr<const Logger> m_logger;
   std::string name;
   Config m_cfg;
 };
