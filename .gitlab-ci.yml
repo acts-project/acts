@@ -69,6 +69,7 @@ build_exatrkx_cpu:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
@@ -117,6 +118,7 @@ build_exatrkx:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+    - export TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0"
     - echo $PATH
     - git clone $CLONE_URL src
     - cd src
