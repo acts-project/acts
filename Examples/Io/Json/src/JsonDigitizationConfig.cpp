@@ -97,11 +97,11 @@ void from_json(
   } else if (sType == "Uniform") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Uniform(std::move(bd));
+    f = Digitization::Uniform(bd);
   } else if (sType == "Digitial") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
-    f = Digitization::Digital(std::move(bd));
+    f = Digitization::Digital(bd);
   } else if (sType == "Exact") {
     f = Digitization::Exact(j["stddev"]);
   } else {

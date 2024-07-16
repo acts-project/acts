@@ -152,7 +152,7 @@ struct Uniform {
   /// Constructor with a binning data in order to get the bin borders.
   ///
   /// @param bu the binning data
-  Uniform(Acts::BinningData&& bd) : binningData(bd) {}
+  explicit Uniform(const Acts::BinningData& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
