@@ -921,8 +921,8 @@ class CombinatorialKalmanFilter {
           trackState.shareFrom(PM::Predicted, PM::Filtered);
         } else {
           // Kalman update
-          auto updateRes = m_extensions.updater(
-              gctx, trackState, Direction::Forward, *updaterLogger);
+          auto updateRes =
+              m_extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();

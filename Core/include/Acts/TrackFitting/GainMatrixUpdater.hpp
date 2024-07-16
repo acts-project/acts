@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -46,12 +45,10 @@ class GainMatrixUpdater {
   ///
   /// @tparam kMeasurementSizeMax
   /// @param[in,out] trackState The track state
-  /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
   Result<void> operator()(const GeometryContext& /*gctx*/,
                           typename traj_t::TrackStateProxy trackState,
-                          Direction direction = Direction::Forward,
                           const Logger& logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
@@ -95,7 +92,7 @@ class GainMatrixUpdater {
             trackState.projector(),
             trackState.calibratedSize(),
         },
-        direction, logger);
+        logger);
 
     trackState.chi2() = chi2;
 
@@ -104,8 +101,7 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, Direction direction,
-      const Logger& logger) const;
+      InternalTrackState trackState, const Logger& logger) const;
 };
 
 }  // namespace Acts
