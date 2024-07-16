@@ -70,7 +70,6 @@ class SeedFilter final {
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates_collector collection of seed candidates
-  /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
   template <typename collection_t>
