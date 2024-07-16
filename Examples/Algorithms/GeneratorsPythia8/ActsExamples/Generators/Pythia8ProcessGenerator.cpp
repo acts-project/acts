@@ -68,7 +68,6 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
   m_pythia8->settings.mode("Beams:frameType", 1);
   m_pythia8->settings.parm("Beams:eCM",
                            m_cfg.cmsEnergy / Acts::UnitConstants::GeV);
-  m_pythia8->init();
 
   m_pythia8RndmEngine = std::make_shared<Pythia8RandomEngineWrapper>();
 
@@ -77,6 +76,8 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
 #else
   m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine.get());
 #endif
+
+  m_pythia8->init();
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
