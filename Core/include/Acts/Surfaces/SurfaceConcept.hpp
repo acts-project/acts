@@ -19,9 +19,6 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#if defined(__cpp_concepts)
-#include <concepts>
-
 namespace Acts {
 
 template <typename S>
@@ -120,5 +117,3 @@ concept RegularSurfaceConcept = SurfaceConcept<S> &&
   { cs.localToGlobal(gctx, Vector2{}) } -> std::same_as<Vector3>;
 };
 }  // namespace Acts
-
-#endif
