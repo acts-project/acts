@@ -17,7 +17,6 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -864,8 +863,8 @@ class TrackStateProxy {
   ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
-  template <ACTS_CONCEPT(TrackStateProxyConcept) track_state_proxy_t,
-            bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  template <TrackStateProxyConcept track_state_proxy_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
   void copyFrom(const track_state_proxy_t& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {

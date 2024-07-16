@@ -14,10 +14,8 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
-#include <type_traits>
-
-#if defined(__cpp_concepts)
 #include <concepts>
+#include <type_traits>
 
 namespace Acts {
 
@@ -35,5 +33,3 @@ concept ChargeConcept = requires(C c, C c2, float f, double d) {
 };
 
 }  // namespace Acts
-
-#endif
