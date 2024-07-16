@@ -32,12 +32,17 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, mtj);
 
-  PassThroughCalibrator calibratorImpl;
-  MeasurementCalibratorAdapter calibrator(calibratorImpl,
-                                          m_inputMeasurements(ctx));
+  boost::container::flat_map<Index, Acts::SourceLink> slMap;
+  for (const auto& varm : m_inputMeasurements(ctx)) {
+    std::visit(
+        [&](const auto& m) {
+          const auto idx =
+              m.sourceLink().template get<IndexSourceLink>().index();
+          slMap.insert(std::pair<Index, Acts::SourceLink>{idx, m.sourceLink()});
+        },
+        varm);
+  }
 
-  auto refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
   const auto& prototracks = m_inputProtoTracks(ctx);
   ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
 
@@ -54,26 +59,17 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     minSize = std::min(minSize, protoTrack.size());
     maxSize = std::max(maxSize, protoTrack.size());
 
-    std::size_t tip = Acts::kTrackIndexInvalid;
+    auto track = tracks.makeTrack();
     for (auto idx : protoTrack) {
       auto trackStateProxy =
-          mtj->makeTrackState(Acts::TrackStatePropMask::Calibrated, tip);
-      tip = trackStateProxy.index();
-
-      IndexSourceLink sl(Acts::GeometryIdentifier{}, idx);
-
-      calibrator.calibrate({}, {}, Acts::SourceLink{sl}, trackStateProxy);
+          track.appendTrackState(Acts::TrackStatePropMask::None);
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
+      trackStateProxy.setUncalibratedSourceLink(slMap.at(idx));
     }
 
-    auto track = tracks.makeTrack();
-    track.tipIndex() = tip;
     track.nMeasurements() = protoTrack.size();
     track.nHoles() = 0;
     track.nOutliers() = 0;
-    track.setReferenceSurface(refSurface->getSharedPtr());
-    track.parameters() = Acts::BoundVector::Ones();
-    track.covariance() = Acts::BoundSquareMatrix::Identity();
   }
 
   ConstTrackContainer constTracks{
