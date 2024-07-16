@@ -22,7 +22,7 @@ namespace ActsExamples {
 PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("PrototracksToTracks", lvl), m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
 }
 
@@ -31,11 +31,15 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, mtj);
 
-  // Move from a GeoId-based structure to an index-based one to speed things up
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
-  boost::container::flat_map<Index, IndexSourceLink> slMap;
-  for(const auto &sl : sourceLinks) {
-    slMap.insert({sl.index(), sl});
+  boost::container::flat_map<Index, Acts::SourceLink> slMap;
+  for (const auto& varm : m_inputMeasurements(ctx)) {
+    std::visit(
+        [&](const auto& m) {
+          const auto idx =
+              m.sourceLink().template get<IndexSourceLink>().index();
+          slMap.insert(std::pair<Index, Acts::SourceLink>{idx, m.sourceLink()});
+        },
+        varm);
   }
 
   const auto& prototracks = m_inputProtoTracks(ctx);
@@ -57,11 +61,9 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     auto track = tracks.makeTrack();
     for (auto idx : protoTrack) {
       auto trackStateProxy =
-          track.appendTrackState(Acts::TrackStatePropMask::Calibrated);
-
-      auto sl = slMap.at(idx);
-      trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink{sl});
+          track.appendTrackState(Acts::TrackStatePropMask::None);
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
+      trackStateProxy.setUncalibratedSourceLink(slMap.at(idx));
     }
 
     track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
