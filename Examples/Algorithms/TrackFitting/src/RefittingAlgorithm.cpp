@@ -69,7 +69,8 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     TrackFitterFunction::GeneralFitterOptions options{
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        &track.referenceSurface(), Acts::PropagatorPlainOptions()};
+        &track.referenceSurface(),
+        Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext)};
 
     const Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),

@@ -205,9 +205,10 @@ class MappingMaterialDecorator : public IMaterialDecorator {
                 ? Acts::closed
                 : Acts::open,
             Acts::BinningValue::binPhi);
-        bUtility += Acts::BinUtility(binning.second, radialBounds->rMin(),
-                                     radialBounds->rMax(), Acts::open,
-                                     Acts::BinningValue::binR);
+        bUtility += Acts::BinUtility(binning.second,
+                                     static_cast<float>(radialBounds->rMin()),
+                                     static_cast<float>(radialBounds->rMax()),
+                                     Acts::open, Acts::BinningValue::binR);
       }
       if (cylinderBounds != nullptr) {
         bUtility += Acts::BinUtility(
@@ -232,9 +233,10 @@ class MappingMaterialDecorator : public IMaterialDecorator {
             binning.first, annulusBounds->get(Acts::AnnulusBounds::eMinPhiRel),
             annulusBounds->get(Acts::AnnulusBounds::eMaxPhiRel), Acts::open,
             Acts::BinningValue::binPhi);
-        bUtility += Acts::BinUtility(binning.second, annulusBounds->rMin(),
-                                     annulusBounds->rMax(), Acts::open,
-                                     Acts::BinningValue::binR);
+        bUtility += Acts::BinUtility(binning.second,
+                                     static_cast<float>(annulusBounds->rMin()),
+                                     static_cast<float>(annulusBounds->rMax()),
+                                     Acts::open, Acts::BinningValue::binR);
       }
       if (rectangleBounds != nullptr) {
         bUtility += Acts::BinUtility(
@@ -250,9 +252,10 @@ class MappingMaterialDecorator : public IMaterialDecorator {
         double halfLengthX = std::max(
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
-        bUtility +=
-            Acts::BinUtility(binning.first, -1 * halfLengthX, halfLengthX,
-                             Acts::open, Acts::BinningValue::binX);
+        bUtility += Acts::BinUtility(binning.first,
+                                     static_cast<float>(-1 * halfLengthX),
+                                     static_cast<float>(halfLengthX),
+                                     Acts::open, Acts::BinningValue::binX);
         bUtility += Acts::BinUtility(
             binning.second,
             -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
