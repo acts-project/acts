@@ -28,7 +28,7 @@ struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
 
   struct {
     std::size_t numUniformRandomNumbers = 0;
-    std::optional<double> first = std::nullopt;
+    double first = std::numeric_limits<double>::quiet_NaN();
     double last = std::numeric_limits<double>::quiet_NaN();
   } statistics;
 
@@ -40,12 +40,12 @@ struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
           "Pythia8RandomEngineWrapper: no random engine set");
     }
 
-    statistics.numUniformRandomNumbers++;
     double value = std::uniform_real_distribution<double>(0.0, 1.0)(*rng);
-    if (!statistics.first.has_value()) {
+    if (statistics.numUniformRandomNumbers == 0) {
       statistics.first = value;
     }
     statistics.last = value;
+    statistics.numUniformRandomNumbers++;
     return value;
   }
 
@@ -84,8 +84,8 @@ Pythia8Generator::~Pythia8Generator() {
   ACTS_INFO("Pythia8Generator produced "
             << m_pythia8RndmEngine->statistics.numUniformRandomNumbers
             << " uniform random numbers");
-  ACTS_INFO("                 first = "
-            << m_pythia8RndmEngine->statistics.first.value_or(-1.0));
+  ACTS_INFO(
+      "                 first = " << m_pythia8RndmEngine->statistics.first);
   ACTS_INFO(
       "                  last = " << m_pythia8RndmEngine->statistics.last);
 }
