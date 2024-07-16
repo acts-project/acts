@@ -408,6 +408,24 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         amvf_gridseeder_ttbar
 fi
 
+if [[ "$mode" == "all" || "$mode" == "traccc" ]]; then
+    run Examples/Scripts/generic_plotter.py \
+        $outdir/tracksummary_traccc.root \
+        tracksummary \
+        $outdir/tracksummary_traccc_hist.root \
+        --silent \
+        --config CI/physmon/traccc_config.yml
+    ec=$(($ec | $?))
+
+    rm $outdir/tracksummary_traccc.root
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_hist.root \
+        $refdir/tracksummary_traccc_hist.root \
+        "Track Summary Traccc Chain" \
+        tracksummary_traccc
+fi
+
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
     run_histcmp \
         $outdir/performance_gsf.root \
