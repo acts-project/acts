@@ -51,7 +51,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     /// The spatial threshold to consider a particle originating from a vertex
     double spatialVertexThreshold = 1.0 * Acts::UnitConstants::um;
     /// Random seed for the initialization stage of Pythia8
-    std::uint64_t initializationSeed = 42;
+    unsigned int initializationSeed = 42;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
