@@ -59,6 +59,8 @@ class TryAllNavigatorBase {
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    Options options;
+
     // Starting geometry information of the navigation which should only be set
     // while initialization. NOTE: This information is mostly used by actors to
     // check if we are on the starting surface (e.g. MaterialInteraction).
@@ -91,6 +93,16 @@ class TryAllNavigatorBase {
   /// @param _logger a logger instance
   TryAllNavigatorBase(Config cfg, std::unique_ptr<const Logger> _logger)
       : m_cfg(std::move(cfg)), m_logger{std::move(_logger)} {}
+
+  State makeState(const Options& options) const {
+    assert(options.startSurface != nullptr && "Start surface must be set");
+
+    State state;
+    state.options = options;
+    state.startSurface = options.startSurface;
+    state.targetSurface = options.targetSurface;
+    return state;
+  }
 
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
@@ -231,14 +243,9 @@ class TryAllNavigatorBase {
 ///
 class TryAllNavigator : public TryAllNavigatorBase {
  public:
-  /// @brief Configuration for this Navigator
-  struct Config : public TryAllNavigatorBase::Config {};
-
-  /// @brief Nested State struct
-  ///
-  /// It acts as an internal state which is created for every propagation and
-  /// meant to keep thread-local navigation information.
-  struct State : public TryAllNavigatorBase::State {};
+  using Config = TryAllNavigatorBase::Config;
+  using Options = TryAllNavigatorBase::Options;
+  using State = TryAllNavigatorBase::State;
 
   /// Constructor with configuration object
   ///
@@ -249,13 +256,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
                       getDefaultLogger("TryAllNavigator", Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
-  }
+  using TryAllNavigatorBase::makeState;
 
   using TryAllNavigatorBase::currentSurface;
   using TryAllNavigatorBase::currentVolume;
@@ -540,8 +541,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
 ///
 class TryAllOverstepNavigator : public TryAllNavigatorBase {
  public:
-  /// @brief Configuration for this Navigator
-  struct Config : public TryAllNavigatorBase::Config {};
+  using Config = TryAllNavigatorBase::Config;
+
+  using Options = TryAllNavigatorBase::Options;
 
   /// @brief Nested State struct
   ///
@@ -576,58 +578,24 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                                                Logging::INFO))
       : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+  State makeState(const Options& options) const {
+    assert(options.startSurface != nullptr && "Start surface must be set");
+
+    State state;
+    state.options = options;
+    state.startSurface = options.startSurface;
+    state.targetSurface = options.targetSurface;
+    return state;
   }
 
-  const Surface* currentSurface(const State& state) const {
-    return state.currentSurface;
-  }
-
-  const TrackingVolume* currentVolume(const State& state) const {
-    return state.currentVolume;
-  }
-
-  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
-    if (state.currentVolume == nullptr) {
-      return nullptr;
-    }
-    return state.currentVolume->volumeMaterial();
-  }
-
-  const Surface* startSurface(const State& state) const {
-    return state.startSurface;
-  }
-
-  const Surface* targetSurface(const State& state) const {
-    return state.targetSurface;
-  }
-
-  bool targetReached(const State& state) const { return state.targetReached; }
-
-  bool endOfWorldReached(State& state) const {
-    return state.currentVolume == nullptr;
-  }
-
-  bool navigationBreak(const State& state) const {
-    return state.navigationBreak;
-  }
-
-  void currentSurface(State& state, const Surface* surface) const {
-    state.currentSurface = surface;
-  }
-
-  void targetReached(State& state, bool targetReached) const {
-    state.targetReached = targetReached;
-  }
-
-  void navigationBreak(State& state, bool navigationBreak) const {
-    state.navigationBreak = navigationBreak;
-  }
+  using TryAllNavigatorBase::currentSurface;
+  using TryAllNavigatorBase::currentVolume;
+  using TryAllNavigatorBase::currentVolumeMaterial;
+  using TryAllNavigatorBase::endOfWorldReached;
+  using TryAllNavigatorBase::navigationBreak;
+  using TryAllNavigatorBase::startSurface;
+  using TryAllNavigatorBase::targetReached;
+  using TryAllNavigatorBase::targetSurface;
 
   /// @brief Initialize call - start of navigation
   ///
