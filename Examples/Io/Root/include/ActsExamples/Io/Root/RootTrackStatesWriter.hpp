@@ -90,7 +90,7 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
 
  private:
   enum ParameterType { ePredicted = 0, eFiltered, eSmoothed, eUnbiased, eSize };
-  enum StateType {
+  enum class StateType : int {
     eMeasurement = 0,
     eOutlier,
     eHole,

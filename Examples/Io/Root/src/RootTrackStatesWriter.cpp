@@ -17,6 +17,7 @@
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
@@ -371,7 +372,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
 
-      m_stateType.push_back(static_cast<int>(getStateType(state)));
+      m_stateType.push_back(Acts::toUnderlying(getStateType(state)));
 
       // get the path length
       m_pathLength.push_back(state.pathLength());
