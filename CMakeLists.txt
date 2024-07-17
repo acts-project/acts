@@ -213,6 +213,7 @@ set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+set(_acts_pythia8_version 8.309)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -436,15 +437,7 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-  find_package(Pythia8 REQUIRED)
-
-  if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-      message(WARNING "ACTS is configured to build with C++20."
-        "As of version 309, Pythia8 does not compile under C++20."
-        "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
-    endif()
-  endif()
+  find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
