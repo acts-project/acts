@@ -21,17 +21,17 @@ from acts.examples.reconstruction import (
 
 from physmon_common import makeSetup
 
-u = acts.UnitConstants
-
-setup = makeSetup()
+setup = makeSetup(useGeometricConfig=True)
 
 
-def run_traccc_chain():
+def runTracccChain(platform):
+    u = acts.UnitConstants
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
+            trackFpes=False,
         )
 
         tp = Path(temp)
@@ -91,15 +91,13 @@ def run_traccc_chain():
             outputDirRoot=tp,
             chainConfig=chainConfig,
             logLevel=acts.logging.INFO,
+            platform=platform,
         )
 
         s.run()
         del s
 
-        name = "tracksummary_traccc";
+        name = f"tracksummary_traccc_{platform}";
         perf_file = tp / f"{name}.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, setup.outdir / f"{name}.root")
-
-
-run_traccc_chain()

@@ -20,8 +20,8 @@ shopt -s extglob
 
 
 mode=${1:-all}
-if ! [[ $mode = @(all|kalman|gsf|gx2f|fullchains|vertexing|simulation) ]]; then
-    echo "Usage: $0 <all|kalman|gsf|gx2f|fullchains|vertexing|simulation> (outdir)"
+if ! [[ $mode = @(all|kalman|gsf|gx2f|fullchains|vertexing|simulation|traccc_host|traccc_cuda) ]]; then
+    echo "Usage: $0 <all|kalman|gsf|gx2f|fullchains|vertexing|simulation|traccc_host|traccc_cuda> (outdir)"
     exit 1
 fi
 
@@ -155,6 +155,12 @@ if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
 fi
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     run_physmon_gen "Simulation" "simulation"
+fi
+if [[ "$mode" == "all" || "$mode" == "traccc_host" ]]; then
+    run_physmon_gen "Traccc Host Chain" "traccc_chain_host"
+fi
+if [[ "$mode" == "traccc_cuda" ]]; then
+    run_physmon_gen "Traccc Cuda Chain" "traccc_chain_cuda"
 fi
 echo "::endgroup::"
 
