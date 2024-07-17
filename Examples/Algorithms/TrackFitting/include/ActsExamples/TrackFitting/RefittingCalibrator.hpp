@@ -31,7 +31,8 @@ struct RefittingCalibrator {
     ConstProxy state;
   };
 
-  static const Acts::Surface* accessSurface(const Acts::SourceLink& sourceLink) {
+  static const Acts::Surface* accessSurface(
+      const Acts::SourceLink& sourceLink) {
     const auto& refittingSl = sourceLink.get<RefittingSourceLink>();
     return &refittingSl.state.referenceSurface();
   }

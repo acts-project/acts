@@ -117,13 +117,13 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
 
-    if(options.doRefit) {
+    if (options.doRefit) {
       gsfOptions.extensions.surfaceAccessor
-        .connect<&RefittingCalibrator::accessSurface>();
+          .connect<&RefittingCalibrator::accessSurface>();
     } else {
       gsfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &m_slSurfaceAccessor);
     }
     switch (reductionAlg) {
       case MixtureReductionAlgorithm::weightCut: {

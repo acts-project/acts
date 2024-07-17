@@ -115,13 +115,13 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
 
-    if(options.doRefit) {
+    if (options.doRefit) {
       gsfOptions.extensions.surfaceAccessor
-        .connect<&RefittingCalibrator::accessSurface>();
+          .connect<&RefittingCalibrator::accessSurface>();
     } else {
       gsfOptions.extensions.surfaceAccessor
-        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &m_slSurfaceAccessor);
+          .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+              &m_slSurfaceAccessor);
     }
 
     return kfOptions;

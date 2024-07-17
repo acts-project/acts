@@ -44,7 +44,9 @@ def runRefittingGsf(
             acts.logging.INFO,
             inputTracks="kf_tracks",
             outputTracks="gsf_tracks",
-            fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+            fit=acts.examples.makeGsfFitterFunction(
+                trackingGeometry, field, **gsfOptions
+            ),
         )
     )
 
