@@ -75,6 +75,13 @@ struct TripletCandidate {
 /// @tparam external_space_point_t The external spacepoint type.
 
 template <typename external_space_point_t>
+concept satisfyCandidateConcept = requires(external_space_point_t space_point) {
+  { space_point.x() } -> std::convertible_to<float>;
+  { space_point.y() } -> std::convertible_to<float>;
+  { space_point.z() } -> std::convertible_to<float>;
+};
+
+template <satisfyCandidateConcept external_space_point_t>
 class CandidatesForMiddleSp {
  public:
   using value_type = TripletCandidate<external_space_point_t>;

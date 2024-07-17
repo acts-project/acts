@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2022 CERN for the benefit of the Acts project
@@ -8,7 +9,7 @@
 
 namespace Acts {
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
     std::size_t n_low, std::size_t n_high) {
   m_max_size_high = n_high;
@@ -27,7 +28,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
   m_indices_low.reserve(n_low);
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 inline void CandidatesForMiddleSp<external_space_point_t>::pop(
     std::vector<std::size_t>& indices, std::size_t& current_size) {
   // Remove the candidate with the lowest weight in the collection
@@ -41,7 +42,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::pop(
   bubbledw(indices, 0, --current_size);
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
     const std::size_t n, const std::size_t max_size) const {
   // If the element exists, its index is lower than the current number
@@ -49,14 +50,14 @@ inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
   return n < max_size;
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 inline float CandidatesForMiddleSp<external_space_point_t>::weight(
     const std::vector<std::size_t>& indices, std::size_t n) const {
   // Get the weight of the n-th element
   return m_storage[indices[n]].weight;
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 inline void CandidatesForMiddleSp<external_space_point_t>::clear() {
   // do not clear max size, this is set only once
   // reset to 0 the number of stored elements
@@ -68,7 +69,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::clear() {
   m_indices_low.clear();
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::push(
     external_space_point_t& SpB, external_space_point_t& SpM,
     external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
@@ -82,7 +83,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
               zOrigin, isQuality);
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::push(
     std::vector<std::size_t>& indices, std::size_t& n, const std::size_t n_max,
     external_space_point_t& SpB, external_space_point_t& SpM,
@@ -113,7 +114,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
   return true;
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
     std::vector<std::size_t>& indices, std::size_t& n, const std::size_t n_max,
     value_type&& element) {
@@ -128,7 +129,7 @@ void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
   bubbleup(indices, n++);
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     std::vector<std::size_t>& indices, std::size_t n, std::size_t actual_size) {
   while (n < actual_size) {
@@ -185,7 +186,7 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
   }  // while loop
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
     std::vector<std::size_t>& indices, std::size_t n) {
   while (n != 0) {
@@ -208,7 +209,7 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
   }
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 std::vector<typename CandidatesForMiddleSp<external_space_point_t>::value_type>
 CandidatesForMiddleSp<external_space_point_t>::storage() {
   // this will retrieve the entire storage
@@ -256,7 +257,7 @@ CandidatesForMiddleSp<external_space_point_t>::storage() {
   return output;
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
     const value_type& i1, const value_type& i2) {
   if (i1.weight != i2.weight) {
@@ -292,19 +293,19 @@ bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
   return seed1_sum > seed2_sum;
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::ascendingByQuality(
     const value_type& i1, const value_type& i2) {
   return !descendingByQuality(i1, i2);
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 std::size_t
 CandidatesForMiddleSp<external_space_point_t>::nLowQualityCandidates() const {
   return m_n_low;
 }
 
-template <typename external_space_point_t>
+template <satisfyCandidateConcept external_space_point_t>
 std::size_t
 CandidatesForMiddleSp<external_space_point_t>::nHighQualityCandidates() const {
   return m_n_high;
