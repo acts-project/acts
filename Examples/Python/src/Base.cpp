@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +9,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -28,6 +31,16 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace Acts::Python {
+
+void addContext(Context& ctx) {
+  auto& m = ctx.get("main");
+
+  py::class_<Acts::GeometryContext>(m, "GeometryContext").def(py::init<>());
+  py::class_<Acts::MagneticFieldContext>(m, "MagneticFieldContext")
+      .def(py::init<>());
+  py::class_<Acts::CalibrationContext>(m, "CalibrationContext")
+      .def(py::init<>());
+}
 
 void addUnits(Context& ctx) {
   auto& m = ctx.get("main");
