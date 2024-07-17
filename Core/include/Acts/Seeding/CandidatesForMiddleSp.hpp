@@ -41,8 +41,23 @@ struct TripletCandidate {
   TripletCandidate& operator=(const TripletCandidate&) = default;
 
   /// @brief Move operations
-  TripletCandidate(TripletCandidate&&) = default;
-  TripletCandidate& operator=(TripletCandidate&&) = default;
+  TripletCandidate(TripletCandidate&& other) noexcept
+      : bottom(std::exchange(other.bottom, nullptr)),
+        middle(std::exchange(other.middle, nullptr)),
+        top(std::exchange(other.top, nullptr)),
+        weight(other.weight),
+        zOrigin(other.zOrigin),
+        isQuality(other.isQuality) {}
+
+  TripletCandidate& operator=(TripletCandidate&& other) noexcept {
+    bottom = std::exchange(other.bottom, nullptr);
+    middle = std::exchange(other.middle, nullptr);
+    top = std::exchange(other.top, nullptr);
+    weight = other.weight;
+    zOrigin = other.zOrigin;
+    isQuality = other.isQuality;
+    return *this;
+  }
 
   external_space_point_t* bottom{nullptr};
   external_space_point_t* middle{nullptr};
