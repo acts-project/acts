@@ -39,26 +39,23 @@ void addDetray(Context& ctx) {
   }
 
   { mex.def("writeToJson", &DetrayConverter::writeToJson); }
-  /**
-          {
-              /// @brief Converts an Acts::Detector to a detray::detector
-              mex.def("convertDetectorToDetray",
-                      [](const Acts::GeometryContext& gctx,
-                      const Acts::Experimental::Detector& acts_detector,
-                      const std::string& name) -> auto
-     {//detector<default_metadata>
+  
+  {
+    /// @brief Converts an Acts::Detector to a detray::detector
+    mex.def("convertDetectorToDetray",
+      [](const Acts::GeometryContext& gctx,
+      const Acts::Experimental::Detector& acts_detector,
+      const std::string& name) -> auto
+      {//detector<default_metadata>
 
-                          // Create a host memory resource
-                          vecmem::host_memory_resource host_mr;
-                          // Convert Acts detector to detray detector using the
-     detray converter function auto det_tuple =
-     DetrayConverter::detrayConvert(acts_detector, gctx, host_mr);
+        // Create a host memory resource
+        vecmem::host_memory_resource host_mr;
+        // Convert Acts detector to detray detector using the
+        auto detrayDet = DetrayConverter::convertDetector(gctx, acts_detector, host_mr);
 
-                          return true; //TO DO:: cannot return tuple
+        return true; //TO DO:: cannot return tuple
 
-                      });
-          }
-
-          **/
+      });
+    }
 }
 }  // namespace Acts::Python
