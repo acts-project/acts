@@ -2077,25 +2077,49 @@ def addTracccChain(
     logLevel: Optional[acts.logging.Level] = None,
     writeTrajectories: bool = True,
     writeCovMat=False,
+    platform="host",
 ) -> None:
-    from acts.examples import TracccChainAlgorithmHost
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = TracccChainAlgorithmHost(
-        level=customLogLevel(),
-        inputCells=inputCells,
-        inputMeasurements=inputMeasurements,
-        outputTracks=outputTracks,
-        trackingGeometry=trackingGeometry,
-        field=field,
-        digitizationConfigs=acts.examples.readDigiConfigFromJson(
-            str(digiConfigFile),
-        ),
-        chainConfig=chainConfig,
-    )
+    platform = platform.lower()
+    if (platform not in ["host", "cuda"]):
+        raise RuntimeError("Invalid platform type (expected either 'host' or 'cuda')")
+    
+    if (platform == "host"):
+        from acts.examples import TracccChainAlgorithmHost
+        alg = TracccChainAlgorithmHost(
+            level=customLogLevel(),
+            inputCells=inputCells,
+            inputMeasurements=inputMeasurements,
+            outputTracks=outputTracks,
+            trackingGeometry=trackingGeometry,
+            field=field,
+            digitizationConfigs=acts.examples.readDigiConfigFromJson(
+                str(digiConfigFile),
+            ),
+            chainConfig=chainConfig,
+        )
 
-    s.addAlgorithm(alg)
+        s.addAlgorithm(alg)
+    
+    if (platform == "cuda"):
+        from acts.examples import TracccChainAlgorithmCuda
+        alg = TracccChainAlgorithmCuda(
+            level=customLogLevel(),
+            inputCells=inputCells,
+            inputMeasurements=inputMeasurements,
+            outputTracks=outputTracks,
+            trackingGeometry=trackingGeometry,
+            field=field,
+            digitizationConfigs=acts.examples.readDigiConfigFromJson(
+                str(digiConfigFile),
+            ),
+            chainConfig=chainConfig,
+        )
+
+        s.addAlgorithm(alg)
+
     s.addWhiteboardAlias("tracks", alg.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
@@ -2116,7 +2140,7 @@ def addTracccChain(
 
     addTrackWriters(
         s,
-        name="traccc",
+        name=f"traccc_{platform}",
         tracks=alg.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,

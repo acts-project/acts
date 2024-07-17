@@ -110,6 +110,13 @@ parser.add_argument(
     help="Construct experimental geometry",
 )
 
+parser.add_argument(
+    "--platform",
+    help="Platform to run the traccc chain on (host/device)",
+    type=str,
+    default="host"
+)
+
 args = parser.parse_args()
 
 decorators = None
@@ -265,6 +272,7 @@ addTracccChain(
     outputDirRoot=outputDir,
     chainConfig=chainConfig,
     logLevel=acts.logging.DEBUG,
+    platform=args.platform,
     # outputDirCsv=outputDir,
 )
 
