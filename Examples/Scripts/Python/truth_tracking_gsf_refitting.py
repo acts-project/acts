@@ -12,7 +12,6 @@ u = acts.UnitConstants
 
 def runRefittingGsf(
     trackingGeometry,
-    decorators,
     field,
     outputDir,
     s: acts.examples.Sequencer = None,
@@ -31,10 +30,9 @@ def runRefittingGsf(
 
     gsfOptions = {
         "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
-        "maxComponents": 4,
-        "abortOnError": False,
-        "disableAllMaterialHandling": False,
-        "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
+        "maxComponents": 12,
+        "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
+        "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
         "weightCutoff": 1.0e-4,
         "level": acts.logging.INFO,
     }
