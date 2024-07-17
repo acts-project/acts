@@ -166,6 +166,8 @@ class GridPortalLinkT : public GridPortalLink {
         m_grid(std::tuple{std::move(axes)...}) {
     if (const auto* cylinder = dynamic_cast<const CylinderSurface*>(&surface)) {
       checkConsistency(*cylinder);
+    } else if (const auto* disc = dynamic_cast<const DiscSurface*>(&surface)) {
+      checkConsistency(*disc);
     } else {
       throw std::logic_error{"Surface type is not supported"};
     }
@@ -242,6 +244,10 @@ class GridPortalLinkT : public GridPortalLink {
       checkRPhi(axisLoc0);
       checkZ(axisLoc1);
     }
+  }
+
+  void checkConsistency(const DiscSurface& disc) const {
+    throw std::logic_error{"DiscSurface not implemented"};
   }
 
   std::unique_ptr<GridPortalLink> extendTo2D(

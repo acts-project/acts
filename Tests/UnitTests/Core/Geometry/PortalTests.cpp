@@ -51,6 +51,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                     30_mm, 100_mm);
 
+    // Incompatible binning
     BOOST_CHECK_THROW(GridPortalLink::make(*cyl, BinningValue::binZ,
                                            Axis{AxisBound, 0, 5, 5}),
                       std::invalid_argument);
@@ -140,7 +141,20 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 }
 
 BOOST_AUTO_TEST_CASE(Disc) {
-  // @TODO: Add tests for disc surface grid portals
+  auto disc1 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
+
+  BOOST_CHECK_THROW(GridPortalLink::make(*disc1, BinningValue::binZ,
+                                         Axis{AxisBound, 30_mm, 100_mm, 3}),
+                    std::invalid_argument);
+
+  auto grid1 = GridPortalLink::make(*disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 3});
+  BOOST_REQUIRE_NE(grid1, nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Plane) {
+  // @TODO: Add plane tests
 }
 
 BOOST_AUTO_TEST_SUITE_END()
