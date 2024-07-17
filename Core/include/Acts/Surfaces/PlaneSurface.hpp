@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -237,6 +236,7 @@ class PlaneSurface : public RegularSurface {
  private:
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, PlaneSurface);
+static_assert(RegularSurfaceConcept<PlaneSurface>,
+              "PlaneSurface does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts
