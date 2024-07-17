@@ -61,7 +61,6 @@ def run() -> None:
         "Acts::RotationMatrix3",
         "Acts::Translation2",
         "Acts::Translation3",
-        "Acts::GeometryContext",
         "Acts::FreeVector",
         "Acts::FreeMatrix",
         "Acts::SurfaceVector",
@@ -81,6 +80,9 @@ def run() -> None:
     }
 
     role_instances["class"] |= {
+        "Acts::GeometryContext",
+        "Acts::MagneticFieldContext",
+        "Acts::CalibrationContext",
         "Acts::BinningData",
         "Acts::Direction",
         "Acts::ConstrainedStep",
