@@ -87,10 +87,9 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
     extensions.calibrator.connect<&calibrator_t::calibrate>(&calibrator);
 
     if (options.doRefit) {
-      gsfOptions.extensions.surfaceAccessor
-          .connect<&RefittingCalibrator::accessSurface>();
+      extensions.surfaceAccessor.connect<&RefittingCalibrator::accessSurface>();
     } else {
-      gsfOptions.extensions.surfaceAccessor
+      extensions.surfaceAccessor
           .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
               &m_slSurfaceAccessor);
     }

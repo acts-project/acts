@@ -116,10 +116,10 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
         &calibrator);
 
     if (options.doRefit) {
-      gsfOptions.extensions.surfaceAccessor
+      kfOptions.extensions.surfaceAccessor
           .connect<&RefittingCalibrator::accessSurface>();
     } else {
-      gsfOptions.extensions.surfaceAccessor
+      kfOptions.extensions.surfaceAccessor
           .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
               &m_slSurfaceAccessor);
     }
