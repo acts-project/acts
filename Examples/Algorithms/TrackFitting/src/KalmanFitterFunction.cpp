@@ -114,9 +114,15 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.extensions.surfaceAccessor
+
+    if(options.doRefit) {
+      gsfOptions.extensions.surfaceAccessor
+        .connect<&RefittingCalibrator::accessSurface>();
+    } else {
+      gsfOptions.extensions.surfaceAccessor
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-            &slSurfaceAccessor);
+            &m_slSurfaceAccessor);
+    }
 
     return kfOptions;
   }
