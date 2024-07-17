@@ -121,7 +121,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     } else {
       kfOptions.extensions.surfaceAccessor
           .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-              &m_slSurfaceAccessor);
+              &slSurfaceAccessor);
     }
 
     return kfOptions;
