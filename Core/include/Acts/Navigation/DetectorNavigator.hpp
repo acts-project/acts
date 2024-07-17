@@ -127,11 +127,6 @@ class DetectorNavigator {
     state.navigationBreak = navigationBreak;
   }
 
-  void insertExternalSurface(State& /*state*/,
-                             GeometryIdentifier /*geoid*/) const {
-    // TODO what about external surfaces?
-  }
-
   /// Initialize call - start of propagation
   ///
   /// @tparam propagator_state_t The state type of the propagator
