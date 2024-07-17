@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <algorithm>
 #include <limits>
 #include <memory>
@@ -76,9 +78,9 @@ struct TripletCandidate {
 
 template <typename external_space_point_t>
 concept satisfyCandidateConcept = requires(external_space_point_t space_point) {
-  { space_point.x() } -> std::convertible_to<float>;
-  { space_point.y() } -> std::convertible_to<float>;
-  { space_point.z() } -> std::convertible_to<float>;
+  { space_point.x() } -> std::convertible_to<Acts::ActsScalar>;
+  { space_point.y() } -> std::convertible_to<Acts::ActsScalar>;
+  { space_point.z() } -> std::convertible_to<Acts::ActsScalar>;
 };
 
 template <satisfyCandidateConcept external_space_point_t>

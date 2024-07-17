@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2022 CERN for the benefit of the Acts project
@@ -275,8 +274,8 @@ bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
   const auto& middle_l2 = i2.middle;
   const auto& top_l2 = i2.top;
 
-  float seed1_sum = 0.;
-  float seed2_sum = 0.;
+  Acts::ActsScalar seed1_sum = 0.;
+  Acts::ActsScalar seed2_sum = 0.;
 
   seed1_sum +=
       bottom_l1->y() * bottom_l1->y() + bottom_l1->z() * bottom_l1->z();
