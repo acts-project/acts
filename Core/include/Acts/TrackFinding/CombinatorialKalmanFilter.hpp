@@ -708,9 +708,9 @@ class CombinatorialKalmanFilter {
                         const stepper_t& stepper, const navigator_t& navigator,
                         result_type& result) const {
       std::size_t nBranchesOnSurface = 0;
-      // Count the number of source links on the surface
-      auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
-      if (slBegin != slEnd) {
+
+      if (auto [slBegin, slEnd] = m_sourcelinkAccessor(*surface);
+          slBegin != slEnd) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
@@ -763,7 +763,39 @@ class CombinatorialKalmanFilter {
         auto [nNewBranchesOnSurface, isOutlier] = *procRes;
         nBranchesOnSurface = nNewBranchesOnSurface;
 
-        if (nBranchesOnSurface > 0 && !isOutlier) {
+        if (nBranchesOnSurface == 0) {
+          auto stateMask =
+              TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
+
+          currentBranch.nHoles()++;
+
+          // Add a hole track state to the multitrajectory
+          IndexType currentTip = addNonSourcelinkState(stateMask, boundState,
+                                                       result, true, prevTip);
+          auto nonSourcelinkState =
+              result.trackStates->getTrackState(currentTip);
+          currentBranch.tipIndex() = currentTip;
+
+          using BranchStopperResult =
+              CombinatorialKalmanFilterBranchStopperResult;
+          BranchStopperResult branchStopperResult =
+              m_extensions.branchStopper(currentBranch, nonSourcelinkState);
+
+          // Check the branch
+          if (branchStopperResult == BranchStopperResult::Continue) {
+            // Remembered the active tip and its state
+          } else {
+            // No branch on this surface
+            nBranchesOnSurface = 0;
+
+            if (branchStopperResult == BranchStopperResult::StopAndKeep) {
+              storeLastActiveBranch(result);
+            }
+
+            // Remove the tip from list of active tips
+            result.activeBranches.pop_back();
+          }
+        } else if (!isOutlier) {
           // If there are measurement track states on this surface
           ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
                                                          << " branches");
