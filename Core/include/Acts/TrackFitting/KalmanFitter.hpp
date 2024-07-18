@@ -65,7 +65,7 @@ struct KalmanFitterExtensions {
                                          std::size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        Direction, const Logger&)>;
+                                        const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -365,18 +365,6 @@ class KalmanFitter {
                    << " momentum: "
                    << stepper.absoluteMomentum(state.stepping));
 
-      // Add the measurement surface as external surface to navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if constexpr (!isDirectNavigator) {
-        if (result.processedStates == 0) {
-          for (auto measurementIt = inputMeasurements->begin();
-               measurementIt != inputMeasurements->end(); measurementIt++) {
-            navigator.insertExternalSurface(state.navigation,
-                                            measurementIt->first);
-          }
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -467,7 +455,7 @@ class KalmanFitter {
                 "The target surface needed for aborting reversed propagation "
                 "is not provided");
             result.result =
-                Result<void>(KalmanFitterError::BackwardUpdateFailed);
+                Result<void>(KalmanFitterError::ReversePropagationFailed);
           } else {
             ACTS_VERBOSE(
                 "No target surface set. Completing without fitted track "
@@ -531,7 +519,7 @@ class KalmanFitter {
       if (result.lastMeasurementIndex ==
           Acts::MultiTrajectoryTraits::kInvalid) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
-        return KalmanFitterError::ReverseNavigationFailed;
+        return KalmanFitterError::ReversePropagationFailed;
       }
 
       // Remember the navigation direction has been reversed
@@ -563,7 +551,10 @@ class KalmanFitter {
       // Reset navigation state
       // We do not need to specify a target here since this will be handled
       // separately in the KF actor
-      state.navigation = navigator.makeState(&st.referenceSurface(), nullptr);
+      auto navigationOptions = state.navigation.options;
+      navigationOptions.startSurface = &st.referenceSurface();
+      navigationOptions.targetSurface = nullptr;
+      state.navigation = navigator.makeState(navigationOptions);
       navigator.initialize(state, stepper);
 
       // Update material effects for last measurement state in reversed
@@ -764,8 +755,8 @@ class KalmanFitter {
                               sourcelink_it->second, trackStateProxy);
 
         // If the update is successful, set covariance and
-        auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                            state.options.direction, logger());
+        auto updateRes =
+            extensions.updater(state.geoContext, trackStateProxy, logger());
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -1040,7 +1031,10 @@ class KalmanFitter {
       // Reset the navigation state to enable propagation towards the target
       // surface
       // Set targetSurface to nullptr as it is handled manually in the actor
-      state.navigation = navigator.makeState(&surface, nullptr);
+      auto navigationOptions = state.navigation.options;
+      navigationOptions.startSurface = &surface;
+      navigationOptions.targetSurface = nullptr;
+      state.navigation = navigator.makeState(navigationOptions);
       navigator.initialize(state, stepper);
 
       return Result<void>::success();
@@ -1128,6 +1122,12 @@ class KalmanFitter {
     // Set the trivial propagator options
     propagatorOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
+    // Add the measurement surface as external surface to navigator.
+    // We will try to hit those surface by ignoring boundary checks.
+    for (const auto& [surfaceId, _] : inputMeasurements) {
+      propagatorOptions.navigation.insertExternalSurface(surfaceId);
+    }
+
     // Catch the actor and set the measurements
     auto& kalmanActor =
         propagatorOptions.actionList.template get<KalmanActor>();
@@ -1200,7 +1200,7 @@ class KalmanFitter {
     using KalmanActor = Actor<parameters_t>;
 
     using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
+    using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
     using PropagatorOptions =
         typename propagator_t::template Options<Actors, Aborters>;
@@ -1227,9 +1227,7 @@ class KalmanFitter {
     kalmanActor.actorLogger = m_actorLogger.get();
 
     // Set the surface sequence
-    auto& dInitializer = propagatorOptions.actionList
-                             .template get<DirectNavigator::Initializer>();
-    dInitializer.navSurfaces = sSequence;
+    propagatorOptions.navigation.surfaces = sSequence;
 
     return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
                     track_container_t, holder_t>(sParameters, propagatorOptions,

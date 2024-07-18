@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include <memory>
-
-#if defined(__cpp_concepts)
-#include <concepts>
+#include <utility>
 
 namespace Acts {
 
@@ -28,5 +25,3 @@ concept MutableSurfaceVisitor = requires(T v) {
 };
 
 }  // namespace Acts
-
-#endif
