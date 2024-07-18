@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -123,6 +122,7 @@ class SurfaceStub : public RegularSurface {
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
 
-ACTS_STATIC_CHECK_CONCEPT(RegularSurfaceConcept, SurfaceStub);
+static_assert(RegularSurfaceConcept<SurfaceStub>,
+              "SurfaceStub does not fulfill RegularSurfaceConcept");
 
 }  // namespace Acts
