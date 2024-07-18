@@ -14,8 +14,9 @@ template <typename propagator_state_t, typename navigator_t>
 Result<double> SympyStepper::step(propagator_state_t& state,
                                   const navigator_t& /*navigator*/) const {
   return stepImpl(state.stepping, state.options.direction,
-                  state.options.stepTolerance, state.options.stepSizeCutOff,
-                  state.options.maxRungeKuttaStepTrials);
+                  state.options.stepping.stepTolerance,
+                  state.options.stepping.stepSizeCutOff,
+                  state.options.stepping.maxRungeKuttaStepTrials);
 }
 
 }  // namespace Acts

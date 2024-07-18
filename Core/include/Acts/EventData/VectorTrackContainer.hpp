@@ -15,7 +15,6 @@
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
@@ -225,8 +224,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void removeTrack_impl(IndexType itrack);
 
   template <typename T>
-  constexpr void addColumn_impl(std::string_view key) {
-    Acts::HashedString hashedKey = hashString(key);
+  constexpr void addColumn_impl(const std::string_view& key) {
+    HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
@@ -268,7 +267,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer);
+static_assert(TrackContainerBackend<VectorTrackContainer>,
+              "VectorTrackContainer does not fulfill TrackContainerBackend");
 
 class ConstVectorTrackContainer;
 
@@ -311,8 +311,9 @@ class ConstVectorTrackContainer final
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend,
-                          ConstVectorTrackContainer);
+static_assert(
+    TrackContainerBackend<ConstVectorTrackContainer>,
+    "ConstVectorTrackContainer does not fulfill TrackContainerBackend");
 
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)

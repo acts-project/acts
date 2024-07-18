@@ -62,6 +62,11 @@ MeasurementSelector::select(
   for (std::size_t i(0ul); i < candidates.size(); ++i) {
     auto& trackState = candidates[i];
 
+    // We access the dynamic size of the matrix here but use them later
+    // through a template function which accesses the data pointer
+    // with compile time size. That way the Eigen math operations are
+    // still done with compile time size and no dynamic memory allocation
+    // is needed.
     double chi2 =
         calculateChi2(trackState.effectiveCalibrated().data(),
                       trackState.effectiveCalibratedCovariance().data(),

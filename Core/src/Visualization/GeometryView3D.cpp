@@ -127,8 +127,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
   auto axes = surfaceArray.getAxes();
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
     // Cylinder surface array
-    if (binning[0] == binPhi && binning[1] == binZ) {
-      double R = arrayExtent.medium(binR) + gridConfig.offset;
+    if (binning[0] == BinningValue::binPhi &&
+        binning[1] == BinningValue::binZ) {
+      double R = arrayExtent.medium(BinningValue::binR) + gridConfig.offset;
       auto phiValues = axes[0]->getBinEdges();
       auto zValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
@@ -151,8 +152,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
         }
       }
 
-    } else if (binning[0] == binR && binning[1] == binPhi) {
-      double z = arrayExtent.medium(binZ) + gridConfig.offset;
+    } else if (binning[0] == BinningValue::binR &&
+               binning[1] == BinningValue::binPhi) {
+      double z = arrayExtent.medium(BinningValue::binZ) + gridConfig.offset;
       auto rValues = axes[0]->getBinEdges();
       auto phiValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;

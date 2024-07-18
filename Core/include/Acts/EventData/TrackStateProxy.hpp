@@ -17,13 +17,13 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cstddef>
 
 #include <Eigen/Core>
+#include <Eigen/src/Core/util/Constants.h>
 
 namespace Acts {
 
@@ -79,9 +79,7 @@ class TransitiveConstPointer {
 /// covariances.
 template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
-  enum {
-    Flags = Eigen::ColMajor | Eigen::AutoAlign,
-  };
+  constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
   using Scalar = ActsScalar;
 
@@ -90,9 +88,17 @@ struct FixedSizeTypes {
   using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
+
+  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using DynamicCovariance =
+      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+  using DynamicCoefficientsMap =
+      Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
+  using DynamicCovarianceMap =
+      Eigen::Map<ConstIf<DynamicCovariance, ReadOnlyMaps>>;
 };
 
-/// Type construction helper for dynamic sized coefficients and associated
+// Type construction helper for dynamic sized coefficients and associated
 /// covariances.
 template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
@@ -106,6 +112,7 @@ struct DynamicSizeTypes {
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
+
 }  // namespace detail_lt
 
 // This is public
@@ -117,27 +124,25 @@ struct TrackStateTraits {
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CovarianceMap;
-  using Measurement =
+  using Calibrated =
       typename detail_lt::FixedSizeTypes<M, ReadOnly>::CoefficientsMap;
-  using MeasurementCovariance =
+  using CalibratedCovariance =
       typename detail_lt::FixedSizeTypes<M, ReadOnly>::CovarianceMap;
-  using EffectiveMeasurement =
+  using EffectiveCalibrated =
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CoefficientsMap;
-  using EffectiveMeasurementCovariance =
+  using EffectiveCalibratedCovariance =
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
 
   constexpr static auto ProjectorFlags = Eigen::ColMajor | Eigen::AutoAlign;
   using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
-  using EffectiveProjector =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic,
-                    TrackStateTraits<M, ReadOnly>::ProjectorFlags, M,
-                    eBoundSize>;
+  using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
+                                           ProjectorFlags, M, eBoundSize>;
 };
 
 /// Proxy object to access a single point on the trajectory.
 ///
 /// @tparam SourceLink Type to link back to an original measurement
-/// @tparam M         Maximum number of measurement dimensions
+/// @tparam M          Maximum number of measurement dimensions
 /// @tparam read_only  true for read-only access to underlying storage
 template <typename trajectory_t, std::size_t M, bool read_only = true>
 class TrackStateProxy {
@@ -163,43 +168,43 @@ class TrackStateProxy {
   /// Same as @ref Covariance, but with const semantics
   using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
 
+  /// Map-type for a calibrated measurement vector, where the local measurement
+  /// dimension is variable.
+  template <std::size_t N>
+  using Calibrated = typename TrackStateTraits<N, ReadOnly>::Calibrated;
+
+  /// Same as @c Calibrated, but with const semantics
+  template <std::size_t N>
+  using ConstCalibrated = typename TrackStateTraits<N, true>::Calibrated;
+
+  /// Map-type for a calibrated measurement covariance matrix, where the local
+  /// measurement dimension is variable.
+  template <std::size_t N>
+  using CalibratedCovariance =
+      typename TrackStateTraits<N, ReadOnly>::CalibratedCovariance;
+
+  /// Same as @ref CalibratedCovariance, but with const semantics
+  template <std::size_t N>
+  using ConstCalibratedCovariance =
+      typename TrackStateTraits<N, true>::CalibratedCovariance;
+
   /// Map-type for a measurement vector, where the local measurement dimension
   /// is variable.
-  template <std::size_t N>
-  using Measurement = typename TrackStateTraits<N, ReadOnly>::Measurement;
+  using EffectiveCalibrated =
+      typename TrackStateTraits<M, ReadOnly>::EffectiveCalibrated;
 
-  /// Same as @c Measurement, but with const semantics
-  template <std::size_t N>
-  using ConstMeasurement = typename TrackStateTraits<N, true>::Measurement;
+  /// Same as @c EffectiveCalibrated, but with const semantics
+  using ConstEffectiveCalibrated =
+      typename TrackStateTraits<M, true>::EffectiveCalibrated;
 
   /// Map-type for a measurement covariance matrix, where the local measurement
   /// dimension is variable.
-  template <std::size_t N>
-  using MeasurementCovariance =
-      typename TrackStateTraits<N, ReadOnly>::MeasurementCovariance;
+  using EffectiveCalibratedCovariance =
+      typename TrackStateTraits<M, ReadOnly>::EffectiveCalibratedCovariance;
 
-  /// Same as @ref MeasurementCovariance, but with const semantics
-  template <std::size_t N>
-  using ConstMeasurementCovariance =
-      typename TrackStateTraits<N, true>::MeasurementCovariance;
-
-  /// Map-type for a measurement vector, where the local measurement dimension
-  /// is variable.
-  using EffectiveMeasurement =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveMeasurement;
-
-  /// Same as @c EffectiveMeasurement, but with const semantics
-  using ConstEffectiveMeasurement =
-      typename TrackStateTraits<M, true>::EffectiveMeasurement;
-
-  /// Map-type for a measurement covariance matrix, where the local measurement
-  /// dimension is variable.
-  using EffectiveMeasurementCovariance =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveMeasurementCovariance;
-
-  /// Same as @ref EffectiveMeasurementCovariance, but with const semantics
-  using ConstEffectiveMeasurementCovariance =
-      typename TrackStateTraits<M, true>::EffectiveMeasurementCovariance;
+  /// Same as @ref EffectiveCalibratedCovariance, but with const semantics
+  using ConstEffectiveCalibratedCovariance =
+      typename TrackStateTraits<M, true>::EffectiveCalibratedCovariance;
 
   /// The index type of the track state container
   using IndexType = TrackIndexType;
@@ -594,9 +599,6 @@ class TrackStateProxy {
   /// The projector matrix is packed as a bitset, which is converted to a matrix
   /// on-demand (and therefore returned by value).
   ///
-  /// A convenience function to assign this from the @ref Measurement class
-  /// is provided, although it's use is discouraged.
-  ///
   /// The track state also includes a @ref SourceLink which acts as a proxy
   /// to the original uncalibrated measurement that the calibrated measurement
   /// was derived from. It is set and returned by value, to allow unpacking /
@@ -709,9 +711,9 @@ class TrackStateProxy {
   /// @return The measurement vector
   /// @note Const version
   template <std::size_t measdim>
-  ConstMeasurement<measdim> calibrated() const {
+  ConstCalibrated<measdim> calibrated() const {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(m_istate);
+    return m_traj->self().template calibrated<measdim>(m_istate);
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -720,18 +722,18 @@ class TrackStateProxy {
   /// @note Mutable version
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  Measurement<measdim> calibrated() {
+  Calibrated<measdim> calibrated() {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(m_istate);
+    return m_traj->self().template calibrated<measdim>(m_istate);
   }
 
   /// Const full calibrated measurement covariance matrix. The effective
   /// covariance is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
   template <std::size_t measdim>
-  ConstMeasurementCovariance<measdim> calibratedCovariance() const {
+  ConstCalibratedCovariance<measdim> calibratedCovariance() const {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(m_istate);
+    return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
 
   /// Mutable full calibrated measurement covariance matrix. The effective
@@ -739,45 +741,44 @@ class TrackStateProxy {
   /// @return The measurement covariance matrix
   template <std::size_t measdim, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  MeasurementCovariance<measdim> calibratedCovariance() {
+  CalibratedCovariance<measdim> calibratedCovariance() {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(m_istate);
+    return m_traj->self().template calibratedCovariance<measdim>(m_istate);
   }
 
   /// Mutable dynamic measurement vector with only the valid dimensions.
   /// @warning The dynamic vector has a runtime overhead!
   /// @return The effective calibrated measurement vector
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  EffectiveMeasurement effectiveCalibrated() {
+  EffectiveCalibrated effectiveCalibrated() {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().effectiveMeasurement(m_istate);
+    return m_traj->self().effectiveCalibrated(m_istate);
   }
 
   /// Const dynamic measurement vector with only the valid dimensions.
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated measurement vector
-  ConstEffectiveMeasurement effectiveCalibrated() const {
+  ConstEffectiveCalibrated effectiveCalibrated() const {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().effectiveMeasurement(m_istate);
+    return m_traj->self().effectiveCalibrated(m_istate);
   }
 
   /// Mutable dynamic measurement covariance matrix with only the valid
   /// dimensions.
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated covariance matrix
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  EffectiveMeasurementCovariance effectiveCalibratedCovariance() {
+  EffectiveCalibratedCovariance effectiveCalibratedCovariance() {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().effectiveMeasurementCovariance(m_istate);
+    return m_traj->self().effectiveCalibratedCovariance(m_istate);
   }
 
   /// Const dynamic measurement covariance matrix with only the valid
   /// dimensions.
   /// @warning The dynamic matrix has a runtime overhead!
   /// @return The effective calibrated covariance matrix
-  ConstEffectiveMeasurementCovariance effectiveCalibratedCovariance() const {
+  ConstEffectiveCalibratedCovariance effectiveCalibratedCovariance() const {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().effectiveMeasurementCovariance(m_istate);
+    return m_traj->self().effectiveCalibratedCovariance(m_istate);
   }
 
   /// Return the (dynamic) number of dimensions stored for this measurement.
@@ -863,8 +864,8 @@ class TrackStateProxy {
   ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
-  template <ACTS_CONCEPT(TrackStateProxyConcept) track_state_proxy_t,
-            bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  template <TrackStateProxyConcept track_state_proxy_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
   void copyFrom(const track_state_proxy_t& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,6 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -28,6 +27,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -394,30 +394,30 @@ class VectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::Measurement<measdim> measurement_impl(IndexType istate) {
+  TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType istate) {
     IndexType offset = m_measOffset[istate];
-    return TrackStateProxy::Measurement<measdim>{&m_meas[offset]};
+    return TrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
+  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
+  TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
       IndexType istate) {
     IndexType offset = m_measCovOffset[istate];
-    return TrackStateProxy::MeasurementCovariance<measdim>{&m_measCov[offset]};
+    return TrackStateProxy::CalibratedCovariance<measdim>{&m_measCov[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType istate) const {
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
+    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -457,7 +457,7 @@ class VectorMultiTrajectory final
 
   template <typename T>
   void addColumn_impl(std::string_view key) {
-    Acts::HashedString hashedKey = hashString(key);
+    HashedString hashedKey = hashString(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
@@ -499,7 +499,9 @@ class VectorMultiTrajectory final
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend, VectorMultiTrajectory);
+static_assert(
+    MutableMultiTrajectoryBackend<VectorMultiTrajectory>,
+    "VectorMultiTrajectory does not fulfill MutableMultiTrajectoryBackend");
 
 class ConstVectorMultiTrajectory;
 
@@ -548,17 +550,17 @@ class ConstVectorMultiTrajectory final
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::Measurement<measdim> measurement_impl(
+  ConstTrackStateProxy::Calibrated<measdim> calibrated_impl(
       IndexType istate) const {
     IndexType offset = m_measOffset[istate];
-    return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
+    return ConstTrackStateProxy::Calibrated<measdim>{&m_meas[offset]};
   }
 
   template <std::size_t measdim>
-  ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType istate) const {
+  ConstTrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType istate) const {
     IndexType offset = m_measCovOffset[istate];
-    return ConstTrackStateProxy::MeasurementCovariance<measdim>{
+    return ConstTrackStateProxy::CalibratedCovariance<measdim>{
         &m_measCov[offset]};
   }
 
@@ -582,7 +584,8 @@ class ConstVectorMultiTrajectory final
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ConstMultiTrajectoryBackend,
-                          ConstVectorMultiTrajectory);
+static_assert(
+    ConstMultiTrajectoryBackend<ConstVectorMultiTrajectory>,
+    "ConctVectorMultiTrajectory does not fulfill ConstMultiTrajectoryBackend");
 
 }  // namespace Acts

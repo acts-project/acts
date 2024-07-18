@@ -14,11 +14,10 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 
 #include <array>
 #include <map>
@@ -71,7 +70,7 @@ class Portal {
   /// @tparam visitor_t Type of the callable visitor
   ///
   /// @param visitor will be called with the represented surface
-  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
+  template <SurfaceVisitor visitor_t>
   void visitSurface(visitor_t&& visitor) const {
     visitor(m_surface.get());
   }
@@ -81,7 +80,7 @@ class Portal {
   /// @tparam visitor_t Type of the callable visitor
   ///
   /// @param visitor will be called with the represented surface
-  template <ACTS_CONCEPT(MutableSurfaceVisitor) visitor_t>
+  template <MutableSurfaceVisitor visitor_t>
   void visitMutableSurface(visitor_t&& visitor) {
     visitor(m_surface.get());
   }
