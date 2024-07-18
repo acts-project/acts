@@ -172,7 +172,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       int deltaSeedConf =
           compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (seedFilterState.numQualitySeeds != 0 && deltaSeedConf == 0)) {
+          (candidates_collector.nHighQualityCandidates() != 0 &&
+           deltaSeedConf == 0)) {
         continue;
       }
       bool seedRangeCuts =
@@ -204,11 +205,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // If this is reached, we remove the seed with the lowest weight.
         candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                   weight, zOrigin, true);
-        if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
-          // fill high quality seed
-          seedFilterState.numQualitySeeds++;
-        }
-
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
         weightMax = weight;
@@ -222,25 +218,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                 weight, zOrigin, false);
-      if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
-        // fill seed
-        seedFilterState.numSeeds++;
-      }
     }
   }  // loop on tops
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation && maxWeightSeed &&
-      seedFilterState.numQualitySeeds == 0) {
+      candidates_collector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
 
     candidates_collector.push(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
                               weightMax, zOrigin, false);
-    if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
-      // fill seed
-      seedFilterState.numSeeds++;
-    }
   }
 }
 
@@ -252,10 +240,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     Acts::SpacePointData& spacePointData,
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
-    const std::size_t numQualitySeeds, collection_t& outputCollection) const {
+    collection_t& outputCollection) const {
   // retrieve all candidates
   // this collection is already sorted
   // higher weights first
+  std::size_t numQualitySeeds = candidates_collector.nHighQualityCandidates();
   auto extended_collection = candidates_collector.storage();
   filterSeeds_1SpFixed(spacePointData, extended_collection, numQualitySeeds,
                        outputCollection);
