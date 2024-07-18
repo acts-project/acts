@@ -18,6 +18,7 @@
 #include <optional>
 #include <set>
 #include <unordered_set>
+#include <span>
 
 #include "HoughVectors.hpp"
 
@@ -110,10 +111,14 @@ class HoughCell {
   /// @brief access the number of unique hits compatible with this cell
   YieldType nHits() const { return m_nHits; }
   /// @brief access the set of layers compatible with this cell
-  const std::unordered_set<unsigned>& layers() const { return m_layers; }
-  /// @brief access the set of unique hits compatible with this cell
-  const std::unordered_set<identifier_t>& hits() const { return m_hits; }
-  /// @brief reset this cell, removing any existing content.
+  // const std::unordered_set<unsigned>& layers() const { return m_layers; }
+  // /// @brief access the set of unique hits compatible with this cell
+  // const std::unordered_set<identifier_t>& hits() const { return m_hits; }
+  // /// @brief reset this cell, removing any existing content.
+  std::span<unsigned, std::dynamic_extent> getLayers();
+
+  const std::span<const identifier_t, std::dynamic_extent> getHits() const ;
+
   void reset();
 
  private:
@@ -122,10 +127,18 @@ class HoughCell {
   YieldType m_nLayers =
       0;                  // (weighted) number of layers with hits on this cell
   YieldType m_nHits = 0;  // (weighted) number of unique hits on this cell
-  std::unordered_set<unsigned> m_layers =
-      {};  // set of layers with hits on this cell
-  std::unordered_set<identifier_t> m_hits =
-      {};  // set of unique hits on this cell
+  // std::unordered_set<unsigned> m_layers =
+  //     {};  // set of layers with hits on this cell
+  // std::unordered_set<identifier_t> m_hits =
+  //     {};  // set of unique hits on this cell
+
+  std::vector<unsigned> m_layers = std::vector<unsigned>(20,0); // vector of layers with hits on this cell
+
+  std::vector<identifier_t> m_hits = std::vector<identifier_t>(20); //vector of hits on this cell
+
+  std::size_t m_ihit = 0;
+
+  std::size_t m_ilayer = 0;
 };
 
 /// @brief Configuration - number of bins in each axis.
@@ -196,9 +209,11 @@ class HoughPlane {
   /// @param xBin: bin index in the first coordinate
   /// @param yBin: bin index in the second coordinate
   /// @return the set of identifiers of the hits for this cell
-  const std::unordered_set<identifier_t>& hitIds(std::size_t xBin,
-                                                 std::size_t yBin) const {
-    return m_houghHist(xBin, yBin).hits();
+  std::unordered_set<identifier_t> hitIds(std::size_t xBin, std::size_t yBin) const {
+
+    const auto hits_span = m_houghHist(xBin, yBin).getHits();
+    
+    return std::unordered_set<identifier_t>(hits_span.begin(), hits_span.end());
   }
   /// @brief get the (weighted) number of hits in one cell of the histogram
   /// @param xBin: bin index in the first coordinate
