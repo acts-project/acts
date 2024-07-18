@@ -636,7 +636,7 @@ def test_refitting(tmp_path, detector_config):
     seq = Sequencer(events=1, numThreads=1)
 
     # Only check if it runs without errors right known
-    # Changes in fitter behaviour should be catched by other tests
+    # Changes in fitter behaviour should be caught by other tests
     runRefittingGsf(
         trackingGeometry=detector_config.trackingGeometry,
         field=field,
