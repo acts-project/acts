@@ -50,6 +50,18 @@ class IGrid {
     return os;
   }
 
+  friend bool operator==(const IGrid& lhs, const IGrid& rhs) {
+    auto lhsAxes = lhs.axes();
+    auto rhsAxes = rhs.axes();
+    return lhsAxes.size() == rhsAxes.size() &&
+           std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(),
+                      [](const IAxis* a, const IAxis* b) { return *a == *b; });
+  }
+
+  friend bool operator!=(const IGrid& lhs, const IGrid& rhs) {
+    return !(lhs == rhs);
+  }
+
  protected:
   virtual void toStream(std::ostream& os) const = 0;
 };
