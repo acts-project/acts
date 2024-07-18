@@ -8,19 +8,15 @@
 
 #pragma once
 
-#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
-// #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <concepts>
 #include <memory>
 #include <type_traits>
 
@@ -65,7 +61,8 @@ concept PortalSurfaceConcept =
 
 class PortalLinkBase {
  public:
-  PortalLinkBase(const RegularSurface& surface) : m_surface(&surface) {}
+  PortalLinkBase(std::shared_ptr<RegularSurface> surface)
+      : m_surface(std::move(surface)) {}
 
   virtual ~PortalLinkBase() = default;
   // virtual const Volume* resolveVolume(const Vector3& position) const = 0;
@@ -88,7 +85,7 @@ class PortalLinkBase {
       const RegularSurface& surfaceB, BinningValue direction,
       const Logger& logger = getDummyLogger()) const;
 
-  const RegularSurface* m_surface;
+  std::shared_ptr<RegularSurface> m_surface;
 };
 
 class BinaryPortalLink : public PortalLinkBase {};
@@ -100,14 +97,15 @@ class GridPortalLinkT;
 
 class GridPortalLink : public PortalLinkBase {
  protected:
-  GridPortalLink(const RegularSurface& surface, BinningValue direction)
-      : PortalLinkBase(surface), m_direction(direction) {}
+  GridPortalLink(std::shared_ptr<RegularSurface> surface,
+                 BinningValue direction)
+      : PortalLinkBase(std::move(surface)), m_direction(direction) {}
 
  public:
   template <PortalSurfaceConcept surface_t, typename axis_t>
-  static std::unique_ptr<GridPortalLink> make(const surface_t& surface,
-                                              BinningValue direction,
-                                              axis_t&& axis) {
+  static std::unique_ptr<GridPortalLink> make(
+      std::shared_ptr<surface_t> surface, BinningValue direction,
+      axis_t&& axis) {
     if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
       if (direction != BinningValue::binZ &&
           direction != BinningValue::binRPhi) {
@@ -126,8 +124,8 @@ class GridPortalLink : public PortalLinkBase {
 
   template <PortalSurfaceConcept surface_t, typename axis_1_t,
             typename axis_2_t>
-  static std::unique_ptr<GridPortalLink> make(const surface_t& surface,
-                                              axis_1_t axis1, axis_2_t axis2) {
+  static std::unique_ptr<GridPortalLink> make(
+      std::shared_ptr<surface_t> surface, axis_1_t axis1, axis_2_t axis2) {
     std::optional<BinningValue> direction;
     if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
       direction = BinningValue::binRPhi;
@@ -155,8 +153,9 @@ class GridPortalLink : public PortalLinkBase {
   void checkConsistency(const DiscSurface& disc) const;
 
   std::unique_ptr<GridPortalLink> extendTo2D(
-      const CylinderSurface& surface) const;
-  std::unique_ptr<GridPortalLink> extendTo2D(const DiscSurface& surface) const;
+      const std::shared_ptr<CylinderSurface>& surface) const;
+  std::unique_ptr<GridPortalLink> extendTo2D(
+      const std::shared_ptr<DiscSurface>& surface) const;
 
  private:
   BinningValue m_direction;
@@ -171,13 +170,15 @@ class GridPortalLinkT : public GridPortalLink {
   static_assert(DIM == 1 || DIM == 2,
                 "GridPortalLinks only support 1D or 2D grids");
 
-  GridPortalLinkT(const RegularSurface& surface, BinningValue direction,
-                  Axes&&... axes)
-      : GridPortalLink(surface, direction),
+  GridPortalLinkT(std::shared_ptr<RegularSurface> surface,
+                  BinningValue direction, Axes&&... axes)
+      : GridPortalLink(std::move(surface), direction),
         m_grid(std::tuple{std::move(axes)...}) {
-    if (const auto* cylinder = dynamic_cast<const CylinderSurface*>(&surface)) {
+    if (const auto* cylinder =
+            dynamic_cast<const CylinderSurface*>(m_surface.get())) {
       checkConsistency(*cylinder);
-    } else if (const auto* disc = dynamic_cast<const DiscSurface*>(&surface)) {
+    } else if (const auto* disc =
+                   dynamic_cast<const DiscSurface*>(m_surface.get())) {
       checkConsistency(*disc);
     } else {
       throw std::logic_error{"Surface type is not supported"};
@@ -195,12 +196,12 @@ class GridPortalLinkT : public GridPortalLink {
     if constexpr (DIM == 2) {
       return std::make_unique<GridPortalLinkT<Axes...>>(*this);
     } else {
-      if (const auto* cylinder =
-              dynamic_cast<const CylinderSurface*>(m_surface)) {
-        return extendTo2D(*cylinder);
-      } else if (const auto* disc =
-                     dynamic_cast<const DiscSurface*>(m_surface)) {
-        return extendTo2D(*disc);
+      if (auto cylinder =
+              std::dynamic_pointer_cast<CylinderSurface>(m_surface)) {
+        return extendTo2D(cylinder);
+      } else if (auto disc =
+                     std::dynamic_pointer_cast<DiscSurface>(m_surface)) {
+        return extendTo2D(disc);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};

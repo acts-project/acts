@@ -13,9 +13,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
-#include <algorithm>
 #include <stdexcept>
-#include <type_traits>
 
 namespace Acts {
 
@@ -174,12 +172,12 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
-    const CylinderSurface& surface) const {
+    const std::shared_ptr<CylinderSurface>& surface) const {
   assert(dim() == 1);
   if (direction() == BinningValue::binRPhi) {
     const auto& axisRPhi = *grid().axes().front();
     // 1D direction is binRPhi, so add a Z axis
-    ActsScalar hlZ = surface.bounds().get(CylinderBounds::eHalfLengthZ);
+    ActsScalar hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
 
     Axis axisZ{AxisBound, -hlZ, hlZ, 1};
     return axisRPhi.visit([&](const auto& axis) {
@@ -188,8 +186,8 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
   } else {
     const auto& axisZ = *grid().axes().front();
     // 1D direction is binZ, so add an rPhi axis
-    ActsScalar r = surface.bounds().get(CylinderBounds::eR);
-    ActsScalar hlPhi = surface.bounds().get(CylinderBounds::eHalfPhiSector);
+    ActsScalar r = surface->bounds().get(CylinderBounds::eR);
+    ActsScalar hlPhi = surface->bounds().get(CylinderBounds::eHalfPhiSector);
     ActsScalar hlRPhi = r * hlPhi;
 
     auto axis = [&](auto bdt) {
@@ -199,7 +197,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
       });
     };
 
-    if (surface.bounds().coversFullAzimuth()) {
+    if (surface->bounds().coversFullAzimuth()) {
       return axis(AxisClosed);
     } else {
       return axis(AxisBound);
@@ -208,10 +206,10 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
-    const DiscSurface& surface) const {
+    const std::shared_ptr<DiscSurface>& surface) const {
   assert(dim() == 1);
 
-  const auto* bounds = dynamic_cast<const RadialBounds*>(&surface.bounds());
+  const auto* bounds = dynamic_cast<const RadialBounds*>(&surface->bounds());
   if (bounds == nullptr) {
     throw std::invalid_argument(
         "GridPortalLink: DiscBounds: invalid bounds type.");
