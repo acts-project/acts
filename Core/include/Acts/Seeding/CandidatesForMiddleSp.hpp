@@ -89,11 +89,6 @@ class CandidatesForMiddleSp {
  public:
   using value_type = TripletCandidate<external_space_point_t>;
 
-  /// @brief constructor
-  CandidatesForMiddleSp() = default;
-  /// @brief Destructor
-  ~CandidatesForMiddleSp() = default;
-
   /// @brief Setting maximum number of candidates to keep
   /// @param n_low Maximum number of candidates in the low-quality collection
   /// @param n_high Maximum number of candidates in the high-quality collection
