@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -22,7 +23,8 @@
 
 namespace Acts {
 
-template <Acts::TrackContainerBackend track_container_t, typename traj_t,
+template <TrackContainerBackend track_container_t,
+          CommonMultiTrajectoryBackend traj_t,
           template <typename> class holder_t>
 class TrackContainer;
 
@@ -44,13 +46,14 @@ class TrackProxyIterator {
   using pointer = void;
   using reference = void;
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackProxyIterator(container_t& container, IndexType itrack)
+  TrackProxyIterator(container_t& container,
+                     IndexType itrack) requires(!ReadOnly)
       : m_container(&container), m_itrack(itrack) {}
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<RO>>
-  TrackProxyIterator(const container_t& container, IndexType itrack)
-      : m_container(&container), m_itrack(itrack) {}
+  TrackProxyIterator(const container_t& container,
+                     IndexType itrack) requires ReadOnly
+      : m_container(&container),
+        m_itrack(itrack) {}
 
   TrackProxyIterator& operator++() {
     m_itrack++;
@@ -87,8 +90,7 @@ class TrackProxyIterator {
 
   ProxyType operator*() const { return m_container->getTrack(m_itrack); }
 
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  ProxyType operator*() {
+  ProxyType operator*() requires(!ReadOnly) {
     return m_container->getTrack(m_itrack);
   }
 
@@ -279,8 +281,7 @@ class TrackProxy {
   /// track container
   /// @note Only available if the track proxy is not read-only
   /// @return mutable reference to the tip index
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexType& tipIndex() {
+  IndexType& tipIndex() requires(!ReadOnly) {
     return component<IndexType>(hashString("tipIndex"));
   }
 
@@ -289,8 +290,7 @@ class TrackProxy {
   /// forward-linked.
   /// @note Only available if the track proxy is not read-only
   /// @return mutable reference to the stem index
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexType& stemIndex() {
+  IndexType& stemIndex() requires(!ReadOnly) {
     return component<IndexType>(hashString("stemIndex"));
   }
 
@@ -304,8 +304,8 @@ class TrackProxy {
   // looks like a false-positive. clang-tidy believes `srf` is not movable.
   /// Set a new reference surface for this track
   /// @param srf The surface to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+  void setReferenceSurface(std::shared_ptr<const Surface> srf) requires(
+      !ReadOnly) {
     m_container->container().setReferenceSurface_impl(m_index, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
@@ -335,8 +335,7 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return Proxy vector for the parameters
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Parameters parameters() {
+  Parameters parameters() requires(!ReadOnly) {
     return m_container->parameters(m_index);
   }
 
@@ -344,8 +343,7 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return Proxy matrix for the covariance
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Covariance covariance() {
+  Covariance covariance() requires(!ReadOnly) {
     return m_container->covariance(m_index);
   }
 
@@ -394,8 +392,8 @@ class TrackProxy {
   /// Set a new particle hypothesis for this track
   /// @note Only available if the track proxy is not read-only
   /// @param particleHypothesis The particle hypothesis to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setParticleHypothesis(const ParticleHypothesis& particleHypothesis) {
+  void setParticleHypothesis(
+      const ParticleHypothesis& particleHypothesis) requires(!ReadOnly) {
     m_container->container().setParticleHypothesis_impl(m_index,
                                                         particleHypothesis);
   }
@@ -450,8 +448,7 @@ class TrackProxy {
   /// Return the number of measurements for the track. Const version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of measurements
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  unsigned int& nMeasurements() {
+  unsigned int& nMeasurements() requires(!ReadOnly) {
     return component<unsigned int, hashString("nMeasurements")>();
   }
 
@@ -466,8 +463,7 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of holes
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  unsigned int& nHoles() {
+  unsigned int& nHoles() requires(!ReadOnly) {
     return component<unsigned int, hashString("nHoles")>();
   }
 
@@ -481,8 +477,7 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of outliers
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  unsigned int& nOutliers() {
+  unsigned int& nOutliers() requires(!ReadOnly) {
     return component<unsigned int, hashString("nOutliers")>();
   }
 
@@ -496,8 +491,7 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of shared hits
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  unsigned int& nSharedHits() {
+  unsigned int& nSharedHits() requires(!ReadOnly) {
     return component<unsigned int, hashString("nSharedHits")>();
   }
 
@@ -511,8 +505,7 @@ class TrackProxy {
   /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The chi squared
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  float& chi2() {
+  float& chi2() requires(!ReadOnly) {
     return component<float, hashString("chi2")>();
   }
 
@@ -526,8 +519,7 @@ class TrackProxy {
   /// track. Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of degrees of freedom
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  unsigned int& nDoF() {
+  unsigned int& nDoF() requires(!ReadOnly) {
     return component<unsigned int, hashString("ndf")>();
   }
 
@@ -559,8 +551,7 @@ class TrackProxy {
 
   /// Return a mutable track state proxy to the outermost track state
   /// @return The outermost track state proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackStateProxy outermostTrackState() const {
+  TrackStateProxy outermostTrackState() requires(!ReadOnly) {
     return m_container->trackStateContainer().getTrackState(tipIndex());
   }
 
@@ -584,8 +575,7 @@ class TrackProxy {
   /// @note This is only available, if the track is forward linked
   /// @note Only available if the track proxy is not read-only
   /// @return The innermost track state proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto innermostTrackState() {
+  auto innermostTrackState() requires(!ReadOnly) {
     using proxy_t = decltype(m_container->trackStateContainer().getTrackState(
         std::declval<IndexType>()));
 
@@ -611,8 +601,7 @@ class TrackProxy {
   /// @note Only available if the track proxy is not read-only
   /// @note This range is from the outside inwards!
   /// @return Track state range to iterate over
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStatesReversed() {
+  auto trackStatesReversed() requires(!ReadOnly) {
     return m_container->reverseTrackStateRange(m_index);
   }
 
@@ -637,8 +626,7 @@ class TrackProxy {
   /// @warning This access direction is only possible if the track states are
   ///          **forward-linked**.
   /// @return Track state range to iterate over
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStates() {
+  auto trackStates() requires(!ReadOnly) {
     return m_container->forwardTrackStateRange(m_index);
   }
 
@@ -652,8 +640,7 @@ class TrackProxy {
   /// Forward connect a track.
   /// This means setting indices from the inside out on all track states.
   /// @note Only available if the track proxy is not read-only
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void linkForward() {
+  void linkForward() requires(!ReadOnly) {
     IndexType last = kInvalid;
     for (auto ts : trackStatesReversed()) {
       ts.template component<IndexType>(hashString("next")) = last;
@@ -668,8 +655,8 @@ class TrackProxy {
   /// @note Only available if the track proxy is not read-only
   /// @param mask The allocation prop mask for the new track state
   /// @return The newly added track state
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto appendTrackState(TrackStatePropMask mask = TrackStatePropMask::All) {
+  auto appendTrackState(
+      TrackStatePropMask mask = TrackStatePropMask::All) requires(!ReadOnly) {
     auto& tsc = m_container->trackStateContainer();
     auto ts = tsc.makeTrackState(mask, tipIndex());
     tipIndex() = ts.index();
@@ -681,9 +668,9 @@ class TrackProxy {
   /// @tparam track_proxy_t the other track proxy's type
   /// @param other The track proxy
   /// @param copyTrackStates Copy the track state sequence from @p other
-  template <typename track_proxy_t, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  void copyFrom(const track_proxy_t& other, bool copyTrackStates = true) {
+  template <typename track_proxy_t>
+  void copyFrom(const track_proxy_t& other,
+                bool copyTrackStates = true) requires(!ReadOnly) {
     // @TODO: Add constraint on which track proxies are allowed,
     // this is only implicit right now
 
@@ -726,8 +713,7 @@ class TrackProxy {
   /// @note This is dangerous with branching track state sequences, as it will break them
   /// @note This also automatically forward-links the track!
   /// @param invertJacobians Whether to invert the Jacobians of the track states
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void reverseTrackStates(bool invertJacobians = false) {
+  void reverseTrackStates(bool invertJacobians = false) requires(!ReadOnly) {
     IndexType current = tipIndex();
     IndexType next = kInvalid;
     IndexType prev = kInvalid;
@@ -779,9 +765,8 @@ class TrackProxy {
   /// @tparam T The type of the component to access
   /// @tparam key String key for the component to access
   /// @return Mutable reference to the component given by @p key
-  template <typename T, HashedString key, bool RO = ReadOnly,
-            typename = std::enable_if_t<!RO>>
-  constexpr T& component() {
+  template <typename T, HashedString key>
+  constexpr T& component() requires(!ReadOnly) {
     return m_container->template component<T, key>(m_index);
   }
 
@@ -789,8 +774,8 @@ class TrackProxy {
   /// @tparam T The type of the component to access
   /// @param key String key for the component to access
   /// @return Mutable reference to the component given by @p key
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr T& component(HashedString key) {
+  template <typename T>
+  constexpr T& component(HashedString key) requires(!ReadOnly) {
     return m_container->template component<T>(key, m_index);
   }
 
@@ -799,8 +784,8 @@ class TrackProxy {
   /// @param key String key for the component to access
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return Mutable reference to the component given by @p key
-  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr T& component(std::string_view key) {
+  template <typename T>
+  constexpr T& component(std::string_view key) requires(!ReadOnly) {
     return m_container->template component<T>(hashString(key), m_index);
   }
 
@@ -855,8 +840,7 @@ class TrackProxy {
   /// Return a reference to the track container backend, mutable version.
   /// @note Only available if the track proxy is not read-only
   /// @return reference to the track container backend
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto& container() {
+  auto& container() requires(!ReadOnly) {
     return *m_container;
   }
 
