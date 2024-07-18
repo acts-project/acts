@@ -15,11 +15,11 @@ set( ACTS_COVFIE_SOURCE
 mark_as_advanced( ACTS_COVFIE_SOURCE )
 
 set( ACTS_DETRAY_SOURCE
-   "URL;https://github.com/acts-project/detray/archive/refs/tags/v0.70.0.tar.gz;URL_MD5;ce913a3dbd38d4453fb680b9667dfbaf" CACHE STRING "Source to take DETRAY from")
+   "URL;https://github.com/acts-project/detray/archive/refs/tags/v0.71.0.tar.gz;URL_MD5;3d68d6d97acd0b584c98ca8998aa24d3" CACHE STRING "Source to take DETRAY from")
 mark_as_advanced( ACTS_DETRAY_SOURCE )
 
 set( ACTS_TRACCC_SOURCE
-   "GIT_REPOSITORY;https://github.com/fredevb/traccc;GIT_TAG;77473d3e67afaa535705cdb9dfe5a4337452be2a" CACHE STRING "Source to take TRACCC from")
+   "GIT_REPOSITORY;https://github.com/fredevb/traccc;GIT_TAG;0dbb533516fc6d579c6998ac943fe17064509554" CACHE STRING "Source to take TRACCC from")
 mark_as_advanced( ACTS_TRACCC_SOURCE )
 
 set( ACTS_DFELIBS_SOURCE
