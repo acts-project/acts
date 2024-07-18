@@ -117,4 +117,7 @@ class IAxis {
   virtual void toStream(std::ostream& os) const = 0;
 };
 
+template <typename T>
+concept AxisConcept = std::derived_from<T, IAxis>;
+
 }  // namespace Acts
