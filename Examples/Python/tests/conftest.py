@@ -249,8 +249,10 @@ def detector_config(request):
             detector,
             trackingGeometry,
             decorators,
-            geometrySelection= algdir / "TrackFinding/share/geoSelection-genericDetector.json",
-            digiConfigFile=algdir / "Digitization/share/default-smearing-config-generic.json",
+            geometrySelection=algdir
+            / "TrackFinding/share/geoSelection-genericDetector.json",
+            digiConfigFile=algdir
+            / "Digitization/share/default-smearing-config-generic.json",
             name=request.param,
         )
     elif request.param == "odd":

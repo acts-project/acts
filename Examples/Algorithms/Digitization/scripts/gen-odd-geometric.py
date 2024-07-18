@@ -29,30 +29,91 @@ sstrip_cfg = {
 lstrip_cfg = {
     "thickness": 0.250,
     "digital": True,
-    "pitch": [ls_pitchx,],
+    "pitch": [
+        ls_pitchx,
+    ],
 }
 
 # Assemble all simplified configurations of the different geometry hierarchy entries
-cfgs = [{"desc": "pixel barrel", "vol": 17, "size": [16.8, 72.0], **pixel_cfg},]
+cfgs = [
+    {"desc": "pixel barrel", "vol": 17, "size": [16.8, 72.0], **pixel_cfg},
+]
 for ecvol in [16, 18]:
     cfgs += [
-        {"desc": "pixel endcap (ring 0)", "vol": ecvol, "extra": 1, "size": [32.2, 78.0], **pixel_cfg},
-        {"desc": "pixel endcap (ring 1)", "vol": ecvol, "extra": 2, "size": [16.8, 78.0], **pixel_cfg},
+        {
+            "desc": "pixel endcap (ring 0)",
+            "vol": ecvol,
+            "extra": 1,
+            "size": [32.2, 78.0],
+            **pixel_cfg,
+        },
+        {
+            "desc": "pixel endcap (ring 1)",
+            "vol": ecvol,
+            "extra": 2,
+            "size": [16.8, 78.0],
+            **pixel_cfg,
+        },
     ]
 
-cfgs += [{"desc": "sstrip barrel", "vol": 24, "size": [48.0, 108.0], **sstrip_cfg},]
+cfgs += [
+    {"desc": "sstrip barrel", "vol": 24, "size": [48.0, 108.0], **sstrip_cfg},
+]
 for ecvol in [23, 25]:
     cfgs += [
-        {"desc": "sstrip endcap (ring 0)", "vol": ecvol, "extra": 1, "size": [32.2, 78.0], **sstrip_cfg},
-        {"desc": "sstrip endcap (ring 1)", "vol": ecvol, "extra": 2, "size": [44.0, 78.0], **sstrip_cfg},
-        {"desc": "sstrip endcap (ring 2)", "vol": ecvol, "extra": 3, "size": [56.4, 78.0], **sstrip_cfg},
+        {
+            "desc": "sstrip endcap (ring 0)",
+            "vol": ecvol,
+            "extra": 1,
+            "size": [32.2, 78.0],
+            **sstrip_cfg,
+        },
+        {
+            "desc": "sstrip endcap (ring 1)",
+            "vol": ecvol,
+            "extra": 2,
+            "size": [44.0, 78.0],
+            **sstrip_cfg,
+        },
+        {
+            "desc": "sstrip endcap (ring 2)",
+            "vol": ecvol,
+            "extra": 3,
+            "size": [56.4, 78.0],
+            **sstrip_cfg,
+        },
     ]
 
-cfgs += [{"desc": "sstrip barrel", "vol": 29, "size": [96.0,], **lstrip_cfg},]
+cfgs += [
+    {
+        "desc": "sstrip barrel",
+        "vol": 29,
+        "size": [
+            96.0,
+        ],
+        **lstrip_cfg,
+    },
+]
 for ecvol in [28, 30]:
     cfgs += [
-        {"desc": "sstrip endcap (ring 0)", "vol": ecvol, "extra": 1, "size": [58.6,], **lstrip_cfg},
-        {"desc": "sstrip endcap (ring 1)", "vol": ecvol, "extra": 2, "size": [70.0,], **lstrip_cfg},
+        {
+            "desc": "sstrip endcap (ring 0)",
+            "vol": ecvol,
+            "extra": 1,
+            "size": [
+                58.6,
+            ],
+            **lstrip_cfg,
+        },
+        {
+            "desc": "sstrip endcap (ring 1)",
+            "vol": ecvol,
+            "extra": 2,
+            "size": [
+                70.0,
+            ],
+            **lstrip_cfg,
+        },
     ]
 
 # Assemble the entries of the geometry hierarchy map
@@ -61,14 +122,16 @@ entries = []
 for cfg in cfgs:
     binning_data = []
     for pitch, size, binDim in zip(cfg["pitch"], cfg["size"], ["binX", "binY"]):
-        binning_data.append({
-            "bins": int(size / pitch),
-            "max": 0.5*size,
-            "min": -0.5*size,
-            "option": "open",
-            "type": "equidistant",
-            "value": binDim
-        })
+        binning_data.append(
+            {
+                "bins": int(size / pitch),
+                "max": 0.5 * size,
+                "min": -0.5 * size,
+                "option": "open",
+                "type": "equidistant",
+                "value": binDim,
+            }
+        )
 
     segmentation = {}
     segmentation["binningdata"] = binning_data
@@ -95,7 +158,7 @@ for cfg in cfgs:
 
 # Assemble and write the final configuration
 final_json = {}
-final_json["acts-geometry-hierarchy-map"] =  {
+final_json["acts-geometry-hierarchy-map"] = {
     "format-version": 0,
     "value-identifier": "digitization-configuration",
 }
