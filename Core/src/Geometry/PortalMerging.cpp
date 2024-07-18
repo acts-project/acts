@@ -427,9 +427,10 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
       return nullptr;
     }
   } else {
-    ACTS_VERBOSE("Grids have different dimension, falling back");
-    // @TODO: Support 2D + 1D merging
-    return nullptr;
+    ACTS_VERBOSE("Grids have different dimension, extending rhs to 2D");
+    auto b2D = b->make2DGrid();
+    return mergeGridPortals(a, b2D.get(), surfaceA, surfaceB, direction,
+                            logger);
   }
 }
 
