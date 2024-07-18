@@ -83,7 +83,7 @@ struct Fixture {
   // hit information
   ActsFatras::Hit hit;
 
-  Fixture(uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
+  Fixture(std::uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
       : rng(rngSeed),
         gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
             3)),

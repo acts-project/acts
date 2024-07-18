@@ -8,8 +8,7 @@
 
 #pragma once
 
-#if defined(__cpp_concepts)
-#include <concepts>
+#include <utility>
 
 namespace Acts {
 
@@ -21,5 +20,3 @@ concept TrackingVolumeVisitor = requires(T v) {
 };
 
 }  // namespace Acts
-
-#endif

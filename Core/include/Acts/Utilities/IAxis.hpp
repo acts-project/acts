@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/AxisFwd.hpp"
 
 #include <vector>
 
@@ -29,10 +29,14 @@ class IAxis {
   /// @return bool is variable
   virtual bool isVariable() const = 0;
 
+  /// @brief returns the type of the axis
+  /// @return @c AxisType of this axis
+  virtual AxisType getType() const = 0;
+
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
-  virtual detail::AxisBoundaryType getBoundaryType() const = 0;
+  virtual AxisBoundaryType getBoundaryType() const = 0;
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges

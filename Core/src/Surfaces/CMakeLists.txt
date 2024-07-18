@@ -2,6 +2,7 @@ target_sources(
   ActsCore
   PRIVATE
     AnnulusBounds.cpp
+    BoundaryTolerance.cpp
     ConeBounds.cpp
     ConeSurface.cpp
     ConvexPolygonBounds.cpp

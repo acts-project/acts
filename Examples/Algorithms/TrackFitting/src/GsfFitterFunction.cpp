@@ -103,16 +103,15 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
         &updater);
 
     Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
-        options.geoContext,
-        options.magFieldContext,
-        options.calibrationContext,
-        extensions,
-        options.propOptions,
-        &(*options.referenceSurface),
-        maxComponents,
-        weightCutoff,
-        abortOnError,
-        disableAllMaterialHandling};
+        options.geoContext, options.magFieldContext,
+        options.calibrationContext};
+    gsfOptions.extensions = extensions;
+    gsfOptions.propagatorPlainOptions = options.propOptions;
+    gsfOptions.referenceSurface = options.referenceSurface;
+    gsfOptions.maxComponents = maxComponents;
+    gsfOptions.weightCutoff = weightCutoff;
+    gsfOptions.abortOnError = abortOnError;
+    gsfOptions.disableAllMaterialHandling = disableAllMaterialHandling;
     gsfOptions.componentMergeMethod = mergeMethod;
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(

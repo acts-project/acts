@@ -12,7 +12,6 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -69,7 +68,7 @@ struct Gx2FitterExtensions {
                     const SourceLink&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        Direction, const Logger&)>;
+                                        const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -181,13 +180,13 @@ struct Gx2FitterResult {
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This corresponds to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  // Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
   std::size_t lastMeasurementIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This corresponds to the last state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
-  // SIZE_MAX is the start of a trajectory.
+  // Acts::MultiTrajectoryTraits::kInvalid is the start of a trajectory.
   std::size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // The optional Parameters at the provided surface
@@ -434,16 +433,6 @@ class Gx2Fitter {
         return;
       }
 
-      // Add the measurement surface as external surface to the navigator.
-      // We will try to hit those surface by ignoring boundary checks.
-      if (state.navigation.externalSurfaces.size() == 0) {
-        for (auto measurementIt = inputMeasurements->begin();
-             measurementIt != inputMeasurements->end(); measurementIt++) {
-          navigator.insertExternalSurface(state.navigation,
-                                          measurementIt->first);
-        }
-      }
-
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
@@ -607,12 +596,14 @@ class Gx2Fitter {
             // MaterialUpdateStage::FullUpdate);
           }
         } else {
-          ACTS_INFO("Surface " << geoId << " has no measurement/material/hole.")
+          ACTS_INFO("Surface " << geoId
+                               << " has no measurement/material/hole.");
         }
       }
       ACTS_VERBOSE("result.processedMeasurements: "
                    << result.processedMeasurements << "\n"
-                   << "inputMeasurements.size(): " << inputMeasurements->size())
+                   << "inputMeasurements.size(): "
+                   << inputMeasurements->size());
       if (result.processedMeasurements >= inputMeasurements->size()) {
         ACTS_INFO("Actor: finish: all measurements found.");
         result.finished = true;
@@ -697,7 +688,8 @@ class Gx2Fitter {
     using Actors = Acts::ActionList<GX2FActor>;
     using Aborters = Acts::AbortList<GX2FAborter>;
 
-    using PropagatorOptions = Acts::PropagatorOptions<Actors, Aborters>;
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actors, Aborters>;
 
     start_parameters_t params = sParameters;
     BoundVector deltaParams = BoundVector::Zero();
@@ -710,8 +702,8 @@ class Gx2Fitter {
     // new track and delete it after updating the parameters. However, if we
     // would work on the externally provided track container, it would be
     // difficult to remove the correct track, if it contains more than one.
-    Acts::VectorTrackContainer trackContainerTempBackend;
-    Acts::VectorMultiTrajectory trajectoryTempBackend;
+    track_container_t trackContainerTempBackend;
+    traj_t trajectoryTempBackend;
     TrackContainer trackContainerTemp{trackContainerTempBackend,
                                       trajectoryTempBackend};
 
@@ -746,6 +738,13 @@ class Gx2Fitter {
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
       PropagatorOptions propagatorOptions(geoCtx, magCtx);
+
+      // Add the measurement surface as external surface to the navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      for (const auto& [surfaceId, _] : inputMeasurements) {
+        propagatorOptions.navigation.insertExternalSurface(surfaceId);
+      }
+
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
@@ -832,7 +831,7 @@ class Gx2Fitter {
                              trackState, *m_addToSumLogger);
           } else {
             ACTS_ERROR("Can not process state with measurement with "
-                       << measDim << " dimensions.")
+                       << measDim << " dimensions.");
             throw std::domain_error(
                 "Found measurement with less than 1 or more than 6 "
                 "dimension(s).");
@@ -840,9 +839,9 @@ class Gx2Fitter {
         } else if (typeFlags.test(TrackStateFlag::HoleFlag)) {
           // Handle hole
           // TODO: write hole handling
-          ACTS_VERBOSE("Placeholder: Handle hole.")
+          ACTS_VERBOSE("Placeholder: Handle hole.");
         } else {
-          ACTS_WARNING("Unknown state encountered")
+          ACTS_WARNING("Unknown state encountered");
         }
         // TODO: Material handling. Should be there for hole and measurement
       }
@@ -994,7 +993,7 @@ class Gx2Fitter {
 
     if (!trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      trackContainer.template addColumn<std::size_t>("Gx2fnUpdateColumn");
+      trackContainer.template addColumn<std::uint32_t>("Gx2fnUpdateColumn");
     }
 
     // Prepare track for return
@@ -1006,8 +1005,9 @@ class Gx2Fitter {
 
     if (trackContainer.hasColumn(
             Acts::hashString(Gx2fConstants::gx2fnUpdateColumn))) {
-      ACTS_DEBUG("Add nUpdate to track")
-      track.template component<std::size_t>("Gx2fnUpdateColumn") = nUpdate;
+      ACTS_DEBUG("Add nUpdate to track");
+      track.template component<std::uint32_t>("Gx2fnUpdateColumn") =
+          static_cast<std::uint32_t>(nUpdate);
     }
 
     // TODO write test for calculateTrackQuantities

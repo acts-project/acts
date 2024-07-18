@@ -17,7 +17,7 @@ namespace ActsFatras::detail {
 /// @brief Data storage of the parametrized nuclear interaction
 struct NuclearInteractionParameters {
   using CumulativeDistribution =
-      std::pair<std::vector<float>, std::vector<uint32_t>>;
+      std::pair<std::vector<float>, std::vector<std::uint32_t>>;
   using Distributions = std::vector<CumulativeDistribution>;
   using PdgMap =
       std::vector<std::pair<int, std::vector<std::pair<int, float>>>>;

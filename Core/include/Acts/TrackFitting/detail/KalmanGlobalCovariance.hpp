@@ -40,13 +40,13 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
   using GainMatrix = CovMatrix;
 
   // The last smoothed state index
-  std::size_t lastSmoothedIndex = SIZE_MAX;
+  std::size_t lastSmoothedIndex = Acts::MultiTrajectoryTraits::kInvalid;
   // The total number of smoothed states
   std::size_t nSmoothedStates = 0;
   // Visit all the states
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
     if (ts.hasSmoothed()) {
-      if (lastSmoothedIndex == SIZE_MAX) {
+      if (lastSmoothedIndex == Acts::MultiTrajectoryTraits::kInvalid) {
         lastSmoothedIndex = ts.index();
       }
       nSmoothedStates++;

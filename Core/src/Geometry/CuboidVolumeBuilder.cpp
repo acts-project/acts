@@ -93,9 +93,9 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
   ProtoLayer pl{gctx, cfg.surfaces};
-  pl.envelope[binX] = cfg.envelopeX;
-  pl.envelope[binY] = cfg.envelopeY;
-  pl.envelope[binZ] = cfg.envelopeZ;
+  pl.envelope[BinningValue::binX] = cfg.envelopeX;
+  pl.envelope[BinningValue::binY] = cfg.envelopeY;
+  pl.envelope[BinningValue::binZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
                                  BinningValue::binX, pl, trafo);
 }
@@ -121,10 +121,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   for (const auto& layercfg : cfg.layerCfg) {
     // recreating the protolayer for each layer => slow, but only few sensors
     ProtoLayer pl{gctx, layercfg.surfaces};
-    pl.envelope[binX] = layercfg.envelopeX;
+    pl.envelope[BinningValue::binX] = layercfg.envelopeX;
 
-    double surfacePosMin = pl.min(binX);
-    double surfacePosMax = pl.max(binX);
+    double surfacePosMin = pl.min(BinningValue::binX);
+    double surfacePosMax = pl.max(BinningValue::binX);
 
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
@@ -136,8 +136,10 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   }
 
   // Use the volume boundaries as limits for the binning
-  minMax.first = std::min(minMax.first, minVolumeBoundaries(binX));
-  minMax.second = std::max(minMax.second, maxVolumeBoundaries(binX));
+  minMax.first = std::min(
+      minMax.first, minVolumeBoundaries(toUnderlying(BinningValue::binX)));
+  minMax.second = std::max(
+      minMax.second, maxVolumeBoundaries(toUnderlying(BinningValue::binX)));
 
   return minMax;
 }
