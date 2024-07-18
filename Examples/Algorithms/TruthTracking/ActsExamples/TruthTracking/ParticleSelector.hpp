@@ -66,6 +66,8 @@ class ParticleSelector final : public IAlgorithm {
     bool removeIntermediate = true;
     /// Remove secondaries.
     bool removeSecondaries = false;
+    /// Exclude particles depending on absolute pdg value
+    std::vector<int> excludeAbsPdgs;
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);

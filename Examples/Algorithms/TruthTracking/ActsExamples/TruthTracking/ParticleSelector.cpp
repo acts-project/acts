@@ -119,7 +119,16 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
       
     }
 
-    return validCharge && validSecondary && validIntermediate && validMeasurementCount &&
+    // Pdg selection
+    bool validPdg = true;
+    for (auto pdg : m_cfg.excludeAbsPdgs) {
+      if (p.absolutePdg() == std::abs(pdg)) {
+        validPdg = false;
+        break;
+      }
+    }
+
+    return validPdg && validCharge && validSecondary && validIntermediate && validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
