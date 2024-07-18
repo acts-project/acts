@@ -298,4 +298,16 @@ bool CandidatesForMiddleSp<external_space_point_t>::ascendingByQuality(
   return !descendingByQuality(i1, i2);
 }
 
+template <typename external_space_point_t>
+std::size_t
+CandidatesForMiddleSp<external_space_point_t>::nLowQualityCandidates() const {
+  return m_n_low;
+}
+
+template <typename external_space_point_t>
+std::size_t
+CandidatesForMiddleSp<external_space_point_t>::nHighQualityCandidates() const {
+  return m_n_high;
+}
+
 }  // namespace Acts
