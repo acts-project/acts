@@ -1886,7 +1886,9 @@ def addVertexFitting(
     maxIterations: Optional[int] = None,
     initialVariances: Optional[List[float]] = None,
     useTime: Optional[bool] = False,
-    vertexSeeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
+    vertexSeeder: Optional[
+        acts.VertexSeedFinder
+    ] = acts.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
