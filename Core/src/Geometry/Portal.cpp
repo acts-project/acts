@@ -81,11 +81,18 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     }
 
     // If full cylinder, make sure axis wraps around
-    if (same(hlPhi, M_PI) &&
-        axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
-      throw std::invalid_argument(
-          "GridPortalLink: CylinderBounds: invalid phi sector setup: axis is "
-          "not closed.");
+    if (same(hlPhi, M_PI)) {
+      if (axis.getBoundaryType() != AxisBoundaryType::Closed) {
+        throw std::invalid_argument(
+            "GridPortalLink: CylinderBounds: invalid phi sector setup: "
+            "axis is not closed.");
+      }
+    } else {
+      if (axis.getBoundaryType() != AxisBoundaryType::Bound) {
+        throw std::invalid_argument(
+            "GridPortalLink: CylinderBounds: invalid phi sector setup: "
+            "axis is not bound.");
+      }
     }
   };
 
@@ -136,11 +143,18 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
           "GridPortalLink: DiscBounds: invalid phi sector setup.");
     }
     // If full disc, make sure axis wraps around
-    if (same(hlPhi, M_PI) &&
-        axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
-      throw std::invalid_argument(
-          "GridPortalLink: DiscBounds: invalid phi sector setup: axis is not "
-          "closed.");
+    if (same(hlPhi, M_PI)) {
+      if (axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
+        throw std::invalid_argument(
+            "GridPortalLink: DiscBounds: invalid phi sector setup: axis is "
+            "not closed.");
+      }
+    } else {
+      if (axis.getBoundaryType() != Acts::AxisBoundaryType::Bound) {
+        throw std::invalid_argument(
+            "GridPortalLink: DiscBounds: invalid phi sector setup: axis "
+            "is not bound.");
+      }
     }
   };
 
