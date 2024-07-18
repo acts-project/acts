@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 
+#include <limits>
 #include <vector>
 
 #include "SpacePoint.hpp"
@@ -93,6 +94,17 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   UnitTestSpacePoint spacePoint;
 
   Acts::CandidatesForMiddleSp<UnitTestSpacePoint> container;
+  container.setMaxElements(std::numeric_limits<std::size_t>::max(),
+                           std::numeric_limits<std::size_t>::max());
+  BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 0);
+  BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
+  for (int i(0); i < 20; ++i) {
+    container.push(spacePoint, spacePoint, spacePoint, 1, 2.1, false);
+  }
+  BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 20);
+  BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
+  container.clear();
+
   container.setMaxElements(5, 3);
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 0);
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
@@ -110,7 +122,7 @@ BOOST_AUTO_TEST_CASE(CandidatesForMiddleSpObject) {
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
 
   for (int i(0); i < 7; ++i) {
-    container.push(spacePoint, spacePoint, spacePoint, i, 2.15, false);
+    container.push(spacePoint, spacePoint, spacePoint, 2.01, 2.15, false);
   }
   BOOST_CHECK_EQUAL(container.nLowQualityCandidates(), 5);
   BOOST_CHECK_EQUAL(container.nHighQualityCandidates(), 0);
