@@ -391,18 +391,15 @@ class TrackContainer {
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
-template <TrackContainerBackend track_container_t,
-          CommonMultiTrajectoryBackend traj_t>
+template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
-template <TrackContainerBackend track_container_t,
-          CommonMultiTrajectoryBackend traj_t>
+template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(const track_container_t& container, const traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
 
-template <TrackContainerBackend track_container_t,
-          CommonMultiTrajectoryBackend traj_t>
+template <TrackContainerBackend track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 
