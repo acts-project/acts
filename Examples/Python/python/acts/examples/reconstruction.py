@@ -1886,7 +1886,7 @@ def addVertexFitting(
     maxIterations: Optional[int] = None,
     initialVariances: Optional[List[float]] = None,
     useTime: Optional[bool] = False,
-    vertexSeeder: Optional[
+    seeder: Optional[
         acts.VertexSeedFinder
     ] = acts.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
@@ -1907,7 +1907,7 @@ def addVertexFitting(
         the output folder for the Root output, None triggers no output
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
-    vertexSeeder : enum member
+    seeder : enum member
         determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
         acts.seeder.AdaptiveGridSeeder
     useTime : bool, False
@@ -1989,7 +1989,7 @@ def addVertexFitting(
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             bField=field,
-            seedFinder=vertexSeeder,
+            seedFinder=seeder,
             **acts.examples.defaultKWArgs(
                 maxIterations=maxIterations,
                 initialVariances=initialVariances,
