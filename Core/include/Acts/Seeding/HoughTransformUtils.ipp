@@ -38,19 +38,54 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
   }
 }
 
+template<class identifier_t>
+const std::span<const identifier_t, std::dynamic_extent> Acts::HoughTransformUtils::HoughCell<identifier_t>::getHits() const {
+  
+  const std::span<const identifier_t, std::dynamic_extent> hits(m_hits.begin(), m_ihit);
+  return hits;
+}
+
+template<class identifier_t>
+std::span<unsigned , std::dynamic_extent> Acts::HoughTransformUtils::HoughCell<identifier_t>::getLayers(){
+  return std::span<unsigned, std::dynamic_extent>(m_layers.begin(), m_ilayer);
+}
+
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
     const identifier_t& identifier, unsigned layer, YieldType weight) {
+
   // add the hit to the list of hits in the cell
-  if (m_hits.insert(identifier).second) {
-    // if new, increment the weighted hit counter
-    m_nHits += weight;
+  // if (m_hits.insert(identifier).second) {
+  //   // if new, increment the weighted hit counter
+  //   m_nHits += weight;
+  // }
+  // // and to the same for layer counts
+  // if (m_layers.insert(layer).second) {
+  //   m_nLayers += weight;
+  // }
+
+  if(m_ihit != 0 && m_hits[m_ihit-1] == identifier) return;
+ // if(m_ilayer != 0 && m_layers[m_ilayer-1] == layer) return;
+
+  if(m_ihit == m_hits.size()){
+    m_hits.resize(m_hits.size() + m_ihit +1); 
   }
-  // and to the same for layer counts
-  if (m_layers.insert(layer).second) {
-    m_nLayers += weight;
+
+  if(m_ilayer == m_layers.size()){
+    m_layers.resize(m_layers.size() + m_ilayer +1);
   }
+
+  m_hits[m_ihit] = identifier;
+  m_layers[m_ilayer] = layer;
+
+  m_ihit+=1;
+  m_ilayer+=1;
+
+  m_nHits += weight;
+  m_nLayers += weight;
+
 }
+
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
   // avoid expensive clear calls on empty cells
@@ -62,6 +97,9 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
   }
   m_nHits = 0;
   m_nLayers = 0;
+
+  m_ilayer = 0;
+  m_ihit = 0;
 }
 
 template <class identifier_t>
@@ -208,10 +246,10 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
   YieldType min = std::max(m_cfg.threshold, m_cfg.fractionCutoff * max);
   // book a list for the candidates and the maxima
   std::vector<std::pair<std::size_t, std::size_t>> candidates;
-  std::vector<Maximum> maxima;
+  std::vector<Maximum> maxima; 
   // keep track of the yields in each non empty cell
   std::map<std::pair<std::size_t, std::size_t>, YieldType> yieldMap;
-
+  
   // now loop over all non empty bins
   for (auto [x, y] : plane.getNonEmptyBins()) {
     // we only consider cells above threshold from now on.
@@ -220,6 +258,7 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     if (plane.nHits(x, y) > min) {
       candidates.push_back({x, y});
       yieldMap[{x, y}] = plane.nHits(x, y);
+      
     }
   }
   // sort the candidate cells descending in content
@@ -284,10 +323,11 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     CoordType xmin = std::numeric_limits<CoordType>::max();
     // loop over cells in the island and get the weighted mean position.
     // Also collect all hit identifiers in the island and the maximum
-    // extent (within the count threshold!) of the island
-    for (auto& [xBin, yBin] : solution) {
+    // extent (within the count threshold!) of the island    
+    for (auto& [xBin, yBin] : solution) {   
+
       const auto& hidIds = plane.hitIds(xBin, yBin);
-      maximum.hitIdentifiers.insert(hidIds.cbegin(), hidIds.cend());
+      maximum.hitIdentifiers.insert(hidIds.begin(), hidIds.end());
       CoordType xHit =
           binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), xBin);
       CoordType yHit =
