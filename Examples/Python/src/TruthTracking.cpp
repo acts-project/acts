@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -208,12 +208,6 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,
       inputParticles, inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::ProtoTrackTruthMatcher, mex, "ProtoTrackTruthMatcher",
-      inputProtoTracks, inputParticles, inputMeasurementParticlesMap,
-      outputProtoTrackParticleMatching, outputParticleProtoTrackMatching,
-      matchingRatio, doubleMatching);
 }
 
 }  // namespace Acts::Python
