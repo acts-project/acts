@@ -233,10 +233,9 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
     for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 && !fullCone) ? 1 : 0;
       detail::VerticesHelper::createSegment(vertices, {r, r}, phiSegs[iseg],
-                                            phiSegs[iseg + 1], lseg, addon,
-                                            zoffset, ctransform);
+                                            phiSegs[iseg + 1], lseg,
+                                            (iseg > 0u), zoffset, ctransform);
     }
     // Create the faces
     if (tipExists) {

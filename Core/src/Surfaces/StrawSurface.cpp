@@ -63,10 +63,10 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
       for (std::size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-        int addon = (iseg == phiSegs.size() - 2) ? 1 : 0;
         /// Helper method to create the segment
         detail::VerticesHelper::createSegment(
-            vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
+            vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
+            (iseg > 0u),
             Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
             ctransform);
       }

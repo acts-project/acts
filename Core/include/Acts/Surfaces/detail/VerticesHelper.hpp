@@ -43,28 +43,29 @@ std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
 /// @param phi1 The first phi value
 /// @param phi2 The second phi value
 /// @param lseg The number of segments for full 2*PI
-/// @param addon The additional segments to be built
 /// @param offset The out of plane offset position of the bow
+/// @param dropFirst drop the first vertex in case of stiched segments
 /// @param transform The transform applied (optional)
 template <typename vertex_t, typename transform_t>
 void createSegment(std::vector<vertex_t>& vertices,
                    std::pair<ActsScalar, ActsScalar> rxy, ActsScalar phi1,
-                   ActsScalar phi2, unsigned int lseg, int addon = 0,
+                   ActsScalar phi2, unsigned int lseg, bool dropFirst = false,
                    const vertex_t& offset = vertex_t::Zero(),
                    const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
-  unsigned int segs =
-      static_cast<unsigned int>(std::abs(phi2 - phi1) / (2 * M_PI) * lseg);
-  segs = segs > 0 ? segs : 1;
+  unsigned int segs = std::max(
+      static_cast<unsigned int>(std::abs(phi2 - phi1) / (2 * M_PI) * lseg), 1u);
   ActsScalar phistep = (phi2 - phi1) / segs;
   // Create the segments
-  for (unsigned int iphi = 0; iphi < segs + addon; ++iphi) {
+  for (unsigned int iphi = 0; iphi < segs; ++iphi) {
     ActsScalar phi = phi1 + iphi * phistep;
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rxy.first * std::cos(phi);
     vertex(1) = rxy.second * std::sin(phi);
-
     vertex = vertex + offset;
+    if (dropFirst && iphi == 0) {
+      continue;
+    }
     vertices.push_back(transform * vertex);
   }
 }
