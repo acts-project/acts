@@ -58,8 +58,9 @@ class Portal {
 
 class GridPortalLink;
 
-// template <std::size_t N>
-// class GridPortalLinkN;
+template <typename S>
+concept PortalSurfaceConcept = std::is_same_v<S, CylinderSurface> ||
+    std::is_same_v<S, DiscSurface> || std::is_same_v<S, PlaneSurface>;
 
 class PortalLinkBase {
  public:
@@ -102,38 +103,39 @@ class GridPortalLink : public PortalLinkBase {
       : PortalLinkBase(surface), m_direction(direction) {}
 
  public:
-  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
-  static auto make(const CylinderSurface& surface, BinningValue direction,
-                   Axes&&... axes) {
-    if (direction != BinningValue::binZ && direction != BinningValue::binRPhi) {
-      throw std::invalid_argument{"Invalid binning direction"};
+  template <PortalSurfaceConcept surface_t, typename axis_t>
+  static std::unique_ptr<GridPortalLink> make(const surface_t& surface,
+                                              BinningValue direction,
+                                              axis_t&& axis) {
+    if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
+      if (direction != BinningValue::binZ &&
+          direction != BinningValue::binRPhi) {
+        throw std::invalid_argument{"Invalid binning direction"};
+      }
+    } else if constexpr (std::is_same_v<surface_t, DiscSurface>) {
+      if (direction != BinningValue::binR &&
+          direction != BinningValue::binPhi) {
+        throw std::invalid_argument{"Invalid binning direction"};
+      }
     }
 
-    return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, direction, std::forward<Axes>(axes)...);
+    return std::make_unique<GridPortalLinkT<axis_t>>(surface, direction,
+                                                     std::move(axis));
   }
 
-  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 1>>
-  static auto make(const DiscSurface& surface, BinningValue direction,
-                   Axes&&... axes) {
-    if (direction != BinningValue::binR && direction != BinningValue::binPhi) {
-      throw std::invalid_argument{"Invalid binning direction"};
+  template <PortalSurfaceConcept surface_t, typename axis_1_t,
+            typename axis_2_t>
+  static std::unique_ptr<GridPortalLink> make(const surface_t& surface,
+                                              axis_1_t axis1, axis_2_t axis2) {
+    std::optional<BinningValue> direction;
+    if constexpr (std::is_same_v<surface_t, CylinderSurface>) {
+      direction = BinningValue::binRPhi;
+    } else if constexpr (std::is_same_v<surface_t, DiscSurface>) {
+      direction = BinningValue::binR;
     }
 
-    return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, direction, std::forward<Axes>(axes)...);
-  }
-
-  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
-  static auto make(const CylinderSurface& surface, Axes&&... axes) {
-    return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, BinningValue::binRPhi, std::forward<Axes>(axes)...);
-  }
-
-  template <typename... Axes, typename = std::enable_if_t<sizeof...(Axes) == 2>>
-  static auto make(const DiscSurface& surface, Axes&&... axes) {
-    return std::make_unique<GridPortalLinkT<Axes...>>(
-        surface, BinningValue::binR, std::forward<Axes>(axes)...);
+    return std::make_unique<GridPortalLinkT<axis_1_t, axis_2_t>>(
+        surface, direction.value(), std::move(axis1), std::move(axis2));
   }
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
@@ -150,6 +152,10 @@ class GridPortalLink : public PortalLinkBase {
  protected:
   void checkConsistency(const CylinderSurface& disc) const;
   void checkConsistency(const DiscSurface& disc) const;
+
+  std::unique_ptr<GridPortalLink> extendTo2D(
+      const CylinderSurface& surface) const;
+  std::unique_ptr<GridPortalLink> extendTo2D(const DiscSurface& surface) const;
 
  private:
   BinningValue m_direction;
@@ -191,40 +197,12 @@ class GridPortalLinkT : public GridPortalLink {
       if (const auto* cylinder =
               dynamic_cast<const CylinderSurface*>(m_surface)) {
         return extendTo2D(*cylinder);
+      } else if (const auto* disc =
+                     dynamic_cast<const DiscSurface*>(m_surface)) {
+        return extendTo2D(*disc);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};
-      }
-    }
-  }
-
- private:
-  std::unique_ptr<GridPortalLink> extendTo2D(
-      const CylinderSurface& surface) const {
-    if (direction() == BinningValue::binRPhi) {
-      auto [axisRPhi] = m_grid.axesTuple();
-      // 1D direction is binRPhi, so add a Z axis
-      ActsScalar hlZ = surface.bounds().get(CylinderBounds::eHalfLengthZ);
-
-      Axis axisZ{AxisBound, -hlZ, hlZ, 1};
-      return GridPortalLink::make(surface, std::move(axisRPhi),
-                                  std::move(axisZ));
-    } else {
-      auto [axisZ] = m_grid.axesTuple();
-      // 1D direction is binZ, so add an rPhi axis
-      ActsScalar r = surface.bounds().get(CylinderBounds::eR);
-      ActsScalar hlPhi = surface.bounds().get(CylinderBounds::eHalfPhiSector);
-      ActsScalar hlRPhi = r * hlPhi;
-
-      auto axis = [&](auto bdt) {
-        return GridPortalLink::make(surface, Axis{bdt, -hlRPhi, hlRPhi, 1},
-                                    std::move(axisZ));
-      };
-
-      if (surface.bounds().coversFullAzimuth()) {
-        return axis(AxisClosed);
-      } else {
-        return axis(AxisBound);
       }
     }
   }
