@@ -59,6 +59,22 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     std::unique_ptr<GridPortalLink> grid1dCyl = GridPortalLink::make(
         *cyl, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
 
+    // Throws because non-closed axis
+    BOOST_CHECK_THROW(GridPortalLink::make(*cyl, BinningValue::binRPhi,
+                                           Axis{AxisBound, -180_degree * 30_mm,
+                                                180_degree * 30_mm, 10}),
+                      std::invalid_argument);
+
+    std::unique_ptr<GridPortalLink> grid1dCylRPhi = GridPortalLink::make(
+        *cyl, BinningValue::binRPhi,
+        Axis{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 10});
+    BOOST_REQUIRE_NE(grid1dCylRPhi, nullptr);
+
+    Axis axisExpected{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 10};
+    BOOST_CHECK_EQUAL(grid1dCylRPhi->grid().axes().size(), 1);
+    const auto& axis = *grid1dCylRPhi->grid().axes().front();
+    BOOST_CHECK_EQUAL(axis, axisExpected);
+
     // Another cylinder, shifted in z
     auto cyl2 = Surface::makeShared<CylinderSurface>(
         Transform3{Translation3{Vector3::UnitZ() * 150_mm}}, 30_mm, 50_mm);
@@ -73,16 +89,11 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     BOOST_CHECK_EQUAL(grid2dCyl1->surface().bounds(), cyl->bounds());
     const auto& axis1 = *grid2dCyl1->grid().axes().front();
     const auto& axis2 = *grid2dCyl1->grid().axes().back();
-    BOOST_CHECK_EQUAL(axis1.getMin(), -M_PI * 30_mm);
-    BOOST_CHECK_EQUAL(axis1.getMax(), M_PI * 30_mm);
-    BOOST_CHECK_EQUAL(axis1.getNBins(), 1);
-    BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
-    BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Closed);
-    BOOST_CHECK_EQUAL(axis2.getMin(), -100_mm);
-    BOOST_CHECK_EQUAL(axis2.getMax(), 100_mm);
-    BOOST_CHECK_EQUAL(axis2.getNBins(), 10);
-    BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
-    BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+
+    Axis axis1Expected{AxisClosed, -M_PI * 30_mm, M_PI * 30_mm, 1};
+    BOOST_CHECK_EQUAL(axis1, axis1Expected);
+    Axis axis2Expected{AxisBound, -100_mm, 100_mm, 10};
+    BOOST_CHECK_EQUAL(axis2, axis2Expected);
 
     // @TODO: Check content of the bins
 
@@ -97,16 +108,10 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     const auto& axis1Phi = *grid2dCylPhi->grid().axes().front();
     const auto& axis2Phi = *grid2dCylPhi->grid().axes().back();
 
-    BOOST_CHECK_EQUAL(axis1Phi.getMin(), -45_degree * 30_mm);
-    BOOST_CHECK_EQUAL(axis1Phi.getMax(), 45_degree * 30_mm);
-    BOOST_CHECK_EQUAL(axis1Phi.getNBins(), 1);
-    BOOST_CHECK_EQUAL(axis1Phi.getType(), AxisType::Equidistant);
-    BOOST_CHECK_EQUAL(axis1Phi.getBoundaryType(), AxisBoundaryType::Bound);
-    BOOST_CHECK_EQUAL(axis2Phi.getMin(), -100_mm);
-    BOOST_CHECK_EQUAL(axis2Phi.getMax(), 100_mm);
-    BOOST_CHECK_EQUAL(axis2Phi.getNBins(), 10);
-    BOOST_CHECK_EQUAL(axis2Phi.getType(), AxisType::Equidistant);
-    BOOST_CHECK_EQUAL(axis2Phi.getBoundaryType(), AxisBoundaryType::Bound);
+    Axis axis1PhiExpected{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 1};
+    BOOST_CHECK_EQUAL(axis1Phi, axis1PhiExpected);
+    Axis axis2PhiExpected{AxisBound, -100_mm, 100_mm, 10};
+    BOOST_CHECK_EQUAL(axis2Phi, axis2PhiExpected);
 
     // @TODO: Check content of the bins
   }
@@ -136,21 +141,76 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
         *cyl, Axis{AxisBound, -45_degree * 30_mm, 45_degree * 30_mm, 5},
         Axis{AxisBound, -100_mm, 100_mm, 5});
 
+    auto cylFull = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                        30_mm, 100_mm);
+
+    // Throws because non-closed axis
+    BOOST_CHECK_THROW(GridPortalLink::make(*cylFull,
+                                           Axis{AxisBound, -180_degree * 30_mm,
+                                                180_degree * 30_mm, 5},
+                                           Axis{AxisBound, -100_mm, 100_mm, 5}),
+                      std::invalid_argument);
+
+    auto gridFull = GridPortalLink::make(
+        *cylFull, Axis{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm, 5},
+        Axis{AxisBound, -100_mm, 100_mm, 5});
+
+    BOOST_CHECK_EQUAL(gridFull->grid().axes().size(), 2);
+    BOOST_CHECK_EQUAL(gridFull->grid().axes().size(), 2);
+    Axis axisFullExpected{AxisClosed, -180_degree * 30_mm, 180_degree * 30_mm,
+                          5};
+    const auto& axisFull = *gridFull->grid().axes().front();
+    BOOST_CHECK_EQUAL(axisFull, axisFullExpected);
+
     // @TODO: Check is same when asked to make 2D grid
   }
 }
 
 BOOST_AUTO_TEST_CASE(Disc) {
-  auto disc1 =
-      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
+  BOOST_TEST_CONTEXT("1D") {
+    auto disc1 =
+        Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
 
-  BOOST_CHECK_THROW(GridPortalLink::make(*disc1, BinningValue::binZ,
-                                         Axis{AxisBound, 30_mm, 100_mm, 3}),
-                    std::invalid_argument);
+    BOOST_CHECK_THROW(GridPortalLink::make(*disc1, BinningValue::binZ,
+                                           Axis{AxisBound, 30_mm, 100_mm, 3}),
+                      std::invalid_argument);
 
-  auto grid1 = GridPortalLink::make(*disc1, BinningValue::binR,
-                                    Axis{AxisBound, 30_mm, 100_mm, 3});
-  BOOST_REQUIRE_NE(grid1, nullptr);
+    auto grid1 = GridPortalLink::make(*disc1, BinningValue::binR,
+                                      Axis{AxisBound, 30_mm, 100_mm, 3});
+    BOOST_REQUIRE_NE(grid1, nullptr);
+    BOOST_CHECK_EQUAL(grid1->grid().axes().size(), 1);
+    const auto& axis = *grid1->grid().axes().front();
+    Axis axisExpected{AxisBound, 30_mm, 100_mm, 3};
+    BOOST_CHECK_EQUAL(axis, axisExpected);
+
+    auto discPhi = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                    30_mm, 100_mm, 45_degree);
+
+    auto gridPhi =
+        GridPortalLink::make(*discPhi, BinningValue::binPhi,
+                             Axis{AxisBound, -45_degree, 45_degree, 3});
+    BOOST_REQUIRE_NE(gridPhi, nullptr);
+
+    BOOST_CHECK_EQUAL(gridPhi->grid().axes().size(), 1);
+    const auto& axisPhi = *gridPhi->grid().axes().front();
+    Axis axisPhiExpected{AxisBound, -45_degree, 45_degree, 3};
+    BOOST_CHECK_EQUAL(axisPhi, axisPhiExpected);
+  }
+
+  BOOST_TEST_CONTEXT("2D") {
+    auto discPhi = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                    30_mm, 100_mm, 45_degree);
+
+    Axis rBad{AxisBound, 1, 2, 5};
+    Axis rGood{AxisBound, 30_mm, 100_mm, 5};
+    Axis phiBad{AxisBound, 1, 2, 5};
+    Axis phiGood{AxisBound, -45_degree, 45_degree, 5};
+
+    // r bad, phi bad
+    // r bad, phi good
+    // r good, phi bad
+    // r good phi good
+  }
 }
 
 BOOST_AUTO_TEST_CASE(Plane) {

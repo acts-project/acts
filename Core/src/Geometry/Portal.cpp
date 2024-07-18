@@ -523,4 +523,105 @@ std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
                                    logger);
 }
 
+void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
+  constexpr auto tolerance = s_onSurfaceTolerance;
+  auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
+
+  auto checkZ = [&](const IAxis& axis) {
+    ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
+    if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
+      throw std::invalid_argument(
+          "GridPortalLink: CylinderBounds: invalid length setup.");
+    }
+  };
+  auto checkRPhi = [&](const IAxis& axis) {
+    if (cyl.bounds().get(CylinderBounds::eAveragePhi) != 0) {
+      throw std::invalid_argument(
+          "GridPortalLink: CylinderBounds: only average phi == 0 is "
+          "supported. Rotate the cylinder surface.");
+    };
+
+    ActsScalar hlPhi = cyl.bounds().get(CylinderBounds::eHalfPhiSector);
+    ActsScalar r = cyl.bounds().get(CylinderBounds::eR);
+    ActsScalar hlRPhi = r * hlPhi;
+
+    if (!same(axis.getMin(), -hlRPhi) || !same(axis.getMax(), hlRPhi)) {
+      throw std::invalid_argument(
+          "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
+          "don't match bounds");
+    }
+
+    // If full cylinder, make sure axis wraps around
+    if (same(hlPhi, M_PI) &&
+        axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
+      throw std::invalid_argument(
+          "GridPortalLink: CylinderBounds: invalid phi sector setup: axis is "
+          "not closed.");
+    }
+  };
+
+  if (dim() == 1) {
+    const IAxis& axisLoc0 = *grid().axes().front();
+    if (direction() == BinningValue::binRPhi) {
+      checkRPhi(axisLoc0);
+    } else {
+      checkZ(axisLoc0);
+    }
+  } else {  // DIM == 2
+    const auto& axisLoc0 = *grid().axes().front();
+    const auto& axisLoc1 = *grid().axes().back();
+    checkRPhi(axisLoc0);
+    checkZ(axisLoc1);
+  }
+}
+
+void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
+  constexpr auto tolerance = s_onSurfaceTolerance;
+  auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(&disc.bounds());
+  if (bounds == nullptr) {
+    throw std::invalid_argument(
+        "GridPortalLink: DiscBounds: invalid bounds type.");
+  }
+
+  auto checkR = [&](const IAxis& axis) {
+    ActsScalar minR = bounds->get(RadialBounds::eMinR);
+    ActsScalar maxR = bounds->get(RadialBounds::eMaxR);
+    if (!same(axis.getMin(), minR) || !same(axis.getMax(), maxR)) {
+      throw std::invalid_argument(
+          "GridPortalLink: DiscBounds: invalid radius setup.");
+    }
+  };
+
+  auto checkPhi = [&](const IAxis& axis) {
+    ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+    if (!same(axis.getMin(), -hlPhi) || !same(axis.getMax(), hlPhi)) {
+      throw std::invalid_argument(
+          "GridPortalLink: DiscBounds: invalid phi sector setup.");
+    }
+    // If full disc, make sure axis wraps around
+    if (same(hlPhi, M_PI) &&
+        axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
+      throw std::invalid_argument(
+          "GridPortalLink: DiscBounds: invalid phi sector setup: axis is not "
+          "closed.");
+    }
+  };
+
+  if (dim() == 1) {
+    const IAxis& axisLoc0 = *grid().axes().front();
+    if (direction() == BinningValue::binR) {
+      checkR(axisLoc0);
+    } else {
+      checkPhi(axisLoc0);
+    }
+  } else {  // DIM == 2
+    const auto& axisLoc0 = *grid().axes().front();
+    const auto& axisLoc1 = *grid().axes().back();
+    checkR(axisLoc1);
+    checkPhi(axisLoc0);
+  }
+}
+
 }  // namespace Acts
