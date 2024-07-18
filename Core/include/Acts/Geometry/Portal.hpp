@@ -147,6 +147,10 @@ class GridPortalLink : public PortalLinkBase {
 
   BinningValue direction() const { return m_direction; }
 
+ protected:
+  void checkConsistency(const CylinderSurface& disc) const;
+  void checkConsistency(const DiscSurface& disc) const;
+
  private:
   BinningValue m_direction;
 };
@@ -195,61 +199,6 @@ class GridPortalLinkT : public GridPortalLink {
   }
 
  private:
-  void checkConsistency(const CylinderSurface& cyl) const {
-    constexpr auto tolerance = s_onSurfaceTolerance;
-    auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
-
-    auto checkZ = [&](const auto& axis) {
-      ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
-      if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
-        throw std::invalid_argument(
-            "GridPortalLink: CylinderBounds: invalid length setup.");
-      }
-    };
-    auto checkRPhi = [&](const auto& axis) {
-      if (cyl.bounds().get(CylinderBounds::eAveragePhi) != 0) {
-        throw std::invalid_argument(
-            "GridPortalLink: CylinderBounds: only average phi == 0 is "
-            "supported. Rotate the cylinder surface.");
-      };
-
-      ActsScalar hlPhi = cyl.bounds().get(CylinderBounds::eHalfPhiSector);
-      ActsScalar r = cyl.bounds().get(CylinderBounds::eR);
-      ActsScalar hlRPhi = r * hlPhi;
-
-      if (!same(axis.getMin(), -hlRPhi) || !same(axis.getMax(), hlRPhi)) {
-        throw std::invalid_argument(
-            "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
-            "don't match bounds");
-      }
-
-      // If full cylinder, make sure axis wraps around
-      if (same(hlPhi, M_PI) &&
-          axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
-        throw std::invalid_argument(
-            "GridPortalLink: CylinderBounds: invalid phi sector setup: axis is "
-            "not closed.");
-      }
-    };
-
-    if constexpr (DIM == 1) {
-      auto [axisLoc0] = m_grid.axesTuple();
-      if (direction() == BinningValue::binRPhi) {
-        checkRPhi(axisLoc0);
-      } else {
-        checkZ(axisLoc0);
-      }
-    } else {  // DIM == 2
-      auto [axisLoc0, axisLoc1] = m_grid.axesTuple();
-      checkRPhi(axisLoc0);
-      checkZ(axisLoc1);
-    }
-  }
-
-  void checkConsistency(const DiscSurface& disc) const {
-    throw std::logic_error{"DiscSurface not implemented"};
-  }
-
   std::unique_ptr<GridPortalLink> extendTo2D(
       const CylinderSurface& surface) const {
     if (direction() == BinningValue::binRPhi) {
