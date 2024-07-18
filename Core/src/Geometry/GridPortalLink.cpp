@@ -6,11 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
+
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
 #include <algorithm>
 #include <limits>
+#include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -350,7 +356,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       if (loc1AxisA != loc1AxisB) {
         ACTS_WARNING("    ~> "
                      << loc1
-                     << " axes are not identical, falling back to binary "
+                     << " axes are not identical, falling back to composite "
                         "merging");
         return nullptr;
       }
@@ -370,7 +376,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       if (loc0AxisA != loc0AxisB) {
         ACTS_WARNING("    ~> "
                      << loc0
-                     << " axes are not identical, falling back to binary "
+                     << " axes are not identical, falling back to composite "
                         "merging");
         return nullptr;
       }
@@ -435,64 +441,241 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
 
 }  // namespace
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
-    const GeometryContext& /*gctx*/, const PortalLinkBase& other,
-    BinningValue direction, const Logger& logger) const {
-  ACTS_DEBUG("Merging two arbitrary portals");
+std::unique_ptr<GridPortalLink> GridPortalLink::make(
+    std::shared_ptr<RegularSurface> surface, const TrackingVolume& volume,
+    BinningValue direction) {
+  std::unique_ptr<GridPortalLink> grid;
 
-  ACTS_VERBOSE(" - this:  " << *this);
-  ACTS_VERBOSE(" - other: " << other);
+  if (const auto* cylinder =
+          dynamic_cast<const CylinderSurface*>(surface.get());
+      cylinder != nullptr) {
+    if (direction == BinningValue::binRPhi) {
+      ActsScalar r = cylinder->bounds().get(CylinderBounds::eR);
+      if (cylinder->bounds().coversFullAzimuth()) {
+        grid = GridPortalLink::make(surface, direction,
+                                    Axis{AxisClosed, -M_PI * r, M_PI * r, 1});
+      } else {
+        ActsScalar hlPhi =
+            cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
 
-  const auto& surfaceA = this->surface();
-  const auto& surfaceB = other.surface();
+        grid = GridPortalLink::make(surface, direction,
+                                    Axis{AxisBound, -hlPhi * r, hlPhi * r, 1});
+      }
+    } else if (direction == BinningValue::binZ) {
+      ActsScalar hlZ = cylinder->bounds().get(CylinderBounds::eHalfLengthZ);
 
-  throw_assert(&surfaceA != &surfaceB,
-               "Cannot merge portals to the same surface");
+      grid = GridPortalLink::make(surface, direction,
+                                  Axis{AxisBound, -hlZ, hlZ, 1});
 
-  throw_assert(surfaceA.type() == surfaceB.type(),
-               "Cannot merge portals of different surface types");
-
-  throw_assert(surfaceA.bounds().type() == surfaceB.bounds().type(),
-               "Cannot merge portals of different surface bounds");
-
-  if (const auto* cylA = dynamic_cast<const CylinderSurface*>(&surfaceA);
-      cylA != nullptr) {
-    const auto* cylB = dynamic_cast<const CylinderSurface*>(&surfaceB);
-    throw_assert(cylB != nullptr,
-                 "Cannot merge CylinderSurface with "
-                 "non-CylinderSurface");
-    throw_assert(
-        direction == BinningValue::binZ || direction == BinningValue::binRPhi,
-        "Invalid binning direction: " + binningValueName(direction));
-
-    return mergeImpl(other, surfaceA, surfaceB, direction, logger);
-
-  } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&surfaceA);
-             discA != nullptr) {
-    const auto* discB = dynamic_cast<const DiscSurface*>(&surfaceB);
-    throw_assert(discB != nullptr,
-                 "Cannot merge DiscSurface with non-DiscSurface");
-    throw_assert(
-        direction == BinningValue::binR || direction == BinningValue::binPhi,
-        "Invalid binning direction: " + binningValueName(direction));
-
-    return mergeImpl(other, surfaceA, surfaceB, direction, logger);
-
+    } else {
+      throw std::invalid_argument{"Invalid binning direction"};
+    }
+  } else if (const auto* disc = dynamic_cast<const DiscSurface*>(surface.get());
+             disc != nullptr) {
+    throw std::logic_error{"Not implemented"};
   } else {
-    throw std::logic_error{"Surface type is not supported"};
+    throw std::invalid_argument{"Surface type is not supported"};
+  }
+
+  assert(grid != nullptr);
+  grid->setVolume(volume);
+
+  return grid;
+}
+
+void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
+  if (cyl.bounds().get(CylinderBounds::eAveragePhi) != 0) {
+    throw std::invalid_argument(
+        "GridPortalLink: CylinderBounds: only average phi == 0 is "
+        "supported. Rotate the cylinder surface.");
+  };
+
+  constexpr auto tolerance = s_onSurfaceTolerance;
+  auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
+
+  auto checkZ = [&](const IAxis& axis) {
+    ActsScalar hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
+    if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
+      throw std::invalid_argument(
+          "GridPortalLink: CylinderBounds: invalid length setup.");
+    }
+  };
+  auto checkRPhi = [&](const IAxis& axis) {
+    ActsScalar hlPhi = cyl.bounds().get(CylinderBounds::eHalfPhiSector);
+    ActsScalar r = cyl.bounds().get(CylinderBounds::eR);
+    ActsScalar hlRPhi = r * hlPhi;
+
+    if (!same(axis.getMin(), -hlRPhi) || !same(axis.getMax(), hlRPhi)) {
+      throw std::invalid_argument(
+          "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
+          "don't match bounds");
+    }
+
+    // If full cylinder, make sure axis wraps around
+    if (same(hlPhi, M_PI)) {
+      if (axis.getBoundaryType() != AxisBoundaryType::Closed) {
+        throw std::invalid_argument(
+            "GridPortalLink: CylinderBounds: invalid phi sector setup: "
+            "axis is not closed.");
+      }
+    } else {
+      if (axis.getBoundaryType() != AxisBoundaryType::Bound) {
+        throw std::invalid_argument(
+            "GridPortalLink: CylinderBounds: invalid phi sector setup: "
+            "axis is not bound.");
+      }
+    }
+  };
+
+  if (dim() == 1) {
+    const IAxis& axisLoc0 = *grid().axes().front();
+    if (direction() == BinningValue::binRPhi) {
+      checkRPhi(axisLoc0);
+    } else {
+      checkZ(axisLoc0);
+    }
+  } else {  // DIM == 2
+    const auto& axisLoc0 = *grid().axes().front();
+    const auto& axisLoc1 = *grid().axes().back();
+    checkRPhi(axisLoc0);
+    checkZ(axisLoc1);
   }
 }
 
-std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const PortalLinkBase& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
-    const Logger& logger) const {
-  (void)other;
-  (void)surfaceA;
-  (void)surfaceB;
-  (void)direction;
-  ACTS_VERBOSE("Binary portal merging");
-  throw std::logic_error{"Not implemented"};
+void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
+  constexpr auto tolerance = s_onSurfaceTolerance;
+  auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(&disc.bounds());
+  if (bounds == nullptr) {
+    throw std::invalid_argument(
+        "GridPortalLink: DiscBounds: invalid bounds type.");
+  }
+
+  if (bounds->get(RadialBounds::eAveragePhi) != 0) {
+    throw std::invalid_argument(
+        "GridPortalLink: DiscBounds: only average phi == 0 is supported. "
+        "Rotate the disc surface.");
+  }
+
+  auto checkR = [&](const IAxis& axis) {
+    ActsScalar minR = bounds->get(RadialBounds::eMinR);
+    ActsScalar maxR = bounds->get(RadialBounds::eMaxR);
+    if (!same(axis.getMin(), minR) || !same(axis.getMax(), maxR)) {
+      throw std::invalid_argument(
+          "GridPortalLink: DiscBounds: invalid radius setup.");
+    }
+  };
+
+  auto checkPhi = [&](const IAxis& axis) {
+    ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+    if (!same(axis.getMin(), -hlPhi) || !same(axis.getMax(), hlPhi)) {
+      throw std::invalid_argument(
+          "GridPortalLink: DiscBounds: invalid phi sector setup.");
+    }
+    // If full disc, make sure axis wraps around
+    if (same(hlPhi, M_PI)) {
+      if (axis.getBoundaryType() != Acts::AxisBoundaryType::Closed) {
+        throw std::invalid_argument(
+            "GridPortalLink: DiscBounds: invalid phi sector setup: axis is "
+            "not closed.");
+      }
+    } else {
+      if (axis.getBoundaryType() != Acts::AxisBoundaryType::Bound) {
+        throw std::invalid_argument(
+            "GridPortalLink: DiscBounds: invalid phi sector setup: axis "
+            "is not bound.");
+      }
+    }
+  };
+
+  if (dim() == 1) {
+    const IAxis& axisLoc0 = *grid().axes().front();
+    if (direction() == BinningValue::binR) {
+      checkR(axisLoc0);
+    } else {
+      checkPhi(axisLoc0);
+    }
+  } else {  // DIM == 2
+    const auto& axisLoc0 = *grid().axes().front();
+    const auto& axisLoc1 = *grid().axes().back();
+    checkR(axisLoc0);
+    checkPhi(axisLoc1);
+  }
+}
+
+std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
+    const std::shared_ptr<CylinderSurface>& surface) const {
+  assert(dim() == 1);
+  if (direction() == BinningValue::binRPhi) {
+    const auto& axisRPhi = *grid().axes().front();
+    // 1D direction is binRPhi, so add a Z axis
+    ActsScalar hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
+
+    Axis axisZ{AxisBound, -hlZ, hlZ, 1};
+    return axisRPhi.visit([&](const auto& axis) {
+      return GridPortalLink::make(surface, Axis{axis}, std::move(axisZ));
+    });
+  } else {
+    const auto& axisZ = *grid().axes().front();
+    // 1D direction is binZ, so add an rPhi axis
+    ActsScalar r = surface->bounds().get(CylinderBounds::eR);
+    ActsScalar hlPhi = surface->bounds().get(CylinderBounds::eHalfPhiSector);
+    ActsScalar hlRPhi = r * hlPhi;
+
+    auto axis = [&](auto bdt) {
+      return axisZ.visit([&](const auto& concreteAxis) {
+        return GridPortalLink::make(surface, Axis{bdt, -hlRPhi, hlRPhi, 1},
+                                    Axis{concreteAxis});
+      });
+    };
+
+    if (surface->bounds().coversFullAzimuth()) {
+      return axis(AxisClosed);
+    } else {
+      return axis(AxisBound);
+    }
+  }
+}
+
+std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
+    const std::shared_ptr<DiscSurface>& surface) const {
+  assert(dim() == 1);
+
+  const auto* bounds = dynamic_cast<const RadialBounds*>(&surface->bounds());
+  if (bounds == nullptr) {
+    throw std::invalid_argument(
+        "GridPortalLink: DiscBounds: invalid bounds type.");
+  }
+
+  if (direction() == BinningValue::binR) {
+    const auto& axisR = *grid().axes().front();
+    // 1D direction is binR, so add a phi axis
+    ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+
+    auto axis = [&](auto bdt) {
+      return axisR.visit([&](const auto& concreteAxis) {
+        return GridPortalLink::make(surface, Axis{concreteAxis},
+                                    Axis{bdt, -hlPhi, hlPhi, 1});
+      });
+    };
+
+    if (bounds->coversFullAzimuth()) {
+      return axis(AxisClosed);
+    } else {
+      return axis(AxisBound);
+    }
+  } else {
+    const auto& axisPhi = *grid().axes().front();
+    // 1D direction is binPhi, so add an R axis
+    ActsScalar rMin = bounds->get(RadialBounds::eMinR);
+    ActsScalar rMax = bounds->get(RadialBounds::eMaxR);
+
+    return axisPhi.visit([&](const auto& axis) {
+      return GridPortalLink::make(surface, Axis{AxisBound, rMin, rMax, 1},
+                                  Axis{axis});
+    });
+  }
 }
 
 std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
@@ -510,9 +693,9 @@ std::unique_ptr<PortalLinkBase> GridPortalLink::mergeImpl(
     if (merged != nullptr) {
       return merged;
     }
-    ACTS_VERBOSE("Grid merging failed, falling back to binary merging");
+    ACTS_VERBOSE("Grid merging failed, falling back to composite merging");
   } else {
-    ACTS_VERBOSE("-> no! Falling back to binary merging");
+    ACTS_VERBOSE("-> no! Falling back to composite merging");
   }
   return PortalLinkBase::mergeImpl(other, surfaceA, surfaceB, direction,
                                    logger);

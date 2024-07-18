@@ -13,7 +13,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
@@ -296,7 +299,75 @@ BOOST_AUTO_TEST_CASE(Plane) {
   // @TODO: Add plane tests
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(FromTrivial) {
+  BOOST_TEST_CONTEXT("Cylinder") {
+    auto cyl = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
+                                                    30_mm, 100_mm);
+
+    auto vol = std::make_shared<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto trivial = std::make_unique<TrivialPortalLink>(cyl, vol.get());
+    BOOST_REQUIRE(trivial);
+
+    BOOST_CHECK_EQUAL(trivial->resolveVolume({}, Vector2{1, 2}), vol.get());
+
+    auto gridZ = trivial->makeGrid(BinningValue::binZ);
+    BOOST_REQUIRE(gridZ);
+
+    BOOST_CHECK_EQUAL(gridZ->grid().axes().size(), 1);
+    BOOST_CHECK_EQUAL(gridZ->surface().bounds(), cyl->bounds());
+    Axis axisZExpected{AxisBound, -100_mm, 100_mm, 1};
+    BOOST_CHECK_EQUAL(*gridZ->grid().axes().front(), axisZExpected);
+
+    BOOST_CHECK_EQUAL(
+        gridZ->resolveVolume({}, Vector2{20_degree * 30_mm, 90_mm}), vol.get());
+
+    // Exception when queried for out of bounds
+    BOOST_CHECK_THROW(
+        gridZ->resolveVolume({}, Vector2{20_degree * 30_mm, 110_mm}),
+        std::invalid_argument);
+
+    auto gridRPhi = trivial->makeGrid(BinningValue::binRPhi);
+    BOOST_REQUIRE(gridRPhi);
+
+    BOOST_CHECK_EQUAL(gridRPhi->grid().axes().size(), 1);
+    BOOST_CHECK_EQUAL(gridRPhi->surface().bounds(), cyl->bounds());
+    Axis axisRPhiExpected{AxisClosed, -M_PI * 30_mm, M_PI * 30_mm, 1};
+    BOOST_CHECK_EQUAL(*gridRPhi->grid().axes().front(), axisRPhiExpected);
+
+    auto cylPhi = Surface::makeShared<CylinderSurface>(
+        Transform3::Identity(), 30_mm, 100_mm, 30_degree);
+
+    auto trivialPhi = std::make_unique<TrivialPortalLink>(cylPhi, vol.get());
+    BOOST_REQUIRE(trivialPhi);
+
+    BOOST_CHECK_EQUAL(trivialPhi->resolveVolume({}, Vector2{1, 2}), vol.get());
+
+    auto gridRPhiSector = trivialPhi->makeGrid(BinningValue::binRPhi);
+    BOOST_REQUIRE(gridRPhiSector);
+
+    BOOST_CHECK_EQUAL(
+        gridRPhiSector->resolveVolume({}, Vector2{20_degree * 30_mm, 90_mm}),
+        vol.get());
+
+    // Exception when queried for out of bounds
+    BOOST_CHECK_THROW(
+        gridRPhiSector->resolveVolume({}, Vector2{40_degree * 30_mm, 90_mm}),
+        std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(gridRPhiSector->grid().axes().size(), 1);
+    Axis axisRPhiSectorExpected{AxisBound, -30_degree * 30_mm,
+                                30_degree * 30_mm, 1};
+    BOOST_CHECK_EQUAL(*gridRPhiSector->grid().axes().front(),
+                      axisRPhiSectorExpected);
+  }
+
+  BOOST_TEST_CONTEXT("Disc") {}
+}
+
+BOOST_AUTO_TEST_SUITE_END()  // GridConstruction
 
 BOOST_AUTO_TEST_SUITE(GridMerging)
 
