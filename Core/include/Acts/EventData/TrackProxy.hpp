@@ -51,8 +51,9 @@ class TrackProxyIterator {
       : m_container(&container), m_itrack(itrack) {}
 
   TrackProxyIterator(const container_t& container,
-                     IndexType itrack) requires(ReadOnly)
-      : m_container(&container), m_itrack(itrack) {}
+                     IndexType itrack) requires ReadOnly
+      : m_container(&container),
+        m_itrack(itrack) {}
 
   TrackProxyIterator& operator++() {
     m_itrack++;
