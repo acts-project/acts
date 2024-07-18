@@ -304,7 +304,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
                              logger, NoOtherAxis{});
 
       } else {
-        ACTS_VERBOSE("=> perpendicular merge");
+        ACTS_VERBOSE("=> parallel merge");
 
         auto a2D = a->make2DGrid();
         auto b2D = b->make2DGrid();
@@ -322,7 +322,7 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
                              logger, NoOtherAxis{});
 
       } else {
-        ACTS_VERBOSE("=> perpendicular merge");
+        ACTS_VERBOSE("=> parallel merge");
         auto a2D = a->make2DGrid();
         auto b2D = b->make2DGrid();
         assert(a2D != nullptr);
