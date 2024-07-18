@@ -405,7 +405,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
             volumes[volumes.size() - 1u]->portals()[iu + 4u]->surface();
         pReplacements.push_back(
             createSectorReplacement(gctx, vCenter, refSurface, rBoundaries,
-                                    Acts::BinningValue::binR, iu + 4u, idir));
+                                    Acts::BinningValue::binR, iu + 4ul, idir));
       }
     }
   } else {
@@ -610,7 +610,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
             volumes[0u]->portals()[iu + iSecOffset]->surface();
         pReplacements.push_back(createSectorReplacement(
             gctx, combinedCenter, refSurface, zBoundaries,
-            Acts::BinningValue::binZ, iu + 4u, idir));
+            Acts::BinningValue::binZ, iu + 4ul, idir));
       }
     }
   } else {

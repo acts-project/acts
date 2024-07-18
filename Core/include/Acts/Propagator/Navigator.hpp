@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -111,11 +112,27 @@ class Navigator {
     bool resolvePassive = false;
   };
 
+  struct Options : public NavigatorPlainOptions {
+    /// Externally provided surfaces - these are tried to be hit
+    ExternalSurfaces externalSurfaces = {};
+
+    void insertExternalSurface(GeometryIdentifier geoid) {
+      externalSurfaces.insert(
+          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+    }
+
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// @brief Nested State struct
   ///
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    Options options;
+
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -137,9 +154,6 @@ class Navigator {
     auto navSurface() const { return navSurfaces.at(navSurfaceIndex); }
     auto navLayer() const { return navLayers.at(navLayerIndex); }
     auto navBoundary() const { return navBoundaries.at(navBoundaryIndex); }
-
-    /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
 
     /// Navigation state: the world volume
     const TrackingVolume* worldVolume = nullptr;
@@ -187,14 +201,14 @@ class Navigator {
                          getDefaultLogger("Navigator", Logging::Level::INFO))
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    assert(startSurface != nullptr && "Start surface must be set");
+  State makeState(const Options& options) const {
+    assert(options.startSurface != nullptr && "Start surface must be set");
 
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+    State state;
+    state.options = options;
+    state.startSurface = options.startSurface;
+    state.targetSurface = options.targetSurface;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -240,11 +254,6 @@ class Navigator {
 
   void navigationBreak(State& state, bool navigationBreak) const {
     state.navigationBreak = navigationBreak;
-  }
-
-  void insertExternalSurface(State& state, GeometryIdentifier geoid) const {
-    state.externalSurfaces.insert(
-        std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
   }
 
   /// @brief Initialize call - start of navigation
@@ -618,7 +627,7 @@ class Navigator {
     auto layerID = state.navigation.navSurface().object()->geometryId().layer();
     std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
         externalSurfaceRange =
-            state.navigation.externalSurfaces.equal_range(layerID);
+            state.navigation.options.externalSurfaces.equal_range(layerID);
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIndex !=
            state.navigation.navSurfaces.size()) {
@@ -1030,12 +1039,12 @@ class Navigator {
     navOpts.endObject = state.navigation.targetSurface;
 
     std::vector<GeometryIdentifier> externalSurfaces;
-    if (!state.navigation.externalSurfaces.empty()) {
+    if (!state.navigation.options.externalSurfaces.empty()) {
       auto layerID = layerSurface->geometryId().layer();
       auto externalSurfaceRange =
-          state.navigation.externalSurfaces.equal_range(layerID);
+          state.navigation.options.externalSurfaces.equal_range(layerID);
       navOpts.externalSurfaces.reserve(
-          state.navigation.externalSurfaces.count(layerID));
+          state.navigation.options.externalSurfaces.count(layerID));
       for (auto itSurface = externalSurfaceRange.first;
            itSurface != externalSurfaceRange.second; itSurface++) {
         navOpts.externalSurfaces.push_back(itSurface->second);

@@ -42,11 +42,7 @@ using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
 using CKF =
-    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
-
-using TrackContainer =
-    Acts::TrackContainer<Acts::VectorTrackContainer,
-                         Acts::VectorMultiTrajectory, std::shared_ptr>;
+    Acts::CombinatorialKalmanFilter<Propagator, ActsExamples::TrackContainer>;
 
 struct TrackFinderFunctionImpl
     : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
@@ -57,7 +53,7 @@ struct TrackFinderFunctionImpl
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
-      TrackContainer& tracks) const override {
+      ActsExamples::TrackContainer& tracks) const override {
     return trackFinder.findTracks(initialParameters, options, tracks);
   };
 };

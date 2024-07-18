@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -110,6 +109,7 @@ inline std::string Acts::StrawSurface::name() const {
   return "Acts::StrawSurface";
 }
 
-ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, StrawSurface);
+static_assert(SurfaceConcept<StrawSurface>,
+              "StrawSurface does not fulfill SurfaceConcept");
 
 }  // namespace Acts
