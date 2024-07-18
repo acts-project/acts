@@ -1989,10 +1989,10 @@ def addVertexFitting(
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             bField=field,
-            maxIterations=maxIterations,
-            initialVariances=initialVariances,
             seedFinder=vertexSeeder,
             **acts.examples.defaultKWArgs(
+                maxIterations=maxIterations,
+                initialVariances=initialVariances,
                 useTime=useTime,
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
