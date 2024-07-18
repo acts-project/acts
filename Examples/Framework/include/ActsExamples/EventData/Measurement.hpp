@@ -380,8 +380,11 @@ std::ostream& operator<<(std::ostream& os,
   return std::visit([&](const auto& m) { return (os << m); }, vm);
 }
 
+/// Type that can hold all possible bound measurements.
+using BoundVariableMeasurement = VariableSizeMeasurement<Acts::BoundIndices>;
+
 /// Variable measurement type that can contain all possible combinations.
-using Measurement = VariableSizeMeasurement<Acts::BoundIndices>;
+using Measurement = BoundVariableMeasurement;
 
 /// Container of measurements.
 ///
