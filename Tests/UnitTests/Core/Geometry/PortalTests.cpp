@@ -10,6 +10,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
@@ -108,6 +109,12 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     std::unique_ptr<GridPortalLink> grid1dCylPhi = GridPortalLink::make(
         *cylPhi, BinningValue::binZ, Axis{AxisBound, -100_mm, 100_mm, 10});
 
+    // Check that phi sector portal does not accept closed axis
+    BOOST_CHECK_THROW(GridPortalLink::make(*cylPhi, BinningValue::binRPhi,
+                                           Axis{AxisClosed, -45_degree * 30_mm,
+                                                45_degree * 30_mm, 10}),
+                      std::invalid_argument);
+
     auto grid2dCylPhi = grid1dCylPhi->make2DGrid();
     BOOST_CHECK_EQUAL(grid2dCylPhi->grid().axes().size(), 2);
     BOOST_CHECK_EQUAL(grid2dCylPhi->surface().bounds(), cylPhi->bounds());
@@ -181,6 +188,12 @@ BOOST_AUTO_TEST_CASE(Disc) {
                                            Axis{AxisBound, 30_mm, 100_mm, 3}),
                       std::invalid_argument);
 
+    // Check exception for full disc and non-closed phi axis
+    BOOST_CHECK_THROW(
+        GridPortalLink::make(*disc1, BinningValue::binPhi,
+                             Axis{AxisBound, -180_degree, 180_degree, 3}),
+        std::invalid_argument);
+
     auto grid1 = GridPortalLink::make(*disc1, BinningValue::binR,
                                       Axis{AxisBound, 30_mm, 100_mm, 3});
     BOOST_REQUIRE_NE(grid1, nullptr);
@@ -191,6 +204,12 @@ BOOST_AUTO_TEST_CASE(Disc) {
 
     auto discPhi = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                     30_mm, 100_mm, 45_degree);
+
+    // Check thet disc with phi sector does not accept closed axis
+    BOOST_CHECK_THROW(
+        GridPortalLink::make(*discPhi, BinningValue::binPhi,
+                             Axis{AxisClosed, -45_degree, 45_degree, 3}),
+        std::invalid_argument);
 
     auto gridPhi =
         GridPortalLink::make(*discPhi, BinningValue::binPhi,
@@ -463,7 +482,7 @@ BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
   BOOST_CHECK_EQUAL(axis2, axis2Expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()  // ZDirection
 
 BOOST_AUTO_TEST_SUITE(RPhiDirection)
 
@@ -512,10 +531,6 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         *cylPhi3, BinningValue::binRPhi,
         Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 5});
 
-    auto portalPhi4Closed = GridPortalLink::make(
-        *cylPhi4, BinningValue::binRPhi,
-        Axis{AxisClosed, -90_degree * 30_mm, 90_degree * 30_mm, 5});
-
     auto portalPhi4 = GridPortalLink::make(
         *cylPhi4, BinningValue::binRPhi,
         Axis{AxisBound, -90_degree * 30_mm, 90_degree * 30_mm, 5});
@@ -535,12 +550,6 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       BOOST_CHECK_EQUAL(axis.getNBins(), 15);
       BOOST_CHECK_EQUAL(axis.getType(), AxisType::Equidistant);
       BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
-
-      // @TODO: Cross check binary merging of different boundary types
-      // Merge to binary because they have different axis boundary types
-      // BOOST_CHECK_THROW(portalPhi3->merge(gctx, *portalPhi4Closed,
-      //                                     BinningValue::binRPhi, *logger),
-      //                   std::invalid_argument);
 
       // Test that if you merge half-circles, we get a closed axis
       auto portalMerged34 =
@@ -831,8 +840,9 @@ BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
   BOOST_CHECK_EQUAL(axis2, axis2Expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()  // RPhiDirection
+
+BOOST_AUTO_TEST_SUITE_END()  // Merging1dCylinder
 
 BOOST_AUTO_TEST_SUITE(Merging2dCylinder)
 
@@ -955,8 +965,262 @@ BOOST_AUTO_TEST_CASE(RPhiDirection) {
   BOOST_CHECK_EQUAL(axis2, axis2Expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()  // Merging2dCylinder
 
+BOOST_AUTO_TEST_SUITE(Merging1dDisc)
+
+BOOST_AUTO_TEST_SUITE(RDirection)
+
+BOOST_AUTO_TEST_CASE(ColinearMerge) {
+  // Without phi sector
+  auto disc1 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
+
+  auto grid1 = GridPortalLink::make(*disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 7});
+
+  auto disc2 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 100_mm, 150_mm);
+
+  auto grid2 = GridPortalLink::make(*disc2, BinningValue::binR,
+                                    Axis{AxisBound, 100_mm, 150_mm, 5});
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binR, *logger);
+  BOOST_REQUIRE(mergedPtr);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(merged, nullptr);
+
+  BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+  Axis axisExpected{AxisBound, 30_mm, 150_mm, 12};
+  BOOST_CHECK_EQUAL(*merged->grid().axes().front(), axisExpected);
+
+  // With phi sector
+  auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                   30_mm, 100_mm, 30_degree);
+
+  auto discPhiGrid1 = GridPortalLink::make(*discPhi1, BinningValue::binR,
+                                           Axis{AxisBound, 30_mm, 100_mm, 7});
+
+  auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                   100_mm, 150_mm, 30_degree);
+
+  auto discPhiGrid2 = GridPortalLink::make(*discPhi2, BinningValue::binR,
+                                           Axis{AxisBound, 100_mm, 150_mm, 5});
+
+  auto mergedPhiPtr =
+      discPhiGrid1->merge(gctx, *discPhiGrid2, BinningValue::binR, *logger);
+  BOOST_REQUIRE(mergedPhiPtr);
+  const auto* mergedPhi =
+      dynamic_cast<const GridPortalLink*>(mergedPhiPtr.get());
+  BOOST_REQUIRE_NE(mergedPhi, nullptr);
+
+  BOOST_CHECK_EQUAL(mergedPhi->grid().axes().size(), 1);
+  BOOST_CHECK_EQUAL(*mergedPhi->grid().axes().front(), axisExpected);
+}
+
+BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
+  auto disc1 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
+
+  auto grid1 =
+      GridPortalLink::make(*disc1, BinningValue::binPhi,
+                           Axis{AxisClosed, -180_degree, 180_degree, 5});
+
+  auto disc2 =
+      Surface::makeShared<DiscSurface>(Transform3::Identity(), 100_mm, 150_mm);
+
+  auto grid2 =
+      GridPortalLink::make(*disc2, BinningValue::binPhi,
+                           Axis{AxisClosed, -180_degree, 180_degree, 5});
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binR, *logger);
+  BOOST_REQUIRE(mergedPtr);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(merged, nullptr);
+
+  BOOST_CHECK_EQUAL(merged->grid().axes().size(), 2);
+  const auto& axis1 = *merged->grid().axes().front();
+  const auto& axis2 = *merged->grid().axes().back();
+  Axis axis1Expected{AxisBound, {30_mm, 100_mm, 150_mm}};
+  BOOST_CHECK_EQUAL(axis1, axis1Expected);
+  Axis axis2Expected{AxisClosed, -180_degree, 180_degree, 5};
+  BOOST_CHECK_EQUAL(axis2, axis2Expected);
+}
+
+BOOST_AUTO_TEST_SUITE_END()  // RDirection
+
+BOOST_AUTO_TEST_SUITE(PhiDirection)
+
+BOOST_AUTO_TEST_CASE(ColinearMerge) {
+  auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
+                                                100_mm, 30_degree);
+
+  auto grid1 = GridPortalLink::make(*disc1, BinningValue::binPhi,
+                                    Axis{AxisBound, -30_degree, 30_degree, 3});
+
+  auto disc2 = Surface::makeShared<DiscSurface>(
+      Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+      60_degree);
+
+  auto grid2 = GridPortalLink::make(*disc2, BinningValue::binPhi,
+                                    Axis{AxisBound, -60_degree, 60_degree, 6});
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binPhi, *logger);
+  BOOST_REQUIRE(mergedPtr);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(merged, nullptr);
+
+  BOOST_CHECK_EQUAL(merged->grid().axes().size(), 1);
+  const auto& axis = *merged->grid().axes().front();
+  BOOST_CHECK_CLOSE(axis.getMin(), -90_degree, 1e-6);
+  BOOST_CHECK_CLOSE(axis.getMax(), 90_degree, 1e-6);
+  BOOST_CHECK_EQUAL(axis.getNBins(), 9);
+
+  // Check wrapping
+
+  auto disc1Half = Surface::makeShared<DiscSurface>(
+      Transform3{AngleAxis3{15_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+      90_degree);
+
+  auto grid1Half =
+      GridPortalLink::make(*disc1Half, BinningValue::binPhi,
+                           Axis{AxisBound, -90_degree, 90_degree, 3});
+
+  auto disc2Half = Surface::makeShared<DiscSurface>(
+      Transform3{AngleAxis3{-165_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+      90_degree);
+
+  auto grid2Half =
+      GridPortalLink::make(*disc2Half, BinningValue::binPhi,
+                           Axis{AxisBound, -90_degree, 90_degree, 3});
+
+  auto mergedHalfPtr =
+      grid1Half->merge(gctx, *grid2Half, BinningValue::binPhi, *logger);
+  BOOST_REQUIRE(mergedHalfPtr);
+  const auto* mergedHalf =
+      dynamic_cast<const GridPortalLink*>(mergedHalfPtr.get());
+  BOOST_REQUIRE_NE(mergedHalf, nullptr);
+
+  BOOST_CHECK_EQUAL(mergedHalf->grid().axes().size(), 1);
+  Axis axisHalfExpected{AxisClosed, -180_degree, 180_degree, 6};
+  BOOST_CHECK_EQUAL(axisHalfExpected, *mergedHalf->grid().axes().front());
+}
+
+BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
+  auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
+                                                100_mm, 30_degree);
+
+  auto grid1 = GridPortalLink::make(*disc1, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 3});
+
+  auto disc2 = Surface::makeShared<DiscSurface>(
+      Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+      60_degree);
+
+  auto grid2 = GridPortalLink::make(*disc2, BinningValue::binR,
+                                    Axis{AxisBound, 30_mm, 100_mm, 3});
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binPhi, *logger);
+  BOOST_REQUIRE(mergedPtr);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(merged, nullptr);
+
+  BOOST_CHECK_EQUAL(merged->grid().axes().size(), 2);
+  const auto& axis1 = *merged->grid().axes().front();
+  const auto& axis2 = *merged->grid().axes().back();
+
+  Axis axis1Expected{AxisBound, 30_mm, 100_mm, 3};
+  BOOST_CHECK_EQUAL(axis1, axis1Expected);
+
+  BOOST_CHECK_CLOSE(axis2.getMin(), -90_degree, 1e-6);
+  BOOST_CHECK_CLOSE(axis2.getMax(), 90_degree, 1e-6);
+  BOOST_CHECK_EQUAL(axis2.getNBins(), 2);
+  BOOST_CHECK_CLOSE(axis2.getBinEdges().at(1), 30_degree, 1e-6);
+  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Variable);
+  BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+}
+
+BOOST_AUTO_TEST_SUITE_END()  // PhiDirection
+
+BOOST_AUTO_TEST_SUITE_END()  // Merging2dDisc
+
+BOOST_AUTO_TEST_SUITE(Merging2dDisc)
+
+BOOST_AUTO_TEST_CASE(RDirection) {
+  // Basic, because the perpendicular 1D case already tests this to some degree
+  auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                   30_mm, 100_mm, 30_degree);
+
+  auto discPhiGrid1 =
+      GridPortalLink::make(*discPhi1, Axis{AxisBound, 30_mm, 100_mm, 7},
+                           Axis{AxisBound, -30_degree, 30_degree, 3});
+
+  auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                   100_mm, 150_mm, 30_degree);
+
+  auto discPhiGrid2 =
+      GridPortalLink::make(*discPhi2, Axis{AxisBound, 100_mm, 150_mm, 5},
+                           Axis{AxisBound, -30_degree, 30_degree, 3});
+
+  auto mergedPtr =
+      discPhiGrid1->merge(gctx, *discPhiGrid2, BinningValue::binR, *logger);
+  BOOST_REQUIRE(mergedPtr);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(merged, nullptr);
+  BOOST_CHECK_EQUAL(merged->grid().axes().size(), 2);
+  const auto& axis1 = *merged->grid().axes().front();
+  const auto& axis2 = *merged->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1.getMin(), 30_mm);
+  BOOST_CHECK_EQUAL(axis1.getMax(), 150_mm);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 12);
+  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_EQUAL(axis2.getMin(), -30_degree);
+  BOOST_CHECK_EQUAL(axis2.getMax(), 30_degree);
+  BOOST_CHECK_EQUAL(axis2.getNBins(), 3);
+  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
+}
+
+BOOST_AUTO_TEST_CASE(PhiDirection) {
+  // Basic, because the perpendicular 1D case already tests this to some degree
+  auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
+                                                100_mm, 30_degree);
+
+  auto grid1 = GridPortalLink::make(*disc1, Axis{AxisBound, 30_mm, 100_mm, 3},
+                                    Axis{AxisBound, -30_degree, 30_degree, 3});
+
+  auto disc2 = Surface::makeShared<DiscSurface>(
+      Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+      60_degree);
+
+  auto grid2 = GridPortalLink::make(*disc2, Axis{AxisBound, 30_mm, 100_mm, 3},
+                                    Axis{AxisBound, -60_degree, 60_degree, 6});
+
+  auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binPhi, *logger);
+  BOOST_REQUIRE(mergedPtr);
+  const auto* merged = dynamic_cast<const GridPortalLink*>(mergedPtr.get());
+  BOOST_REQUIRE_NE(merged, nullptr);
+
+  BOOST_CHECK_EQUAL(merged->grid().axes().size(), 2);
+  const auto& axis1 = *merged->grid().axes().front();
+  const auto& axis2 = *merged->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1.getMin(), 30_mm);
+  BOOST_CHECK_EQUAL(axis1.getMax(), 100_mm);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 3);
+  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_CLOSE(axis2.getMin(), -90_degree, 1e-6);
+  BOOST_CHECK_CLOSE(axis2.getMax(), 90_degree, 1e-6);
+  BOOST_CHECK_EQUAL(axis2.getNBins(), 9);
+  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+}
+
+BOOST_AUTO_TEST_SUITE_END()  // Merging2dDisc
+
+BOOST_AUTO_TEST_SUITE_END()  // GridMerging
+
+BOOST_AUTO_TEST_SUITE_END()  // Geometry
 }  // namespace Acts::Test
