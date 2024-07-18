@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
+BOOST_AUTO_TEST_CASE(ParallelMerge) {
   // Merge in z direction with phi sectors
   auto cyl1 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                    30_mm, 100_mm, 35_degree);
@@ -809,7 +809,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
+BOOST_AUTO_TEST_CASE(ParallelMerge) {
   // Merge in phi direction with z binning
   auto cylPhi1 = Surface::makeShared<CylinderSurface>(
       Transform3::Identity() * AngleAxis3(45_degree, Vector3::UnitZ()), 30_mm,
@@ -1018,7 +1018,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   BOOST_CHECK_EQUAL(*mergedPhi->grid().axes().front(), axisExpected);
 }
 
-BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
+BOOST_AUTO_TEST_CASE(ParallelMerge) {
   auto disc1 =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
 
@@ -1106,7 +1106,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
   BOOST_CHECK_EQUAL(axisHalfExpected, *mergedHalf->grid().axes().front());
 }
 
-BOOST_AUTO_TEST_CASE(PerpendicularMerge) {
+BOOST_AUTO_TEST_CASE(ParallelMerge) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
@@ -1147,7 +1147,7 @@ BOOST_AUTO_TEST_SUITE_END()  // Merging2dDisc
 BOOST_AUTO_TEST_SUITE(Merging2dDisc)
 
 BOOST_AUTO_TEST_CASE(RDirection) {
-  // Basic, because the perpendicular 1D case already tests this to some degree
+  // Basic, because the parallel 1D case already tests this to some degree
   auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                    30_mm, 100_mm, 30_degree);
 
@@ -1183,7 +1183,7 @@ BOOST_AUTO_TEST_CASE(RDirection) {
 }
 
 BOOST_AUTO_TEST_CASE(PhiDirection) {
-  // Basic, because the perpendicular 1D case already tests this to some degree
+  // Basic, because the parallel 1D case already tests this to some degree
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
