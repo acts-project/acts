@@ -1220,6 +1220,156 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
 
 BOOST_AUTO_TEST_SUITE_END()  // Merging2dDisc
 
+BOOST_AUTO_TEST_SUITE(MergingMixedDisc)
+
+BOOST_AUTO_TEST_CASE(RDirection) {
+  auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                   30_mm, 100_mm, 30_degree);
+
+  // The 1 bin is such that the auto 1D -> 2D conversion will happen to produce
+  // a compatible 2D grid. General case will end up in binary merging
+  auto discPhiGrid1 =
+      GridPortalLink::make(*discPhi1, Axis{AxisBound, 30_mm, 100_mm, 7},
+                           Axis{AxisBound, -30_degree, 30_degree, 1});
+
+  auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                   100_mm, 150_mm, 30_degree);
+
+  auto discPhiGrid21dPhi =
+      GridPortalLink::make(*discPhi2, BinningValue::binPhi,
+                           Axis{AxisBound, -30_degree, 30_degree, 1});
+
+  auto merged12PhiPtr = discPhiGrid1->merge(gctx, *discPhiGrid21dPhi,
+                                            BinningValue::binR, *logger);
+  BOOST_REQUIRE(merged12PhiPtr);
+  const auto* merged12Phi =
+      dynamic_cast<const GridPortalLink*>(merged12PhiPtr.get());
+  BOOST_REQUIRE_NE(merged12Phi, nullptr);
+
+  auto merged21PhiPtr = discPhiGrid21dPhi->merge(gctx, *discPhiGrid1,
+                                                 BinningValue::binR, *logger);
+  BOOST_REQUIRE(merged21PhiPtr);
+  const auto* merged21Phi =
+      dynamic_cast<const GridPortalLink*>(merged21PhiPtr.get());
+  BOOST_REQUIRE_NE(merged21Phi, nullptr);
+
+  BOOST_CHECK_EQUAL(merged12Phi->grid(), merged21Phi->grid());
+
+  BOOST_CHECK_EQUAL(merged12Phi->grid().axes().size(), 2);
+  const auto& axis1 = *merged12Phi->grid().axes().front();
+  const auto& axis2 = *merged12Phi->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1.getMin(), 30_mm);
+  BOOST_CHECK_EQUAL(axis1.getMax(), 150_mm);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 8);
+  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Variable);
+  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_EQUAL(axis2.getMin(), -30_degree);
+  BOOST_CHECK_EQUAL(axis2.getMax(), 30_degree);
+  BOOST_CHECK_EQUAL(axis2.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+
+  auto discPhiGrid21dR = GridPortalLink::make(
+      *discPhi2, BinningValue::binR, Axis{AxisBound, 100_mm, 150_mm, 5});
+
+  auto merged12RPtr =
+      discPhiGrid1->merge(gctx, *discPhiGrid21dR, BinningValue::binR, *logger);
+  BOOST_REQUIRE(merged12RPtr);
+  const auto* merged12R =
+      dynamic_cast<const GridPortalLink*>(merged12RPtr.get());
+  BOOST_REQUIRE_NE(merged12R, nullptr);
+
+  auto merged21RPtr =
+      discPhiGrid21dR->merge(gctx, *discPhiGrid1, BinningValue::binR, *logger);
+  BOOST_REQUIRE(merged21RPtr);
+  const auto* merged21R =
+      dynamic_cast<const GridPortalLink*>(merged21RPtr.get());
+  BOOST_REQUIRE_NE(merged21R, nullptr);
+  BOOST_CHECK_EQUAL(merged12R->grid(), merged21R->grid());
+
+  BOOST_CHECK_EQUAL(merged12R->grid().axes().size(), 2);
+  const auto& axis1R = *merged12R->grid().axes().front();
+  const auto& axis2R = *merged12R->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1R.getMin(), 30_mm);
+  BOOST_CHECK_EQUAL(axis1R.getMax(), 150_mm);
+  BOOST_CHECK_EQUAL(axis1R.getNBins(), 12);
+  BOOST_CHECK_EQUAL(axis1R.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1R.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_EQUAL(axis2R.getMin(), -30_degree);
+  BOOST_CHECK_EQUAL(axis2R.getMax(), 30_degree);
+  BOOST_CHECK_EQUAL(axis2R.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis2R.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis2R.getBoundaryType(), AxisBoundaryType::Bound);
+}
+
+BOOST_AUTO_TEST_CASE(PhiDirection) {
+  auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
+                                                100_mm, 30_degree);
+
+  auto grid1 = GridPortalLink::make(*disc1, Axis{AxisBound, 30_mm, 100_mm, 1},
+                                    Axis{AxisBound, -30_degree, 30_degree, 3});
+
+  auto disc2 = Surface::makeShared<DiscSurface>(
+      Transform3{AngleAxis3{90_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+      60_degree);
+
+  auto grid21dPhi =
+      GridPortalLink::make(*disc2, BinningValue::binPhi,
+
+                           Axis{AxisBound, -60_degree, 60_degree, 6});
+
+  auto merged12PhiPtr =
+      grid1->merge(gctx, *grid21dPhi, BinningValue::binPhi, *logger);
+  BOOST_REQUIRE(merged12PhiPtr);
+  const auto* merged12Phi =
+      dynamic_cast<const GridPortalLink*>(merged12PhiPtr.get());
+  BOOST_REQUIRE_NE(merged12Phi, nullptr);
+
+  BOOST_CHECK_EQUAL(merged12Phi->grid().axes().size(), 2);
+  const auto& axis1 = *merged12Phi->grid().axes().front();
+  const auto& axis2 = *merged12Phi->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1.getMin(), 30_mm);
+  BOOST_CHECK_EQUAL(axis1.getMax(), 100_mm);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_CLOSE(axis2.getMin(), -90_degree, 1e-6);
+  BOOST_CHECK_CLOSE(axis2.getMax(), 90_degree, 1e-6);
+  BOOST_CHECK_EQUAL(axis2.getNBins(), 9);
+  BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+
+  auto grid21dR = GridPortalLink::make(*disc2, BinningValue::binR,
+                                       Axis{AxisBound, 30_mm, 100_mm, 1});
+
+  auto merged12RPtr =
+      grid1->merge(gctx, *grid21dR, BinningValue::binPhi, *logger);
+  BOOST_REQUIRE(merged12RPtr);
+  const auto* merged12R =
+      dynamic_cast<const GridPortalLink*>(merged12RPtr.get());
+  BOOST_REQUIRE_NE(merged12R, nullptr);
+
+  BOOST_CHECK_EQUAL(merged12R->grid().axes().size(), 2);
+  const auto& axis1R = *merged12R->grid().axes().front();
+  const auto& axis2R = *merged12R->grid().axes().back();
+
+  BOOST_CHECK_EQUAL(axis1R.getMin(), 30_mm);
+  BOOST_CHECK_EQUAL(axis1R.getMax(), 100_mm);
+  BOOST_CHECK_EQUAL(axis1R.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis1R.getType(), AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis1R.getBoundaryType(), AxisBoundaryType::Bound);
+  BOOST_CHECK_CLOSE(axis2R.getMin(), -90_degree, 1e-6);
+  BOOST_CHECK_CLOSE(axis2R.getMax(), 90_degree, 1e-6);
+  BOOST_CHECK_EQUAL(axis2R.getNBins(), 4);
+  BOOST_CHECK_EQUAL(axis2R.getType(), AxisType::Variable);
+  BOOST_CHECK_EQUAL(axis2R.getBoundaryType(), AxisBoundaryType::Bound);
+}
+
+BOOST_AUTO_TEST_SUITE_END()  // MergingMixedDisc
+
 BOOST_AUTO_TEST_SUITE_END()  // GridMerging
 
 BOOST_AUTO_TEST_SUITE_END()  // Geometry
