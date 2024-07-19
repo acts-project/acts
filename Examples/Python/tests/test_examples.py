@@ -628,6 +628,23 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
             assert_root_hash(fn, fp)
 
 
+def test_refitting(tmp_path, detector_config):
+    from truth_tracking_gsf_refitting import runRefittingGsf
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    seq = Sequencer(events=1, numThreads=1)
+
+    # Only check if it runs without errors right known
+    # Changes in fitter behaviour should be caught by other tests
+    runRefittingGsf(
+        trackingGeometry=detector_config.trackingGeometry,
+        field=field,
+        outputDir=tmp_path,
+        s=seq,
+    ).run()
+
+
 def test_particle_gun(tmp_path, assert_root_hash):
     from particle_gun import runParticleGun
 
