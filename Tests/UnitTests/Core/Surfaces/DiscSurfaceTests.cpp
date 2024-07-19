@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
                             .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    Intersection3D::Status::reachable};
-  BOOST_CHECK(bool(sfIntersection));
+  BOOST_CHECK(sfIntersection.isValid());
   CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersect.position(),
                   1e-9);
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), expectedIntersect.pathLength(),
