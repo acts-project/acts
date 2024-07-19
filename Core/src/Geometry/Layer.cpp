@@ -139,7 +139,7 @@ Acts::Layer::compatibleSurfaces(
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
-    if (endInter) {
+    if (endInter.isValid()) {
       farLimit = endInter.pathLength();
     } else {
       return sIntersections;

@@ -38,7 +38,7 @@ namespace {
 /// @param sLength The segment length, maximal allowed length
 void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
                        const Acts::Intersection2D& candidate, double sLength) {
-  if (candidate && candidate.pathLength() > 0 &&
+  if (candidate.isValid() && candidate.pathLength() > 0 &&
       candidate.pathLength() < sLength) {
     intersections.push_back(candidate);
   }
@@ -282,7 +282,7 @@ ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
         Acts::VectorHelpers::phi(vertices[phii[iarc * 2]] - moduleOrigin),
         Acts::VectorHelpers::phi(vertices[phii[iarc * 2 + 1]] - moduleOrigin),
         segment[0] - moduleOrigin, sDir);
-    if (intersection) {
+    if (intersection.isValid()) {
       checkIntersection(intersections,
                         Acts::Intersection2D(
                             intersection.position() + moduleOrigin,

@@ -61,7 +61,10 @@ class Intersection {
 
   /// Returns whether the intersection was successful or not
   /// @deprecated
-  constexpr explicit operator bool() const { return isValid(); }
+  [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
+      const {
+    return isValid();
+  }
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_status != Status::missed; }
@@ -144,7 +147,10 @@ class ObjectIntersection {
 
   /// Returns whether the intersection was successful or not
   /// @deprecated
-  constexpr explicit operator bool() const { return isValid(); }
+  [[deprecated("Use isValid() instead")]] constexpr explicit operator bool()
+      const {
+    return isValid();
+  }
 
   /// Returns whether the intersection was successful or not
   constexpr bool isValid() const { return m_intersection.isValid(); }
@@ -268,38 +274,8 @@ namespace detail {
 /// @param farLimit The maximum path length for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
 ///               at VERBOSE level
-inline bool checkPathLength(double pathLength, double nearLimit,
-                            double farLimit,
-                            const Logger& logger = getDummyLogger()) {
-  // TODO why?
-  const double tolerance = s_onSurfaceTolerance;
-
-  ACTS_VERBOSE(" -> near limit, far limit, distance: "
-               << nearLimit << ", " << farLimit << ", " << pathLength);
-
-  const bool coCriterion = pathLength > nearLimit;
-  const bool cpCriterion = pathLength < farLimit + tolerance;
-
-  const bool accept = coCriterion && cpCriterion;
-
-  if (accept) {
-    ACTS_VERBOSE("Intersection is WITHIN limit");
-  } else {
-    ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-    if (!coCriterion) {
-      ACTS_VERBOSE("- intersection path length "
-                   << pathLength << " <= near limit " << nearLimit);
-    }
-    if (!cpCriterion) {
-      ACTS_VERBOSE("- intersection path length "
-                   << pathLength << " is over the far limit "
-                   << (farLimit + tolerance) << " (including tolerance of "
-                   << tolerance << ")");
-    }
-  }
-
-  return accept;
-}
+bool checkPathLength(double pathLength, double nearLimit, double farLimit,
+                     const Logger& logger = getDummyLogger());
 
 }  // namespace detail
 
