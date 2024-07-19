@@ -681,6 +681,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     odd_dir = getOpenDataDetectorDirectory()
     config = acts.MaterialMapJsonConverter.Config()
     mdecorator = acts.JsonMaterialDecorator(
+        level=acts.logging.INFO,
         rConfig=config,
         jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
     )
