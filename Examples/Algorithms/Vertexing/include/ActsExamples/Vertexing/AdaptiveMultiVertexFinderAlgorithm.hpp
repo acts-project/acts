@@ -71,10 +71,31 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
 
-    /// Enum member determining the choice of the vertex seed finder
-    SeedFinder seedFinder;
+    /// For more information look at `AdaptiveMultiVertexFitter.hpp`
+    Acts::AnnealingUtility::Config annealingConfig{9., {1.0}};
+
+    /// For more information look at `AdaptiveMultiVertexFitter.hpp`
+    double minWeight = 0.001;
+    /// For more information look at `AdaptiveMultiVertexFitter.hpp`
+    bool doSmoothing = true;
+
+    /// Maximum number of iterations for the vertex finding
+    int maxIterations = 1000;
     /// Use time information in vertex seeder, finder, and fitter
     bool useTime = false;
+    /// For more information look at `AdaptiveMultiVertexFinder.hpp`
+    double tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
+    /// For more information look at `AdaptiveMultiVertexFinder.hpp`
+    Acts::Vector4 initialVariances = Acts::Vector4{1e+2, 1e+2, 1e+2, 1e+8};
+    /// For more information look at `AdaptiveMultiVertexFinder.hpp`
+    bool doFullSplitting = false;
+    /// For more information look at `AdaptiveMultiVertexFinder.hpp`
+    std::optional<double> tracksMaxSignificance;
+    /// For more information look at `AdaptiveMultiVertexFinder.hpp`
+    std::optional<double> maxMergeVertexSignificance;
+
+    /// Enum member determining the choice of the vertex seed finder
+    SeedFinder seedFinder;
     /// Bin extent in z-direction which is only used with `AdaptiveGridSeeder`
     double spatialBinExtent = 15. * Acts::UnitConstants::um;
     /// Bin extent in t-direction which is only used with `AdaptiveGridSeeder`
