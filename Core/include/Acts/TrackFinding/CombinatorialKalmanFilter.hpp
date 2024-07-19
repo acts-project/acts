@@ -763,7 +763,16 @@ class CombinatorialKalmanFilter {
         auto [nNewBranchesOnSurface, isOutlier] = *procRes;
         nBranchesOnSurface = nNewBranchesOnSurface;
 
-        if (nBranchesOnSurface == 0) {
+        if (isOutlier) {
+          // Outliers are already handled in `processNewTrackStates`. Nothing to
+          // do here.
+        } else if (nBranchesOnSurface == 0) {
+          ACTS_VERBOSE("Detected hole after measurement selection");
+
+          // Setting the number of branches on the surface to 1 as the hole
+          // still counts as a branch
+          nBranchesOnSurface = 1;
+
           auto stateMask =
               TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
 
@@ -795,7 +804,7 @@ class CombinatorialKalmanFilter {
             // Remove the tip from list of active tips
             result.activeBranches.pop_back();
           }
-        } else if (!isOutlier) {
+        } else {
           // If there are measurement track states on this surface
           ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
                                                          << " branches");
@@ -930,6 +939,7 @@ class CombinatorialKalmanFilter {
         result_type& result) const {
       unsigned int nBranchesOnSurface = 0;
       bool isOutlier = false;
+
       for (IndexType tipIndex : newTrackStateList) {
         // Inherit the tip state from the previous and will be updated later
         auto trackState = result.trackStates->getTrackState(tipIndex);
@@ -987,10 +997,12 @@ class CombinatorialKalmanFilter {
           }
         }
       }
+
       // Finally pop the current branch if there are no branches on surface
       if (nBranchesOnSurface == 0) {
         result.activeBranches.pop_back();
       }
+
       return std::make_tuple(nBranchesOnSurface, isOutlier);
     }
 
