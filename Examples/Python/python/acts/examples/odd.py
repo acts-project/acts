@@ -20,12 +20,11 @@ def getOpenDataDetector(
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
 ):
-
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
     ----------
     mdecorator: Material Decorator, take RootMaterialDecorator if non is given
-    odd_dir: if not given, try to get via ODD_PATH environment varaible
+    odd_dir: if not given, try to get via ODD_PATH environment variable
     logLevel: logging level
     """
     import acts.examples.dd4hep
