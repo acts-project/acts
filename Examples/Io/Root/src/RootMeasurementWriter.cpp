@@ -43,6 +43,10 @@ struct RootMeasurementWriter::DigitizationTree {
   int layerID = 0;
   int surfaceID = 0;
 
+  // Reconstruction information
+  float recBound[Acts::eBoundSize] = {};
+  float varBound[Acts::eBoundSize] = {};
+
   // Truth parameters
   float trueBound[Acts::eBoundSize] = {};
   float trueGx = 0.;
@@ -51,9 +55,9 @@ struct RootMeasurementWriter::DigitizationTree {
   float incidentPhi = 0.;
   float incidentTheta = 0.;
 
-  // Reconstruction information
-  float recBound[Acts::eBoundSize] = {};
-  float varBound[Acts::eBoundSize] = {};
+  // Residuals and pulls
+  float residual[Acts::eBoundSize] = {};
+  float pull[Acts::eBoundSize] = {};
 
   // Cluster information comprised of
   // nch :  number of channels
@@ -65,17 +69,34 @@ struct RootMeasurementWriter::DigitizationTree {
   std::array<std::vector<int>, 2> chId;
   std::vector<float> chValue;
 
-  /// Setup helper to create the tree and
-  /// register the branches
-  ///
-  /// @param treeName the name of the tree to be registered
-  void setupTree(const std::string& treeName) {
+  /// Constructor from tree name
+  DigitizationTree(const std::string& treeName,
+                   const std::vector<Acts::BoundIndices>& recoIndices,
+                   const std::vector<Acts::BoundIndices>& clusterIndices) {
     tree = new TTree(treeName.c_str(), treeName.c_str());
-    // Declare the branches
+
     tree->Branch("event_nr", &eventNr);
     tree->Branch("volume_id", &volumeID);
     tree->Branch("layer_id", &layerID);
     tree->Branch("surface_id", &surfaceID);
+
+    for (auto ib : recoIndices) {
+      tree->Branch(("rec_" + bNames[ib]).c_str(), &recBound[ib]);
+    }
+    for (auto ib : recoIndices) {
+      tree->Branch(("var_" + bNames[ib]).c_str(), &varBound[ib]);
+    }
+
+    tree->Branch("clus_size", &nch);
+    tree->Branch("channel_value", &chValue);
+    // Both are allocated, but only relevant ones are set
+    for (auto ib : clusterIndices) {
+      if (static_cast<unsigned int>(ib) < 2) {
+        tree->Branch(("channel_" + bNames[ib]).c_str(), &chId[ib]);
+        tree->Branch(("clus_size_" + bNames[ib]).c_str(), &cSize[ib]);
+      }
+    }
+
     for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
       tree->Branch(("true_" + bNames[ib]).c_str(), &trueBound[ib]);
     }
@@ -84,47 +105,15 @@ struct RootMeasurementWriter::DigitizationTree {
     tree->Branch("true_z", &trueGz);
     tree->Branch("true_incident_phi", &incidentPhi);
     tree->Branch("true_incident_theta", &incidentTheta);
-  }
 
-  /// Constructor from tree name
-  DigitizationTree(const std::string& treeName) { setupTree(treeName); }
-
-  /// Constructor from GeometryIdentifier
-  DigitizationTree(Acts::GeometryIdentifier geoID) {
-    auto vID = geoID.volume();
-    auto lID = geoID.layer();
-    auto mID = geoID.sensitive();
-    std::string treeName = "vol" + std::to_string(vID);
-    if (lID > 0) {
-      treeName += "_lay" + std::to_string(lID);
+    for (auto ib : recoIndices) {
+      tree->Branch(("residual_" + bNames[ib]).c_str(), &residual[ib]);
     }
-    if (mID > 0) {
-      treeName += "_mod" + std::to_string(mID);
+    for (auto ib : recoIndices) {
+      tree->Branch(("pull_" + bNames[ib]).c_str(), &pull[ib]);
     }
-    setupTree(treeName);
-  }
 
-  /// Setup the dimension depended branches
-  ///
-  /// @param i the bound index in question
-  void setupBoundRecBranch(Acts::BoundIndices i) {
-    tree->Branch(("rec_" + bNames[i]).c_str(), &recBound[i]);
-    tree->Branch(("var_" + bNames[i]).c_str(), &varBound[i]);
-  }
-
-  /// Setup the cluster related branch
-  ///
-  /// @param bIndices the bound indices to be written
-  void setupClusterBranch(const std::vector<Acts::BoundIndices>& bIndices) {
-    tree->Branch("clus_size", &nch);
-    tree->Branch("channel_value", &chValue);
-    // Both are allocated, but only relevant ones are set
-    for (const auto& ib : bIndices) {
-      if (static_cast<unsigned int>(ib) < 2) {
-        tree->Branch(("channel_" + bNames[ib]).c_str(), &chId[ib]);
-        tree->Branch(("clus_size_" + bNames[ib]).c_str(), &cSize[ib]);
-      }
-    }
+    clear();
   }
 
   /// Convenience function to register idenfication
@@ -143,6 +132,8 @@ struct RootMeasurementWriter::DigitizationTree {
   /// @param lp The true local position
   /// @param xt The true 4D global position
   /// @param dir The true particle direction
+  /// @param angles The incident angles
+  /// @param qop The true q/p
   void fillTruthParameters(const Acts::Vector2& lp, const Acts::Vector4& xt,
                            const Acts::Vector3& dir,
                            const std::pair<double, double> angles) {
@@ -150,7 +141,6 @@ struct RootMeasurementWriter::DigitizationTree {
     trueBound[Acts::eBoundLoc1] = lp[Acts::eBoundLoc1];
     trueBound[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
     trueBound[Acts::eBoundTheta] = Acts::VectorHelpers::theta(dir);
-    trueBound[Acts::eBoundQOverP] = std::numeric_limits<float>::quiet_NaN();
     trueBound[Acts::eBoundTime] = xt[Acts::eTime];
 
     trueGx = xt[Acts::ePos0];
@@ -178,6 +168,11 @@ struct RootMeasurementWriter::DigitizationTree {
     for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
       varBound[ib] = fullVar(ib, ib);
     }
+
+    for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
+      residual[ib] = recBound[ib] - trueBound[ib];
+      pull[ib] = residual[ib] / std::sqrt(varBound[ib]);
+    }
   }
 
   /// Convenience function to fill the cluster information
@@ -194,18 +189,23 @@ struct RootMeasurementWriter::DigitizationTree {
     }
   }
 
+  /// Fill the tree
+  void fill() { tree->Fill(); }
+
   /// Clear the tree
   void clear() {
     for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
-      trueBound[ib] = 0.;
-      recBound[ib] = 0.;
-      varBound[ib] = 0.;
+      trueBound[ib] = std::numeric_limits<float>::quiet_NaN();
+      recBound[ib] = std::numeric_limits<float>::quiet_NaN();
+      varBound[ib] = std::numeric_limits<float>::quiet_NaN();
+      residual[ib] = std::numeric_limits<float>::quiet_NaN();
+      pull[ib] = std::numeric_limits<float>::quiet_NaN();
     }
-    trueGx = 0.;
-    trueGy = 0.;
-    trueGz = 0.;
-    incidentPhi = 0.;
-    incidentTheta = 0.;
+    trueGx = std::numeric_limits<float>::quiet_NaN();
+    trueGy = std::numeric_limits<float>::quiet_NaN();
+    trueGz = std::numeric_limits<float>::quiet_NaN();
+    incidentPhi = std::numeric_limits<float>::quiet_NaN();
+    incidentTheta = std::numeric_limits<float>::quiet_NaN();
     nch = 0;
     cSize[0] = 0;
     cSize[1] = 0;
@@ -243,7 +243,9 @@ RootMeasurementWriter::RootMeasurementWriter(
 
   m_outputFile->cd();
 
-  m_outputTree = std::make_unique<DigitizationTree>("measurements");
+  std::vector bIndices = {Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
+  m_outputTree =
+      std::make_unique<DigitizationTree>("measurements", bIndices, bIndices);
 }
 
 RootMeasurementWriter::~RootMeasurementWriter() {
@@ -311,7 +313,7 @@ ProcessCode RootMeasurementWriter::writeT(
             m_outputTree->fillCluster(c);
           }
 
-          m_outputTree->tree->Fill();
+          m_outputTree->fill();
           m_outputTree->clear();
         },
         meas);
