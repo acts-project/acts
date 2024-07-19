@@ -79,9 +79,9 @@ struct TripletCandidate {
 
 template <typename external_space_point_t>
 concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {
-  { spacePoint.x() } -> std::convertible_to<Acts::ActsScalar>;
-  { spacePoint.y() } -> std::convertible_to<Acts::ActsScalar>;
-  { spacePoint.z() } -> std::convertible_to<Acts::ActsScalar>;
+  { spacePoint.x() } -> std::convertible_to<float>;
+  { spacePoint.y() } -> std::convertible_to<float>;
+  { spacePoint.z() } -> std::convertible_to<float>;
 };
 
 template <SatisfyCandidateConcept external_space_point_t>
