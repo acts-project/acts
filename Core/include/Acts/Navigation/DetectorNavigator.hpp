@@ -296,7 +296,7 @@ class DetectorNavigator {
                      << posInfo(state, stepper)
                      << "this is a portal, updating to new volume.");
         nState.currentPortal = nextPortal;
-
+        nState.currentSurface = &nextPortal->surface();
         nState.surfaceCandidates.clear();
         nState.surfaceCandidateIndex = 0;
 
