@@ -205,13 +205,15 @@ set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_geomodel_version 6.3.0)
-set(_acts_podio_version 0.16)
+set(_acts_podio_version 1.0.1) # will try this first
+set(_acts_podio_fallback_version 0.16) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.1)
 set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+set(_acts_pythia8_version 8.309)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -396,7 +398,11 @@ if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
   find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
-  find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
+  find_package(podio ${_acts_podio_version} CONFIG)
+  if(NOT podio_FOUND)
+    message(STATUS "Podio not found, trying ${_acts_podio_fallback_version} version")
+    find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
+  endif()
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
@@ -431,15 +437,7 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-  find_package(Pythia8 REQUIRED)
-
-  if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-      message(WARNING "ACTS is configured to build with C++20."
-        "As of version 309, Pythia8 does not compile under C++20."
-        "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
-    endif()
-  endif()
+  find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

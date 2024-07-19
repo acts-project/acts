@@ -292,7 +292,7 @@ struct Fixture {
     return CombinatorialKalmanFilterOptions(
         geoCtx, magCtx, calCtx,
         Acts::SourceLinkAccessorDelegate<TestSourceLinkAccessor::Iterator>{},
-        getExtensions(), Acts::PropagatorPlainOptions());
+        getExtensions(), Acts::PropagatorPlainOptions(geoCtx, magCtx));
   }
 };
 
