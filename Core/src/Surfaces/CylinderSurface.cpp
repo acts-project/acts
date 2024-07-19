@@ -195,9 +195,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
   std::vector<Vector3> vertices = bounds().createCircles(ctrans, lseg);
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
-
   bool fullCylinder = bounds().coversFullAzimuth();
-
   auto facesMesh =
       detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
   return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);

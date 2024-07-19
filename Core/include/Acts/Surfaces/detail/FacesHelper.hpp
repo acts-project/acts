@@ -21,7 +21,7 @@ namespace Acts::detail {
 struct FacesHelper {
   using FaceVector = std::vector<Polyhedron::FaceType>;
 
-  /// @brief This method words for all convex type surface setups
+  /// @brief This method works for all convex type surface setups
   /// It includes:
   ///
   /// Rectangle / Triangle / Polygon

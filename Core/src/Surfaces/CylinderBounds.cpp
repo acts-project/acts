@@ -112,22 +112,19 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
   double halfPhi = get(eHalfPhiSector);
 
   bool fullCylinder = coversFullAzimuth();
-
-  // Get the phi segments from the helper - ensures extra points
-  auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
-                              : detail::VerticesHelper::phiSegments(
-                                    avgPhi - halfPhi, avgPhi + halfPhi,
-                                    {static_cast<ActsScalar>(avgPhi)});
+  std::vector<ActsScalar> phiRef = {};
+  if (fullCylinder) {
+    phiRef = {static_cast<ActsScalar>(avgPhi)};
+  }
 
   // Write the two bows/circles on either side
   std::vector<int> sides = {-1, 1};
   for (auto& side : sides) {
-    for (std::size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      /// Helper method to create the segment
-      detail::VerticesHelper::createSegment(
-          vertices, {get(eR), get(eR)}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
-          (iseg > 0u), Vector3(0., 0., side * get(eHalfLengthZ)), ctrans);
-    }
+    /// Helper method to create the segment
+    auto svertices = detail::VerticesHelper::createSegment(
+        {get(eR), get(eR)}, avgPhi - halfPhi, avgPhi + halfPhi, {}, lseg,
+        Vector3(0., 0., side * get(eHalfLengthZ)), ctrans);
+    vertices.insert(vertices.end(), svertices.begin(), svertices.end());
   }
 
   double bevelMinZ = get(eBevelMinZ);

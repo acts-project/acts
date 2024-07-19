@@ -92,6 +92,59 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(GeneratePhiSegments) {
+  // Case (1): a small segment is given, no cartesian maximum vertex
+  ActsScalar minPhi = 0.1;
+  ActsScalar maxPhi = 0.3;
+
+  auto phis = VerticesHelper::phiSegments(minPhi, maxPhi);
+  BOOST_CHECK_EQUAL(phis.size(), 2u);
+  BOOST_CHECK(phis[0] == minPhi);
+  BOOST_CHECK(phis[1] == maxPhi);
+
+  // Case (2) a small segment is given, with one maximum vertex at phi = 0
+  minPhi = -0.1;
+  phis = VerticesHelper::phiSegments(minPhi, maxPhi);
+  BOOST_CHECK_EQUAL(phis.size(), 3u);
+  BOOST_CHECK(phis[0] == minPhi);
+  BOOST_CHECK(phis[1] == 0.);
+  BOOST_CHECK(phis[2] == maxPhi);
+
+  // Case (3) a small segment is given, with one maximum vertex at phi = 2pi,
+  // and one extra value
+  phis = VerticesHelper::phiSegments(minPhi, maxPhi, {0.25});
+  BOOST_CHECK_EQUAL(phis.size(), 4u);
+  BOOST_CHECK(phis[0] == minPhi);
+  BOOST_CHECK(phis[1] == 0.);
+  BOOST_CHECK(phis[2] == 0.25);
+  BOOST_CHECK(phis[3] == maxPhi);
+
+  // Case (4) a small segment is given, with one maximum vertex at phi = 2pi,
+  // and two extra values, one outside & hence throw an exception
+  BOOST_CHECK_THROW(VerticesHelper::phiSegments(minPhi, maxPhi, {0.25, 0.5}),
+                    std::invalid_argument);
+
+  // Case (5) an invalid phi range is given
+  BOOST_CHECK_THROW(VerticesHelper::phiSegments(0.8, 0.2, {0.25, 0.5}),
+                    std::invalid_argument);
+
+  // Case (6) a wrong number of minimum segments is given
+  BOOST_CHECK_THROW(VerticesHelper::phiSegments(0.1, 0.3, {0.25, 0.5}, 3),
+                    std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(GeneratCircularSegments) {
+  // Case (1): a small segment is given, no cartesian maximum vertex & 1 step
+  // segment
+  ActsScalar rx = 10.;
+  ActsScalar ry = 10.;
+  ActsScalar minPhi = 0.1;
+  ActsScalar maxPhi = 0.3;
+
+  auto vertices = VerticesHelper::createSegment<Vector3, Transform3>(
+      {rx, ry}, minPhi, maxPhi, {}, 72);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::detail::Test

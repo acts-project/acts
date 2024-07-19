@@ -58,18 +58,15 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
   // Draw the bounds if more than one segment are chosen
   if (lseg > 1) {
     double r = m_bounds->get(LineBounds::eR);
-    auto phiSegs = detail::VerticesHelper::phiSegments();
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
-      for (std::size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-        /// Helper method to create the segment
-        detail::VerticesHelper::createSegment(
-            vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
-            (iseg > 0u),
-            Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
-            ctransform);
-      }
+      /// Helper method to create the segment
+      auto svertices = detail::VerticesHelper::createSegment(
+          {r, r}, -M_PI, M_PI, {}, lseg,
+          Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
+          ctransform);
+      vertices.insert(vertices.end(), svertices.begin(), svertices.end());
     }
     auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
     faces = facesMesh.first;
