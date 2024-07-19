@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2022 CERN for the benefit of the Acts project
@@ -101,8 +102,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
 
   // if no space, replace one if quality is enough
   // compare to element with lowest weight
-  const auto& lowestWeight = this->weight(indices, 0);
-  if (weight <= lowestWeight) {
+  if (float lowestWeight = this->weight(indices, 0); weight <= lowestWeight) {
     return false;
   }
 
@@ -195,10 +195,9 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
     std::size_t parentIdx = (n - 1) / 2;
 
     float weightCurrent = weight(indices, n);
-    float weightParent = weight(indices, parentIdx);
-
     // If weight of the parent is lower than this one, we stop
-    if (weightParent <= weightCurrent) {
+    if (float weightParent = weight(indices, parentIdx);
+        weightParent <= weightCurrent) {
       break;
     }
 
