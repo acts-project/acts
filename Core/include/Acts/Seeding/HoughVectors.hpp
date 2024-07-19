@@ -17,23 +17,21 @@
 template <typename T>
 class MultiIndexedVector2D {
  private:
-  std::size_t m_d1, m_d2;
+  std::size_t m_d1{0};
+  std::size_t m_d2{0};
   std::vector<T> m_data;
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
 
   /// the logging instance
-  std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger{Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR)};
 
  public:
-  MultiIndexedVector2D() : m_d1(0), m_d2(0) {
-    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
-  }
+  MultiIndexedVector2D() = default;
 
   MultiIndexedVector2D(std::size_t d1, std::size_t d2, T const& t = T())
       : m_d1(d1), m_d2(d2), m_data(d1 * d2, t) {
-    m_logger = Acts::getDefaultLogger("HoughVectors", Acts::Logging::ERROR);
   }
 
   std::size_t size(int dim) const {
@@ -53,28 +51,40 @@ class MultiIndexedVector2D {
     m_d2 = x2;
     m_data.resize(x1 * x2, t);
   }
-
-  T& operator()(std::size_t i, std::size_t j) {
+  size_t globalBin(std::size_t i , std::size_t j) const {
     if (i >= m_d1 || j >= m_d2) {
       std::stringstream s;
       s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j
         << ") size (" << m_d1 << "," << m_d2 << ")";
       ACTS_ERROR(s.str());
+      throw std::runtime_error("blub 1");
     }
-    return m_data[i * m_d2 + j];
+    return i  + m_d1 * j;
+  }
+  std::pair<std::size_t, std::size_t> axisBins(std::size_t bin) const{
+    if(bin > m_d1*m_d2){
+      std::stringstream s;
+      s << "MultiIndexedVector2D bin value out of bounds: request (" << bin 
+        << ") size (" << m_d1 * m_d2 << ")";
+      ACTS_ERROR(s.str());
+      throw std::runtime_error(" Blub");
+    }
+
+    std::size_t i = bin%m_d1;
+    std::size_t j = (bin-i)/m_d2;
+
+    return std::make_pair(i,j);
+    
+  }
+  T& operator()(std::size_t i, std::size_t j) {
+    return m_data[globalBin(i, j)];
   }
   inline T& operator()(std::pair<std::size_t, std::size_t> indices) {
     return operator()(indices.first, indices.second);
   }
 
   T const& operator()(std::size_t i, std::size_t j) const {
-    if (i >= m_d1 || j >= m_d2) {
-      std::stringstream s;
-      s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j
-        << ") size (" << m_d1 << "," << m_d2 << ")";
-      ACTS_ERROR(s.str());
-    }
-    return m_data[i * m_d2 + j];
+    return m_data[globalBin(i, j)];
   }
   inline T const& operator()(
       std::pair<std::size_t, std::size_t> indices) const {
