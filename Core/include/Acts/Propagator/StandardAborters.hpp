@@ -130,9 +130,9 @@ struct SurfaceReached {
     bool intersectionFound = false;
 
     for (const auto& intersection : sIntersection.split()) {
-      if (intersection &&
-          detail::checkIntersection(intersection.intersection(), nearLimit,
-                                    farLimit, logger)) {
+      if (intersection.isValid() &&
+          detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
                                ConstrainedStep::aborter, false);
         ACTS_VERBOSE(

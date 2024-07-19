@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -196,8 +197,8 @@ Acts::Layer::compatibleSurfaces(
     // the surface intersection
     SurfaceIntersection sfi =
         sf.intersect(gctx, position, direction, boundaryTolerance).closest();
-    if (sfi &&
-        detail::checkIntersection(sfi.intersection(), nearLimit, farLimit) &&
+    if (sfi.isValid() &&
+        detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit) &&
         isUnique(sfi)) {
       sIntersections.push_back(sfi);
     }
@@ -267,8 +268,8 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   auto findValidIntersection =
       [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
     for (const auto& sfi : sfmi.split()) {
-      if (sfi &&
-          detail::checkIntersection(sfi.intersection(), nearLimit, farLimit)) {
+      if (sfi.isValid() &&
+          detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit)) {
         return sfi;
       }
     }
