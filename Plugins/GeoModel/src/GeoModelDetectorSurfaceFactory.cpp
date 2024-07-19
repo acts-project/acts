@@ -122,8 +122,7 @@ void Acts::GeoModelDetectorSurfaceFactory::construct(
 
       } else {
         // convert the full phys vol
-        convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),
-                         cache.sensitiveSurfaces);
+        convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr),cache.sensitiveSurfaces);
       }
     }
 

@@ -143,6 +143,7 @@ def main():
     # All surfaces from GeoModel
     gmBoxes = gmVolFactoryCache.boundingBoxes
 
+    '''
     #Surfaces
     gmFactoryConfig = gm.GeoModelDetectorSurfaceFactory.Config()
     gmFactoryConfig.materialList = args.material_list
@@ -155,8 +156,8 @@ def main():
     # The Cache & construct call
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
     gmFactory.construct(gmFactoryCache, gContext, gmTree, gmFactoryOptions)
-    '''
     # Construct the building hierarchy
+
     # if the blueprint is enabled
     if args.enable_blueprint:
         gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
@@ -247,7 +248,10 @@ def main():
     if args.output_obj:
         segments = 720
         #gmBoxes = gmVolFactoryCache.boundingBoxes
-        ssurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
+        ssurfaces = [ss[1] for ss in gmVolFactoryCache.sensitiveSurfaces]
+        print(len(ssurfaces))
+        #for ssurface in ssurfaces:
+            #print(ssurface)
         acts.examples.writeSurfacesObj(
             ssurfaces,
             gContext,

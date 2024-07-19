@@ -1,16 +1,19 @@
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
+#include <GeoModelHelpers/getChildNodesWithTrf.h>
 #include "Acts/Plugins/GeoModel/GeoModelToDetVol.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "GeoModelKernel/GeoDefinitions.h"
 
 class GeoShape;
 struct GeoModelTree;
+class Surface;
 namespace Acts {
-//namespace GeoModel {
 class GeoModelDetectorVolumeFactory {
  public:
-  using GeoModelSensitiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
+  //using GeoModelSensitiveSurface = std::shared_ptr<Surface>;
+  //using  GeoModelSensitiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
   using GeoModelBoundingBox = std::shared_ptr<Experimental::DetectorVolume>;
 
   struct Options {
@@ -35,6 +38,8 @@ class GeoModelDetectorVolumeFactory {
   GeoModelDetectorVolumeFactory(const Config& cfg, std::unique_ptr<const Logger> mlogger = getDefaultLogger( "GeoModelDetectorVolumeFactory", Acts::Logging::WARNING));
 
   void construct(Cache& cache, const GeometryContext& gctx, const GeoModelTree& geoModelTree, const Options& options);
+
+  void convertSensitive(PVConstLink geoPV, const Acts::Transform3 &transform, std::vector<GeoModelSensitiveSurface> &sensitives);
 
 
 
