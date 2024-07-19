@@ -211,7 +211,7 @@ void addLogging(Acts::Python::Context& ctx) {
     } catch (const std::exception& e) {
       std::string what = e.what();
       if (what.find("ACTS_LOG_FAILURE_THRESHOLD") != std::string::npos) {
-        exc(e.what());
+        py::set_error(exc, e.what());
       } else {
         std::rethrow_exception(p);
       }
