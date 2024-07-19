@@ -44,8 +44,8 @@ ViewConfig red({200, 0, 0});
 ViewConfig green({0, 200, 0});
 ViewConfig blue({0, 0, 200});
 
-std::vector<std::string> allowedAxes = {"XY*"};  //, "Xy*", "xy*", "xY*",
-                                                 // "YX*", "yx*", "yX*", "Yx*"};
+std::vector<std::string> allowedAxes = {"XY*", "Xy*", "xy*", "xY*",
+                                        "YX*", "yx*", "yX*", "Yx*"};
 
 std::vector<std::string> notAllowedAxes = {"YZ*", "ZX*", "ZY*"};
 
