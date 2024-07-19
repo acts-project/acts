@@ -272,8 +272,8 @@ bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
   const auto& middleL2 = i2.middle;
   const auto& topL2 = i2.top;
 
-  Acts::ActsScalar seed1_sum = 0.;
-  Acts::ActsScalar seed2_sum = 0.;
+  float seed1_sum = 0.;
+  float seed2_sum = 0.;
 
   seed1_sum += bottomL1->y() * bottomL1->y() + bottomL1->z() * bottomL1->z();
   seed1_sum += middleL1->y() * middleL1->y() + middleL1->z() * middleL1->z();
