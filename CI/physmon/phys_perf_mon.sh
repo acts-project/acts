@@ -414,22 +414,52 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         amvf_gridseeder_ttbar
 fi
 
-if [[ "$mode" == "all" || "$mode" == "traccc" ]]; then
+if [[ "$mode" == "all" || "$mode" == "traccc_host" ]]; then
     run Examples/Scripts/generic_plotter.py \
-        $outdir/tracksummary_traccc.root \
+        $outdir/tracksummary_traccc_host.root \
         tracksummary \
-        $outdir/tracksummary_traccc_hist.root \
+        $outdir/tracksummary_traccc_host_hist.root \
         --silent \
-        --config CI/physmon/traccc_config.yml
+        --config CI/physmon/tracksummary_ckf_config.yml
     ec=$(($ec | $?))
 
-    rm $outdir/tracksummary_traccc.root
+    rm $outdir/tracksummary_traccc_host.root
 
     run_histcmp \
-        $outdir/tracksummary_traccc_hist.root \
-        $refdir/tracksummary_traccc_hist.root \
-        "Track Summary Traccc Chain" \
-        tracksummary_traccc
+        $outdir/tracksummary_traccc_host_hist.root \
+        $refdir/tracksummary_traccc_host_hist.root \
+        "Track Summary Traccc Chain (Host)" \
+        tracksummary_traccc_host
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_host_hist.root \
+        $refdir/tracksummary_ckf_seeded_hist.root \
+        "Track Summary Comparision (traccc host and acts)" \
+        tracksummary_comparison_acts_traccc_host
+fi
+
+if [[ "$mode" == "all" || "$mode" == "traccc_cuda" ]]; then
+    run Examples/Scripts/generic_plotter.py \
+        $outdir/tracksummary_traccc_cuda.root \
+        tracksummary \
+        $outdir/tracksummary_traccc_cuda_hist.root \
+        --silent \
+        --config CI/physmon/tracksummary_ckf_config.yml
+    ec=$(($ec | $?))
+
+    rm $outdir/tracksummary_traccc_cuda.root
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_cuda_hist.root \
+        $refdir/tracksummary_traccc_cuda_hist.root \
+        "Track Summary Traccc Chain (Cuda)" \
+        tracksummary_traccc_cuda
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_cuda_hist.root \
+        $refdir/tracksummary_ckf_seeded_hist.root \
+        "Track Summary Comparision (traccc cuda and acts)" \
+        tracksummary_comparison_acts_traccc_cuda
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
