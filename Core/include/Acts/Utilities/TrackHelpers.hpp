@@ -16,6 +16,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/MBFSmoother.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -95,7 +96,7 @@ template <typename track_proxy_t>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
-  Acts::GainMatrixSmoother smoother;
+  Acts::MBFSmoother smoother;
 
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
