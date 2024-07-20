@@ -87,8 +87,10 @@ class MBFSmoother {
         const auto S = (H * ts.predictedCovariance() * H.transpose() +
                         ts.template calibratedCovariance<kMeasurementSize>())
                            .eval();
+        // TODO Sinv could be cached by the filter step
         const auto Sinv = S.inverse();
 
+        // TODO K could be cached by the filter step
         const auto K = (ts.predictedCovariance() * H.transpose() * Sinv).eval();
 
         const auto C = (BoundMatrix::Identity() - K * H).eval();
