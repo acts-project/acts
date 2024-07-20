@@ -55,8 +55,6 @@ class MBFSmoother {
     BoundMatrix blambda_hat = BoundMatrix::Zero();
     BoundVector slambda_hat = BoundVector::Zero();
 
-    // default-constructed error represents success, i.e. an invalid error code
-    std::error_code error;
     trajectory.applyBackwards(start_ts.index(), [&](TrackStateProxy ts) {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
@@ -68,11 +66,8 @@ class MBFSmoother {
       ts.smoothed() =
           (ts.filtered() - ts.filteredCovariance() * slambda_hat).eval();
 
-      if (!ts.hasPrevious()) {
-        return;
-      }
-
-      if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+      if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag) ||
+          !ts.hasPrevious()) {
         return;
       }
 
@@ -110,7 +105,7 @@ class MBFSmoother {
       });
     });
 
-    return error ? Result<void>::failure(error) : Result<void>::success();
+    return Result<void>::success();
   }
 };
 
