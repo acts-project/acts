@@ -50,14 +50,21 @@ class MBFSmoother {
       ts.addComponents(TrackStatePropMask::Smoothed);
 
       ts.smoothedCovariance() =
-          (ts.filteredCovariance() -
-           ts.filteredCovariance() * big_lambda_hat * ts.filteredCovariance())
-              .eval();
+          ts.filteredCovariance() -
+          ts.filteredCovariance() * big_lambda_hat * ts.filteredCovariance();
       ts.smoothed() =
-          (ts.filtered() - ts.filteredCovariance() * small_lambda_hat).eval();
+          ts.filtered() - ts.filteredCovariance() * small_lambda_hat;
 
-      if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag) ||
-          !ts.hasPrevious()) {
+      if (!ts.hasPrevious()) {
+        return;
+      }
+
+      if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        const auto F = ts.jacobian();
+
+        big_lambda_hat = F.transpose() * big_lambda_hat * F;
+        small_lambda_hat = F.transpose() * small_lambda_hat;
+
         return;
       }
 
@@ -73,7 +80,7 @@ class MBFSmoother {
                         ts.template calibratedCovariance<kMeasurementSize>())
                            .eval();
         // TODO Sinv could be cached by the filter step
-        const auto Sinv = S.inverse();
+        const auto Sinv = S.inverse().eval();
 
         // TODO K could be cached by the filter step
         const auto K = (ts.predictedCovariance() * H.transpose() * Sinv).eval();
@@ -92,8 +99,8 @@ class MBFSmoother {
 
         const auto F = ts.jacobian();
 
-        big_lambda_hat = (F.transpose() * big_lambda_tilde * F).eval();
-        small_lambda_hat = (F.transpose() * small_lambda_tilde).eval();
+        big_lambda_hat = F.transpose() * big_lambda_tilde * F;
+        small_lambda_hat = F.transpose() * small_lambda_tilde;
       });
     });
 
