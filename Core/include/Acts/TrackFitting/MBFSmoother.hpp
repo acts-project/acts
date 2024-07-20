@@ -37,23 +37,13 @@ class MBFSmoother {
   template <typename traj_t>
   Result<void> operator()(const GeometryContext& /*gctx*/, traj_t& trajectory,
                           std::size_t entryIndex,
-                          const Logger& logger = getDummyLogger()) const {
+                          const Logger& /*logger*/ = getDummyLogger()) const {
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
-    ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
-
-    // For the last state: smoothed is filtered - also: switch to next
-    ACTS_VERBOSE("Getting previous track state");
     TrackStateProxy start_ts = trajectory.getTrackState(entryIndex);
 
-    // make sure there is more than one track state
-    if (!start_ts.hasPrevious()) {
-      ACTS_VERBOSE("Only one track state given, smoothing terminates early");
-      return Result<void>::success();
-    }
-
-    BoundMatrix blambda_hat = BoundMatrix::Zero();
-    BoundVector slambda_hat = BoundVector::Zero();
+    BoundMatrix big_lambda_hat = BoundMatrix::Zero();
+    BoundVector small_lambda_hat = BoundVector::Zero();
 
     trajectory.applyBackwards(start_ts.index(), [&](TrackStateProxy ts) {
       // ensure the track state has a smoothed component
@@ -61,10 +51,10 @@ class MBFSmoother {
 
       ts.smoothedCovariance() =
           (ts.filteredCovariance() -
-           ts.filteredCovariance() * blambda_hat * ts.filteredCovariance())
+           ts.filteredCovariance() * big_lambda_hat * ts.filteredCovariance())
               .eval();
       ts.smoothed() =
-          (ts.filtered() - ts.filteredCovariance() * slambda_hat).eval();
+          (ts.filtered() - ts.filteredCovariance() * small_lambda_hat).eval();
 
       if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag) ||
           !ts.hasPrevious()) {
@@ -93,15 +83,17 @@ class MBFSmoother {
             (ts.template calibrated<kMeasurementSize>() - H * ts.predicted())
                 .eval();
 
-        const auto blambda_tilde =
-            (H.transpose() * Sinv * H + C.transpose() * blambda_hat * C).eval();
-        const auto slambda_tilde =
-            (-H.transpose() * Sinv * y + C.transpose() * slambda_hat).eval();
+        const auto big_lambda_tilde =
+            (H.transpose() * Sinv * H + C.transpose() * big_lambda_hat * C)
+                .eval();
+        const auto small_lambda_tilde =
+            (-H.transpose() * Sinv * y + C.transpose() * small_lambda_hat)
+                .eval();
 
         const auto F = ts.jacobian();
 
-        blambda_hat = (F.transpose() * blambda_tilde * F).eval();
-        slambda_hat = (F.transpose() * slambda_tilde).eval();
+        big_lambda_hat = (F.transpose() * big_lambda_tilde * F).eval();
+        small_lambda_hat = (F.transpose() * small_lambda_tilde).eval();
       });
     });
 
