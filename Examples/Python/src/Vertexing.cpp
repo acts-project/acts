@@ -39,14 +39,15 @@ void addVertexing(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      inputTruthParticles, inputTruthVertices, outputProtoVertices,
-      outputVertices, seedFinder, bField, useTime, spatialBinExtent,
-      temporalBinExtent);
+      outputProtoVertices, outputVertices, seedFinder, bField, minWeight,
+      doSmoothing, maxIterations, useTime, tracksMaxZinterval, initialVariances,
+      doFullSplitting, tracksMaxSignificance, maxMergeVertexSignificance,
+      spatialBinExtent, temporalBinExtent);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",
                                 inputTrackParameters, outputProtoVertices,
-                                outputVertices, bField);
+                                outputVertices, bField, maxIterations);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
                                 "VertexFitterAlgorithm", inputTrackParameters,

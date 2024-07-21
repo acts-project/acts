@@ -107,6 +107,14 @@ class CandidatesForMiddleSp {
   /// @returns The comparison result
   static bool ascendingByQuality(const value_type& i1, const value_type& i2);
 
+  /// @brief Retrieve the number of Low quality candidates
+  /// @returns The number of Low quality candidates
+  std::size_t nLowQualityCandidates() const;
+
+  /// @brief Retrieve the number of High quality candidates
+  /// @returns The number of High quality candidates
+  std::size_t nHighQualityCandidates() const;
+
  private:
   /// @brief dding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria

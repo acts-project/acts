@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -15,8 +16,6 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <string>
-
-#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -69,7 +68,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   Config m_cfg;
 
   std::mutex m_writeMutex;
-  podio::ROOTFrameWriter m_writer;
+  Acts::PodioUtil::ROOTWriter m_writer;
 
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};

@@ -25,7 +25,12 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent geometry changes
 
-using GeometryContext = ContextType;
+class GeometryContext : public ContextType {
+ public:
+  /// Inherit all constructors
+  using ContextType::ContextType;
+  using ContextType::operator=;
+};
 
 /// Helper struct that stores an object and a context, and will print it to
 /// an outstream.
