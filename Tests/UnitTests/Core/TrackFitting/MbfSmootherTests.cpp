@@ -12,11 +12,13 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -38,48 +40,64 @@ BOOST_AUTO_TEST_SUITE(TrackFittingMbfSmoother)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
-  std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
-  auto ts = traj.getTrackState(ts_idx);
+
+  auto projector = detail::FixedSizeSubspace<eBoundSize, 2>(
+                       std::array{eBoundLoc0, eBoundLoc1})
+                       .projector<double>();
 
   // Make dummy track parameter
   CovarianceMatrix covTrk;
   covTrk.setIdentity();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
   BoundVector parValues;
-  parValues << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
 
-  ts.predicted() = parValues;
+  std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
+  auto ts = traj.getTrackState(ts_idx);
+  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+
+  ts.predicted() << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
-  parValues << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
+  ts.setProjector(projector);
+  ts.allocateCalibrated(2);
+  ts.calibrated<2>() << 0.351, 0.473;
+  ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
 
-  ts.filtered() = parValues;
+  ts.filtered() << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 1.;
   ts.jacobian().setIdentity();
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
+  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  parValues << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.predicted() = parValues;
+  ts.predicted() << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
-  parValues << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.filtered() = parValues;
+  ts.setProjector(projector);
+  ts.allocateCalibrated(2);
+  ts.calibrated<2>() << 0.351, 0.473;
+  ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
+
+  ts.filtered() << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 2.;
   ts.jacobian().setIdentity();
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
+  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
 
-  parValues << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.predicted() = parValues;
+  ts.predicted() << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
 
-  parValues << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.filtered() = parValues;
+  ts.setProjector(projector);
+  ts.allocateCalibrated(2);
+  ts.calibrated<2>() << 0.351, 0.473;
+  ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
+
+  ts.filtered() << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 3.;
   ts.jacobian().setIdentity();
@@ -97,11 +115,10 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   double tol = 1e-6;
 
   ParametersVector expPars;
-  expPars << 0.3510000, 0.4730000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
+  expPars << 0.301, 0.503, 1.5707963, 0.0, 0.01, 0.0;
   CovarianceMatrix expCov;
   expCov.setIdentity();
-  expCov.diagonal() << 0.0800000, 0.3000000, 1.0000000, 1.0000000, 1.0000000,
-      1.0000000;
+  expCov.diagonal() << 0.08, 0.3, 1.0, 1.0, 1.0, 1.0;
   CHECK_CLOSE_ABS(ts1.smoothed(), expPars, tol);
   CHECK_CLOSE_ABS(ts1.smoothedCovariance(), expCov, tol);
 
@@ -109,7 +126,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   BOOST_CHECK(ts2.hasSmoothed());
   BOOST_CHECK_NE(ts2.filtered(), ts2.smoothed());
 
-  expPars << 0.2500000, 0.4700000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
+  expPars << 0.27, 0.53, 1.5707963, 0.0, 0.01, 0.0;
   CHECK_CLOSE_ABS(ts2.smoothed(), expPars, tol);
   CHECK_CLOSE_ABS(ts2.smoothedCovariance(), expCov, tol);
 
@@ -118,7 +135,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   // last one, smoothed == filtered
   BOOST_CHECK_EQUAL(ts3.filtered(), ts3.smoothed());
 
-  expPars << 0.3300000, 0.4300000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
+  expPars << 0.33, 0.43, 1.5707963, 0.0, 0.01, 0.0;
   CHECK_CLOSE_ABS(ts3.smoothed(), expPars, tol);
   CHECK_CLOSE_ABS(ts3.smoothedCovariance(), expCov, tol);
 }
