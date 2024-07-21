@@ -55,13 +55,17 @@ class MbfSmoother {
 
   /// Run the Kalman smoothing for one trajectory.
   ///
+  /// @param[in] gctx The geometry context to be used
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& /*gctx*/, traj_t& trajectory,
+  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
-                          const Logger& /*logger*/ = getDummyLogger()) const {
+                          const Logger& logger = getDummyLogger()) const {
+    (void)gctx;
+    (void)logger;
+
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
     TrackStateProxy start_ts = trajectory.getTrackState(entryIndex);
