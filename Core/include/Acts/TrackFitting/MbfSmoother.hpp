@@ -30,27 +30,54 @@ namespace Acts {
 class MbfSmoother {
  public:
   struct InternalTrackState {
-    // This is used to build a covariance matrix view in the .cpp file
-    unsigned int calibratedSize;
-    const double* calibrated;
-    const double* calibratedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector projector;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance jacobian;
+    using Projector =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Projector;
+    using Jacobian =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Covariance;
+    using Parameters =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Parameters;
+    using Covariance =
+        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                  false>::Covariance;
 
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters filtered;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance filteredCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters smoothed;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance smoothedCovariance;
+    // This is used to build a covariance matrix view in the .cpp file
+    unsigned int calibratedSize{0};
+    const double* calibrated{nullptr};
+    const double* calibratedCovariance{nullptr};
+    Projector projector;
+
+    Jacobian jacobian{nullptr};
+
+    Parameters predicted{nullptr};
+    Covariance predictedCovariance{nullptr};
+    Parameters filtered{nullptr};
+    Covariance filteredCovariance{nullptr};
+    Parameters smoothed{nullptr};
+    Covariance smoothedCovariance{nullptr};
+
+    InternalTrackState() = default;
+
+    template <typename TrackStateProxy>
+    explicit InternalTrackState(TrackStateProxy ts)
+        : jacobian(ts.jacobian()),
+          predicted(ts.predicted()),
+          predictedCovariance(ts.predictedCovariance()),
+          filtered(ts.filtered()),
+          filteredCovariance(ts.filteredCovariance()),
+          smoothed(ts.smoothed()),
+          smoothedCovariance(ts.smoothedCovariance()) {
+      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        calibratedSize = ts.calibratedSize();
+        // Note that we pass raw pointers here which are used in the correct
+        // shape later
+        calibrated = {ts.effectiveCalibrated().data()};
+        calibratedCovariance = {ts.effectiveCalibratedCovariance().data()};
+        projector = {ts.projector()};
+      }
+    }
   };
 
   /// Run the Kalman smoothing for one trajectory.
@@ -77,21 +104,7 @@ class MbfSmoother {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
-      InternalTrackState internalTrackState{
-          ts.calibratedSize(),
-          // Note that we pass raw pointers here which are used in the correct
-          // shape later
-          ts.effectiveCalibrated().data(),
-          ts.effectiveCalibratedCovariance().data(),
-          ts.projector(),
-          ts.jacobian(),
-          ts.predicted(),
-          ts.predictedCovariance(),
-          ts.filtered(),
-          ts.filteredCovariance(),
-          ts.smoothed(),
-          ts.smoothedCovariance(),
-      };
+      InternalTrackState internalTrackState(ts);
 
       calculateSmoothed(internalTrackState, big_lambda_hat, small_lambda_hat);
 
@@ -99,14 +112,12 @@ class MbfSmoother {
         return;
       }
 
-      if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        visitMeasurement(internalTrackState, big_lambda_hat, small_lambda_hat);
+      } else {
         visitNonMeasurement(internalTrackState, big_lambda_hat,
                             small_lambda_hat);
-
-        return;
       }
-
-      visitMeasurement(internalTrackState, big_lambda_hat, small_lambda_hat);
     });
 
     return Result<void>::success();
