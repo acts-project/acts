@@ -10,5 +10,5 @@ target_sources(
     BetheHeitlerApprox.cpp
     GsfMixtureReduction.cpp
     GlobalChiSquareFitter.cpp
-    MBFSmoother.cpp
+    MbfSmoother.cpp
 )
