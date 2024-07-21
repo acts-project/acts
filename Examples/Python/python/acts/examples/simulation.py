@@ -452,7 +452,7 @@ def addFatras(
 
     # Selector
     if preSelectParticles is not None:
-        particles_selected = "particles_selected"
+        particles_selected = "fatras_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
@@ -673,7 +673,7 @@ def addGeant4(
 
     # Selector
     if preSelectParticles is not None:
-        particles_selected = "particles_selected"
+        particles_selected = "geant4_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
@@ -728,7 +728,7 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "geant4_particles_initial_selected"
+        particlesInitial = "geant4_particles_initial_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -736,7 +736,7 @@ def addGeant4(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "geant4_particles_final_selected"
+        particlesFinal = "geant4_particles_final_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
