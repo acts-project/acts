@@ -34,7 +34,7 @@ void addObj(Context& ctx) {
     /// @param surfaces is the collection of surfaces
     /// @param viewContext is the geometry context
     /// @param viewRgb is the color of the surfaces
-    /// @param viewSegements is the number of segments to approximate a full circle
+    /// @param viewSegements is the number of segments to approximate a quarter of a circle
     /// @param fileName is the path to the output file
     ///
     mex.def("writeSurfacesObj",
@@ -43,7 +43,7 @@ void addObj(Context& ctx) {
                const std::array<int, 3>& viewRgb, unsigned int viewSegements,
                const std::string& fileName) {
               Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
-              sConfig.nSegments = viewSegements;
+              sConfig.quaterSegments = viewSegements;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 

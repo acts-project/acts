@@ -104,8 +104,8 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
-    const Transform3 ctrans, std::size_t lseg) const {
+std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
+    const Transform3 transform, unsigned int quarterSegments) const {
   std::vector<Vector3> vertices;
 
   double avgPhi = get(eAveragePhi);
@@ -121,24 +121,24 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
   std::vector<int> sides = {-1, 1};
   for (auto& side : sides) {
     /// Helper method to create the segment
-    auto svertices = detail::VerticesHelper::createSegment(
-        {get(eR), get(eR)}, avgPhi - halfPhi, avgPhi + halfPhi, {}, lseg,
-        Vector3(0., 0., side * get(eHalfLengthZ)), ctrans);
+    auto svertices = detail::VerticesHelper::segmentVertices(
+        {get(eR), get(eR)}, avgPhi - halfPhi, avgPhi + halfPhi, phiRef,
+        quarterSegments, Vector3(0., 0., side * get(eHalfLengthZ)), transform);
     vertices.insert(vertices.end(), svertices.begin(), svertices.end());
   }
 
-  double bevelMinZ = get(eBevelMinZ);
-  double bevelMaxZ = get(eBevelMaxZ);
+  ActsScalar bevelMinZ = get(eBevelMinZ);
+  ActsScalar bevelMaxZ = get(eBevelMaxZ);
 
   // Modify the vertices position if bevel is defined
   if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
-    double mult{1};
-    auto invCtrans = ctrans.inverse();
-    auto func = [&mult, &ctrans, &invCtrans](Vector3& v) {
-      v = invCtrans * v;
+    ActsScalar mult{1};
+    auto invTransform = transform.inverse();
+    auto func = [&mult, &transform, &invTransform](Vector3& v) {
+      v = invTransform * v;
       v(2) += v(1) * mult;
-      v = ctrans * v;
+      v = transform * v;
     };
     if (bevelMinZ != 0.) {
       mult = std::tan(-bevelMinZ);

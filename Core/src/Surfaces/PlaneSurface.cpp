@@ -94,13 +94,14 @@ const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
   bool exactPolyhedron = true;
 
+  unsigned int lseg = quarterSegments;
   // If you have bounds you can create a polyhedron representation
   if (m_bounds) {
     auto vertices2D = m_bounds->vertices(lseg);
@@ -129,7 +130,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
+      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
     }

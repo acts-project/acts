@@ -103,9 +103,10 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
 }
 
 std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
-    unsigned int lseg) const {
-  if (lseg > 0) {
+    unsigned int quarterSegments) const {
+  if (quarterSegments > 0u) {
     using VectorHelpers::phi;
+
     ActsScalar phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
     ActsScalar phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
 
@@ -114,13 +115,16 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
     std::vector<Acts::Vector2> rvertices =
-        detail::VerticesHelper::createSegment<Vector2, Transform2>(
-            {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {}, lseg);
+        detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
+            {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
+            quarterSegments);
     std::reverse(rvertices.begin(), rvertices.end());
 
     // Outer bow from phi_min -> phi_max
-    auto overtices = detail::VerticesHelper::createSegment<Vector2, Transform2>(
-        {get(eMaxR), get(eMaxR)}, phiMinOuter, phiMaxOuter, {}, lseg);
+    auto overtices =
+        detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
+            {get(eMaxR), get(eMaxR)}, phiMinOuter, phiMaxOuter, {},
+            quarterSegments);
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
 
     std::for_each(rvertices.begin(), rvertices.end(),

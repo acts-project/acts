@@ -25,14 +25,13 @@ namespace Acts::detail::VerticesHelper {
 /// @param phiMin the minimum phi value
 /// @param phiMax The second phi value
 /// @param phiRef is a vector of reference phi values to be included as well
-/// @param minSegments approximation of a circle extrema points - default is 8 segments
-///        - needs to be divisible by 4
+/// @param quarterSegments number of segments used to approximate a segement quarter
 ///
 /// @return a vector of generated phi values
 std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
                                     ActsScalar phiMax = M_PI,
                                     const std::vector<ActsScalar>& phiRefs = {},
-                                    unsigned int minSegments = 8u);
+                                    unsigned int quarterSegments = 2u);
 
 /// Helper method to create a regular 2 or 3 D segment
 ///  between two phi values with a given number of segments
@@ -47,24 +46,21 @@ std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
 /// @param phiMin the minimum phi value
 /// @param phiMax The second phi value
 /// @param phiRef is a vector of reference phi values to be included as well
-/// @param nSegments The number of segments for full 2*PI - 4 is the minimum approximation
-///                  must be either -1 or divisible by 4
+/// @param quarterSegments number of segments used to approximate a segement quarter
 /// @param offset The out of plane offset position of the bow
 /// @param transform The transform applied (optional)
 ///
 /// @return a vector of vertices
 template <typename vertex_t, typename transform_t>
-std::vector<vertex_t> createSegment(
+std::vector<vertex_t> segmentVertices(
     std::pair<ActsScalar, ActsScalar> rXY, ActsScalar phiMin, ActsScalar phiMax,
-    const std::vector<ActsScalar>& phiRefs = {}, unsigned int nSegments = 8u,
+    const std::vector<ActsScalar>& phiRefs = {},
+    unsigned int quarterSegments = 2u,
     const vertex_t& offset = vertex_t::Zero(),
     const transform_t& transform = transform_t::Identity()) {
   std::vector<vertex_t> vertices;
-
-  unsigned int nSegmentsCorr = std::max(nSegments, 8u);
   std::vector<ActsScalar> phis =
-      phiSegments(phiMin, phiMax, phiRefs, nSegmentsCorr);
-
+      phiSegments(phiMin, phiMax, phiRefs, quarterSegments);
   for (auto phi : phis) {
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rXY.first * std::cos(phi);
@@ -82,14 +78,15 @@ std::vector<vertex_t> createSegment(
 /// @param outerRx The radius of the outer ellipse (in x)
 /// @param outerRy The radius of the outer ellipse (in y)
 /// @param avgPhi The phi direction of the center if sector
-/// @param halfPhi The half phi sector if sector
-/// @param lseg The number of segments for for a full 2*pi segment
+/// @param halfPhi The half phi sector of the ellipse
+/// @param quarterSegments number of segments used to approximate a segement quarter
+///
 /// @return a vector of 2d-vectors
 std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
                                        ActsScalar outerRx, ActsScalar outerRy,
                                        ActsScalar avgPhi = 0.,
                                        ActsScalar halfPhi = M_PI,
-                                       unsigned int lseg = 1);
+                                       unsigned int quarterSegments = 2u);
 
 /// Construct vertices on an disc/wheel-like bound object.
 ///
@@ -97,12 +94,14 @@ std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
 /// @param outerR The radius of the outer circle (sector)
 /// @param avgPhi The phi direction of the center if sector
 /// @param halfPhi The half phi sector if sector
-/// @param lseg The number of segments for for a full 2*pi segment
+/// @param quarterSegments number of segments used to approximate a segement quarter
+///
 /// @return a vector of 2d-vectors
 std::vector<Vector2> circularVertices(ActsScalar innerR, ActsScalar outerR,
                                       ActsScalar avgPhi = 0.,
                                       ActsScalar halfPhi = M_PI,
-                                      unsigned int lseg = 1);
+                                      unsigned int quarterSegments = 2u);
+
 /// Check if the point is inside the polygon w/o any tolerances.
 ///
 /// @tparam vertex_container_t is an iterable container

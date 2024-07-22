@@ -48,7 +48,7 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
 }
 
 Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -56,14 +56,14 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
 
   const Transform3& ctransform = transform(gctx);
   // Draw the bounds if more than one segment are chosen
-  if (lseg > 1) {
+  if (quarterSegments > 0u) {
     double r = m_bounds->get(LineBounds::eR);
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
       /// Helper method to create the segment
-      auto svertices = detail::VerticesHelper::createSegment(
-          {r, r}, -M_PI, M_PI, {}, lseg,
+      auto svertices = detail::VerticesHelper::segmentVertices(
+          {r, r}, -M_PI, M_PI, {}, quarterSegments,
           Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
           ctransform);
       vertices.insert(vertices.end(), svertices.begin(), svertices.end());

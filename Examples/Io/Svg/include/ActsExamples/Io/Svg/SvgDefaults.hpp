@@ -22,7 +22,7 @@ static inline Acts::Svg::Style layerStyle() {
   lStyle.highlights = {"mouseover", "mouseout"};
   lStyle.strokeColor = {25, 25, 25};
   lStyle.strokeWidth = 0.5;
-  lStyle.nSegments = 72u;
+  lStyle.quaterSegments = 72u;
 
   return lStyle;
 }
@@ -43,7 +43,7 @@ static inline Acts::Svg::Style backgroundStyle() {
   bgStyle.highlights = {};
   bgStyle.strokeColor = {25, 25, 25};
   bgStyle.strokeWidth = 0.5;
-  bgStyle.nSegments = 72u;
+  bgStyle.quaterSegments = 72u;
   return bgStyle;
 }
 
@@ -55,7 +55,7 @@ static inline Acts::Svg::Style pointStyle() {
   pStyle.highlights = {"mouseover", "mouseout"};
   pStyle.strokeColor = {0, 0, 0};
   pStyle.strokeWidth = 0.5;
-  pStyle.nSegments = 72u;
+  pStyle.quaterSegments = 72u;
 
   return pStyle;
 }

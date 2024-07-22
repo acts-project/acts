@@ -118,7 +118,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(offset);
     ACTS_PYTHON_MEMBER(lineThickness);
     ACTS_PYTHON_MEMBER(surfaceThickness);
-    ACTS_PYTHON_MEMBER(nSegments);
+    ACTS_PYTHON_MEMBER(quaterSegments);
     ACTS_PYTHON_MEMBER(triangulate);
     ACTS_PYTHON_MEMBER(outputName);
     ACTS_PYTHON_STRUCT_END();

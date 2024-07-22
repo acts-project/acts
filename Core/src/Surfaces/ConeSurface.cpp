@@ -183,12 +183,11 @@ const Acts::ConeBounds& Acts::ConeSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
-
   ActsScalar minZ = bounds().get(ConeBounds::eMinZ);
   ActsScalar maxZ = bounds().get(ConeBounds::eMaxZ);
 
@@ -202,7 +201,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
 
   // The tip - created only once and only, if it is not a cut-off cone
   bool tipExists = false;
-  if (std::abs(minZ) <= s_onSurfaceTolerance) {
+  if (minZ * maxZ <= s_onSurfaceTolerance) {
     vertices.push_back(ctransform * Vector3(0., 0., 0.));
     tipExists = true;
   }
@@ -230,9 +229,9 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
     // Radius and z offset
     double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
-    auto svertices = detail::VerticesHelper::createSegment(
-        {r, r}, avgPhi - hPhiSec, avgPhi + hPhiSec, refPhi, lseg, zoffset,
-        ctransform);
+    auto svertices = detail::VerticesHelper::segmentVertices(
+        {r, r}, avgPhi - hPhiSec, avgPhi + hPhiSec, refPhi, quarterSegments,
+        zoffset, ctransform);
     vertices.insert(vertices.end(), svertices.begin(), svertices.end());
     // If the tip exists, the faces need to be triangular
     if (tipExists) {
@@ -251,8 +250,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   if (tipExists) {
     triangularMesh = faces;
   } else {
-    auto facesMesh =
-        detail::FacesHelper::cylindricalFaceMesh(vertices, fullCone);
+    auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
     faces = facesMesh.first;
     triangularMesh = facesMesh.second;
   }

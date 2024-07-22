@@ -154,7 +154,7 @@ const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
 }
 
 Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -167,7 +167,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::eDiscTrapezoid);
   bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::eAnnulus);
   if (m_bounds) {
-    auto vertices2D = m_bounds->vertices(lseg);
+    auto vertices2D = m_bounds->vertices(quarterSegments);
     vertices.reserve(vertices2D.size() + 1);
     Vector3 wCenter(0., 0., 0);
     for (const auto& v2D : vertices2D) {
@@ -189,7 +189,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
+      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
     }

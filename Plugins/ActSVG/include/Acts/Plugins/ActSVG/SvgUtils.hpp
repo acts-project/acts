@@ -20,6 +20,7 @@
 namespace Acts {
 namespace Svg {
 
+/// @brief Style struct
 struct Style {
   // Fill parameters
   std::array<int, 3> fillColor = {255, 255, 255};
@@ -39,7 +40,8 @@ struct Style {
 
   unsigned int fontSize = 14u;
 
-  unsigned int nSegments = 72u;
+  /// Number of segments to approximate a quarter of a circle
+  unsigned int quaterSegments = 72u;
 
   /// Conversion to fill and stroke object from the base library
   /// @return a tuple of actsvg digestable objects

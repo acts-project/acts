@@ -90,15 +90,13 @@ class DiamondBounds : public PlanarBounds {
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance) const final;
 
-  /// Return the vertices
+  /// Return the vertices that describe this shape
   ///
-  /// @param lseg the number of segments used to approximate
-  /// and eventually curved line
-  ///
-  /// @note the number of segments is ignored for this representation
+  /// @param ignoredSegments is an ignored parameter only used for
+  /// curved bound segments
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
