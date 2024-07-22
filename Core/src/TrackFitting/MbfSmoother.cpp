@@ -63,7 +63,7 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     const auto y = (calibrated - H * ts.predicted).eval();
 
     const auto big_lambda_tilde =
-        (H.transpose() * S_inv * H + C_hat.transpose() * big_lambda_hat * C)
+        (H.transpose() * S_inv * H + C_hat.transpose() * big_lambda_hat * C_hat)
             .eval();
     const auto small_lambda_tilde =
         (-H.transpose() * S_inv * y + C_hat.transpose() * small_lambda_hat)
