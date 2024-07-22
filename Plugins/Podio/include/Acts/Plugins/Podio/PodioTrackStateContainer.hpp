@@ -345,8 +345,9 @@ class ConstPodioTrackStateContainer final
 static_assert(IsReadOnlyMultiTrajectory<ConstPodioTrackStateContainer>::value,
               "MutablePodioTrackStateContainer should not be read-only");
 
-ACTS_STATIC_CHECK_CONCEPT(ConstMultiTrajectoryBackend,
-                          ConstPodioTrackStateContainer);
+static_assert(
+    ConstMultiTrajectoryBackend<ConstPodioTrackStateContainer>,
+    "ConstPodioTrackStateContainer does not fulfill TrackContainerBackend");
 
 template <>
 struct IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>
@@ -703,8 +704,9 @@ static_assert(
     !IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>::value,
     "MutablePodioTrackStateContainer should not be read-only");
 
-ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend,
-                          MutablePodioTrackStateContainer);
+static_assert(MutableMultiTrajectoryBackend<MutablePodioTrackStateContainer>,
+              "MutablePodioTrackStateContainer does not fulfill "
+              "TrackStateContainerBackend");
 
 ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
     const MutablePodioTrackStateContainer& other)

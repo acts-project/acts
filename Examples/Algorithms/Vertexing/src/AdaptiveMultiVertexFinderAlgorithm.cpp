@@ -36,10 +36,11 @@
 
 #include "VertexingHelpers.hpp"
 
-ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
-    AdaptiveMultiVertexFinderAlgorithm(const Config& config,
-                                       Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("AdaptiveMultiVertexFinder", level),
+namespace ActsExamples {
+
+AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
+    const Config& config, Acts::Logging::Level level)
+    : IAlgorithm("AdaptiveMultiVertexFinder", level),
       m_cfg(config),
       m_propagator{[&]() {
         // Set up EigenStepper
@@ -79,7 +80,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
+auto AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
     -> Acts::AdaptiveMultiVertexFinder {
   std::shared_ptr<const Acts::IVertexFinder> seedFinder;
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
@@ -109,15 +110,13 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   }
 
   // Set up deterministic annealing with user-defined temperatures
-  Acts::AnnealingUtility::Config annealingConfig;
-  annealingConfig.setOfTemperatures = {1.};
-  Acts::AnnealingUtility annealingUtility(annealingConfig);
+  Acts::AnnealingUtility annealingUtility(m_cfg.annealingConfig);
 
   // Set up the vertex fitter with user-defined annealing
   Fitter::Config fitterCfg(m_ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
-  fitterCfg.minWeight = 0.001;
-  fitterCfg.doSmoothing = true;
+  fitterCfg.minWeight = m_cfg.minWeight;
+  fitterCfg.doSmoothing = m_cfg.doSmoothing;
   fitterCfg.useTime = m_cfg.useTime;
   fitterCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
   fitterCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&m_linearizer);
@@ -129,14 +128,14 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   // Set the initial variance of the 4D vertex position. Since time is on a
   // numerical scale, we have to provide a greater value in the corresponding
   // dimension.
-  finderConfig.initialVariances << 1e+2, 1e+2, 1e+2, 1e+8;
-  finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
-  finderConfig.maxIterations = 200;
+  finderConfig.initialVariances = m_cfg.initialVariances;
+  finderConfig.tracksMaxZinterval = m_cfg.tracksMaxZinterval;
+  finderConfig.maxIterations = m_cfg.maxIterations;
   finderConfig.useTime = m_cfg.useTime;
   // 5 corresponds to a p-value of ~0.92 using `chi2(x=5,ndf=2)`
   finderConfig.tracksMaxSignificance = 5;
   // This should be used consistently with and without time
-  finderConfig.doFullSplitting = false;
+  finderConfig.doFullSplitting = m_cfg.doFullSplitting;
   // 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
   finderConfig.maxMergeVertexSignificance = 3;
   if (m_cfg.useTime) {
@@ -153,14 +152,19 @@ auto ActsExamples::AdaptiveMultiVertexFinderAlgorithm::makeVertexFinder() const
   finderConfig.extractParameters
       .template connect<&Acts::InputTrack::extractParameters>();
 
+  finderConfig.tracksMaxSignificance =
+      m_cfg.tracksMaxSignificance.value_or(finderConfig.tracksMaxSignificance);
+  finderConfig.maxMergeVertexSignificance =
+      m_cfg.maxMergeVertexSignificance.value_or(
+          finderConfig.maxMergeVertexSignificance);
+
   // Instantiate the finder
   return Acts::AdaptiveMultiVertexFinder(std::move(finderConfig),
                                          logger().clone());
 }
 
-ActsExamples::ProcessCode
-ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
 
   const auto& inputTrackParameters = m_inputTrackParameters(ctx);
@@ -221,5 +225,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

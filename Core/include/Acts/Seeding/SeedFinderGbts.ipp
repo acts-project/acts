@@ -589,9 +589,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
           }
           const double A = (vo - vi) / du;
           const double B = vi - A * ui;
-          const double R_squ = (1 + A * A) / (B * B);
 
-          if (R_squ < m_minR_squ) {
+          if ((1 + A * A) < (B * B) * m_minR_squ) {
             continue;
           }
 

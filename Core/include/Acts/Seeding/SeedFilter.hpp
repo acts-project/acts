@@ -30,24 +30,18 @@ struct SeedFilterState {
   // compatible top required
   float rMaxSeedConf =
       std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
-  // number of high quality seeds in seed confirmation
-  std::size_t numQualitySeeds = 0;
-  // number of seeds that did not pass the quality confirmation but were still
-  // accepted, if quality confirmation is not used this is the total number of
-  // seeds
-  std::size_t numSeeds = 0;
 };
 
 /// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_spacepoint_t>
-class SeedFilter {
+class SeedFilter final {
  public:
   SeedFilter(SeedFilterConfig config,
              IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
 
   SeedFilter() = delete;
-  virtual ~SeedFilter() = default;
+  ~SeedFilter() = default;
 
   /// Create Seeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
@@ -59,7 +53,7 @@ class SeedFilter {
   /// @param impactParametersVec vector containing the impact parameters
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
-  virtual void filterSeeds_2SpFixed(
+  void filterSeeds_2SpFixed(
       const Acts::SpacePointMutableData& mutableData,
       const external_spacepoint_t& bottomSP,
       const external_spacepoint_t& middleSP,
@@ -68,32 +62,29 @@ class SeedFilter {
       const std::vector<float>& impactParametersVec,
       SeedFilterState& seedFilterState,
       CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector)
-      const;
+    const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param candidates_collector collection of seed candidates
-  /// @param numQualitySeeds number of high quality seeds in seed confirmation
-  /// @param outIt Output iterator for the seeds
+  /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(
-				    Acts::SpacePointMutableData& mutableData,
+  template <typename collection_t>
+  void filterSeeds_1SpFixed(
+      Acts::SpacePointMutableData& mutableData,
       CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
-      const std::size_t numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-      const;
+      collection_t& outputCollection) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
-  /// @param outIt Output iterator for the seeds
+  /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(
-				    Acts::SpacePointMutableData& mutableData,
+  template <typename collection_t>
+  void filterSeeds_1SpFixed(
+      Acts::SpacePointMutableData& mutableData,
       std::vector<typename CandidatesForMiddleSp<
           const external_spacepoint_t>::value_type>& candidates,
-      const std::size_t numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-      const;
+      const std::size_t numQualitySeeds, collection_t& outputCollection) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {

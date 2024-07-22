@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/detail/UtilityFunctions.hpp"
+
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -166,7 +168,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       int deltaSeedConf =
           compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (seedFilterState.numQualitySeeds != 0 && deltaSeedConf == 0)) {
+          (candidates_collector.nHighQualityCandidates() != 0 &&
+           deltaSeedConf == 0)) {
         continue;
       }
       bool seedRangeCuts =
@@ -198,11 +201,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // If this is reached, we remove the seed with the lowest weight.
         candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                   weight, zOrigin, true);
-        if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
-          // fill high quality seed
-          seedFilterState.numQualitySeeds++;
-        }
-
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
         weightMax = weight;
@@ -216,52 +214,44 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                 weight, zOrigin, false);
-      if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
-        // fill seed
-        seedFilterState.numSeeds++;
-      }
     }
   }  // loop on tops
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation && maxWeightSeed &&
-      seedFilterState.numQualitySeeds == 0) {
+      candidates_collector.nHighQualityCandidates() == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
 
     candidates_collector.push(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
                               weightMax, zOrigin, false);
-    if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
-      // fill seed
-      seedFilterState.numSeeds++;
-    }
   }
 }
 
 // after creating all seeds with a common middle space point, filter again
 
 template <typename external_spacepoint_t>
+template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-							     Acts::SpacePointMutableData& mutableData,
+    Acts::SpacePointMutableData& mutableData,
     CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
-    const std::size_t numQualitySeeds,
-    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-    const {
+    collection_t& outputCollection) const {
   // retrieve all candidates
   // this collection is already sorted
   // higher weights first
+  std::size_t numQualitySeeds = candidates_collector.nHighQualityCandidates();
   auto extended_collection = candidates_collector.storage();
-  filterSeeds_1SpFixed(mutableData, extended_collection, numQualitySeeds, outIt);
+  filterSeeds_1SpFixed(mutableData, extended_collection, numQualitySeeds,
+                       outputCollection);
 }
 
 template <typename external_spacepoint_t>
+template <typename collection_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-							     Acts::SpacePointMutableData& mutableData,
+    Acts::SpacePointMutableData& mutableData,
     std::vector<typename CandidatesForMiddleSp<
         const external_spacepoint_t>::value_type>& candidates,
-    const std::size_t numQualitySeeds,
-    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
-    const {
+    const std::size_t numQualitySeeds, collection_t& outputCollection) const {
   if (m_experimentCuts != nullptr) {
     candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
   }
@@ -303,7 +293,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     Acts::Seed<external_spacepoint_t> seed{*bottom, *medium, *top};
     seed.setZvertex(zOrigin);
     seed.setQuality(bestSeedQuality);
-    outIt = std::move(seed);
+
+    Acts::detail::pushBackOrInsertAtEnd(
+        outputCollection, std::move(seed));
 
     ++numTotalSeeds;
   }
