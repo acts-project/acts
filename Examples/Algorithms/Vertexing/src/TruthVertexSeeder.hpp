@@ -20,7 +20,7 @@ namespace ActsExamples {
 class TruthVertexSeeder final : public Acts::IVertexFinder {
  public:
   struct Config {
-    std::vector<SimVertex> vertices;
+    std::vector<SimVertex> truthVertices;
 
     bool useXY = false;
     bool useTime = false;

@@ -20,11 +20,11 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
     Acts::IVertexFinder::State &anyState) const {
   auto &state = anyState.template as<State>();
 
-  if (state.nextVertexIndex >= m_cfg.vertices.size()) {
+  if (state.nextVertexIndex >= m_cfg.truthVertices.size()) {
     return std::vector<Acts::Vertex>();
   }
 
-  const auto &truthVertex = m_cfg.vertices[state.nextVertexIndex];
+  const auto &truthVertex = m_cfg.truthVertices[state.nextVertexIndex];
   ++state.nextVertexIndex;
 
   Acts::Vertex converted;
@@ -40,9 +40,7 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
   Acts::SquareMatrix4 seedCov = vertexingOptions.constraint.fullCovariance();
   converted.setFullCovariance(seedCov);
 
-  std::vector<Acts::Vertex> vertices;
-  vertices.push_back(converted);
-  return vertices;
+  return std::vector<Acts::Vertex>{converted};
 }
 
 Acts::IVertexFinder::State TruthVertexSeeder::makeState(
