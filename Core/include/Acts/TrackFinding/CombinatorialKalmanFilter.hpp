@@ -1014,13 +1014,14 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (nBranchesOnSurface == 0) {
+      if (nBranchesOnSurface > 0) {
+        // Remove the root branch
+        result.tracks->removeTrack(rootBranch.index());
+      } else if (!isOutlier) {
         // Prepare for hole
         result.activeBranches.push_back(rootBranch);
-        isOutlier = false;
       } else {
-        // Otherwise remove the root branch
-        result.tracks->removeTrack(rootBranch.index());
+        // The last branch was killed
       }
 
       return std::make_tuple(nBranchesOnSurface, isOutlier);
