@@ -24,6 +24,13 @@ namespace Acts {
 /// Kalman update step using the gain matrix formalism.
 class GainMatrixUpdater {
   struct InternalTrackState {
+    unsigned int calibratedSize;
+    // This is used to build a covariance matrix view in the .cpp file
+    const double* calibrated;
+    const double* calibratedCovariance;
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     false>::Projector projector;
+
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -32,12 +39,6 @@ class GainMatrixUpdater {
                      false>::Parameters filtered;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance filteredCovariance;
-    // This is used to build a covariance matrix view in the .cpp file
-    double* calibrated;
-    double* calibratedCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Projector projector;
-    unsigned int calibratedSize;
   };
 
  public:
@@ -74,23 +75,16 @@ class GainMatrixUpdater {
 
     auto [chi2, error] = visitMeasurement(
         InternalTrackState{
+            trackState.calibratedSize(),
+            // Note that we pass raw pointers here which are used in the correct
+            // shape later
+            trackState.effectiveCalibrated().data(),
+            trackState.effectiveCalibratedCovariance().data(),
+            trackState.projector(),
             trackState.predicted(),
             trackState.predictedCovariance(),
             trackState.filtered(),
             trackState.filteredCovariance(),
-            // This abuses an incorrectly sized vector / matrix to access the
-            // data pointer! This works (don't use the matrix as is!), but be
-            // careful!
-            trackState
-                .template calibrated<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackState
-                .template calibratedCovariance<
-                    MultiTrajectoryTraits::MeasurementSizeMax>()
-                .data(),
-            trackState.projector(),
-            trackState.calibratedSize(),
         },
         logger);
 

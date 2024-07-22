@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -67,8 +67,12 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
+
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
+
+    /// Maximum number of iterations for the vertex finding
+    int maxIterations = 1000;
   };
 
   IterativeVertexFinderAlgorithm(const Config& config,
