@@ -41,6 +41,11 @@ class ParticleSmearing final : public IAlgorithm {
     std::string inputParticles;
     /// Output smeared tracks parameters collection.
     std::string outputTrackParameters;
+
+    /// Random numbers service.
+    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+
+    // Smearing parameters
     /// Constant term of the d0 resolution.
     double sigmaD0 = 20 * Acts::UnitConstants::um;
     /// Pt-dependent d0 resolution of the form sigma_d0 = A*exp(-1.*abs(B)*pt).
@@ -59,26 +64,15 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.05;
-    /// Optional. Initial covariance matrix diagonal which overwrites the
-    /// default if set.
+
+    /// Optional. Initial sigmas for the track parameters which overwrites the
+    /// smearing params if set.
     std::optional<std::array<double, 6>> initialSigmas;
-    /// Initial q/p coefficient covariance matrix diagonal.
-    std::array<double, 6> initialSimgaQoverPCoefficients = {
-        0 * Acts::UnitConstants::mm /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0 * Acts::UnitConstants::mm /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0 * Acts::UnitConstants::degree /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0 * Acts::UnitConstants::degree /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
-        0,
-        0 * Acts::UnitConstants::ns /
-            (Acts::UnitConstants::e * Acts::UnitConstants::GeV)};
+    /// Relative pt resolution for the initial sigma of the q/p.
+    double initialSigmaRelativePtResolution = 0.1;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1e2, 1e2, 1e2, 1e2, 1e2, 1e2};
-    /// Random numbers service.
-    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
   };

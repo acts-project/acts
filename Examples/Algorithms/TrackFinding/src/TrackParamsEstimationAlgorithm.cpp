@@ -45,9 +45,19 @@ Acts::BoundSquareMatrix makeInitialCovariance(
   for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
     double sigma = config.initialSigmas[i];
 
-    // Add momentum dependent uncertainties
-    sigma +=
-        config.initialSimgaQoverPCoefficients[i] * params[Acts::eBoundQOverP];
+    if (i == Acts::eBoundQOverP) {
+      // Add momentum dependent uncertainty
+
+      // note that we rely on the fact that sigma theta is already computed
+      double sigmaTheta =
+          std::sqrt(result(Acts::eBoundTheta, Acts::eBoundTheta));
+      double additionalSimga =
+          config.initialSigmaRelativePtResolution * params[Acts::eBoundQOverP] +
+          sigmaTheta * std::abs(params[Acts::eBoundQOverP] *
+                                std::tan(params[Acts::eBoundTheta]));
+
+      sigma += additionalSimga;
+    }
 
     double var = sigma * sigma;
 

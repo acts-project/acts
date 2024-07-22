@@ -93,7 +93,7 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
       sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPRel,
-      initialSigmas, initialSimgaQoverPCoefficients, initialVarInflation,
+      initialSigmas, initialSigmaRelativePtResolution, initialVarInflation,
       particleHypothesis, randomNumbers);
 
   {

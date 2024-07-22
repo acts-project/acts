@@ -132,9 +132,21 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
           double sigma = (*m_cfg.initialSigmas)[i];
 
-          // Add momentum dependent uncertainties
-          sigma += m_cfg.initialSimgaQoverPCoefficients[i] *
-                   params[Acts::eBoundQOverP];
+          if (i == Acts::eBoundQOverP) {
+            // Add momentum dependent uncertainty
+
+            // note that we rely on the fact that sigma theta is already
+            // computed
+            double covSigmaTheta =
+                std::sqrt(cov(Acts::eBoundTheta, Acts::eBoundTheta));
+            double additionalSimga =
+                m_cfg.initialSigmaRelativePtResolution *
+                    params[Acts::eBoundQOverP] +
+                covSigmaTheta * std::abs(params[Acts::eBoundQOverP] *
+                                         std::tan(params[Acts::eBoundTheta]));
+
+            sigma += additionalSimga;
+          }
 
           double var = sigma * sigma;
 
@@ -151,10 +163,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
           double sigma = sigmas[i];
-
-          // Add momentum dependent uncertainties
-          sigma += m_cfg.initialSimgaQoverPCoefficients[i] *
-                   params[Acts::eBoundQOverP];
 
           double var = sigma * sigma;
 
