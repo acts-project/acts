@@ -39,16 +39,19 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
         calibratedCovariance{ts.calibratedCovariance};
 
+    // Measurement matrix
     const auto H =
         ts.projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
             .eval();
 
+    // Residual covariance
     const auto S =
         (H * ts.predictedCovariance * H.transpose() + calibratedCovariance)
             .eval();
     // TODO Sinv could be cached by the filter step
     const auto Sinv = S.inverse().eval();
 
+    // Kalman gain
     // TODO K could be cached by the filter step
     const auto K = (ts.predictedCovariance * H.transpose() * Sinv).eval();
 

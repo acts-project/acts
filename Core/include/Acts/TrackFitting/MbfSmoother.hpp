@@ -22,13 +22,74 @@
 
 namespace Acts {
 
-/// Kalman trajectory smoother based on the Modified Bryson–Frazier smoother.
+/// Kalman trajectory smoother based on the Modified Bryson–Frazier (mBF)
+/// smoother.
+///
+/// The benefit of the mBF smoother is that it does not require the inverse of
+/// the full covariance matrix, but only the inverse of the residual covariance
+/// matrix which can be cached by the filter step. The same holds for the
+/// Kalman gain matrix.
 ///
 /// This implements not a single smoothing step, but the full backwards
 /// smoothing procedure for a filtered, forward trajectory using the stored
 /// linearization.
+///
+/// See
+/// [Wikipedia](https://en.wikipedia.org/wiki/Kalman_filter#Modified_Bryson%E2%80%93Frazier_smoother)
+/// for more information.
 class MbfSmoother {
  public:
+  /// Run the Kalman smoothing for one trajectory.
+  ///
+  /// @param[in] gctx The geometry context to be used
+  /// @param[in,out] trajectory The trajectory to be smoothed
+  /// @param[in] entryIndex The index of state to start the smoothing
+  /// @param[in] logger Where to write logging information to
+  template <typename traj_t>
+  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
+                          std::size_t entryIndex,
+                          const Logger& logger = getDummyLogger()) const {
+    (void)gctx;
+    (void)logger;
+
+    using TrackStateProxy = typename traj_t::TrackStateProxy;
+
+    TrackStateProxy start_ts = trajectory.getTrackState(entryIndex);
+
+    // Notation consistent with the Wikipedia article
+    // https://en.wikipedia.org/wiki/Kalman_filter
+    BoundMatrix big_lambda_hat = BoundMatrix::Zero();
+    BoundVector small_lambda_hat = BoundVector::Zero();
+
+    trajectory.applyBackwards(start_ts.index(), [&](TrackStateProxy ts) {
+      // ensure the track state has a smoothed component
+      ts.addComponents(TrackStatePropMask::Smoothed);
+
+      InternalTrackState internalTrackState(ts);
+
+      // Smoothe the current state
+      calculateSmoothed(internalTrackState, big_lambda_hat, small_lambda_hat);
+
+      // We smoothed the last state - no need to update the lambdas
+      if (!ts.hasPrevious()) {
+        return;
+      }
+
+      // Update the lambdas depending on the type of track state
+      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+        visitMeasurement(internalTrackState, big_lambda_hat, small_lambda_hat);
+      } else {
+        visitNonMeasurement(internalTrackState, big_lambda_hat,
+                            small_lambda_hat);
+      }
+    });
+
+    return Result<void>::success();
+  }
+
+ private:
+  /// Internal track state representation for the smoother.
+  /// @note This allows us to move parts of the implementation into the .cpp
   struct InternalTrackState {
     using Projector =
         typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -47,7 +108,7 @@ class MbfSmoother {
     unsigned int calibratedSize{0};
     const double* calibrated{nullptr};
     const double* calibratedCovariance{nullptr};
-    Projector projector;
+    Projector projector{nullptr};
 
     Jacobian jacobian{nullptr};
 
@@ -80,56 +141,17 @@ class MbfSmoother {
     }
   };
 
-  /// Run the Kalman smoothing for one trajectory.
-  ///
-  /// @param[in] gctx The geometry context to be used
-  /// @param[in,out] trajectory The trajectory to be smoothed
-  /// @param[in] entryIndex The index of state to start the smoothing
-  /// @param[in] logger Where to write logging information to
-  template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
-                          std::size_t entryIndex,
-                          const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
-    (void)logger;
-
-    using TrackStateProxy = typename traj_t::TrackStateProxy;
-
-    TrackStateProxy start_ts = trajectory.getTrackState(entryIndex);
-
-    BoundMatrix big_lambda_hat = BoundMatrix::Zero();
-    BoundVector small_lambda_hat = BoundVector::Zero();
-
-    trajectory.applyBackwards(start_ts.index(), [&](TrackStateProxy ts) {
-      // ensure the track state has a smoothed component
-      ts.addComponents(TrackStatePropMask::Smoothed);
-
-      InternalTrackState internalTrackState(ts);
-
-      calculateSmoothed(internalTrackState, big_lambda_hat, small_lambda_hat);
-
-      if (!ts.hasPrevious()) {
-        return;
-      }
-
-      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        visitMeasurement(internalTrackState, big_lambda_hat, small_lambda_hat);
-      } else {
-        visitNonMeasurement(internalTrackState, big_lambda_hat,
-                            small_lambda_hat);
-      }
-    });
-
-    return Result<void>::success();
-  }
-
- private:
+  /// Calculate the smoothed parameters and covariance.
   void calculateSmoothed(InternalTrackState& ts,
                          const BoundMatrix& big_lambda_hat,
                          const BoundVector& small_lambda_hat) const;
+
+  /// Visit a non-measurement track state and update the lambdas.
   void visitNonMeasurement(const InternalTrackState& ts,
                            BoundMatrix& big_lambda_hat,
                            BoundVector& small_lambda_hat) const;
+
+  /// Visit a measurement track state and update the lambdas.
   void visitMeasurement(const InternalTrackState& ts,
                         BoundMatrix& big_lambda_hat,
                         BoundVector& small_lambda_hat) const;
