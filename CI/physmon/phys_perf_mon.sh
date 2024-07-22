@@ -427,15 +427,15 @@ if [[ "$mode" == "all" || "$mode" == "traccc_host" ]]; then
 
     run_histcmp \
         $outdir/tracksummary_traccc_host_hist.root \
-        $refdir/tracksummary_traccc_host_hist.root \
-        "Track Summary Traccc Chain (Host)" \
-        tracksummary_traccc_host
-
-    run_histcmp \
-        $outdir/tracksummary_traccc_host_hist.root \
         $refdir/tracksummary_ckf_seeded_hist.root \
         "Track Summary Comparision (traccc host and acts)" \
         tracksummary_comparison_acts_traccc_host
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_host_hist.root \
+        $refdir/tracksummary_traccc_host_hist.root \
+        "Track Summary Traccc Chain (Host)" \
+        tracksummary_traccc_host
 fi
 
 if [[ "$mode" == "all" || "$mode" == "traccc_cuda" ]]; then
@@ -451,15 +451,15 @@ if [[ "$mode" == "all" || "$mode" == "traccc_cuda" ]]; then
 
     run_histcmp \
         $outdir/tracksummary_traccc_cuda_hist.root \
-        $refdir/tracksummary_traccc_cuda_hist.root \
-        "Track Summary Traccc Chain (Cuda)" \
-        tracksummary_traccc_cuda
-
-    run_histcmp \
-        $outdir/tracksummary_traccc_cuda_hist.root \
         $refdir/tracksummary_ckf_seeded_hist.root \
         "Track Summary Comparision (traccc cuda and acts)" \
         tracksummary_comparison_acts_traccc_cuda
+
+    run_histcmp \
+        $outdir/tracksummary_traccc_cuda_hist.root \
+        $refdir/tracksummary_traccc_cuda_hist.root \
+        "Track Summary Traccc Chain (Cuda)" \
+        tracksummary_traccc_cuda
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
