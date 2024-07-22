@@ -59,8 +59,8 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.05;
-    /// Optional. Initial covariance matrix diagonal. Overwrites the default if
-    /// set.
+    /// Optional. Initial covariance matrix diagonal which overwrites the
+    /// default if set.
     std::optional<std::array<double, 6>> initialSigmas;
     /// Initial q/p coefficient covariance matrix diagonal.
     std::array<double, 6> initialSimgaQoverPCoefficients = {
@@ -76,7 +76,7 @@ class ParticleSmearing final : public IAlgorithm {
         0 * Acts::UnitConstants::ns /
             (Acts::UnitConstants::e * Acts::UnitConstants::GeV)};
     /// Inflate the initial covariance matrix
-    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    std::array<double, 6> initialVarInflation = {1e2, 1e2, 1e2, 1e2, 1e2, 1e2};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// Optional particle hypothesis override.
