@@ -51,7 +51,7 @@ class MultiIndexedVector2D {
     m_d2 = x2;
     m_data.resize(x1 * x2, t);
   }
-  size_t globalBin(std::size_t i , std::size_t j) const {
+  std::size_t globalBin(std::size_t i , std::size_t j) const {
     if (i >= m_d1 || j >= m_d2) {
       std::stringstream s;
       s << "MultiIndexedVector2D out of bounds: request (" << i << "," << j

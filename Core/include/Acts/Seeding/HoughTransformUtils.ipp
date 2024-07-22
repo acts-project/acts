@@ -65,21 +65,20 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
   // }
 
   if(m_ihit != 0 && m_hits[m_ihit-1] == identifier) return;
- // if(m_ilayer != 0 && m_layers[m_ilayer-1] == layer) return;
 
   if(m_ihit == m_hits.size()){
-    m_hits.resize(m_hits.size() + m_ihit +1); 
+    m_hits.resize(m_hits.size() + m_assignBatch); 
   }
 
-  if(m_ilayer == m_layers.size()){
-    m_layers.resize(m_layers.size() + m_ilayer +1);
-  }
+  // if(m_ilayer == m_layers.size()){
+  //   m_layers.resize(m_layers.size() + m_assignBatch);
+  // }
 
   m_hits[m_ihit] = identifier;
-  m_layers[m_ilayer] = layer;
+  //m_layers[m_ilayer] = layer;
 
   m_ihit+=1;
-  m_ilayer+=1;
+  //m_ilayer+=1;
 
   m_nHits += weight;
   m_nLayers += weight;
@@ -88,13 +87,7 @@ void Acts::HoughTransformUtils::HoughCell<identifier_t>::fill(
 
 template <class identifier_t>
 void Acts::HoughTransformUtils::HoughCell<identifier_t>::reset() {
-  // avoid expensive clear calls on empty cells
-  if (m_nLayers > 0) {
-    m_layers.clear();
-  }
-  if (m_nHits > 0) {
-    m_hits.clear();
-  }
+
   m_nHits = 0;
   m_nLayers = 0;
 
@@ -114,12 +107,17 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
     std::size_t binX, std::size_t binY, const identifier_t& identifier,
     unsigned layer, double w) {
   // mark that this bin was filled with non trivial content
-  m_touchedBins.insert({binX, binY});
+  // if(m_touchedBins.size() == m_ibin){
+  //   m_touchedBins.resize(m_touchedBins.size() + m_assignBatch);
+  // }
+  m_touchedBins.insert(m_houghHist.index(binX, binY));
+  //m_ibin+=1;
+
   // add content to the cell
-  m_houghHist(binX, binY).fill(identifier, layer, w);
+  m_houghHist.get(binX, binY).fill(identifier, layer, w);
   // and update our cached maxima
-  YieldType nLayers = m_houghHist(binX, binY).nLayers();
-  YieldType nHits = m_houghHist(binX, binY).nHits();
+  YieldType nLayers = m_houghHist.get(binX, binY).nLayers();
+  YieldType nHits = m_houghHist.get(binX, binY).nHits();
   if (nLayers > m_maxLayers) {
     m_maxLayers = nLayers;
     m_maxLocLayers = {binX, binY};
@@ -134,13 +132,14 @@ template <class identifier_t>
 void Acts::HoughTransformUtils::HoughPlane<identifier_t>::reset() {
   // reset all bins that were previously filled
   // avoid calling this on empty cells to save time
-  for (auto bin : m_touchedBins) {
-    m_houghHist(bin).reset();
+  for (auto bin : getNonEmptyBins()) {
+    m_houghHist.get_val(bin).reset();
   }
   // don't forget to reset our cached maxima
   m_maxHits = 0.;
   m_maxLayers = 0.;
   // and reset the list of nontrivial bins
+  m_ibin = 0;
   m_touchedBins.clear();
 }
 
@@ -251,13 +250,16 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
   std::map<std::pair<std::size_t, std::size_t>, YieldType> yieldMap;
   
   // now loop over all non empty bins
-  for (auto [x, y] : plane.getNonEmptyBins()) {
+  for (const std::size_t nbin : plane.getNonEmptyBins()) {
+
+    std::array<std::size_t,2> xy = plane.axisBins(nbin);
     // we only consider cells above threshold from now on.
     // each is a potential candidate to seed or join an island
     // We also add each to our yield map
-    if (plane.nHits(x, y) > min) {
-      candidates.push_back({x, y});
-      yieldMap[{x, y}] = plane.nHits(x, y);
+
+    if (plane.nHits(xy[0], xy[1]) > min) {
+      candidates.push_back({xy[0], xy[1]});
+      yieldMap[{xy[0], xy[1]}] = plane.nHits(xy[0], xy[1]);
       
     }
   }
