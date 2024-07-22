@@ -62,7 +62,7 @@ std::unique_ptr<ActsExamples::TruthVertexSeeder> makeTruthVertexSeeder(
     if (truthVertex.vertexId().vertexSecondary() != 0) {
       continue;
     }
-    seederConfig.vertices.push_back(truthVertex);
+    seederConfig.truthVertices.push_back(truthVertex);
 
     // Count the number of particles associated with each vertex
     std::size_t particleCount = 0;
@@ -75,14 +75,15 @@ std::unique_ptr<ActsExamples::TruthVertexSeeder> makeTruthVertexSeeder(
   }
 
   // sort by number of particles
-  std::sort(seederConfig.vertices.begin(), seederConfig.vertices.end(),
+  std::sort(seederConfig.truthVertices.begin(),
+            seederConfig.truthVertices.end(),
             [&vertexParticleCount](const auto& lhs, const auto& rhs) {
               return vertexParticleCount[lhs.vertexId()] >
                      vertexParticleCount[rhs.vertexId()];
             });
 
   ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "
-                   << seederConfig.vertices.size() << " in event");
+                   << seederConfig.truthVertices.size() << " in event");
 
   return std::make_unique<Seeder>(seederConfig);
 }
