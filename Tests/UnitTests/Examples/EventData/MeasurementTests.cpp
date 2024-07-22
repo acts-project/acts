@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(FixedBoundAll) {
 
 BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  auto meas = BoundVariableMeasurement(source, std::array{index}, params, cov);
+  BoundVariableMeasurement meas(source, std::array{index}, params, cov);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
   for (auto i : boundIndices) {
@@ -106,7 +106,7 @@ BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
 
 BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   auto [params, cov] = generateBoundParametersCovariance(rng);
-  auto meas = BoundVariableMeasurement(
+  BoundVariableMeasurement meas(
       source,
       std::array{eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta, eBoundQOverP,
                  eBoundTime},
