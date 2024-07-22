@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Plugins/GenericDetector/GenericDetector.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -69,14 +69,16 @@ class AlignedDetector {
       const Config& cfg,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 
-  std::vector<std::vector<std::shared_ptr<Acts::Generic::GenericDetectorElement>>>&
+  std::vector<
+      std::vector<std::shared_ptr<Acts::Generic::GenericDetectorElement>>>&
   detectorStore() {
     return m_detectorStore;
   }
 
  private:
   /// The Store of the detector elements (lifetime: job)
-  std::vector<std::vector<std::shared_ptr<Acts::Generic::GenericDetectorElement>>>
+  std::vector<
+      std::vector<std::shared_ptr<Acts::Generic::GenericDetectorElement>>>
       m_detectorStore;
 };
 

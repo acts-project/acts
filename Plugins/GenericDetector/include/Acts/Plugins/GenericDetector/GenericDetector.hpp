@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Plugins/GenericDetector/GenericDetectorElement.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
 #include <memory>

@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Plugins/GenericDetector/GenericDetectorElement.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -22,7 +23,6 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Plugins/GenericDetector/GenericDetectorElement.hpp"
 
 #include <iostream>
 

@@ -8,10 +8,10 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Plugins/GenericDetector/GenericDetector.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Plugins/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -45,14 +45,19 @@ void addDetector(Context& ctx) {
 
   {
     using Config = GenericDetector::Config;
-    using FinalizeRet = std::pair<std::shared_ptr<const Acts::TrackingGeometry>, std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>>;
+    using FinalizeRet = std::pair<
+        std::shared_ptr<const Acts::TrackingGeometry>,
+        std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>>;
 
     auto gd = py::class_<GenericDetector, std::shared_ptr<GenericDetector>>(
                   mex, "GenericDetector")
                   .def(py::init<>())
-                  .def("finalize", [](GenericDetector &self, const Config &cfg, const std::shared_ptr<const Acts::IMaterialDecorator> &mdecorator) -> FinalizeRet {
-                    return FinalizeRet{self.finalize(cfg, mdecorator), {}};
-                  });
+                  .def("finalize",
+                       [](GenericDetector& self, const Config& cfg,
+                          const std::shared_ptr<const Acts::IMaterialDecorator>&
+                              mdecorator) -> FinalizeRet {
+                         return FinalizeRet{self.finalize(cfg, mdecorator), {}};
+                       });
 
     py::class_<Config>(gd, "Config")
         .def(py::init<>())

@@ -130,4 +130,4 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   return rPositions;
 }
 
-}  // namespace ActsExamples::Generic
+}  // namespace Acts::Generic

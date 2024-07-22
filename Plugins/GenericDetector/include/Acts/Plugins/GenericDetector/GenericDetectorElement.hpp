@@ -101,14 +101,13 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
 };
 
-inline const Acts::Transform3&
-Acts::Generic::GenericDetectorElement::transform(
+inline const Acts::Transform3& Acts::Generic::GenericDetectorElement::transform(
     const Acts::GeometryContext& /*gctx*/) const {
   return *m_elementTransform;
 }
 
-inline const Acts::Surface&
-Acts::Generic::GenericDetectorElement::surface() const {
+inline const Acts::Surface& Acts::Generic::GenericDetectorElement::surface()
+    const {
   return *m_elementSurface;
 }
 

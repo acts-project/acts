@@ -25,11 +25,11 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Plugins/GenericDetector/LayerBuilderT.hpp"
+#include "Acts/Plugins/GenericDetector/ProtoLayerCreatorT.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Plugins/GenericDetector/LayerBuilderT.hpp"
-#include "Acts/Plugins/GenericDetector/ProtoLayerCreatorT.hpp"
 
 #include <array>
 #include <cmath>
@@ -785,5 +785,5 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   return trackingGeometry;
 }
 
-}
-}
+}  // namespace Generic
+}  // namespace Acts

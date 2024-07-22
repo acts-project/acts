@@ -21,12 +21,11 @@ auto GenericDetector::finalize(
     -> TrackingGeometryPtr {
   DetectorElement::ContextType nominalContext;
   /// Return the generic detector
-  TrackingGeometryPtr gGeometry =
-      Acts::Generic::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
-          cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
-          cfg.volumeLogLevel);
+  TrackingGeometryPtr gGeometry = Acts::Generic::buildDetector<DetectorElement>(
+      nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
+      cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
+      cfg.volumeLogLevel);
   // return the pair of geometry and empty decorators
   return gGeometry;
 }
-}
+}  // namespace Acts

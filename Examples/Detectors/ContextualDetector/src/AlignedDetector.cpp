@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/GenericDetector/BuildGenericDetector.hpp"
+#include "Acts/Plugins/GenericDetector/ProtoLayerCreatorT.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
@@ -18,8 +20,6 @@
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "Acts/Plugins/GenericDetector/BuildGenericDetector.hpp"
-#include "Acts/Plugins/GenericDetector/ProtoLayerCreatorT.hpp"
 
 using namespace Acts::UnitLiterals;
 namespace ActsExamples::Contextual {
