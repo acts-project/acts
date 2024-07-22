@@ -158,18 +158,10 @@ struct RootMeasurementWriter::DigitizationTree {
   /// @param m The measurement set
   template <typename measurement_t>
   void fillBoundMeasurement(const measurement_t& m) {
-    Acts::BoundVector fullVect = m.expander() * m.parameters();
-    for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
-      recBound[ib] = fullVect[ib];
-    }
+    for (Acts::BoundIndices ib : m.indices()) {
+      recBound[ib] = m.parameters()[ib];
+      varBound[ib] = m.covariance()(ib, ib);
 
-    Acts::BoundSquareMatrix fullVar =
-        m.expander() * m.covariance() * m.expander().transpose();
-    for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
-      varBound[ib] = fullVar(ib, ib);
-    }
-
-    for (unsigned int ib = 0; ib < Acts::eBoundSize; ++ib) {
       residual[ib] = recBound[ib] - trueBound[ib];
       pull[ib] = residual[ib] / std::sqrt(varBound[ib]);
     }
