@@ -6,27 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "Acts/Plugins/GenericDetector/GenericDetector.hpp"
 
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
-#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
+#include "Acts/Plugins/GenericDetector/BuildGenericDetector.hpp"
+#include "Acts/Plugins/GenericDetector/GenericDetectorElement.hpp"
+#include "Acts/Plugins/GenericDetector/ProtoLayerCreatorT.hpp"
 
+namespace Acts {
 auto GenericDetector::finalize(
     const Config& cfg,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+    -> TrackingGeometryPtr {
   DetectorElement::ContextType nominalContext;
   /// Return the generic detector
   TrackingGeometryPtr gGeometry =
-      ActsExamples::Generic::buildDetector<DetectorElement>(
+      Acts::Generic::buildDetector<DetectorElement>(
           nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
           cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
           cfg.volumeLogLevel);
-  ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(gGeometry), std::move(gContextDecorators));
+  return gGeometry;
+}
 }

@@ -22,7 +22,7 @@ class DiscBounds;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples::Generic {
+namespace Acts::Generic {
 
 /// @class GenericDetectorElement
 ///
@@ -102,27 +102,27 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
 };
 
 inline const Acts::Transform3&
-ActsExamples::Generic::GenericDetectorElement::transform(
+Acts::Generic::GenericDetectorElement::transform(
     const Acts::GeometryContext& /*gctx*/) const {
   return *m_elementTransform;
 }
 
 inline const Acts::Surface&
-ActsExamples::Generic::GenericDetectorElement::surface() const {
+Acts::Generic::GenericDetectorElement::surface() const {
   return *m_elementSurface;
 }
 
-inline Acts::Surface& ActsExamples::Generic::GenericDetectorElement::surface() {
+inline Acts::Surface& Acts::Generic::GenericDetectorElement::surface() {
   return *m_elementSurface;
 }
 
-inline double ActsExamples::Generic::GenericDetectorElement::thickness() const {
+inline double Acts::Generic::GenericDetectorElement::thickness() const {
   return m_elementThickness;
 }
 
-inline ActsExamples::Generic::GenericDetectorElement::Identifier
-ActsExamples::Generic::GenericDetectorElement::identifier() const {
+inline Acts::Generic::GenericDetectorElement::Identifier
+Acts::Generic::GenericDetectorElement::identifier() const {
   return m_elementIdentifier;
 }
 
-}  // namespace ActsExamples::Generic
+}  // namespace Acts::Generic

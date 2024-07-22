@@ -22,7 +22,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
+#include "Acts/Plugins/GenericDetector/GenericDetectorElement.hpp"
 
 #include <iostream>
 
@@ -33,7 +33,7 @@ class Surface;
 class DetecorElementBase;
 }  // namespace Acts
 
-namespace ActsExamples::Generic {
+namespace Acts::Generic {
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -531,4 +531,4 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
   return epLayers;
 }
 
-}  // namespace ActsExamples::Generic
+}  // namespace Acts::Generic

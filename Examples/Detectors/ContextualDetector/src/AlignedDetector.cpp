@@ -18,8 +18,8 @@
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
+#include "Acts/Plugins/GenericDetector/BuildGenericDetector.hpp"
+#include "Acts/Plugins/GenericDetector/ProtoLayerCreatorT.hpp"
 
 using namespace Acts::UnitLiterals;
 namespace ActsExamples::Contextual {
@@ -63,7 +63,7 @@ auto AlignedDetector::finalize(
         detectorStore;
 
     aTrackingGeometry =
-        ActsExamples::Generic::buildDetector<ExternallyAlignedDetectorElement>(
+        Acts::Generic::buildDetector<ExternallyAlignedDetectorElement>(
             nominalContext, detectorStore, cfg.buildLevel,
             std::move(mdecorator), cfg.buildProto, cfg.surfaceLogLevel,
             cfg.layerLogLevel, cfg.volumeLogLevel);
@@ -89,7 +89,7 @@ auto AlignedDetector::finalize(
     fillDecoratorConfig(agcsConfig);
 
     aTrackingGeometry =
-        ActsExamples::Generic::buildDetector<InternallyAlignedDetectorElement>(
+        Acts::Generic::buildDetector<InternallyAlignedDetectorElement>(
             nominalContext, agcsConfig.detectorStore, cfg.buildLevel,
             std::move(mdecorator), cfg.buildProto, cfg.surfaceLogLevel,
             cfg.layerLogLevel, cfg.volumeLogLevel);
