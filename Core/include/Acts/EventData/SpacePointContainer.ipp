@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -104,16 +105,14 @@ std::size_t SpacePointContainer<container_t, holder_t>::size() const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
 typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::begin() {
+SpacePointContainer<container_t, holder_t>::begin() requires (!read_only) {
   return {*this, 0};
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
 typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::end() {
+SpacePointContainer<container_t, holder_t>::end() requires (!read_only) {
   return {*this, size()};
 }
 
@@ -130,8 +129,7 @@ SpacePointContainer<container_t, holder_t>::end() const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
-container_t& SpacePointContainer<container_t, holder_t>::container() {
+container_t& SpacePointContainer<container_t, holder_t>::container() requires (!read_only) {
   return *m_container;
 }
 
@@ -142,9 +140,8 @@ SpacePointContainer<container_t, holder_t>::container() const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
 typename SpacePointContainer<container_t, holder_t>::ValueType&
-SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) {
+SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) requires (!read_only) {
   return container().get_impl(n);
 }
 
@@ -197,9 +194,8 @@ float SpacePointContainer<container_t, holder_t>::varianceZ(
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
 typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) {
+SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) requires (!read_only) {
   assert(n < proxies().size());
   return proxies()[n];
 }
@@ -219,9 +215,8 @@ SpacePointContainer<container_t, holder_t>::proxies() const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
 std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
-SpacePointContainer<container_t, holder_t>::proxies() {
+SpacePointContainer<container_t, holder_t>::proxies() requires (!read_only) {
   return m_proxies;
 }
 

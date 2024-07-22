@@ -34,7 +34,7 @@ class SpacePointProxyIterator {
   SpacePointProxyIterator(ContainerType&& container,
                           std::size_t index) = delete;
   SpacePointProxyIterator(ContainerType& container, std::size_t index);
-
+  
   SpacePointProxyIterator& operator++();
   SpacePointProxyIterator& operator--();
   SpacePointProxyIterator operator++(int);
@@ -47,18 +47,16 @@ class SpacePointProxyIterator {
   bool operator<=(const SpacePointProxyIterator& other) const;
   bool operator>=(const SpacePointProxyIterator& other) const;
 
-  SpacePointProxyIterator& operator+=(const std::size_t& offset);
-  SpacePointProxyIterator& operator-=(const std::size_t& offset);
+  SpacePointProxyIterator& operator+=(const std::size_t offset);
+  SpacePointProxyIterator& operator-=(const std::size_t offset);
 
-  SpacePointProxyIterator operator+(const std::size_t& offset) const;
-  SpacePointProxyIterator operator-(const std::size_t& offset) const;
+  SpacePointProxyIterator operator+(const std::size_t offset) const;
+  SpacePointProxyIterator operator-(const std::size_t offset) const;
 
   difference_type operator-(const SpacePointProxyIterator& other) const;
 
   value_type& operator*() const;
-
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  value_type& operator*();
+  value_type& operator*() requires (!read_only);
 
  private:
   Acts::detail::RefHolder<ContainerType> m_container;

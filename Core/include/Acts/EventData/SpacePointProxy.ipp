@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -16,9 +17,9 @@ SpacePointProxy<container_t, read_only>::SpacePointProxy(
    : m_container(container), m_index(index) {}
 
 template <typename container_t, bool read_only>
-template <bool, typename>
 typename SpacePointProxy<container_t, read_only>::ValueType&
-SpacePointProxy<container_t, read_only>::externalSpacePoint() {
+SpacePointProxy<container_t, read_only>::externalSpacePoint()
+requires (!read_only) {
   return container().sp(m_index);
 }
 
@@ -100,9 +101,9 @@ SpacePointProxy<container_t, read_only>::container() const {
 }
 
 template <typename container_t, bool read_only>
-template <bool, typename>
 typename SpacePointProxy<container_t, read_only>::ContainerType&
-SpacePointProxy<container_t, read_only>::container() {
+SpacePointProxy<container_t, read_only>::container()
+  requires (!read_only) {
   return *m_container;
 }
 

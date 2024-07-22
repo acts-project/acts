@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -86,7 +87,7 @@ bool SpacePointProxyIterator<container_t, read_only>::operator>=(
 template <typename container_t, bool read_only>
 SpacePointProxyIterator<container_t, read_only>&
 SpacePointProxyIterator<container_t, read_only>::operator+=(
-    const std::size_t& offset) {
+    const std::size_t offset) {
   m_index += offset;
   return *this;
 }
@@ -94,7 +95,7 @@ SpacePointProxyIterator<container_t, read_only>::operator+=(
 template <typename container_t, bool read_only>
 SpacePointProxyIterator<container_t, read_only>&
 SpacePointProxyIterator<container_t, read_only>::operator-=(
-    const std::size_t& offset) {
+    const std::size_t offset) {
   m_index -= offset;
   return *this;
 }
@@ -102,14 +103,14 @@ SpacePointProxyIterator<container_t, read_only>::operator-=(
 template <typename container_t, bool read_only>
 SpacePointProxyIterator<container_t, read_only>
 SpacePointProxyIterator<container_t, read_only>::operator+(
-    const std::size_t& offset) const {
+    const std::size_t offset) const {
   return SpacePointProxyIterator(*m_container, m_index + offset);
 }
 
 template <typename container_t, bool read_only>
 SpacePointProxyIterator<container_t, read_only>
 SpacePointProxyIterator<container_t, read_only>::operator-(
-    const std::size_t& offset) const {
+    const std::size_t offset) const {
   return SpacePointProxyIterator(*m_container, m_index - offset);
 }
 
@@ -121,9 +122,9 @@ SpacePointProxyIterator<container_t, read_only>::operator-(
 }
 
 template <typename container_t, bool read_only>
-template <bool, typename>
 typename SpacePointProxyIterator<container_t, read_only>::value_type&
-SpacePointProxyIterator<container_t, read_only>::operator*() {
+SpacePointProxyIterator<container_t, read_only>::operator*()
+requires (!read_only) {
   return m_container->proxy(m_index);
 }
 

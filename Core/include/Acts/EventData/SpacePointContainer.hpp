@@ -136,37 +136,26 @@ class SpacePointContainer {
 
   std::size_t size() const;
 
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  iterator begin();
-
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  iterator end();
+  iterator begin() requires (!read_only);
+  iterator end() requires (!read_only);
 
   const_iterator begin() const;
   const_iterator end() const;
 
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ValueType& sp(const std::size_t n);
-
+  ValueType& sp(const std::size_t n) requires (!read_only);
   ValueType& sp(const std::size_t n) const;
 
  private:
   void initialize();
 
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  container_t& container();
-
+  container_t& container() requires (!read_only);
   const container_t& container() const;
 
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& proxy(const std::size_t n);
-
+  ProxyType& proxy(const std::size_t n) requires (!read_only);
   const ProxyType& proxy(const std::size_t n) const;
 
   const std::vector<ProxyType>& proxies() const;
-
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  std::vector<ProxyType>& proxies();
+  std::vector<ProxyType>& proxies() requires (!read_only);
 
  private:
   float x(const std::size_t n) const;
