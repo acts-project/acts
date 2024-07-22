@@ -322,7 +322,7 @@ class VariableSizeMeasurement {
 /// for a 2d measurement w/ one position and time.
 ///
 /// @note The indices must be ordered and must be consistent with the content of
-///   parameters and covariance.
+/// parameters and covariance.
 template <typename parameters_t, typename covariance_t, typename indices_t,
           typename... tail_indices_t>
 auto makeFixedSizeMeasurement(Acts::SourceLink source,
@@ -330,6 +330,33 @@ auto makeFixedSizeMeasurement(Acts::SourceLink source,
                               const Eigen::MatrixBase<covariance_t>& cov,
                               indices_t index0, tail_indices_t... tailIndices)
     -> FixedSizeMeasurement<indices_t, 1u + sizeof...(tail_indices_t)> {
+  using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
+  return {std::move(source), IndexContainer{index0, tailIndices...}, params,
+          cov};
+}
+
+/// Construct a variable-size measurement for the given indices.
+///
+/// @tparam parameters_t Input parameters vector type
+/// @tparam covariance_t Input covariance matrix type
+/// @tparam indices_t Parameter index type, determines the full parameter space
+/// @tparam tail_indices_t Helper types required to support variadic arguments;
+///   all types must be convertibale to `indices_t`.
+/// @param source The link that connects to the underlying detector readout
+/// @param params Measured parameters values
+/// @param cov Measured parameters covariance
+/// @param index0 Required parameter index, measurement must be at least 1d
+/// @param tailIndices Additional parameter indices for larger measurements
+/// @return Variable-size measurement w/ the correct type and given inputs
+///
+/// @note The indices must be ordered and must be consistent with the content of
+/// parameters and covariance.
+template <typename parameters_t, typename covariance_t, typename indices_t,
+          typename... tail_indices_t>
+VariableSizeMeasurement<indices_t> makeVariableSizeMeasurement(
+    Acts::SourceLink source, const Eigen::MatrixBase<parameters_t>& params,
+    const Eigen::MatrixBase<covariance_t>& cov, indices_t index0,
+    tail_indices_t... tailIndices) {
   using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
   return {std::move(source), IndexContainer{index0, tailIndices...}, params,
           cov};

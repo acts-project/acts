@@ -86,12 +86,9 @@ BOOST_AUTO_TEST_CASE(FixedBoundAll) {
   BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 }
 
-// stop gcc optimizer doing silly
-#pragma GCC push_options
-#pragma GCC optimize("O0")
 BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  BoundVariableMeasurement meas(source, std::array{index}, params, cov);
+  auto meas = makeVariableSizeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
   for (auto i : boundIndices) {
@@ -106,15 +103,12 @@ BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
   BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
                     sourceOrig);
 }
-#pragma GCC pop_options
 
 BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   auto [params, cov] = generateBoundParametersCovariance(rng);
-  BoundVariableMeasurement meas(
-      source,
-      std::array{eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta, eBoundQOverP,
-                 eBoundTime},
-      params, cov);
+  auto meas = makeVariableSizeMeasurement(source, params, cov, eBoundLoc0,
+                                          eBoundLoc1, eBoundPhi, eBoundTheta,
+                                          eBoundQOverP, eBoundTime);
 
   BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
   for (auto i : boundIndices) {
