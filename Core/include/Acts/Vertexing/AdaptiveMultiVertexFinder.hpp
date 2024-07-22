@@ -160,6 +160,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// State struct for fulfilling interface
   struct State {
     std::reference_wrapper<const MagneticFieldContext> magContext;
+
+    IVertexFinder::State seedFinderState;
   };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
@@ -203,7 +205,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
   IVertexFinder::State makeState(
       const Acts::MagneticFieldContext& mctx) const override {
-    return IVertexFinder::State{State{mctx}};
+    return IVertexFinder::State{
+        State{mctx, IVertexFinder::State{m_cfg.seedFinder->makeState(mctx)}}};
   }
 
   void setTracksToRemove(

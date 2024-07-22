@@ -20,11 +20,11 @@ Acts::Result<std::vector<Acts::Vertex>> TruthVertexSeeder::find(
     Acts::IVertexFinder::State &anyState) const {
   auto &state = anyState.template as<State>();
 
-  if (state.nextVertexIndex >= m_cfg.truthVertices.size()) {
+  if (state.nextVertexIndex >= state.truthVertices.size()) {
     return std::vector<Acts::Vertex>();
   }
 
-  const auto &truthVertex = m_cfg.truthVertices[state.nextVertexIndex];
+  const auto &truthVertex = state.truthVertices[state.nextVertexIndex];
   ++state.nextVertexIndex;
 
   Acts::Vertex converted;

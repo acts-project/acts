@@ -29,6 +29,7 @@
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
 #include <memory>
 #include <optional>
@@ -42,53 +43,6 @@
 #include "VertexingHelpers.hpp"
 
 namespace ActsExamples {
-
-namespace {
-
-std::unique_ptr<ActsExamples::TruthVertexSeeder> makeTruthVertexSeeder(
-    const AdaptiveMultiVertexFinderAlgorithm::Config& cfg,
-    const SimParticleContainer& truthParticles,
-    const SimVertexContainer& truthVertices, const Acts::Logger& logger) {
-  using Seeder = ActsExamples::TruthVertexSeeder;
-
-  Seeder::Config seederConfig;
-  seederConfig.useXY = false;
-  seederConfig.useTime = cfg.useTime;
-
-  std::map<SimVertexBarcode, std::size_t> vertexParticleCount;
-
-  for (const auto& truthVertex : truthVertices) {
-    // Skip secondary vertices
-    if (truthVertex.vertexId().vertexSecondary() != 0) {
-      continue;
-    }
-    seederConfig.truthVertices.push_back(truthVertex);
-
-    // Count the number of particles associated with each vertex
-    std::size_t particleCount = 0;
-    for (const auto& particle : truthParticles) {
-      if (particle.particleId().vertexId() == truthVertex.vertexId()) {
-        ++particleCount;
-      }
-    }
-    vertexParticleCount[truthVertex.vertexId()] = particleCount;
-  }
-
-  // sort by number of particles
-  std::sort(seederConfig.truthVertices.begin(),
-            seederConfig.truthVertices.end(),
-            [&vertexParticleCount](const auto& lhs, const auto& rhs) {
-              return vertexParticleCount[lhs.vertexId()] >
-                     vertexParticleCount[rhs.vertexId()];
-            });
-
-  ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "
-                   << seederConfig.truthVertices.size() << " in event");
-
-  return std::make_unique<Seeder>(seederConfig);
-}
-
-}  // namespace
 
 AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
@@ -151,9 +105,11 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
 std::unique_ptr<Acts::IVertexFinder>
 AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
   if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
-    // Note that the default config will not generate any vertices. We need the
-    // event context to get the truth vertices.
-    return makeTruthVertexSeeder(m_cfg, {}, {}, logger());
+    using Seeder = ActsExamples::TruthVertexSeeder;
+    Seeder::Config seederConfig;
+    seederConfig.useXY = false;
+    seederConfig.useTime = m_cfg.useTime;
+    return std::make_unique<Seeder>(seederConfig);
   }
 
   if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
@@ -267,29 +223,49 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     }
   }
 
-  const Acts::AdaptiveMultiVertexFinder* vertexFinder = &m_vertexFinder;
+  // The vertex finder state
+  auto state = m_vertexFinder.makeState(ctx.magFieldContext);
 
-  // Temporary vertex finder for the truth seeder
-  std::optional<Acts::AdaptiveMultiVertexFinder> temporaryVertexFinder;
+  // In case of the truth seeder, we need to wire the truth vertices into the
+  // vertex finder
   if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
-    // In case of the truth seeder, we need to wire the truth vertices into the
-    // vertex finder
-
     const auto& truthParticles = m_inputTruthParticles(ctx);
     const auto& truthVertices = m_inputTruthVertices(ctx);
 
-    // Build a new vertex seeder with the truth vertices
-    auto vertexSeeder =
-        makeTruthVertexSeeder(m_cfg, truthParticles, truthVertices, logger());
+    auto& vertexSeederState =
+        state.as<Acts::AdaptiveMultiVertexFinder::State>()
+            .seedFinderState.as<TruthVertexSeeder::State>();
 
-    // Build a new vertex finder with the new seeder
-    temporaryVertexFinder.emplace(makeVertexFinder(std::move(vertexSeeder)));
+    std::map<SimVertexBarcode, std::size_t> vertexParticleCount;
 
-    vertexFinder = &temporaryVertexFinder.value();
+    for (const auto& truthVertex : truthVertices) {
+      // Skip secondary vertices
+      if (truthVertex.vertexId().vertexSecondary() != 0) {
+        continue;
+      }
+      vertexSeederState.truthVertices.push_back(truthVertex);
+
+      // Count the number of particles associated with each vertex
+      std::size_t particleCount = 0;
+      for (const auto& particle : truthParticles) {
+        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+          ++particleCount;
+        }
+      }
+      vertexParticleCount[truthVertex.vertexId()] = particleCount;
+    }
+
+    // sort by number of particles
+    std::sort(vertexSeederState.truthVertices.begin(),
+              vertexSeederState.truthVertices.end(),
+              [&vertexParticleCount](const auto& lhs, const auto& rhs) {
+                return vertexParticleCount[lhs.vertexId()] >
+                       vertexParticleCount[rhs.vertexId()];
+              });
+
+    ACTS_INFO("Got " << truthVertices.size() << " truth vertices and selected "
+                     << vertexSeederState.truthVertices.size() << " in event");
   }
-
-  // The vertex finder state
-  auto state = vertexFinder->makeState(ctx.magFieldContext);
 
   // Default vertexing options, this is where e.g. a constraint could be set
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
@@ -302,7 +278,7 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices
-    auto result = vertexFinder->find(inputTracks, finderOpts, state);
+    auto result = m_vertexFinder.find(inputTracks, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());
