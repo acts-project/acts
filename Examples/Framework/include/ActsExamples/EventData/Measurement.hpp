@@ -206,7 +206,8 @@ class VariableSizeMeasurement {
   template <std::size_t kSize, typename parameters_t, typename covariance_t>
   VariableSizeMeasurement(Acts::SourceLink source,
                           const std::array<indices_t, kSize>& indices,
-                          const parameters_t& params, const covariance_t& cov)
+                          const Eigen::MatrixBase<parameters_t>& params,
+                          const Eigen::MatrixBase<covariance_t>& cov)
       : m_source(std::move(source)), m_subspace(indices) {
     // TODO we should be able to support arbitrary ordering, by sorting the
     //   indices and reordering parameters/covariance. since the parameter order
