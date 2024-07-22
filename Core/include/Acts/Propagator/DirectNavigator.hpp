@@ -254,7 +254,7 @@ class DirectNavigator {
                    << state.navigation.currentSurface->geometryId());
       // Move the sequence to the next surface
       ++state.navigation.surfaceIndex;
-      if (state.navigation.surfaceIndex >=
+      if (state.navigation.surfaceIndex <
           state.navigation.options.surfaces.size()) {
         ACTS_VERBOSE("Next surface candidate is  "
                      << state.navigation.options.surfaces
