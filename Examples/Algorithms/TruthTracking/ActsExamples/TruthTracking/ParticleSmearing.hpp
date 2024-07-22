@@ -71,7 +71,7 @@ class ParticleSmearing final : public IAlgorithm {
     /// Relative pt resolution for the initial sigma of the q/p.
     double initialSigmaRelativePtResolution = 0.1;
     /// Inflate the initial covariance matrix
-    std::array<double, 6> initialVarInflation = {1e2, 1e2, 1e2, 1e2, 1e2, 1e2};
+    std::array<double, 6> initialVarInflation = {1e4, 1e4, 1e4, 1e4, 1e4, 1e4};
 
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
