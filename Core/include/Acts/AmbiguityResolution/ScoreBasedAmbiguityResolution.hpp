@@ -117,7 +117,7 @@ class ScoreBasedAmbiguityResolution {
   /// good enough, based on some criteria. Users are free to add their own cuts
   /// with the help of this struct.
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t, bool ReadOnly>
+            template <typename> class holder_t, bool ReadOnly = true>
   struct OptionalCuts {
     using OptionalFilter =
         std::function<bool(const Acts::TrackProxy<track_container_t, traj_t,
@@ -162,7 +162,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t, bool ReadOnly>
+            template <typename> class holder_t, bool ReadOnly = true>
   std::vector<double> simpleScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
@@ -176,7 +176,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t, bool ReadOnly>
+            template <typename> class holder_t, bool ReadOnly = true>
   std::vector<double> ambiguityScore(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
@@ -206,7 +206,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t, bool ReadOnly>
+            template <typename> class holder_t, bool ReadOnly = true>
   std::vector<int> solveAmbiguity(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
       const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,
