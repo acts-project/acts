@@ -53,19 +53,21 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
         (H * ts.predictedCovariance * H.transpose() + calibratedCovariance)
             .eval();
     // TODO Sinv could be cached by the filter step
-    const auto Sinv = S.inverse().eval();
+    const auto S_inv = S.inverse().eval();
 
     // Kalman gain
     // TODO K could be cached by the filter step
-    const auto K = (ts.predictedCovariance * H.transpose() * Sinv).eval();
+    const auto K = (ts.predictedCovariance * H.transpose() * S_inv).eval();
 
-    const auto C = (BoundMatrix::Identity() - K * H).eval();
+    const auto C_hat = (BoundMatrix::Identity() - K * H).eval();
     const auto y = (calibrated - H * ts.predicted).eval();
 
     const auto big_lambda_tilde =
-        (H.transpose() * Sinv * H + C.transpose() * big_lambda_hat * C).eval();
+        (H.transpose() * S_inv * H + C_hat.transpose() * big_lambda_hat * C)
+            .eval();
     const auto small_lambda_tilde =
-        (-H.transpose() * Sinv * y + C.transpose() * small_lambda_hat).eval();
+        (-H.transpose() * S_inv * y + C_hat.transpose() * small_lambda_hat)
+            .eval();
 
     const auto F = ts.jacobian;
 
