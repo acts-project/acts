@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -61,10 +61,20 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaPRel = 0.05;
     /// Optional. Initial covariance matrix diagonal. Overwrites the default if
     /// set.
-    std::optional<std::array<double, 6>> initialSigmas = std::array<double, 6>{
-        1 * Acts::UnitConstants::mm,     1 * Acts::UnitConstants::mm,
-        1 * Acts::UnitConstants::degree, 1 * Acts::UnitConstants::degree,
-        0.1 / Acts::UnitConstants::GeV,  1 * Acts::UnitConstants::ns};
+    std::optional<std::array<double, 6>> initialSigmas;
+    /// Initial q/p coefficient covariance matrix diagonal.
+    std::array<double, 6> initialSimgaQoverPCoefficients = {
+        0 * Acts::UnitConstants::mm /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0 * Acts::UnitConstants::mm /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0 * Acts::UnitConstants::degree /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0 * Acts::UnitConstants::degree /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0,
+        0 * Acts::UnitConstants::ns /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV)};
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.

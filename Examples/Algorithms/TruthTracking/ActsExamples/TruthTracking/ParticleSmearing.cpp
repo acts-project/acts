@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -130,25 +130,39 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       if (m_cfg.initialSigmas) {
         // use the initial sigmas if set
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-          cov(i, i) = m_cfg.initialVarInflation[i] * (*m_cfg.initialSigmas)[i] *
-                      (*m_cfg.initialSigmas)[i];
+          double sigma = (*m_cfg.initialSigmas)[i];
+
+          // Add momentum dependent uncertainties
+          sigma += m_cfg.initialSimgaQoverPCoefficients[i] *
+                   params[Acts::eBoundQOverP];
+
+          double var = sigma * sigma;
+
+          // Inflate the initial covariance
+          var *= m_cfg.initialVarInflation[i];
+
+          cov(i, i) = var;
         }
       } else {
         // otherwise use the smearing sigmas
-        cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-            m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
-        cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-            m_cfg.initialVarInflation[Acts::eBoundLoc1] * sigmaZ0 * sigmaZ0;
-        cov(Acts::eBoundTime, Acts::eBoundTime) =
-            m_cfg.initialVarInflation[Acts::eBoundTime] * sigmaT0 * sigmaT0;
-        cov(Acts::eBoundPhi, Acts::eBoundPhi) =
-            m_cfg.initialVarInflation[Acts::eBoundPhi] * sigmaPhi * sigmaPhi;
-        cov(Acts::eBoundTheta, Acts::eBoundTheta) =
-            m_cfg.initialVarInflation[Acts::eBoundTheta] * sigmaTheta *
-            sigmaTheta;
-        cov(Acts::eBoundQOverP, Acts::eBoundQOverP) =
-            m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
-            sigmaQOverP;
+
+        Acts::BoundVector sigmas = Acts::BoundVector(
+            {sigmaD0, sigmaZ0, sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0});
+
+        for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+          double sigma = sigmas[i];
+
+          // Add momentum dependent uncertainties
+          sigma += m_cfg.initialSimgaQoverPCoefficients[i] *
+                   params[Acts::eBoundQOverP];
+
+          double var = sigma * sigma;
+
+          // Inflate the initial covariance
+          var *= m_cfg.initialVarInflation[i];
+
+          cov(i, i) = var;
+        }
       }
 
       parameters.emplace_back(perigee, params, cov, particleHypothesis);
