@@ -687,6 +687,10 @@ class TrackProxy {
 
       // reverse using standard linked list reversal algorithm
       reverseTrackStates();
+    } else {
+      // just copy the indices
+      tipIndex() = other.tipIndex();
+      stemIndex() = other.stemIndex();
     }
 
     parameters() = other.parameters();
