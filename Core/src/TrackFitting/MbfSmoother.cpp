@@ -31,18 +31,22 @@ void MbfSmoother::visitNonMeasurement(const InternalTrackState& ts,
 void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
                                    BoundMatrix& big_lambda_hat,
                                    BoundVector& small_lambda_hat) const {
-  visit_measurement(ts.calibratedSize, [&](auto N) -> void {
+  assert(ts.measurement.has_value());
+
+  const auto& measurement = ts.measurement.value();
+
+  visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
-        ts.calibrated};
+        measurement.calibrated};
     typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-        calibratedCovariance{ts.calibratedCovariance};
+        calibratedCovariance{measurement.calibratedCovariance};
 
     // Measurement matrix
-    const auto H =
-        ts.projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
-            .eval();
+    const auto H = measurement.projector
+                       .template topLeftCorner<kMeasurementSize, eBoundSize>()
+                       .eval();
 
     // Residual covariance
     const auto S =

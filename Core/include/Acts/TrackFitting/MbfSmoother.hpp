@@ -11,14 +11,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cassert>
 #include <cstddef>
-#include <system_error>
+#include <optional>
 
 namespace Acts {
 
@@ -90,7 +87,7 @@ class MbfSmoother {
  private:
   /// Internal track state representation for the smoother.
   /// @note This allows us to move parts of the implementation into the .cpp
-  struct InternalTrackState {
+  struct InternalTrackState final {
     using Projector =
         typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                                   false>::Projector;
@@ -104,22 +101,31 @@ class MbfSmoother {
         typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                                   false>::Covariance;
 
-    // This is used to build a covariance matrix view in the .cpp file
-    unsigned int calibratedSize{0};
-    const double* calibrated{nullptr};
-    const double* calibratedCovariance{nullptr};
-    Projector projector{nullptr};
+    struct Measurement final {
+      unsigned int calibratedSize{0};
+      // This is used to build a covariance matrix view in the .cpp file
+      const double* calibrated{nullptr};
+      const double* calibratedCovariance{nullptr};
+      Projector projector;
 
-    Jacobian jacobian{nullptr};
+      template <typename TrackStateProxy>
+      explicit Measurement(TrackStateProxy ts)
+          : calibratedSize(ts.calibratedSize()),
+            calibrated(ts.effectiveCalibrated().data()),
+            calibratedCovariance(ts.effectiveCalibratedCovariance().data()),
+            projector(ts.projector()) {}
+    };
 
-    Parameters predicted{nullptr};
-    Covariance predictedCovariance{nullptr};
-    Parameters filtered{nullptr};
-    Covariance filteredCovariance{nullptr};
-    Parameters smoothed{nullptr};
-    Covariance smoothedCovariance{nullptr};
+    Jacobian jacobian;
 
-    InternalTrackState() = default;
+    Parameters predicted;
+    Covariance predictedCovariance;
+    Parameters filtered;
+    Covariance filteredCovariance;
+    Parameters smoothed;
+    Covariance smoothedCovariance;
+
+    std::optional<Measurement> measurement;
 
     template <typename TrackStateProxy>
     explicit InternalTrackState(TrackStateProxy ts)
@@ -129,16 +135,10 @@ class MbfSmoother {
           filtered(ts.filtered()),
           filteredCovariance(ts.filteredCovariance()),
           smoothed(ts.smoothed()),
-          smoothedCovariance(ts.smoothedCovariance()) {
-      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        calibratedSize = ts.calibratedSize();
-        // Note that we pass raw pointers here which are used in the correct
-        // shape later
-        calibrated = {ts.effectiveCalibrated().data()};
-        calibratedCovariance = {ts.effectiveCalibratedCovariance().data()};
-        projector = {ts.projector()};
-      }
-    }
+          smoothedCovariance(ts.smoothedCovariance()),
+          measurement(ts.typeFlags().test(TrackStateFlag::MeasurementFlag)
+                          ? std::optional<Measurement>(ts)
+                          : std::nullopt) {}
   };
 
   /// Calculate the smoothed parameters and covariance.
