@@ -124,6 +124,11 @@ addCKFTracks(
     ckfConfig=CkfConfig(
         seedDeduplication=True,
         stayOnSeed=True,
+        # ITk volumes from Noemi's plot
+        pixelVolumes={8, 9, 10, 13, 14, 15, 16, 18, 19, 20},
+        stripVolumes={22, 23, 24},
+        maxPixelHoles=1,
+        maxStripHoles=2,
     ),
     outputDirRoot=outputDir,
 )
