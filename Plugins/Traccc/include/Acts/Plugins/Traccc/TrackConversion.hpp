@@ -40,6 +40,15 @@
 
 namespace Acts::TracccPlugin {
 
+template <typename algebra_t, typename allocator_t>
+inline std::size_t nMeasurements(const std::vector<traccc::track_state<algebra_t>, allocator_t> trackStates){
+    std::set<traccc::measurement> uniqueMeasurements;
+    for (const auto& trackState : trackStates){
+        uniqueMeasurements.insert(trackState.get_measurement());
+    }
+    return uniqueMeasurements.size();
+}
+
 /// @brief Creates a new Acts bound track parameters from detray bound track parameters.
 /// @param dparams the detray bound track parameters.
 /// @param detector the detray detector.
@@ -85,16 +94,16 @@ inline auto newParams(const detray::bound_track_parameters<algebra_t>& dparams,
 template <typename algebra_t, typename track_container_t, typename trajectory_t,
           template <typename> class holder_t, typename metadata_t,
           typename container_t>
-inline void copyFittingResult(
-    const traccc::fitting_result<algebra_t>& source,
+inline void copyParams(
+    const detray::bound_track_parameters<algebra_t>& dparams,
     Acts::TrackProxy<track_container_t, trajectory_t, holder_t, false>&
         destination,
     const detray::detector<metadata_t, container_t>& detector,
     const Acts::TrackingGeometry& trackingGeometry) {
-  const auto params = newParams(source.fit_params, detector, trackingGeometry);
+  const auto params = newParams(dparams, detector, trackingGeometry);
   destination.parameters() = params.parameters();
   destination.covariance() = params.covariance().value();
-  destination.setReferenceSurface(params.referenceSurface().getSharedPtr());
+  destination.setReferenceSurface(params.referenceSurface().getSharedPtr());  
 }
 
 /// @brief Copies data from a traccc track state to a Acts track state proxy.
@@ -199,7 +208,10 @@ inline auto makeTrack(
   auto trackStates = tracccTrack.items;
 
   auto track = trackContainer.makeTrack();
-  copyFittingResult(fittingResult, track, detector, trackingGeometry);
+  copyParams(fittingResult.fit_params, track, detector, trackingGeometry);
+  track.chi2() = fittingResult.chi2;
+  track.nDoF() = fittingResult.ndf;
+  track.nMeasurements() = nMeasurements(trackStates);
 
   // Make the track states.
   for (const auto& tstate : trackStates) {
