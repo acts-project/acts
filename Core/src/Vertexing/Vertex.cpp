@@ -81,6 +81,11 @@ void Vertex::setPosition(const Vector3& position) {
   m_position.head<3>() = position;
 }
 
+void Vertex::setPosition(const Vector3& position, ActsScalar time) {
+  m_position.head<3>() = position;
+  m_position[eTime] = time;
+}
+
 void Vertex::setFullPosition(const Vector4& fullPosition) {
   m_position = fullPosition;
 }
