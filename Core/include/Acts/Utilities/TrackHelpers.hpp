@@ -85,18 +85,19 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @brief Smooth a track using the gain matrix smoother
 ///
 /// @tparam track_proxy_t The track proxy type
+/// @tparam smoother_t The smoother type
 ///
 /// @param geoContext The geometry context
 /// @param track The track to smooth
 /// @param logger The logger
+/// @param smoother The smoother
 ///
 /// @return The result of the smoothing
-template <typename track_proxy_t>
+template <typename track_proxy_t, typename smoother_t = GainMatrixSmoother>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
-    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO)) {
-  Acts::GainMatrixSmoother smoother;
-
+    const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),
+    smoother_t smoother = GainMatrixSmoother()) {
   auto &trackContainer = track.container();
   auto &trackStateContainer = trackContainer.trackStateContainer();
 

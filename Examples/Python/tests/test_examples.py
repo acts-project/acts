@@ -28,7 +28,7 @@ from acts.examples import (
     GenericDetector,
     AlignedDetector,
 )
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 u = acts.UnitConstants
@@ -678,7 +678,14 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    odd_dir = getOpenDataDetectorDirectory()
+    config = acts.MaterialMapJsonConverter.Config()
+    mdecorator = acts.JsonMaterialDecorator(
+        level=acts.logging.INFO,
+        rConfig=config,
+        jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
+    )
+    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator)
 
     from material_mapping import runMaterialMapping
 
