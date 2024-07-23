@@ -56,8 +56,9 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   const double nearLimit = std::numeric_limits<double>::lowest();
   const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
 
-  if (sIntersection && detail::checkIntersection(sIntersection.intersection(),
-                                                 nearLimit, farLimit, logger)) {
+  if (sIntersection.isValid() &&
+      detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,
+                              logger)) {
     ACTS_VERBOSE("Surface is reachable");
     stepper.updateStepSize(state, sIntersection.pathLength(),
                            ConstrainedStep::actor);
