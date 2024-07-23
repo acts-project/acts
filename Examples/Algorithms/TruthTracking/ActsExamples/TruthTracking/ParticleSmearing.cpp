@@ -146,8 +146,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       } else {
         // otherwise use the smearing sigmas
 
-        Acts::BoundVector sigmas = Acts::BoundVector(
-            {sigmaD0, sigmaZ0, sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0});
+        Acts::BoundVector sigmas{sigmaD0, sigmaZ0, sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0};
 
         for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
           double sigma = sigmas[i];
