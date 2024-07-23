@@ -14,7 +14,8 @@ template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     const Acts::SpacePointContainerConfig& config,
-    const Acts::SpacePointContainerOptions& options, const container_t& container)
+    const Acts::SpacePointContainerOptions& options,
+    const container_t& container)
     : m_config(config.toInternalUnits()),
       m_options(options.toInternalUnits()),
       m_container(container) {
@@ -71,8 +72,7 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
 }
 
 template <typename container_t, template <typename> class holder_t>
-const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::topStripVector(
+const Acts::Vector3& SpacePointContainer<container_t, holder_t>::topStripVector(
     const std::size_t n) const {
   return m_data.topStripVector(n);
 }
@@ -116,8 +116,8 @@ SpacePointContainer<container_t, holder_t>::end() const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-const container_t&
-SpacePointContainer<container_t, holder_t>::container() const {
+const container_t& SpacePointContainer<container_t, holder_t>::container()
+    const {
   return *m_container;
 }
 
@@ -128,20 +128,17 @@ SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-float SpacePointContainer<container_t, holder_t>::x(
-    const std::size_t n) const {
+float SpacePointContainer<container_t, holder_t>::x(const std::size_t n) const {
   return m_data.x(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-float SpacePointContainer<container_t, holder_t>::y(
-    const std::size_t n) const {
+float SpacePointContainer<container_t, holder_t>::y(const std::size_t n) const {
   return m_data.y(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-float SpacePointContainer<container_t, holder_t>::z(
-    const std::size_t n) const {
+float SpacePointContainer<container_t, holder_t>::z(const std::size_t n) const {
   return m_data.z(n);
 }
 

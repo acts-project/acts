@@ -93,7 +93,6 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   std::vector<Acts::GbtsSP<SimSpacePoint>> GbtsSpacePoints =
       MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
-
   for (auto sp : GbtsSpacePoints) {
     ACTS_DEBUG("Gbts space points: "
                << " Gbts_id: " << sp.gbtsID << " z: " << sp.SP->z()

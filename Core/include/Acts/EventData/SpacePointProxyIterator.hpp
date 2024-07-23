@@ -27,10 +27,9 @@ class SpacePointProxyIterator {
 
  public:
   // Constructors
-  SpacePointProxyIterator(container_t&& container,
-                          std::size_t index) = delete;
+  SpacePointProxyIterator(container_t&& container, std::size_t index) = delete;
   SpacePointProxyIterator(const container_t& container, std::size_t index);
-  
+
   SpacePointProxyIterator& operator++();
   SpacePointProxyIterator& operator--();
   SpacePointProxyIterator operator++(int);
@@ -54,8 +53,8 @@ class SpacePointProxyIterator {
   const value_type& operator*() const;
 
  private:
-  const container_t* m_container {nullptr};
-  std::size_t m_index {0ul};
+  const container_t* m_container{nullptr};
+  std::size_t m_index{0ul};
 };
 
 }  // namespace Acts

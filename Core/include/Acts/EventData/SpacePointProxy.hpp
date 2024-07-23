@@ -30,7 +30,7 @@ class SpacePointProxy {
   SpacePointProxy(container_t&& container, std::size_t index) = delete;
   // Only get the reference
   SpacePointProxy(const container_t& container, std::size_t index);
-  
+
   const ValueType& externalSpacePoint() const;
   std::size_t index() const;
 
@@ -51,8 +51,8 @@ class SpacePointProxy {
   const container_t& container() const;
 
  private:
-  const container_t* m_container {nullptr};
-  std::size_t m_index {0ul};
+  const container_t* m_container{nullptr};
+  std::size_t m_index{0ul};
 };
 
 }  // namespace Acts

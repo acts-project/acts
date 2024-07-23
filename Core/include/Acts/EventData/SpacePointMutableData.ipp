@@ -21,7 +21,7 @@ inline float SpacePointMutableData::deltaR(const std::size_t idx) const {
 }
 
 inline void SpacePointMutableData::setQuality(const std::size_t idx,
-					      const float value) {
+                                              const float value) {
   assert(idx < m_quality.size());
   if (value > m_quality[idx]) {
     m_quality[idx] = value;
@@ -29,7 +29,7 @@ inline void SpacePointMutableData::setQuality(const std::size_t idx,
 }
 
 inline void SpacePointMutableData::setDeltaR(const std::size_t idx,
-					     const float value) {
+                                             const float value) {
   assert(idx < m_deltaR.size());
   m_deltaR[idx] = value;
 }

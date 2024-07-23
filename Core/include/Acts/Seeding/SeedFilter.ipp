@@ -69,7 +69,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](const std::size_t i1, const std::size_t i2) {
+              [&invHelixDiameterVec](const size_t i1, const size_t i2) {
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }
@@ -104,9 +104,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
 
-      float otherTopR = m_cfg.useDeltaRorTopRadius
-	                    ? mutableData.deltaR(topSpVec[compatibleTopSPIndex]->index())
-                            : topSpVec[compatibleTopSPIndex]->radius();
+      float otherTopR =
+          m_cfg.useDeltaRorTopRadius
+              ? mutableData.deltaR(topSpVec[compatibleTopSPIndex]->index())
+              : topSpVec[compatibleTopSPIndex]->radius();
 
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
@@ -187,7 +188,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
       if (weight < mutableData.quality(bottomSP.index()) &&
-	  weight < mutableData.quality(middleSP.index()) &&
+          weight < mutableData.quality(middleSP.index()) &&
           weight < mutableData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
@@ -294,8 +295,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     seed.setZvertex(zOrigin);
     seed.setQuality(bestSeedQuality);
 
-    Acts::detail::pushBackOrInsertAtEnd(
-        outputCollection, std::move(seed));
+    Acts::detail::pushBackOrInsertAtEnd(outputCollection, std::move(seed));
 
     ++numTotalSeeds;
   }

@@ -18,10 +18,10 @@
 namespace Acts {
 
 /// @class SpacePointMutableData
-/// This class contains mutable data associated to the 
+/// This class contains mutable data associated to the
 /// external space points provided by the customers
 /// These variables are used mainly internally by the seeding algorithm, that
-/// reads and updates them for seed selection purposes. 
+/// reads and updates them for seed selection purposes.
 /// The quality is also accessed after the seeding for an additional selection
 /// round on the candidates
 class SpacePointMutableData {
@@ -35,7 +35,8 @@ class SpacePointMutableData {
 
   /// @brief Move operations
   SpacePointMutableData(SpacePointMutableData&& other) noexcept = default;
-  SpacePointMutableData& operator=(SpacePointMutableData&& other) noexcept = default;
+  SpacePointMutableData& operator=(SpacePointMutableData&& other) noexcept =
+      default;
 
   /// @brief Destructor
   ~SpacePointMutableData() = default;

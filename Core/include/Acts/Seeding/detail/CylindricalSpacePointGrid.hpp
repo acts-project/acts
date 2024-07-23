@@ -121,8 +121,7 @@ class CylindricalSpacePointGridCreator {
       const Acts::SeedFinderOptions& options,
       Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
       external_spacepoint_iterator_t spBegin,
-      external_spacepoint_iterator_t spEnd,
-      Acts::Extent& rRangeSPExtent);
+      external_spacepoint_iterator_t spEnd, Acts::Extent& rRangeSPExtent);
 };
 
 }  // namespace Acts

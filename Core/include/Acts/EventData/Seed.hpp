@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-  template <typename external_spacePoint_t>
+template <typename external_spacePoint_t>
 class Seed {
  public:
   Seed(const external_spacePoint_t& b, const external_spacePoint_t& m,

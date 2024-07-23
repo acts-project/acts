@@ -12,7 +12,6 @@
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
@@ -192,8 +191,10 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
       Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
-  Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>> a;  // test creation of unconfigured finder
-  a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(config);
+  Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>
+      a;  // test creation of unconfigured finder
+  a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(
+      config);
 
   // setup spacepoint grid config
   Acts::CylindricalSpacePointGridConfig gridConf;
@@ -209,10 +210,12 @@ int main(int argc, char** argv) {
   // create grid with bin sizes according to the configured geometry
 
   Acts::CylindricalSpacePointGrid<value_type> grid =
-      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
-  Acts::CylindricalSpacePointGridCreator::fillGrid(config, options, grid, spContainer.begin(),
-                                        spContainer.end(), rRangeSPExtent);
-  
+      Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(gridConf,
+                                                                     gridOpts);
+  Acts::CylindricalSpacePointGridCreator::fillGrid(
+      config, options, grid, spContainer.begin(), spContainer.end(),
+      rRangeSPExtent);
+
   auto spGroup = Acts::CylindricalBinnedGroup<value_type>(
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
@@ -235,17 +238,17 @@ int main(int argc, char** argv) {
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   if (!quiet) {
     for (auto& regionVec : seedVector) {
-      for (std::size_t i = 0; i < regionVec.size(); i++) {
+      for (size_t i = 0; i < regionVec.size(); i++) {
         const seed_type* seed = &regionVec[i];
         const value_type* sp = seed->sp()[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
         sp = seed->sp()[1];
-        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", " << sp->y()
-                  << ", " << sp->z() << ") ";
+        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", "
+                  << sp->y() << ", " << sp->z() << ") ";
         sp = seed->sp()[2];
-        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", " << sp->y()
-                  << ", " << sp->z() << ") ";
+        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", "
+                  << sp->y() << ", " << sp->z() << ") ";
         std::cout << std::endl;
       }
     }

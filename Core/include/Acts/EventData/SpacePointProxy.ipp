@@ -10,10 +10,9 @@ namespace Acts {
 
 // Implementation
 template <typename container_t>
-SpacePointProxy<container_t>::SpacePointProxy(
-							 const container_t& container,
-    std::size_t index)
-   : m_container(&container), m_index(index) {}
+SpacePointProxy<container_t>::SpacePointProxy(const container_t& container,
+                                              std::size_t index)
+    : m_container(&container), m_index(index) {}
 
 template <typename container_t>
 const typename SpacePointProxy<container_t>::ValueType&
@@ -22,8 +21,7 @@ SpacePointProxy<container_t>::externalSpacePoint() const {
 }
 
 template <typename container_t>
-std::size_t SpacePointProxy<container_t>::index()
-    const {
+std::size_t SpacePointProxy<container_t>::index() const {
   return m_index;
 }
 
@@ -63,32 +61,28 @@ float SpacePointProxy<container_t>::varianceZ() const {
 }
 
 template <typename container_t>
-const Acts::Vector3&
-SpacePointProxy<container_t>::topStripVector() const {
+const Acts::Vector3& SpacePointProxy<container_t>::topStripVector() const {
   return container().topStripVector(m_index);
 }
 
 template <typename container_t>
-const Acts::Vector3&
-SpacePointProxy<container_t>::bottomStripVector() const {
+const Acts::Vector3& SpacePointProxy<container_t>::bottomStripVector() const {
   return container().bottomStripVector(m_index);
 }
 
 template <typename container_t>
-const Acts::Vector3&
-SpacePointProxy<container_t>::stripCenterDistance() const {
+const Acts::Vector3& SpacePointProxy<container_t>::stripCenterDistance() const {
   return container().stripCenterDistance(m_index);
 }
 
 template <typename container_t>
-const Acts::Vector3&
-SpacePointProxy<container_t>::topStripCenterPosition() const {
+const Acts::Vector3& SpacePointProxy<container_t>::topStripCenterPosition()
+    const {
   return container().topStripCenterPosition(m_index);
 }
 
 template <typename container_t>
-const container_t&
-SpacePointProxy<container_t>::container() const {
+const container_t& SpacePointProxy<container_t>::container() const {
   return *m_container;
 }
 

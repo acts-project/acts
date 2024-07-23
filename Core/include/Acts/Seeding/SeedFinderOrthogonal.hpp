@@ -206,8 +206,9 @@ class SeedFinderOrthogonal {
    * seed candidates to.
    */
   void filterCandidates(
-      const SeedFinderOptions &options, 
-      Acts::SpacePointMutableData& mutableData, const external_spacepoint_t &middle,
+      const SeedFinderOptions &options,
+      Acts::SpacePointMutableData &mutableData,
+      const external_spacepoint_t &middle,
       const std::vector<const external_spacepoint_t *> &bottom,
       const std::vector<const external_spacepoint_t *> &top,
       SeedFilterState seedFilterState,
@@ -226,9 +227,9 @@ class SeedFinderOrthogonal {
    * @param middle_p The middle spacepoint to find seeds for.
    */
   template <typename output_container_t>
-  void processFromMiddleSP(const SeedFinderOptions &options, Acts::SpacePointMutableData& mutableData,
-			   const tree_t &tree,
-                           output_container_t &out_cont,
+  void processFromMiddleSP(const SeedFinderOptions &options,
+                           Acts::SpacePointMutableData &mutableData,
+                           const tree_t &tree, output_container_t &out_cont,
                            const typename tree_t::pair_t &middle_p) const;
 
   /**

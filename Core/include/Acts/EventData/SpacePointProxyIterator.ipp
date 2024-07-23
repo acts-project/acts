@@ -11,8 +11,7 @@ namespace Acts {
 // Implementation
 template <typename container_t>
 SpacePointProxyIterator<container_t>::SpacePointProxyIterator(
-							      const container_t& container,
-    std::size_t index)
+    const container_t& container, std::size_t index)
     : m_container(&container), m_index(index) {}
 
 template <typename container_t>
@@ -84,16 +83,14 @@ bool SpacePointProxyIterator<container_t>::operator>=(
 
 template <typename container_t>
 SpacePointProxyIterator<container_t>&
-SpacePointProxyIterator<container_t>::operator+=(
-    const std::size_t offset) {
+SpacePointProxyIterator<container_t>::operator+=(const std::size_t offset) {
   m_index += offset;
   return *this;
 }
 
 template <typename container_t>
 SpacePointProxyIterator<container_t>&
-SpacePointProxyIterator<container_t>::operator-=(
-    const std::size_t offset) {
+SpacePointProxyIterator<container_t>::operator-=(const std::size_t offset) {
   m_index -= offset;
   return *this;
 }

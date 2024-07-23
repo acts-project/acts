@@ -8,7 +8,7 @@
 
 namespace Acts {
 template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData, 
+inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
                                       const external_spacepoint_t& sp,
                                       const external_spacepoint_t& spM,
                                       bool bottom,
@@ -51,7 +51,8 @@ inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
 }
 
 template <typename external_spacepoint_t>
-inline void transformCoordinates(Acts::SpacePointMutableData& mutableData,
+inline void transformCoordinates(
+    Acts::SpacePointMutableData& mutableData,
     const std::vector<const external_spacepoint_t*>& vec,
     const external_spacepoint_t& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -105,8 +106,8 @@ inline void transformCoordinates(Acts::SpacePointMutableData& mutableData,
     const float V = yNewFrame * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
     const float Er = ((varianceZM + varianceZSP) +
-                (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
-               iDeltaR2;
+                      (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
+                     iDeltaR2;
 
     // Fill Line Circle
     linCircleVec[idx].cotTheta = cotTheta;

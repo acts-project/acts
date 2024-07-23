@@ -68,18 +68,18 @@ template <typename container_t, template <typename> class holder_t>
 //                 H, Acts::detail::ValueHolder>::value)
 class SpacePointContainer {
  public:
-
   friend class Acts::SpacePointProxy<
-     Acts::SpacePointContainer<container_t, holder_t>>;
+      Acts::SpacePointContainer<container_t, holder_t>>;
   friend class Acts::SpacePointProxyIterator<
-     Acts::SpacePointContainer<container_t, holder_t>>;
+      Acts::SpacePointContainer<container_t, holder_t>>;
 
  public:
   using iterator = Acts::SpacePointProxyIterator<
-    Acts::SpacePointContainer<container_t, holder_t>>;
+      Acts::SpacePointContainer<container_t, holder_t>>;
   using const_iterator = iterator;
 
-  using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
+  using SpacePointProxyType =
+      Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
   using ValueType = typename container_t::ValueType;
   using ProxyType = SpacePointProxyType;
   using value_type = ProxyType;
@@ -113,7 +113,8 @@ class SpacePointContainer {
 
   // move operations
   SpacePointContainer(SpacePointContainer&& other) noexcept = default;
-  SpacePointContainer& operator=(SpacePointContainer&& other) noexcept = default;
+  SpacePointContainer& operator=(SpacePointContainer&& other) noexcept =
+      default;
 
   // Destructor
   ~SpacePointContainer() = default;

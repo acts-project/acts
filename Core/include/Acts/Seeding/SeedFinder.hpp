@@ -17,7 +17,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/EventData/SpacePointMutableData.hpp"
 
 #include <array>
 #include <limits>
@@ -124,10 +123,10 @@ class SeedFinder {
   /// @param sinPhiM ratio between middle SP y position and radius
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
-      const Acts::SeedFinderOptions& options,
-      const grid_t& grid,
+      const Acts::SeedFinderOptions& options, const grid_t& grid,
       Acts::SpacePointMutableData& mutableData,
-      boost::container::small_vector<Neighbour<grid_t>, Acts::detail::ipow(3, grid_t::DIM)>&
+      boost::container::small_vector<Neighbour<grid_t>,
+                                     Acts::detail::ipow(3, grid_t::DIM)>&
           otherSPsNeighbours,
       const external_spacepoint_t& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,

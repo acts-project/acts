@@ -62,7 +62,7 @@ class SeedFilter final {
       const std::vector<float>& impactParametersVec,
       SeedFilterState& seedFilterState,
       CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector)
-    const;
+      const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param candidates_collector collection of seed candidates

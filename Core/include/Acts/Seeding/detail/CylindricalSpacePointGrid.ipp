@@ -140,8 +140,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
     const Acts::SeedFinderOptions& options,
     Acts::CylindricalSpacePointGrid<external_spacepoint_t>& grid,
     external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd,
-    Acts::Extent& rRangeSPExtent) {
+    external_spacepoint_iterator_t spEnd, Acts::Extent& rRangeSPExtent) {
   using iterated_value_t =
       typename std::iterator_traits<external_spacepoint_iterator_t>::value_type;
   using iterated_t = typename std::remove_const<
@@ -179,7 +178,6 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   std::size_t counter = 0ul;
   for (external_spacepoint_iterator_t it = spBegin; it != spEnd;
        it++, ++counter) {
-
     const external_spacepoint_t& sp = *it;
     float spX = sp.x();
     float spY = sp.y();
@@ -214,7 +212,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
 
     // fill rbins into grid
     std::size_t globIndex =
-      grid.globalBinFromPosition(Acts::Vector2{sp.phi(), sp.z()});
+        grid.globalBinFromPosition(Acts::Vector2{sp.phi(), sp.z()});
     auto& rbin = grid.at(globIndex);
     rbin.push_back(&sp);
 
@@ -230,8 +228,7 @@ void Acts::CylindricalSpacePointGridCreator::fillGrid(
   for (std::size_t binIndex : rBinsIndex) {
     auto& rbin = grid.atPosition(binIndex);
     std::sort(rbin.begin(), rbin.end(),
-	      [] (const external_spacepoint_t* a, const external_spacepoint_t* b) -> bool {
-		return a->radius() < b->radius();
-	      });
+              [](const external_spacepoint_t* a, const external_spacepoint_t* b)
+                  -> bool { return a->radius() < b->radius(); });
   }
 }

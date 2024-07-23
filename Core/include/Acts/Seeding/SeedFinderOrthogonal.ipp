@@ -254,8 +254,8 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 
 template <typename external_spacepoint_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
-    const SeedFinderOptions &options, 
-    Acts::SpacePointMutableData& mutableData, const external_spacepoint_t &middle,
+    const SeedFinderOptions &options, Acts::SpacePointMutableData &mutableData,
+    const external_spacepoint_t &middle,
     const std::vector<const external_spacepoint_t *> &bottom,
     const std::vector<const external_spacepoint_t *> &top,
     SeedFilterState seedFilterState,
@@ -473,9 +473,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     seedFilterState.zOrigin = zM - rM * lb.cotTheta;
 
-    m_config.seedFilter->filterSeeds_2SpFixed(mutableData,
-        *bottom[b], middle, top_valid, curvatures, impactParameters,
-        seedFilterState, candidates_collector);
+    m_config.seedFilter->filterSeeds_2SpFixed(
+        mutableData, *bottom[b], middle, top_valid, curvatures,
+        impactParameters, seedFilterState, candidates_collector);
 
   }  // loop on bottoms
 }
@@ -483,9 +483,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const SeedFinderOptions &options, 
-    Acts::SpacePointMutableData& mutableData, const tree_t &tree,
-    output_container_t &out_cont,
+    const SeedFinderOptions &options, Acts::SpacePointMutableData &mutableData,
+    const tree_t &tree, output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   const external_spacepoint_t &middle = *middle_p.second;
@@ -664,23 +663,23 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(options, mutableData, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     candidates_collector);
+    filterCandidates(options, mutableData, middle, bottom_lh_v, top_lh_v,
+                     seedFilterState, candidates_collector);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(options, mutableData, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     candidates_collector);
+    filterCandidates(options, mutableData, middle, bottom_hl_v, top_hl_v,
+                     seedFilterState, candidates_collector);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) ||
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    m_config.seedFilter->filterSeeds_1SpFixed(mutableData,
-        candidates_collector, out_cont);
+    m_config.seedFilter->filterSeeds_1SpFixed(mutableData, candidates_collector,
+                                              out_cont);
   }
 }
 
