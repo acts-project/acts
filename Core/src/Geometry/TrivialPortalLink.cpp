@@ -9,6 +9,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 
 #include <memory>
 
