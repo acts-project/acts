@@ -9,17 +9,20 @@
 #pragma once
 
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Grid.hpp"
+
+#include <vector>
 
 namespace Acts {
 
 class IGrid;
 
 template <typename... Axes>
-class GridPortalLinkT;
+requires(sizeof...(Axes) <= 2) class GridPortalLinkT;
 
 class GridPortalLink : public PortalLinkBase {
  protected:
@@ -83,6 +86,9 @@ class GridPortalLink : public PortalLinkBase {
       const RegularSurface& surfaceB, BinningValue direction,
       const Logger& logger = getDummyLogger()) const override;
 
+  static void fillMergedGrid(const GridPortalLink& a, const GridPortalLink& b,
+                             GridPortalLink& merged, BinningValue direction);
+
  protected:
   void checkConsistency(const CylinderSurface& cyl) const;
   void checkConsistency(const DiscSurface& disc) const;
@@ -93,18 +99,27 @@ class GridPortalLink : public PortalLinkBase {
   std::unique_ptr<GridPortalLink> extendTo2D(
       const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
 
+  // These should only be used to synchronize the bins between grids
+  virtual std::vector<std::size_t> numLocalBins() const = 0;
+  virtual const TrackingVolume*& atLocalBins(
+      const std::vector<std::size_t>) = 0;
+
+  virtual const TrackingVolume* atLocalBins(
+      const std::vector<std::size_t>) const = 0;
+
  private:
   BinningValue m_direction;
 };
 
+class GridPortalLink1 : public GridPortalLink {};
+class GridPortalLink2 : public GridPortalLink {};
+
 template <typename... Axes>
-class GridPortalLinkT final : public GridPortalLink {
+requires(sizeof...(Axes) <= 2) class GridPortalLinkT final
+    : public GridPortalLink {
  public:
   using GridType = Grid<const TrackingVolume*, Axes...>;
   static constexpr std::size_t DIM = sizeof...(Axes);
-
-  static_assert(DIM == 1 || DIM == 2,
-                "GridPortalLinks only support 1D or 2D grids");
 
   GridPortalLinkT(std::shared_ptr<RegularSurface> surface,
                   BinningValue direction, Axes&&... axes)
@@ -166,6 +181,36 @@ class GridPortalLinkT final : public GridPortalLink {
     for (std::size_t i = 0; i < m_grid.size(); i++) {
       func(m_grid.at(i));
     }
+  }
+
+ protected:
+  std::vector<std::size_t> numLocalBins() const final {
+    typename GridType::index_t idx = m_grid.numLocalBins();
+    std::vector<std::size_t> result;
+    for (std::size_t i = 0; i < DIM; i++) {
+      result.push_back(idx[i]);
+    }
+    return result;
+  }
+
+  const TrackingVolume*& atLocalBins(
+      const std::vector<std::size_t> indices) final {
+    throw_assert(indices.size() == DIM, "Invalid number of indices");
+    typename GridType::index_t idx;
+    for (std::size_t i = 0; i < DIM; i++) {
+      idx[i] = indices[i];
+    }
+    return m_grid.atLocalBins(idx);
+  }
+
+  const TrackingVolume* atLocalBins(
+      const std::vector<std::size_t> indices) const final {
+    throw_assert(indices.size() == DIM, "Invalid number of indices");
+    typename GridType::index_t idx;
+    for (std::size_t i = 0; i < DIM; i++) {
+      idx[i] = indices[i];
+    }
+    return m_grid.atLocalBins(idx);
   }
 
  private:
