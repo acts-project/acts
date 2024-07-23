@@ -708,6 +708,17 @@ class TrackProxy {
                                  other.m_index);
   }
 
+  /// Creates  a *shallow copy* of the track. Track states are not copied, but
+  /// the resulting track points at the same track states as the original.
+  /// @note Only available if the track proxy is not read-only
+  TrackProxy shallowCopy() requires(!ReadOnly) {
+    auto ts = container().makeTrack();
+    ts.copyFrom(*this, false);
+    ts.tipIndex() = tipIndex();
+    ts.stemIndex() = stemIndex();
+    return ts;
+  }
+
   /// Reverse the ordering of track states for this track
   /// Afterwards, the previous endpoint of the track state sequence will be the
   /// "innermost" track state
