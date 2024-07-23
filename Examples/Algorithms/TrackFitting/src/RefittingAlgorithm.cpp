@@ -91,6 +91,8 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
       trackSourceLinks.push_back(Acts::SourceLink{sl});
     }
 
+    std::reverse(surfSequence.begin(), surfSequence.end());
+
     if (surfSequence.empty()) {
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
