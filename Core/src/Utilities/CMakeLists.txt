@@ -6,4 +6,6 @@ target_sources(
     Logger.cpp
     SpacePointUtility.cpp
     TrackHelpers.cpp
+    BinningType.cpp
+    Intersection.cpp
 )

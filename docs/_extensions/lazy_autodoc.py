@@ -61,7 +61,6 @@ def run() -> None:
         "Acts::RotationMatrix3",
         "Acts::Translation2",
         "Acts::Translation3",
-        "Acts::GeometryContext",
         "Acts::FreeVector",
         "Acts::FreeMatrix",
         "Acts::SurfaceVector",
@@ -74,7 +73,6 @@ def run() -> None:
     }
 
     role_instances["struct"] |= {
-        "Acts::DenseStepperPropagatorOptions",
         "Acts::Geant4PhysicalVolumeSelectors::AllSelector",
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
@@ -82,13 +80,16 @@ def run() -> None:
     }
 
     role_instances["class"] |= {
+        "Acts::GeometryContext",
+        "Acts::MagneticFieldContext",
+        "Acts::CalibrationContext",
         "Acts::BinningData",
         "Acts::Direction",
         "Acts::ConstrainedStep",
         "Acts::Axis",
         "Acts::IAxis",
         "Acts::SeedFilter",
-        "Acts::BoundaryCheck",
+        "Acts::BoundaryTolerance",
         "Acts::ConeVolumeBounds",
         "Acts::CuboidVolumeBounds",
         "Acts::CylinderVolumeBounds",
@@ -116,7 +117,6 @@ def run() -> None:
         "Acts::Logging::TimedOutputDecorator",
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
-        "Acts::Measurement",
         "Acts::SourceLink",
     }
 

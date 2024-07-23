@@ -86,7 +86,7 @@ class ConcretePropagator : public PropagatorInterface {
       using ActionList = Acts::ActionList<SteppingLogger, MaterialInteractor>;
       using AbortList = Acts::AbortList<EndOfWorld>;
       using PropagatorOptions =
-          Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
+          typename propagator_t::template Options<ActionList, AbortList>;
 
       PropagatorOptions options(context.geoContext, context.magFieldContext);
       options.pathLimit = pathLength;
@@ -96,16 +96,16 @@ class ConcretePropagator : public PropagatorInterface {
           startParameters.transverseMomentum() < cfg.ptLoopers;
 
       // Switch the material interaction on/off & eventually into logging mode
-      auto& mInteractor = options.actionList.get<MaterialInteractor>();
+      auto& mInteractor = options.actionList.template get<MaterialInteractor>();
       mInteractor.multipleScattering = cfg.multipleScattering;
       mInteractor.energyLoss = cfg.energyLoss;
       mInteractor.recordInteractions = cfg.recordMaterialInteractions;
 
       // Switch the logger to sterile, e.g. for timing checks
-      auto& sLogger = options.actionList.get<SteppingLogger>();
+      auto& sLogger = options.actionList.template get<SteppingLogger>();
       sLogger.sterile = cfg.sterileLogger;
       // Set a maximum step size
-      options.maxStepSize = cfg.maxStepSize;
+      options.stepping.maxStepSize = cfg.maxStepSize;
 
       // Propagate using the propagator
       auto result = m_propagator.propagate(startParameters, options);

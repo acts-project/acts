@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -35,7 +36,7 @@ class InfiniteBounds : public SurfaceBounds {
   ///
   /// @return always true
   bool inside(const Vector2& /*lposition*/,
-              const BoundaryCheck& /*bcheck*/) const final {
+              const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;
   }
 

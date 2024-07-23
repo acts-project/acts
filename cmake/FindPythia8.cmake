@@ -14,8 +14,13 @@ find_path(Pythia8_INCLUDE_DIR
   PATHS /opt/pythia8 /usr/local
   DOC "The Pythia8 include directory")
 
+file(READ "${Pythia8_INCLUDE_DIR}/Pythia8/Pythia.h" Pythia8_VERSION_FILE)
+string(REGEX MATCH "#define PYTHIA_VERSION (8\.[0-9]+)" _ ${Pythia8_VERSION_FILE})
+set(Pythia8_VERSION ${CMAKE_MATCH_1})
+
 find_package_handle_standard_args(Pythia8
-  REQUIRED_VARS Pythia8_LIBRARY Pythia8_INCLUDE_DIR)
+  REQUIRED_VARS Pythia8_LIBRARY Pythia8_INCLUDE_DIR
+  VERSION_VAR Pythia8_VERSION)
 
 add_library(Pythia8 SHARED IMPORTED)
 set_property(TARGET Pythia8 PROPERTY IMPORTED_LOCATION ${Pythia8_LIBRARY})

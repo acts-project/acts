@@ -208,7 +208,7 @@ auto Acts::IterativeVertexFinder::getVertexSeed(
   }
   const Vertex& seedVertex = seedVector.back();
 
-  ACTS_DEBUG("Use " << seedTracks.size() << " tracks for vertex seed finding.")
+  ACTS_DEBUG("Use " << seedTracks.size() << " tracks for vertex seed finding.");
   ACTS_DEBUG(
       "Found seed at position: " << seedVertex.fullPosition().transpose());
 
@@ -230,7 +230,7 @@ inline void Acts::IterativeVertexFinder::removeTracks(
       // Remove track from seed tracks
       seedTracks.erase(foundIter);
     } else {
-      ACTS_WARNING("Track to be removed not found in seed tracks.")
+      ACTS_WARNING("Track to be removed not found in seed tracks.");
     }
   }
 }

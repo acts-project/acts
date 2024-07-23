@@ -363,7 +363,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (m_config.seedConfirmation && seedFilterState.numQualitySeeds) {
+    if (m_config.seedConfirmation &&
+        candidates_collector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
 
@@ -676,9 +677,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) ||
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    m_config.seedFilter->filterSeeds_1SpFixed(
-        spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
-        std::back_inserter(out_cont));
+    m_config.seedFilter->filterSeeds_1SpFixed(spacePointData,
+                                              candidates_collector, out_cont);
   }
 }
 
@@ -750,9 +750,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   }
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
-      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+      std::floor(rRangeSPExtent.min(Acts::BinningValue::binR) / 2) * 2 +
           m_config.deltaRMiddleMinSPRange,
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+      std::floor(rRangeSPExtent.max(Acts::BinningValue::binR) / 2) * 2 -
           m_config.deltaRMiddleMaxSPRange);
 
   /*

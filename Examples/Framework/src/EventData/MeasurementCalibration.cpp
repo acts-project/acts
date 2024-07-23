@@ -31,7 +31,17 @@ void ActsExamples::PassThroughCalibrator::calibrate(
          "Source link index is outside the container bounds");
 
   std::visit(
-      [&trackState](const auto& meas) { trackState.setCalibrated(meas); },
+      [&trackState](const auto& meas) {
+        using MeasurementType = std::decay_t<decltype(meas)>;
+        constexpr std::size_t size = MeasurementType::size();
+
+        trackState.allocateCalibrated(meas.size());
+        assert(trackState.hasCalibrated());
+
+        trackState.calibrated<size>() = meas.parameters();
+        trackState.calibratedCovariance<size>() = meas.covariance();
+        trackState.setProjector(meas.projector());
+      },
       measurements[idxSourceLink.index()]);
 }
 
