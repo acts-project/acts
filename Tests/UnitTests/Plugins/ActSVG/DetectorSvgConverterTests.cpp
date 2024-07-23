@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {binR};
+  barrelRCfg.binning = {BinningValue::binR};
 
   auto barrel = std::make_shared<CylindricalContainerBuilder>(
       barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelEndcapCfg;
   barrelEndcapCfg.builders = {endcapN, barrel, endcapP};
-  barrelEndcapCfg.binning = {binZ};
+  barrelEndcapCfg.binning = {BinningValue::binZ};
 
   auto barrelEndcap = std::make_shared<CylindricalContainerBuilder>(
       barrelEndcapCfg,
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config detectorCfg;
   detectorCfg.builders = {beampipe, barrelEndcap};
-  detectorCfg.binning = {binR};
+  detectorCfg.binning = {BinningValue::binR};
 
   auto containerBuilder = std::make_shared<CylindricalContainerBuilder>(
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));

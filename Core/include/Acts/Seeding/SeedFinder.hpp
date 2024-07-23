@@ -92,46 +92,21 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param state State object that holds memory used
   /// @param grid The grid with space points
-  /// @param outIt Output iterator for the seeds in the group
+  /// @param outputCollection Output container for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
-  template <template <typename...> typename container_t, typename sp_range_t>
-  void createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, SeedingState& state,
-      const grid_t& grid,
-      std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
-
-  /// @brief Compatibility method for the new-style seed finding API.
-  ///
-  /// This method models the old-style seeding API where we only need a
-  /// container for the bottom, middle, and top space points. Also, the results
-  /// are returned by value instead of inserted into an inserter.
-  ///
-  /// @note This method is a very simply wrapper around the more modern API.
-  /// @warning The performance of the seeding code is far greater if the new
-  /// API is used, and this is recommended for all new uses which do not
-  /// require backwards-compatibility.
-  ///
-  /// @tparam sp_range_t container type for the seed point collections.
-  /// @param options frequently changing configuration (like beam position)
-  /// @param grid The grid with space points
-  /// @param bottomSPs group of space points to be used as innermost SP in a
-  /// seed.
-  /// @param middleSPs group of space points to be used as middle SP in a seed.
-  /// @param topSPs group of space points to be used as outermost SP in a seed.
-  /// @returns a vector of seeds.
-  template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, const grid_t& grid,
-      const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs) const;
+  template <typename container_t, typename sp_range_t>
+  void createSeedsForGroup(const Acts::SeedFinderOptions& options,
+                           SeedingState& state, const grid_t& grid,
+                           container_t& outputCollection,
+                           const sp_range_t& bottomSPs,
+                           const std::size_t middleSPs,
+                           const sp_range_t& topSPs,
+                           const Acts::Range1D<float>& rMiddleSPRange) const;
 
  private:
   /// Iterates over dublets and tests the compatibility between them by applying

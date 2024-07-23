@@ -25,6 +25,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -195,6 +196,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
 BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                      q, vx0, vy0, vz0, vt0) {
   using Propagator = Acts::Propagator<Stepper>;
+  using PropagatorOptions = Propagator::Options<>;
   using StraightPropagator = Acts::Propagator<StraightLineStepper>;
 
   // Set up quantities for constant B field
@@ -256,10 +258,11 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   // Set up the propagator options (they are the same with and without B field)
   PropagatorOptions pOptions(geoContext, magFieldContext);
-  auto intersection = refPerigeeSurface
-                          ->intersect(geoContext, params.position(geoContext),
-                                      params.direction(), BoundaryCheck(false))
-                          .closest();
+  auto intersection =
+      refPerigeeSurface
+          ->intersect(geoContext, params.position(geoContext),
+                      params.direction(), BoundaryTolerance::Infinite())
+          .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());
 

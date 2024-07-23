@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <GeoModelRead/ReadGeoModel.h>
 
 class GeoVPhysVol;

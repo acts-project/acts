@@ -74,6 +74,7 @@ struct BenchmarkStepper {
   template <typename Stepper>
   void run(Stepper stepper, const std::string& name) const {
     using Propagator = Propagator<Stepper>;
+    using PropagatorOptions = typename Propagator::template Options<>;
     using Covariance = BoundSquareMatrix;
 
     // Create a test context
@@ -88,7 +89,7 @@ struct BenchmarkStepper {
 
     Propagator propagator(std::move(stepper));
 
-    PropagatorOptions<> options(tgContext, mfContext);
+    PropagatorOptions options(tgContext, mfContext);
     options.pathLimit = maxPathInM * UnitConstants::m;
 
     Vector4 pos4(0, 0, 0, 0);

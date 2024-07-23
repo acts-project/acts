@@ -30,6 +30,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <ostream>
 #include <set>
 #include <stdexcept>
@@ -197,7 +198,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             DigitizedParameters dParameters;
 
             if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
-              ACTS_VERBOSE("Skip hit because energy deposit to small")
+              ACTS_VERBOSE("Skip hit because energy deposit to small");
               continue;
             }
 
@@ -213,7 +214,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
                   cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_DEBUG(
-                    "Geometric channelization did not work, skipping this hit.")
+                    "Geometric channelization did not work, skipping this "
+                    "hit.");
                 continue;
               }
               ACTS_VERBOSE("Activated " << channelsRes->size()
@@ -246,7 +248,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // Check on success - threshold could have eliminated all channels
             if (dParameters.values.empty()) {
               ACTS_VERBOSE(
-                  "Parameter digitization did not yield a measurement.")
+                  "Parameter digitization did not yield a measurement.");
               continue;
             }
 
@@ -308,9 +310,9 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
   Acts::ActsScalar totalWeight = 0.;
   Acts::Vector2 m(0., 0.);
-  std::size_t b0min = SIZE_MAX;
+  std::size_t b0min = std::numeric_limits<std::size_t>::max();
   std::size_t b0max = 0;
-  std::size_t b1min = SIZE_MAX;
+  std::size_t b1min = std::numeric_limits<std::size_t>::max();
   std::size_t b1max = 0;
   // Combine the channels
   for (const auto& ch : channels) {

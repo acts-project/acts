@@ -113,7 +113,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
           "Surface material is not found, inconsistent configuration.");
     }
     // Accumulate the material - remember the touched bin
-    auto tBin = accMaterial->second.accumulate(mi.position, mi.materialSlab,
+    auto tBin = accMaterial->second.accumulate(mi.intersection, mi.materialSlab,
                                                mi.pathCorrection);
     touchedMapBins.insert(MapBin(&(accMaterial->second), tBin));
   }
@@ -126,7 +126,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 
   // Empty bin correction
   if (m_cfg.emptyBinCorrection) {
-    for (auto [surface, position, direction] : surfacesWithoutAssignment) {
+    for (const auto& [surface, position, direction] :
+         surfacesWithoutAssignment) {
       // Get the accumulated material
       auto missedMaterial =
           cState->accumulatedMaterial.find(surface->geometryId());
