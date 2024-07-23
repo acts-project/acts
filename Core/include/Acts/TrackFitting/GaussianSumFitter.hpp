@@ -102,11 +102,6 @@ struct GaussianSumFitter {
     static_assert(
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
 
-    ACTS_VERBOSE("Surface sequence for navigation:");
-    for(auto surface : sSequence) {
-      ACTS_VERBOSE(surface->geometryId() << " - " << surface->center(options.geoContext).transpose());
-    }
-
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
