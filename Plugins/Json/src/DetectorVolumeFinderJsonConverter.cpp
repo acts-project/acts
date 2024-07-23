@@ -39,10 +39,11 @@ struct IndexedVolumesGenerator {
       grid_type&& grid,
       const std::array<Acts::BinningValue, grid_type::DIM>& bv,
       const Acts::Transform3& transform) {
-    using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedUpdaterImpl<
-        Acts::Experimental::IExternalNavigation, grid_type,
-        Acts::Experimental::IndexedDetectorVolumeExtractor,
-        Acts::Experimental::DetectorVolumeFiller>;
+    using IndexedDetectorVolumesImpl =
+        Acts::Experimental::IndexedGridNavigation<
+            Acts::Experimental::IExternalNavigation, grid_type,
+            Acts::Experimental::IndexedDetectorVolumeExtractor,
+            Acts::Experimental::DetectorVolumeFiller>;
 
     auto indexedDetectorVolumeImpl =
         std::make_unique<const IndexedDetectorVolumesImpl>(std::move(grid), bv,

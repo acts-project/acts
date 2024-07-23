@@ -45,6 +45,7 @@ option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
+option(ACTS_EXATRKX_ENABLE_CUDA "Enable CUDA for the exatrkx plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
@@ -83,6 +84,12 @@ option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OF
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+if(ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES)
+  set(_default_examples_unit_tests ON)
+else()
+  set(_default_examples_unit_tests OFF)
+endif()
+option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
 option(ACTS_BUILD_NONCOMPILE_TESTS "Build tests that check build failure invariants" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
@@ -128,7 +135,6 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
-  OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 
@@ -167,7 +173,7 @@ function(check_root_compatibility)
   get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
   set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
   #yolo
-  #check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  #check_cxx_source_compiles(" #include <string>\n #include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
   #if(NOT ROOT_COMPATIBILITY_CHECK)
   #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
   #endif()
@@ -199,13 +205,15 @@ set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
 set(_acts_geomodel_version 4.6.0)
 set(_acts_eigen3_version 3.3.7)
-set(_acts_podio_version 0.16)
+set(_acts_podio_version 1.0.1) # will try this first
+set(_acts_podio_fallback_version 0.16) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.1)
 set(_acts_nlohmanjson_version 3.2.0)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+set(_acts_pythia8_version 8.309)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -214,15 +222,21 @@ set(_acts_boost_recommended_version 1.78.0)
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
+# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+    if(POLICY CMP0167)
+      cmake_policy(SET CMP0167 NEW)
+    endif()
 
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
-    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
-        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+    if( ACTS_BUILD_ANALYSIS_APPS OR ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
     else()
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
@@ -350,7 +364,8 @@ if(ACTS_BUILD_PLUGIN_JSON)
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
   if(ACTS_USE_SYSTEM_GEOMODEL)
-    find_package(GeoModel ${_acts_geomodel_version} REQUIRED CONFIG)
+    find_package(GeoModelCore ${_acts_geomodel_version} REQUIRED CONFIG)
+    find_package(GeoModelIO ${_acts_geomodel_version} REQUIRED CONFIG)
   else()
     add_subdirectory(thirdparty/GeoModel)
   endif()
@@ -365,12 +380,13 @@ if(ACTS_BUILD_ANALYSIS_APPS)
 endif()
 if(ACTS_BUILD_PLUGIN_EXATRKX)
   find_package(Torch REQUIRED)
-  find_package(CUDAToolkit)
-  if(CUDAToolkit_FOUND)
+  if(ACTS_EXATRKX_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
     enable_cuda()
     add_subdirectory(thirdparty/FRNN)
+    message(STATUS "Build Exa.TrkX plugin with CUDA")
   else()
-    message(WARNING "CUDA not found, build Exa.TrkX plugin only for CPU")
+    message(STATUS "Build Exa.TrkX plugin for CPU only")
   endif()
   if(NOT (ACTS_EXATRKX_ENABLE_ONNX OR ACTS_EXATRKX_ENABLE_TORCH))
     message(FATAL_ERROR
@@ -389,7 +405,11 @@ if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
   find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
-  find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
+  find_package(podio ${_acts_podio_version} CONFIG)
+  if(NOT podio_FOUND)
+    message(STATUS "Podio not found, trying ${_acts_podio_fallback_version} version")
+    find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
+  endif()
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
@@ -424,15 +444,7 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-  find_package(Pythia8 REQUIRED)
-
-  if(DEFINED CMAKE_CXX_STANDARD)
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-      message(WARNING "ACTS is configured to build with C++20."
-        "As of version 309, Pythia8 does not compile under C++20."
-        "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
-    endif()
-  endif()
+  find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

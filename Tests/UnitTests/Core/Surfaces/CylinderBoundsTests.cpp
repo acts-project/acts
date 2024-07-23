@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -22,9 +21,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant CylinderBounds object
 
@@ -115,27 +113,19 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   const Vector2 unitPhi{1.0, 0.0};
   const Vector2 withinBevelMin{0.5, -20.012};
   const Vector2 outsideBevelMin{0.5, -40.};
-  const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
-  const BoundaryCheck trueBoundaryCheckWithLessTolerance(true, true, 0.01,
-                                                         0.01);
-  BOOST_CHECK(
-      cylinderBoundsObject.inside(atPiBy2, trueBoundaryCheckWithTolerance));
-  BOOST_CHECK(
-      !cylinderBoundsSegment.inside(unitPhi, trueBoundaryCheckWithTolerance));
-  BOOST_CHECK(
-      cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance));
+  const BoundaryTolerance tolerance =
+      BoundaryTolerance::AbsoluteBound(0.1, 0.1);
+  const BoundaryTolerance lessTolerance =
+      BoundaryTolerance::AbsoluteBound(0.01, 0.01);
+  BOOST_CHECK(cylinderBoundsObject.inside(atPiBy2, tolerance));
+  BOOST_CHECK(!cylinderBoundsSegment.inside(unitPhi, tolerance));
+  BOOST_CHECK(cylinderBoundsObject.inside(origin, tolerance));
 
-  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin,
-                                           trueBoundaryCheckWithLessTolerance));
-  BOOST_CHECK(cylinderBoundsBeveledObject.inside(
-      withinBevelMin, trueBoundaryCheckWithLessTolerance));
-  BOOST_CHECK(!cylinderBoundsBeveledObject.inside(
-      outsideBevelMin, trueBoundaryCheckWithLessTolerance));
-
-  /// test for inside3D() with Vector3 argument
-  const Vector3 origin3D{0., 0., 0.};
+  BOOST_CHECK(!cylinderBoundsObject.inside(withinBevelMin, lessTolerance));
   BOOST_CHECK(
-      !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
+      cylinderBoundsBeveledObject.inside(withinBevelMin, lessTolerance));
+  BOOST_CHECK(
+      !cylinderBoundsBeveledObject.inside(outsideBevelMin, lessTolerance));
 
   /// test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,
@@ -182,6 +172,4 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

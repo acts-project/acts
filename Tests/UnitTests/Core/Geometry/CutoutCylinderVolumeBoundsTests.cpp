@@ -25,8 +25,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -195,7 +194,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : ccvbOrientedSurfaces) {
-    auto onSurface = os.surface->binningPosition(geoCtx, binR);
+    auto onSurface = os.surface->binningPosition(geoCtx, BinningValue::binR);
     auto locPos =
         os.surface->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
     auto osNormal = os.surface->normal(geoCtx, locPos);
@@ -215,5 +214,5 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

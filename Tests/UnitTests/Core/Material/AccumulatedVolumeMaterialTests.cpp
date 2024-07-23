@@ -15,8 +15,7 @@
 
 #include <cmath>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(accumulated_material)
 
@@ -106,5 +105,4 @@ BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

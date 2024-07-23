@@ -137,4 +137,4 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_containervolume_test) {
   }
 }
 
-}  //  namespace Acts::Test
+}  // namespace Acts::Test

@@ -19,11 +19,9 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+using namespace Acts::UnitLiterals;
 
-using namespace UnitLiterals;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(VolumeBounds)
 
@@ -102,6 +100,4 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

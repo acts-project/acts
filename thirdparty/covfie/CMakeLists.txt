@@ -7,7 +7,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # CMake include(s).
-cmake_minimum_required(VERSION 3.14)
 include(FetchContent)
 
 # Tell the user what's happening.

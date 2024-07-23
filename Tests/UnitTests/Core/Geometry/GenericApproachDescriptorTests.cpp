@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -15,7 +14,7 @@
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -62,7 +61,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
       0.,
   };
   Vector3 zDir{0., 0., 1.};
-  BoundaryCheck bcheck{true};
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
   double nearLimit = -100 * UnitConstants::um;
   double farLimit = std::numeric_limits<double>::max();
   //
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
   // approachSurface
   SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
-      tgContext, origin, zDir, bcheck, nearLimit, farLimit);
+      tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit);
   double expectedIntersection = 20.0;  // property of SurfaceStub
   CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
 BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   Vector3 origin{0., -0.5, 1.};
   Vector3 direction{0., 1., 0.};
-  BoundaryCheck bcheck{true};
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
   double nearLimit = -100 * UnitConstants::um;
   double farLimit = std::numeric_limits<double>::max();
 
@@ -104,8 +103,9 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
 
   GenericApproachDescriptor gad(approachSurface);
 
-  auto sfIntersection = gad.approachSurface(
-      GeometryContext(), origin, direction, bcheck, nearLimit, farLimit);
+  auto sfIntersection =
+      gad.approachSurface(GeometryContext(), origin, direction,
+                          boundaryTolerance, nearLimit, farLimit);
 
   // No overstepping allowed, the preferred solution should be the forward one
   CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);

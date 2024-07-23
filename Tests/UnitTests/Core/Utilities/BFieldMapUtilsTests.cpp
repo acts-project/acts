@@ -26,11 +26,9 @@ namespace bdata = boost::unit_test::data;
 
 using Acts::VectorHelpers::perp;
 
-namespace Acts {
+using namespace Acts::detail;
 
-using namespace detail;
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(bfield_creation) {
   // create grid values
@@ -368,5 +366,5 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(value0_xyz, value3_xyz, 1e-10);
   CHECK_CLOSE_REL(value0_xyz, value4_xyz, 1e-10);
 }
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

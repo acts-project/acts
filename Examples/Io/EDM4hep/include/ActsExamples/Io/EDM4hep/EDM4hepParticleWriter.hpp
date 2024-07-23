@@ -8,13 +8,12 @@
 
 #pragma once
 
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
 #include <string>
-
-#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -58,7 +57,7 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
 
   std::mutex m_writeMutex;
 
-  podio::ROOTFrameWriter m_writer;
+  Acts::PodioUtil::ROOTWriter m_writer;
 };
 
 }  // namespace ActsExamples

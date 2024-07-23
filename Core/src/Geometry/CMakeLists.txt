@@ -34,4 +34,5 @@ target_sources(
     TrapezoidVolumeBounds.cpp
     Volume.cpp
     VolumeBounds.cpp
+    CylinderVolumeStack.cpp
 )
