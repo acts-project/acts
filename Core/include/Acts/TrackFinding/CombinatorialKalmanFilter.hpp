@@ -949,6 +949,8 @@ class CombinatorialKalmanFilter {
       unsigned int nBranchesOnSurface = 0;
       bool isOutlier = false;
 
+      // We keep the root branch at the end of the list so it can be easily
+      // removed at the end
       auto rootBranch = result.activeBranches.back();
       result.activeBranches.pop_back();
 
@@ -957,9 +959,12 @@ class CombinatorialKalmanFilter {
         auto trackState = result.trackStates->getTrackState(tipIndex);
 
         // Create a new branch, copy the current branch to the new branch,
-        // and swap the current branch with the new branch
+        // swap the root branch with the new branch so it stays at the end of
+        // the list
         auto newBranch = result.tracks->makeTrack();
         newBranch.copyFrom(rootBranch, false);
+        // `tipIndex` is not copied so we do it manually
+        newBranch.tipIndex() = rootBranch.tipIndex();
         std::swap(rootBranch, newBranch);
         newBranch.tipIndex() = trackState.index();
         result.activeBranches.push_back(newBranch);
