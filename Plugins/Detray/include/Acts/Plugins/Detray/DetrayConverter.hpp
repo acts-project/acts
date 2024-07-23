@@ -24,6 +24,7 @@
 #include "detray/core/detector.hpp"
 #include "detray/definitions/geometry.hpp"
 #include "detray/io/common/geometry_reader.hpp"
+#include "detray/io/common/surface_grid_reader.hpp"
 #include "detray/io/frontend/detector_writer.hpp"
 #include "detray/io/frontend/payloads.hpp"
 #include "detray/utils/consistency_checker.hpp"
@@ -92,9 +93,8 @@ std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>> unrollC
     const Acts::Experimental::InternalNavigationDelegate& delegate,
     Acts::TypeList<Args...>);
 
-static detray::io::detector_grids_payload<std::size_t, detray::io::accel_id> convertSurfaceGrids(
+detray::io::detector_grids_payload<std::size_t, detray::io::accel_id> convertSurfaceGrids(
     const Acts::Experimental::Detector& detector);
-
 
 
 /// Conversion method for surface objects to detray::surface payloads
@@ -152,7 +152,8 @@ detray::io::geo_header_payload convertHead(
 ///
 /// @returns a detector of requested return type
 template <typename detector_t = DetrayDetector>
-std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
+//std::tuple<detector_t, vecmem::memory_resource&> 
+bool convertDetector(
     const Acts::GeometryContext& gctx,
     const Acts::Experimental::Detector& detector, vecmem::memory_resource& mr) {
   detray::io::detector_payload detectorPayload;
@@ -166,13 +167,29 @@ std::tuple<detector_t, vecmem::memory_resource&> convertDetector(
   detray::detector_builder<detray::default_metadata> detectorBuilder{};
   detray::io::geometry_reader::convert<detector_t>(detectorBuilder, names,
                                                    detectorPayload);
+
+  detray::io::surface_grid_reader<
+                                    typename detector_t::surface_type,
+                                    std::integral_constant<std::size_t, 0>,
+                                    std::integral_constant<std::size_t, 2>>
+                                    ::template convert<detector_t>(detectorBuilder, names, DetrayConverter::convertSurfaceGrids(detector));
+
+  /*using SurfaceGridReader = detray::io::surface_grid_reader<
+    typename detector_t::surface_type,
+    std::integral_constant<std::size_t, 0>,
+    std::integral_constant<std::size_t, 2>>;
+
+  SurfaceGridReader::template convert<detector_t>(detectorBuilder, names, DetrayConverter::convertSurfaceGrids(detector));
+  */
+
   detector_t detrayDetector(detectorBuilder.build(mr));
 
   // checks and print
   detray::detail::check_consistency(detrayDetector);
   writeToJson(detrayDetector, names);
 
-  return {std::move(detrayDetector), mr};
+  //return {std::move(detrayDetector), mr};
+  return true;
 }
 
 }  // namespace DetrayConverter

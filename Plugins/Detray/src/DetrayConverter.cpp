@@ -379,7 +379,7 @@ detray::io::volume_payload Acts::DetrayConverter::convertVolume(
 //SURFACE GRIDS 
 
 //convertAxis
-detray::io::axis_payload convertAxis(
+detray::io::axis_payload  Acts::DetrayConverter::convertAxis(
     const Acts::IAxis& ia) {
     ///home/exochell/docker_dir/ACTS_ODD_D/acts/Plugins/Json/src/GridJsonConverter.cpp: nlohmann::json Acts::AxisJsonConverter::toJsonDetray
     io::axis_payload axis_pd;
@@ -398,15 +398,15 @@ detray::io::axis_payload convertAxis(
 
 //convertGrid
 template <typename grid_type>
-detray::io::grid_payload<std::size_t, detray::io::accel_id> convertGrid(
+detray::io::grid_payload<std::size_t, detray::io::accel_id>  Acts::DetrayConverter::convertGrid(
     const grid_type& grid, 
-    bool swapAxis = false) {
+    bool swapAxis) {
         // Get the grid axes & potentially swap them
         io::grid_payload<std::size_t, io::accel_id> grid_pd;
 
         auto axes = grid.axes();
         if (swapAxis && grid_type::DIM == 2u) {
-            std::cout<<"swap axes"<<std::endl;
+            //std::cout<<"swap axes"<<std::endl;
             std::swap(axes[0u], axes[1u]);
         }
         
@@ -462,7 +462,7 @@ detray::io::grid_payload<std::size_t, detray::io::accel_id> convertGrid(
 
 //convertImpl -> probs avoidable
 template <typename index_grid>
-detray::io::grid_payload<std::size_t, detray::io::accel_id> convertImpl(
+detray::io::grid_payload<std::size_t, detray::io::accel_id>  Acts::DetrayConverter::convertImpl(
     const index_grid& indexGrid) {
     
     bool swapAxes = true;
@@ -479,7 +479,7 @@ detray::io::grid_payload<std::size_t, detray::io::accel_id> convertImpl(
 
 //convert
 template <typename instance_type>
-std::optional<io::grid_payload<std::size_t, detray::io::accel_id>> convert(
+std::optional<io::grid_payload<std::size_t, detray::io::accel_id>>  Acts::DetrayConverter::convert(
     const Acts::Experimental::InternalNavigationDelegate& delegate,
     [[maybe_unused]] const instance_type& refInstance) {
       using GridType =
@@ -508,11 +508,11 @@ std::optional<io::grid_payload<std::size_t, detray::io::accel_id>> convert(
 }
 
 template <typename... Args>
-std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>> unrollConvert(
+std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>  Acts::DetrayConverter::unrollConvert(
     const Acts::Experimental::InternalNavigationDelegate& delegate,
                 Acts::TypeList<Args...> ) {
 
-    std::cout<<"call convert"<<std::endl;
+    //std::cout<<"call convert"<<std::endl;
     std::vector<io::grid_payload<std::size_t, io::accel_id>> grid_pds;
 
     ((void)(([&]() {
@@ -525,7 +525,7 @@ std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>> unrollC
     return grid_pds;
 }
 
-static detray::io::detector_grids_payload<std::size_t, detray::io::accel_id> convertSurfaceGrids(
+detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>  Acts::DetrayConverter::convertSurfaceGrids(
     const Acts::Experimental::Detector& detector){
 
     io::detector_grids_payload<std::size_t, io::accel_id> grids_pd = io::detector_grids_payload<std::size_t, io::accel_id>();
@@ -535,7 +535,7 @@ static detray::io::detector_grids_payload<std::size_t, detray::io::accel_id> con
 
         //Call an equivalent of IndexedSurfacesJsonConverter::toJson
             //check if it is null
-        std::cout<<"call unroll"<<std::endl;
+        //std::cout<<"call unroll"<<std::endl;
         std::vector<io::grid_payload<std::size_t, io::accel_id>> grid_pd = 
             unrollConvert(volume->internalNavigation(), Acts::GridAxisGenerators::PossibleAxes{});
         
@@ -547,9 +547,6 @@ static detray::io::detector_grids_payload<std::size_t, detray::io::accel_id> con
         }
         
     }
-    //detray_grids_print(grids_pd);
     return grids_pd;
 }
-
-
 
