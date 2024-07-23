@@ -289,6 +289,15 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     std::swap(a, b);
   }
 
+  auto fillGrid = [&](auto merged) {
+    if (auto* mergedGrid = dynamic_cast<GridPortalLink*>(merged.get());
+        mergedGrid != nullptr) {
+      ACTS_VERBOSE("Post processing merged grid: " << mergedGrid->grid());
+      GridPortalLink::fillMergedGrid(*a, *b, *mergedGrid, direction);
+    }
+    return merged;
+  };
+
   if (a->dim() == 1) {
     ACTS_VERBOSE("Merge two 1D GridPortalLinks on " << name << "s in "
                                                     << direction);
@@ -305,8 +314,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       if (a->direction() == loc0) {
         ACTS_VERBOSE("=> colinear merge");
 
-        return colinearMerge(mergedSurface, axisA, axisB, tolerance, loc0,
-                             logger, NoOtherAxis{});
+        return fillGrid(colinearMerge(mergedSurface, axisA, axisB, tolerance,
+                                      loc0, logger, NoOtherAxis{}));
 
       } else {
         ACTS_VERBOSE("=> parallel merge");
@@ -323,8 +332,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       if (a->direction() == loc1) {
         ACTS_VERBOSE("=> colinear merge");
 
-        return colinearMerge(mergedSurface, axisA, axisB, tolerance, loc1,
-                             logger, NoOtherAxis{});
+        return fillGrid(colinearMerge(mergedSurface, axisA, axisB, tolerance,
+                                      loc1, logger, NoOtherAxis{}));
 
       } else {
         ACTS_VERBOSE("=> parallel merge");
@@ -362,12 +371,12 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       }
       ACTS_VERBOSE("    ~> they are!");
 
-      return loc1AxisA.visit(
+      return fillGrid(loc1AxisA.visit(
           [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
             ACTS_VERBOSE("    ~> " << loc1 << " axis: " << axis);
             return colinearMerge(mergedSurface, loc0AxisA, loc0AxisB, tolerance,
                                  loc0, logger, AppendAxis{axis});
-          });
+          }));
 
     } else if (direction == loc1) {
       ACTS_VERBOSE("=> colinear merge along " << loc1);
@@ -382,12 +391,12 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       }
       ACTS_VERBOSE("    ~> they are!");
 
-      return loc0AxisA.visit(
+      return fillGrid(loc0AxisA.visit(
           [&, mergedSurface](auto axis) -> std::unique_ptr<GridPortalLink> {
             ACTS_VERBOSE("    ~> rPhi axis: " << axis);
             return colinearMerge(mergedSurface, loc1AxisA, loc1AxisB, tolerance,
                                  loc1, logger, PrependAxis{axis});
-          });
+          }));
 
     } else {
       ACTS_ERROR("Invalid binning direction: " << a->direction());
@@ -490,6 +499,52 @@ void fillGrid1dTo2d(const Grid<const TrackingVolume*, axis_1_t>& grid1d,
 }
 
 }  // namespace
+
+void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
+                                    const GridPortalLink& b,
+                                    GridPortalLink& merged,
+                                    BinningValue direction) {
+  assert(a.dim() == b.dim());
+  assert(a.direction() == b.direction());
+  const auto locBinsA = a.numLocalBins();
+  const auto locBinsB = b.numLocalBins();
+
+  if (a.dim() == 1) {
+    std::size_t nBinsA = locBinsA.at(0);
+    std::size_t nBinsB = locBinsB.at(0);
+
+    for (std::size_t i = 1; i <= nBinsA; ++i) {
+      merged.atLocalBins({i}) = a.atLocalBins({i});
+    }
+    for (std::size_t i = 1; i <= nBinsB; ++i) {
+      merged.atLocalBins({nBinsA + i}) = b.atLocalBins({i});
+    }
+  } else {
+    auto swizzle = [&](std::size_t i, std::size_t j) {
+      return a.direction() == direction ? std::pair{i, j} : std::pair{j, i};
+    };
+
+    auto [ai, aj] = swizzle(0, 1);
+
+    std::size_t nBinsA = locBinsA.at(ai);
+    std::size_t nBinsB = locBinsB.at(ai);
+    std::size_t nBinsC = locBinsB.at(aj);
+
+    for (std::size_t i = 1; i <= nBinsA; ++i) {
+      for (std::size_t j = 1; j <= nBinsC; ++j) {
+        auto [li, lj] = swizzle(i, j);
+        merged.atLocalBins({li, lj}) = a.atLocalBins({li, lj});
+      }
+    }
+    for (std::size_t i = 1; i <= nBinsB; ++i) {
+      for (std::size_t j = 1; j <= nBinsC; ++j) {
+        auto [li, lj] = swizzle(i, j);
+        auto [ti, tj] = swizzle(nBinsA + li, lj);
+        merged.atLocalBins({ti, tj}) = b.atLocalBins({li, lj});
+      }
+    }
+  }
+}
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
     const std::shared_ptr<RegularSurface>& surface,
