@@ -13,27 +13,23 @@
 
 namespace Acts {
 
-template <typename container_t, bool read_only>
+template <typename container_t>
 class SpacePointProxyIterator {
  public:
-  using ContainerType = typename std::conditional<read_only, const container_t,
-                                                  container_t>::type;
-  using ProxyType = typename std::conditional<
-      read_only, typename container_t::ConstSpacePointProxyType,
-      typename container_t::SpacePointProxyType>::type;
+  using ContainerType = container_t;
+  using ProxyType = typename container_t::SpacePointProxyType;
 
   using iterator_category = std::random_access_iterator_tag;
-  using value_type =
-      typename std::conditional<read_only, const ProxyType, ProxyType>::type;
+  using value_type = ProxyType;
   using difference_type = std::ptrdiff_t;
   using pointer = value_type*;
   using reference = value_type&;
 
  public:
   // Constructors
-  SpacePointProxyIterator(ContainerType&& container,
+  SpacePointProxyIterator(container_t&& container,
                           std::size_t index) = delete;
-  SpacePointProxyIterator(ContainerType& container, std::size_t index);
+  SpacePointProxyIterator(const container_t& container, std::size_t index);
   
   SpacePointProxyIterator& operator++();
   SpacePointProxyIterator& operator--();
@@ -55,12 +51,11 @@ class SpacePointProxyIterator {
 
   difference_type operator-(const SpacePointProxyIterator& other) const;
 
-  value_type& operator*() const;
-  value_type& operator*() requires (!read_only);
+  const value_type& operator*() const;
 
  private:
-  Acts::detail::RefHolder<ContainerType> m_container;
-  std::size_t m_index;
+  const container_t* m_container {nullptr};
+  std::size_t m_index {0ul};
 };
 
 }  // namespace Acts

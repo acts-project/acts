@@ -10,100 +10,86 @@
 namespace Acts {
 
 // Implementation
-template <typename container_t, bool read_only>
-SpacePointProxy<container_t, read_only>::SpacePointProxy(
-    typename SpacePointProxy<container_t, read_only>::ContainerType& container,
+template <typename container_t>
+SpacePointProxy<container_t>::SpacePointProxy(
+							 const container_t& container,
     std::size_t index)
-   : m_container(container), m_index(index) {}
+   : m_container(&container), m_index(index) {}
 
-template <typename container_t, bool read_only>
-typename SpacePointProxy<container_t, read_only>::ValueType&
-SpacePointProxy<container_t, read_only>::externalSpacePoint()
-requires (!read_only) {
+template <typename container_t>
+const typename SpacePointProxy<container_t>::ValueType&
+SpacePointProxy<container_t>::externalSpacePoint() const {
   return container().sp(m_index);
 }
 
-template <typename container_t, bool read_only>
-typename SpacePointProxy<container_t, read_only>::ValueType&
-SpacePointProxy<container_t, read_only>::externalSpacePoint() const {
-  return container().sp(m_index);
-}
-
-template <typename container_t, bool read_only>
-std::size_t SpacePointProxy<container_t, read_only>::index()
+template <typename container_t>
+std::size_t SpacePointProxy<container_t>::index()
     const {
   return m_index;
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::x() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::x() const {
   return container().x(m_index);
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::y() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::y() const {
   return container().y(m_index);
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::z() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::z() const {
   return container().z(m_index);
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::phi() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::phi() const {
   return container().phi(m_index);
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::radius() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::radius() const {
   return container().radius(m_index);
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::varianceR() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::varianceR() const {
   return container().varianceR(m_index);
 }
 
-template <typename container_t, bool read_only>
-float SpacePointProxy<container_t, read_only>::varianceZ() const {
+template <typename container_t>
+float SpacePointProxy<container_t>::varianceZ() const {
   return container().varianceZ(m_index);
 }
 
-template <typename container_t, bool read_only>
+template <typename container_t>
 const Acts::Vector3&
-SpacePointProxy<container_t, read_only>::topStripVector() const {
+SpacePointProxy<container_t>::topStripVector() const {
   return container().topStripVector(m_index);
 }
 
-template <typename container_t, bool read_only>
+template <typename container_t>
 const Acts::Vector3&
-SpacePointProxy<container_t, read_only>::bottomStripVector() const {
+SpacePointProxy<container_t>::bottomStripVector() const {
   return container().bottomStripVector(m_index);
 }
 
-template <typename container_t, bool read_only>
+template <typename container_t>
 const Acts::Vector3&
-SpacePointProxy<container_t, read_only>::stripCenterDistance() const {
+SpacePointProxy<container_t>::stripCenterDistance() const {
   return container().stripCenterDistance(m_index);
 }
 
-template <typename container_t, bool read_only>
+template <typename container_t>
 const Acts::Vector3&
-SpacePointProxy<container_t, read_only>::topStripCenterPosition() const {
+SpacePointProxy<container_t>::topStripCenterPosition() const {
   return container().topStripCenterPosition(m_index);
 }
 
-template <typename container_t, bool read_only>
-typename SpacePointProxy<container_t, read_only>::ContainerType&
-SpacePointProxy<container_t, read_only>::container() const {
-  return *m_container;
-}
-
-template <typename container_t, bool read_only>
-typename SpacePointProxy<container_t, read_only>::ContainerType&
-SpacePointProxy<container_t, read_only>::container()
-  requires (!read_only) {
+template <typename container_t>
+const container_t&
+SpacePointProxy<container_t>::container() const {
   return *m_container;
 }
 

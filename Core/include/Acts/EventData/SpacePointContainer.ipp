@@ -15,7 +15,7 @@ template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     const Acts::SpacePointContainerConfig& config,
-    const Acts::SpacePointContainerOptions& options, container_t& container)
+    const Acts::SpacePointContainerOptions& options, const container_t& container)
     : m_config(config.toInternalUnits()),
       m_options(options.toInternalUnits()),
       m_container(container) {
@@ -106,31 +106,14 @@ std::size_t SpacePointContainer<container_t, holder_t>::size() const {
 
 template <typename container_t, template <typename> class holder_t>
 typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::begin() requires (!read_only) {
-  return {*this, 0};
-}
-
-template <typename container_t, template <typename> class holder_t>
-typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::end() requires (!read_only) {
-  return {*this, size()};
-}
-
-template <typename container_t, template <typename> class holder_t>
-typename SpacePointContainer<container_t, holder_t>::const_iterator
 SpacePointContainer<container_t, holder_t>::begin() const {
   return {*this, 0};
 }
 
 template <typename container_t, template <typename> class holder_t>
-typename SpacePointContainer<container_t, holder_t>::const_iterator
+typename SpacePointContainer<container_t, holder_t>::iterator
 SpacePointContainer<container_t, holder_t>::end() const {
   return {*this, size()};
-}
-
-template <typename container_t, template <typename> class holder_t>
-container_t& SpacePointContainer<container_t, holder_t>::container() requires (!read_only) {
-  return *m_container;
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -140,13 +123,7 @@ SpacePointContainer<container_t, holder_t>::container() const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-typename SpacePointContainer<container_t, holder_t>::ValueType&
-SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) requires (!read_only) {
-  return container().get_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-typename SpacePointContainer<container_t, holder_t>::ValueType&
+const typename SpacePointContainer<container_t, holder_t>::ValueType&
 SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) const {
   return container().get_impl(n);
 }
@@ -194,13 +171,6 @@ float SpacePointContainer<container_t, holder_t>::varianceZ(
 }
 
 template <typename container_t, template <typename> class holder_t>
-typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) requires (!read_only) {
-  assert(n < proxies().size());
-  return proxies()[n];
-}
-
-template <typename container_t, template <typename> class holder_t>
 const typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) const {
   assert(n < proxies().size());
@@ -211,12 +181,6 @@ template <typename container_t, template <typename> class holder_t>
 const std::vector<
     typename SpacePointContainer<container_t, holder_t>::ProxyType>&
 SpacePointContainer<container_t, holder_t>::proxies() const {
-  return m_proxies;
-}
-
-template <typename container_t, template <typename> class holder_t>
-std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
-SpacePointContainer<container_t, holder_t>::proxies() requires (!read_only) {
   return m_proxies;
 }
 

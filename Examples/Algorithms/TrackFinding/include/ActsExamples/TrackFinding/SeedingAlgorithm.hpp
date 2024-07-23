@@ -55,7 +55,7 @@ class SeedingAlgorithm final : public IAlgorithm {
 
     Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
         ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-        Acts::detail::RefHolder>::ConstSpacePointProxyType>
+        Acts::detail::RefHolder>::SpacePointProxyType>
         seedFinderConfig;
     Acts::CylindricalSpacePointGridConfig gridConfig;
     Acts::CylindricalSpacePointGridOptions gridOptions;
@@ -95,11 +95,11 @@ class SeedingAlgorithm final : public IAlgorithm {
  private:
   using SpacePointProxy_t = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::ConstSpacePointProxyType;
+      Acts::detail::RefHolder>::SpacePointProxyType;
 
   Acts::SeedFinder<SpacePointProxy_t, Acts::CylindricalSpacePointGrid<SpacePointProxy_t>> m_seedFinder;
-  std::shared_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
-  std::shared_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
 
   Config m_cfg;
 

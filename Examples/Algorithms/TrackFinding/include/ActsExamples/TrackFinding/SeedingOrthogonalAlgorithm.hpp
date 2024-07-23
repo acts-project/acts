@@ -35,7 +35,7 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
  public:
   using proxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::ConstSpacePointProxyType;
+      Acts::detail::RefHolder>::SpacePointProxyType;
 
   struct Config {
     /// Input space point collections.

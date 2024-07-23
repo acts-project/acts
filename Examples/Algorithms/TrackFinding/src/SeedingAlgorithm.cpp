@@ -42,13 +42,13 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::ConstSpacePointProxyType;
+      Acts::detail::RefHolder>::SpacePointProxyType;
 
   // Seed Finder config requires Seed Filter object before conversion to
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(m_cfg.seedFilterConfig);
+    std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -181,7 +181,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::ConstSpacePointProxyType;
+      Acts::detail::RefHolder>::SpacePointProxyType;
 
   m_bottomBinFinder =
       std::make_unique<const Acts::GridBinFinder<2ul>>(
@@ -235,7 +235,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   std::cout << "nsp: " << spContainer.size() << std::endl;
 
-  using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
+  using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
   // extent used to store r range for middle spacepoint

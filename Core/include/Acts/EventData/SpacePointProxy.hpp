@@ -19,28 +19,19 @@
 
 namespace Acts {
 
-template <typename container_t, bool read_only>
+template <typename container_t>
 class SpacePointProxy {
  public:
-  using ContainerType = typename std::conditional<read_only, const container_t,
-                                                  container_t>::type;
-  using ValueType = typename std::conditional<
-      read_only,
-      typename std::conditional<
-          std::is_const<typename ContainerType::ValueType>::value,
-          typename ContainerType::ValueType,
-          const typename ContainerType::ValueType>::type,
-      typename ContainerType::ValueType>::type;
+  using ContainerType = container_t;
+  using ValueType = typename ContainerType::ValueType;
 
  public:
   // Never take the ownership of the container
-  SpacePointProxy(ContainerType&& container, std::size_t index) = delete;
+  SpacePointProxy(container_t&& container, std::size_t index) = delete;
   // Only get the reference
-  SpacePointProxy(ContainerType& container, std::size_t index);
+  SpacePointProxy(const container_t& container, std::size_t index);
   
-  ValueType& externalSpacePoint() requires (!read_only);
-  ValueType& externalSpacePoint() const;
-
+  const ValueType& externalSpacePoint() const;
   std::size_t index() const;
 
   float x() const;
@@ -57,12 +48,11 @@ class SpacePointProxy {
   const Acts::Vector3& topStripCenterPosition() const;
 
  private:
-  ContainerType& container() const;
-  ContainerType& container() requires (!read_only);
+  const container_t& container() const;
 
  private:
-  Acts::detail::RefHolder<ContainerType> m_container;
-  std::size_t m_index;
+  const container_t* m_container {nullptr};
+  std::size_t m_index {0ul};
 };
 
 }  // namespace Acts

@@ -62,42 +62,26 @@ struct SpacePointContainerOptions {
 };
 
 template <typename container_t, template <typename> class holder_t>
+// requires (Acts::detail::is_same_template<
+//                 H, Acts::detail::RefHolder>::value ||
+// 	  Acts::detail::is_same_template<
+//                 H, Acts::detail::ValueHolder>::value)
 class SpacePointContainer {
  public:
+
   friend class Acts::SpacePointProxy<
-      Acts::SpacePointContainer<container_t, holder_t>, false>;
-  friend class Acts::SpacePointProxy<
-      Acts::SpacePointContainer<container_t, holder_t>, true>;
+     Acts::SpacePointContainer<container_t, holder_t>>;
   friend class Acts::SpacePointProxyIterator<
-      Acts::SpacePointContainer<container_t, holder_t>, false>;
-  friend class Acts::SpacePointProxyIterator<
-      Acts::SpacePointContainer<container_t, holder_t>, true>;
+     Acts::SpacePointContainer<container_t, holder_t>>;
 
  public:
-  static constexpr bool read_only = true;
-
-  using SpacePointProxyType =
-      Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>,
-                            false>;
-  using ConstSpacePointProxyType =
-      Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>,
-                            true>;
-
   using iterator = Acts::SpacePointProxyIterator<
-      Acts::SpacePointContainer<container_t, holder_t>, false>;
-  using const_iterator = Acts::SpacePointProxyIterator<
-      Acts::SpacePointContainer<container_t, holder_t>, true>;
+    Acts::SpacePointContainer<container_t, holder_t>>;
+  using const_iterator = iterator;
 
-  using ValueType = typename std::conditional<
-      read_only,
-      typename std::conditional<
-          std::is_const<typename container_t::ValueType>::value,
-          typename container_t::ValueType,
-          const typename container_t::ValueType>::type,
-      typename container_t::ValueType>::type;
-  using ProxyType =
-      typename std::conditional<read_only, ConstSpacePointProxyType,
-                                SpacePointProxyType>::type;
+  using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
+  using ValueType = typename container_t::ValueType;
+  using ProxyType = SpacePointProxyType;
   using value_type = ProxyType;
 
  public:
@@ -112,7 +96,7 @@ class SpacePointContainer {
                 H, Acts::detail::RefHolder>::value>>
   SpacePointContainer(const Acts::SpacePointContainerConfig& config,
                       const Acts::SpacePointContainerOptions& options,
-                      container_t& container);
+                      const container_t& container);
 
   // Take the ownership
   // Activate only if holder_t is ValueHolder
@@ -136,26 +120,17 @@ class SpacePointContainer {
 
   std::size_t size() const;
 
-  iterator begin() requires (!read_only);
-  iterator end() requires (!read_only);
+  iterator begin() const;
+  iterator end() const;
 
-  const_iterator begin() const;
-  const_iterator end() const;
-
-  ValueType& sp(const std::size_t n) requires (!read_only);
-  ValueType& sp(const std::size_t n) const;
+  const ValueType& sp(const std::size_t n) const;
 
  private:
   void initialize();
 
-  container_t& container() requires (!read_only);
   const container_t& container() const;
-
-  ProxyType& proxy(const std::size_t n) requires (!read_only);
   const ProxyType& proxy(const std::size_t n) const;
-
   const std::vector<ProxyType>& proxies() const;
-  std::vector<ProxyType>& proxies() requires (!read_only);
 
  private:
   float x(const std::size_t n) const;
@@ -175,7 +150,7 @@ class SpacePointContainer {
   Acts::SpacePointContainerConfig m_config;
   Acts::SpacePointContainerOptions m_options;
   Acts::SpacePointData m_data;
-  holder_t<container_t> m_container;
+  holder_t<const container_t> m_container;
   std::vector<ProxyType> m_proxies;
 };
 
