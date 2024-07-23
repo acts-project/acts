@@ -24,6 +24,7 @@
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <cstdio>
 #include <stdexcept>
 
 using namespace Acts::UnitLiterals;
@@ -1388,6 +1389,179 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   BOOST_CHECK_EQUAL(axis2.getNBins(), 9);
   BOOST_CHECK_EQUAL(axis2.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
+}
+
+BOOST_AUTO_TEST_CASE(BinFilling) {
+  // Volumes for bin content checking
+  // Volume shape/transform is irrelevant, only used for pointer identity
+  auto vol1 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto vol2 = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+  auto fillCheckerBoard = [&](auto& grid) {
+    auto loc = grid.numLocalBins();
+    for (size_t i = 1; i <= loc[0]; ++i) {
+      for (size_t j = 1; j <= loc[1]; ++j) {
+        grid.atLocalBins({i, j}) = (i + j) % 2 == 0 ? vol1.get() : vol2.get();
+      }
+    }
+  };
+
+  auto checkCheckerBoard = [&](const auto& grid) {
+    auto loc = grid.numLocalBins();
+    for (size_t i = 1; i <= loc[0]; ++i) {
+      for (size_t j = 1; j <= loc[1]; ++j) {
+        const auto* vol = grid.atLocalBins({i, j});
+        if (vol != ((i + j) % 2 == 0 ? vol1.get() : vol2.get())) {
+          BOOST_ERROR("Is not a checkerboard pattern");
+          return;
+        }
+      }
+    }
+  };
+
+  BOOST_TEST_CONTEXT("RDirection") {
+    auto discPhi1 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                     30_mm, 60_mm, 30_degree);
+
+    auto discPhiGrid1 =
+        GridPortalLink::make(discPhi1, Axis{AxisBound, 30_mm, 60_mm, 2},
+                             Axis{AxisBound, -30_degree, 30_degree, 2});
+
+    fillCheckerBoard(discPhiGrid1->grid());
+    checkCheckerBoard(discPhiGrid1->grid());
+
+    auto discPhi2 = Surface::makeShared<DiscSurface>(Transform3::Identity(),
+                                                     60_mm, 90_mm, 30_degree);
+
+    auto discPhiGrid2 =
+        GridPortalLink::make(discPhi2, Axis{AxisBound, 60_mm, 90_mm, 2},
+                             Axis{AxisBound, -30_degree, 30_degree, 2});
+
+    fillCheckerBoard(discPhiGrid2->grid());
+    checkCheckerBoard(discPhiGrid2->grid());
+
+    auto mergedPtr =
+        discPhiGrid1->merge(gctx, *discPhiGrid2, BinningValue::binR, *logger);
+
+    using merged_type =
+        GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
+
+    const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    BOOST_REQUIRE(merged);
+    checkCheckerBoard(merged->grid());
+
+    // Fill a / b
+    discPhiGrid1->setVolume(*vol1);
+    discPhiGrid2->setVolume(*vol2);
+
+    mergedPtr =
+        discPhiGrid2->merge(gctx, *discPhiGrid1, BinningValue::binR, *logger);
+    merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    BOOST_REQUIRE(merged);
+
+    const auto* v1 = vol1.get();
+    const auto* v2 = vol2.get();
+
+    std::vector<std::pair<Vector2, const TrackingVolume*>> locations = {
+        {{40_mm, -20_degree}, v1}, {{40_mm, 20_degree}, v1},
+        {{50_mm, -20_degree}, v1}, {{50_mm, 20_degree}, v1},
+        {{70_mm, -20_degree}, v2}, {{70_mm, 20_degree}, v2},
+        {{80_mm, -20_degree}, v2}, {{80_mm, 20_degree}, v2},
+    };
+
+    for (const auto& [loc, vol] : locations) {
+      BOOST_TEST_CONTEXT(loc.transpose())
+      BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc), vol);
+    }
+
+    std::vector<std::vector<const TrackingVolume*>> contents = {
+        {v1, v1},
+        {v1, v1},
+        {v2, v2},
+        {v2, v2},
+    };
+
+    for (std::size_t i = 0; i < 4; ++i) {
+      for (std::size_t j = 0; j < 2; ++j) {
+        BOOST_CHECK_EQUAL(merged->grid().atLocalBins({i + 1, j + 1}),
+                          contents.at(i).at(j));
+      }
+    }
+  }
+
+  BOOST_TEST_CONTEXT("PhiDirection") {
+    auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
+                                                  100_mm, 30_degree);
+
+    auto grid1 =
+        GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 2},
+                             Axis{AxisBound, -30_degree, 30_degree, 2});
+    fillCheckerBoard(grid1->grid());
+    checkCheckerBoard(grid1->grid());
+
+    auto disc2 = Surface::makeShared<DiscSurface>(
+        Transform3{AngleAxis3{60_degree, Vector3::UnitZ()}}, 30_mm, 100_mm,
+        30_degree);
+
+    auto grid2 =
+        GridPortalLink::make(disc2, Axis{AxisBound, 30_mm, 100_mm, 2},
+                             Axis{AxisBound, -30_degree, 30_degree, 2});
+    fillCheckerBoard(grid2->grid());
+    checkCheckerBoard(grid2->grid());
+
+    auto mergedPtr = grid1->merge(gctx, *grid2, BinningValue::binPhi, *logger);
+    BOOST_REQUIRE(mergedPtr);
+
+    using merged_type =
+        GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
+
+    const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    BOOST_REQUIRE(merged);
+
+    checkCheckerBoard(merged->grid());
+
+    // Fill a / b
+    grid1->setVolume(*vol1);
+    grid2->setVolume(*vol2);
+
+    mergedPtr = grid2->merge(gctx, *grid1, BinningValue::binPhi, *logger);
+    merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    BOOST_REQUIRE(merged);
+
+    const auto* v1 = vol1.get();
+    const auto* v2 = vol2.get();
+
+    std::vector<std::pair<Vector2, const TrackingVolume*>> locations = {
+        {{40_mm, -50_degree}, v2}, {{40_mm, -10_degree}, v2},
+        {{50_mm, -50_degree}, v2}, {{50_mm, -10_degree}, v2},
+        {{40_mm, 10_degree}, v1},  {{50_mm, 50_degree}, v1},
+        {{50_mm, 10_degree}, v1},  {{50_mm, 50_degree}, v1},
+    };
+
+    for (const auto& [loc, vol] : locations) {
+      BOOST_TEST_CONTEXT(loc.transpose())
+      BOOST_CHECK_EQUAL(merged->resolveVolume(gctx, loc), vol);
+    }
+
+    std::vector<std::vector<const TrackingVolume*>> contents = {
+        {v2, v2, v1, v1},
+        {v2, v2, v1, v1},
+    };
+
+    for (std::size_t i = 0; i < 2; ++i) {
+      for (std::size_t j = 0; j < 4; ++j) {
+        BOOST_CHECK_EQUAL(merged->grid().atLocalBins({i + 1, j + 1}),
+                          contents.at(i).at(j));
+      }
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // Merging2dDisc
