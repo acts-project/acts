@@ -69,7 +69,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
     for (auto& b : fCache.binnings) {
       if (extent.constrains(b.binValue)) {
-        ACTS_VERBOSE("Binning '" << binningValueNames()[b.binValue]
+        ACTS_VERBOSE("Binning '" << binningValueName(b.binValue)
                                  << "' is patched.");
         ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back()
                                     << "]");
@@ -93,14 +93,14 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   cElements.reserve(fCache.sensitiveSurfaces.size());
 
   // Fill them in to the surface provider struct and detector store
-  for (auto [de, ds] : fCache.sensitiveSurfaces) {
+  for (const auto& [de, ds] : fCache.sensitiveSurfaces) {
     lSurfaces.push_back(ds);
     cElements.push_back(de);
   }
   dd4hepStore[options.name] = cElements;
 
   // Passive surfaces to be added
-  for (auto [ps, toAll] : fCache.passiveSurfaces) {
+  for (const auto& [ps, toAll] : fCache.passiveSurfaces) {
     // Passive surface is not declared to be added to all navigation bins
     if (!toAll) {
       lSurfaces.push_back(ps);

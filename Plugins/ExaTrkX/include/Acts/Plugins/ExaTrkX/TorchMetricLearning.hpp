@@ -18,7 +18,7 @@ class Module;
 }
 
 namespace c10 {
-enum class DeviceType : int8_t;
+enum class DeviceType : std::int8_t;
 }
 
 namespace Acts {
@@ -32,16 +32,18 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     float rVal = 1.6;
     int knnVal = 500;
     bool shuffleDirections = false;
+    int deviceID = 0;  // default is the first GPU if available
   };
 
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(std::vector<float> &inputValues,
-                                            std::size_t numNodes,
-                                            int deviceHint = -1) override;
+  std::tuple<std::any, std::any> operator()(
+      std::vector<float> &inputValues, std::size_t numNodes,
+      torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }
+  torch::Device device() const override { return m_device; };
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -49,6 +51,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
 
   Config m_cfg;
   c10::DeviceType m_deviceType;
+  torch::Device m_device;
   std::unique_ptr<torch::jit::Module> m_model;
 };
 

@@ -66,9 +66,11 @@ class AssertionFailureException : public std::exception {
 
 }  // namespace Acts
 
-#define throw_assert(EXPRESSION, MESSAGE)                                 \
-  if (!(EXPRESSION)) {                                                    \
-    throw Acts::AssertionFailureException(                                \
-        #EXPRESSION, __FILE__, __LINE__,                                  \
-        (Acts::AssertionFailureException::StreamFormatter() << MESSAGE)); \
-  }
+#define throw_assert(EXPRESSION, MESSAGE)                                   \
+  do {                                                                      \
+    if (!(EXPRESSION)) {                                                    \
+      throw Acts::AssertionFailureException(                                \
+          #EXPRESSION, __FILE__, __LINE__,                                  \
+          (Acts::AssertionFailureException::StreamFormatter() << MESSAGE)); \
+    }                                                                       \
+  } while (0)

@@ -36,11 +36,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <template <typename...> typename container_t, typename sp_range_t>
+template <typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    const grid_t& grid,
-    std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
+    const grid_t& grid, container_t& outputCollection,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
@@ -78,17 +77,29 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   // Fill
   // bottoms
   for (const std::size_t idx : bottomSPsIdx) {
+    // Only add an entry if the bin has entries
+    if (grid.at(idx).size() == 0) {
+      continue;
+    }
     state.bottomNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
   }
+  // if no bottom candidates, then no need to proceed
+  if (state.bottomNeighbours.size() == 0) {
+    return;
+  }
+
   // tops
   for (const std::size_t idx : topSPsIdx) {
+    // Only add an entry if the bin has entries
+    if (grid.at(idx).size() == 0) {
+      continue;
+    }
     state.topNeighbours.emplace_back(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
-
-  // Return if there are no bottom or top candidates
-  if (state.bottomNeighbours.size() == 0 || state.topNeighbours.size() == 0) {
+  // if no top candidates, then no need to proceed
+  if (state.topNeighbours.size() == 0) {
     return;
   }
 
@@ -128,14 +139,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    // remove middle SPs on the last layer since there would be no outer SPs to
-    // complete a seed
-    float zM = spM->z();
-    if (zM < m_config.zOutermostLayers.first ||
-        zM > m_config.zOutermostLayers.second) {
-      continue;
-    }
-
+    const float zM = spM->z();
     const float uIP = -1. / rM;
     const float cosPhiM = -spM->x() * uIP;
     const float sinPhiM = -spM->y() * uIP;
@@ -195,8 +199,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
 
     m_config.seedFilter->filterSeeds_1SpFixed(
-        state.spacePointData, state.candidates_collector,
-        seedFilterState.numQualitySeeds, outIt);
+        state.spacePointData, state.candidates_collector, outputCollection);
 
   }  // loop on mediums
 }
@@ -568,7 +571,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (m_config.seedConfirmation && seedFilterState.numQualitySeeds) {
+    if (m_config.seedConfirmation &&
+        state.candidates_collector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
 
@@ -826,20 +830,4 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   }  // loop on bottoms
 }
 
-template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename sp_range_t>
-std::vector<Seed<external_spacepoint_t>>
-SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, const grid_t& grid,
-    const sp_range_t& bottomSPs, const std::size_t middleSPs,
-    const sp_range_t& topSPs) const {
-  SeedingState state;
-  const Acts::Range1D<float> rMiddleSPRange;
-  std::vector<Seed<external_spacepoint_t>> ret;
-
-  createSeedsForGroup(options, state, grid, std::back_inserter(ret), bottomSPs,
-                      middleSPs, topSPs, rMiddleSPRange);
-
-  return ret;
-}
 }  // namespace Acts

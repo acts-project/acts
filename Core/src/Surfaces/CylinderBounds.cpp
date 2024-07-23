@@ -9,6 +9,8 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -41,8 +43,9 @@ Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-bool Acts::CylinderBounds::inside(const Vector2& lposition,
-                                  const BoundaryCheck& bcheck) const {
+bool Acts::CylinderBounds::inside(
+    const Vector2& lposition,
+    const BoundaryTolerance& boundaryTolerance) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
 
@@ -50,9 +53,9 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
   double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
-    return bcheck.transformed(jacobian())
-        .isInside(shifted(lposition), Vector2(-halfPhi, -halfLengthZ),
-                  Vector2(halfPhi, halfLengthZ));
+    return detail::insideAlignedBox(
+        Vector2(-halfPhi, -halfLengthZ), Vector2(halfPhi, halfLengthZ),
+        boundaryTolerance, shifted(lposition), jacobian());
   }
 
   double radius = get(eR);
@@ -76,9 +79,6 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
     return true;
   }
 
-  // check within tolerance
-  auto boundaryCheck = bcheck.transformed(jacobian());
-
   Vector2 lowerLeft = {-radius, -halfLengthZ};
   Vector2 middleLeft = {0., -(halfLengthZ + radius * std::tan(bevelMinZ))};
   Vector2 upperLeft = {radius, -halfLengthZ};
@@ -87,45 +87,9 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
   Vector2 lowerRight = {-radius, halfLengthZ};
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
-  Vector2 closestPoint =
-      boundaryCheck.computeClosestPointOnPolygon(lposition, vertices);
 
-  return boundaryCheck.isTolerated(closestPoint - lposition);
-}
-
-bool Acts::CylinderBounds::inside3D(const Vector3& position,
-                                    const BoundaryCheck& bcheck) const {
-  // additional tolerance from the boundary check if configured
-  bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
-
-  // this fast check only applies to closed cylindrical bounds
-  double addToleranceR =
-      (checkAbsolute && m_closed) ? bcheck.m_tolerance[0] : 0.;
-  double addToleranceZ = checkAbsolute ? bcheck.m_tolerance[1] : 0.;
-  // check if the position compatible with the radius
-  if ((s_onSurfaceTolerance + addToleranceR) <=
-      std::abs(perp(position) - get(eR))) {
-    return false;
-  } else if (checkAbsolute && m_closed) {
-    double bevelMinZ = get(eBevelMinZ);
-    double bevelMaxZ = get(eBevelMaxZ);
-
-    double addedMinZ =
-        bevelMinZ != 0. ? position.y() * std::sin(bevelMinZ) : 0.;
-    double addedMaxZ =
-        bevelMinZ != 0. ? position.y() * std::sin(bevelMaxZ) : 0.;
-
-    return ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) +
-             addedMinZ) >= position.z()) &&
-           ((s_onSurfaceTolerance + addToleranceZ + get(eHalfLengthZ) +
-             addedMaxZ) <= position.z());
-  }
-  // detailed, but slower check
-  Vector2 lpos(detail::radian_sym(phi(position) - get(eAveragePhi)),
-               position.z());
-  return bcheck.transformed(jacobian())
-      .isInside(lpos, Vector2(-get(eHalfPhiSector), -get(eHalfLengthZ)),
-                Vector2(get(eHalfPhiSector), get(eHalfLengthZ)));
+  return detail::insidePolygon(vertices, boundaryTolerance, lposition,
+                               jacobian());
 }
 
 std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
@@ -190,4 +154,26 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
     }
   }
   return vertices;
+}
+
+void Acts::CylinderBounds::checkConsistency() noexcept(false) {
+  if (get(eR) <= 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+  }
+  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
+    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi)) &&
+      std::abs(std::abs(get(eAveragePhi)) - M_PI) > s_epsilon) {
+    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+  }
+  if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at min Z.");
+  }
+  if (get(eBevelMaxZ) != detail::radian_sym(get(eBevelMaxZ))) {
+    throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
+  }
 }
