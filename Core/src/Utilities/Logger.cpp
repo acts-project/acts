@@ -114,7 +114,7 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
                                                const Logging::Level& lvl,
                                                std::ostream* log_stream) {
   std::size_t maxWidth = 15;
-  if( auto cptr = std::getenv("ACTS_LOGGER_MAXWIDTH"); cptr != nullptr) {
+  if (auto cptr = std::getenv("ACTS_LOGGER_MAXWIDTH"); cptr != nullptr) {
     maxWidth = std::stoul(std::string(cptr));
   }
   using namespace Logging;

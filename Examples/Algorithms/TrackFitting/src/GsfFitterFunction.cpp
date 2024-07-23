@@ -179,7 +179,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       tracks.template addColumn<FinalMultiComponentState>(key);
     }
 
-    if( std::getenv("ACTS_REFIT_DEFAULT_NAVIGATION") != nullptr ) {
+    if (std::getenv("ACTS_REFIT_DEFAULT_NAVIGATION") != nullptr) {
       return fitter.fit(sourceLinks.begin(), sourceLinks.end(),
                         initialParameters, gsfOptions, tracks);
     }

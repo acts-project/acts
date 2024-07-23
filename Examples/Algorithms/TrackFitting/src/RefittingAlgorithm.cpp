@@ -67,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
       continue;
     }
 
-    if( !track.hasReferenceSurface() ) {
+    if (!track.hasReferenceSurface()) {
       ACTS_VERBOSE("Skip track " << itrack << ": missing ref surface");
       continue;
     }
