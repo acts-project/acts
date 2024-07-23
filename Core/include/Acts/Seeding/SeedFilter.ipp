@@ -69,7 +69,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](const std::size_t i1, const std::size_t i2) {
+              [&invHelixDiameterVec](const size_t i1, const size_t i2) {
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }

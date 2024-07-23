@@ -38,6 +38,7 @@ LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
+/// @param mutableData Container for mutable variables used in the seeding
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.

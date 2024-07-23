@@ -198,6 +198,7 @@ class SeedFinderOrthogonal {
    * iterator.
    *
    * @param options frequently changing configuration (like beam position)
+   * @param mutableData Container for mutable variables used in the seeding
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
@@ -219,6 +220,7 @@ class SeedFinderOrthogonal {
    * @brief Search for seeds starting from a given middle space point.
    *
    * @param options frequently changing configuration (like beam position)
+   * @param mutableData Container for mutable variables used in the seeding
    * @tparam NDims Number of dimensions for our spatial embedding (probably 3).
    * @tparam output_container_t Type of the output container.
    *

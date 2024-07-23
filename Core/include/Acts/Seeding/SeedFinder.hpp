@@ -111,6 +111,7 @@ class SeedFinder {
   /// a series of cuts that can be tested with only two SPs
   /// @param options frequently changing configuration (like beam position)
   /// @param grid spacepoint grid
+  /// @param mutableData Container for mutable variables used in the seeding
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
   /// @param mediumSP space point candidate to be used as middle SP in a seed
   /// @param linCircleVec vector containing inner or outer SP parameters after reference frame transformation to the u-v space
