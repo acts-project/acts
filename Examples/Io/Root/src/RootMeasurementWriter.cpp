@@ -25,10 +25,7 @@
 #include <variant>
 
 #include <TFile.h>
-
-namespace Acts {
-class Surface;
-}  // namespace Acts
+#include <TTree.h>
 
 namespace ActsExamples {
 
