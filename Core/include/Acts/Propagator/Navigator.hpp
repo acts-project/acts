@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -32,7 +33,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The boundary check directive
-  BoundaryCheck boundaryCheck = BoundaryCheck(true);
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
   // How to resolve the geometry
   /// Always look for sensitive
@@ -89,7 +90,7 @@ class Navigator {
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
 
-  using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
+  using ExternalSurfaces = std::multimap<std::uint64_t, GeometryIdentifier>;
 
   /// The navigation stage
   enum struct Stage : int {
@@ -111,11 +112,27 @@ class Navigator {
     bool resolvePassive = false;
   };
 
+  struct Options : public NavigatorPlainOptions {
+    /// Externally provided surfaces - these are tried to be hit
+    ExternalSurfaces externalSurfaces = {};
+
+    void insertExternalSurface(GeometryIdentifier geoid) {
+      externalSurfaces.insert(
+          std::pair<std::uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+    }
+
+    void setPlainOptions(const NavigatorPlainOptions& options) {
+      static_cast<NavigatorPlainOptions&>(*this) = options;
+    }
+  };
+
   /// @brief Nested State struct
   ///
   /// It acts as an internal state which is created for every propagation and
   /// meant to keep thread-local navigation information.
   struct State {
+    Options options;
+
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -137,9 +154,6 @@ class Navigator {
     auto navSurface() const { return navSurfaces.at(navSurfaceIndex); }
     auto navLayer() const { return navLayers.at(navLayerIndex); }
     auto navBoundary() const { return navBoundaries.at(navBoundaryIndex); }
-
-    /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
 
     /// Navigation state: the world volume
     const TrackingVolume* worldVolume = nullptr;
@@ -185,14 +199,14 @@ class Navigator {
                          getDefaultLogger("Navigator", Logging::Level::INFO))
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface,
-                  const Surface* targetSurface) const {
-    assert(startSurface != nullptr && "Start surface must be set");
+  State makeState(const Options& options) const {
+    assert(options.startSurface != nullptr && "Start surface must be set");
 
-    State result;
-    result.startSurface = startSurface;
-    result.targetSurface = targetSurface;
-    return result;
+    State state;
+    state.options = options;
+    state.startSurface = options.startSurface;
+    state.targetSurface = options.targetSurface;
+    return state;
   }
 
   const Surface* currentSurface(const State& state) const {
@@ -238,11 +252,6 @@ class Navigator {
 
   void navigationBreak(State& state, bool navigationBreak) const {
     state.navigationBreak = navigationBreak;
-  }
-
-  void insertExternalSurface(State& state, GeometryIdentifier geoid) const {
-    state.externalSurfaces.insert(
-        std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
   }
 
   /// @brief Initialize call - start of navigation
@@ -434,15 +443,9 @@ class Navigator {
           // this was the last surface, check if we have layers
           if (!state.navigation.navLayers.empty()) {
             ++state.navigation.navLayerIndex;
-          } else if (state.navigation.startLayer != nullptr &&
-                     state.navigation.currentSurface->associatedLayer() ==
-                         state.navigation.startLayer) {
-            // this was the start layer, switch to layer target next
-            state.navigation.navigationStage = Stage::layerTarget;
-            return;
           } else {
-            // no layers, go to boundary
-            state.navigation.navigationStage = Stage::boundaryTarget;
+            state.navigation.navigationStage = Stage::layerTarget;
+            ACTS_VERBOSE(volInfo(state) << "Target layers.");
             return;
           }
         }
@@ -574,7 +577,7 @@ class Navigator {
     // it the current one to pass it to the other actors
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
-        BoundaryCheck(true), state.options.surfaceTolerance, logger());
+        BoundaryTolerance::None(), state.options.surfaceTolerance, logger());
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -621,7 +624,7 @@ class Navigator {
     auto layerID = state.navigation.navSurface().object()->geometryId().layer();
     std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
         externalSurfaceRange =
-            state.navigation.externalSurfaces.equal_range(layerID);
+            state.navigation.options.externalSurfaces.equal_range(layerID);
     // Loop over the remaining navigation surfaces
     while (state.navigation.navSurfaceIndex !=
            state.navigation.navSurfaces.size()) {
@@ -638,17 +641,17 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
       // Estimate the surface status
-      bool boundaryCheck = true;
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
       for (auto it = externalSurfaceRange.first;
            it != externalSurfaceRange.second; it++) {
         if (surface->geometryId() == it->second) {
-          boundaryCheck = false;
+          boundaryTolerance = BoundaryTolerance::Infinite();
           break;
         }
       }
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, *surface, intersection.index(),
-          state.options.direction, BoundaryCheck(boundaryCheck),
+          state.options.direction, boundaryTolerance,
           state.options.surfaceTolerance, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
@@ -743,7 +746,7 @@ class Navigator {
       // Try to step towards it
       auto layerStatus = stepper.updateSurfaceStatus(
           state.stepping, *layerSurface, intersection.index(),
-          state.options.direction, BoundaryCheck(true),
+          state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
       if (layerStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
@@ -896,7 +899,7 @@ class Navigator {
       // Step towards the boundary surfrace
       auto boundaryStatus = stepper.updateSurfaceStatus(
           state.stepping, *boundarySurface, intersection.index(),
-          state.options.direction, BoundaryCheck(true),
+          state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
       if (boundaryStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
@@ -910,7 +913,7 @@ class Navigator {
                      << " out of " << state.navigation.navBoundaries.size()
                      << " not reachable anymore, switching to next.");
         ACTS_VERBOSE("Targeted boundary surface was: \n"
-                     << std::tie(*boundarySurface, state.geoContext));
+                     << boundarySurface->toStream(state.geoContext));
       }
       // Increase the index to the next one
       ++state.navigation.navBoundaryIndex;
@@ -981,9 +984,9 @@ class Navigator {
               ->intersect(
                   state.geoContext, stepper.position(state.stepping),
                   state.options.direction * stepper.direction(state.stepping),
-                  BoundaryCheck(false), state.options.surfaceTolerance)
+                  BoundaryTolerance::Infinite(), state.options.surfaceTolerance)
               .closest();
-      if (targetIntersection) {
+      if (targetIntersection.isValid()) {
         ACTS_VERBOSE(volInfo(state)
                      << "Target estimate position ("
                      << targetIntersection.position().x() << ", "
@@ -1033,12 +1036,12 @@ class Navigator {
     navOpts.endObject = state.navigation.targetSurface;
 
     std::vector<GeometryIdentifier> externalSurfaces;
-    if (!state.navigation.externalSurfaces.empty()) {
+    if (!state.navigation.options.externalSurfaces.empty()) {
       auto layerID = layerSurface->geometryId().layer();
       auto externalSurfaceRange =
-          state.navigation.externalSurfaces.equal_range(layerID);
+          state.navigation.options.externalSurfaces.equal_range(layerID);
       navOpts.externalSurfaces.reserve(
-          state.navigation.externalSurfaces.count(layerID));
+          state.navigation.options.externalSurfaces.count(layerID));
       for (auto itSurface = externalSurfaceRange.first;
            itSurface != externalSurfaceRange.second; itSurface++) {
         navOpts.externalSurfaces.push_back(itSurface->second);
@@ -1199,7 +1202,7 @@ class Navigator {
       // TODO we do not know the intersection index - passing 0
       auto targetStatus = stepper.updateSurfaceStatus(
           state.stepping, *state.navigation.targetSurface, 0,
-          state.options.direction, BoundaryCheck(true),
+          state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
       // the only advance could have been to the target
       if (targetStatus == Intersection3D::Status::onSurface) {

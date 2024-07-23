@@ -240,8 +240,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // CASE I
   double envR = 0.1, envZ = 0.5;
   ProtoLayer pl(tgContext, srf);
-  pl.envelope[Acts::binR] = {envR, envR};
-  pl.envelope[Acts::binZ] = {envZ, envZ};
+  pl.envelope[Acts::BinningValue::binR] = {envR, envR};
+  pl.envelope[Acts::BinningValue::binZ] = {envZ, envZ};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl));
@@ -265,8 +265,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   // CASE II
 
   ProtoLayer pl2(tgContext, srf);
-  pl2.envelope[Acts::binR] = {envR, envR};
-  pl2.envelope[Acts::binZ] = {envZ, envZ};
+  pl2.envelope[Acts::BinningValue::binR] = {envR, envR};
+  pl2.envelope[Acts::BinningValue::binZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, 30, 7, pl2));
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
@@ -301,8 +301,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 
   // CASE III
   ProtoLayer pl3;
-  pl3.extent.range(Acts::binR).set(1, 20);
-  pl3.extent.range(Acts::binZ).set(-25, 25);
+  pl3.extent.range(Acts::BinningValue::binR).set(1, 20);
+  pl3.extent.range(Acts::BinningValue::binZ).set(-25, 25);
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl3));
   CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
@@ -335,8 +335,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   draw_surfaces(surfaces, "LayerCreator_createDiscLayer_EC_1.obj");
 
   ProtoLayer pl(tgContext, surfaces);
-  pl.extent.range(binZ).set(-10, 10);
-  pl.extent.range(binR).set(5., 25.);
+  pl.extent.range(BinningValue::binZ).set(-10, 10);
+  pl.extent.range(BinningValue::binR).set(5., 25.);
   std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, equidistant, equidistant, pl));
   CHECK_CLOSE_REL(layer->thickness(), 20, 1e-3);
@@ -363,8 +363,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   double envMinR = 1, envMaxR = 1, envZ = 5;
   std::size_t nBinsR = 3, nBinsPhi = 30;
   ProtoLayer pl2(tgContext, surfaces);
-  pl2.envelope[binR] = {envMinR, envMaxR};
-  pl2.envelope[binZ] = {envZ, envZ};
+  pl2.envelope[BinningValue::binR] = {envMinR, envMaxR};
+  pl2.envelope[BinningValue::binZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, nBinsR, nBinsPhi, pl2));
 
@@ -419,8 +419,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 
   double envR = 0, envZ = 0;
   ProtoLayer pl(tgContext, brl);
-  pl.envelope[binR] = {envR, envR};
-  pl.envelope[binZ] = {envZ, envZ};
+  pl.envelope[BinningValue::binR] = {envR, envR};
+  pl.envelope[BinningValue::binZ] = {envZ, envZ};
   std::shared_ptr<CylinderLayer> layer =
       std::dynamic_pointer_cast<CylinderLayer>(
           p_LC->cylinderLayer(tgContext, brl, equidistant, equidistant, pl));
@@ -439,7 +439,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
     // std::cout << "dPHi = " << A->center().phi() - B->center().phi() <<
     // std::endl;
 
-    Vector3 ctr = A->binningPosition(tgContext, binR);
+    Vector3 ctr = A->binningPosition(tgContext, BinningValue::binR);
     auto binContent = layer->surfaceArray()->at(ctr);
     BOOST_CHECK_EQUAL(binContent.size(), 2u);
     std::set<const Surface*> act;

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
@@ -19,9 +18,6 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <utility>
-
-#if defined(__cpp_concepts)
-#include <concepts>
 
 namespace Acts {
 
@@ -55,9 +51,8 @@ using ConstDynamicMeasurementCovariance = Eigen::Map<
 constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
 using Projector = Eigen::Matrix<typename Covariance::Scalar, eBoundSize,
                                 eBoundSize, ProjectorFlags>;
-
 using EffectiveProjector =
-    Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
+    Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, eBoundSize,
                   ProjectorFlags, eBoundSize, eBoundSize>;
 
 }  // namespace detail
@@ -192,7 +187,7 @@ concept MutableTrackStateProxyConcept = TrackStateProxyConcept<T> &&
              TrackIndexType index, std::shared_ptr<const Surface> surface,
              Eigen::Matrix<double, 3, 6> projector,
              ProjectorBitset projectorBitset, SourceLink sl,
-             Acts::Measurement<BoundIndices, 2> meas, std::size_t measdim) {
+             std::size_t measdim) {
   {v.shareFrom(mask, mask)};
 
   {v.shareFrom(std::declval<typename T::Trajectory::ConstTrackStateProxy>(),
@@ -240,8 +235,6 @@ concept MutableTrackStateProxyConcept = TrackStateProxyConcept<T> &&
     v.effectiveCalibratedCovariance()
     } -> std::same_as<detail::DynamicMeasurementCovariance>;
 
-  {v.setCalibrated(meas)};
-
   {v.allocateCalibrated(measdim)};
 
   { v.chi2() } -> std::same_as<double&>;
@@ -251,4 +244,3 @@ concept MutableTrackStateProxyConcept = TrackStateProxyConcept<T> &&
   { v.typeFlags() } -> std::same_as<TrackStateType>;
 };
 }  // namespace Acts
-#endif

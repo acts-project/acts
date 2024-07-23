@@ -6,6 +6,9 @@ import subprocess
 from pathlib import Path
 import shutil
 import datetime
+import urllib.request
+import urllib.error
+import json
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -59,16 +62,22 @@ myst_heading_anchors = 3
 myst_dmath_allow_labels = True
 
 linkcheck_retries = 5
-linkcheck_ignore = [
-    r"https://doi.org/.*",
-    r"https://cernvm.cern.ch/.*",
-    r"http://eigen.tuxfamily.org.*",
-    r"https://pythia.org.*",
-    r"https://lcginfo.cern.ch/.*",
-    r"https://.*\.?intel.com/.*",
-    r"https://www.conventionalcommits.org/.*",
-    r"https://cds.cern.ch/record/.*",
-]
+linkcheck_ignore = []
+
+# Linkcheck ignore patterns are loaded from this URL, so we can
+# update without adding pull requests.
+linkcheck_ignore_url = (
+    "https://raw.githubusercontent.com/acts-project/linkcheck-ignore/main/data.json"
+)
+try:
+    response = urllib.request.urlopen(linkcheck_ignore_url)
+    linkcheck_ignore = json.loads(response.read().decode("utf-8"))
+except urllib.error.HTTPError:
+    print("Error getting linkcheck ignore data, using default")
+
+print("Link check ignore patterns")
+print(linkcheck_ignore)
+
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -112,7 +121,6 @@ nitpicky = True
 nitpick_ignore = [
     ("cpp:identifier", "Acts"),
     ("cpp:identifier", "detail"),
-    ("cpp:identifier", "SIZE_MAX"),
     ("cpp:identifier", "M_PI"),
     ("cpp:identifier", "eSize"),
     ("cpp:identifier", "eBoundSize"),

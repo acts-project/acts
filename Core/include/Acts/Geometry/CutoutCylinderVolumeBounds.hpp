@@ -119,7 +119,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   ///
   /// @return vector of canonical binning values
   std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::binR, Acts::binPhi, Acts::binZ};
+    return {Acts::BinningValue::binR, Acts::BinningValue::binPhi,
+            Acts::BinningValue::binZ};
   };
 
   /// Write information about this instance to an outstream

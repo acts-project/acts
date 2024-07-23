@@ -239,8 +239,9 @@ BOOST_AUTO_TEST_CASE(NoFit) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 0, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 0, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -272,7 +273,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       0);
 
@@ -326,8 +327,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -368,7 +370,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
@@ -431,8 +433,9 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -472,7 +475,7 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
@@ -526,8 +529,9 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -568,7 +572,7 @@ BOOST_AUTO_TEST_CASE(FitWithBfield) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 
@@ -623,8 +627,9 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 500, 1e-5);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 500, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -664,7 +669,7 @@ BOOST_AUTO_TEST_CASE(relChi2changeCutOff) {
   // Convergence
   BOOST_CHECK_LT(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       10);
 
@@ -723,8 +728,9 @@ BOOST_AUTO_TEST_CASE(DidNotConverge) {
   // Since we didn't break due to convergence, we reach nUpdatesMax and
   // therefore fail the fit.
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 6, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 6, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -791,8 +797,9 @@ BOOST_AUTO_TEST_CASE(NotEnoughMeasurements) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 6, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 6, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -879,8 +886,9 @@ BOOST_AUTO_TEST_CASE(FindHoles) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 20, 1e-5);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 20, 1e-5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -984,8 +992,9 @@ BOOST_AUTO_TEST_CASE(Material) {
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
-      false, false, FreeToBoundCorrection(false), 5, 0);
+      geoCtx, magCtx, calCtx, extensions,
+      PropagatorPlainOptions(geoCtx, magCtx), rSurface, false, false,
+      FreeToBoundCorrection(false), 5, 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -1027,7 +1036,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Convergence
   BOOST_CHECK_EQUAL(
       (track.template component<
-          std::size_t,
+          std::uint32_t,
           hashString(Experimental::Gx2fConstants::gx2fnUpdateColumn)>()),
       5);
 

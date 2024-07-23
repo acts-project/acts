@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ChargeConcept.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -93,7 +92,7 @@ struct Neutral {
   }
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, Neutral);
+static_assert(ChargeConcept<Neutral>, "Neutral does not fulfill ChargeConcept");
 
 /// Charge and momentum interpretation for particles with +-e charge.
 struct SinglyCharged {
@@ -136,7 +135,8 @@ struct SinglyCharged {
   }
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, SinglyCharged);
+static_assert(ChargeConcept<SinglyCharged>,
+              "SinglyCharged does not fulfill ChargeConcept");
 
 /// Charge and momentum interpretation for arbitrarily charged but not neutral
 /// particles.
@@ -174,7 +174,8 @@ class NonNeutralCharge {
   float m_absQ{};
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, NonNeutralCharge);
+static_assert(ChargeConcept<NonNeutralCharge>,
+              "NonNeutralCharge does not fulfill ChargeConcept");
 
 /// Charge and momentum interpretation for arbitrarily charged particles.
 ///
@@ -215,7 +216,8 @@ class AnyCharge {
   float m_absQ{};
 };
 
-ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, AnyCharge);
+static_assert(ChargeConcept<AnyCharge>,
+              "AnyCharge does not fulfill ChargeConcept");
 
 /// @}
 

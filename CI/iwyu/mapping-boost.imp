@@ -1,3 +1,0 @@
-[
-  { include: ["@<<boost/histogram/.*>", "private", "<boost/histogram.hpp>", "public"] },
-]
