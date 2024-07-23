@@ -5,8 +5,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-cmake_minimum_required(VERSION 3.11)
 include(FetchContent)
 
 message(STATUS "Building FRNN as part of the ACTS project")
@@ -22,5 +20,3 @@ if(NOT frnncontent_POPULATED)
   configure_file(CMakeLists.txt.in "${frnncontent_SOURCE_DIR}/CMakeLists.txt" COPYONLY)
   add_subdirectory(${frnncontent_SOURCE_DIR} ${frnncontent_BINARY_DIR})
 endif()
-
-
