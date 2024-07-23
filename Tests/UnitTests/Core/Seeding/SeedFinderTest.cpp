@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   std::cout << "read " << spContainer.size() << " SP from file " << file
             << " in " << elapsed_read.count() << "s" << std::endl;
 
-  using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
+  using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
   Acts::SeedFinderConfig<value_type> config;
