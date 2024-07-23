@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -34,9 +33,6 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace {
-
-using Updater = Acts::GainMatrixUpdater;
-using Smoother = Acts::GainMatrixSmoother;
 
 using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
