@@ -222,10 +222,17 @@ set(_acts_boost_recommended_version 1.78.0)
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
+# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
+    if(POLICY CMP0167)
+      cmake_policy(SET CMP0167 NEW)
+    endif()
 
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
