@@ -67,6 +67,11 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
       continue;
     }
 
+    if( !track.hasReferenceSurface() ) {
+      ACTS_VERBOSE("Skip track " << itrack << ": missing ref surface");
+      continue;
+    }
+
     TrackFitterFunction::GeneralFitterOptions options{
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
         &track.referenceSurface(),
