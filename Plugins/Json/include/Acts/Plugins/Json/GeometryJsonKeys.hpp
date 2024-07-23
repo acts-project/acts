@@ -10,13 +10,8 @@
 
 #include <string_view>
 
-namespace Acts {
+namespace Acts::JsonKey {
 
-/// JsonKey
-///
-/// @brief store in a single place the different key used for the material
-/// mapping
-namespace JsonKey {
 /// The name identification
 static constexpr std::string_view kName = "NAME";
 /// The bin key
@@ -34,6 +29,5 @@ static constexpr std::string_view kMaterialMap = "mapMaterial";
 /// The mapping type key, used to select the type od material mapping for the
 /// surface
 static constexpr std::string_view kMappingType = "mappingType";
-}  // namespace JsonKey
 
-}  // namespace Acts
+}  // namespace Acts::JsonKey
