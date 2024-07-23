@@ -687,10 +687,6 @@ class TrackProxy {
 
       // reverse using standard linked list reversal algorithm
       reverseTrackStates();
-    } else {
-      // just copy the track state indices
-      tipIndex() = other.tipIndex();
-      stemIndex() = other.stemIndex();
     }
 
     setParticleHypothesis(other.particleHypothesis());
