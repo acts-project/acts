@@ -413,16 +413,17 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
   ACTS_VERBOSE(" - a: " << a->grid() << " along: " << a->direction());
   ACTS_VERBOSE(" - b: " << b->grid() << " along: " << b->direction());
 
+  const auto* cylinder = dynamic_cast<const CylinderSurface*>(&surfaceA);
+  const auto* disc = dynamic_cast<const DiscSurface*>(&surfaceA);
+
   if (a->dim() == b->dim()) {
     ACTS_VERBOSE("Grid both have same dimension: " << a->dim());
 
-    if (const auto* cylinder = dynamic_cast<const CylinderSurface*>(&surfaceA);
-        cylinder != nullptr) {
+    if (cylinder != nullptr) {
       return mergeGridPortals(a, b, cylinder,
                               &dynamic_cast<const CylinderSurface&>(surfaceB),
                               direction, logger);
-    } else if (const auto* disc = dynamic_cast<const DiscSurface*>(&surfaceA);
-               disc != nullptr) {
+    } else if (disc != nullptr) {
       return mergeGridPortals(a, b, disc,
                               &dynamic_cast<const DiscSurface&>(surfaceB),
                               direction, logger);
@@ -433,7 +434,29 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
     }
   } else {
     ACTS_VERBOSE("Grids have different dimension, extending rhs to 2D");
-    auto b2D = b->make2DGrid(nullptr);
+    const IAxis* otherAxis = nullptr;
+
+    if (b->direction() == direction) {
+      ACTS_VERBOSE("1D grid is binned in merging direction " << direction);
+      ACTS_VERBOSE("~> Adding complementary axis");
+
+      if (cylinder != nullptr) {
+        otherAxis = direction == BinningValue::binRPhi
+                        ? a->grid().axes().back()
+                        : a->grid().axes().front();
+      } else if (disc != nullptr) {
+        otherAxis = direction == BinningValue::binR ? a->grid().axes().back()
+                                                    : a->grid().axes().front();
+      } else {
+        ACTS_VERBOSE("Surface type is not supported here, falling back");
+        return nullptr;
+      }
+    } else {
+      ACTS_VERBOSE("1D grid is binned in complementary direction");
+    }
+
+    auto b2D = b->make2DGrid(otherAxis);
+    ACTS_VERBOSE("-> new grid: " << b2D->grid());
     return mergeGridPortals(a, b2D.get(), surfaceA, surfaceB, direction,
                             logger);
   }
