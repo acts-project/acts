@@ -37,10 +37,6 @@ namespace {
 constexpr BoundIndices boundIndices[] = {
     eBoundLoc0, eBoundLoc1, eBoundTime, eBoundPhi, eBoundTheta, eBoundQOverP,
 };
-constexpr FreeIndices freeIndices[] = {
-    eFreePos0, eFreePos1, eFreePos2, eFreeTime,
-    eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP,
-};
 const TestSourceLink sourceOrig;
 const Acts::SourceLink source{sourceOrig};
 // fix seed for reproducible tests
@@ -52,39 +48,6 @@ std::default_random_engine rng(123);
 // measurement-specific functionality.
 
 BOOST_AUTO_TEST_SUITE(EventDataMeasurement)
-
-BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
-  auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  auto meas = makeFixedSizeMeasurement(source, params, cov, index);
-
-  BOOST_CHECK_EQUAL(meas.size(), 1);
-  for (auto i : boundIndices) {
-    if (i == index) {
-      BOOST_CHECK(meas.contains(i));
-    } else {
-      BOOST_CHECK(!meas.contains(i));
-    }
-  }
-  BOOST_CHECK_EQUAL(meas.parameters(), params);
-  BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
-                    sourceOrig);
-}
-
-BOOST_AUTO_TEST_CASE(FixedBoundAll) {
-  auto [params, cov] = generateBoundParametersCovariance(rng);
-  auto meas = makeFixedSizeMeasurement(source, params, cov, eBoundLoc0,
-                                       eBoundLoc1, eBoundPhi, eBoundTheta,
-                                       eBoundQOverP, eBoundTime);
-
-  BOOST_CHECK_EQUAL(meas.size(), eBoundSize);
-  for (auto i : boundIndices) {
-    BOOST_CHECK(meas.contains(i));
-  }
-  BOOST_CHECK_EQUAL(meas.parameters(), params);
-  BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
-}
 
 BOOST_DATA_TEST_CASE(VariableBoundOne, bd::make(boundIndices), index) {
   auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
@@ -117,91 +80,6 @@ BOOST_AUTO_TEST_CASE(VariableBoundAll) {
   BOOST_CHECK_EQUAL(meas.effectiveParameters(), params);
   BOOST_CHECK_EQUAL(meas.effectiveCovariance(), cov);
   BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
-}
-
-namespace {
-// example data for phi residual tests. each entry contains
-//
-//     measured, reference, expected residual
-//
-const std::vector<std::tuple<double, double, double>> kPhiDataset = {
-    // measurement and reference in bounds and close
-    {0.5, 0.75, -0.25},
-    // measurement and reference in bounds but at different edges
-    {0.25, 2 * M_PI - 0.25, 0.5},
-    {2 * M_PI - 0.125, 0.125, -0.25},
-    // measurement in bounds, reference ouf-of-bounds, both near lower edge
-    {0.25, -0.25, 0.5},
-    // measurement in bounds, reference ouf-of-bounds, both near upper edge
-    {2 * M_PI - 0.25, 2 * M_PI + 0.25, -0.5},
-    // measurement out-of-bounds, reference in bounds, both near lower edge
-    {-0.25, 0.25, -0.5},
-    // measurement out-of-bounds, reference in bounds, both near upper edge
-    {2 * M_PI + 0.25, 2 * M_PI - 0.25, 0.5},
-};
-}  // namespace
-
-BOOST_DATA_TEST_CASE(FixedBoundResidualsPhi, bd::make(kPhiDataset), phiMea,
-                     phiRef, phiRes) {
-  using MeasurementVector = Acts::ActsVector<1>;
-  using MeasurementCovariance = Acts::ActsSquareMatrix<1>;
-
-  // prepare measurement
-  MeasurementVector params = MeasurementVector::Zero();
-  MeasurementCovariance cov = MeasurementCovariance::Zero();
-  params[0] = phiMea;
-  auto measurement = makeFixedSizeMeasurement(source, params, cov, eBoundPhi);
-  // prepare reference parameters
-  Acts::BoundVector reference = Acts::BoundVector::Zero();
-  reference[eBoundPhi] = phiRef;
-
-  // compute and check residual
-  auto res = measurement.residuals(reference);
-  CHECK_CLOSE_ABS(res[0], phiRes, std::numeric_limits<ActsScalar>::epsilon());
-}
-
-BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
-  auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  auto meas = makeFixedSizeMeasurement(source, params, cov, index);
-
-  BOOST_CHECK_EQUAL(meas.size(), 1);
-  for (auto i : freeIndices) {
-    if (i == index) {
-      BOOST_CHECK(meas.contains(i));
-    } else {
-      BOOST_CHECK(!meas.contains(i));
-    }
-  }
-  BOOST_CHECK_EQUAL(meas.parameters(), params);
-  BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
-                    sourceOrig);
-
-  // all free parameters are unrestricted and we know the expected residual.
-  constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
-  auto [ref, refCov] = generateFreeParametersCovariance(rng);
-  auto res = meas.residuals(ref);
-  CHECK_CLOSE_ABS(res[0], params[0] - ref[index], tol);
-}
-
-BOOST_AUTO_TEST_CASE(FixedFreeAll) {
-  auto [params, cov] = generateFreeParametersCovariance(rng);
-  auto meas = makeFixedSizeMeasurement(
-      source, params, cov, eFreePos0, eFreePos1, eFreePos2, eFreeTime,
-      eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP);
-
-  BOOST_CHECK_EQUAL(meas.size(), eFreeSize);
-  for (auto i : freeIndices) {
-    BOOST_CHECK(meas.contains(i));
-  }
-  BOOST_CHECK_EQUAL(meas.parameters(), params);
-  BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
-
-  // all free parameters are unrestricted and we know the expected residual.
-  constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
-  auto [ref, refCov] = generateFreeParametersCovariance(rng);
-  CHECK_CLOSE_ABS(meas.residuals(ref), params - ref, tol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
