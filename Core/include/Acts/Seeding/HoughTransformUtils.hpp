@@ -88,6 +88,7 @@ inline double lowerBinEdge(double min, double max, unsigned nSteps,
 /// left to the caller
 inline double binCenter(double min, double max, unsigned nSteps,
                         std::size_t binIndex) {
+                      
   return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
 }
 
@@ -111,15 +112,12 @@ class HoughCell {
   YieldType nLayers() const { return m_nLayers; }
   /// @brief access the number of unique hits compatible with this cell
   YieldType nHits() const { return m_nHits; }
-  /// @brief access the set of layers compatible with this cell
-  // const std::unordered_set<unsigned>& layers() const { return m_layers; }
-  // /// @brief access the set of unique hits compatible with this cell
-  // const std::unordered_set<identifier_t>& hits() const { return m_hits; }
-  // /// @brief reset this cell, removing any existing content.
-  std::span<unsigned, std::dynamic_extent> getLayers();
+  /// @brief access the span of layers compatible with this cell
+  std::span<const unsigned, std::dynamic_extent> getLayers() const;
+  // /// @brief access the pan of unique hits compatible with this cell  
+  std::span<const identifier_t, std::dynamic_extent> getHits() const ;
 
-  const std::span<const identifier_t, std::dynamic_extent> getHits() const ;
-
+  /// @brief reset this cell, removing any existing content.
   void reset();
 
  private:
@@ -244,11 +242,8 @@ class HoughPlane {
 
     return m_touchedBins;
   }
-
-  // std::pair<std::size_t, std::size_t> axisBins(std::size_t globalBin) const{
-  //   return m_houghHist.axisIndices(globalBin);
-  // }
-
+  
+  /// @brief get the coordinates of the bin given the global bin index
   std::array<std::size_t, 2> axisBins(std::size_t globalBin) const{
     return m_houghHist.axisIndices(globalBin);
   }
@@ -282,10 +277,6 @@ class HoughPlane {
 
   YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen
-  // std::pair<std::size_t, std::size_t> m_maxLocHits = {
-  //     0, 0};  // track the location of the maximum in hits
-  // std::pair<std::size_t, std::size_t> m_maxLocLayers = {
-  //     0, 0};  // track the location of the maximum in layers
 
   std::pair<std::size_t, std::size_t> m_maxLocHits = {
       0, 0};  // track the location of the maximum in hits
@@ -396,7 +387,7 @@ class IslandsAroundMax {
       std::vector<std::pair<std::size_t, std::size_t>>& inMaximum,
       std::vector<std::pair<std::size_t, std::size_t>>& toExplore,
       YieldType threshold,
-      std::map<std::pair<std::size_t, std::size_t>, YieldType>& yieldMap);
+      std::unordered_map<std::size_t>& yieldMap);
 
   IslandsAroundMaxConfig m_cfg;  // configuration data object
 
