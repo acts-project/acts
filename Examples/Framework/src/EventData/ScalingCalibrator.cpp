@@ -151,15 +151,30 @@ void ActsExamples::ScalingCalibrator::calibrate(
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
-  const auto& meas = measurements[idxSourceLink.index()];
+  const auto& measurement = measurements[idxSourceLink.index()];
 
-  Measurement measCopy = meas;
-  measCopy.parameters()[Acts::eBoundLoc0] += ct.x_offset;
-  measCopy.parameters()[Acts::eBoundLoc1] += ct.y_offset;
-  measCopy.covariance()(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
-  measCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
-  trackState.allocateCalibrated(meas.size());
-  trackState.effectiveCalibrated() = measCopy.parameters();
-  trackState.effectiveCalibratedCovariance() = measCopy.covariance();
-  trackState.setProjectorBitset(measCopy.subspace().fullProjectorBits());
+  assert(measurement.contains(Acts::eBoundLoc0) &&
+         "Measurement does not contain the required bound loc0");
+  assert(measurement.contains(Acts::eBoundLoc1) &&
+         "Measurement does not contain the required bound loc1");
+
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
+
+  Measurement measurementCopy = measurement;
+  measurementCopy.effectiveParameters()[boundLoc0] += ct.x_offset;
+  measurementCopy.effectiveParameters()[boundLoc1] += ct.y_offset;
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) *= ct.x_scale;
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) *= ct.y_scale;
+
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurement.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurementCopy.covariance<kMeasurementSize>();
+    trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+  });
 }

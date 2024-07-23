@@ -8,6 +8,8 @@
 
 #include "ActsExamples/EventData/NeuralCalibrator.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -102,16 +104,28 @@ void ActsExamples::NeuralCalibrator::calibrate(
   input[iInput++] = idxSourceLink.geometryId().layer();
 
   const Acts::Surface& referenceSurface = trackState.referenceSurface();
+  auto trackParameters = trackState.parameters();
 
   const auto& measurement = measurements[idxSourceLink.index()];
 
-  const Acts::BoundVector& fpar = measurement.fullParameters();
-  const Acts::BoundMatrix& fcov = measurement.fullCovariance();
+  assert(measurement.contains(Acts::eBoundLoc0) &&
+         "Measurement does not contain the required bound loc0");
+  assert(measurement.contains(Acts::eBoundLoc1) &&
+         "Measurement does not contain the required bound loc1");
 
-  Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(fpar[Acts::eBoundPhi],
-                                                      fpar[Acts::eBoundTheta]);
-  Acts::Vector3 globalPosition = referenceSurface.localToGlobal(
-      gctx, fpar.segment<2>(Acts::eBoundLoc0), dir);
+  auto boundLoc0 = measurement.subspace().indexOf(Acts::eBoundLoc0);
+  auto boundLoc1 = measurement.subspace().indexOf(Acts::eBoundLoc1);
+
+  Acts::Vector2 localPosition{measurement.effectiveParameters()[boundLoc0],
+                              measurement.effectiveParameters()[boundLoc1]};
+  Acts::Vector2 localCovariance{
+      measurement.effectiveCovariance()(boundLoc0, boundLoc0),
+      measurement.effectiveCovariance()(boundLoc1, boundLoc1)};
+
+  Acts::Vector3 dir = Acts::makeDirectionFromPhiTheta(
+      trackParameters[Acts::eBoundPhi], trackParameters[Acts::eBoundTheta]);
+  Acts::Vector3 globalPosition =
+      referenceSurface.localToGlobal(gctx, localPosition, dir);
 
   // Rotation matrix. When applied to global coordinates, they
   // are rotated into the local reference frame of the
@@ -125,10 +139,10 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
   input[iInput++] = angles.first;
   input[iInput++] = angles.second;
-  input[iInput++] = fpar[Acts::eBoundLoc0];
-  input[iInput++] = fpar[Acts::eBoundLoc1];
-  input[iInput++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
-  input[iInput++] = fcov(Acts::eBoundLoc1, Acts::eBoundLoc1);
+  input[iInput++] = localPosition[0];
+  input[iInput++] = localPosition[1];
+  input[iInput++] = localCovariance[0];
+  input[iInput++] = localCovariance[1];
   if (iInput != m_nInputs) {
     throw std::runtime_error("Expected input size of " +
                              std::to_string(m_nInputs) +
@@ -159,15 +173,19 @@ void ActsExamples::NeuralCalibrator::calibrate(
   std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
   Measurement measurementCopy = measurement;
-  measurementCopy.parameters()[Acts::eBoundLoc0] = output[iLoc0];
-  measurementCopy.parameters()[Acts::eBoundLoc1] = output[iLoc0 + 1];
-  measurementCopy.covariance()(Acts::eBoundLoc0, Acts::eBoundLoc0) =
-      output[iVar0];
-  measurementCopy.covariance()(Acts::eBoundLoc1, Acts::eBoundLoc1) =
-      output[iVar0 + 1];
+  measurementCopy.parameters()[boundLoc0] = output[iLoc0];
+  measurementCopy.parameters()[boundLoc1] = output[iLoc0 + 1];
+  measurementCopy.covariance()(boundLoc0, boundLoc0) = output[iVar0];
+  measurementCopy.covariance()(boundLoc1, boundLoc1) = output[iVar0 + 1];
 
-  trackState.allocateCalibrated(measurementCopy.size());
-  trackState.effectiveCalibrated() = measurementCopy.parameters();
-  trackState.effectiveCalibratedCovariance() = measurementCopy.covariance();
-  trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+  visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurementCopy.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurementCopy.covariance<kMeasurementSize>();
+    trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+  });
 }

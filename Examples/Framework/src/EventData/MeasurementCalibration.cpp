@@ -31,12 +31,18 @@ void ActsExamples::PassThroughCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) &&
          "Source link index is outside the container bounds");
 
-  const auto& meas = measurements[idxSourceLink.index()];
+  const auto& measurement = measurements[idxSourceLink.index()];
 
-  trackState.allocateCalibrated(meas.size());
-  trackState.effectiveCalibrated() = meas.parameters();
-  trackState.effectiveCalibratedCovariance() = meas.covariance();
-  trackState.setProjectorBitset(meas.subspace().fullProjectorBits());
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+    trackState.allocateCalibrated(kMeasurementSize);
+    trackState.calibrated<kMeasurementSize>() =
+        measurement.parameters<kMeasurementSize>();
+    trackState.calibratedCovariance<kMeasurementSize>() =
+        measurement.covariance<kMeasurementSize>();
+    trackState.setProjectorBitset(measurement.subspace().fullProjectorBits());
+  });
 }
 
 ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(

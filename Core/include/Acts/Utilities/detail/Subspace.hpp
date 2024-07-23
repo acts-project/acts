@@ -119,6 +119,15 @@ class FixedSizeSubspace {
   /// @return Axis index in the full space
   constexpr std::size_t operator[](std::size_t i) const { return m_axes[i]; }
 
+  std::size_t indexOf(std::size_t axis) const {
+    for (std::size_t i = 0; i < kSize; ++i) {
+      if (m_axes[i] == axis) {
+        return i;
+      }
+    }
+    return kSize;
+  }
+
   /// Axis indices that comprise the subspace.
   ///
   /// The specific container and index type should be considered an
@@ -264,6 +273,15 @@ class VariableSizeSubspace {
   constexpr std::size_t operator[](std::size_t i) const {
     assert(i < m_size);
     return m_axes[i];
+  }
+
+  std::size_t indexOf(std::size_t axis) const {
+    for (std::size_t i = 0; i < m_size; ++i) {
+      if (m_axes[i] == axis) {
+        return i;
+      }
+    }
+    return m_size;
   }
 
   /// Check if the given axis index in the full space is part of the subspace.

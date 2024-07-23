@@ -23,7 +23,6 @@
 #include <cstddef>
 
 #include <Eigen/Core>
-#include <Eigen/src/Core/util/Constants.h>
 
 namespace Acts {
 

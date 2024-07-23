@@ -503,7 +503,6 @@ class MultiTrajectory {
   /// measurement at a given index
   /// @param istate The track state
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   typename TrackStateProxy::EffectiveCalibrated effectiveCalibrated(
       IndexType istate) requires(!ReadOnly) {
     // This abuses an incorrectly sized vector / matrix to access the
@@ -530,7 +529,6 @@ class MultiTrajectory {
   /// measurement at a given index
   /// @param istate The track state
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   typename TrackStateProxy::EffectiveCalibratedCovariance
   effectiveCalibratedCovariance(IndexType istate) requires(!ReadOnly) {
     // This abuses an incorrectly sized vector / matrix to access the
