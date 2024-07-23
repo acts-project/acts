@@ -1469,7 +1469,7 @@ BOOST_AUTO_TEST_CASE(RDirection) {
   BOOST_CHECK_EQUAL(axis1R.getBoundaryType(), AxisBoundaryType::Bound);
   BOOST_CHECK_EQUAL(axis2R.getMin(), -30_degree);
   BOOST_CHECK_EQUAL(axis2R.getMax(), 30_degree);
-  BOOST_CHECK_EQUAL(axis2R.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis2R.getNBins(), 3);
   BOOST_CHECK_EQUAL(axis2R.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis2R.getBoundaryType(), AxisBoundaryType::Bound);
 }
@@ -1478,7 +1478,7 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   auto disc1 = Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm,
                                                 100_mm, 30_degree);
 
-  auto grid1 = GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 1},
+  auto grid1 = GridPortalLink::make(disc1, Axis{AxisBound, 30_mm, 100_mm, 3},
                                     Axis{AxisBound, -30_degree, 30_degree, 3});
 
   auto disc2 = Surface::makeShared<DiscSurface>(
@@ -1503,7 +1503,7 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
 
   BOOST_CHECK_EQUAL(axis1.getMin(), 30_mm);
   BOOST_CHECK_EQUAL(axis1.getMax(), 100_mm);
-  BOOST_CHECK_EQUAL(axis1.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis1.getNBins(), 3);
   BOOST_CHECK_EQUAL(axis1.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis1.getBoundaryType(), AxisBoundaryType::Bound);
   BOOST_CHECK_CLOSE(axis2.getMin(), -90_degree, 1e-6);
@@ -1513,7 +1513,7 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
   BOOST_CHECK_EQUAL(axis2.getBoundaryType(), AxisBoundaryType::Bound);
 
   auto grid21dR = GridPortalLink::make(disc2, BinningValue::binR,
-                                       Axis{AxisBound, 30_mm, 100_mm, 1});
+                                       Axis{AxisBound, 30_mm, 100_mm, 3});
 
   auto merged12RPtr =
       grid1->merge(gctx, *grid21dR, BinningValue::binPhi, *logger);
@@ -1528,7 +1528,7 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
 
   BOOST_CHECK_EQUAL(axis1R.getMin(), 30_mm);
   BOOST_CHECK_EQUAL(axis1R.getMax(), 100_mm);
-  BOOST_CHECK_EQUAL(axis1R.getNBins(), 1);
+  BOOST_CHECK_EQUAL(axis1R.getNBins(), 3);
   BOOST_CHECK_EQUAL(axis1R.getType(), AxisType::Equidistant);
   BOOST_CHECK_EQUAL(axis1R.getBoundaryType(), AxisBoundaryType::Bound);
   BOOST_CHECK_CLOSE(axis2R.getMin(), -90_degree, 1e-6);
