@@ -91,7 +91,7 @@ void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Transform3& transform,
                                        const ViewConfig& viewConfig) {
   Polyhedron surfaceHedron =
-      surface.polyhedronRepresentation(gctx, viewConfig.quaterSegments);
+      surface.polyhedronRepresentation(gctx, viewConfig.quarterSegments);
   if (!transform.isApprox(Transform3::Identity())) {
     surfaceHedron.move(transform);
   }
@@ -157,7 +157,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
       auto rValues = axes[0]->getBinEdges();
       auto phiValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
-      gridRadConfig.quaterSegments = phiValues.size();
+      gridRadConfig.quarterSegments = phiValues.size();
       for (auto r : rValues) {
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
@@ -289,7 +289,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   ViewConfig lConfig = layerView;
   ViewConfig sConfig = sensitiveView;
   ViewConfig gConfig = gridView;
-  gConfig.quaterSegments = 8;
+  gConfig.quarterSegments = 8;
 
   ViewConfig vcConfig = cConfig;
   std::string vname = tVolume.volumeName();

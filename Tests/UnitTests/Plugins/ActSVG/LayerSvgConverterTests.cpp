@@ -45,12 +45,12 @@ void setupTools() {
 
 std::shared_ptr<Acts::Layer> generateDiscLayer(Acts::ActsScalar rInner,
                                                Acts::ActsScalar rOuter,
-                                               unsigned int quaterSegments,
+                                               unsigned int quarterSegments,
                                                unsigned int nRings,
                                                bool useTrapezoids = false) {
   // Some preparations
   setupTools();
-  unsigned int fullSegments = 4 * quaterSegments;
+  unsigned int fullSegments = 4 * quarterSegments;
   std::vector<std::shared_ptr<const Acts::Surface>> moduleSurfaces;
   Acts::ActsScalar phiStep = 2 * M_PI / fullSegments;
   Acts::ActsScalar rStep = (rOuter - rInner) / nRings;
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   discLayerStyle.highlights = {"mouseover", "mouseout"};
   discLayerStyle.strokeColor = {25, 25, 25};
   discLayerStyle.strokeWidth = 0.5;
-  discLayerStyle.quaterSegments = 72u;
+  discLayerStyle.quarterSegments = 72u;
 
   Acts::GeometryIdentifier geoID{0};
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   discLayerStyle.highlights = {"mouseover", "mouseout"};
   discLayerStyle.strokeColor = {25, 25, 25};
   discLayerStyle.strokeWidth = 0.5;
-  discLayerStyle.quaterSegments = 72u;
+  discLayerStyle.quarterSegments = 72u;
 
   Acts::GeometryIdentifier geoID{0};
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   cylinderLayerStyle.highlights = {"mouseover", "mouseout"};
   cylinderLayerStyle.strokeColor = {25, 25, 25};
   cylinderLayerStyle.strokeWidth = 0.5;
-  cylinderLayerStyle.quaterSegments = 72u;
+  cylinderLayerStyle.quarterSegments = 72u;
 
   Acts::GeometryIdentifier geoID{0};
 

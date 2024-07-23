@@ -41,7 +41,7 @@ class GeoModelBlueprintCreater {
     /// The binning values for the KDTree sorting
     std::vector<BinningValue> kdtBinning = {};
     /// Polyhedron approximation: number of segments per circle quater
-    unsigned int quaterSegments = 1u;
+    unsigned int quarterSegments = 1u;
   };
 
   /// The cache struct

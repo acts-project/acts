@@ -90,7 +90,7 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
   splitBarrelModule(
       const Acts::GeometryContext& gctx,
       const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
-      unsigned int quaterSegments) const;
+      unsigned int quarterSegments) const;
 
   /// Take a geometry context and TGeoElement in the Itk disks and split it
   /// into sub elements.

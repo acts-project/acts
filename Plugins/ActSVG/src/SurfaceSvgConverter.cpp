@@ -21,7 +21,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
   if (!cOptions.templateSurface) {
     // Polyhedron surface for vertices needed anyway
     Polyhedron surfaceHedron =
-        surface.polyhedronRepresentation(gctx, cOptions.style.quaterSegments);
+        surface.polyhedronRepresentation(gctx, cOptions.style.quarterSegments);
     auto vertices3D = surfaceHedron.vertices;
     pSurface._vertices = vertices3D;
   } else {
@@ -30,7 +30,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
     auto planarBounds =
         dynamic_cast<const Acts::PlanarBounds*>(&(surface.bounds()));
     if (planarBounds != nullptr) {
-      auto vertices2D = planarBounds->vertices(cOptions.style.quaterSegments);
+      auto vertices2D = planarBounds->vertices(cOptions.style.quarterSegments);
       pSurface._vertices.reserve(vertices2D.size());
       for (const auto& v2 : vertices2D) {
         pSurface._vertices.push_back({v2[0], v2[1], 0.});
@@ -41,7 +41,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
           dynamic_cast<const Acts::AnnulusBounds*>(&(surface.bounds()));
       if (annulusBounds != nullptr) {
         auto vertices2D =
-            annulusBounds->vertices(cOptions.style.quaterSegments);
+            annulusBounds->vertices(cOptions.style.quarterSegments);
         pSurface._vertices.reserve(vertices2D.size());
         for (const auto& v2 : vertices2D) {
           pSurface._vertices.push_back({v2[0], v2[1], 0.});

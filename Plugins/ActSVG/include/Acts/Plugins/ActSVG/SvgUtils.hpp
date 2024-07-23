@@ -41,7 +41,7 @@ struct Style {
   unsigned int fontSize = 14u;
 
   /// Number of segments to approximate a quarter of a circle
-  unsigned int quaterSegments = 72u;
+  unsigned int quarterSegments = 72u;
 
   /// Conversion to fill and stroke object from the base library
   /// @return a tuple of actsvg digestable objects
