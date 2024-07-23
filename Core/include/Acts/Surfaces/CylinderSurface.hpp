@@ -220,7 +220,7 @@ class CylinderSurface : public RegularSurface {
   /// them, both as rectangular faces and as triangular faces.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param quarterSegments The number of segmetns to approximate a quarter of the
+  /// @param quarterSegments The number of segments to approximate a quarter of the
   /// full circle; it it's chosen to be 1, only the extrema points (-pi, -0.5pi,
   /// 0., 0.5pi) are inserted to capture the correct extent in the x-y plane
   ///

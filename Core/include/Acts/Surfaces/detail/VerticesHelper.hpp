@@ -25,7 +25,7 @@ namespace Acts::detail::VerticesHelper {
 /// @param phiMin the minimum phi value
 /// @param phiMax The second phi value
 /// @param phiRef is a vector of reference phi values to be included as well
-/// @param quarterSegments number of segments used to approximate a segement quarter
+/// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of generated phi values
 std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
@@ -46,7 +46,7 @@ std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
 /// @param phiMin the minimum phi value
 /// @param phiMax The second phi value
 /// @param phiRef is a vector of reference phi values to be included as well
-/// @param quarterSegments number of segments used to approximate a segement quarter
+/// @param quarterSegments number of segments used to approximate a segment quarter
 /// @param offset The out of plane offset position of the bow
 /// @param transform The transform applied (optional)
 ///
@@ -79,7 +79,7 @@ std::vector<vertex_t> segmentVertices(
 /// @param outerRy The radius of the outer ellipse (in y)
 /// @param avgPhi The phi direction of the center if sector
 /// @param halfPhi The half phi sector of the ellipse
-/// @param quarterSegments number of segments used to approximate a segement quarter
+/// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
 std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
@@ -94,7 +94,7 @@ std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
 /// @param outerR The radius of the outer circle (sector)
 /// @param avgPhi The phi direction of the center if sector
 /// @param halfPhi The half phi sector if sector
-/// @param quarterSegments number of segments used to approximate a segement quarter
+/// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
 std::vector<Vector2> circularVertices(ActsScalar innerR, ActsScalar outerR,

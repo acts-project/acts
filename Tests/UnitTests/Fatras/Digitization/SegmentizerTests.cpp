@@ -217,9 +217,9 @@ BOOST_DATA_TEST_CASE(
                  ".csv");
 
     /// Run the Segmentizer
-    auto cSegement = cl.segments(geoCtx, *surface, segmentation, {start, end});
+    auto csegment = cl.segments(geoCtx, *surface, segmentation, {start, end});
 
-    for (const auto& cs : cSegement) {
+    for (const auto& cs : csegment) {
       csvHelper.writeLine(segments, cs.path2D[0], cs.path2D[1]);
     }
 
