@@ -989,7 +989,7 @@ class Navigator {
                   state.options.direction * stepper.direction(state.stepping),
                   BoundaryTolerance::Infinite(), state.options.surfaceTolerance)
               .closest();
-      if (targetIntersection) {
+      if (targetIntersection.isValid()) {
         ACTS_VERBOSE(volInfo(state)
                      << "Target estimate position ("
                      << targetIntersection.position().x() << ", "

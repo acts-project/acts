@@ -329,7 +329,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Step to the volume1|volume2 boundary (portal has witched volume id)
   BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 2);
-  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
+                    &(statesFwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 7);
 
   // Step to the surface inside volume2
@@ -339,7 +340,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Step to the volume2|volume3 boundary - volume has switched
   BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(), 3);
-  BOOST_CHECK_EQUAL(statesFwd[4].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[4].currentSurface,
+                    &(statesFwd[4].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[4].currentPortal->surface().geometryId(), 10);
 
   // Step to the surface inside volume3
@@ -349,7 +351,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Step to the volume3|endOfWorld boundary
   BOOST_CHECK_EQUAL(statesFwd[6].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(statesFwd[6].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[6].currentSurface,
+                    &(statesFwd[6].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[6].currentPortal->surface().geometryId(), 11);
 
   // Step to the end of world
@@ -359,7 +362,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // Action list call before the first step
   // Starting in the volume3
   BOOST_CHECK_EQUAL(statesBwd[6].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(statesBwd[6].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[6].currentSurface,
+                    &(statesBwd[6].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[6].currentPortal->surface().geometryId(), 6);
 
   // Step to the surface inside volume1
@@ -369,7 +373,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Step to the volume1|volume2 boundary / preStep not yet set
   BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[4].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[4].currentSurface,
+                    &(statesBwd[4].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[4].currentPortal->surface().geometryId(), 7);
 
   // Step to the surface inside volume2
@@ -379,7 +384,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Step to the volume2|volume3 boundary / pre-step not yet set
   BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 2);
-  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
+                    &(statesBwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 10);
   BOOST_CHECK_EQUAL(statesBwd[2].surfaceCandidates.size(), 2u);
 
@@ -483,7 +489,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
 
   // Step to the volume|endOfWorld boundary
   BOOST_CHECK_EQUAL(statesFwd[2].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
+                    &(statesFwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 6);
 
   // Step to the end of world
@@ -492,7 +499,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
 
   // Step to the endOfWorld|volume boundary
   BOOST_CHECK_EQUAL(statesBwd[2].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
+                    &(statesBwd[2].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 5);
 
   // Step to the cylindrical surface
@@ -606,7 +614,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
 
   // Step to the volume|endOfWorld boundary
   BOOST_CHECK_EQUAL(statesFwd[3].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(statesFwd[3].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesFwd[3].currentSurface,
+                    &(statesFwd[3].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal->surface().geometryId(), 6);
 
   // Step to the end of world
@@ -615,7 +624,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
 
   // Step to the endOfWorld|volume boundary
   BOOST_CHECK_EQUAL(statesBwd[3].currentVolume, nullptr);
-  BOOST_CHECK_EQUAL(statesBwd[3].currentSurface, nullptr);
+  BOOST_CHECK_EQUAL(statesBwd[3].currentSurface,
+                    &(statesBwd[3].currentPortal->surface()));
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal->surface().geometryId(), 5);
 
   // Second intersection of the cylindrical surface
