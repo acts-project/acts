@@ -313,7 +313,7 @@ class DiscSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param quarterSegments Number of segments used to describe the
-  /// quarter of a full cirlce
+  /// quarter of a full circle
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(

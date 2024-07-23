@@ -211,7 +211,7 @@ class PlaneSurface : public RegularSurface {
   /// segments in a quarter of the phi range. If it is 1, then only the extrema
   /// points in phi are inserted next to the segment corners.
   ///
-  /// @note for planar surfaces without curved segements @c quarterSegments is ignored
+  /// @note for planar surfaces without curved segments @c quarterSegments is ignored
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(

@@ -116,11 +116,11 @@ class CylinderBounds : public SurfaceBounds {
   ///
   /// @param transform is the global transform
   /// @param quarterSegments is the number of segments to approximate a quarter
-  /// of a circle. In oder to symmetrize fully closed and sectoral cylinders,
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
   /// also in the first case the two end points are given (albeit they overlap)
   /// in -pi / pi
   ///
-  /// @return a signle vector containing the vertices from one side and then
+  /// @return a singlevector containing the vertices from one side and then
   /// from the other side consecutively
   std::vector<Vector3> circleVertices(const Transform3 transform,
                                       unsigned int quarterSegments) const;

@@ -92,7 +92,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// - otherwise the tryAll options is used
     unsigned int nMinimalSurfaces = 4u;
     /// Polyhedron approximations: number of segments to be used
-    /// to approximate a quater of a circle
+    /// to approximate a quarter of a circle
     unsigned int quarterSegments = 1u;
     /// Extra information, mainly for screen output
     std::string auxiliary = "";

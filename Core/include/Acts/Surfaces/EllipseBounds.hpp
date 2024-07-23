@@ -93,7 +93,7 @@ class EllipseBounds : public PlanarBounds {
   /// Return the vertices
   ///
   /// @param quarterSegments is the number of segments to approximate a quarter
-  /// of a circle. In oder to symmetrize fully closed and sectoral cylinders,
+  /// of a circle. In order to symmetrize fully closed and sectoral cylinders,
   /// also in the first case the two end points are given (albeit they overlap)
   /// in -pi / pi
   ///

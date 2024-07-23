@@ -215,9 +215,9 @@ class CylinderSurface : public RegularSurface {
   /// Return a Polyhedron for a cylinder
   ///
   /// This method represents the cylinder as a polyhedron with a given number
-  /// of segments to represent the full 2*M_PI curve. The polyedron will consist
-  /// of the vertices of the cylinder on both sides, and faces between them,
-  /// both as rectangular faces and as triangular faces.
+  /// of segments to represent a quarter of a full circle. The polyedron will
+  /// consist of the vertices of the cylinder on both sides, and faces between
+  /// them, both as rectangular faces and as triangular faces.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param quarterSegments The number of segmetns to approximate a quarter of the

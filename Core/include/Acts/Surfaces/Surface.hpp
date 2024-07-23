@@ -420,14 +420,14 @@ class Surface : public virtual GeometryObject,
   /// Return properly formatted class name
   virtual std::string name() const = 0;
 
-  /// Return a Polyhedron for surface objecs
+  /// Return a Polyhedron for surface objects
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param quarterSegments The number of segemtns to approximate a 0.5*pi sector,
   /// which represents a quarter of the full circle
   ///
   /// @note In order to symmetrize the code between sectoral and closed cylinders
-  /// in case of closed cylinders, both (-pi, pi) are given as seperate vertices
+  /// in case of closed cylinders, both (-pi, pi) are given as separate vertices
   ///
   /// @note An internal surface transform can invalidate the extrema
   /// in the transformed space
