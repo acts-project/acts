@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -158,9 +159,9 @@ struct RootMeasurementWriter::DigitizationTree {
   /// @param m The measurement set
   template <typename measurement_t>
   void fillBoundMeasurement(const measurement_t& m) {
-    for (Acts::BoundIndices ib : m.indices()) {
-      recBound[ib] = m.parameters()[ib];
-      varBound[ib] = m.covariance()(ib, ib);
+    for (auto [i, ib] : Acts::enumerate(m.indices())) {
+      recBound[ib] = m.parameters()[i];
+      varBound[ib] = m.covariance()(i, i);
 
       residual[ib] = recBound[ib] - trueBound[ib];
       pull[ib] = residual[ib] / std::sqrt(varBound[ib]);
