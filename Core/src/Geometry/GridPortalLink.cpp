@@ -311,8 +311,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
       } else {
         ACTS_VERBOSE("=> parallel merge");
 
-        auto a2D = a->make2DGrid();
-        auto b2D = b->make2DGrid();
+        auto a2D = a->make2DGrid(nullptr);
+        auto b2D = b->make2DGrid(nullptr);
         assert(a2D != nullptr);
         assert(b2D != nullptr);
         return mergeGridPortals(a2D.get(), b2D.get(), surfaceA, surfaceB,
@@ -328,8 +328,8 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
 
       } else {
         ACTS_VERBOSE("=> parallel merge");
-        auto a2D = a->make2DGrid();
-        auto b2D = b->make2DGrid();
+        auto a2D = a->make2DGrid(nullptr);
+        auto b2D = b->make2DGrid(nullptr);
         assert(a2D != nullptr);
         assert(b2D != nullptr);
         return mergeGridPortals(a2D.get(), b2D.get(), surfaceA, surfaceB,
@@ -433,17 +433,44 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(const GridPortalLink* a,
     }
   } else {
     ACTS_VERBOSE("Grids have different dimension, extending rhs to 2D");
-    auto b2D = b->make2DGrid();
+    auto b2D = b->make2DGrid(nullptr);
     return mergeGridPortals(a, b2D.get(), surfaceA, surfaceB, direction,
                             logger);
+  }
+}
+
+enum class FillDirection {
+  loc0,
+  loc1,
+};
+
+template <FillDirection dir, typename axis_1_t, typename axis_2_t,
+          typename axis_3_t>
+void fillGrid1dTo2d(const Grid<const TrackingVolume*, axis_1_t>& grid1d,
+                    Grid<const TrackingVolume*, axis_2_t, axis_3_t>& grid2d) {
+  const auto locSource = grid1d.numLocalBins();
+  const auto locDest = grid2d.numLocalBins();
+
+  for (std::size_t i = 0; i <= locSource[0] + 1; ++i) {
+    const auto* source = grid1d.atLocalBins({i});
+
+    if constexpr (dir == FillDirection::loc1) {
+      for (std::size_t j = 0; j <= locDest[1] + 1; ++j) {
+        grid2d.atLocalBins({i, j}) = source;
+      }
+    } else if constexpr (dir == FillDirection::loc0) {
+      for (std::size_t j = 0; j <= locDest[0] + 1; ++j) {
+        grid2d.atLocalBins({j, i}) = source;
+      }
+    }
   }
 }
 
 }  // namespace
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
-    std::shared_ptr<RegularSurface> surface, const TrackingVolume& volume,
-    BinningValue direction) {
+    const std::shared_ptr<RegularSurface>& surface,
+    const TrackingVolume& volume, BinningValue direction) {
   std::unique_ptr<GridPortalLink> grid;
 
   if (const auto* cylinder =
@@ -605,7 +632,7 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
-    const std::shared_ptr<CylinderSurface>& surface) const {
+    const std::shared_ptr<CylinderSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
   if (direction() == BinningValue::binRPhi) {
     const auto& axisRPhi = *grid().axes().front();
@@ -613,9 +640,23 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
     ActsScalar hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
 
     Axis axisZ{AxisBound, -hlZ, hlZ, 1};
-    return axisRPhi.visit([&](const auto& axis) {
-      return GridPortalLink::make(surface, Axis{axis}, std::move(axisZ));
+
+    if (other == nullptr) {
+      other = &axisZ;
+    }
+
+    return axisRPhi.visit([&](const auto& axis0) {
+      const auto& self =
+          dynamic_cast<const GridPortalLinkT<std::decay_t<decltype(axis0)>>&>(
+              *this);
+      return other->visit(
+          [&](const auto& axis1) -> std::unique_ptr<GridPortalLink> {
+            auto grid = GridPortalLink::make(surface, axis0, axis1);
+            fillGrid1dTo2d<FillDirection::loc1>(self.grid(), grid->grid());
+            return grid;
+          });
     });
+
   } else {
     const auto& axisZ = *grid().axes().front();
     // 1D direction is binZ, so add an rPhi axis
@@ -624,9 +665,22 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
     ActsScalar hlRPhi = r * hlPhi;
 
     auto axis = [&](auto bdt) {
-      return axisZ.visit([&](const auto& concreteAxis) {
-        return GridPortalLink::make(surface, Axis{bdt, -hlRPhi, hlRPhi, 1},
-                                    Axis{concreteAxis});
+      Axis axisRPhi{bdt, -hlRPhi, hlRPhi, 1};
+
+      if (other == nullptr) {
+        other = &axisRPhi;
+      }
+
+      return axisZ.visit([&](const auto& axis1) {
+        const auto& self =
+            dynamic_cast<const GridPortalLinkT<std::decay_t<decltype(axis1)>>&>(
+                *this);
+        return other->visit(
+            [&](const auto& axis0) -> std::unique_ptr<GridPortalLink> {
+              auto grid = GridPortalLink::make(surface, axis0, axis1);
+              fillGrid1dTo2d<FillDirection::loc0>(self.grid(), grid->grid());
+              return grid;
+            });
       });
     };
 
@@ -639,7 +693,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
-    const std::shared_ptr<DiscSurface>& surface) const {
+    const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const {
   assert(dim() == 1);
 
   const auto* bounds = dynamic_cast<const RadialBounds*>(&surface->bounds());
@@ -654,9 +708,22 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
     ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
 
     auto axis = [&](auto bdt) {
-      return axisR.visit([&](const auto& concreteAxis) {
-        return GridPortalLink::make(surface, Axis{concreteAxis},
-                                    Axis{bdt, -hlPhi, hlPhi, 1});
+      Axis axisPhi{bdt, -hlPhi, hlPhi, 1};
+
+      if (other == nullptr) {
+        other = &axisPhi;
+      }
+
+      return axisR.visit([&](const auto& axis0) {
+        const auto& self =
+            dynamic_cast<const GridPortalLinkT<std::decay_t<decltype(axis0)>>&>(
+                *this);
+        return other->visit(
+            [&](const auto& axis1) -> std::unique_ptr<GridPortalLink> {
+              auto grid = GridPortalLink::make(surface, axis0, axis1);
+              fillGrid1dTo2d<FillDirection::loc1>(self.grid(), grid->grid());
+              return grid;
+            });
       });
     };
 
@@ -671,9 +738,22 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2D(
     ActsScalar rMin = bounds->get(RadialBounds::eMinR);
     ActsScalar rMax = bounds->get(RadialBounds::eMaxR);
 
-    return axisPhi.visit([&](const auto& axis) {
-      return GridPortalLink::make(surface, Axis{AxisBound, rMin, rMax, 1},
-                                  Axis{axis});
+    Axis axisR{AxisBound, rMin, rMax, 1};
+
+    if (other == nullptr) {
+      other = &axisR;
+    }
+
+    return axisPhi.visit([&](const auto& axis1) {
+      const auto& self =
+          dynamic_cast<const GridPortalLinkT<std::decay_t<decltype(axis1)>>&>(
+              *this);
+      return other->visit(
+          [&](const auto& axis0) -> std::unique_ptr<GridPortalLink> {
+            auto grid = GridPortalLink::make(surface, axis0, axis1);
+            fillGrid1dTo2d<FillDirection::loc0>(self.grid(), grid->grid());
+            return grid;
+          });
     });
   }
 }

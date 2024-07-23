@@ -29,7 +29,7 @@ class GridPortalLink : public PortalLinkBase {
 
  public:
   template <AxisConcept axis_t>
-  static std::unique_ptr<GridPortalLink> make(
+  static std::unique_ptr<GridPortalLinkT<axis_t>> make(
       std::shared_ptr<RegularSurface> surface, BinningValue direction,
       axis_t&& axis) {
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
@@ -49,7 +49,7 @@ class GridPortalLink : public PortalLinkBase {
   }
 
   template <AxisConcept axis_1_t, AxisConcept axis_2_t>
-  static std::unique_ptr<GridPortalLink> make(
+  static std::unique_ptr<GridPortalLinkT<axis_1_t, axis_2_t>> make(
       std::shared_ptr<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
     std::optional<BinningValue> direction;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
@@ -63,15 +63,20 @@ class GridPortalLink : public PortalLinkBase {
   }
 
   static std::unique_ptr<GridPortalLink> make(
-      std::shared_ptr<RegularSurface> surface, const TrackingVolume& volume,
-      BinningValue direction);
+      const std::shared_ptr<RegularSurface>& surface,
+      const TrackingVolume& volume, BinningValue direction);
 
   virtual const IGrid& grid() const = 0;
   virtual void setVolume(const TrackingVolume& volume) = 0;
   virtual unsigned int dim() const = 0;
-  virtual std::unique_ptr<GridPortalLink> make2DGrid() const = 0;
+  virtual std::unique_ptr<GridPortalLink> make2DGrid(
+      const IAxis* other) const = 0;
 
   BinningValue direction() const { return m_direction; }
+
+  /// This is primarily for testing / inspection
+  virtual void visitBins(
+      const std::function<void(const TrackingVolume*)> func) const = 0;
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
       const PortalLinkBase& other, const RegularSurface& surfaceA,
@@ -79,13 +84,14 @@ class GridPortalLink : public PortalLinkBase {
       const Logger& logger = getDummyLogger()) const override;
 
  protected:
-  void checkConsistency(const CylinderSurface& disc) const;
+  void checkConsistency(const CylinderSurface& cyl) const;
   void checkConsistency(const DiscSurface& disc) const;
 
   std::unique_ptr<GridPortalLink> extendTo2D(
-      const std::shared_ptr<CylinderSurface>& surface) const;
+      const std::shared_ptr<CylinderSurface>& surface,
+      const IAxis* other) const;
   std::unique_ptr<GridPortalLink> extendTo2D(
-      const std::shared_ptr<DiscSurface>& surface) const;
+      const std::shared_ptr<DiscSurface>& surface, const IAxis* other) const;
 
  private:
   BinningValue m_direction;
@@ -116,22 +122,23 @@ class GridPortalLinkT final : public GridPortalLink {
   }
 
   const GridType& grid() const final { return m_grid; }
+  GridType& grid() { return m_grid; }
   unsigned int dim() const final { return DIM; }
 
   void toStream(std::ostream& os) const final {
     os << "GridPortalLink<dim=" << dim() << ">";
   }
 
-  std::unique_ptr<GridPortalLink> make2DGrid() const final {
+  std::unique_ptr<GridPortalLink> make2DGrid(const IAxis* other) const final {
     if constexpr (DIM == 2) {
       return std::make_unique<GridPortalLinkT<Axes...>>(*this);
     } else {
       if (auto cylinder =
               std::dynamic_pointer_cast<CylinderSurface>(m_surface)) {
-        return extendTo2D(cylinder);
+        return extendTo2D(cylinder, other);
       } else if (auto disc =
                      std::dynamic_pointer_cast<DiscSurface>(m_surface)) {
-        return extendTo2D(disc);
+        return extendTo2D(disc, other);
       } else {
         throw std::logic_error{
             "Surface type is not supported (this should not happen)"};
@@ -152,6 +159,13 @@ class GridPortalLinkT final : public GridPortalLink {
       throw std::invalid_argument{"Position is outside of the surface bounds"};
     }
     return m_grid.atPosition(position);
+  }
+
+  void visitBins(
+      const std::function<void(const TrackingVolume*)> func) const final {
+    for (std::size_t i = 0; i < m_grid.size(); i++) {
+      func(m_grid.at(i));
+    }
   }
 
  private:
