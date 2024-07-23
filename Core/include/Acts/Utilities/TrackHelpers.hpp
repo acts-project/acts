@@ -195,7 +195,7 @@ findTrackStateForExtrapolation(
       }
 
       SurfaceIntersection intersection = intersect(*first);
-      if (!intersection) {
+      if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
@@ -215,7 +215,7 @@ findTrackStateForExtrapolation(
       }
 
       SurfaceIntersection intersection = intersect(*last);
-      if (!intersection) {
+      if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
         return Result<std::pair<TrackStateProxy, double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
@@ -246,13 +246,13 @@ findTrackStateForExtrapolation(
       double absDistanceFirst = std::abs(intersectionFirst.pathLength());
       double absDistanceLast = std::abs(intersectionLast.pathLength());
 
-      if (intersectionFirst && absDistanceFirst <= absDistanceLast) {
+      if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
         return std::make_pair(*first, intersectionFirst.pathLength());
       }
 
-      if (intersectionLast && absDistanceLast <= absDistanceFirst) {
+      if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
         return std::make_pair(*last, intersectionLast.pathLength());

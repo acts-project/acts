@@ -277,8 +277,8 @@ class DirectNavigator {
                                            boundaryTolerance, tolerance);
 
     for (auto& intersection : intersections.split()) {
-      if (detail::checkIntersection(intersection, nearLimit, farLimit,
-                                    logger())) {
+      if (detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit, logger())) {
         return intersection;
       }
     }
