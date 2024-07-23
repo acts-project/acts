@@ -45,6 +45,7 @@ class SeedFilter final {
 
   /// Create Seeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
+  /// @param mutableData Container for mutable variables used in the seeding
   /// @param bottomSP fixed bottom space point
   /// @param middleSP fixed middle space point
   /// @param topSpVec vector containing all space points that may be compatible
@@ -65,6 +66,7 @@ class SeedFilter final {
       const;
 
   /// Filter seeds once all seeds for one middle space point have been created
+  /// @param mutableData Container for mutable variables used in the seeding
   /// @param candidates_collector collection of seed candidates
   /// @param outputCollection Output container for the seeds
   /// for all seeds with the same middle space point
@@ -75,6 +77,7 @@ class SeedFilter final {
       collection_t& outputCollection) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
+  /// @param mutableData Container for mutable variables used in the seeding    
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
