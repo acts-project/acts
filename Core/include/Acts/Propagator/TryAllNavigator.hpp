@@ -343,8 +343,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
                               state.options.surfaceTolerance);
       for (const auto& intersection : intersections.first.split()) {
         // exclude invalid intersections
-        if (!intersection ||
-            !detail::checkIntersection(intersection, nearLimit, farLimit)) {
+        if (!intersection.isValid() ||
+            !detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                     farLimit)) {
           continue;
         }
         // store candidate
@@ -746,8 +747,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
             state.geoContext, end, direction, state.options.surfaceTolerance);
         for (const auto& intersection : intersections.first.split()) {
           // exclude invalid intersections
-          if (!intersection ||
-              !detail::checkIntersection(intersection, nearLimit, farLimit)) {
+          if (!intersection.isValid() ||
+              !detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                       farLimit)) {
             continue;
           }
           // exclude last candidate
