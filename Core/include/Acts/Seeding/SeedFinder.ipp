@@ -199,8 +199,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     }
 
     m_config.seedFilter->filterSeeds_1SpFixed(
-        state.spacePointData, state.candidates_collector,
-        seedFilterState.numQualitySeeds, outputCollection);
+        state.spacePointData, state.candidates_collector, outputCollection);
 
   }  // loop on mediums
 }
@@ -572,7 +571,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
-    if (m_config.seedConfirmation && seedFilterState.numQualitySeeds) {
+    if (m_config.seedConfirmation &&
+        state.candidates_collector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
 
