@@ -819,14 +819,7 @@ class CombinatorialKalmanFilter {
           // Check the branch
           if (branchStopperResult == BranchStopperResult::Continue) {
             // Remembered the active branch and its state
-            ACTS_VERBOSE("Continue after branch stopper");
           } else {
-            ACTS_VERBOSE(
-                "Stop and "
-                << (branchStopperResult == BranchStopperResult::StopAndKeep
-                        ? "keep"
-                        : "drop")
-                << " after branch stopper");
             // No branch on this surface
             nBranchesOnSurface = 0;
             if (branchStopperResult == BranchStopperResult::StopAndKeep) {
@@ -896,14 +889,7 @@ class CombinatorialKalmanFilter {
           // Check the branch
           if (branchStopperResult == BranchStopperResult::Continue) {
             // Remembered the active branch and its state
-            ACTS_VERBOSE("Continue after branch stopper");
           } else {
-            ACTS_VERBOSE(
-                "Stop and "
-                << (branchStopperResult == BranchStopperResult::StopAndKeep
-                        ? "keep"
-                        : "drop")
-                << " after branch stopper");
             // No branch on this surface
             nBranchesOnSurface = 0;
             if (branchStopperResult == BranchStopperResult::StopAndKeep) {
@@ -1010,15 +996,9 @@ class CombinatorialKalmanFilter {
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
-          ACTS_VERBOSE("Continue after branch stopper");
           // Record the number of branches on surface
           nBranchesOnSurface++;
         } else {
-          ACTS_VERBOSE("Stop and " << (branchStopperResult ==
-                                               BranchStopperResult::StopAndKeep
-                                           ? "keep"
-                                           : "drop")
-                                   << " after branch stopper");
           // Record the number of stopped branches
           nStoppedBranches++;
           if (branchStopperResult == BranchStopperResult::StopAndKeep) {
