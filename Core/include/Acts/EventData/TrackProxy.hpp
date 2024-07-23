@@ -708,6 +708,14 @@ class TrackProxy {
                                  other.m_index);
   }
 
+  TrackProxy shallowCopy() requires(!ReadOnly) {
+    auto ts = container().makeTrack();
+    ts.copyFrom(*this, false);
+    ts.tipIndex() = tipIndex();
+    ts.stemIndex() = stemIndex();
+    return ts;
+  }
+
   /// Reverse the ordering of track states for this track
   /// Afterwards, the previous endpoint of the track state sequence will be the
   /// "innermost" track state
