@@ -689,12 +689,14 @@ class TrackProxy {
       reverseTrackStates();
     }
 
-    parameters() = other.parameters();
-    covariance() = other.covariance();
     setParticleHypothesis(other.particleHypothesis());
+
     if (other.hasReferenceSurface()) {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
+      parameters() = other.parameters();
+      covariance() = other.covariance();
     }
+
     nMeasurements() = other.nMeasurements();
     nHoles() = other.nHoles();
     nOutliers() = other.nOutliers();
