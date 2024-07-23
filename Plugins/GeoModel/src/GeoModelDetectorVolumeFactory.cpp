@@ -109,7 +109,7 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
         const Acts::Transform3 &transform = fpv->getAbsoluteTransform(nullptr);
 
         //use GeoModelToDetVol to get the bounding boxes
-        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform);
+        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, cache.sensitiveSurfaces);
         cache.boundingBoxes.push_back(box);
         for(int i = 0; i<subvolumes.size();i++){
           // convert grandchildren to sensitive surfaces

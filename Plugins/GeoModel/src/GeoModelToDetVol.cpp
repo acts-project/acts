@@ -27,11 +27,12 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
+
 namespace Acts {
 namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
-    const std::string& name, const GeoTrf::Transform3D transform) {
+    const std::string& name, const GeoTrf::Transform3D transform, std::vector<GeoModelSensitiveSurface> sensitives) {
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   if (shape->typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = static_cast<const GeoTube*>(shape);
@@ -143,7 +144,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeoShapeSubtraction* subtractionShape =
         static_cast<const GeoShapeSubtraction*>(shape);
     const GeoShape* shapeA = subtractionShape->getOpA();
-    return convertVolume(context, shapeA, name, transform);
+    return convertVolume(context, shapeA, name, transform, sensitives);
   } else if (shape->typeID() == GeoPcon::getClassTypeID()) {
     // Will change in future, get bounding box for now
     double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
@@ -160,7 +161,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeoShapeShift* shiftShape = static_cast<const GeoShapeShift*>(shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     GeoTrf::Transform3D newTransform = transform * shiftShape->getX();
-    return convertVolume(context, shapeOp, name, newTransform);
+    return convertVolume(context, shapeOp, name, newTransform, sensitives);
   }
   throw std::runtime_error("FATAL: Unsupported GeoModel shape");
 }
