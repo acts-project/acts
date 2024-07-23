@@ -13,8 +13,8 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <stdexcept>
 
@@ -43,8 +43,7 @@ using SingleDetectorVolumeNavigation =
 using SingleIndex = std::size_t;
 
 using VariableBoundAxis =
-    Acts::detail::Axis<Acts::detail::AxisType::Variable,
-                       Acts::detail::AxisBoundaryType::Bound>;
+    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>;
 using VariableBoundIndexGrid1 = Acts::Grid<SingleIndex, VariableBoundAxis>;
 
 /// @brief This holds and extracts a collection of detector

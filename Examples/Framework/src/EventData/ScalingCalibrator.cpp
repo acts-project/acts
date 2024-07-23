@@ -6,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/ScalingCalibrator.hpp"
+
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -16,8 +18,6 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include <Acts/Definitions/TrackParametrization.hpp>
-#include <ActsExamples/EventData/ScalingCalibrator.hpp>
 
 #include <algorithm>
 #include <array>
@@ -172,11 +172,13 @@ void ActsExamples::ScalingCalibrator::calibrate(
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::Measurement<Acts::BoundIndices, kSize> cmeas(
+        FixedSizeMeasurement<Acts::BoundIndices, kSize> cmeas(
             Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
 
         trackState.allocateCalibrated(cmeas.size());
-        trackState.setCalibrated(cmeas);
+        trackState.calibrated<kSize>() = meas.parameters();
+        trackState.calibratedCovariance<kSize>() = meas.covariance();
+        trackState.setProjector(meas.projector());
       },
       (measurements)[idxSourceLink.index()]);
 }

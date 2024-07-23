@@ -17,15 +17,11 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
-#include <iterator>
-#include <type_traits>
-
-#if defined(__cpp_concepts)
-#include <concepts>
 
 namespace Acts {
 
 namespace detail {
+
 using Parameters = Eigen::Map<BoundVector>;
 using Covariance = Eigen::Map<BoundMatrix>;
 
@@ -59,11 +55,11 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
   { cv.jacobian_impl(istate) } -> std::same_as<detail::ConstCovariance>;
 
   {
-    cv.template measurement_impl<2>(istate)
+    cv.template calibrated_impl<2>(istate)
     } -> std::same_as<Eigen::Map<const ActsVector<2>>>;
 
   {
-    cv.template measurementCovariance_impl<2>(istate)
+    cv.template calibratedCovariance_impl<2>(istate)
     } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 
   { cv.has_impl(key, istate) } -> std::same_as<bool>;
@@ -88,11 +84,11 @@ concept ConstMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
   { v.jacobian_impl(istate) } -> std::same_as<detail::ConstCovariance>;
 
   {
-    v.template measurement_impl<2>(istate)
+    v.template calibrated_impl<2>(istate)
     } -> std::same_as<Eigen::Map<const ActsVector<2>>>;
 
   {
-    v.template measurementCovariance_impl<2>(istate)
+    v.template calibratedCovariance_impl<2>(istate)
     } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 };
 
@@ -108,11 +104,11 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
   { v.jacobian_impl(istate) } -> std::same_as<detail::Covariance>;
 
   {
-    v.template measurement_impl<2>(istate)
+    v.template calibrated_impl<2>(istate)
     } -> std::same_as<Eigen::Map<ActsVector<2>>>;
 
   {
-    v.template measurementCovariance_impl<2>(istate)
+    v.template calibratedCovariance_impl<2>(istate)
     } -> std::same_as<Eigen::Map<ActsSquareMatrix<2>>>;
 
   { v.addTrackState_impl() } -> std::same_as<TrackIndexType>;
@@ -125,10 +121,10 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 
   // As far as I know there's no good way to assert that there's a generic
   // template function
-  {v.template addColumn_impl<uint32_t>(col)};
-  {v.template addColumn_impl<uint64_t>(col)};
-  {v.template addColumn_impl<int32_t>(col)};
-  {v.template addColumn_impl<int64_t>(col)};
+  {v.template addColumn_impl<std::uint32_t>(col)};
+  {v.template addColumn_impl<std::uint64_t>(col)};
+  {v.template addColumn_impl<std::int32_t>(col)};
+  {v.template addColumn_impl<std::int64_t>(col)};
   {v.template addColumn_impl<float>(col)};
   {v.template addColumn_impl<double>(col)};
 
@@ -142,4 +138,3 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 };
 
 }  // namespace Acts
-#endif

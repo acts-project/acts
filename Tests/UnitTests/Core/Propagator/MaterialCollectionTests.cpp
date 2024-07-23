@@ -89,11 +89,10 @@ void runTest(const propagator_t& prop,
   using ActionListType = ActionList<MaterialInteractor>;
   using AbortListType = AbortList<>;
 
-  using Options = PropagatorOptions<ActionListType, AbortListType>;
-
-  // forward material test
+  using Options =
+      typename propagator_t::template Options<ActionListType, AbortListType>;
   Options fwdOptions(tgContext, mfContext);
-  fwdOptions.maxStepSize = 25_cm;
+  fwdOptions.stepping.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
 
   // get the material collector and configure it
@@ -136,7 +135,7 @@ void runTest(const propagator_t& prop,
 
   // backward material test
   Options bwdOptions(tgContext, mfContext);
-  bwdOptions.maxStepSize = 25_cm;
+  bwdOptions.stepping.maxStepSize = 25_cm;
   bwdOptions.pathLimit = -25_cm;
   bwdOptions.direction = Direction::Backward;
 
@@ -194,7 +193,7 @@ void runTest(const propagator_t& prop,
   // stepping from one surface to the next
   // now go from surface to surface and check
   Options fwdStepOptions(tgContext, mfContext);
-  fwdStepOptions.maxStepSize = 25_cm;
+  fwdStepOptions.stepping.maxStepSize = 25_cm;
   fwdStepOptions.pathLimit = 25_cm;
 
   // get the material collector and configure it
@@ -267,7 +266,7 @@ void runTest(const propagator_t& prop,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.maxStepSize = 25_cm;
+  bwdStepOptions.stepping.maxStepSize = 25_cm;
   bwdStepOptions.pathLimit = -25_cm;
   bwdStepOptions.direction = Direction::Backward;
 

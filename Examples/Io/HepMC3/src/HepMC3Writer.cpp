@@ -14,7 +14,7 @@ namespace ActsExamples {
 
 HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
                                      Acts::Logging::Level level)
-    : WriterT(config.inputEvents, "HepMC3EventWriter", level), m_cfg(config) {
+    : WriterT(config.inputEvents, "HepMC3AsciiWriter", level), m_cfg(config) {
   if (m_cfg.outputStem.empty()) {
     throw std::invalid_argument("Missing output stem file name");
   }

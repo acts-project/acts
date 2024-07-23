@@ -55,6 +55,7 @@ with tempfile.TemporaryDirectory() as temp:
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         rnd=rnd,
+        outputDirRoot=tp,
     )
 
     addFatras(
@@ -169,7 +170,11 @@ with tempfile.TemporaryDirectory() as temp:
         "tracksummary_ckf",
         "performance_amvf",
         "performance_amvf_gridseeder",
-    ] + (["performance_seeding", "performance_ambi"]):
+        "performance_seeding",
+        "performance_ambi",
+        "pythia8_particles",
+        "pythia8_vertices",
+    ]:
         perf_file = tp / f"{stem}.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, setup.outdir / f"{stem}_ttbar.root")
