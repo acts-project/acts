@@ -746,27 +746,53 @@ class CombinatorialKalmanFilter {
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             slBegin, slEnd, prevTip, *result.stateBuffer,
             result.trackStateCandidates, *result.trackStates, logger());
-
         if (!tsRes.ok()) {
           ACTS_ERROR(
               "Processing of selected track states failed: " << tsRes.error());
           return tsRes.error();
         }
-        Result<std::tuple<unsigned int, bool>> procRes =
-            processNewTrackStates(state.geoContext, *tsRes, result);
+        const boost::container::small_vector<
+            IndexType, s_maxBranchesPerSurface>& newTrackStateList = *tsRes;
+
+        Result<std::pair<unsigned int, unsigned int>> procRes =
+            processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
           ACTS_ERROR("Processing of selected track states failed: "
                      << procRes.error());
           return procRes.error();
         }
-        auto [nNewBranchesOnSurface, isOutlier] = *procRes;
+        auto [nNewBranchesOnSurface, nStoppedBranches] = *procRes;
         nBranchesOnSurface = nNewBranchesOnSurface;
 
-        if (isOutlier) {
-          // Outliers are already handled in `processNewTrackStates`. Nothing to
-          // do here.
-        } else if (nBranchesOnSurface == 0) {
-          ACTS_VERBOSE("Detected hole after measurement selection");
+        if (nStoppedBranches >= newTrackStateList.size()) {
+          // All branches on the surface have been stopped. Reset happens at the
+          // end of the function
+          ACTS_VERBOSE("All branches on surface " << surface->geometryId()
+                                                  << " have been stopped");
+        } else if (nBranchesOnSurface > 0) {
+          if (currentBranch.outermostTrackState().typeFlags().test(
+                  TrackStateFlag::OutlierFlag)) {
+            // We don't need to update the stepper given an outlier state
+            ACTS_VERBOSE("Outlier state detected on surface "
+                         << surface->geometryId());
+          } else {
+            // If there are measurement track states on this surface
+            ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
+                                                           << " branches");
+            // Update stepping state using filtered parameters of last track
+            // state on this surface
+            auto ts = result.activeBranches.back().outermostTrackState();
+            stepper.update(state.stepping,
+                           MultiTrajectoryHelpers::freeFiltered(
+                               state.options.geoContext, ts),
+                           ts.filtered(), ts.filteredCovariance(), *surface);
+            ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
+            ACTS_VERBOSE("-> " << ts.filtered().transpose()
+                               << " of track state with tip = " << ts.index());
+          }
+        } else {  // nBranchesOnSurface == 0
+          ACTS_VERBOSE("Detected hole after measurement selection on surface "
+                       << surface->geometryId());
 
           // After `processNewTrackStates` `currentBranch` is invalidated
           currentBranch = result.activeBranches.back();
@@ -809,20 +835,6 @@ class CombinatorialKalmanFilter {
             // Remove the branch from list
             result.activeBranches.pop_back();
           }
-        } else {
-          // If there are measurement track states on this surface
-          ACTS_VERBOSE("Filtering step successful with " << nBranchesOnSurface
-                                                         << " branches");
-          // Update stepping state using filtered parameters of last track
-          // state on this surface
-          auto ts = result.activeBranches.back().outermostTrackState();
-          stepper.update(state.stepping,
-                         MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, ts),
-                         ts.filtered(), ts.filteredCovariance(), *surface);
-          ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
-          ACTS_VERBOSE("-> " << ts.filtered().transpose()
-                             << " of track state with tip = " << ts.index());
         }
 
         // Update state and stepper with post material effects
@@ -938,8 +950,8 @@ class CombinatorialKalmanFilter {
     /// @param gctx The geometry context for this track finding/fitting
     /// @param newTrackStateList index list of new track states
     /// @param result which contains among others the new states, and the list of active branches
-    /// @return tuple of the number of newly added branches and outlier flag or an error
-    Result<std::tuple<unsigned int, bool>> processNewTrackStates(
+    /// @return the number of newly added branches and number of stopped branches or an error
+    Result<std::pair<unsigned int, unsigned int>> processNewTrackStates(
         const Acts::GeometryContext& gctx,
         const boost::container::small_vector<
             IndexType, s_maxBranchesPerSurface>& newTrackStateList,
@@ -947,7 +959,7 @@ class CombinatorialKalmanFilter {
       using PM = TrackStatePropMask;
 
       unsigned int nBranchesOnSurface = 0;
-      bool isOutlier = false;
+      unsigned int nStoppedBranches = 0;
 
       // We keep the root branch at the end of the list so it can be easily
       // removed at the end
@@ -972,7 +984,6 @@ class CombinatorialKalmanFilter {
         TrackStateType typeFlags = trackState.typeFlags();
         if (typeFlags.test(TrackStateFlag::OutlierFlag)) {
           // Increment number of outliers
-          isOutlier = true;
           newBranch.nOutliers()++;
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
@@ -1008,6 +1019,8 @@ class CombinatorialKalmanFilter {
                                            ? "keep"
                                            : "drop")
                                    << " after branch stopper");
+          // Record the number of stopped branches
+          nStoppedBranches++;
           if (branchStopperResult == BranchStopperResult::StopAndKeep) {
             storeLastActiveBranch(result);
           }
@@ -1022,14 +1035,11 @@ class CombinatorialKalmanFilter {
       if (nBranchesOnSurface > 0) {
         // Remove the root branch
         result.tracks->removeTrack(rootBranch.index());
-      } else if (!isOutlier) {
-        // Prepare for hole
-        result.activeBranches.push_back(rootBranch);
       } else {
         // The last branch was killed
       }
 
-      return std::make_tuple(nBranchesOnSurface, isOutlier);
+      return std::pair{nBranchesOnSurface, nStoppedBranches};
     }
 
     /// @brief CombinatorialKalmanFilter actor operation: add a hole or material track state
