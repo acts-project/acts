@@ -60,14 +60,10 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
 
 }  // namespace detail
 
-template <typename track_container_t, typename track_state_container_t,
-          template <typename> class holder_t>
-void writeTrack(
-    const Acts::GeometryContext& gctx,
-    Acts::TrackProxy<track_container_t, track_state_container_t, holder_t, true>
-        track,
-    edm4hep::MutableTrack to, double Bz,
-    const Logger& logger = getDummyLogger()) {
+template <typename track_proxy_t>
+void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
+                edm4hep::MutableTrack to, double Bz,
+                const Logger& logger = getDummyLogger()) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
@@ -164,13 +160,9 @@ void writeTrack(
   }
 }
 
-template <typename track_container_t, typename track_state_container_t,
-          template <typename> class holder_t>
-void readTrack(const edm4hep::Track& from,
-               Acts::TrackProxy<track_container_t, track_state_container_t,
-                                holder_t, false>
-                   track,
-               double Bz, const Logger& logger = getDummyLogger()) {
+template <typename track_proxy_t>
+void readTrack(const edm4hep::Track& from, track_proxy_t track, double Bz,
+               const Logger& logger = getDummyLogger()) {
   ACTS_VERBOSE("Reading track from EDM4hep");
   TrackStatePropMask mask = TrackStatePropMask::Smoothed;
 

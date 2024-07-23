@@ -15,16 +15,10 @@ namespace Acts {
 /// Helper function to calculate a number of track level quantities and store
 /// them on the track itself
 /// @note The input track needs to be mutable, so @c ReadOnly=false
-/// @tparam track_container_t the track container backend
-/// @tparam track_state_container_t the track state container backend
-/// @tparam holder_t the holder type for the track container backends
+/// @tparam track_proxy_t The type of the track proxy
 /// @param track A mutable track proxy to operate on
-template <typename track_container_t, typename track_state_container_t,
-          template <typename> class holder_t>
-void calculateTrackQuantities(
-    Acts::TrackProxy<track_container_t, track_state_container_t, holder_t,
-                     false>
-        track) {
+template <typename track_proxy_t>
+void calculateTrackQuantities(track_proxy_t track) {
   track.chi2() = 0;
   track.nDoF() = 0;
 
