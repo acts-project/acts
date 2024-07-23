@@ -27,12 +27,14 @@
 #include <GeoModelKernel/GeoTube.h>
 #include <GeoModelKernel/GeoTubs.h>
 
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+
 
 namespace Acts {
 namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
-    const std::string& name, const GeoTrf::Transform3D transform, std::vector<GeoModelSensitiveSurface> sensitives) {
+    const std::string& name, const GeoTrf::Transform3D transform, std::vector<std::shared_ptr<Surface>>& sensitives) {
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   if (shape->typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = static_cast<const GeoTube*>(shape);
@@ -88,9 +90,16 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         constexpr double rotationAngle = M_PI / 2;
         GeoTrf::Transform3D newTransform =
             transform * GeoTrf::RotateX3D(rotationAngle);
+        /*
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
             Experimental::tryAllPortalsAndSurfaces());
+        */
+        std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
+        return Experimental::DetectorVolumeFactory::construct(
+            portalGenerator, context, name, newTransform, bounds, sensitives, a, 
+            Experimental::tryNoVolumes(),
+            Experimental::tryAllPortalsAndSurfaces());//TODO fix Surfaces
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
