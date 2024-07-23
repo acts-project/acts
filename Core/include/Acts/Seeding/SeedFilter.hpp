@@ -77,7 +77,7 @@ class SeedFilter final {
       collection_t& outputCollection) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
-  /// @param mutableData Container for mutable variables used in the seeding    
+  /// @param mutableData Container for mutable variables used in the seeding
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outputCollection Output container for the seeds
