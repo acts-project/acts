@@ -12,8 +12,6 @@ class Surface;
 namespace Acts {
 class GeoModelDetectorVolumeFactory {
  public:
-  //using GeoModelSensitiveSurface = std::shared_ptr<Surface>;
-  //using  GeoModelSensitiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
   using GeoModelBoundingBox = std::shared_ptr<Experimental::DetectorVolume>;
 
   struct Options {

@@ -34,7 +34,7 @@ namespace Acts {
 namespace GeoModel {
 std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     const GeometryContext& context, const GeoShape* shape,
-    const std::string& name, const GeoTrf::Transform3D transform, std::vector<std::shared_ptr<Surface>> sensitives) {
+    const std::string& name, const GeoTrf::Transform3D transform, std::vector<GeoModelSensitiveSurface> sensitives) {
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   if (shape->typeID() == GeoTube::getClassTypeID()) {
     const GeoTube* tube = static_cast<const GeoTube*>(shape);
@@ -82,6 +82,16 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
     double y1 = trd->getYHalfLength1();
     double y2 = trd->getYHalfLength2();
     double z = trd->getZHalfLength();
+
+    //dummy volume
+    std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
+
+    //type conversion from GeoModelSensitiveSurface to Surface
+    std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
+    std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
+    [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>, std::shared_ptr<Surface>>& t) {
+         return std::get<1>(t);
+    });
     if (y1 == y2) {
       if (x1 <= x2) {
         // y axis in ACTS is z axis in geomodel
@@ -92,14 +102,9 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
             transform * GeoTrf::RotateX3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
-            Experimental::tryAllPortalsAndSurfaces());
-        /*
-        std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> a;
-        return Experimental::DetectorVolumeFactory::construct(
-            portalGenerator, context, name, newTransform, bounds, sensitives, a, 
+            sensSurfaces, a, 
             Experimental::tryNoVolumes(),
-            Experimental::tryAllPortalsAndSurfaces());//TODO fix Surfaces
-        */
+            Experimental::tryAllPortalsAndSurfaces());
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
@@ -109,6 +114,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
                                            GeoTrf::RotateZ3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
+            sensSurfaces, a, 
+            Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       }
     } else if (x1 == x2) {
@@ -121,6 +128,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
                                            GeoTrf::RotateX3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
+            sensSurfaces, a, 
+            Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
@@ -132,6 +141,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
             GeoTrf::RotateX3D(rotationAngle / 2);
         return Experimental::DetectorVolumeFactory::construct(
             portalGenerator, context, name, newTransform, bounds,
+            sensSurfaces, a, 
+            Experimental::tryNoVolumes(),
             Experimental::tryAllPortalsAndSurfaces());
       }
     } else {

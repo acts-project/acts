@@ -56,7 +56,7 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
     throw std::invalid_argument("GeoModelTree has no GeoModelReader");
   }
   for (const auto &q : options.queries) {
-    //ACTS_VERBOSE("Constructing detector elements for query " << q);
+    //ACTS_VERBOSE("Constructing detector elements for query " << q);//TODO put back
     //load data from database according to querie (Muon)
     auto qFPV = geoModelTree.geoReader->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
@@ -97,32 +97,38 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
     //go through each fpv
     for (auto &[name, fpv] : qFPV) {
       PVConstLink physVol{fpv};
+      //if the match lambda returns false skip the rest of the loop
       if (!matches(name, physVol)) {
         continue;
       }
-      std::vector<GeoChildNodeWithTrf> subvolumes = getChildrenWithRef(physVol, false);//get children
+      //get children
+      std::vector<GeoChildNodeWithTrf> subvolumes = getChildrenWithRef(physVol, false);
+
+      //if children exist assume MDT
+      //convert fpvs to bounding boxes and grand children to surfaces
       if (subvolumes.size()>0){
-        //Here we have  identified MDTs as such:
-        //convert fpvs to bounding boxes
+        //Get the volumes from GeoModel
         const GeoLogVol *logVol = physVol->getLogVol();//get logVol for the shape of the volume
         const GeoShape *shape = logVol->getShape();//get shape
         const Acts::Transform3 &transform = fpv->getAbsoluteTransform(nullptr);
 
-        //use GeoModelToDetVol to get the bounding boxes
-        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, cache.sensitiveSurfaces);
-        cache.boundingBoxes.push_back(box);
+        //go through all grand children
         for(int i = 0; i<subvolumes.size();i++){
           // convert grandchildren to sensitive surfaces
           std::vector<GeoChildNodeWithTrf> subsubvolumes = getChildrenWithRef(subvolumes[i].volume, false);
           const Transform3 &transform =fpv->getAbsoluteTransform() * subvolumes[i].transform;
           for(int j=0;j<subsubvolumes.size();j++){
             const Transform3 &subtransform =transform * subsubvolumes[j].transform;
-            //std::cout << "convert subsub" << std::endl;
+            //convert sensitive surfaces
             convertSensitive(subsubvolumes[j].volume, subtransform, cache.sensitiveSurfaces);
           }
         }
+        //convert bounding boxes with surfaces inside
+        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, cache.sensitiveSurfaces);
+        cache.boundingBoxes.push_back(box);
 
       }
+      //if no children are found assume ID and convert fpvs to surfaces
       else{
         //convert ID to surfaces
         convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr), cache.sensitiveSurfaces);
