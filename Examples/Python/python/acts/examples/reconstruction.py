@@ -478,7 +478,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialSigmas: Optional[List[float]],
-    initialVarInflation: List[float],
+    initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
 ):
@@ -1951,7 +1951,7 @@ def addVertexFitting(
     tracks = tracks if tracks is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    inputVertices = "vertices_input"
+    inputTruthVertices = "vertices_input"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1984,6 +1984,8 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             inputTrackParameters=trackParameters,
+            inputTruthParticles=selectedParticles,
+            inputTruthVertices=inputTruthVertices,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             bField=field,
@@ -2009,7 +2011,7 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
-                inputTruthVertices=inputVertices,
+                inputTruthVertices=inputTruthVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,7 @@
 #include <type_traits>
 
 namespace Acts {
+
 /// @brief Implements an iterative vertex finder
 class AdaptiveMultiVertexFinder final : public IVertexFinder {
   using VertexFitter = AdaptiveMultiVertexFitter;
@@ -147,6 +148,11 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// to true, and time seeding should be enabled.
     bool useTime = false;
 
+    /// If set to true, the vertex finder will not break the finding loop.
+    /// Some seeders are not able to cope with this therefore this is
+    /// disabled by default.
+    bool doNotBreakWhileSeeding = false;
+
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
   };
@@ -154,6 +160,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// State struct for fulfilling interface
   struct State {
     std::reference_wrapper<const MagneticFieldContext> magContext;
+
+    IVertexFinder::State seedFinderState;
   };
 
   /// @brief Constructor for user-defined InputTrack_t type !=
@@ -197,7 +205,8 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
   IVertexFinder::State makeState(
       const Acts::MagneticFieldContext& mctx) const override {
-    return IVertexFinder::State{State{mctx}};
+    return IVertexFinder::State{
+        State{mctx, IVertexFinder::State{m_cfg.seedFinder->makeState(mctx)}}};
   }
 
   void setTracksToRemove(
