@@ -1845,7 +1845,7 @@ def addTrackWriters(
                 # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
+                inputTrackParticleMatching=suffix+"track_particle_matching",
                 inputSimHits="simhits",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
                 filePath=str(outputDirRoot / f"trackstates_{name}.root"),
@@ -1863,7 +1863,7 @@ def addTrackWriters(
                 # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
-                inputTrackParticleMatching="track_particle_matching",
+                inputTrackParticleMatching=suffix+"track_particle_matching",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
                 writeCovMat=writeCovMat,
@@ -2136,6 +2136,20 @@ def addAmbiguityResolution(
         writeCovMat=writeCovMat,
         suffix =  suffixOut
     )
+    
+    converter = acts.examples.TracksToParameters(
+        level=customLogLevel(),
+        inputTracks=suffixOut+"tracks",
+        outputTrackParameters=suffixOut+"trackpars",
+    )
+    s.addAlgorithm(converter)
+    
+    converter = acts.examples.TracksToParameters(
+        level=customLogLevel(),
+        inputTracks=suffixIn+"tracks",
+        outputTrackParameters=suffixIn+"trackpars",
+    )
+    s.addAlgorithm(converter)
 
     return s
 
@@ -2312,7 +2326,8 @@ def addVertexFitting(
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
-    suffixIn: str = ""
+    suffixIn: str = "",
+    suffixOut: str = ""
 ) -> None:
     """This function steers the vertex fitting
 
@@ -2435,7 +2450,7 @@ def addVertexFitting(
                 bField=field,
                 vertexMatchThreshold=0.0,
                 treeName="vertexing",
-                filePath=str(outputDirRoot / "performance_vertexing.root"),
+                filePath=str(outputDirRoot / "performance_vertexing")+suffixOut+".root",
             )
         )
 
@@ -2561,6 +2576,26 @@ def addTrackletVertexing(
         outputFitFunction="OutputFitFuncVtx",
         outputZTracklets="OutputZTracklets",
         outputZTrackletsPeak="OutputZTrackletsPeak"
+    )
+
+    s.addAlgorithm(selAlg)
+    return s
+
+
+def addContainerMerger(
+    s: acts.examples.Sequencer,
+    inputTrackParameters=["tracks"],
+    outputTrackParameters="mergetracks",
+    logLevel: Optional[acts.logging.Level] = None,
+
+    ) -> None:
+
+    logLevel = acts.examples.defaultLogging(s, logLevel)()
+
+    selAlg = acts.examples.MergeContainersAlgorithm(
+        level=logLevel,
+        inputTrackParameters=inputTrackParameters,
+        outputTrackParameters=outputTrackParameters
     )
 
     s.addAlgorithm(selAlg)

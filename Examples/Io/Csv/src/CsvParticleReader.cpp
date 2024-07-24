@@ -91,12 +91,14 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
     if (foundVertices.find(vertex_id) != foundVertices.end()) {
       foundVertices[vertex_id].outgoing.insert(particle_id);
     }
-    else
+    else if(!particle.isSecondary())
     {
-      foundVertices[vertex_id] = vertices.emplace_back(vertex_id, SimVertex::Vector4(data.vx * Acts::UnitConstants::mm,
-                                                      data.vy * Acts::UnitConstants::mm,
-                                                      data.vz * Acts::UnitConstants::mm,
-                                                      data.vt * Acts::UnitConstants::mm));
+      foundVertices[vertex_id] = vertices.emplace_back(vertex_id, 
+                                                      SimVertex::Vector4(data.vx * Acts::UnitConstants::mm,
+                                                                         data.vy * Acts::UnitConstants::mm,
+                                                                         data.vz * Acts::UnitConstants::mm,
+                                                                         data.vt * Acts::UnitConstants::mm));
+      foundVertices[vertex_id].outgoing.insert(particle_id);
     }
   }
 
