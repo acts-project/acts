@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -183,11 +183,11 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
     }
 
     if (seedFound) {
-      SimSeed seed{
-          *spacePointsOnTrack[bestSPIndices[0]],
-          *spacePointsOnTrack[bestSPIndices[1]],
-          *spacePointsOnTrack[bestSPIndices[2]],
-          static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z())};
+      SimSeed seed{*spacePointsOnTrack[bestSPIndices[0]],
+                   *spacePointsOnTrack[bestSPIndices[1]],
+                   *spacePointsOnTrack[bestSPIndices[2]]};
+      seed.setZvertex(
+          static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 
       seededParticles.insert(particle);
       seeds.emplace_back(std::move(seed));

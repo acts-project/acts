@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -17,6 +18,7 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -50,9 +52,14 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::string outputSeeds;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
+
+    Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
+        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+        Acts::detail::RefHolder>::SpacePointProxyType>
+        seedFinderConfig;
     Acts::CylindricalSpacePointGridConfig gridConfig;
     Acts::CylindricalSpacePointGridOptions gridOptions;
+
     Acts::SeedFinderOptions seedFinderOptions;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
@@ -86,8 +93,12 @@ class SeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::SeedFinder<SimSpacePoint,
-                   Acts::CylindricalSpacePointGrid<SimSpacePoint>>
+  using SpacePointProxy_t = typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::SpacePointProxyType;
+
+  Acts::SeedFinder<SpacePointProxy_t,
+                   Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
       m_seedFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
   std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;

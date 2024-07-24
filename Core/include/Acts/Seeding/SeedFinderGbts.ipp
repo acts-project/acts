@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -700,7 +700,9 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     float Vertex = 0;
     float Quality = triplet.Q();
     // make a new seed, add to vector of seeds
-    out_cont.emplace_back(*S1, *S2, *S3, Vertex, Quality);
+    out_cont.emplace_back(*S1, *S2, *S3);
+    out_cont.back().setZvertex(Vertex);
+    out_cont.back().setQuality(Quality);
   }
 }
 
