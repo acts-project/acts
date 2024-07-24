@@ -221,7 +221,7 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param quarterSegments The number of segments to approximate a quarter of the
-  /// full circle; it it's chosen to be 1, only the extrema points (-pi, -0.5pi,
+  /// full circle; it's chosen to be 1, only the extrema points (-pi, -0.5pi,
   /// 0., 0.5pi) are inserted to capture the correct extent in the x-y plane
   ///
   /// @return A list of vertices and a face/facett description of it
