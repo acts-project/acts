@@ -204,6 +204,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     break; case NF::eLocDir0##n:      f[ift] = cl##n->localDirection[0]; \
     break; case NF::eLocDir1##n:      f[ift] = cl##n->localDirection[1]; \
     break; case NF::eLocDir2##n:      f[ift] = cl##n->localDirection[2]; \
+    break; case NF::eLengthDir0##n:   f[ift] = cl##n->lengthDirection[0]; \
+    break; case NF::eLengthDir1##n:   f[ift] = cl##n->lengthDirection[1]; \
+    break; case NF::eLengthDir2##n:   f[ift] = cl##n->lengthDirection[2]; \
     break; case NF::eLocEta##n:       f[ift] = cl##n->localEta; \
     break; case NF::eLocPhi##n:       f[ift] = cl##n->localPhi; \
     break; case NF::eGlobEta##n:      f[ift] = cl##n->globalEta; \
