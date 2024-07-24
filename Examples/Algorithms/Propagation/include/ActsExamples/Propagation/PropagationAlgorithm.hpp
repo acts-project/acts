@@ -59,6 +59,15 @@ struct PropagationSummary {
   /// The start parameters
   Acts::BoundTrackParameters startParameters;
 
+  /// Totoal number of successful steps
+  std::size_t nSteps = 0;
+
+  /// Totoal number of attempted steps
+  std::size_t nStepTrials = 0;
+
+  /// Path length
+  double pathLength = 0;
+
   /// Steps
   std::vector<Acts::detail::Step> steps;
 };

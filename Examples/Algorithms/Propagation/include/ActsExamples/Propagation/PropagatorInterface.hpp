@@ -90,17 +90,31 @@ class ConcretePropagator : public PropagatorInterface {
     // Set a maximum step size
     options.stepping.maxStepSize = cfg.maxStepSize;
 
+    auto state = m_propagator.makeState(startParameters, options);
+
     // Propagate using the propagator
-    auto result = m_propagator.propagate(startParameters, options);
+    auto resultTmp = m_propagator.propagate(state);
+    if (!resultTmp.ok()) {
+      return resultTmp.error();
+    }
+
+    // Collect internal stepping information
+    summary.nStepTrials = state.stepping.nStepTrials;
+
+    auto result =
+        m_propagator.makeResult(std::move(state), resultTmp, options, true);
     if (!result.ok()) {
       return result.error();
     }
+    auto& resultValue = result.value();
 
-    const auto& resultValue = result.value();
-    auto steppingResults =
+    // Collect general summary information
+    summary.nSteps = resultValue.steps;
+    summary.pathLength = resultValue.pathLength;
+
+    // Collect the steps
+    auto& steppingResults =
         resultValue.template get<SteppingLogger::result_type>();
-
-    // Set the stepping result
     summary.steps = std::move(steppingResults.steps);
 
     // Also set the material recording result - if configured
