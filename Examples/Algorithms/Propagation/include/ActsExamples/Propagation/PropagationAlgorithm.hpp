@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,10 +43,27 @@
 #include <utility>
 #include <vector>
 
+namespace Acts {
+class Surface;
+}
+
 namespace ActsExamples {
 
 class PropagatorInterface;
 struct AlgorithmContext;
+
+struct PropagationSummary {
+  explicit PropagationSummary(Acts::BoundTrackParameters startParameters_)
+      : startParameters(std::move(startParameters_)) {}
+
+  /// The start parameters
+  Acts::BoundTrackParameters startParameters;
+
+  /// Steps
+  std::vector<Acts::detail::Step> steps;
+};
+
+using PropagationSummaries = std::vector<PropagationSummary>;
 
 /// Using some short hands for Recorded Material
 using RecordedMaterial = Acts::MaterialInteractor::result_type;
@@ -58,8 +75,7 @@ using RecordedMaterialTrack =
     std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
 
 /// Finally the output of the propagation test
-using PropagationOutput =
-    std::pair<std::vector<Acts::detail::Step>, RecordedMaterial>;
+using PropagationOutput = std::pair<PropagationSummary, RecordedMaterial>;
 
 /// @brief this test algorithm performs test propagation
 /// within the Acts::Propagator
@@ -69,13 +85,16 @@ using PropagationOutput =
 class PropagationAlgorithm : public IAlgorithm {
  public:
   struct Config {
+    /// The output step collection
+    std::string outputSummaryCollection = "propagation_summary";
+    /// The output material collection
+    std::string outputMaterialCollection = "recorded_material";
+
     /// Instance of a propagator wrapper that performs the actual propagation
     std::shared_ptr<PropagatorInterface> propagatorImpl = nullptr;
-
     /// how to set it up
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
-    /// proapgation mode
-    int mode = 0;
+
     /// Switch the logger to sterile
     bool sterileLogger = false;
     /// debug output
@@ -111,24 +130,16 @@ class PropagationAlgorithm : public IAlgorithm {
     /// particle hypothesis
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
+
     /// looper protection
     double ptLoopers = 500 * Acts::UnitConstants::MeV;
-
     /// Max step size steering
     double maxStepSize = 3 * Acts::UnitConstants::m;
-
-    /// The step collection to be stored
-    std::string propagationStepCollection = "PropagationSteps";
-
-    /// The material collection to be stored
-    std::string propagationMaterialCollection = "RecordedMaterialTracks";
-
     /// covariance transport
     bool covarianceTransport = false;
 
     /// The covariance values
     Acts::BoundVector covariances = Acts::BoundVector::Zero();
-
     /// The correlation terms
     Acts::BoundSquareMatrix correlations = Acts::BoundSquareMatrix::Identity();
   };
@@ -148,20 +159,24 @@ class PropagationAlgorithm : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  ///< the config class
+  Config m_cfg;
 
-  WriteDataHandle<std::vector<std::vector<Acts::detail::Step>>>
-      m_outpoutPropagationSteps{this, "OutputPropagationSteps"};
+  WriteDataHandle<PropagationSummaries> m_outputSummary{this, "OutputSummary"};
 
   WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
-      m_recordedMaterial{this, "RecordedMaterial"};
+      m_recordedMaterial{this, "OutputRecordedMaterial"};
 
   /// Private helper method to create a corrleated covariance matrix
   /// @param[in] rnd is the random engine
-  /// @param[in] gauss is a gaussian distribution to draw from
   std::optional<Acts::BoundSquareMatrix> generateCovariance(
-      ActsExamples::RandomEngine& rnd,
-      std::normal_distribution<double>& gauss) const;
+      ActsExamples::RandomEngine& rng) const;
+
+  /// Private helper method to create bound parameters
+  /// @param[in] rnd is the random engine
+  /// @param[in] surface is the surface to generate the parameters on
+  Acts::BoundTrackParameters generateBoundParameters(
+      ActsExamples::RandomEngine& rng,
+      std::shared_ptr<const Acts::Surface> surface) const;
 };
 
 }  // namespace ActsExamples

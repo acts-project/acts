@@ -113,12 +113,12 @@ void addPropagation(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
-      propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
-      energyLoss, multipleScattering, recordMaterialInteractions, ntests,
-      d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
-      etaRange, ptRange, particleHypothesis, ptLoopers, maxStepSize,
-      propagationStepCollection, propagationMaterialCollection,
-      covarianceTransport, covariances, correlations);
+      outputSummaryCollection, outputMaterialCollection, propagatorImpl,
+      randomNumberSvc, sterileLogger, debugOutput, energyLoss,
+      multipleScattering, recordMaterialInteractions, ntests, d0Sigma, z0Sigma,
+      phiSigma, thetaSigma, qpSigma, tSigma, phiRange, etaRange, ptRange,
+      particleHypothesis, ptLoopers, maxStepSize, covarianceTransport,
+      covariances, correlations);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(

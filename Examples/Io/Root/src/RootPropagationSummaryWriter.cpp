@@ -1,16 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
+#include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Propagator/ConstrainedStep.hpp>
@@ -25,16 +27,18 @@
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
-    const ActsExamples::RootPropagationStepsWriter::Config& cfg,
-    Acts::Logging::Level level)
-    : WriterT(cfg.collection, "RootPropagationStepsWriter", level),
+namespace ActsExamples {
+
+RootPropagationSummaryWriter::RootPropagationSummaryWriter(
+    const RootPropagationSummaryWriter::Config& cfg, Acts::Logging::Level level)
+    : WriterT(cfg.collection, "RootPropagationSummaryWriter", level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // An input collection name and tree name must be specified
   if (m_cfg.collection.empty()) {
     throw std::invalid_argument("Missing input collection");
-  } else if (m_cfg.treeName.empty()) {
+  }
+  if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
@@ -48,13 +52,15 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputFile->cd();
 
   m_outputTree = new TTree(m_cfg.treeName.c_str(),
-                           "TTree from RootPropagationStepsWriter");
+                           "TTree from RootPropagationSummaryWriter");
   if (m_outputTree == nullptr) {
     throw std::bad_alloc();
   }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
+  m_outputTree->Branch("track_nr", &m_trackNr);
+
   m_outputTree->Branch("volume_id", &m_volumeID);
   m_outputTree->Branch("boundary_id", &m_boundaryID);
   m_outputTree->Branch("layer_id", &m_layerID);
@@ -75,13 +81,13 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
+RootPropagationSummaryWriter::~RootPropagationSummaryWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
+ProcessCode RootPropagationSummaryWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -96,9 +102,8 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
-    const AlgorithmContext& context,
-    const std::vector<PropagationSteps>& stepCollection) {
+ProcessCode RootPropagationSummaryWriter::writeT(
+    const AlgorithmContext& context, const PropagationSummaries& summaries) {
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -110,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
   std::size_t lastTotalTrials = 0;
 
   // Loop over the step vector of each test propagation in this
-  for (auto& steps : stepCollection) {
+  for (const auto& [trackNr, summary] : Acts::enumerate(summaries)) {
     // Clear the vectors for each collection
     m_volumeID.clear();
     m_boundaryID.clear();
@@ -131,14 +136,31 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_step_usr.clear();
     m_nStepTrials.clear();
 
+    // Set the track number
+    m_trackNr = trackNr;
+
+    // Set the initial trajectory parameters
+    const auto& startParameters = summary.startParameters;
+    d0 = startParameters.parameters()[Acts::eBoundLoc0];
+    z0 = startParameters.parameters()[Acts::eBoundLoc1];
+    phi = startParameters.parameters()[Acts::eBoundPhi];
+    theta = startParameters.parameters()[Acts::eBoundTheta];
+    qOverP = startParameters.parameters()[Acts::eBoundQOverP];
+    t = startParameters.parameters()[Acts::eBoundTime];
+
+    // Derived initial trajectory parameters
+    eta = Acts::VectorHelpers::eta(startParameters.direction());
+    pt = startParameters.transverseMomentum();
+    p = startParameters.absoluteMomentum();
+
     // Loop over single steps
-    for (auto& step : steps) {
+    for (const auto& step : summary.steps) {
       const auto& geoID = step.geoID;
-      m_sensitiveID.push_back(geoID.sensitive());
-      m_approachID.push_back(geoID.approach());
-      m_layerID.push_back(geoID.layer());
-      m_boundaryID.push_back(geoID.boundary());
       m_volumeID.push_back(geoID.volume());
+      m_boundaryID.push_back(geoID.boundary());
+      m_layerID.push_back(geoID.layer());
+      m_approachID.push_back(geoID.approach());
+      m_sensitiveID.push_back(geoID.sensitive());
 
       int material = 0;
       if (step.surface) {
@@ -187,7 +209,11 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_nStepTrials.push_back(step.nTotalTrials - lastTotalTrials);
       lastTotalTrials = step.nTotalTrials;
     }
+
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
