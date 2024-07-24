@@ -190,7 +190,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z()));
 
       seededParticles.insert(particle);
-      seeds.emplace_back(std::move(seed));
+      seeds.emplace_back(seed);
       tracks.emplace_back(std::move(track));
     }
   }

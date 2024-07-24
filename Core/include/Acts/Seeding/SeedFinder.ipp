@@ -66,7 +66,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   const std::vector<const external_spacepoint_t*>& middleSPs =
       grid.at(middleSPsIdx);
   // Return if somehow there are no middle sp candidates
-  if (middleSPs.size() == 0) {
+  if (middleSPs.empty()) {
     return;
   }
 
@@ -260,7 +260,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
   for (auto& otherSPCol : otherSPsNeighbours) {
     const std::vector<const external_spacepoint_t*>& otherSPs =
         grid.at(otherSPCol.index);
-    if (otherSPs.size() == 0) {
+    if (otherSPs.empty()) {
       continue;
     }
 
