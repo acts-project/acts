@@ -351,6 +351,9 @@ class Navigator {
       return;
     }
 
+    // Navigator pre step always resets the current surface
+    state.navigation.currentSurface = nullptr;
+
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE(volInfo(state) << "Entering navigator::preStep.");
 
@@ -360,25 +363,73 @@ class Navigator {
       // Find out about the target as much as you can
       initializeTarget(state, stepper);
     }
-    // Try targeting the surfaces - then layers - then boundaries
-    if (state.navigation.navigationStage <= Stage::surfaceTarget &&
-        targetSurfaces(state, stepper)) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
-    } else if (state.navigation.navigationStage <= Stage::layerTarget &&
-               targetLayers(state, stepper)) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
-    } else if (targetBoundaries(state, stepper)) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
-    } else {
-      ACTS_VERBOSE(volInfo(state)
-                   << "No further navigation action, proceed to target.");
-      // Set navigation break and release the navigation step size
-      state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-    }
 
-    // Navigator target always resets the current surface
-    state.navigation.currentSurface = nullptr;
+    // Loop to retry navigation in case we got lost
+    for (unsigned int i = 0; i < 2; ++i) {
+      // Try targeting the surfaces - then layers - then boundaries
+
+      if (state.navigation.navigationStage <= Stage::surfaceTarget &&
+          targetSurfaces(state, stepper)) {
+        ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
+        break;
+      }
+
+      if (state.navigation.navigationStage <= Stage::layerTarget &&
+          targetLayers(state, stepper)) {
+        ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
+        break;
+      }
+
+      if (targetBoundaries(state, stepper)) {
+        ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
+        break;
+      }
+
+      ACTS_VERBOSE(volInfo(state)
+                   << "No targets found, we got lost! Attempt renavigation.");
+
+      if (i == 1) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "We have been here before, stop navigation.");
+        // Set navigation break and release the navigation step size
+        state.navigation.navigationBreak = true;
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+        break;
+      }
+
+      // We might have punched through a boundary and entered another volume
+      // so we have to reinitialize
+      state.navigation.currentVolume =
+          m_cfg.trackingGeometry->lowestTrackingVolume(
+              state.geoContext, stepper.position(state.stepping));
+
+      if (state.navigation.currentVolume == nullptr) {
+        ACTS_VERBOSE(volInfo(state) << "No volume found, stop navigation.");
+        // Set navigation break and release the navigation step size
+        state.navigation.navigationBreak = true;
+        stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+        break;
+      }
+
+      state.navigation.currentLayer =
+          state.navigation.currentVolume->associatedLayer(
+              state.geoContext, stepper.position(state.stepping));
+
+      ACTS_VERBOSE(
+          volInfo(state)
+          << "Resolved volume and layer. Clear navigation candidates.");
+
+      state.navigation.navSurfaces.clear();
+      state.navigation.navSurfaceIndex = state.navigation.navSurfaces.size();
+      state.navigation.navLayers.clear();
+      state.navigation.navLayerIndex = state.navigation.navLayers.size();
+      state.navigation.navBoundaries.clear();
+      state.navigation.navBoundaryIndex = state.navigation.navBoundaries.size();
+      state.navigation.startLayerResolved = false;
+      state.navigation.navigationStage = Stage::undefined;
+
+      // Rerun the targetting
+    }
   }
 
   /// @brief Navigator post step call
@@ -486,6 +537,7 @@ class Navigator {
               << "No more volume to progress to, stopping navigation.");
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
+          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
@@ -511,6 +563,7 @@ class Navigator {
       }
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     } else {
       ACTS_VERBOSE(volInfo(state)
                    << "Status could not be determined - good luck.");
@@ -597,6 +650,7 @@ class Navigator {
     if (state.navigation.navigationBreak) {
       return false;
     }
+
     // Make sure resolve Surfaces is called on the start layer
     if (state.navigation.startLayer != nullptr &&
         !state.navigation.startLayerResolved) {
@@ -681,10 +735,13 @@ class Navigator {
       } else {
         ACTS_VERBOSE(volInfo(state)
                      << "Last surface on layer reached, and no layer.");
-        // first clear the surface cache
         state.navigation.lastHierarchySurfaceReached = true;
-        state.navigation.navigationBreak =
-            (state.navigation.currentVolume == state.navigation.targetVolume);
+        if (state.navigation.currentVolume == state.navigation.targetVolume) {
+          ACTS_VERBOSE(volInfo(state)
+                       << "This is the target volume, stop navigation.");
+          state.navigation.navigationBreak = true;
+          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+        }
       }
     }
     // Do not return to the propagator
@@ -761,8 +818,8 @@ class Navigator {
       ++state.navigation.navLayerIndex;
     }
 
-    // Re-initialize target at last layer, only in case it is the target volume
-    // This avoids a wrong target volume estimation
+    // Re-initialize target at last layer, only in case it is the target
+    // volume This avoids a wrong target volume estimation
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
       initializeTarget(state, stepper);
     }
@@ -777,9 +834,14 @@ class Navigator {
       }
       logger().log(Logging::VERBOSE, os.str());
     }
+
     // Set the navigation break if necessary
-    state.navigation.navigationBreak =
-        (state.navigation.currentVolume == state.navigation.targetVolume);
+    if (state.navigation.currentVolume == state.navigation.targetVolume) {
+      ACTS_VERBOSE(volInfo(state)
+                   << "This is the target volume, stop navigation.");
+      state.navigation.navigationBreak = true;
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+    }
     return false;
   }
 
@@ -1028,8 +1090,14 @@ class Navigator {
                        const stepper_t& stepper) const {
     // get the layer and layer surface
     const Layer* currentLayer = state.navigation.currentLayer;
-    assert(currentLayer != nullptr && "Current layer is not set.");
+
+    if (currentLayer == nullptr) {
+      ACTS_VERBOSE(volInfo(state) << "No layer to resolve surfaces.");
+      return false;
+    }
+
     const Surface* layerSurface = &currentLayer->surfaceRepresentation();
+
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts;
     navOpts.resolveSensitive = m_cfg.resolveSensitive;
@@ -1050,6 +1118,7 @@ class Navigator {
         navOpts.externalSurfaces.push_back(itSurface->second);
       }
     }
+
     navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
