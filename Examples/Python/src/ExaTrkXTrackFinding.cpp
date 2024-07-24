@@ -205,10 +205,10 @@ void addExaTrkXTrackFinding(Context &ctx) {
       .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
       .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
       .value("Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eEta)
-      .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterX)
-      .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterY)
+      .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc0)
+      .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc1)
       .value("CellCount", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
-      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellSum)
+      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum)
       .value("Cluster1R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1R)
       .value("Cluster2R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2R)
       .value("Cluster1Phi",
