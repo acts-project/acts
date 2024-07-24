@@ -267,7 +267,7 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
     // Set the world volume if it is not set
-    if (!state.navigation.worldVolume) {
+    if (state.navigation.worldVolume == nullptr) {
       state.navigation.worldVolume =
           m_cfg.trackingGeometry->highestTrackingVolume();
     }
