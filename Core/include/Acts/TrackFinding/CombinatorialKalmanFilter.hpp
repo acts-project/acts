@@ -1146,10 +1146,7 @@ class CombinatorialKalmanFilter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (result.finished) {
-        return true;
-      }
-      return false;
+      return !result.lastError.ok() || result.finished;
     }
   };
 
@@ -1276,18 +1273,18 @@ class CombinatorialKalmanFilter {
         std::move(propRes.template get<
                   CombinatorialKalmanFilterResult<track_container_t>>());
 
-    if (combKalmanResult.lastError.ok() && !combKalmanResult.finished) {
-      combKalmanResult.lastError = Result<void>(
+    Result<void> error = combKalmanResult.lastError;
+    if (error.ok() && !combKalmanResult.finished) {
+      error = Result<void>(
           CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
     }
-
-    if (!combKalmanResult.lastError.ok()) {
+    if (!error.ok()) {
       ACTS_ERROR("CombinatorialKalmanFilter failed: "
                  << combKalmanResult.lastError.error() << " "
                  << combKalmanResult.lastError.error().message()
                  << " with the initial parameters: "
                  << initialParameters.parameters().transpose());
-      return combKalmanResult.lastError.error();
+      return error.error();
     }
 
     for (const auto& track : combKalmanResult.collectedTracks) {
