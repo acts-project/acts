@@ -198,6 +198,25 @@ void addExaTrkXTrackFinding(Context &ctx) {
       inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
       targetMinPT, targetMinSize, uniqueModules);
 
+#define ADD_FEATURE_ENUMS(n) \
+  .value("Cluster" #n "X",TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##X) \
+  .value("Cluster" #n "Y",TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Y) \
+  .value("Cluster" #n "Z",TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Z) \
+  .value("Cluster" #n "R",TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##R) \
+  .value("Cluster" #n "Phi",TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Phi) \
+  .value("Cluster" #n "Eta",TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Eta) \
+  .value("CellCount" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount##n) \
+  .value("ChargeSum" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum##n) \
+  .value("LocEta" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eLocEta##n) \
+  .value("LocPhi" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eLocPhi##n) \
+  .value("LocDir0" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir0##n) \
+  .value("LocDir1" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir1##n) \
+  .value("LocDir2" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir2##n) \
+  .value("GlobEta" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eGlobEta##n) \
+  .value("GlobPhi" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eGlobPhi##n) \
+  .value("EtaAngle" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::eEtaAngle##n) \
+  .value("PhiAngle" #n,TrackFindingAlgorithmExaTrkX::NodeFeature::ePhiAngle##n) \
+
   py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
       .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
       .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
@@ -208,19 +227,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
       .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc0)
       .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc1)
       .value("CellCount", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
-      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum)
-      .value("Cluster1R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1R)
-      .value("Cluster2R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2R)
-      .value("Cluster1Phi",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Phi)
-      .value("Cluster2Phi",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Phi)
-      .value("Cluster1Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Z)
-      .value("Cluster2Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Z)
-      .value("Cluster1Eta",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Eta)
-      .value("Cluster2Eta",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
+      .value("ChargeSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum)
+      ADD_FEATURE_ENUMS(1)
+      ADD_FEATURE_ENUMS(2);
+
+#undef ADD_FEATURE_ENUMS
+
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
                                 "TrackFindingAlgorithmExaTrkX",
