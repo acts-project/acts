@@ -325,6 +325,11 @@ class Navigator {
       }
     }
 
+    // Set the start volume as current volume
+    state.navigation.currentVolume = state.navigation.startVolume;
+    // Set the start layer as current layer
+    state.navigation.currentLayer = state.navigation.startLayer;
+
     if (state.navigation.startLayer != nullptr) {
       ACTS_VERBOSE(volInfo(state) << "Start layer to be resolved.");
       // We provide the layer to the resolve surface method in this case
@@ -339,11 +344,6 @@ class Navigator {
         stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       }
     }
-
-    // Set the start volume as current volume
-    state.navigation.currentVolume = state.navigation.startVolume;
-    // Set the start layer as current layer
-    state.navigation.currentLayer = state.navigation.startLayer;
   }
 
   /// @brief Navigator pre step call
