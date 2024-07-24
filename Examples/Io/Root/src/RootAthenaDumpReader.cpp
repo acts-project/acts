@@ -344,7 +344,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     }
 
     cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
-    cluster.localDirection = {CLloc_direction1[im], CLloc_direction2[im], CLloc_direction3[im]};
+    cluster.localDirection = {CLloc_direction1[im], CLloc_direction2[im],
+                              CLloc_direction3[im]};
     cluster.localEta = CLloc_eta[im];
     cluster.localPhi = CLloc_phi[im];
     cluster.globalEta = CLglob_eta[im];

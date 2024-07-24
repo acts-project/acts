@@ -93,8 +93,9 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
   // Check if we want cluster features but do not have them
   const static std::array clFeatures = {
-      NodeFeature::eClusterLoc0, NodeFeature::eClusterLoc0,  NodeFeature::eCellCount,
-      NodeFeature::eChargeSum,  NodeFeature::eCluster1R, NodeFeature::eCluster2R};
+      NodeFeature::eClusterLoc0, NodeFeature::eClusterLoc0,
+      NodeFeature::eCellCount,   NodeFeature::eChargeSum,
+      NodeFeature::eCluster1R,   NodeFeature::eCluster2R};
 
   auto wantClFeatures = std::any_of(
       m_cfg.nodeFeatures.begin(), m_cfg.nodeFeatures.end(), [&](const auto& f) {
@@ -183,9 +184,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     using NF = NodeFeature;
 
-    auto r = [](const auto &p) { return std::hypot(p[Acts::ePos0], p[Acts::ePos1]); };
-    auto phi = [](const auto &p) { return std::atan2(p[Acts::ePos1], p[Acts::ePos0]); };
+    auto r = [](const auto& p) {
+      return std::hypot(p[Acts::ePos0], p[Acts::ePos1]);
+    };
+    auto phi = [](const auto& p) {
+      return std::atan2(p[Acts::ePos1], p[Acts::ePos0]);
+    };
 
+    // clang-format off
 #define MAKE_CLUSTER_FEATURES(n) \
     break; case NF::eCluster##n##X:   f[ift] = cl##n->globalPosition[Acts::ePos0]; \
     break; case NF::eCluster##n##Y:   f[ift] = cl##n->globalPosition[Acts::ePos1]; \
@@ -193,17 +199,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     break; case NF::eCluster##n##Phi: f[ift] = phi(cl##n->globalPosition); \
     break; case NF::eCluster##n##Z:   f[ift] = cl##n->globalPosition[Acts::ePos2]; \
     break; case NF::eCluster##n##Eta: f[ift] = eta(r(cl##n->globalPosition), cl##n->globalPosition[Acts::ePos2]); \
-    break; case NF::eCellCount##n:  f[ift] = cl##n->channels.size(); \
-    break; case NF::eChargeSum##n:  f[ift] = cl##n->sumActivations(); \
-    break; case NF::eLocDir0##n:    f[ift] = cl##n->localDirection[0]; \
-    break; case NF::eLocDir1##n:    f[ift] = cl##n->localDirection[1]; \
-    break; case NF::eLocDir2##n:    f[ift] = cl##n->localDirection[2]; \
-    break; case NF::eLocEta##n:     f[ift] = cl##n->localEta; \
-    break; case NF::eLocPhi##n:     f[ift] = cl##n->localPhi; \
-    break; case NF::eGlobEta##n:    f[ift] = cl##n->globalEta; \
-    break; case NF::eGlobPhi##n:    f[ift] = cl##n->globalPhi; \
-    break; case NF::eEtaAngle##n:   f[ift] = cl##n->etaAngle; \
-    break; case NF::ePhiAngle##n:   f[ift] = cl##n->phiAngle;
+    break; case NF::eCellCount##n:    f[ift] = cl##n->channels.size(); \
+    break; case NF::eChargeSum##n:    f[ift] = cl##n->sumActivations(); \
+    break; case NF::eLocDir0##n:      f[ift] = cl##n->localDirection[0]; \
+    break; case NF::eLocDir1##n:      f[ift] = cl##n->localDirection[1]; \
+    break; case NF::eLocDir2##n:      f[ift] = cl##n->localDirection[2]; \
+    break; case NF::eLocEta##n:       f[ift] = cl##n->localEta; \
+    break; case NF::eLocPhi##n:       f[ift] = cl##n->localPhi; \
+    break; case NF::eGlobEta##n:      f[ift] = cl##n->globalEta; \
+    break; case NF::eGlobPhi##n:      f[ift] = cl##n->globalPhi; \
+    break; case NF::eEtaAngle##n:     f[ift] = cl##n->etaAngle; \
+    break; case NF::ePhiAngle##n:     f[ift] = cl##n->phiAngle;
+    // clang-format on
 
     for (auto ift = 0ul; ift < numFeatures; ++ift) {
       // clang-format off
