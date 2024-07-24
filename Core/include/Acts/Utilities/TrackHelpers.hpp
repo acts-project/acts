@@ -94,7 +94,8 @@ Result<typename track_proxy_t::ConstTrackStateProxy> findLastMeasurementState(
 /// @param smoother The smoother
 ///
 /// @return The result of the smoothing
-template <TrackProxyConcept track_proxy_t, typename smoother_t = GainMatrixSmoother>
+template <TrackProxyConcept track_proxy_t,
+          typename smoother_t = GainMatrixSmoother>
 Result<void> smoothTrack(
     const GeometryContext &geoContext, track_proxy_t &track,
     const Logger &logger = *getDefaultLogger("TrackSmoother", Logging::INFO),

@@ -16,19 +16,18 @@
 namespace Acts {
 
 template <typename T>
-concept TrackContainerFrontend =
-    requires() {
-      typename T::ReadOnly;
+concept TrackContainerFrontend = requires() {
+  typename T::ReadOnly;
 
-      requires std::same_as<typename T::IndexType, TrackIndexType>;
+  requires std::same_as<typename T::IndexType, TrackIndexType>;
 
-      TrackContainerBackend<typename T::TrackContainerBackend>;
-      CommonMultiTrajectoryBackend<typename T::TrackStateContainerBackend>;
+  TrackContainerBackend<typename T::TrackContainerBackend>;
+  CommonMultiTrajectoryBackend<typename T::TrackStateContainerBackend>;
 
-      typename T::TrackProxy;
-      typename T::ConstTrackProxy;
-      typename T::TrackStateProxy;
-      typename T::ConstTrackStateProxy;
-    };
+  typename T::TrackProxy;
+  typename T::ConstTrackProxy;
+  typename T::TrackStateProxy;
+  typename T::ConstTrackStateProxy;
+};
 
 }  // namespace Acts

@@ -1084,12 +1084,11 @@ class KalmanFitter {
             typename parameters_t = BoundTrackParameters,
             TrackContainerFrontend track_container_t,
             bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions,
-           track_container_t& trackContainer) const
-      -> std::enable_if_t<!_isdn,
-                          Result<typename track_container_t::TrackProxy>> {
+  Result<typename track_container_t::TrackProxy> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions<traj_t>& kfOptions,
+      track_container_t& trackContainer) const requires(!_isdn) {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1172,13 +1171,12 @@ class KalmanFitter {
             typename parameters_t = BoundTrackParameters,
             TrackContainerFrontend track_container_t,
             bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions,
-           const std::vector<const Surface*>& sSequence,
-           track_container_t& trackContainer) const
-      -> std::enable_if_t<_isdn,
-                          Result<typename track_container_t::TrackProxy>> {
+  Result<typename track_container_t::TrackProxy> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions<traj_t>& kfOptions,
+      const std::vector<const Surface*>& sSequence,
+      track_container_t& trackContainer) const requires(_isdn) {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
