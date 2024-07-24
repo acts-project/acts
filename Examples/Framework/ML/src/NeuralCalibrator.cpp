@@ -173,10 +173,11 @@ void ActsExamples::NeuralCalibrator::calibrate(
   std::size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
   Measurement measurementCopy = measurement;
-  measurementCopy.parameters()[boundLoc0] = output[iLoc0];
-  measurementCopy.parameters()[boundLoc1] = output[iLoc0 + 1];
-  measurementCopy.covariance()(boundLoc0, boundLoc0) = output[iVar0];
-  measurementCopy.covariance()(boundLoc1, boundLoc1) = output[iVar0 + 1];
+  measurementCopy.effectiveParameters()[boundLoc0] = output[iLoc0];
+  measurementCopy.effectiveParameters()[boundLoc1] = output[iLoc0 + 1];
+  measurementCopy.effectiveCovariance()(boundLoc0, boundLoc0) = output[iVar0];
+  measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) =
+      output[iVar0 + 1];
 
   visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
