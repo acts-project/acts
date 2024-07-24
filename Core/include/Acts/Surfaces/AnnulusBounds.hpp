@@ -133,7 +133,7 @@ class AnnulusBounds : public DiscBounds {
   std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
-  /// bounds in module coordinates (in x/y), and if quarterSegments is bigger of
+  /// bounds in module coordinates (in x/y), and if quarterSegments is bigger or
   /// equal to 0, the curved part of the segment is included and approximated
   /// by the correspondingnumber of segments.
   ///
