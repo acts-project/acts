@@ -36,7 +36,8 @@ struct AlgorithmContext;
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
+class RootPropagationSummaryWriter final
+    : public WriterT<PropagationSummaries> {
  public:
   struct Config {
     /// particle collection to write
@@ -59,10 +60,10 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
       const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
-  ~RootPropagationSummaryWriter() override;
+  ~RootPropagationSummaryWriter() final;
 
   /// End-of-run hook
-  ProcessCode finalize() override;
+  ProcessCode finalize() final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -74,7 +75,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   /// @param context The Algorithm context with per event information
   /// @param summaries is the data to be written out
   ProcessCode writeT(const AlgorithmContext& context,
-                     const PropagationSummaries& summaries) override;
+                     const PropagationSummaries& summaries) final;
 
  private:
   /// the configuration object
@@ -93,54 +94,59 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   int m_trackNr = 0;
 
   // initial trajectory parameters
-  float d0 = 0;
-  float z0 = 0;
-  float phi = 0;
-  float theta = 0;
-  float qOverP = 0;
-  float t = 0;
+  float m_d0 = 0;
+  float m_z0 = 0;
+  float m_phi = 0;
+  float m_theta = 0;
+  float m_qOverP = 0;
+  float m_t = 0;
   // derived initial trajectory parameters
-  float eta = 0;
-  float pt = 0;
-  float p = 0;
+  float m_eta = 0;
+  float m_pt = 0;
+  float m_p = 0;
+
+  // steper statistics
+  float m_nSteps = 0;
+  float m_nStepTrials = 0;
+  float m_pathLength = 0;
 
   /// volume identifier
-  std::vector<int> m_volumeID;
+  std::vector<int> m_stepVolumeID;
   /// boundary identifier
-  std::vector<int> m_boundaryID;
+  std::vector<int> m_stepBoundaryID;
   /// layer identifier if
-  std::vector<int> m_layerID;
+  std::vector<int> m_stepLayerID;
   /// surface identifier
-  std::vector<int> m_approachID;
+  std::vector<int> m_stepApproachID;
   /// surface identifier
-  std::vector<int> m_sensitiveID;
+  std::vector<int> m_stepSensitiveID;
   /// flag material if present
-  std::vector<int> m_material;
+  std::vector<int> m_stepMaterial;
   /// global x
-  std::vector<float> m_x;
+  std::vector<float> m_stepX;
   /// global y
-  std::vector<float> m_y;
+  std::vector<float> m_stepY;
   /// global z
-  std::vector<float> m_z;
+  std::vector<float> m_stepZ;
   /// global direction x
-  std::vector<float> m_dx;
+  std::vector<float> m_stepDx;
   /// global direction y
-  std::vector<float> m_dy;
+  std::vector<float> m_stepDy;
   /// global direction z
-  std::vector<float> m_dz;
+  std::vector<float> m_stepDz;
   /// step type
-  std::vector<int> m_step_type;
+  std::vector<int> m_stepType;
   /// accuracy
-  std::vector<float> m_step_acc;
+  std::vector<float> m_stepAcc;
   /// actor check
-  std::vector<float> m_step_act;
+  std::vector<float> m_stepAct;
   /// aborter
-  std::vector<float> m_step_abt;
+  std::vector<float> m_stepAbt;
   /// user
-  std::vector<float> m_step_usr;
+  std::vector<float> m_stepUsr;
   /// Number of iterations needed by the stepsize finder (e.g. Runge-Kutta) of
   /// the stepper.
-  std::vector<std::size_t> m_nStepTrials;
+  std::vector<std::size_t> m_stepTrials;
 };
 
 }  // namespace ActsExamples
