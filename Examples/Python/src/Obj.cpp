@@ -40,7 +40,7 @@ void addObj(Context& ctx) {
     mex.def("writeSurfacesObj",
             [](const std::vector<std::shared_ptr<Surface>>& surfaces,
                const GeometryContext& viewContext,
-               const std::array<int, 3>& viewRgb, unsigned int viewsegments,
+               const std::array<int, 3>& viewRgb, unsigned int viewSegments,
                const std::string& fileName) {
               Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
               sConfig.quarterSegments = viewsegments;
