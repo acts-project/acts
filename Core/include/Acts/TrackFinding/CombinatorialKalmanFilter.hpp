@@ -371,7 +371,6 @@ class CombinatorialKalmanFilter {
 
         // prepare the track state
         PM mask = PM::Predicted | PM::Jacobian | PM::Calibrated;
-
         if (it != slBegin) {
           // not the first TrackState, only need uncalibrated and calibrated
           mask = PM::Calibrated;
@@ -398,7 +397,6 @@ class CombinatorialKalmanFilter {
         }
 
         ts.pathLength() = pathLength;
-
         ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
 
         // now calibrate the track state
@@ -406,6 +404,7 @@ class CombinatorialKalmanFilter {
 
         trackStateCandidates.push_back(ts);
       }
+
       bool isOutlier = false;
       Result<
           std::pair<typename std::vector<
@@ -421,7 +420,6 @@ class CombinatorialKalmanFilter {
             ResultTrackStateList::failure(selectorResult.error());
       } else {
         auto selectedTrackStateRange = *selectorResult;
-
         resultTrackStateList = processSelectedTrackStates(
             selectedTrackStateRange.first, selectedTrackStateRange.second,
             trajectory, isOutlier, logger);
@@ -461,13 +459,11 @@ class CombinatorialKalmanFilter {
         auto& candidateTrackState = *it;
 
         PM mask = PM::Predicted | PM::Filtered | PM::Jacobian | PM::Calibrated;
-
         if (it != begin) {
           // subsequent track states don't need storage for these as they will
           // be shared
           mask &= ~PM::Predicted & ~PM::Jacobian;
         }
-
         if (isOutlier) {
           // outlier won't have separate filtered parameters
           mask &= ~PM::Filtered;
@@ -492,19 +488,18 @@ class CombinatorialKalmanFilter {
         trackState.copyFrom(candidateTrackState, mask, false);
 
         auto typeFlags = trackState.typeFlags();
+        typeFlags.set(TrackStateFlag::ParameterFlag);
+        typeFlags.set(TrackStateFlag::MeasurementFlag);
         if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
           typeFlags.set(TrackStateFlag::MaterialFlag);
         }
-        typeFlags.set(TrackStateFlag::ParameterFlag);
-
         if (isOutlier) {
           // propagate information that this is an outlier state
           ACTS_VERBOSE(
               "Creating outlier track state with tip = " << trackState.index());
-          // Set the outlier flag needed by the next step to identify outlier
-          // states
           typeFlags.set(TrackStateFlag::OutlierFlag);
         }
+
         trackStateList.push_back(trackState.index());
       }
       return resultTrackStateList;
@@ -947,35 +942,31 @@ class CombinatorialKalmanFilter {
       unsigned int nBranchesOnSurface = 0;
       unsigned int nStoppedBranches = 0;
 
-      // We keep the root branch at the end of the list so it can be easily
-      // removed at the end
       auto rootBranch = result.activeBranches.back();
-      result.activeBranches.pop_back();
 
-      for (IndexType tipIndex : newTrackStateList) {
-        // Inherit the tip state from the previous and will be updated later
-        auto trackState = result.trackStates->getTrackState(tipIndex);
+      // Build the new branches by forking the root branch
+      using TrackProxy = typename track_container_t::TrackProxy;
+      boost::container::small_vector<TrackProxy, s_maxBranchesPerSurface>
+          newBranches;
+      for (auto [i, tipIndex] : enumerate(newTrackStateList)) {
+        auto newBranch = (i == 0) ? rootBranch : rootBranch.shallowCopy();
+        newBranch.tipIndex() = tipIndex;
+        newBranches.push_back(newBranch);
+      }
 
-        // Create a new branch, copy the current branch to the new branch,
-        // swap the root branch with the new branch so it stays at the end of
-        // the list
-        auto newBranch = result.tracks->makeTrack();
-        newBranch.copyFrom(rootBranch, false);
-        // `tipIndex` is not copied so we do it manually
-        newBranch.tipIndex() = rootBranch.tipIndex();
-        std::swap(rootBranch, newBranch);
-        newBranch.tipIndex() = trackState.index();
-        result.activeBranches.push_back(newBranch);
-
+      // Update and select from the new branches
+      for (TrackProxy newBranch : newBranches) {
+        auto trackState = newBranch.outermostTrackState();
         TrackStateType typeFlags = trackState.typeFlags();
+
         if (typeFlags.test(TrackStateFlag::OutlierFlag)) {
-          // Increment number of outliers
-          newBranch.nOutliers()++;
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
           // parameter
           trackState.shareFrom(PM::Predicted, PM::Filtered);
-        } else {
+          // Increment number of outliers
+          newBranch.nOutliers()++;
+        } else if (typeFlags.test(TrackStateFlag::MeasurementFlag)) {
           // Kalman update
           auto updateRes =
               m_extensions.updater(gctx, trackState, *updaterLogger);
@@ -983,12 +974,16 @@ class CombinatorialKalmanFilter {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
           }
-          ACTS_VERBOSE(
-              "Appended measurement track state with tip = " << tipIndex);
+          ACTS_VERBOSE("Appended measurement track state with tip = "
+                       << newBranch.tipIndex());
           // Set the measurement flag
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // Increment number of measurements
           newBranch.nMeasurements()++;
+        } else {
+          ACTS_WARNING("Cannot handle track state with flags: " << typeFlags);
+          nStoppedBranches++;
+          continue;
         }
 
         BranchStopperResult branchStopperResult =
@@ -996,6 +991,7 @@ class CombinatorialKalmanFilter {
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
+          result.activeBranches.push_back(newBranch);
           // Record the number of branches on surface
           nBranchesOnSurface++;
         } else {
@@ -1004,19 +1000,7 @@ class CombinatorialKalmanFilter {
           if (branchStopperResult == BranchStopperResult::StopAndKeep) {
             storeLastActiveBranch(result);
           }
-          // Remove the branch from list
-          result.activeBranches.pop_back();
-          newBranch.copyFrom(rootBranch, false);
-          result.tracks->removeTrack(rootBranch.index());
-          rootBranch = newBranch;
         }
-      }
-
-      if (nBranchesOnSurface > 0) {
-        // Remove the root branch
-        result.tracks->removeTrack(rootBranch.index());
-      } else {
-        // The last branch was killed
       }
 
       return std::pair{nBranchesOnSurface, nStoppedBranches};
