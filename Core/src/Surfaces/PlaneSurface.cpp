@@ -104,7 +104,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
   unsigned int lseg = quarterSegments;
   // If you have bounds you can create a polyhedron representation
   if (m_bounds) {
-    auto vertices2D = m_bounds->vertices(lseg);
+    auto vertices2D = m_bounds->vertices(quarterSegments);
     vertices.reserve(vertices2D.size() + 1);
     for (const auto& v2D : vertices2D) {
       vertices.push_back(transform(gctx) * Vector3(v2D.x(), v2D.y(), 0.));
