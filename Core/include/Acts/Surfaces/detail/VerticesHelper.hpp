@@ -44,7 +44,7 @@ std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
 ///
 /// @param rXY The radius description if first +/= second: ellipse
 /// @param phiMin the minimum phi value
-/// @param phiMax The second phi value
+/// @param phiMax the second phi value
 /// @param phiRef is a vector of reference phi values to be included as well
 /// @param quarterSegments number of segments used to approximate a segment quarter
 /// @param offset The out of plane offset position of the bow
