@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,10 +22,27 @@
 #include <string>
 #include <unordered_map>
 
+namespace Acts {
+class Surface;
+}
+
 namespace ActsExamples {
 
 class PropagatorInterface;
 struct AlgorithmContext;
+
+struct PropagationSummary {
+  explicit PropagationSummary(Acts::BoundTrackParameters startParameters_)
+      : startParameters(std::move(startParameters_)) {}
+
+  /// The start parameters
+  Acts::BoundTrackParameters startParameters;
+
+  /// Steps
+  std::vector<Acts::detail::Step> steps;
+};
+
+using PropagationSummaries = std::vector<PropagationSummary>;
 
 /// Using some short hands for Recorded Material
 using RecordedMaterial = Acts::MaterialInteractor::result_type;
@@ -37,8 +54,7 @@ using RecordedMaterialTrack =
     std::pair<std::pair<Acts::Vector3, Acts::Vector3>, Acts::RecordedMaterial>;
 
 /// Finally the output of the propagation test
-using PropagationOutput =
-    std::pair<std::vector<Acts::detail::Step>, Acts::RecordedMaterial>;
+using PropagationOutput = std::pair<PropagationSummary, RecordedMaterial>;
 
 /// @brief this test algorithm performs test propagation
 /// within the Acts::Propagator
@@ -48,6 +64,11 @@ using PropagationOutput =
 class PropagationAlgorithm : public IAlgorithm {
  public:
   struct Config {
+    /// The output step collection
+    std::string outputSummaryCollection = "propagation_summary";
+    /// The output material collection
+    std::string outputMaterialCollection = "recorded_material";
+
     /// Instance of a propagator wrapper that performs the actual propagation
     std::shared_ptr<PropagatorInterface> propagatorImpl = nullptr;
     /// Switch the logger to sterile - for timing measurements
@@ -69,9 +90,9 @@ class PropagationAlgorithm : public IAlgorithm {
     /// Input track parameters
     std::string inputTrackParameters = "InputTrackParameters";
     /// The step collection to be stored
-    std::string outputPropagationSteps = "PropagationSteps";
+    std::string outputSummarySollection = "PropagationSummary";
     /// The material collection to be stored
-    std::string outputMaterialTracks = "RecordedMaterialTracks";
+    std::string outputSummaryCollection = "RecordedMaterialTracks";
   };
 
   /// Constructor
@@ -94,8 +115,8 @@ class PropagationAlgorithm : public IAlgorithm {
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
 
-  WriteDataHandle<std::vector<std::vector<Acts::detail::Step>>>
-      m_outputPropagationSteps{this, "OutputPropagationSteps"};
+  WriteDataHandle<PropagationSummaries> m_outputSummary{this, "OutputSummary"};
+
 
   WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "RecordedMaterial"};

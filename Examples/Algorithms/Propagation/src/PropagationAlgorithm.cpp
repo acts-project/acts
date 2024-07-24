@@ -13,8 +13,23 @@
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 namespace ActsExamples {
+
+PropagationAlgorithm::PropagationAlgorithm(
+    const PropagationAlgorithm::Config& config, Acts::Logging::Level level)
+    : IAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
+  if (!m_cfg.propagatorImpl) {
+    throw std::invalid_argument("Config needs to contain a propagator");
+  }
+  if (!m_cfg.randomNumberSvc) {
+    throw std::invalid_argument("No random number generator given");
+  }
+
+  m_outputSummary.initialize(m_cfg.outputSummaryCollection);
+  m_recordedMaterial.initialize(m_cfg.outputMaterialCollection);
+}
 
 ProcessCode PropagationAlgorithm::execute(
     const AlgorithmContext& context) const {
@@ -24,9 +39,13 @@ ProcessCode PropagationAlgorithm::execute(
   ACTS_DEBUG("Propagating " << inputTrackParameters.size()
                             << " input trackparameters");
 
+  std::shared_ptr<const Acts::PerigeeSurface> surface =
+      Acts::Surface::makeShared<Acts::PerigeeSurface>(
+          Acts::Vector3(0., 0., 0.));
+
   // Output : the propagation steps
-  std::vector<std::vector<Acts::detail::Step>> propagationSteps;
-  propagationSteps.reserve(inputTrackParameters.size());
+  PropagationSummaries propagationSummaries;
+  propagationSummaries.reserve(m_cfg.ntests);
 
   // Output (optional): the recorded material
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
@@ -38,7 +57,7 @@ ProcessCode PropagationAlgorithm::execute(
   for (const auto [it, parameters] : Acts::enumerate(inputTrackParameters)) {
     // In case covariance transport is not desired, it has to be stripped
     // off the input parameters
-    PropagationOutput pOutput =
+    auto propagationResult =
         m_cfg.covarianceTransport
             ? m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
                                             parameters)
@@ -47,13 +66,20 @@ ProcessCode PropagationAlgorithm::execute(
                   TrackParameters(parameters.referenceSurface().getSharedPtr(),
                                   parameters.parameters(), std::nullopt,
                                   parameters.particleHypothesis()));
+    if (!propagationResult.ok()) {
+      ACTS_ERROR("Propagation failed with " << propagationResult.error());
+      continue;
+    }
+
+    PropagationOutput& propagationOutput = propagationResult.value();
 
     // Position / momentum for the output writing
     Acts::Vector3 position = parameters.position(context.geoContext);
     Acts::Vector3 direction = parameters.direction();
 
     // Record the propagator steps
-    propagationSteps.push_back(std::move(pOutput.first));
+    propagationSummaries.push_back(std::move(propagationOutput.first));
+
     if (m_cfg.recordMaterialInteractions) {
       // Record the material information
       recordedMaterialTracks.emplace(
@@ -62,7 +88,7 @@ ProcessCode PropagationAlgorithm::execute(
     }
   }
   // Write the propagation step data to the event store
-  m_outputPropagationSteps(context, std::move(propagationSteps));
+  m_outputSummary(context, std::move(propagationSummaries));
 
   // Write the recorded material to the event store
   if (m_cfg.recordMaterialInteractions) {
@@ -78,8 +104,8 @@ PropagationAlgorithm::PropagationAlgorithm(
     throw std::invalid_argument("Config needs to contain a propagator");
   }
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-  m_outputPropagationSteps.initialize(m_cfg.outputPropagationSteps);
-  m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
+  m_outputSummary.initialize(m_cfg.outputSummaryCollection);
+  m_outputMaterialTracks.initialize(m_cfg.outputMaterialCollection);
 }
 
 }  // namespace ActsExamples
