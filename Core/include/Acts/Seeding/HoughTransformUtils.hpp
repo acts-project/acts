@@ -223,8 +223,15 @@ class HoughPlane {
   /// @param yBin: bin index in the second coordinate
   /// @return the (weighted) number of hits for this cell
   YieldType nHits(std::size_t xBin, std::size_t yBin) const {
+    std::cout<<"x,y="<<xBin<<","<<yBin<<std::endl;
+    std::cout<<m_cfg.nBinsX<<","<<m_cfg.nBinsY<<std::endl;
     return m_houghHist.get(xBin, yBin).nHits();
   }
+
+  YieldType nHits(std::size_t globalBin) const {
+    return m_houghHist.get_val(globalBin).nHits();
+  }
+
 
   /// @brief get the number of bins on the first coordinate
   std::size_t nBinsX() const { return m_cfg.nBinsX; }
@@ -246,6 +253,11 @@ class HoughPlane {
   /// @brief get the coordinates of the bin given the global bin index
   std::array<std::size_t, 2> axisBins(std::size_t globalBin) const{
     return m_houghHist.axisIndices(globalBin);
+  }
+
+  /// @brief get the globalBin index given the coordinates of the bin
+  std::size_t globalBin(std::size_t x, std::size_t y) const{
+    return m_houghHist.index({x,y});
   }
 
   /// @brief get the bin indices of the cell containing the largest number
@@ -384,15 +396,16 @@ class IslandsAroundMax {
   /// @param threshold: the threshold to apply to check if a cell should be added to an island
   /// @param yieldMap: A map of the hit content of above-threshold cells. Used cells will be set to empty content to avoid re-use by subsequent calls
   void extendMaximum(
-      std::vector<std::pair<std::size_t, std::size_t>>& inMaximum,
-      std::vector<std::pair<std::size_t, std::size_t>>& toExplore,
+      const HoughPlane<identifier_t>& houghPlane, 
+      std::vector<std::array<std::size_t,2>>& inMaximum,
+      std::vector<std::size_t>& toExplore,
       YieldType threshold,
-      std::unordered_map<std::size_t>& yieldMap);
+      std::unordered_map<std::size_t, YieldType>& yieldMap);
 
   IslandsAroundMaxConfig m_cfg;  // configuration data object
 
   /// @brief array of steps to consider when exploring neighbouring cells.
-  const std::array<std::pair<int, int>, 8> m_stepDirections{
+  const std::array<std::pair<int, int>, 8>  m_stepDirections{
       std::make_pair(-1, -1), std::make_pair(0, -1), std::make_pair(1, -1),
       std::make_pair(-1, 0),  std::make_pair(1, 0),  std::make_pair(-1, 1),
       std::make_pair(0, 1),   std::make_pair(1, 1)};
