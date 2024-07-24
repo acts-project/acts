@@ -43,7 +43,7 @@ void addObj(Context& ctx) {
                const std::array<int, 3>& viewRgb, unsigned int viewSegments,
                const std::string& fileName) {
               Acts::ViewConfig sConfig = Acts::ViewConfig{viewRgb};
-              sConfig.quarterSegments = viewsegments;
+              sConfig.quarterSegments = viewSegments;
               Acts::GeometryView3D view3D;
               Acts::ObjVisualization3D obj;
 
