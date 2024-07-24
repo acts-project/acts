@@ -18,6 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -92,6 +93,43 @@ BOOST_AUTO_TEST_CASE(Update) {
   CHECK_CLOSE_ABS(ts.filteredCovariance(), expCov, tol);
 
   CHECK_CLOSE_ABS(ts.chi2(), 1.33958, 1e-4);
+}
+
+BOOST_AUTO_TEST_CASE(UpdateFailed) {
+  // Make dummy measurement
+  Vector2 measPar(-0.1, 0.45);
+  SquareMatrix2 measCov = SquareMatrix2::Zero();
+  auto sourceLink = TestSourceLink(eBoundLoc0, eBoundLoc1, measPar, measCov);
+
+  // Make dummy track parameters
+  ParametersVector trkPar;
+  trkPar << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
+  CovarianceMatrix trkCov = CovarianceMatrix::Zero();
+
+  // Make trajectory w/ one state
+  VectorMultiTrajectory traj;
+  auto idx = traj.addTrackState(TrackStatePropMask::All);
+  auto ts = traj.getTrackState(idx);
+
+  // Fill the state w/ the dummy information
+  ts.predicted() = trkPar;
+  ts.predictedCovariance() = trkCov;
+  ts.pathLength() = 0.;
+  BOOST_CHECK(!ts.hasUncalibratedSourceLink());
+  testSourceLinkCalibrator<VectorMultiTrajectory>(
+      tgContext, CalibrationContext{}, SourceLink{std::move(sourceLink)}, ts);
+  BOOST_CHECK(ts.hasUncalibratedSourceLink());
+
+  // Check that the state has storage available
+  BOOST_CHECK(ts.hasPredicted());
+  BOOST_CHECK(ts.hasFiltered());
+  BOOST_CHECK(ts.hasCalibrated());
+
+  // Gain matrix update and filtered state
+  BOOST_CHECK(GainMatrixUpdater()
+                  .
+                  operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .error() == KalmanFitterError::UpdateFailed);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

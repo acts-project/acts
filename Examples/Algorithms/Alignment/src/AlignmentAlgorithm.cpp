@@ -113,9 +113,10 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
       &kfSmoother);
 
   // Set the KalmanFitter options
-  TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
-                               ctx.calibContext, extensions,
-                               Acts::PropagatorPlainOptions(), &(*pSurface));
+  TrackFitterOptions kfOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      &(*pSurface));
 
   // Set the alignment options
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(

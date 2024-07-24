@@ -259,7 +259,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
 
   // Assign the proto material
   // Material assignment from configuration
-  for (auto [ip, bDescription] : m_cfg.portalMaterialBinning) {
+  for (const auto& [ip, bDescription] : m_cfg.portalMaterialBinning) {
     if (portalContainer.find(ip) != portalContainer.end()) {
       auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
           gctx, portalContainer[ip]->surface(), bDescription);

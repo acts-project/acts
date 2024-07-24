@@ -164,8 +164,9 @@ SeedingAlgorithmConfigArg = namedtuple(
         "zBinNeighborsTop",
         "zBinNeighborsBottom",
         "numPhiNeighbors",
+        "useExtraCuts",
     ],
-    defaults=[None] * 4,
+    defaults=[None] * 5,
 )
 
 TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
@@ -204,8 +205,12 @@ CkfConfig = namedtuple(
         "maxSteps",
         "seedDeduplication",
         "stayOnSeed",
+        "pixelVolumes",
+        "stripVolumes",
+        "maxPixelHoles",
+        "maxStripHoles",
     ],
-    defaults=[15.0, 10, None, False, False],
+    defaults=[15.0, 10, None, None, None, None, None, None, None],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -341,7 +346,7 @@ def addSeeding(
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
-    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
+    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors, useExtraCuts)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
@@ -973,6 +978,7 @@ def addStandardSeeding(
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
             zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
+            useExtraCuts=seedingAlgorithmConfigArg.useExtraCuts,
         ),
         gridConfig=gridConfig,
         gridOptions=gridOptions,
@@ -1717,6 +1723,10 @@ def addCKFTracks(
             twoWay=twoWay,
             seedDeduplication=ckfConfig.seedDeduplication,
             stayOnSeed=ckfConfig.stayOnSeed,
+            pixelVolumes=ckfConfig.pixelVolumes,
+            stripVolumes=ckfConfig.stripVolumes,
+            maxPixelHoles=ckfConfig.maxPixelHoles,
+            maxStripHoles=ckfConfig.maxStripHoles,
         ),
     )
     s.addAlgorithm(trackFinder)
@@ -2318,9 +2328,11 @@ def addVertexFitting(
     trackParameters: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
     outputVertices: str = "fittedVertices",
-    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    maxIterations: Optional[int] = None,
+    initialVariances: Optional[List[float]] = None,
     useTime: Optional[bool] = False,
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
@@ -2339,11 +2351,11 @@ def addVertexFitting(
     field : magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    vertexFinder : VertexFinder, Truth
+        vertexFinder algorithm: one of Truth, AMVF, Iterative
     seeder : enum member
         determines vertex seeder for AMVF, can be acts.seeder.GaussianSeeder or
         acts.seeder.AdaptiveGridSeeder
-    vertexFinder : VertexFinder, Truth
-        vertexFinder algorithm: one of Truth, AMVF, Iterative
     useTime : bool, False
         determines whether time information is used in vertex seeder, finder,
         and fitter
@@ -2401,30 +2413,32 @@ def addVertexFitting(
         s.addAlgorithm(findVertices)
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
-            bField=field,
             inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
+            bField=field,
         )
         s.addAlgorithm(fitVertices)
     elif vertexFinder == VertexFinder.Iterative:
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
-            bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
+            bField=field,
         )
         s.addAlgorithm(findVertices)
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
-            seedFinder=seeder,
-            bField=field,
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
+            bField=field,
+            seedFinder=seeder,
             **acts.examples.defaultKWArgs(
+                maxIterations=maxIterations,
+                initialVariances=initialVariances,
                 useTime=useTime,
                 spatialBinExtent=spatialBinExtent,
                 temporalBinExtent=temporalBinExtent,
@@ -2448,7 +2462,6 @@ def addVertexFitting(
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching=suffixIn+"track_particle_matching",
                 bField=field,
-                vertexMatchThreshold=0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing")+suffixOut+".root",
             )

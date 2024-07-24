@@ -39,6 +39,7 @@ namespace py = pybind11;
 using namespace Acts::Python;
 
 namespace Acts::Python {
+void addContext(Context& ctx);
 void addUnits(Context& ctx);
 void addFramework(Context& ctx);
 void addLogging(Context& ctx);
@@ -73,6 +74,7 @@ void addDigitization(Context& ctx);
 void addPythia8(Context& ctx);
 void addGeoModel(Context& ctx);
 void addJson(Context& ctx);
+void addDetray(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addSvg(Context& ctx);
@@ -105,6 +107,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
     mv.attr("commit_hash_short") = Acts::CommitHashShort;
   }
 
+  addContext(ctx);
   addUnits(ctx);
   addFramework(ctx);
   addLogging(ctx);
@@ -136,6 +139,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addPythia8(ctx);
   addJson(ctx);
   addGeoModel(ctx);
+  addDetray(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addObj(ctx);
