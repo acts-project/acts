@@ -36,19 +36,19 @@ void calculateTrackQuantities(
   for (const auto& trackState : track.trackStatesReversed()) {
     auto typeFlags = trackState.typeFlags();
 
-    if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+      track.nHoles()++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+      track.nOutliers()++;
+    } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
         track.nSharedHits()++;
       }
-
       track.nMeasurements()++;
       track.chi2() += trackState.chi2();
       track.nDoF() += trackState.calibratedSize();
-    } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
-      track.nOutliers()++;
-    } else if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-      track.nHoles()++;
     }
   }
 }
+
 }  // namespace Acts
