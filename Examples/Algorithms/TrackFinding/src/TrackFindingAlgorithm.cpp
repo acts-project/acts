@@ -298,6 +298,7 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
   m_outputTracks.initialize(m_cfg.outputTracks);
+  m_inputPrimaryVertex.initialize(m_cfg.inputPrimaryVertex);
 }
 
 ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
@@ -318,7 +319,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3{0., 0., 0.});
+      Acts::Vector3{0., 0., m_inputPrimaryVertex(ctx)});
 
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);

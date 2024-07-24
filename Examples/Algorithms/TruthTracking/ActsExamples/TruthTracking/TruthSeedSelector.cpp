@@ -74,7 +74,9 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
            within(phi, m_cfg.phiMin, m_cfg.phiMax) &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(nHits, m_cfg.nHitsMin, m_cfg.nHitsMax) &&
-           (m_cfg.keepNeutral || (p.charge() != 0));
+           (m_cfg.keepNeutral || (p.charge() != 0)) and
+           ((m_cfg.keepPrimary and !p.isSecondary()) or
+           (m_cfg.keepSecondary and p.isSecondary()));
   };
 
   // create prototracks for all input particles

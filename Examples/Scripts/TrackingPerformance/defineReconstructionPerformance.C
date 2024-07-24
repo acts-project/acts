@@ -97,17 +97,17 @@ void defineReconstructionPerformance(
 
   for (int i = 0; i < nTrackFiles; ++i) {
     trackEff_vs_eta.push_back(new TEfficiency(
-        Form("trackeff_vs_eta_%i", i), ";Truth #eta [GeV/c];Efficiency", 40, -4, 4));
+        Form("trackeff_vs_eta_%i", i), ";Truth #eta [GeV/c];Efficiency", 40, 0, 10));
     fakeRate_vs_eta.push_back(new TEfficiency(
-        Form("fakerate_vs_eta_%i", i), ";#eta [GeV/c];fake rate", 40, -4, 4));
+        Form("fakerate_vs_eta_%i", i), ";#eta [GeV/c];fake rate", 40, 0, 10));
     duplicateRate_vs_eta.push_back(new TEfficiency(
-        Form("duplicaterate_vs_eta_%i", i), ";#eta [GeV/c];Duplicate rate", 40, -4, 4));
+        Form("duplicaterate_vs_eta_%i", i), ";#eta [GeV/c];Duplicate rate", 40, 0, 10));
     trackEff_vs_pt.push_back(new TEfficiency(
-        Form("trackeff_vs_pt_%i", i), ";Truth pt [GeV/c];Efficiency", 40, 0, 100));
+        Form("trackeff_vs_pt_%i", i), ";Truth pt [GeV/c];Efficiency", 30, 0, 3));
     fakeRate_vs_pt.push_back(new TEfficiency(
-        Form("fakerate_vs_pt_%i", i), ";pt [GeV/c];fake rate", 40, 0, 100));
+        Form("fakerate_vs_pt_%i", i), ";pt [GeV/c];fake rate", 30, 0, 3));
     duplicateRate_vs_pt.push_back(new TEfficiency(
-        Form("duplicaterate_vs_pt_%i", i), ";pt [GeV/c];Duplicate rate", 40, 0, 100));
+        Form("duplicaterate_vs_pt_%i", i), ";pt [GeV/c];Duplicate rate", 30, 0, 3));
   }
 
   // Set styles
@@ -274,7 +274,7 @@ void defineReconstructionPerformance(
   TCanvas* c1 = new TCanvas("recoPerf", " ", 1500, 800);
   c1->Divide(3, 2);
 
-  float scaleRangeMax = 1.15;
+  float scaleRangeMax = 1.;
   for (int i = 0; i < nTrackFiles; ++i) {
     std::string mode = (i == 0) ? "" : "same";
     c1->cd(1);

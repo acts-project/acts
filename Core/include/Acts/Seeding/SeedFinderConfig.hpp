@@ -15,6 +15,7 @@
 
 #include <limits>
 #include <memory>
+#include <iostream>
 #include <vector>
 
 namespace Acts {
@@ -44,7 +45,8 @@ struct SeedFinderConfig {
 
   /// Vector containing the z-bin edges for non equidistant binning in z
   std::vector<float> zBinEdges;
-
+  
+  bool verbose=false;
   /// Order of z bins to loop over when searching for SPs
   std::vector<std::size_t> zBinsCustomLooping = {};
 
@@ -96,7 +98,8 @@ struct SeedFinderConfig {
 
   /// Maximum allowed cotTheta between two space-points in doublet, used to
   /// check if forward angle is within bounds
-  float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
+  // equivalent to 2.7 eta (pseudorapidity)
+  float cotThetaMax = 7.40627;
 
   /// Limiting location of collision region in z-axis used to check if doublet
   /// origin is within reasonable bounds
@@ -321,6 +324,22 @@ struct SeedFinderOptions {
         options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
     options.multipleScattering2 =
         config.maxScatteringAngle2 * std::pow(config.sigmaScattering, 2);
+
+	  std::cout << "NA60+_options.bFieldInZ= " << options.bFieldInZ << std::endl;
+     options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
+	  std::cout << "NA60+_1_T= " << 1_T << std::endl;
+	  std::cout << "NA60+_options.pTPerHelixRadius= " << options.pTPerHelixRadius << std::endl;
+	  std::cout << "NA60+_config.minPt= " << config.minPt << std::endl;
+     options.minHelixDiameter2 =
+         std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
+	  std::cout << "NA60+_options.minHelixDiameter2= " << options.minHelixDiameter2 << std::endl;
+     options.pT2perRadius =
+         std::pow(config.highland / options.pTPerHelixRadius, 2);
+     options.sigmapT2perRadius =
+         options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+     options.multipleScattering2 =
+         config.maxScatteringAngle2 * std::pow(config.sigmaScattering, 2);
+	  std::cout << "NA60+_options.multipleScattering2= " << options.multipleScattering2 << std::endl;
     return options;
   }
 };

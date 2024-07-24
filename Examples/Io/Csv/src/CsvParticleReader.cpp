@@ -22,6 +22,8 @@
 #include <cmath>
 #include <stdexcept>
 #include <string>
+#include <map>
+#include <iostream>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -42,6 +44,8 @@ ActsExamples::CsvParticleReader::CsvParticleReader(
   }
 
   m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputVertices.initialize(m_cfg.outputVertices);
+
 }
 
 std::string ActsExamples::CsvParticleReader::CsvParticleReader::name() const {
@@ -56,15 +60,21 @@ ActsExamples::CsvParticleReader::availableEvents() const {
 ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
+  SimVertexContainer::sequence_type vertices;
+
+  std::map<ActsFatras::Barcode, SimVertex> foundVertices;
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
   dfe::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
-
+  
   while (reader.read(data)) {
-    ActsFatras::Particle particle(ActsFatras::Barcode(data.particle_id),
+    ActsFatras::Barcode particle_id(data.particle_id);
+    ActsFatras::Barcode vertex_id = particle_id.vertexId();
+  
+    ActsFatras::Particle particle(particle_id,
                                   Acts::PdgParticle{data.particle_type},
                                   data.q * Acts::UnitConstants::e,
                                   data.m * Acts::UnitConstants::GeV);
@@ -77,12 +87,27 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
     particle.setAbsoluteMomentum(std::hypot(data.px, data.py, data.pz) *
                                  Acts::UnitConstants::GeV);
     unordered.push_back(std::move(particle));
+
+    if (foundVertices.find(vertex_id) != foundVertices.end()) {
+      foundVertices[vertex_id].outgoing.insert(particle_id);
+    }
+    else if(!particle.isSecondary())
+    {
+      foundVertices[vertex_id] = vertices.emplace_back(vertex_id, 
+                                                      SimVertex::Vector4(data.vx * Acts::UnitConstants::mm,
+                                                                         data.vy * Acts::UnitConstants::mm,
+                                                                         data.vz * Acts::UnitConstants::mm,
+                                                                         data.vt * Acts::UnitConstants::mm));
+      foundVertices[vertex_id].outgoing.insert(particle_id);
+    }
   }
 
   // Write ordered particles container to the EventStore
   SimParticleContainer particles;
   particles.insert(unordered.begin(), unordered.end());
+  SimVertexContainer vert;
+  vert.insert(vertices.begin(), vertices.end());
   m_outputParticles(ctx, std::move(particles));
-
+  m_outputVertices(ctx, std::move(vert));
   return ProcessCode::SUCCESS;
 }

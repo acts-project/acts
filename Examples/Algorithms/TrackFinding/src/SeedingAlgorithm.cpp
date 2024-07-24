@@ -223,6 +223,15 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       Acts::SeedFinder<SimSpacePoint,
                        Acts::CylindricalSpacePointGrid<SimSpacePoint>>(
           m_cfg.seedFinderConfig);
+
+  
+  if (m_cfg.seedFinderConfig.verbose)
+    std::cout << "NA60+_m_cfg.gridOptions.bFieldInZ= "
+              << m_cfg.gridOptions.bFieldInZ
+              << " m_cfg.seedFinderOptions.bFieldInZ= "
+              << m_cfg.seedFinderOptions.bFieldInZ << std::endl;
+
+  m_inputPrimaryVertex.initialize(m_cfg.inputPrimaryVertex);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -250,8 +259,26 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // covariance tool, extracts covariances per spacepoint as required
   auto extractGlobalQuantities = [=](const SimSpacePoint& sp, float, float,
                                      float) {
-    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
-    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
+    // modified to rotate our setup
+    Acts::Vector3 position{sp.x(), sp.z()-m_inputPrimaryVertex(ctx), -sp.y()};
+    Acts::Vector2 covariance{
+        50e-3, 30e-3};  // large values put by hand. Check??? in R is the Si
+                        // thickness and in z is the pixel pitch. Units is mm???
+    //    Acts::Vector3 position{sp.y(), sp.z(), sp.x()};
+    //    Acts::Vector2 covariance{50e-3, 30e-3};  //large values put by hand.
+    //    Check??? in R is the Si thickness and in z is the pixel pitch. Units
+    //    is mm??? Acts::Vector3 position{sp.x(), sp.y(), sp.z()}; Acts::Vector2
+    //    covariance{sp.varianceR(), sp.varianceZ()};
+
+    if (m_cfg.seedFinderConfig.verbose) {
+      std::cout << "NA60+_SeedingAlgorithm: sp.x()= " << sp.x()
+                << " sp.y()= " << sp.y() << " sp.z()= " << sp.z()-m_inputPrimaryVertex(ctx) << std::endl;
+
+      std::cout << "NA60+_position= " << position.x() << " " << position.y()
+                << " " << position.z() << std::endl;
+      std::cout << "NA60+_covariance.R= " << covariance.x()
+                << " covariance.Z= " << covariance.y() << std::endl;
+    }
     return std::make_tuple(position, covariance, sp.t());
   };
 
@@ -320,9 +347,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   }
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
-    m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state,
-                                     spacePointsGrouping.grid(), seeds, bottom,
-                                     middle, top, rMiddleSPRange);
+    m_seedFinder.createSeedsForGroup(
+        m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
+        seeds, bottom, middle, top, rMiddleSPRange, m_inputPrimaryVertex(ctx));
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

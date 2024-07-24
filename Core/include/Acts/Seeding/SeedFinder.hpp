@@ -106,7 +106,7 @@ class SeedFinder {
                            const sp_range_t& bottomSPs,
                            const std::size_t middleSPs,
                            const sp_range_t& topSPs,
-                           const Acts::Range1D<float>& rMiddleSPRange) const;
+                           const Acts::Range1D<float>& rMiddleSPRange, float zTarget) const;
 
  private:
   /// Iterates over dublets and tests the compatibility between them by applying

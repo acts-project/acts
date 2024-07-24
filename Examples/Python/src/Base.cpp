@@ -307,6 +307,11 @@ void addBinning(Context& ctx) {
                           .value("phi", Acts::BinningValue::binPhi)
                           .export_values();
 
+  auto BinningOption = py::enum_<Acts::BinningOption>(binning, "BinningOption")
+                          .value("open", Acts::BinningOption::open)
+                          .value("closed", Acts::BinningOption::closed)
+                          .export_values();
+
   auto boundaryType =
       py::enum_<Acts::AxisBoundaryType>(binning, "AxisBoundaryType")
           .value("bound", Acts::AxisBoundaryType::Bound)

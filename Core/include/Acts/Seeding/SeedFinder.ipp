@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <numeric>
 #include <type_traits>
 
@@ -42,7 +43,8 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const grid_t& grid, container_t& outputCollection,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
-    const Acts::Range1D<float>& rMiddleSPRange) const {
+    const Acts::Range1D<float>& rMiddleSPRange,
+    float zTarget) const {
   if (!options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
@@ -104,8 +106,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
   }
 
   for (const auto& spM : middleSPs) {
-    float rM = spM->radius();
-
+    float rM = sqrt((spM->y()+zTarget)*(spM->y()+zTarget)+spM->x()*spM->x());
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       if (rM < rMiddleSPRange.min()) {
@@ -130,6 +131,10 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
         break;
       }
     } else {
+      if (m_config.verbose)
+        std::cout << "\nNA60+_SeedFinder_middleSP_rM,rMinMiddle,rMaxMiddle: "
+                  << rM << " " << m_config.rMinMiddle << " "
+                  << m_config.rMaxMiddle << std::endl;
       if (rM < m_config.rMinMiddle) {
         continue;
       }
@@ -170,8 +175,18 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
                                          ? seedConfRange.nTopForLargeR
                                          : seedConfRange.nTopForSmallR;
+      if (m_config.verbose)
+        std::cout
+            << "NA60+_in seedfinder confirmation seedFilterState.nTopSeedConf "
+            << seedFilterState.nTopSeedConf << std::endl;
       // set max bottom radius for seed confirmation
       seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+
+      if (m_config.verbose)
+        std::cout
+            << "NA60+_in seedfinder confirmation seedFilterState.rMaxSeedConf "
+            << seedFilterState.rMaxSeedConf << std::endl;
+
       // continue if number of top SPs is smaller than minimum
       if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
         continue;
@@ -269,11 +284,21 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
       if constexpr (isBottomCandidate) {
+        if (m_config.verbose)
+          std::cout << "NA60+_SeedFinder_getCompatibleDoublets_Bottom_DeltaR_"
+                       "deltaRMin,deltRMax= "
+                    << rM - otherSP->radius() << " " << deltaRMinSP << " "
+                    << deltaRMaxSP << std::endl;
         // if r-distance is too big, try next SP in bin
         if ((rM - otherSP->radius()) <= deltaRMaxSP) {
           break;
         }
       } else {
+        if (m_config.verbose)
+          std::cout << "NA60+_SeedFinder_getCompatibleDoublets_Top_DeltaR_"
+                       "deltaRMin,deltRMax= "
+                    << otherSP->radius() - rM << " " << deltaRMinSP << " "
+                    << deltaRMaxSP << std::endl;
         // if r-distance is too small, try next SP in bin
         if ((otherSP->radius() - rM) >= deltaRMinSP) {
           break;
@@ -287,9 +312,28 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
+      if (m_config.verbose)
+        std::cout << "NA60+_MIDDLE " << xM << " " << yM << " " << zM
+                  << std::endl;
+      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom)
+        if (m_config.verbose)
+          std::cout << "BOTTOM " << otherSP->x() << " " << otherSP->y() << " "
+                    << otherSP->z() << std::endl;
+      if constexpr (candidateType == Acts::SpacePointCandidateType::eTop)
+        if (m_config.verbose)
+          std::cout << "TOP " << otherSP->x() << " " << otherSP->y() << " "
+                    << otherSP->z() << std::endl;
 
       if constexpr (isBottomCandidate) {
         deltaR = (rM - otherSP->radius());
+        if (m_config.verbose){
+          std::cout << "NA60+_---BOTTOM " << otherSP->x() << " " << otherSP->y()
+                    << " " << otherSP->z() << std::endl;
+          std::cout << "NA60+_SeedFinder_getCompatibleDoublets_Bottom_DeltaR_"
+                       "deltRMin= "
+                    << (rM - otherSP->radius()) << " " << deltaRMinSP
+                    << std::endl;
+        }
 
         // if r-distance is too small, try next SP in bin
         if (deltaR < deltaRMinSP) {
@@ -298,6 +342,13 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       } else {
         deltaR = (otherSP->radius() - rM);
 
+        if (m_config.verbose) {
+          std::cout << "NA60+_---TOP " << otherSP->x() << " " << otherSP->y()
+                    << " " << otherSP->z() << std::endl;
+          std::cout
+              << "NA60+_SeedFinder_getCompatibleDoublets_Top_DeltaR_deltRMax= "
+              << otherSP->radius() - rM << " " << deltaRMaxSP << std::endl;
+        }
         // if r-distance is too big, try next SP in bin
         if (deltaR > deltaRMaxSP) {
           break;
@@ -315,6 +366,20 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // point duplet but instead we calculate (zOrigin * deltaR) and multiply
       // collisionRegion by deltaR to avoid divisions
       const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
+      if (m_config.verbose) {
+        if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom)
+          std::cout << "NA60+_SeedFinder_getCompatibleDoublets_BOTTOM_"
+                       "zOriginTimesDeltaR/DeltaR_collRegionMin,collRegionMax= "
+                    << zOriginTimesDeltaR / deltaR << " "
+                    << m_config.collisionRegionMin << " "
+                    << m_config.collisionRegionMax << std::endl;
+        if constexpr (candidateType == Acts::SpacePointCandidateType::eTop)
+          std::cout << "NA60+_SeedFinder_getCompatibleDoublets_TOP_"
+                       "zOriginTimesDeltaR/DeltaR_collRegionMin,collRegionMax= "
+                    << zOriginTimesDeltaR / deltaR << " "
+                    << m_config.collisionRegionMin << " "
+                    << m_config.collisionRegionMax << std::endl;
+      }
       // check if duplet origin on z axis within collision region
       if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR ||
           zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
@@ -326,6 +391,18 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       // interactionPointCut is true we apply the curvature cut first because it
       // is more frequent but requires the coordinate transformation
       if (!m_config.interactionPointCut) {
+        if (m_config.verbose) {
+          if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom)
+            std::cout << "NA60+_SeedFinder_getCompatibleDoublets_BOTTOM_deltaZ/"
+                         "deltaR,cotThetaMin,cotThetaMax: "
+                      << deltaZ / deltaR << " " << -m_config.cotThetaMax << " "
+                      << m_config.cotThetaMax << std::endl;
+          if constexpr (candidateType == Acts::SpacePointCandidateType::eTop)
+            std::cout << "NA60+_SeedFinder_getCompatibleDoublets_TOP_deltaZ/"
+                         "deltaR,cotThetaMin,cotThetaMax: "
+                      << deltaZ / deltaR << " " << -m_config.cotThetaMax << " "
+                      << m_config.cotThetaMax << std::endl;
+        }
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
         // cotThetaMax by deltaR to avoid division
@@ -333,6 +410,20 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
             deltaZ < -m_config.cotThetaMax * deltaR) {
           continue;
         }
+
+        if (m_config.verbose) {
+          if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom)
+            std::cout << "NA60+_SeedFinder_getCompatibleDoublets_BOTTOM_deltaZ,"
+                         "deltaZMin,deltaZMax: "
+                      << deltaZ << " " << -m_config.deltaZMax << " "
+                      << m_config.deltaZMax << std::endl;
+          if constexpr (candidateType == Acts::SpacePointCandidateType::eTop)
+            std::cout << "NA60+_SeedFinder_getCompatibleDoublets_TOP_deltaZ,"
+                         "deltaZMin,deltaZMax: "
+                      << deltaZ << " " << -m_config.deltaZMax << " "
+                      << m_config.deltaZMax << std::endl;
+        }
+
         // if z-distance between SPs is within max and min values
         if (deltaZ > m_config.deltaZMax || deltaZ < -m_config.deltaZMax) {
           continue;
@@ -365,6 +456,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
         spacePointData.setDeltaR(otherSP->index(),
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.push_back(otherSP.get());
+        if (m_config.verbose) {
+          std::cout << "NA60+_cotTheta in getCompatible = " << cotTheta
+                    << std::endl;
+        }
         continue;
       }
 
@@ -509,6 +604,13 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
               });
   }
 
+  if (m_config.verbose) {
+    std::cout << "NA60+_SeedFinder_filterCandidates numTopSP= " << numTopSP
+              << std::endl;
+    std::cout << "\nNA60+_SeedFinder_filterCandidates sorted_tops= "
+              << sorted_tops.size()
+              << " sorted_bottoms= " << sorted_bottoms.size() << std::endl;
+  }
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);
   state.curvatures.reserve(numTopSP);
@@ -520,6 +622,8 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
   state.candidates_collector.clear();
 
   for (const std::size_t b : sorted_bottoms) {
+    if (m_config.verbose)
+      std::cout << "NA60+_---- filterCandidates - Loop on bottom" << std::endl;
     // break if we reached the last top SP
     if (t0 == numTopSP) {
       break;
@@ -569,14 +673,23 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     std::size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation ||
         state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
+      if (m_config.verbose)
+        std::cout << "NA60+_state.compatBottomSP[b]->radius()= "
+                  << state.compatBottomSP[b]->radius()
+                  << " seedFilterState.rMaxSeedConf= "
+                  << seedFilterState.rMaxSeedConf << std::endl;
       minCompatibleTopSPs = 1;
     }
     if (m_config.seedConfirmation &&
         state.candidates_collector.nHighQualityCandidates()) {
       minCompatibleTopSPs++;
     }
+    //test
+    minCompatibleTopSPs = 1;
 
     for (std::size_t index_t = t0; index_t < numTopSP; index_t++) {
+      if (m_config.verbose)
+        std::cout << "NA60+_---- filterCandidates - Loop on top" << std::endl;
       const std::size_t t = sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];
@@ -594,6 +707,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       float yT = 0.;
       float iDeltaRB2 = 0.;
       float iDeltaRT2 = 0.;
+
+      if (m_config.verbose)
+        std::cout << "NA60+_cotThetaT in SeedFinder_filterCandidates = "
+                  << cotThetaT << std::endl;
 
       if constexpr (detailedMeasurement ==
                     Acts::DetectorMeasurementInfo::eDetailed) {
@@ -674,6 +791,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
       } else if (cotThetaAvg2 <= 0) {
+        if (m_config.verbose)
+          std::cout << "NA60+_Skip SP because cotThetaAvg2 <= 0 [SP have not a "
+                       "correct order in z]"
+                    << std::endl;
         continue;
       }
 
@@ -696,6 +817,16 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // (scatteringInRegion2). This assumes gaussian error propagation which
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
+      if (m_config.verbose) {
+        std::cout << "NA60+_varianceRM = " << varianceRM
+                  << " varianceZM= " << varianceZM << std::endl;
+        std::cout << "NA60+_cotThetaB= " << cotThetaB
+                  << " cotThetaT= " << cotThetaT << std::endl;
+        std::cout << "NA60+_SeedFinder_filterCandidates_deltaCotTheta2,error2,"
+                     "scatteringInRegion2: "
+                  << deltaCotTheta2 << " " << error2 << " "
+                  << scatteringInRegion2 << std::endl;
+      }
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
         if constexpr (detailedMeasurement ==
@@ -757,6 +888,14 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
 
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
+      if (m_config.verbose) {
+        std::cout << "NA60+_SeedFinder_filterCandidates_minHelixDiameter2: "
+                  << S2 / B2 << " "
+                  << options.minHelixDiameter2 * m_config.helixCutTolerance << std::endl;
+        std::cout << "NA60+_S2/B2= " << S2 / B2
+                  << " options.minHelixDiameter2=" << options.minHelixDiameter2
+                  << " m_config.helixCutTolerance= " << m_config.helixCutTolerance << std::endl;
+      }
       if (S2 < B2 * options.minHelixDiameter2) {
         continue;
       }
@@ -768,6 +907,10 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
       float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
+
+      if (m_config.verbose)
+        std::cout << "NA60+_p2scatterSigma= " << p2scatterSigma << std::endl;
+
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
@@ -779,10 +922,19 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
               (m_config.highland / m_config.maxPtScattering) *
               m_config.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+          if (m_config.verbose)
+            std::cout << "NA60+_inside p2scatterSigma= " << p2scatterSigma
+                      << std::endl;
         }
       }
 
       // if deltaTheta larger than allowed scattering for calculated pT, skip
+      if (m_config.verbose)
+        std::cout << "NA60+_SeedFinder_filterCandidates_deltaTheta_scattering,"
+                     "error2,p2scatterSigma: "
+                  << deltaCotTheta2 << " " << error2 << " " << p2scatterSigma
+                  << std::endl;
+
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
         if constexpr (detailedMeasurement ==
                       Acts::DetectorMeasurementInfo::eDetailed) {
@@ -804,6 +956,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       } else {
         Im = std::abs((A - B * rM) * rM);
       }
+      if (m_config.verbose)
+        std::cout << "NA60+_SeedFinder_filterCandidates_Im_impactMax: " << Im
+                  << " " << m_config.impactMax << std::endl;
 
       if (Im > m_config.impactMax) {
         continue;
@@ -814,14 +969,34 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
       // positive/negative in phi
       state.curvatures.push_back(B / std::sqrt(S2));
       state.impactParameters.push_back(Im);
+      auto Bzfield = 1.5;  // by hand
+      if (m_config.verbose) {
+        if ((cotThetaB < 0) && (cotThetaT < 0))
+          std::cout << "NA60+_SeedParameter_cotThetaAvg= "
+                    << -sqrt(cotThetaAvg2) << std::endl;
+        else
+          std::cout << "NA60+_SeedParameter_cotThetaAvg= " << sqrt(cotThetaAvg2)
+                    << std::endl;
+        std::cout << "NA60+_SeedParameter_pT= "
+                  << 1. / (B / std::sqrt(S2)) * 300 * Bzfield / 2. / 1e6
+                  << std::endl;  // from pdf Louis (why 1e6?
+        std::cout << "NA60+_SeedParameter_d0= " << Im << std::endl;
+        std::cout << "NA60+_SeedParameter_curvature= " << B / std::sqrt(S2)
+                  << std::endl;
+      }
     }  // loop on tops
-
+    if (m_config.verbose)
+      std::cout << "NA60+_state.topSpVec.size()= " << state.topSpVec.size()
+                << " minCompatibleTopSPs= " << minCompatibleTopSPs << std::endl;
     // continue if number of top SPs is smaller than minimum required for filter
     if (state.topSpVec.size() < minCompatibleTopSPs) {
       continue;
     }
 
     seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
+
+    if (m_config.verbose)
+      std::cout << "NA60+_SeedFilter_filterSeeds_2SpFixed" << std::endl;
 
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,

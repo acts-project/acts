@@ -101,7 +101,6 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
-
   finderCfg.maxVertices = m_cfg.maxIterations;
   finderCfg.reassignTracksAfterFirstFit = false;
   finderCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();

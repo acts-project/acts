@@ -97,6 +97,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
+    bool verbose=false;
+    bool truthSeeding=false;
   };
 
   /// Construct the track parameters making algorithm.

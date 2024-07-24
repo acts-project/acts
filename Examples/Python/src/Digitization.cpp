@@ -72,6 +72,14 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(doMerge);
     ACTS_PYTHON_MEMBER(minEnergyDeposit);
     ACTS_PYTHON_MEMBER(digitizationConfigs);
+    ACTS_PYTHON_MEMBER(efficiency);
+    ACTS_PYTHON_MEMBER(applyDeadAreas);
+    ACTS_PYTHON_MEMBER(applyFastSimSelections);
+    ACTS_PYTHON_MEMBER(applyReadout);
+    ACTS_PYTHON_MEMBER(applyBackbone);
+    ACTS_PYTHON_MEMBER(applyHole);
+    ACTS_PYTHON_MEMBER(applyEndcapShort);
+    ACTS_PYTHON_MEMBER(applyEndcapLong);
     ACTS_PYTHON_STRUCT_END();
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);

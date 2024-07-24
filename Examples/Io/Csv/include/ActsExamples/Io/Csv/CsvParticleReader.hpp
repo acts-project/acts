@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -41,6 +42,8 @@ class CsvParticleReader final : public IReader {
     std::string inputStem;
     /// Which particle collection to read into.
     std::string outputParticles;
+    /// Name of the vertex collection.
+    std::string outputVertices;
   };
 
   /// Construct the particle reader.
@@ -67,6 +70,8 @@ class CsvParticleReader final : public IReader {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
+
+  WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

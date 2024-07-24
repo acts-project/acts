@@ -40,7 +40,7 @@ class GreedyAmbiguityResolution {
     /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
     /// Maximum number of iterations
-    std::uint32_t maximumIterations = 1000;
+    std::uint32_t maximumIterations = 1000000000;
 
     /// Minimum number of measurement to form a track.
     std::size_t nMeasurementsMin = 7;

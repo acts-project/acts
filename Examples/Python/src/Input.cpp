@@ -59,7 +59,7 @@ void addInput(Context& ctx) {
   // CSV READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvParticleReader, mex,
                              "CsvParticleReader", inputDir, inputStem,
-                             outputParticles);
+                             outputParticles, outputVertices);
 
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,

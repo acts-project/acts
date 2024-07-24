@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 import acts
 from acts.examples import (
+    CsvParticleReader,
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
@@ -184,6 +185,81 @@ def addParticleGun(
         )
 
     return s
+
+def addParticleReader(
+    s: acts.examples.Sequencer,
+    inputDir: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    printParticles: bool = False,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    """This function read
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the particle gun steps (returned from addParticleGun)
+    inputDirCsv : Path|str, path, None
+        the input folder for the Csv input, None triggers no output
+    outputDirCsv : Path|str, path, None
+        the output folder for the Csv output, None triggers no output
+    outputDirRoot : Path|str, path, None
+        the output folder for the Root output, None triggers no output
+    printParticles : bool, False
+        print generated particles
+    """
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    evReader = acts.examples.CsvParticleReader(
+            acts.logging.WARNING,
+            inputDir=str(inputDir),
+            inputStem="particles",
+            outputParticles="particles_input",
+            outputVertices="vertices_input",
+        )
+    
+    s.addReader(evReader)
+
+    s.addWhiteboardAlias("particles", evReader.config.outputParticles)
+
+    if printParticles:
+        s.addAlgorithm(
+            ParticlesPrinter(
+                level=customLogLevel(),
+                inputParticles=evReader.config.outputParticles,
+            )
+        )
+
+    if outputDirCsv is not None:
+        outputDirCsv = Path(outputDirCsv)
+        if not outputDirCsv.exists():
+            outputDirCsv.mkdir()
+
+        s.addWriter(
+            CsvParticleWriter(
+                level=customLogLevel(),
+                inputParticles=evReader.config.outputParticles,
+                outputDir=str(outputDirCsv),
+                outputStem="particles",
+            )
+        )
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        s.addWriter(
+            RootParticleWriter(
+                level=customLogLevel(),
+                inputParticles=evReader.config.outputParticles,
+                filePath=str(outputDirRoot / "particles.root"),
+            )
+        )
+
+    return s
+
 
 
 def addPythia8(
@@ -778,6 +854,14 @@ def addDigitization(
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
     minEnergyDeposit: Optional[float] = None,
+    efficiency: Optional[float] = None,
+    applyDeadAreas: Optional[bool] = None,
+    applyFastSimSelections: Optional[bool] = None,
+    applyReadout: Optional[bool] = None,
+    applyBackbone: Optional[bool] = None,
+    applyHole: Optional[bool] = None,
+    applyEndcapShort: Optional[bool] = None,
+    applyEndcapLong: Optional[bool] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
@@ -821,6 +905,29 @@ def addDigitization(
     # Not sure how to do this in our style
     if minEnergyDeposit is not None:
         digiCfg.minEnergyDeposit = minEnergyDeposit
+    if efficiency is not None:
+        digiCfg.efficiency=efficiency
+        
+    if applyDeadAreas is not None:
+        digiCfg.applyDeadAreas=applyDeadAreas
+        
+    if applyFastSimSelections is not None:
+        digiCfg.applyFastSimSelections=applyFastSimSelections
+        
+    if applyReadout is not None:
+        digiCfg.applyReadout=applyReadout
+        
+    if applyBackbone is not None:
+        digiCfg.applyBackbone=applyBackbone
+        
+    if applyHole is not None:
+        digiCfg.applyHole=applyHole
+        
+    if applyEndcapShort is not None:
+        digiCfg.applyEndcapShort=applyEndcapShort
+
+    if applyEndcapLong is not None:
+        digiCfg.applyEndcapLong=applyEndcapLong
 
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, customLogLevel())
 

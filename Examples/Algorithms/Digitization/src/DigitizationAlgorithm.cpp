@@ -150,7 +150,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
   // Setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-
+  std::uniform_real_distribution<double> uniformDist(0.0,1.0);
   // Some statistics
   std::size_t skippedHits = 0;
 
@@ -201,7 +201,48 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               ACTS_VERBOSE("Skip hit because energy deposit to small");
               continue;
             }
+            double rndm = uniformDist(rng);
+            if (rndm > m_cfg.efficiency){
+                ACTS_VERBOSE("Skip due to inefficiency");
+                continue;
+            }
 
+            auto pos = simHit.fourPosition();
+            if (m_cfg.applyDeadAreas){
+              if (m_cfg.applyReadout){
+                ACTS_VERBOSE("Skip hit because in the readout");
+                continue;
+              }
+
+              if (m_cfg.applyBackbone){
+                ACTS_VERBOSE("Skip hit because in the backbone");
+                continue;
+              }
+              
+              if (m_cfg.applyHole){
+                if(abs(pos[0])<3 and abs(pos[1])<3 and pos[2] < 400){
+                  ACTS_VERBOSE("Skip hit because inside the hole");
+                  continue;
+                }
+              }
+              
+              if (m_cfg.applyEndcapShort){
+                ACTS_VERBOSE("Skip hit because in the short endcap");
+                continue;
+              }
+              
+              if (m_cfg.applyEndcapLong){
+                ACTS_VERBOSE("Skip hit because in the long endcap");
+                continue;
+              }
+            }
+
+            if (m_cfg.applyFastSimSelections) {
+              if((sqrt(pos[0]*pos[0]+pos[1]*pos[1])>150 or sqrt(pos[0]*pos[0]+pos[1]*pos[1])<3) and pos[2] < 400){
+                ACTS_VERBOSE("Skip hit because outside the fast simulation geometry");
+                continue;
+              }
+            }
             // Geometric part - 0, 1, 2 local parameters are possible
             if (!digitizer.geometric.indices.empty()) {
               ACTS_VERBOSE("Configured to geometric digitize "

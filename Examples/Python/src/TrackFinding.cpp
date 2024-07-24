@@ -12,6 +12,8 @@
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SeedFilterConfigNA60.hpp"
+#include "Acts/Seeding/SeedFinderConfigNA60.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
@@ -23,6 +25,7 @@
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingAlgorithmNA60.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -87,6 +90,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(numSeedIncrement);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpMConf);
     ACTS_PYTHON_MEMBER(maxQualitySeedsPerSpMConf);
+    ACTS_PYTHON_MEMBER(verbose);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -138,6 +142,9 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
+    ACTS_PYTHON_MEMBER(rMinMiddle);
+    ACTS_PYTHON_MEMBER(rMaxMiddle);
+    ACTS_PYTHON_MEMBER(verbose);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -150,6 +157,94 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
+
+
+
+  {
+    using Config = Acts::SeedFilterConfigNA60;
+    auto c = py::class_<Config>(m, "SeedFilterConfigNA60").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(deltaInvHelixDiameter);
+    ACTS_PYTHON_MEMBER(impactWeightFactor);
+    ACTS_PYTHON_MEMBER(zOriginWeightFactor);
+    ACTS_PYTHON_MEMBER(compatSeedWeight);
+    ACTS_PYTHON_MEMBER(deltaYMin);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
+    ACTS_PYTHON_MEMBER(compatSeedLimit);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(seedConfirmationRange);
+    ACTS_PYTHON_MEMBER(useDeltaRorTopRadius);
+    ACTS_PYTHON_MEMBER(seedWeightIncrement);
+    ACTS_PYTHON_MEMBER(numSeedIncrement);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpMConf);
+    ACTS_PYTHON_MEMBER(maxQualitySeedsPerSpMConf);
+    ACTS_PYTHON_MEMBER(verbose);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using Config = Acts::SeedFinderConfigNA60<SimSpacePoint>;
+    auto c = py::class_<Config>(m, "SeedFinderConfigNA60").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(cotThetaMax);
+    ACTS_PYTHON_MEMBER(deltaYMin);
+    ACTS_PYTHON_MEMBER(deltaYMax);
+    ACTS_PYTHON_MEMBER(deltaYMinBottomSP);
+    ACTS_PYTHON_MEMBER(deltaYMaxBottomSP);
+    ACTS_PYTHON_MEMBER(deltaYMinTopSP);
+    ACTS_PYTHON_MEMBER(deltaYMaxTopSP);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(sigmaScattering);
+    ACTS_PYTHON_MEMBER(maxPtScattering);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
+    ACTS_PYTHON_MEMBER(collisionRegionMin);
+    ACTS_PYTHON_MEMBER(collisionRegionMax);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
+    ACTS_PYTHON_MEMBER(zMin);
+    ACTS_PYTHON_MEMBER(zMax);
+    ACTS_PYTHON_MEMBER(zOutermostLayers);
+    ACTS_PYTHON_MEMBER(rMax);
+    ACTS_PYTHON_MEMBER(rMin);
+    ACTS_PYTHON_MEMBER(radLengthPerSeed);
+    ACTS_PYTHON_MEMBER(zAlign);
+    ACTS_PYTHON_MEMBER(rAlign);
+    ACTS_PYTHON_MEMBER(sigmaError);
+    ACTS_PYTHON_MEMBER(maxBlockSize);
+    ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
+    ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(deltaZMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(interactionPointCut);
+    ACTS_PYTHON_MEMBER(zBinsCustomLooping);
+    ACTS_PYTHON_MEMBER(skipZMiddleBinSearch);
+    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+    ACTS_PYTHON_MEMBER(deltaYMiddleMinSPRange);
+    ACTS_PYTHON_MEMBER(deltaYMiddleMaxSPRange);
+    ACTS_PYTHON_MEMBER(yRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(binSizeR);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(seedConfirmationRange);
+    ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
+    ACTS_PYTHON_MEMBER(yMinMiddle);
+    ACTS_PYTHON_MEMBER(yMaxMiddle);
+    ACTS_PYTHON_MEMBER(verbose);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+  {
+    using seedOptions = Acts::SeedFinderOptionsNA60;
+    auto c = py::class_<seedOptions>(m, "SeedFinderOptionsNA60").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedOptions);
+    ACTS_PYTHON_MEMBER(beamPos);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
   {
     using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
     auto c =
@@ -230,6 +325,29 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
+    using Config = Acts::PlanarSpacePointGridConfig;
+    auto c = py::class_<Config>(m, "PlanarSpacePointGridConfig").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(xMax);
+    ACTS_PYTHON_MEMBER(xMin);
+    ACTS_PYTHON_MEMBER(zMax);
+    ACTS_PYTHON_MEMBER(zMin);
+    ACTS_PYTHON_MEMBER(xBinEdges);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+  {
+    using Options = Acts::PlanarSpacePointGridOptions;
+    auto c = py::class_<Options>(m, "PlanarSpacePointGridOptions").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Options);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+  {
     using Config = Acts::CylindricalSpacePointGridConfig;
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
@@ -263,7 +381,15 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts);
+      zBinNeighborsBottom, numPhiNeighbors, useExtraCuts,
+      inputPrimaryVertex);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingAlgorithmNA60, mex, "SeedingAlgorithmNA60", inputSpacePoints,
+      outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
+      gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
+      zBinNeighborsBottom, xBinNeighborsTop, xBinNeighborsBottom,
+      inputPrimaryVertex);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
@@ -322,6 +448,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(inputSourceLinks);
+    ACTS_PYTHON_MEMBER(inputPrimaryVertex);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(inputSeeds);
     ACTS_PYTHON_MEMBER(outputTracks);

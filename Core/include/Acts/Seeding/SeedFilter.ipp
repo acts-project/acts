@@ -9,6 +9,7 @@
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <numeric>
 #include <utility>
 
@@ -67,6 +68,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     topSPIndexVec[i] = i;
   }
 
+  if (m_cfg.verbose)
+    std::cout << "NA60+_SeedFilter_topSpVec.size()= " << topSpVec.size()
+              << std::endl;
+
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(
@@ -99,10 +104,22 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 
+    if (m_cfg.verbose) {
+      std::cout
+          << "NA60+_weight_currentTop= (-(impact * m_cfg.impactWeightFactor))= "
+          << weight << std::endl;
+      std::cout << "NA60+_m_cfg.impactWeightFactor= "
+                << m_cfg.impactWeightFactor << std::endl;
+    }
+
     // loop over compatible top SP candidates
     for (std::size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < topSPIndexVec.size(); variableCompTopIndex++) {
       std::size_t compatibleTopSPIndex = topSPIndexVec[variableCompTopIndex];
+      if (m_cfg.verbose)
+        std::cout << "NA60+_CheckTopIndexes compatibleTopSPIndex= "
+                  << compatibleTopSPIndex << " topSPIndex= " << topSPIndex
+                  << std::endl;
       if (compatibleTopSPIndex == topSPIndex) {
         continue;
       }
@@ -111,7 +128,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
           m_cfg.useDeltaRorTopRadius
               ? spacePointData.deltaR(topSpVec[compatibleTopSPIndex]->index())
               : topSpVec[compatibleTopSPIndex]->radius();
-
+      if (m_cfg.verbose) {
+        std::cout << "NA60+_currentTopR = " << currentTopR
+                  << " otherTopR = " << otherTopR << std::endl;
+        std::cout
+            << "NA60+_SeedFilter_2SP_invHelixDiameterVec[compatibleTopSPIndex]_"
+               "invHelixDiameter[topSPIndex]_m_cfg.deltaInvHelixDiameter: "
+            << invHelixDiameterVec[compatibleTopSPIndex] << " "
+            << invHelixDiameter << " " << m_cfg.deltaInvHelixDiameter
+            << std::endl;
+        std::cout << "SeedFilter_2SP_invHelixDiameterVec[compatibleTopSPIndex]_"
+                     "invHelixDiameter[topSPIndex]_lowhigh: "
+                  << invHelixDiameterVec[compatibleTopSPIndex] << " "
+                  << invHelixDiameter << " " << lowerLimitCurv << " "
+                  << upperLimitCurv << std::endl;
+      }
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
         // the SPs are sorted in curvature so we skip unnecessary iterations
@@ -124,9 +155,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTopR - otherTopR;
+      if (m_cfg.verbose)
+        std::cout << "NA60+_SeedFilter_2SP_deltaR_in2SpFixed,min: " << deltaR
+                  << " " << m_cfg.deltaRMin << std::endl;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
+        if (m_cfg.verbose)
+          std::cout << "NA60+_std::abs(deltaR) < m_cfg.deltaRMin  "
+                << std::endl;
         continue;
       }
+      if (m_cfg.verbose)
+        std::cout << "NA60+_seed_filter_afterdeltaR " << std::endl;
       bool newCompSeed = true;
       for (const float previousDiameter : compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
@@ -141,11 +180,20 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       if (newCompSeed) {
         compatibleSeedR.push_back(otherTopR);
         weight += m_cfg.compatSeedWeight;
+        if (m_cfg.verbose)
+          std::cout << "NA60+_updated weight= m_cfg.compatSeedWeight= "
+                    << weight
+                    << " m_cfg.compatSeedWeight= " << m_cfg.compatSeedWeight
+                    << std::endl;
       }
       if (compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
         break;
       }
     }
+
+    if (m_cfg.verbose)
+      std::cout << "NA60+_compatibleSeedR.size(): " << compatibleSeedR.size()
+                << std::endl;
 
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
@@ -162,6 +210,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // numSeedIncrement
     if (compatibleSeedR.size() > m_cfg.numSeedIncrement) {
       weight += m_cfg.seedWeightIncrement;
+      if (m_cfg.verbose)
+        std::cout << "NA60+_updated weight+= m_cfg.seedWeightIncrement"
+                  << weight << " m_cfg.numSeedIncrement "
+                  << m_cfg.numSeedIncrement << std::endl;
     }
 
     if (m_cfg.seedConfirmation) {
@@ -169,6 +221,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
+
+      if (m_cfg.verbose)
+        std::cout << "NA60+_deltaSeedConf="
+                  << (compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf)
+                  << " seedFilterState.numQualitySeeds= "
+                  << seedFilterState.numQualitySeeds << std::endl;
+
       int deltaSeedConf =
           compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
       if (deltaSeedConf < 0 ||
@@ -188,6 +247,22 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       weight += -(std::abs(zOrigin) * m_cfg.zOriginWeightFactor) +
                 m_cfg.compatSeedWeight;
 
+      if (m_cfg.verbose) {
+        std::cout << "NA60+_SeedFinder_confirmation_weighinconfirmation= "
+                  << weight
+                  << " m_cfg.zOriginWeightFactor= " << m_cfg.zOriginWeightFactor
+                  << std::endl;
+
+        std::cout << "NA60+_spacePointData.quality(bottomSP.index())= "
+                  << spacePointData.quality(bottomSP.index()) << std::endl;
+        std::cout << "NA60+_spacePointData.quality(middleSP.index())= "
+                  << spacePointData.quality(middleSP.index()) << std::endl;
+        std::cout
+            << "NA60+_spacePointData.quality(topSpVec[topSPIndex]->index())= "
+            << spacePointData.quality(topSpVec[topSPIndex]->index())
+            << std::endl;
+        std::cout << "NA60+_weight= " << weight << std::endl;
+      }
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
       if (weight < spacePointData.quality(bottomSP.index()) &&
@@ -195,6 +270,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
           weight < spacePointData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
+      if (m_cfg.verbose)
+        std::cout << "NA60+_SeedFilter keep seed with good weight "
+                  << std::endl;
 
       if (deltaSeedConf > 0) {
         // if we have not yet reached our max number of quality seeds we add the
@@ -205,6 +283,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // If this is reached, we remove the seed with the lowest weight.
         candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                   weight, zOrigin, true);
+
+        if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
+          // fill high quality seed
+          seedFilterState.numQualitySeeds++;
+        }
+        if (m_cfg.verbose)
+          std::cout << "NA60+_SeedFilter_confirmation_push " << std::endl;
+
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
         weightMax = weight;
@@ -218,6 +304,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
                                 weight, zOrigin, false);
+
+      if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
+        // fill seed
+        seedFilterState.numSeeds++;
+        if (m_cfg.verbose)
+          std::cout << "NA60+_seedFilterState.numSeeds= "
+                    << seedFilterState.numSeeds << std::endl;
+      }
     }
   }  // loop on tops
   // if no high quality seed was found for a certain middle+bottom SP pair,
@@ -264,6 +358,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
   unsigned int maxSeeds = candidates.size();
 
+  if (m_cfg.verbose)
+    std::cout << "NA60+_SeedFilter_filterSeeds_1SpFixed maxSeeds= " << maxSeeds
+              << " m_cfg.maxSeedsPerSpM= " << m_cfg.maxSeedsPerSpM << std::endl;
+
   if (maxSeeds > m_cfg.maxSeedsPerSpM) {
     maxSeeds = m_cfg.maxSeedsPerSpM + 1;
   }
@@ -274,6 +372,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   unsigned int numTotalSeeds = 0;
   for (const auto& [bottom, medium, top, bestSeedQuality, zOrigin,
                     qualitySeed] : candidates) {
+    if (m_cfg.verbose)
+      std::cout << "NA60+_SeedFilter_1SpFixed inside loop " << std::endl;
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
       break;
@@ -289,9 +389,15 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
           bestSeedQuality < spacePointData.quality(top->index())) {
         continue;
       }
+      if (m_cfg.verbose)
+        std::cout << "NA60+_SeedFilter_filterSeeds_1SpFixed assign quality"
+                  << std::endl;
     }
 
     // set quality of seed components
+    if (m_cfg.verbose)
+      std::cout << "NA60+_SeedFilter_filterSeeds_1SpFixed_bestSeedQuality= "
+                << bestSeedQuality << std::endl;
     spacePointData.setQuality(bottom->index(), bestSeedQuality);
     spacePointData.setQuality(medium->index(), bestSeedQuality);
     spacePointData.setQuality(top->index(), bestSeedQuality);

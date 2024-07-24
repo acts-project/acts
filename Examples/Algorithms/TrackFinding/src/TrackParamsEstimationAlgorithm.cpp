@@ -96,6 +96,40 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   auto const& seeds = m_inputSeeds(ctx);
+
+  //==================================================================
+  // MODIFIED BY ME
+  //      // rotation of SP should be done here
+  //      const auto bottomSP = seed.sp().at(0);
+  //      const auto middleSP = seed.sp().at(1);
+  //      const auto topSP = seed.sp().at(2);
+  //
+  //      std::cout << "before rotation" << std::endl;
+  //      std::cout << "SPinseed_bottomsp= " << bottomSP->x() << " " <<
+  //      bottomSP->y() << " " << bottomSP->z() << " " << std::endl; std::cout
+  //      << "SPinseed_middlesp= " << middleSP->x() << " " << middleSP->y() <<
+  //      " " << middleSP->z() << " " << std::endl; std::cout <<
+  //      "SPinseed_topsp= " << topSP->x() << " " << topSP->y() << " " <<
+  //      topSP->z() << " " << std::endl;
+  //
+  //      double_t ytmpb = bottomSP->y();
+  //      double_t ytmpm = middleSP->y();
+  //      double_t ytmpt = topSP->y();
+  //      bottomSP->y() == bottomSP->z();
+  //      bottomSP->z() == -ytmpb;
+  //      middleSP->y() == middleSP->z();
+  //      middleSP->z() == -ytmpm;
+  //      topSP->y() == topSP->z();
+  //      topSP->z() == -ytmpt;
+  //
+  //      std::cout << "after rotation" << std::endl;
+  //      std::cout << "bottomsp= " << bottomSP->x() << " " << bottomSP->y()
+  //      << " " << bottomSP->z() << std::endl; std::cout << "middlesp= " <<
+  //      middleSP->x() << " " << middleSP->y() << " " << middleSP->z() <<
+  //      std::endl; std::cout << "topsp= " << topSP->x() << " " << topSP->y()
+  //      << " " << topSP->z() <<  std::endl;
+  //===================================================================
+
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
   TrackParametersContainer trackParameters;
@@ -140,19 +174,47 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
+    if (m_cfg.verbose)
+      std::cout << "TrackParamsEstimationAlgorithm_bottomSP= " << bottomSP->x()
+                << " " << bottomSP->y() << " " << bottomSP->z() << std::endl;
+
+
     // Get the magnetic field at the bottom space point
     auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+        {bottomSP->x(), bottomSP->z(), -bottomSP->y()}, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
     Acts::Vector3 field = *fieldRes;
 
+    if (!m_cfg.truthSeeding) {
+      field.y() = -field.z();
+      field.z() = 0.0;
+    }
+
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        m_cfg.bFieldMin, logger());
+         m_cfg.bFieldMin, logger(), m_cfg.verbose);
+
+    // ===================== ALTERNATIVE WAY OF EXTRACTING TRACK PARAMETERS
+    // (Noemi)
+    // - SP SHOULD BE ROTATED (where???)
+    // - B FIELD SHOULD NOT BE ROTATED
+    // - ALTERNATIVE estimateTrackParameter IS USED
+    //
+    //    std::cout << "TrackParamsEstimationAlgorithm_bottomSP= " <<
+    //    bottomSP->x() << " " << bottomSP->y() << " " << bottomSP->z() <<
+    //    std::endl; std::cout << "fieldB= " << field.x() << " " << field.y() <<
+    //    " " << field.z() << std::endl; auto optParams =
+    //    Acts::estimateTrackParamsFromSeed( seed.sp().begin(),
+    //    seed.sp().end(),logger());
+    //
+
+    // END OF CHANGES
+    //===============================================================================
+
     if (!optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");

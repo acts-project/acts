@@ -84,12 +84,29 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
       m_nTotalMatchedParticles;
   float totalSeedPurity =
       static_cast<float>(m_nTotalMatchedSeeds) / m_nTotalSeeds;
-  ACTS_DEBUG("nTotalSeeds               = " << m_nTotalSeeds);
-  ACTS_DEBUG("nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
-  ACTS_DEBUG("nTotalParticles           = " << m_nTotalParticles);
-  ACTS_DEBUG("nTotalMatchedParticles    = " << m_nTotalMatchedParticles);
-  ACTS_DEBUG("nTotalDuplicatedParticles = " << m_nTotalDuplicatedParticles);
+  ACTS_DEBUG("NA60+_nTotalSeeds               = " << m_nTotalSeeds);
+  ACTS_DEBUG("NA60+_nTotalMatchedSeeds        = " << m_nTotalMatchedSeeds);
+  ACTS_DEBUG("NA60+_nTotalParticles           = " << m_nTotalParticles);
+  ACTS_DEBUG("NA60+_nTotalMatchedParticles    = " << m_nTotalMatchedParticles);
+  ACTS_DEBUG("NA60+_nTotalDuplicatedParticles = " << m_nTotalDuplicatedParticles);
 
+  if (m_cfg.verbose) {
+    std::cout << "NA60+_Summary_nTotalSeeds= " << m_nTotalSeeds << std::endl;
+    std::cout << "NA60+_Summary_nTotalMatchedSeeds= " << m_nTotalMatchedSeeds
+              << std::endl;
+    std::cout << "NA60+_Summary_nTotalParticles= " << m_nTotalParticles
+              << std::endl;
+    std::cout << "NA60+_Summary_nTotalMatchedParticles= "
+              << m_nTotalMatchedParticles << std::endl;
+    std::cout << "NA60+_Summary_nTotalDuplicatedParticles= "
+              << m_nTotalDuplicatedParticles << std::endl;
+    std::cout << "NA60+_Summary_Eff= " << eff << std::endl;
+    std::cout << "NA60+_Summary_Fakerate= " << fakeRate << std::endl;
+    std::cout << "NA60+_Summary_Purity= " << totalSeedPurity << std::endl;
+    std::cout << "NA60+_Summary_Duplication= " << duplicationRate << std::endl;
+    std::cout << "NA60+_Summary_nDuplicatedSeeds= " << aveNDuplicatedSeeds
+              << std::endl;
+  }
   ACTS_INFO("Efficiency (nMatchedParticles / nAllParticles) = " << eff);
   ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) = " << fakeRate);
   ACTS_INFO("Total seed purity (nTotalMatchedSeeds / m_nTotalSeeds)	= "
@@ -132,8 +149,24 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
+  if (m_cfg.verbose)
+    std::cout << "NA60+_SeedingPerformanceWriter_seed.size= " << seeds.size() << std::endl;
+
   for (std::size_t itrack = 0; itrack < seeds.size(); ++itrack) {
     const auto& seed = seeds[itrack];
+    const auto bottomSP = seed.sp().at(0);
+    const auto middleSP = seed.sp().at(1);
+    const auto topSP = seed.sp().at(2);
+    
+    if (m_cfg.verbose) {
+      std::cout << "NA60+_SeedingPerformanceWriter_bottomSP= " << bottomSP->x()
+                << " " << bottomSP->y() << " " << bottomSP->z() << std::endl;
+      std::cout << "NA60+_SeedingPerformanceWriter_middleSP= " << middleSP->x()
+                << " " << middleSP->y() << " " << middleSP->z() << std::endl;
+      std::cout << "NA60+_SeedingPerformanceWriter_topSP= " << topSP->x() << " "
+                << topSP->y() << " " << topSP->z() << std::endl;
+    }
+
     const auto track = seedToPrototrack(seed);
     std::vector<ParticleHitCount> particleHitCounts;
     identifyContributingParticles(hitParticlesMap, track, particleHitCounts);
