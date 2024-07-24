@@ -127,8 +127,8 @@ struct SimulationActor {
         (result.properTimeLimit - result.particle.properTime() <
          result.properTimeLimit * properTimeRelativeTolerance)) {
       auto descendants = decay.run(generator, result.particle);
-      for (auto &&descendant : descendants) {
-        result.generatedParticles.emplace_back(std::move(descendant));
+      for (const auto &descendant : descendants) {
+        result.generatedParticles.emplace_back(descendant);
       }
       result.isAlive = false;
       return;

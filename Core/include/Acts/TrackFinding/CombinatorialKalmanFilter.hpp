@@ -272,9 +272,8 @@ struct CombinatorialKalmanFilterResult {
 /// The Sequencer has to be part of the Navigator of the Propagator in order to
 /// initialize and provide the measurement surfaces.
 ///
-/// The Actor is part of the Propagation call and does the Kalman update and
-/// eventually the smoothing. Updater and Calibrator are given to the Actor for
-/// further use:
+/// The Actor is part of the Propagation call and does the Kalman update.
+/// Updater and Calibrator are given to the Actor for further use:
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
 ///
@@ -671,10 +670,11 @@ class CombinatorialKalmanFilter {
                          state.options.stepping.maxStepSize);
 
       // Reset the navigation state
-      // Set targetSurface to nullptr for forward filtering; it's only needed
-      // after smoothing
-      state.navigation =
-          navigator.makeState(&currentState.referenceSurface(), nullptr);
+      // Set targetSurface to nullptr for forward filtering
+      auto navigationOptions = state.navigation.options;
+      navigationOptions.startSurface = &currentState.referenceSurface();
+      navigationOptions.targetSurface = nullptr;
+      state.navigation = navigator.makeState(navigationOptions);
       navigator.initialize(state, stepper);
 
       // No Kalman filtering for the starting surface, but still need
@@ -919,8 +919,8 @@ class CombinatorialKalmanFilter {
           trackState.shareFrom(PM::Predicted, PM::Filtered);
         } else {
           // Kalman update
-          auto updateRes = m_extensions.updater(
-              gctx, trackState, Direction::Forward, *updaterLogger);
+          auto updateRes =
+              m_extensions.updater(gctx, trackState, *updaterLogger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
