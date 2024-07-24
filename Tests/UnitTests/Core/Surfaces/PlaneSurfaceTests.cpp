@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // Get the global position
   Vector3 globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
-  
+
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentToPathMatrix& alignToPath =
       planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
