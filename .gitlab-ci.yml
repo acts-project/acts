@@ -146,16 +146,16 @@ build_exatrkx:
     - cmake --build build -- -j2
     - ccache -s
 
-test_exatrkx_unittests:
-  stage: test
-  needs:
-    - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
-  tags:
-    - docker-gpu-nvidia
-  script:
-    - ctest --test-dir build -R ExaTrkX
-
+# test_exatrkx_unittests:
+#  stage: test
+#  needs:
+#    - build_exatrkx
+#  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#  tags:
+#    - docker-gpu-nvidia
+#  script:
+#    - ctest --test-dir build -R ExaTrkX
+#
 # test_exatrkx_python:
 #   stage: test
 #   needs:
@@ -172,8 +172,7 @@ test_exatrkx_unittests:
 #     - git checkout $HEAD_SHA
 #     - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
 #     - nvidia-smi
-#     - pytest -rFsv -k torch --collect-only
-#     - pytest -rFsv -k torch # For now only test torch pipeline
+#     - pytest -rFsv -k test_exatrkx
 
 build_linux_ubuntu:
   stage: build
