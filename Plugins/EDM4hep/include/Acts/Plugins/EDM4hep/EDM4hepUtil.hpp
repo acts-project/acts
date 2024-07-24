@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -60,7 +61,7 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
 
 }  // namespace detail
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
                 const Logger& logger = getDummyLogger()) {
@@ -160,7 +161,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   }
 }
 
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 void readTrack(const edm4hep::Track& from, track_proxy_t track, double Bz,
                const Logger& logger = getDummyLogger()) {
   ACTS_VERBOSE("Reading track from EDM4hep");

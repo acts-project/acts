@@ -16,6 +16,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -656,7 +657,8 @@ class Gx2Fitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, bool _isdn = isDirectNavigator>
+            TrackContainerFrontend track_container_t,
+            bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const Gx2FitterOptions<traj_t>& gx2fOptions,

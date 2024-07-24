@@ -14,6 +14,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -1081,7 +1082,8 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, bool _isdn = isDirectNavigator>
+            TrackContainerFrontend track_container_t,
+            bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
@@ -1168,7 +1170,8 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
-            typename track_container_t, bool _isdn = isDirectNavigator>
+            TrackContainerFrontend track_container_t,
+            bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
@@ -1243,7 +1246,7 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename start_parameters_t, typename propagator_options_t,
-            typename kalman_result_t, typename track_container_t>
+            typename kalman_result_t, TrackContainerFrontend track_container_t>
   auto fit_impl(const start_parameters_t& sParameters,
                 const propagator_options_t& propagatorOptions,
                 track_container_t& trackContainer) const

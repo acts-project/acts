@@ -14,7 +14,7 @@
 
 namespace Acts {
 
-template <typename track_container_t, typename source_link_hash_t,
+template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
           typename source_link_equality_t>
 void GreedyAmbiguityResolution::computeInitialState(
     const track_container_t& tracks, State& state,

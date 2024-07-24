@@ -9,6 +9,7 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 
 namespace Acts {
 
@@ -17,7 +18,7 @@ namespace Acts {
 /// @note The input track needs to be mutable, so @c ReadOnly=false
 /// @tparam track_proxy_t The type of the track proxy
 /// @param track A mutable track proxy to operate on
-template <typename track_proxy_t>
+template <TrackProxyConcept track_proxy_t>
 void calculateTrackQuantities(track_proxy_t track) {
   track.chi2() = 0;
   track.nDoF() = 0;

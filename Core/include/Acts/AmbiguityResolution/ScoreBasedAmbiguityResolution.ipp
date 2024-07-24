@@ -10,6 +10,7 @@
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <unordered_map>
@@ -20,7 +21,7 @@ inline const Logger& ScoreBasedAmbiguityResolution::logger() const {
   return *m_logger;
 }
 
-template <typename track_container_t, typename source_link_hash_t,
+template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
           typename source_link_equality_t>
 std::vector<std::vector<ScoreBasedAmbiguityResolution::MeasurementInfo>>
 ScoreBasedAmbiguityResolution::computeInitialState(
@@ -96,7 +97,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
   return measurementsPerTrack;
 }
 
-template <typename track_container_t>
+template <TrackContainerFrontend track_container_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     const track_container_t& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
@@ -245,7 +246,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
   return trackScore;
 }
 
-template <typename track_container_t>
+template <TrackContainerFrontend track_container_t>
 std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     const track_container_t& tracks,
     const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
@@ -422,7 +423,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
   return trackScore;
 }
 
-template <typename track_container_t>
+template <TrackContainerFrontend track_container_t>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     const track_container_t& tracks,
     const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,

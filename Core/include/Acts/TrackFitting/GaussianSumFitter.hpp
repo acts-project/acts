@@ -91,7 +91,7 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
-            typename track_container_t>
+            TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
            const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
@@ -147,7 +147,7 @@ struct GaussianSumFitter {
 
   /// @brief The fit function for the standard navigator
   template <typename source_link_it_t, typename start_parameters_t,
-            typename track_container_t>
+            TrackContainerFrontend track_container_t>
   auto fit(source_link_it_t begin, source_link_it_t end,
            const start_parameters_t& sParameters,
            const GsfOptions<traj_t>& options,
@@ -198,7 +198,7 @@ struct GaussianSumFitter {
   /// first measurementSurface
   template <typename source_link_it_t, typename start_parameters_t,
             typename fwd_prop_initializer_t, typename bwd_prop_initializer_t,
-            typename track_container_t>
+            TrackContainerFrontend track_container_t>
   Acts::Result<typename track_container_t::TrackProxy> fit_impl(
       source_link_it_t begin, source_link_it_t end,
       const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,

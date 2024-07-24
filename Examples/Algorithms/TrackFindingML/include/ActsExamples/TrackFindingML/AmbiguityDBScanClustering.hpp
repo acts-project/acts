@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
 #include "Acts/Utilities/DBScan.hpp"
 
@@ -25,7 +26,7 @@ namespace Acts {
 /// @param epsilon Maximum distance between 2 tracks to be clustered
 /// @param minPoints Minimum number of tracks to create a cluster
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
-template <typename track_container_t>
+template <TrackContainerFrontend track_container_t>
 std::unordered_map<std::size_t, std::vector<std::size_t>> dbscanTrackClustering(
     std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>&
         trackMap,

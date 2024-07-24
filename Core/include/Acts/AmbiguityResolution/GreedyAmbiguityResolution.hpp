@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -77,8 +78,8 @@ class GreedyAmbiguityResolution {
   /// @param state An empty state object which is expected to be default constructed.
   /// @param sourceLinkHash A functor to acquire a hash from a given source link.
   /// @param sourceLinkEquality A functor to check equality of two source links.
-  template <typename track_container_t, typename source_link_hash_t,
-            typename source_link_equality_t>
+  template <TrackContainerFrontend track_container_t,
+            typename source_link_hash_t, typename source_link_equality_t>
   void computeInitialState(const track_container_t& tracks, State& state,
                            source_link_hash_t&& sourceLinkHash,
                            source_link_equality_t&& sourceLinkEquality) const;
