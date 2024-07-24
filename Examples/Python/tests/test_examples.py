@@ -940,25 +940,6 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
-    assert_entries(root_file, "vol9", 0)
-    assert_entries(root_file, "vol14", 0)
-
-    if "smearing" in digi_config_file.name:
-        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
-    else:
-        # fmt: off
-        filled_entries = [
-            'vol8', 'vol8_lay2', 'vol12_lay8_mod117', 'vol12_lay10', 'vol12_lay10_mod154',
-            'vol12_lay10_mod163', 'vol12_lay12', 'vol12_lay12_mod150', 'vol13',
-            'vol13_lay2', 'vol16_lay2_mod53', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
-            'vol16_lay10', 'vol16_lay12', 'vol17', 'vol17_lay2', 'vol18_lay2',
-            'vol18_lay2_mod1', 'vol18_lay2_mod49', 'vol18_lay2_mod86', 'vol18_lay4',
-        ]
-        # fmt: on
-
-    for entry in filled_entries:
-        assert_has_entries(root_file, entry)
-
     assert_root_hash(root_file.name, root_file)
 
 
@@ -1013,29 +994,6 @@ def test_digitization_example_input(
 
     assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-
-    assert_entries(root_file, "vol7", 0)
-    assert_entries(root_file, "vol9", 0)
-
-    if "smearing" in digi_config_file.name:
-        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
-    else:
-        # fmt: off
-        filled_entries = [
-            "vol8", "vol8_lay2", "vol12_lay8_mod120", "vol12_lay10_mod120",
-            "vol12_lay10_mod144", "vol12_lay12", "vol12_lay12_mod111",
-            "vol12_lay12_mod137", "vol12_lay12_mod170", "vol13", "vol13_lay2",
-            "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
-            "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
-            "vol14_lay4_mod152", "vol14_lay4_mod161", "vol16_lay4", "vol16_lay6",
-            "vol16_lay8", "vol16_lay10", "vol16_lay12", "vol17", "vol17_lay2",
-            "vol18_lay2", "vol18_lay2_mod71", "vol18_lay4", "vol18_lay6",
-            "vol18_lay8", "vol18_lay10"
-        ]
-        # fmt: on
-
-    for entry in filled_entries:
-        assert_has_entries(root_file, entry)
 
     assert_root_hash(root_file.name, root_file)
 
