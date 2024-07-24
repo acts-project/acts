@@ -627,7 +627,7 @@ class CombinatorialKalmanFilter {
         }
 
         if (!result.activeBranches.empty()) {
-          // Record the active branch remove it from the list
+          // Record the active branch and remove it from the list
           storeLastActiveBranch(result);
           result.activeBranches.pop_back();
         }
