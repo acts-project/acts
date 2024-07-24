@@ -101,7 +101,6 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
   std::vector<Polyhedron::FaceType> triangularMesh;
   bool exactPolyhedron = true;
 
-  unsigned int lseg = quarterSegments;
   // If you have bounds you can create a polyhedron representation
   if (m_bounds) {
     auto vertices2D = m_bounds->vertices(quarterSegments);
