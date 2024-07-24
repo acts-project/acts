@@ -1141,7 +1141,7 @@ class KalmanFitter {
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 
-    return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
+    return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
                     track_container_t>(sParameters, propagatorOptions,
                                        trackContainer);
   }
@@ -1223,7 +1223,7 @@ class KalmanFitter {
     // Set the surface sequence
     propagatorOptions.navigation.surfaces = sSequence;
 
-    return fit_impl<start_parameters_t, Actors, Aborters, KalmanResult,
+    return fit_impl<start_parameters_t, PropagatorOptions, KalmanResult,
                     track_container_t>(sParameters, propagatorOptions,
                                        trackContainer);
   }
