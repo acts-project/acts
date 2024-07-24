@@ -179,7 +179,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   measurementCopy.effectiveCovariance()(boundLoc1, boundLoc1) =
       output[iVar0 + 1];
 
-  visit_measurement(measurement.size(), [&](auto N) -> void {
+  Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     trackState.allocateCalibrated(kMeasurementSize);
