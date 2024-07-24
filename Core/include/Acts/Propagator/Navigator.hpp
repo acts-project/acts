@@ -915,11 +915,9 @@ class Navigator {
       ++state.navigation.navBoundaryIndex;
     }
 
-    // We have to leave the volume somehow, so try again
-    state.navigation.navBoundaries.clear();
-    ACTS_VERBOSE(volInfo(state) << "Boundary navigation lost, re-targetting.");
-
     // Tried our best, but couldn't do anything
+    state.navigation.navBoundaries.clear();
+    state.navigation.navBoundaryIndex = state.navigation.navBoundaries.size();
     return false;
   }
 
