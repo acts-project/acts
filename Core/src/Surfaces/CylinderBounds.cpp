@@ -111,7 +111,6 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
   double avgPhi = get(eAveragePhi);
   double halfPhi = get(eHalfPhiSector);
 
-  bool fullCylinder = coversFullAzimuth();
   std::vector<ActsScalar> phiRef = {};
   if (bool fullCylinder = coversFullAzimuth(); fullCylinder) {
     phiRef = {static_cast<ActsScalar>(avgPhi)};
