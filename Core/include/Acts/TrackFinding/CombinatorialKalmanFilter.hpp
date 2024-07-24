@@ -954,6 +954,9 @@ class CombinatorialKalmanFilter {
         newBranches.push_back(newBranch);
       }
 
+      // Remove the root branch
+      result.activeBranches.pop_back();
+
       // Update and select from the new branches
       for (TrackProxy newBranch : newBranches) {
         auto trackState = newBranch.outermostTrackState();
