@@ -989,12 +989,13 @@ class CombinatorialKalmanFilter {
           continue;
         }
 
+        result.activeBranches.push_back(newBranch);
+
         BranchStopperResult branchStopperResult =
             m_extensions.branchStopper(newBranch, trackState);
 
         // Check if need to stop this branch
         if (branchStopperResult == BranchStopperResult::Continue) {
-          result.activeBranches.push_back(newBranch);
           // Record the number of branches on surface
           nBranchesOnSurface++;
         } else {
@@ -1003,6 +1004,8 @@ class CombinatorialKalmanFilter {
           if (branchStopperResult == BranchStopperResult::StopAndKeep) {
             storeLastActiveBranch(result);
           }
+          // Remove the branch from list
+          result.activeBranches.pop_back();
         }
       }
 
