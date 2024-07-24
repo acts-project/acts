@@ -34,7 +34,7 @@ std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
                                     unsigned int quarterSegments = 2u);
 
 /// Helper method to create a regular 2 or 3 D segment
-///  between two phi values with a given number of segments
+/// between two phi values with a given number of segments
 ///
 /// It will insert the phi at extrema points and reference points, it uses
 /// a minimum approximation of a circle with 8 segments
