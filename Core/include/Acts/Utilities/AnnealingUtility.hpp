@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,6 +31,9 @@ class AnnealingUtility {
   /// @brief The configuration struct
   struct Config {
     Config();
+
+    Config(double cutOff_, std::vector<double> setOfTemperatures_)
+        : cutOff(cutOff_), setOfTemperatures(std::move(setOfTemperatures_)) {}
 
     // Insensitivity of calculated weight at cutoff
     double cutOff{9.};
