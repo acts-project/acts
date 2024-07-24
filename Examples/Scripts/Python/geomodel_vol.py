@@ -141,12 +141,12 @@ def main():
     gmVolFactory.construct(gmVolFactoryCache, gContext, gmTree, gmVolFactoryOptions)
 
     # All surfaces from GeoModel
-    gmBoxes = gmVolFactoryCache.boundingBoxes
 
     # Output the surface to an OBJ file
     if args.output_obj:
         segments = 720
         gmBoxes = gmVolFactoryCache.boundingBoxes
+        print("boxes")
         acts.examples.writeVolumesObj(
             gmBoxes,
             gContext,
