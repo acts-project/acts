@@ -147,14 +147,14 @@ build_exatrkx:
     - ccache -s
 
 # test_exatrkx_unittests:
-#  stage: test
-#  needs:
-#    - build_exatrkx
-#  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
-#  tags:
-#    - docker-gpu-nvidia
-#  script:
-#    - ctest --test-dir build -R ExaTrkX
+#   stage: test
+#   needs:
+#     - build_exatrkx
+#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+#   tags:
+#     - docker-gpu-nvidia
+#   script:
+#     - ctest --test-dir build -R ExaTrkX
 #
 # test_exatrkx_python:
 #   stage: test
