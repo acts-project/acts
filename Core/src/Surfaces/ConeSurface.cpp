@@ -209,9 +209,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   // Cone parameters
   ActsScalar hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
   ActsScalar avgPhi = bounds().get(ConeBounds::eAveragePhi);
-  bool fullCone = (hPhiSec == M_PI);
   std::vector<ActsScalar> refPhi = {};
-  if (not fullCone) {
+  if (bool fullCone = (hPhiSec == M_PI); !fullCone) {
     refPhi = {avgPhi};
   }
 
