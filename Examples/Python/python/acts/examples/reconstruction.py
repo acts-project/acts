@@ -220,7 +220,7 @@ def addSeeding(
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialSigmas: Optional[list] = None,
-    initialSimgaQoverPCoefficients: Optional[list] = None,
+    initialSigmaRelativePtResolution: Optional[float] = None,
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
@@ -309,15 +309,15 @@ def addSeeding(
     if seedingAlgorithm == SeedingAlgorithm.TruthSmeared:
         logger.info("Using smeared truth particles for seeding")
         addTruthSmearedSeeding(
-            s,
-            rnd,
-            selectedParticles,
-            particleSmearingSigmas,
-            initialSigmas,
-            initialSimgaQoverPCoefficients,
-            initialVarInflation,
-            particleHypothesis,
-            logLevel,
+            s=s,
+            rnd=rnd,
+            selectedParticles=selectedParticles,
+            particleSmearingSigmas=particleSmearingSigmas,
+            initialSigmas=initialSigmas,
+            initialSigmaRelativePtResolution=initialSigmaRelativePtResolution,
+            initialVarInflation=initialVarInflation,
+            particleHypothesis=particleHypothesis,
+            logLevel=logLevel,
         )
     else:
         spacePoints = addSpacePointsMaking(
@@ -391,7 +391,7 @@ def addSeeding(
             magneticField=field,
             **acts.examples.defaultKWArgs(
                 initialSigmas=initialSigmas,
-                initialSimgaQoverPCoefficients=initialSimgaQoverPCoefficients,
+                initialSigmaRelativePtResolution=initialSigmaRelativePtResolution,
                 initialVarInflation=initialVarInflation,
                 particleHypothesis=particleHypothesis,
             ),
@@ -481,7 +481,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialSigmas: Optional[List[float]],
-    initialSimgaQoverPCoefficients: Optional[List[float]],
+    initialSigmaRelativePtResolution: Optional[float],
     initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
@@ -510,7 +510,7 @@ def addTruthSmearedSeeding(
             sigmaTheta=particleSmearingSigmas.theta,
             sigmaPRel=particleSmearingSigmas.pRel,
             initialSigmas=initialSigmas,
-            initialSimgaQoverPCoefficients=initialSimgaQoverPCoefficients,
+            initialSigmaRelativePtResolution=initialSigmaRelativePtResolution,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
         ),
@@ -1956,7 +1956,7 @@ def addVertexFitting(
     tracks = tracks if tracks is not None else ""
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    inputVertices = "vertices_input"
+    inputTruthVertices = "vertices_input"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1989,6 +1989,8 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             inputTrackParameters=trackParameters,
+            inputTruthParticles=selectedParticles,
+            inputTruthVertices=inputTruthVertices,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             bField=field,
@@ -2014,7 +2016,7 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputVertices=outputVertices,
                 inputTracks=tracks,
-                inputTruthVertices=inputVertices,
+                inputTruthVertices=inputTruthVertices,
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
