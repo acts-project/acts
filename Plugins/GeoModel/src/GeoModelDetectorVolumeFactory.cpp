@@ -101,56 +101,45 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
       if (!matches(name, physVol)) {
         continue;
       }
-      std::cout << "new fpv" << std::endl;
       //get children
       std::vector<GeoChildNodeWithTrf> subvolumes = getChildrenWithRef(physVol, false);
 
       //if children exist assume MDT
       //convert fpvs to bounding boxes and grand children to surfaces
       if (subvolumes.size()>0){
-        std::cout << "MDT detected" << std::endl;
-        //std::vector<GeoModelSensitiveSurface> sensitives;
+        std::vector<GeoModelSensitiveSurface> sensitives;
         //Get the volumes from GeoModel
         const GeoLogVol *logVol = physVol->getLogVol();//get logVol for the shape of the volume
         const GeoShape *shape = logVol->getShape();//get shape
         const Acts::Transform3 &transform = fpv->getAbsoluteTransform(nullptr);
 
         //go through all grand children
-        std::cout << "starting children scan" << std::endl;
         for(int i = 0; i<subvolumes.size();i++){
           // convert grandchildren to sensitive surfaces
           std::vector<GeoChildNodeWithTrf> subsubvolumes = getChildrenWithRef(subvolumes[i].volume, false);
           const Transform3 &transform =fpv->getAbsoluteTransform() * subvolumes[i].transform;
-          std::cout << "starting grand children scan " << i << std::endl;
           for(int j=0;j<subsubvolumes.size();j++){
             const Transform3 &subtransform =transform * subsubvolumes[j].transform;
             //convert sensitive surfaces
-            convertSensitive(subsubvolumes[j].volume, subtransform, cache.sensitiveSurfaces);
-            std::cout << "converted surfaces" << std::endl;
+            //cache.sensitiveSurfaces.push_back(sensitives);
+            convertSensitive(subsubvolumes[j].volume, subtransform, sensitives);
+            cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
           }
         }
-        std::vector<GeoModelSensitiveSurface> lastss(cache.sensitiveSurfaces.end() - 96, cache.sensitiveSurfaces.end());
-        std::cout << cache.sensitiveSurfaces.size() << std::endl;
         //convert bounding boxes with surfaces inside
-        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, lastss);
+        std::shared_ptr<Experimental::DetectorVolume> box = Acts::GeoModel::convertVolume(gctx, shape, name, transform, sensitives);
         cache.boundingBoxes.push_back(box);
-        std::cout << "?????????? " << box->surfaces().size() << std::endl;
-        std::cout << "converted volumes" << std::endl;
-
-        //cache.sensitiveSurfaces.clear();
       }
       //if no children are found assume ID and convert fpvs to surfaces
       else{
         //convert ID to surfaces
         convertSensitive(physVol, fpv->getAbsoluteTransform(nullptr), cache.sensitiveSurfaces);
-        std::cout << "ID?????" << std::endl;
       }
     }
   }
 }
 
 void Acts::GeoModelDetectorVolumeFactory::convertSensitive(PVConstLink geoPV, const Acts::Transform3 &transform, std::vector<GeoModelSensitiveSurface> &sensitives) {
-  std::cout << "converting stuff" << std::endl;
   const GeoLogVol *logVol = geoPV->getLogVol();
   const GeoShape *shape = logVol->getShape();
   int shapeId = shape->typeID();

@@ -222,7 +222,6 @@ void Acts::GeometryView3D::drawDetectorVolume(
   // draw the surfaces of the mother volume
   for (auto surface : volume.surfaces()) {
     drawSurface(helper, *surface, gctx, transform, viewConfig);
-    std::cout << surface << std::endl;
   }
 
   // draw the envelope first
