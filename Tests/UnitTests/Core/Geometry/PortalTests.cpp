@@ -1827,9 +1827,9 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
       {{90_mm, 0_degree}, vol4},   {{90_mm, -80_degree}, vol3},
   };
 
-  grid1->prettyPrint(std::cout);
-  grid2->prettyPrint(std::cout);
-  merged->prettyPrint(std::cout);
+  grid1->printContents(std::cout);
+  grid2->printContents(std::cout);
+  merged->printContents(std::cout);
 
   for (const auto& [loc, vol] : locations) {
     BOOST_TEST_CONTEXT((Vector2{loc[0], loc[1] / 1_degree}.transpose()))
