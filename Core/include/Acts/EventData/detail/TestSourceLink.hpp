@@ -88,13 +88,18 @@ struct TestSourceLink final {
   }
   constexpr std::size_t index() const { return sourceId; }
 
-    template <typename geometry_t>
+  template <typename geometry_t>
   struct SurfaceAccessor {
     const geometry_t* geometry = nullptr;
 
     const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
       const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-      return geometry->findSurface(testSourceLink.m_geometryId);
+
+      if (geometry != nullptr) {
+        return geometry->findSurface(testSourceLink.m_geometryId);
+      } else {
+        throw std::runtime_error("No tracking geometry or detector set");
+      }
     }
   };
 };
