@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -289,11 +290,14 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     std::swap(a, b);
   }
 
+  // We do this here, because this is the only place where we've normalized the
+  // ordering of grids just above: a is always "before" b, so we can iterate
+  // over the bins in a unified way to fill the merged grid.
   auto fillGrid = [&](auto merged) {
     if (auto* mergedGrid = dynamic_cast<GridPortalLink*>(merged.get());
         mergedGrid != nullptr) {
       ACTS_VERBOSE("Post processing merged grid: " << mergedGrid->grid());
-      GridPortalLink::fillMergedGrid(*a, *b, *mergedGrid, direction);
+      GridPortalLink::fillMergedGrid(*a, *b, *mergedGrid, direction, logger);
     }
     return merged;
   };
@@ -302,8 +306,22 @@ std::unique_ptr<PortalLinkBase> mergeGridPortals(
     ACTS_VERBOSE("Merge two 1D GridPortalLinks on " << name << "s in "
                                                     << direction);
     if (a->direction() != b->direction()) {
-      ACTS_WARNING("GridPortalLinks have different directions");
-      return nullptr;
+      ACTS_VERBOSE("GridPortalLinks have different directions");
+      ACTS_VERBOSE("=> cross merge");
+
+      // Find the one which is already binned in the merging direction
+      const auto* aligned = a->direction() == direction ? a : b;
+      const auto* other = a->direction() == direction ? b : a;
+
+      // Extend the aligned one by the other one's axis
+      auto aligned2D = aligned->make2DGrid(other->grid().axes().front());
+      // Edtend the other one with a single bin
+      auto other2D = other->make2DGrid(nullptr);
+
+      assert(aligned2D != nullptr);
+      assert(other2D != nullptr);
+      return mergeGridPortals(aligned2D.get(), other2D.get(), surfaceA,
+                              surfaceB, direction, logger);
     }
 
     const auto& axisA = *a->grid().axes().front();
@@ -503,47 +521,127 @@ void fillGrid1dTo2d(const Grid<const TrackingVolume*, axis_1_t>& grid1d,
 void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
                                     const GridPortalLink& b,
                                     GridPortalLink& merged,
-                                    BinningValue direction) {
+                                    BinningValue direction,
+                                    const Logger& logger) {
+  ACTS_VERBOSE("Filling merged grid");
   assert(a.dim() == b.dim());
   assert(a.direction() == b.direction());
   const auto locBinsA = a.numLocalBins();
   const auto locBinsB = b.numLocalBins();
 
+  ACTS_VERBOSE("a: " << a.grid());
+  ACTS_VERBOSE("b: " << b.grid());
+  ACTS_VERBOSE("merged: " << merged.grid());
+
   if (a.dim() == 1) {
     std::size_t nBinsA = locBinsA.at(0);
     std::size_t nBinsB = locBinsB.at(0);
 
+    ACTS_VERBOSE("1d merge:");
+
     for (std::size_t i = 1; i <= nBinsA; ++i) {
       merged.atLocalBins({i}) = a.atLocalBins({i});
+      ACTS_VERBOSE(" ~> a " << i << " -> m " << i << " (" << a.atLocalBins({i})
+                            << ")");
     }
     for (std::size_t i = 1; i <= nBinsB; ++i) {
       merged.atLocalBins({nBinsA + i}) = b.atLocalBins({i});
+      ACTS_VERBOSE(" ~> b " << i << " -> m " << (nBinsA + i) << " ("
+                            << b.atLocalBins({i}) << ")");
     }
   } else {
-    auto swizzle = [&](std::size_t i, std::size_t j) {
-      return a.direction() == direction ? std::pair{i, j} : std::pair{j, i};
-    };
+    ACTS_VERBOSE("2d merge:");
+    if (a.direction() == direction) {
+      ACTS_VERBOSE("~> direction is loc0");
+      std::size_t nBinsA = locBinsA.at(0);
+      std::size_t nBinsB = locBinsB.at(0);
+      std::size_t nBinsCommon = locBinsB.at(1);
 
-    auto [ai, aj] = swizzle(0, 1);
-
-    std::size_t nBinsA = locBinsA.at(ai);
-    std::size_t nBinsB = locBinsB.at(ai);
-    std::size_t nBinsC = locBinsB.at(aj);
-
-    for (std::size_t i = 1; i <= nBinsA; ++i) {
-      for (std::size_t j = 1; j <= nBinsC; ++j) {
-        auto [li, lj] = swizzle(i, j);
-        merged.atLocalBins({li, lj}) = a.atLocalBins({li, lj});
+      for (std::size_t i = 1; i <= nBinsA; ++i) {
+        for (std::size_t j = 1; j <= nBinsCommon; ++j) {
+          merged.atLocalBins({i, j}) = a.atLocalBins({i, j});
+          ACTS_VERBOSE(" ~> a " << i << ", " << j << " -> m " << i << ", " << j
+                                << " (" << a.atLocalBins({i, j}) << ")");
+        }
       }
-    }
-    for (std::size_t i = 1; i <= nBinsB; ++i) {
-      for (std::size_t j = 1; j <= nBinsC; ++j) {
-        auto [li, lj] = swizzle(i, j);
-        auto [ti, tj] = swizzle(nBinsA + li, lj);
-        merged.atLocalBins({ti, tj}) = b.atLocalBins({li, lj});
+
+      for (std::size_t i = 1; i <= nBinsB; ++i) {
+        for (std::size_t j = 1; j <= nBinsCommon; ++j) {
+          std::size_t ti = i + nBinsA;
+          merged.atLocalBins({ti, j}) = b.atLocalBins({i, j});
+          ACTS_VERBOSE(" ~> b " << i << ", " << j << " -> m " << ti << ", " << j
+                                << " (" << b.atLocalBins({i, j}) << ")");
+        }
+      }
+    } else {
+      ACTS_VERBOSE("~> direction is loc1");
+      std::size_t nBinsA = locBinsA.at(1);
+      std::size_t nBinsB = locBinsB.at(1);
+      std::size_t nBinsCommon = locBinsB.at(0);
+
+      for (std::size_t i = 1; i <= nBinsCommon; ++i) {
+        for (std::size_t j = 1; j <= nBinsA; ++j) {
+          merged.atLocalBins({i, j}) = a.atLocalBins({i, j});
+          ACTS_VERBOSE(" ~> a " << i << ", " << j << " -> m " << i << ", " << j
+                                << " (" << a.atLocalBins({i, j}) << ")");
+        }
+      }
+
+      for (std::size_t i = 1; i <= nBinsCommon; ++i) {
+        for (std::size_t j = 1; j <= nBinsB; ++j) {
+          std::size_t tj = j + nBinsA;
+          merged.atLocalBins({i, tj}) = b.atLocalBins({i, j});
+          ACTS_VERBOSE(" ~> b " << i << ", " << j << " -> m " << tj << ", " << j
+                                << " (" << b.atLocalBins({i, j}) << ")");
+        }
       }
     }
   }
+
+  //   auto swizzle = [&](std::size_t i, std::size_t j) {
+  //     return a.direction() == direction ? std::pair{i, j} : std::pair{j,
+  //     i};
+  //   };
+  //
+  //   auto [ai, aj] = swizzle(0, 1);
+  //
+  //   std::size_t nBinsA = locBinsA.at(ai);
+  //   std::size_t nBinsB = locBinsB.at(ai);
+  //   std::size_t nBinsC = locBinsB.at(aj);
+  //   assert(locBinsA.at(aj) == locBinsB.at(aj));
+  //   std::cout << "nBinsA: " << nBinsA << ", nBinsB: " << nBinsB
+  //             << ", nBinsC: " << nBinsC << std::endl;
+  //   std::cout << locBinsA.at(aj) << std::endl;
+  //
+  //   for (std::size_t i = 1; i <= nBinsA; ++i) {
+  //     for (std::size_t j = 1; j <= nBinsC; ++j) {
+  //       auto [li, lj] = swizzle(i, j);
+  //       merged.atLocalBins({li, lj}) = a.atLocalBins({li, lj});
+  //       ACTS_VERBOSE(" ~> a " << li << ", " << lj << " -> m " << li << ", "
+  //                             << lj << " (" << a.atLocalBins({li, lj}) <<
+  //                             ")");
+  //     }
+  //   }
+  //   for (std::size_t i = 1; i <= nBinsB; ++i) {
+  //     for (std::size_t j = 1; j <= nBinsC; ++j) {
+  //       auto [li, lj] = swizzle(i, j);
+  //
+  //       std::size_t ti = li;
+  //       std::size_t tj = lj;
+  //       // if (b.direction() == direction) {
+  //       // ti += nBinsA;
+  //       // } else {
+  //       //   tj += nBinsA;
+  //       // }
+  //
+  //       std::tie(ti, tj) = swizzle(ti, tj);
+  //       merged.atLocalBins({ti, tj}) = b.atLocalBins({li, lj});
+  //       ACTS_VERBOSE(" ~> b " << li << ", " << lj << " -> m " << ti << ", "
+  //                             << tj << " (" << b.atLocalBins({li, lj}) <<
+  //                             ")");
+  //     }
+  //   }
+  // }
 }
 
 std::unique_ptr<GridPortalLink> GridPortalLink::make(
