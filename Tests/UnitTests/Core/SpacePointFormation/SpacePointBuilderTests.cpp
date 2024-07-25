@@ -186,9 +186,9 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
-  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  TestSourceLink::SurfaceAccessor<TrackingGeometry> surfaceAccessor{geometry.get()};
   spBuilderConfig.slSurfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(&surfaceAccessor);
 
   auto spBuilder =
       SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
@@ -197,7 +197,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
   spBuilderConfig_perp.slSurfaceAccessor
-      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+      .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(&surfaceAccessor);
 
   spBuilderConfig_perp.usePerpProj = true;
 
@@ -280,7 +280,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
     spBuilderConfig_badStrips.trackingGeometry = geometry;
     spBuilderConfig_badStrips.slSurfaceAccessor
-        .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+        .connect<&TestSourceLink::SurfaceAccessor<TrackingGeometry>::operator()>(
             &surfaceAccessor);
 
     auto spBuilder_badStrips = SpacePointBuilder<TestSpacePoint>(

@@ -88,12 +88,13 @@ struct TestSourceLink final {
   }
   constexpr std::size_t index() const { return sourceId; }
 
+    template <typename geometry_t>
   struct SurfaceAccessor {
-    const Acts::TrackingGeometry& trackingGeometry;
+    const geometry_t* geometry = nullptr;
 
     const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
       const auto& testSourceLink = sourceLink.get<TestSourceLink>();
-      return trackingGeometry.findSurface(testSourceLink.m_geometryId);
+      return geometry->findSurface(testSourceLink.m_geometryId);
     }
   };
 };

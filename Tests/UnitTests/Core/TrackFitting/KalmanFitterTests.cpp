@@ -99,7 +99,7 @@ auto makeDefaultKalmanFitterOptions() {
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
   extensions.surfaceAccessor.connect<
-      &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+      &Acts::detail::Test::TestSourceLink::SurfaceAccessor<Acts::TrackingGeometry>::operator()>(
       &tester.surfaceAccessor);
 
   return KalmanFitterOptions(
