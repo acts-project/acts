@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackHelpers.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
