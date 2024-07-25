@@ -49,7 +49,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
   }
 
   assert(grid != nullptr);
-  grid->setVolume(volume);
+  grid->setVolume(&volume);
 
   return grid;
 }

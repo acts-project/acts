@@ -72,7 +72,7 @@ class GridPortalLink : public PortalLinkBase {
       const TrackingVolume& volume, BinningValue direction);
 
   virtual const IGrid& grid() const = 0;
-  virtual void setVolume(const TrackingVolume& volume) = 0;
+  virtual void setVolume(const TrackingVolume* volume) = 0;
   virtual unsigned int dim() const = 0;
   virtual std::unique_ptr<GridPortalLink> make2DGrid(
       const IAxis* other) const = 0;
@@ -166,9 +166,18 @@ class GridPortalLinkT final : public GridPortalLink {
     }
   }
 
-  void setVolume(const TrackingVolume& volume) final {
-    for (std::size_t i = 0; i < m_grid.size(); i++) {
-      m_grid.at(i) = &volume;
+  void setVolume(const TrackingVolume* volume) final {
+    auto loc = m_grid.numLocalBins();
+    if constexpr (GridType::DIM == 1) {
+      for (std::size_t i = 1; i <= loc[0]; i++) {
+        m_grid.atLocalBins({i}) = volume;
+      }
+    } else {
+      for (std::size_t i = 1; i <= loc[0]; i++) {
+        for (std::size_t j = 1; j <= loc[1]; j++) {
+          m_grid.atLocalBins({i, j}) = volume;
+        }
+      }
     }
   }
 
@@ -183,8 +192,17 @@ class GridPortalLinkT final : public GridPortalLink {
 
   void visitBins(
       const std::function<void(const TrackingVolume*)> func) const final {
-    for (std::size_t i = 0; i < m_grid.size(); i++) {
-      func(m_grid.at(i));
+    auto loc = m_grid.numLocalBins();
+    if constexpr (GridType::DIM == 1) {
+      for (std::size_t i = 1; i <= loc[0]; i++) {
+        func(m_grid.atLocalBins({i}));
+      }
+    } else {
+      for (std::size_t i = 1; i <= loc[0]; i++) {
+        for (std::size_t j = 1; j <= loc[1]; j++) {
+          func(m_grid.atLocalBins({i, j}));
+        }
+      }
     }
   }
 
