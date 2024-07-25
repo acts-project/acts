@@ -31,11 +31,12 @@ namespace ActsExamples {
 
 RootPropagationSummaryWriter::RootPropagationSummaryWriter(
     const RootPropagationSummaryWriter::Config& cfg, Acts::Logging::Level level)
-    : WriterT(cfg.collection, "RootPropagationSummaryWriter", level),
+    : WriterT(cfg.inputSummaryCollection, "RootPropagationSummaryWriter",
+              level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // An input collection name and tree name must be specified
-  if (m_cfg.collection.empty()) {
+  if (m_cfg.inputSummaryCollection.empty()) {
     throw std::invalid_argument("Missing input collection");
   }
   if (m_cfg.treeName.empty()) {

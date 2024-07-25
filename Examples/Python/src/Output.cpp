@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -105,9 +105,8 @@ void addOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::ObjPropagationStepsWriter<Acts::detail::Step>, mex,
-      "ObjPropagationStepsWriter", collection, outputDir, outputScalor,
-      outputPrecision);
+      ActsExamples::ObjPropagationStepsWriter, mex, "ObjPropagationStepsWriter",
+      inputSummaryCollection, outputDir, outputScalor, outputPrecision);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
@@ -171,8 +170,8 @@ void addOutput(Context& ctx) {
 
   // ROOT WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPropagationSummaryWriter, mex,
-                             "RootPropagationSummaryWriter", collection,
-                             filePath, fileMode);
+                             "RootPropagationSummaryWriter",
+                             inputSummaryCollection, filePath, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
                              "RootParticleWriter", inputParticles,

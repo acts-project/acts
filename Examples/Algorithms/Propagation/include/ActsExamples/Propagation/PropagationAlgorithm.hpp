@@ -25,6 +25,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -51,40 +52,6 @@ namespace ActsExamples {
 
 class PropagatorInterface;
 struct AlgorithmContext;
-
-struct PropagationSummary {
-  explicit PropagationSummary(Acts::BoundTrackParameters startParameters_)
-      : startParameters(std::move(startParameters_)) {}
-
-  /// The start parameters
-  Acts::BoundTrackParameters startParameters;
-
-  /// Totoal number of successful steps
-  std::size_t nSteps = 0;
-
-  /// Totoal number of attempted steps
-  std::size_t nStepTrials = 0;
-
-  /// Path length
-  double pathLength = 0;
-
-  /// Steps
-  std::vector<Acts::detail::Step> steps;
-};
-
-using PropagationSummaries = std::vector<PropagationSummary>;
-
-/// Using some short hands for Recorded Material
-using RecordedMaterial = Acts::MaterialInteractor::result_type;
-
-/// And recorded material track
-/// - this is start:  position, start momentum
-///   and the Recorded material
-using RecordedMaterialTrack =
-    std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
-
-/// Finally the output of the propagation test
-using PropagationOutput = std::pair<PropagationSummary, RecordedMaterial>;
 
 /// @brief this test algorithm performs test propagation
 /// within the Acts::Propagator
