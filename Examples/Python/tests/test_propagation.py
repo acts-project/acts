@@ -51,7 +51,7 @@ def test_steppers(conf_const, trk_geo):
             level=acts.logging.WARNING,
             propagatorImpl=prop,
             randomNumberSvc=acts.examples.RandomNumbers(),
-            outputSummaryCollection="propagation_summary",
+            propagationStepCollection="propagation_steps",
             sterileLogger=False,
             ntests=10,
         )
@@ -61,7 +61,7 @@ def test_steppers(conf_const, trk_geo):
         )
         seq.addAlgorithm(alg)
         chkAlg = AssertCollectionExistsAlg(
-            "propagation_summary", "chk_alg", level=acts.logging.WARNING
+            "propagation_steps", "chk_alg", level=acts.logging.WARNING
         )
         seq.addAlgorithm(chkAlg)
         seq.run()

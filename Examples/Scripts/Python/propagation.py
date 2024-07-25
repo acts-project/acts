@@ -23,6 +23,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     stepper = acts.EigenStepper(field)
     # stepper = acts.AtlasStepper(field)
     # stepper = acts.StraightLineStepper()
+    # stepper = acts.SympyStepper(field)
 
     print("We're running with:", type(stepper).__name__)
     prop = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
@@ -33,7 +34,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         randomNumberSvc=rnd,
         ntests=1000,
         sterileLogger=True,
-        outputSummaryCollection="propagation_summary",
+        propagationStepCollection="propagation-steps",
     )
 
     s.addAlgorithm(alg)
@@ -42,16 +43,16 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     s.addWriter(
         acts.examples.ObjPropagationStepsWriter(
             level=acts.logging.INFO,
-            collection="propagation_summary",
+            collection="propagation-steps",
             outputDir=outputDir + "/obj",
         )
     )
 
     s.addWriter(
-        acts.examples.RootPropagationSummaryWriter(
+        acts.examples.RootPropagationStepsWriter(
             level=acts.logging.INFO,
-            collection="propagation_summary",
-            filePath=outputDir + "/propagation_summary.root",
+            collection="propagation-steps",
+            filePath=outputDir + "/propagation_steps.root",
         )
     )
 
