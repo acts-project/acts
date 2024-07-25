@@ -21,8 +21,8 @@ concept TrackContainerFrontend = requires() {
 
   requires std::same_as<typename T::IndexType, TrackIndexType>;
 
-  TrackContainerBackend<typename T::TrackContainerBackend>;
-  CommonMultiTrajectoryBackend<typename T::TrackStateContainerBackend>;
+  requires TrackContainerBackend<typename T::TrackContainerBackend>;
+  requires CommonMultiTrajectoryBackend<typename T::TrackStateContainerBackend>;
 
   typename T::TrackProxy;
   typename T::ConstTrackProxy;

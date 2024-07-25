@@ -20,9 +20,9 @@ template <typename T>
 concept TrackProxyConcept = requires() {
   typename T::ReadOnly;
 
-  TrackContainerBackend<typename T::Container>;
+  requires TrackContainerBackend<typename T::Container>;
 
-  CommonMultiTrajectoryBackend<typename T::Trajectory>;
+  requires CommonMultiTrajectoryBackend<typename T::Trajectory>;
 
   requires std::same_as<typename T::IndexType, TrackIndexType>;
 };
