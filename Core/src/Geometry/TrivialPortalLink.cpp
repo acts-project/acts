@@ -26,34 +26,38 @@ const TrackingVolume* TrivialPortalLink::resolveVolume(
 }
 
 std::unique_ptr<PortalLinkBase> TrivialPortalLink::mergeImpl(
-    const PortalLinkBase& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const PortalLinkBase& other, BinningValue direction,
     const Logger& logger) const {
-  return other.mergeImpl(*this, surfaceB, surfaceA, direction, logger);
+  return other.mergeImpl(*this, direction, logger);
 }
 
 std::unique_ptr<PortalLinkBase> TrivialPortalLink::mergeImpl(
-    const CompositePortalLink& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const CompositePortalLink& other, BinningValue direction,
     const Logger& logger) const {
-  throw std::logic_error{"Not implemented"};
-  ACTS_VERBOSE("Fell through to the Trivial mergeImpl with Composite");
-}
-
-std::unique_ptr<PortalLinkBase> TrivialPortalLink::mergeImpl(
-    const TrivialPortalLink& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
-    const Logger& logger) const {
-  ACTS_VERBOSE("Fell through to the Trivial mergeImpl with Trivial");
+  (void)other;
+  (void)direction;
+  (void)logger;
+  ACTS_VERBOSE("Merging TrivialPortalLink with CompositePortalLink");
   throw std::logic_error{"Not implemented"};
 }
 
 std::unique_ptr<PortalLinkBase> TrivialPortalLink::mergeImpl(
-    const GridPortalLink& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const TrivialPortalLink& other, BinningValue direction,
     const Logger& logger) const {
-  ACTS_VERBOSE("Fell through to the Trivial mergeImpl with Grid");
-  throw std::logic_error{"Not implemented"};
+  ACTS_VERBOSE("Merging TrivialPortalLink with TrivialPortalLink");
+  ACTS_VERBOSE("Making grids from trivial portal links in " << direction);
+  auto grid1 = makeGrid(direction);
+  auto grid2 = other.makeGrid(direction);
+  return grid1->mergeImpl(*grid2, direction, logger);
+}
+
+std::unique_ptr<PortalLinkBase> TrivialPortalLink::mergeImpl(
+    const GridPortalLink& other, BinningValue direction,
+    const Logger& logger) const {
+  ACTS_VERBOSE("Merging TrivialPortalLink with GridPortalLink");
+  ACTS_VERBOSE("Making grid from trivial portal link in " << direction);
+  auto gridFromTrivial = makeGrid(direction);
+  return other.mergeImpl(*gridFromTrivial, direction, logger);
 }
 
 }  // namespace Acts
