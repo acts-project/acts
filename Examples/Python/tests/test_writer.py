@@ -23,7 +23,7 @@ from acts.examples import (
     ObjPropagationStepsWriter,
     TrackFinderPerformanceWriter,
     SeedingPerformanceWriter,
-    RootPropagationSummaryWriter,
+    RootPropagationStepsWriter,
     RootParticleWriter,
     RootTrackParameterWriter,
     RootMaterialTrackWriter,
@@ -58,7 +58,7 @@ def test_obj_propagation_step_writer(tmp_path, trk_geo, conf_const, basic_prop_s
     w = conf_const(
         ObjPropagationStepsWriter,
         acts.logging.INFO,
-        inputSummaryCollection=alg.config.outputSummaryCollection,
+        collection=alg.config.propagationStepCollection,
         outputDir=str(obj),
     )
 
@@ -101,16 +101,16 @@ def test_root_prop_step_writer(
     tmp_path, trk_geo, conf_const, basic_prop_seq, assert_root_hash
 ):
     with pytest.raises(TypeError):
-        RootPropagationSummaryWriter()
+        RootPropagationStepsWriter()
 
     file = tmp_path / "prop_steps.root"
     assert not file.exists()
 
     s, alg = basic_prop_seq(trk_geo)
     w = conf_const(
-        RootPropagationSummaryWriter,
+        RootPropagationStepsWriter,
         acts.logging.INFO,
-        outputSummaryCollection=alg.config.propagationSummaryCollection,
+        collection=alg.config.propagationStepCollection,
         filePath=str(file),
     )
 
@@ -248,7 +248,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
 @pytest.mark.parametrize(
     "writer",
     [
-        RootPropagationSummaryWriter,
+        RootPropagationStepsWriter,
         RootParticleWriter,
         TrackFinderPerformanceWriter,
         SeedingPerformanceWriter,

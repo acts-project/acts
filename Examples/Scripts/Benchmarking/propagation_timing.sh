@@ -38,7 +38,7 @@ for pt in 0.1 0.5 1.0 2.0 5.0 10.0 100.0 ; do
 
     # Archive with Job ID
     mv timing.tsv timing_${jobID}.tsv
-    mv propagation_summary.root propagation_summary_${jobID}.root
+    mv propagation-steps.root propagation_steps_${jobID}.root
     
     # JobID
     let "jobID++"

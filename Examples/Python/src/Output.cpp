@@ -35,6 +35,7 @@
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
@@ -169,6 +170,10 @@ void addOutput(Context& ctx) {
   }
 
   // ROOT WRITERS
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPropagationStepsWriter, mex,
+                             "RootPropagationStepsWriter", collection, filePath,
+                             fileMode);
+
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootPropagationSummaryWriter, mex,
                              "RootPropagationSummaryWriter",
                              inputSummaryCollection, filePath, fileMode);

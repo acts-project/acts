@@ -25,8 +25,8 @@ with open("output.log", mode="r") as csv_file:
             stepper = int(csv_row[1])
             ptvalue = float(csv_row[2])
             # now open the ROOT file and extract the numbers
-            rfile = ROOT.TFile("propagation_summary_" + str(jobID) + ".root")
-            stree = rfile.Get("propagation_summary")
+            rfile = ROOT.TFile("propagation_steps_" + str(jobID) + ".root")
+            stree = rfile.Get("propagation_steps")
             stree.Draw("@g_x->size()>>h_steps")
             h_steps = ROOT.gDirectory.Get("h_steps")
             steps = h_steps.GetMean()
