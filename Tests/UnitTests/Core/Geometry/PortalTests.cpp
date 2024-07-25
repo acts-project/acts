@@ -222,8 +222,6 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
                           5};
     const auto& axisFull = *gridFull->grid().axes().front();
     BOOST_CHECK_EQUAL(axisFull, axisFullExpected);
-
-    // @TODO: Check is same when asked to make 2D grid
   }
 }
 
@@ -296,7 +294,6 @@ BOOST_AUTO_TEST_CASE(Disc) {
     checkAllBins(*gridPhi);
 
     // Test making 2D grids from the 1D ones
-    // @TODO: Check content of the bins
     auto grid2d = grid1->make2DGrid(nullptr);
     BOOST_REQUIRE(grid2d);
     BOOST_CHECK_EQUAL(grid2d->grid().axes().size(), 2);
@@ -467,7 +464,46 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
                       axisRPhiSectorExpected);
   }
 
-  BOOST_TEST_CONTEXT("Disc") {}
+  BOOST_TEST_CONTEXT("Disc") {
+    auto disc =
+        Surface::makeShared<DiscSurface>(Transform3::Identity(), 30_mm, 100_mm);
+
+    auto vol = std::make_shared<TrackingVolume>(
+        Transform3::Identity(),
+        std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
+
+    auto trivial = std::make_unique<TrivialPortalLink>(disc, vol.get());
+    BOOST_REQUIRE(trivial);
+
+    // Doesn't matter which position
+    BOOST_CHECK_EQUAL(trivial->resolveVolume({}, Vector2{1, 2}), vol.get());
+
+    auto gridR = trivial->makeGrid(BinningValue::binR);
+    BOOST_REQUIRE(gridR);
+
+    BOOST_CHECK_EQUAL(gridR->grid().axes().size(), 1);
+    BOOST_CHECK_EQUAL(gridR->surface().bounds(), disc->bounds());
+    Axis axisRExpected{AxisBound, 30_mm, 100_mm, 1};
+    BOOST_CHECK_EQUAL(*gridR->grid().axes().front(), axisRExpected);
+
+    BOOST_CHECK_EQUAL(gridR->resolveVolume({}, Vector2{90_mm, 10_degree}),
+                      vol.get());
+    BOOST_CHECK_THROW(gridR->resolveVolume({}, Vector2{110_mm, 0_degree}),
+                      std::invalid_argument);
+
+    auto gridPhi = trivial->makeGrid(BinningValue::binPhi);
+    BOOST_REQUIRE(gridPhi);
+
+    BOOST_CHECK_EQUAL(gridPhi->grid().axes().size(), 1);
+    BOOST_CHECK_EQUAL(gridPhi->surface().bounds(), disc->bounds());
+    Axis axisPhiExpected{AxisClosed, -M_PI, M_PI, 1};
+    BOOST_CHECK_EQUAL(*gridPhi->grid().axes().front(), axisPhiExpected);
+
+    BOOST_CHECK_EQUAL(gridPhi->resolveVolume({}, Vector2{90_mm, 10_degree}),
+                      vol.get());
+    BOOST_CHECK_THROW(gridPhi->resolveVolume({}, Vector2{110_mm, 0_degree}),
+                      std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()  // GridConstruction

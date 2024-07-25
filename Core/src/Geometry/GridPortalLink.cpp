@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/GridPortalLink.hpp"
 
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 
 namespace Acts {
@@ -34,16 +35,36 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
       }
     } else if (direction == BinningValue::binZ) {
       ActsScalar hlZ = cylinder->bounds().get(CylinderBounds::eHalfLengthZ);
-
       grid = GridPortalLink::make(surface, direction,
                                   Axis{AxisBound, -hlZ, hlZ, 1});
-
     } else {
       throw std::invalid_argument{"Invalid binning direction"};
     }
   } else if (const auto* disc = dynamic_cast<const DiscSurface*>(surface.get());
              disc != nullptr) {
-    throw std::logic_error{"Not implemented"};
+    const auto& bounds = dynamic_cast<const RadialBounds&>(disc->bounds());
+    if (direction == BinningValue::binR) {
+      ActsScalar minR = bounds.get(RadialBounds::eMinR);
+      ActsScalar maxR = bounds.get(RadialBounds::eMaxR);
+      grid = GridPortalLink::make(surface, direction,
+                                  Axis{AxisBound, minR, maxR, 1});
+    } else if (direction == BinningValue::binPhi) {
+      if (bounds.coversFullAzimuth()) {
+        grid = GridPortalLink::make(surface, direction,
+                                    Axis{AxisClosed, -M_PI, M_PI, 1});
+      } else {
+        ActsScalar hlPhi = bounds.get(RadialBounds::eHalfPhiSector);
+        grid = GridPortalLink::make(surface, direction,
+                                    Axis{AxisBound, -hlPhi, hlPhi, 1});
+      }
+    } else {
+      throw std::invalid_argument{"Invalid binning direction"};
+    }
+  } else if (const auto* plane =
+                 dynamic_cast<const PlaneSurface*>(surface.get());
+             plane != nullptr) {
+    throw std::invalid_argument{"Plane surface is not implemented yet"};
+
   } else {
     throw std::invalid_argument{"Surface type is not supported"};
   }
