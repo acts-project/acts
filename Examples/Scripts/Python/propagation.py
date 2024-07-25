@@ -56,16 +56,17 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
         level=acts.logging.INFO,
-        sterileLogger=False,
-        covarianceTransport=False,
+        ntests=1000,
+        sterileLogger=True,
         inputTrackParameters="start_parameters",
-        outputPropagationSteps="propagation_steps",
+        outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)
 
     # if not os.path.exists(outputDir + "/obj"):
     #    os.makedirs(outputDir + "/obj")
 
+<<<<<<< HEAD
     # s.addWriter(
     #    acts.examples.ObjPropagationStepsWriter(
     #        level=acts.logging.INFO,
@@ -82,6 +83,24 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
                 filePath=outputDir + "/propagation_steps.root",
             )
         )
+=======
+    # Output
+    s.addWriter(
+        acts.examples.ObjPropagationStepsWriter(
+            level=acts.logging.INFO,
+            collection="propagation_summary",
+            outputDir=outputDir + "/obj",
+        )
+    )
+
+    s.addWriter(
+        acts.examples.RootPropagationSummaryWriter(
+            level=acts.logging.INFO,
+            collection="propagation_summary",
+            filePath=outputDir + "/propagation_summary.root",
+        )
+    )
+>>>>>>> ba3d1e04e (more downstream changes)
 
     return s
 

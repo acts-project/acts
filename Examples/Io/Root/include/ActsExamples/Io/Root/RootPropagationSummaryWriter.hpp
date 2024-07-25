@@ -41,14 +41,14 @@ class RootPropagationSummaryWriter final
  public:
   struct Config {
     /// particle collection to write
-    std::string collection = "propagation_summary";
+    std::string inputSummaryCollection = "propagation_summary";
 
     /// path of the output file
     std::string filePath = "";
     /// file access mode
     std::string fileMode = "RECREATE";
     /// name of the output tree
-    std::string treeName = "propagation_steps";
+    std::string treeName = "propagation_summary";
     /// common root file
     TFile* rootFile = nullptr;
   };
