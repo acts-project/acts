@@ -58,8 +58,7 @@ class NoFieldIntersectionFinder {
   // length
   std::vector<std::pair<GeometryIdentifier, Vector3>> operator()(
       const GeometryContext& geoCtx, const Vector3& position,
-      const Vector3& direction,
-      [[maybe_unused]] const ActsScalar& Pmag = 0, 
+      const Vector3& direction, [[maybe_unused]] const ActsScalar& Pmag = 0,
       [[maybe_unused]] const ActsScalar& Charge = 0) const {
     std::vector<std::pair<GeometryIdentifier, Vector3>> sIntersections;
     // Intersect the surfaces
