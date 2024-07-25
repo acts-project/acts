@@ -836,8 +836,6 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       CHECK_CLOSE_OR_SMALL(axis34.getBinEdges(), expected34, 1e-4, 10e-10);
     }
 
-    return;
-
     BOOST_TEST_CONTEXT("Left variable") {
       BOOST_TEST_CONTEXT("Non-closed") {
         auto gridLeft =
@@ -894,8 +892,10 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
         BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Closed);
 
-        std::vector<ActsScalar> expected = {-94.2478, -34.0339, 0,
-                                            31.4159,  62.8319,  94.2478};
+        // Caution: for full-azimuth cases, the ordering is preserved, you get
+        // in what you get out. -> this can flip
+        std::vector<ActsScalar> expected = {-94.2478, -62.8319, -31.4159,
+                                            0,        60.2139,  94.2478};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
     }
@@ -956,8 +956,10 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
         BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Closed);
 
-        std::vector<ActsScalar> expected = {-94.2478, -62.8319, -31.4159,
-                                            0,        60.2139,  94.2478};
+        // Caution: for full-azimuth cases, the ordering is preserved, you get
+        // in what you get out. -> this can flip
+        std::vector<ActsScalar> expected = {-94.2478, -34.0339, 0,
+                                            31.4159,  62.8319,  94.2478};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
     }
@@ -1021,8 +1023,10 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
         BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Closed);
 
-        std::vector<ActsScalar> expected = {-94.2478, -34.0339, 0,
-                                            41.8879,  52.3599,  94.2478};
+        // Caution: for full-azimuth cases, the ordering is preserved, you get
+        // in what you get out. -> this can flip
+        std::vector<ActsScalar> expected = {-94.2478, -52.3599, -41.8879,
+                                            0,        60.2139,  94.2478};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
     }
