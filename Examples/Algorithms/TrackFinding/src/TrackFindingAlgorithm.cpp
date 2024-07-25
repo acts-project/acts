@@ -348,7 +348,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = Acts::Direction::Forward;
+  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
+                                                   : Acts::Direction::Forward;
 
   Acts::PropagatorPlainOptions secondPropOptions(ctx.geoContext,
                                                  ctx.magFieldContext);
@@ -359,11 +360,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
                                   ctx.calibContext, slAccessorDelegate,
                                   extensions, firstPropOptions);
+  firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
 
   TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
                                    ctx.calibContext, slAccessorDelegate,
                                    extensions, secondPropOptions);
-  secondOptions.targetSurface = pSurface.get();
+  secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
 
   using Extrapolator = Acts::Propagator<Acts::EigenStepper<>, Acts::Navigator>;
   using ExtrapolatorOptions =
@@ -562,6 +564,21 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               trackCandidate.covariance() = secondTrackCopy.covariance();
               trackCandidate.setReferenceSurface(
                   secondTrackCopy.referenceSurface().getSharedPtr());
+
+              if (m_cfg.reverseSearch) {
+                auto secondSmoothingResult =
+                    Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+                if (!secondSmoothingResult.ok()) {
+                  m_nFailedSmoothing++;
+                  ACTS_ERROR("Second smoothing for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondSmoothingResult.error());
+                  continue;
+                }
+
+                trackCandidate.reverseTrackStates(true);
+              }
 
               Acts::calculateTrackQuantities(trackCandidate);
 
