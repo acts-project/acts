@@ -117,6 +117,26 @@ void addGenerators(Context& ctx) {
           "mean", &ActsExamples::GaussianPrimaryVertexPositionGenerator::mean);
 
   py::class_<
+      ActsExamples::GaussianDisplacedVertexPositionGenerator,
+      ActsExamples::EventGenerator::PrimaryVertexPositionGenerator,
+      std::shared_ptr<ActsExamples::GaussianDisplacedVertexPositionGenerator>>(
+      mex, "GaussianDisplacedVertexPositionGenerator")
+      .def(py::init<>())
+      .def(py::init([](const Acts::Vector4& stddev, const Acts::Vector4& mean) {
+             ActsExamples::GaussianDisplacedVertexPositionGenerator g;
+             g.stddev = stddev;
+             g.mean = mean;
+             return g;
+           }),
+           py::arg("stddev"), py::arg("mean"))
+      .def_readwrite(
+          "stddev",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::stddev)
+      .def_readwrite(
+          "mean",
+          &ActsExamples::GaussianDisplacedVertexPositionGenerator::mean);
+
+  py::class_<
       ActsExamples::FixedPrimaryVertexPositionGenerator,
       ActsExamples::EventGenerator::PrimaryVertexPositionGenerator,
       std::shared_ptr<ActsExamples::FixedPrimaryVertexPositionGenerator>>(
@@ -159,28 +179,21 @@ void addGenerators(Context& ctx) {
         .def_readwrite("mass", &Config::mass)
         .def_readwrite("charge", &Config::charge)
         .def_property(
-            "p",
-            [](Config& cfg) {
-              return std::pair{cfg.pMin, cfg.pMax};
-            },
+            "p", [](Config& cfg) { return std::pair{cfg.pMin, cfg.pMax}; },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.pMin = value.first;
               cfg.pMax = value.second;
             })
         .def_property(
             "phi",
-            [](Config& cfg) {
-              return std::pair{cfg.phiMin, cfg.phiMax};
-            },
+            [](Config& cfg) { return std::pair{cfg.phiMin, cfg.phiMax}; },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.phiMin = value.first;
               cfg.phiMax = value.second;
             })
         .def_property(
             "theta",
-            [](Config& cfg) {
-              return std::pair{cfg.thetaMin, cfg.thetaMax};
-            },
+            [](Config& cfg) { return std::pair{cfg.thetaMin, cfg.thetaMax}; },
             [](Config& cfg, std::pair<double, double> value) {
               cfg.thetaMin = value.first;
               cfg.thetaMax = value.second;
