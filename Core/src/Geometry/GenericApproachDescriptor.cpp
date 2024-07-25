@@ -35,8 +35,9 @@ Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
     auto sfIntersection =
         sf->intersect(gctx, position, direction, boundaryTolerance);
     for (const auto& intersection : sfIntersection.split()) {
-      if (intersection &&
-          detail::checkIntersection(intersection, nearLimit, farLimit)) {
+      if (intersection.isValid() &&
+          detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                  farLimit)) {
         sIntersections.push_back(intersection);
       }
     }
