@@ -540,13 +540,9 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
 
     for (std::size_t i = 1; i <= nBinsA; ++i) {
       merged.atLocalBins({i}) = a.atLocalBins({i});
-      ACTS_VERBOSE(" ~> a " << i << " -> m " << i << " (" << a.atLocalBins({i})
-                            << ")");
     }
     for (std::size_t i = 1; i <= nBinsB; ++i) {
       merged.atLocalBins({nBinsA + i}) = b.atLocalBins({i});
-      ACTS_VERBOSE(" ~> b " << i << " -> m " << (nBinsA + i) << " ("
-                            << b.atLocalBins({i}) << ")");
     }
   } else {
     ACTS_VERBOSE("2d merge:");
@@ -559,8 +555,6 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
       for (std::size_t i = 1; i <= nBinsA; ++i) {
         for (std::size_t j = 1; j <= nBinsCommon; ++j) {
           merged.atLocalBins({i, j}) = a.atLocalBins({i, j});
-          ACTS_VERBOSE(" ~> a " << i << ", " << j << " -> m " << i << ", " << j
-                                << " (" << a.atLocalBins({i, j}) << ")");
         }
       }
 
@@ -568,8 +562,6 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
         for (std::size_t j = 1; j <= nBinsCommon; ++j) {
           std::size_t ti = i + nBinsA;
           merged.atLocalBins({ti, j}) = b.atLocalBins({i, j});
-          ACTS_VERBOSE(" ~> b " << i << ", " << j << " -> m " << ti << ", " << j
-                                << " (" << b.atLocalBins({i, j}) << ")");
         }
       }
     } else {
@@ -581,8 +573,6 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
       for (std::size_t i = 1; i <= nBinsCommon; ++i) {
         for (std::size_t j = 1; j <= nBinsA; ++j) {
           merged.atLocalBins({i, j}) = a.atLocalBins({i, j});
-          ACTS_VERBOSE(" ~> a " << i << ", " << j << " -> m " << i << ", " << j
-                                << " (" << a.atLocalBins({i, j}) << ")");
         }
       }
 
@@ -590,8 +580,6 @@ void GridPortalLink::fillMergedGrid(const GridPortalLink& a,
         for (std::size_t j = 1; j <= nBinsB; ++j) {
           std::size_t tj = j + nBinsA;
           merged.atLocalBins({i, tj}) = b.atLocalBins({i, j});
-          ACTS_VERBOSE(" ~> b " << i << ", " << j << " -> m " << tj << ", " << j
-                                << " (" << b.atLocalBins({i, j}) << ")");
         }
       }
     }
