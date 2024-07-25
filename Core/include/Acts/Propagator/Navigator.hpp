@@ -428,7 +428,7 @@ class Navigator {
       state.navigation.startLayerResolved = false;
       state.navigation.navigationStage = Stage::undefined;
 
-      // Rerun the targetting
+      // Rerun the targeting
     }
   }
 
@@ -985,7 +985,7 @@ class Navigator {
     }
     // We have to leave the volume somehow, so try again
     state.navigation.navBoundaries.clear();
-    ACTS_VERBOSE(volInfo(state) << "Boundary navigation lost, re-targetting.");
+    ACTS_VERBOSE(volInfo(state) << "Boundary navigation lost, re-targeting.");
     state.navigation.forceIntersectBoundaries = true;
     if (findBoundaries()) {
       // Resetting intersection check for boundary surfaces
