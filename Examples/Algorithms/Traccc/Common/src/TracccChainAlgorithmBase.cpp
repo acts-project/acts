@@ -72,5 +72,7 @@ ActsExamples::Traccc::Common::TracccChainAlgorithmBase::
                 logger()} {
   m_inputCells.initialize(m_cfg.inputCells);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }

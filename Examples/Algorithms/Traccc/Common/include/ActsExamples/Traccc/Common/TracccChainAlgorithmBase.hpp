@@ -14,6 +14,8 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+// Acts Examples include(s)
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -21,10 +23,9 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-
-// Acts Examples include(s)
 #include "ActsExamples/Traccc/Common/Converter.hpp"
 #include "ActsExamples/Traccc/Common/TracccChainConfig.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 
 // Covfie Plugin include(s)
 #include "Acts/Plugins/Covfie/FieldConversion.hpp"
@@ -52,6 +53,9 @@ class TracccChainAlgorithmBase : public IAlgorithm {
   struct Config {
     std::string inputCells;
     std::string inputMeasurements;
+    std::string outputSpacePoints;
+    std::string outputSeeds;
+    bool enableAmbiguityResolution;
     std::string outputTracks;
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
     std::shared_ptr<const Acts::ConstantBField> field;
@@ -74,6 +78,8 @@ class TracccChainAlgorithmBase : public IAlgorithm {
   ReadDataHandle<CellsMapType> m_inputCells{this, "InputCells"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
+  WriteDataHandle<std::vector<SimSpacePoint>> m_outputSpacePoints{this, "OutputSpacePoints"};
+  WriteDataHandle<std::vector<SimSeed>> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
   // Memory resource, detector, and converter should be declared in that order

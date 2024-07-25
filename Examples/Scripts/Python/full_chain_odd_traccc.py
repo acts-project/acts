@@ -117,6 +117,13 @@ parser.add_argument(
     default="host"
 )
 
+parser.add_argument(
+    "--ar",
+    help="Enable ambiguity resolution for the traccc chain",
+    type=bool,
+    default=True
+)
+
 args = parser.parse_args()
 
 decorators = None
@@ -271,8 +278,9 @@ addTracccChain(
     inputCells="cells",
     outputDirRoot=outputDir,
     chainConfig=chainConfig,
-    logLevel=acts.logging.DEBUG,
+    logLevel=acts.logging.INFO,
     platform=args.platform,
+    enableAmbiguityResolution=args.ar,
     # outputDirCsv=outputDir,
 )
 

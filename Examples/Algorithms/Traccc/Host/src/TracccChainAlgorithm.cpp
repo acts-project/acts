@@ -6,8 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Acts examples include(s)
+// Acts Examples include(s)
 #include "ActsExamples/Traccc/Host/TracccChainAlgorithm.hpp"
+#include "ActsExamples/Traccc/Common/Conversion/SeedConversion.hpp"
+#include "ActsExamples/Traccc/Common/Conversion/SpacePointConversion.hpp"
 
 // System include(s).
 #include <cstdint>
@@ -60,12 +62,23 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::execute(
 
   ACTS_INFO("Ran the clusterization algorithm");
 
+  ACTS_INFO("Checking if measurements match with Acts...");
+
+  const auto actsMeasurements = m_inputMeasurements(ctx);
+  auto measurementMap = converter.createMeasurementMap(measurements, actsMeasurements);
+
+  ACTS_INFO("Measurements match (found a 1:1 mapping of indexes between traccc and Acts measurements)");
+
   spacepoints = spacepointFormationAlgorithm(vecmem::get_data(measurements),
                                              vecmem::get_data(modules));
 
+  auto [convertedSpacePoints, spacePointMap] = ActsExamples::Traccc::Common::Conversion::convertSpacePoints(spacepoints, measurementMap);
+  
   ACTS_INFO("Ran the spacepoint formation algorithm");
 
   seeds = seedingAlgorithm(spacepoints);
+
+  auto [convertedSeeds, seedMap] = ActsExamples::Traccc::Common::Conversion::convertSeeds(seeds, vecmem::get_data(spacepoints), spacePointMap);
 
   ACTS_INFO("Ran the seeding algorithm");
 
@@ -85,14 +98,16 @@ ActsExamples::Traccc::Host::TracccChainAlgorithm::execute(
 
   ACTS_INFO("Ran the fitting algorithm");
 
-  resolvedTrackStates = ambiguityResolutionAlgorithm(trackStates);
+  if (m_cfg.enableAmbiguityResolution){
+    trackStates = ambiguityResolutionAlgorithm(trackStates);
 
-  ACTS_INFO("Ran the ambiguity resolution algorithm");
+    ACTS_INFO("Ran the ambiguity resolution algorithm");
+  }
 
-  const auto actsMeasurements = m_inputMeasurements(ctx);
-  auto result = converter.convertTracks(resolvedTrackStates, measurements,
-                                        actsMeasurements);
+  auto result = converter.convertTracks(trackStates, measurementMap);
 
+  m_outputSeeds(ctx, std::move(convertedSeeds));
+  m_outputSpacePoints(ctx, std::move(convertedSpacePoints));
   m_outputTracks(ctx, std::move(result));
   return ActsExamples::ProcessCode::SUCCESS;
 }

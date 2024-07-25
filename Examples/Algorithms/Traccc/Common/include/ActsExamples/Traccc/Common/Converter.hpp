@@ -63,58 +63,9 @@ class Converter {
 
   const Acts::Logger& actsLogger;
 
-  /// @brief Writes the number of traccc measurements and Acts measurements to the logger.
-  /// If the number of measurements do not matching a warning is shown.
-  /// @param tracccMeasurements the traccc measurements.
-  /// @param measurements the Acts measurements.
-  template <typename allocator_t>
-  void logMeasurementCountComparison(
-      const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements)
-      const {
-    if (tracccMeasurements.size() != measurements.size()) {
-      std::stringstream ss;
-      ss << "Number of measurements do not match (traccc: "
-         << tracccMeasurements.size() << ", acts: " << measurements.size()
-         << ")\n"
-         << "Perhaps mergeCommonCorner or doMerge is false in the digitization "
-            "algorithm config?";
-      ACTS_WARNING(ss.str());
-    } else {
-      std::stringstream ss;
-      ss << "Number of Acts and Traccc measurements match (count: "
-         << measurements.size() << ")";
-      ACTS_INFO(ss.str());
-    }
-  }
-
-  /// @brief Creates a map from traccc measurements to acts measurements.
-  /// The traccc elements will map to an acts measurement that it is equivalent
-  /// to. The resulting map is assumed to be bijective, thus if any element is
-  /// unable to find a match an error is thrown.
-  /// @param tracccMeasurements the traccc measurements.
-  /// @param measurements the acts measurements.
-  /// @return A map from traccc measurement to acts bound variant measurement.
-  template <typename allocator_t>
-  std::map<traccc::measurement, ActsExamples::BoundVariantMeasurement>
-  measurementConversionMap(
-      const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements)
-      const {
-    logMeasurementCountComparison(tracccMeasurements, measurements);
-
-    auto convertedMeasurements =
-        Conversion::createActsMeasurements(detector, tracccMeasurements);
-    auto indexMap = Measurement::matchMap(convertedMeasurements, measurements);
-
-    ACTS_DEBUG(std::string("Traccc (1) and Acts (2) measurement index pairing "
-                           "information:\n") +
-               Measurement::pairingStatistics(convertedMeasurements,
-                                              measurements, indexMap));
-
-    return Util::referenceMap(tracccMeasurements, measurements, indexMap);
-  }
-
+  /// @brief Maps measurements of the track states from traccc measurements to acts measurements.
+  /// @param trackContainer the track container
+  /// @param map the measurement map.
   template <typename track_container_t, typename trajectory_t,
             template <typename> class holder_t>
   void mapMeasurements(
@@ -132,6 +83,7 @@ class Converter {
             [&trackState](auto& m) {
               trackState.setUncalibratedSourceLink(m.sourceLink());
 
+              // Set the calibrated source link,
               using MeasurementType = std::decay_t<decltype(m)>;
               constexpr std::size_t size = MeasurementType::size();
               trackState.allocateCalibrated(m.size());
@@ -181,6 +133,48 @@ class Converter {
     return res;
   }
 
+  /// @brief Creates a map from traccc measurements to acts measurements.
+  /// The traccc elements will map to an acts measurement that it is equivalent
+  /// to. The resulting map is assumed to be bijective, thus if any element is
+  /// unable to find a match an error is thrown.
+  /// @param tracccMeasurements the traccc measurements.
+  /// @param measurements the acts measurements.
+  /// @return A map from traccc measurement to acts bound variant measurement.
+  template <typename allocator_t>
+  auto createMeasurementMap(
+      const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
+      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements)
+      const {
+
+    if (tracccMeasurements.size() != measurements.size()) {
+      std::stringstream ss;
+      ss << "Number of measurements do not match (traccc: "
+         << tracccMeasurements.size() << ", acts: " << measurements.size()
+         << ")\n"
+         << "Perhaps mergeCommonCorner or doMerge is false in the digitization "
+            "algorithm config?";
+      ACTS_WARNING(ss.str());
+    } 
+    else {
+      std::stringstream ss;
+      ss << "Number of Acts and Traccc measurements match (count: "
+         << measurements.size() << ")";
+      ACTS_INFO(ss.str());
+    }
+
+    auto convertedMeasurements =
+        Conversion::createActsMeasurements(detector, tracccMeasurements);
+    auto indexMap = Measurement::matchMap(convertedMeasurements, measurements);
+
+    ACTS_DEBUG(std::string("Traccc (1) and Acts (2) measurement index pairing "
+                           "information:\n") +
+               Measurement::pairingStatistics(convertedMeasurements,
+                                              measurements, indexMap));
+
+    return Util::referenceMap(tracccMeasurements, measurements, indexMap);
+    //return Util::referenceMap(tracccMeasurements, measurements, indexMap);
+  }
+
   /// @brief Converts a container of traccc tracks to a container of Acts tracks.
   /// The given traccc measurements are compared with the given acts
   /// measurements to determine the mapping between measurements and ensure that
@@ -192,11 +186,10 @@ class Converter {
   /// @param tracccMeasurements the traccc measurements.
   /// @param measurements the Acts measurements.
   /// @return An Acts const track container.
-  template <typename traccc_track_container_t, typename allocator_t>
+  template <typename traccc_track_container_t>
   auto convertTracks(
       traccc_track_container_t& tracccTrackContainer,
-      const std::vector<traccc::measurement, allocator_t>& tracccMeasurements,
-      const std::vector<ActsExamples::BoundVariantMeasurement>& measurements)
+      const std::map<traccc::measurement, ActsExamples::BoundVariantMeasurement>& measurementMap)
       const {
     auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
     auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -209,14 +202,9 @@ class Converter {
     ss << "Converted " << tracccTrackContainer.size() << " traccc tracks";
     ACTS_INFO(ss.str());
 
-    auto mcm = measurementConversionMap(tracccMeasurements, measurements);
+    mapMeasurements(tracks, measurementMap);
 
-    ACTS_INFO(
-        "Found a 1:1 mapping of indexes between traccc and Acts measurements");
-
-    mapMeasurements(tracks, mcm);
-
-    ACTS_INFO("Updated track state measurements");
+    ACTS_INFO("Mapped track states measurements");
 
     ConstTrackContainer constTracks{
         std::make_shared<Acts::ConstVectorTrackContainer>(
