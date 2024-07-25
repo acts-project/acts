@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
+#include <format>
 #include <vector>
 
 namespace Acts {
@@ -88,7 +89,10 @@ class GridPortalLink : public PortalLinkBase {
       const Logger& logger = getDummyLogger()) const override;
 
   static void fillMergedGrid(const GridPortalLink& a, const GridPortalLink& b,
-                             GridPortalLink& merged, BinningValue direction);
+                             GridPortalLink& merged, BinningValue direction,
+                             const Logger& logger);
+
+  virtual void prettyPrint(std::ostream& os) const = 0;
 
  protected:
   void checkConsistency(const CylinderSurface& cyl) const;
@@ -181,6 +185,77 @@ class GridPortalLinkT final : public GridPortalLink {
       const std::function<void(const TrackingVolume*)> func) const final {
     for (std::size_t i = 0; i < m_grid.size(); i++) {
       func(m_grid.at(i));
+    }
+  }
+
+  void prettyPrint(std::ostream& os) const final {
+    // @TODO: Possibly move this to .cpp file
+    std::cout << "----- GRID " << GridType::DIM << "d -----" << std::endl;
+    std::cout << grid() << " along " << direction() << std::endl;
+
+    std::string loc0;
+    std::string loc1;
+
+    bool flipped = false;
+
+    if (surface().type() == Surface::Cylinder) {
+      loc0 = "rPhi";
+      loc1 = "z";
+      flipped = direction() != BinningValue::binRPhi;
+    } else if (surface().type() == Surface::Disc) {
+      loc0 = "r";
+      loc1 = "phi";
+      flipped = direction() != BinningValue::binR;
+    } else if (surface().type() == Surface::Plane) {
+      loc0 = "x";
+      loc1 = "y";
+      flipped = direction() != BinningValue::binX;
+    } else {
+      throw std::invalid_argument{"Unsupported surface type"};
+    }
+
+    if constexpr (GridType::DIM == 1) {
+      auto loc = grid().numLocalBins();
+
+      if (flipped) {
+        os << std::format("{} >       i=0 ", loc1);
+        for (std::size_t i = 1; i <= loc[0] + 1; i++) {
+          os << std::format("{:>11} ", std::format("i={}", i));
+        }
+        os << std::endl;
+
+        os << "    ";
+        for (std::size_t i = 0; i <= loc[0] + 1; i++) {
+          const void* v = grid().atLocalBins({i});
+          os << std::format("{:11}", v) << " ";
+        }
+        os << std::endl;
+
+      } else {
+        os << std::format("v {}", loc0) << std::endl;
+        for (std::size_t i = 0; i <= loc[0] + 1; i++) {
+          os << "i=" << i << " ";
+          const void* v = grid().atLocalBins({i});
+          os << std::format("{:11}", v) << " ";
+          os << std::endl;
+        }
+      }
+
+    } else {
+      auto loc = grid().numLocalBins();
+      os << std::format("v {}|{} >   j=0 ", loc0, loc1, 0);
+      for (std::size_t j = 1; j <= loc[1] + 1; j++) {
+        os << std::format("{:>11} ", std::format("j={}", j));
+      }
+      os << std::endl;
+      for (std::size_t i = 0; i <= loc[0] + 1; i++) {
+        os << "i=" << i << " ";
+        for (std::size_t j = 0; j <= loc[1] + 1; j++) {
+          const void* v = grid().atLocalBins({i, j});
+          os << std::format("{:11}", v) << " ";
+        }
+        os << std::endl;
+      }
     }
   }
 
