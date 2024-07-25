@@ -1146,10 +1146,7 @@ class CombinatorialKalmanFilter {
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
-      if (result.finished) {
-        return true;
-      }
-      return false;
+      return !result.lastError.ok() || result.finished;
     }
   };
 
@@ -1205,8 +1202,10 @@ class CombinatorialKalmanFilter {
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
-    typename propagator_t::template Options<Actors, Aborters> propOptions(
-        tfOptions.geoContext, tfOptions.magFieldContext);
+    using PropagatorOptions =
+        typename propagator_t::template Options<Actors, Aborters>;
+    PropagatorOptions propOptions(tfOptions.geoContext,
+                                  tfOptions.magFieldContext);
 
     // Set the trivial propagator options
     propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
@@ -1239,7 +1238,9 @@ class CombinatorialKalmanFilter {
     }
 
     auto propState =
-        m_propagator.template makeState(initialParameters, propOptions);
+        m_propagator.template makeState<start_parameters_t, PropagatorOptions,
+                                        StubPathLimitReached>(initialParameters,
+                                                              propOptions);
 
     auto& r =
         propState
@@ -1267,29 +1268,23 @@ class CombinatorialKalmanFilter {
 
     auto& propRes = *result;
 
-    /// Get the result of the CombinatorialKalmanFilter
+    // Get the result of the CombinatorialKalmanFilter
     auto combKalmanResult =
         std::move(propRes.template get<
                   CombinatorialKalmanFilterResult<track_container_t>>());
 
-    /// The propagation could already reach max step size
-    /// before the track finding is finished during two phases:
-    // -> filtering for track finding;
-    // -> surface targeting to get fitted parameters at target surface.
-    // This is regarded as a failure.
-    // @TODO: Implement distinguishment between the above two cases if
-    // necessary
-    if (combKalmanResult.lastError.ok() && !combKalmanResult.finished) {
-      combKalmanResult.lastError = Result<void>(
+    Result<void> error = combKalmanResult.lastError;
+    if (error.ok() && !combKalmanResult.finished) {
+      error = Result<void>(
           CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
     }
-
-    if (!combKalmanResult.lastError.ok()) {
+    if (!error.ok()) {
       ACTS_ERROR("CombinatorialKalmanFilter failed: "
                  << combKalmanResult.lastError.error() << " "
                  << combKalmanResult.lastError.error().message()
-                 << " with the initial parameters: \n"
-                 << initialParameters.parameters());
+                 << " with the initial parameters: "
+                 << initialParameters.parameters().transpose());
+      return error.error();
     }
 
     for (const auto& track : combKalmanResult.collectedTracks) {
