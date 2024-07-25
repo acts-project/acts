@@ -61,7 +61,7 @@ std::vector<vertex_t> segmentVertices(
   std::vector<vertex_t> vertices;
   std::vector<ActsScalar> phis =
       phiSegments(phiMin, phiMax, phiRefs, quarterSegments);
-  for (auto phi : phis) {
+  for (ActsScalar phi : phis) {
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rXY.first * std::cos(phi);
     vertex(1) = rXY.second * std::sin(phi);
