@@ -59,7 +59,8 @@ class NoFieldIntersectionFinder {
   std::vector<std::pair<GeometryIdentifier, Vector3>> operator()(
       const GeometryContext& geoCtx, const Vector3& position,
       const Vector3& direction,
-      [[maybe_unused]] const ActsScalar& Pmag = 0) const {
+      [[maybe_unused]] const ActsScalar& Pmag = 0, 
+      [[maybe_unused]] const ActsScalar& Charge = 0) const {
     std::vector<std::pair<GeometryIdentifier, Vector3>> sIntersections;
     // Intersect the surfaces
     for (auto& surface : m_surfaces) {
@@ -168,10 +169,10 @@ class TrackEstimator {
  public:
   Vector3 ip;
 
-  std::tuple<ActsScalar, Vector3, Vector3, Vector3> operator()(
+  std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3> operator()(
       const GeometryContext& /*geoCtx*/, const Vector3& pivot) const {
     Vector3 direction = (pivot - ip).normalized();
-    return {1._GeV, ip, direction, direction};
+    return {1_e, 1._GeV, ip, direction, direction};
   };
 };
 
@@ -341,7 +342,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto sourceLinks = createSourceLinks(gctx, *detector);
 
   // Prepare the PathSeeder
-  auto pathSeederCfg = Acts::PathSeeder<Axis>::Config();
+  auto pathSeederCfg = Acts::Experimental::PathSeeder<Axis>::Config();
 
   // Grid to bin the source links
   detail::Test::TestSourceLink::SurfaceAccessor surfaceAccessor;
@@ -391,7 +392,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   pathSeederCfg.firstLayerExtent = firstLayerExtent;
 
   // Create the PathSeeder
-  Acts::PathSeeder<Axis> pathSeeder(pathSeederCfg);
+  Acts::Experimental::PathSeeder<Axis> pathSeeder(pathSeederCfg);
 
   // Get the seeds
   auto seeds = pathSeeder.getSeeds(gctx, sourceLinks);

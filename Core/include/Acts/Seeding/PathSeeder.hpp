@@ -14,6 +14,8 @@
 
 namespace Acts {
 
+namespace Experimental {
+
 /// @brief Seeding algorigthm that extracts
 /// the IP parameters and sorts the source links
 /// into possible track candidates
@@ -48,10 +50,10 @@ class PathSeeder {
   using IntersectionLookup =
       Delegate<std::vector<std::pair<GeometryIdentifier, Vector3>>(
           const GeometryContext&, const Vector3&, const Vector3&,
-          const ActsScalar&)>;
+          const ActsScalar&, const ActsScalar&)>;
 
   using TrackEstimator =
-      Delegate<std::tuple<ActsScalar, Vector3, Vector3, Vector3>(
+      Delegate<std::tuple<ActsScalar, ActsScalar, Vector3, Vector3, Vector3>(
           const GeometryContext&, const Vector3&)>;
 
   /// @brief The nested configuration struct
@@ -114,12 +116,12 @@ class PathSeeder {
       }
 
       // Get the IP parameters
-      auto [ipP, ipVertex, ipDir, flDir] =
+      auto [q, ipP, ipVertex, ipDir, flDir] =
           m_cfg.trackEstimator(gctx, globalPos);
 
       // Intersect with the surfaces
       std::vector<std::pair<GeometryIdentifier, Vector3>> intersections =
-          m_cfg.intersectionFinder(gctx, globalPos, flDir, ipP);
+          m_cfg.intersectionFinder(gctx, globalPos, flDir, ipP, q);
 
       // Continue if no intersections
       if (intersections.empty()) {
@@ -181,5 +183,7 @@ class PathSeeder {
  private:
   Config m_cfg;
 };
+
+}  // namespace Experimental
 
 }  // namespace Acts
