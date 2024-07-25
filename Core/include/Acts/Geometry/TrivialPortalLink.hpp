@@ -30,23 +30,19 @@ class TrivialPortalLink final : public PortalLinkBase {
                                       const Vector2& position) const final;
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
-      const PortalLinkBase& other, const RegularSurface& surfaceA,
-      const RegularSurface& surfaceB, BinningValue direction,
+      const PortalLinkBase& other, BinningValue direction,
       const Logger& logger = getDummyLogger()) const final;
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
-      const CompositePortalLink& other, const RegularSurface& surfaceA,
-      const RegularSurface& surfaceB, BinningValue direction,
+      const CompositePortalLink& other, BinningValue direction,
       const Logger& logger = getDummyLogger()) const final;
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
-      const TrivialPortalLink& other, const RegularSurface& surfaceA,
-      const RegularSurface& surfaceB, BinningValue direction,
+      const TrivialPortalLink& other, BinningValue direction,
       const Logger& logger = getDummyLogger()) const final;
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
-      const GridPortalLink& other, const RegularSurface& surfaceA,
-      const RegularSurface& surfaceB, BinningValue direction,
+      const GridPortalLink& other, BinningValue direction,
       const Logger& logger = getDummyLogger()) const final;
 
  private:

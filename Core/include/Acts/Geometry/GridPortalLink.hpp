@@ -84,9 +84,20 @@ class GridPortalLink : public PortalLinkBase {
       const std::function<void(const TrackingVolume*)> func) const = 0;
 
   std::unique_ptr<PortalLinkBase> mergeImpl(
-      const PortalLinkBase& other, const RegularSurface& surfaceA,
-      const RegularSurface& surfaceB, BinningValue direction,
-      const Logger& logger = getDummyLogger()) const override;
+      const PortalLinkBase& other, BinningValue direction,
+      const Logger& logger = getDummyLogger()) const final;
+
+  std::unique_ptr<PortalLinkBase> mergeImpl(
+      const CompositePortalLink& other, BinningValue direction,
+      const Logger& logger = getDummyLogger()) const final;
+
+  std::unique_ptr<PortalLinkBase> mergeImpl(
+      const TrivialPortalLink& other, BinningValue direction,
+      const Logger& logger = getDummyLogger()) const final;
+
+  std::unique_ptr<PortalLinkBase> mergeImpl(
+      const GridPortalLink& other, BinningValue direction,
+      const Logger& logger = getDummyLogger()) const final;
 
   static void fillMergedGrid(const GridPortalLink& a, const GridPortalLink& b,
                              GridPortalLink& merged, BinningValue direction,
