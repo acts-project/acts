@@ -76,7 +76,7 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
         direction == BinningValue::binZ || direction == BinningValue::binRPhi,
         "Invalid binning direction: " + binningValueName(direction));
 
-    return mergeImpl(other, surfaceA, surfaceB, direction, logger);
+    return mergeImpl(other, direction, logger);
 
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&surfaceA);
              discA != nullptr) {
@@ -87,7 +87,7 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
         direction == BinningValue::binR || direction == BinningValue::binPhi,
         "Invalid binning direction: " + binningValueName(direction));
 
-    return mergeImpl(other, surfaceA, surfaceB, direction, logger);
+    return mergeImpl(other, direction, logger);
 
   } else {
     throw std::logic_error{"Surface type is not supported"};
@@ -95,36 +95,30 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const PortalLinkBase& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const PortalLinkBase& other, BinningValue direction,
     const Logger& logger) const {
   (void)other;
-  (void)surfaceA;
-  (void)surfaceB;
   (void)direction;
   ACTS_VERBOSE("Composite portal merging");
   throw std::logic_error{"Not implemented"};
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const CompositePortalLink& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const CompositePortalLink& other, BinningValue direction,
     const Logger& logger) const {
   ACTS_ERROR("Fell through to the Base mergeImpl with Composite");
   throw std::logic_error{"Not implemented"};
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const TrivialPortalLink& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const TrivialPortalLink& other, BinningValue direction,
     const Logger& logger) const {
   ACTS_ERROR("Fell through to the Base mergeImpl with Trivial");
   throw std::logic_error{"Not implemented"};
 }
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::mergeImpl(
-    const GridPortalLink& other, const RegularSurface& surfaceA,
-    const RegularSurface& surfaceB, BinningValue direction,
+    const GridPortalLink& other, BinningValue direction,
     const Logger& logger) const {
   ACTS_ERROR("Fell through to the Base mergeImpl with Grid");
   throw std::logic_error{"Not implemented"};
