@@ -421,6 +421,8 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state)
                  << "No targets found, we got lost! Attempt renavigation.");
 
+    state.navigation.reset();
+
     // We might have punched through a boundary and entered another volume
     // so we have to reinitialize
     state.navigation.currentVolume =
@@ -439,10 +441,7 @@ class Navigator {
         state.navigation.currentVolume->associatedLayer(
             state.geoContext, stepper.position(state.stepping));
 
-    ACTS_VERBOSE(volInfo(state)
-                 << "Resolved volume and layer. Clear navigation candidates.");
-
-    state.navigation.reset();
+    ACTS_VERBOSE(volInfo(state) << "Resolved volume and layer.");
 
     // Rerun the targeting
     if (target()) {
