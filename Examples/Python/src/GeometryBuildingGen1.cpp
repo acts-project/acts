@@ -153,8 +153,3 @@ void addGeometryBuildingGen1(Context &ctx) {
 }
 
 }  // namespace Acts::Python
-
-// .def("layerArray", &Acts::LayerArrayCreator::layerArray);
-/*, "gctx"_a, "layersInput"_a, "min"_a,
-                        "max"_a, "bType"_a = BinningType::arbitrary,
-                        "bValue"_a = BinningValue::binX); */
