@@ -411,7 +411,7 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -421,6 +421,6 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
       - name: Downstream run
-        run: |
-          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          ./build-downstream/bin/ShowActsVersion
+        run: >
+          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && ./build-downstream/bin/ShowActsVersion
