@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include "ActsExamples/EventData/Propagation.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -26,8 +25,9 @@ namespace ActsExamples {
 ///     event000000002-propagation-steps.obj
 ///
 /// One Thread per write call and hence thread safe
+template <typename step_t>
 class ObjPropagationStepsWriter
-    : public WriterT<std::vector<std::vector<Acts::detail::Step>>> {
+    : public WriterT<std::vector<std::vector<step_t>>> {
  public:
   struct Config {
     std::string collection;           ///< which collection to write
@@ -42,7 +42,7 @@ class ObjPropagationStepsWriter
   /// @param level Output logging level
   ObjPropagationStepsWriter(const Config& cfg,
                             Acts::Logging::Level level = Acts::Logging::INFO)
-      : WriterT<std::vector<std::vector<Acts::detail::Step>>>(
+      : WriterT<std::vector<std::vector<step_t>>>(
             cfg.collection, "ObjPropagationStepsWriter", level),
         m_cfg(cfg) {
     if (m_cfg.collection.empty()) {
@@ -65,9 +65,9 @@ class ObjPropagationStepsWriter
  protected:
   /// This implementation holds the actual writing method
   /// and is called by the WriterT<>::write interface
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const std::vector<std::vector<Acts::detail::Step>>&
-                         stepCollection) override {
+  ProcessCode writeT(
+      const AlgorithmContext& context,
+      const std::vector<std::vector<step_t>>& stepCollection) override {
     // open per-event file
     std::string path = ActsExamples::perEventFilepath(
         m_cfg.outputDir, "propagation-steps.obj", context.eventNumber);
