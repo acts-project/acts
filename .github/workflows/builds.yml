@@ -353,7 +353,8 @@ jobs:
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst ${{ env.DEPENDENCY_URL }}
           && mkdir ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
-          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m pip install pyyaml jinja2
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && pip3 install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -370,6 +371,7 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -408,7 +410,7 @@ jobs:
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          source ${{ env.DEPENDENCY_DIR }}/setup.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           && cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -419,6 +421,5 @@ jobs:
         run: cmake --build build-downstream
       - name: Downstream run
         run: |
-          source ${{ env.DEPENDENCY_DIR }}/setup.sh
-          source ${{ env.DEPENDENCY_DIR}}/dd4hep/*/bin/thisdd4hep.sh
+          && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
           ./build-downstream/bin/ShowActsVersion
