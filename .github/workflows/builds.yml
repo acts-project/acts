@@ -379,7 +379,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=20
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_EXAMPLES_UNITTESTS=ON
           -DACTS_BUILD_ODD=ON
