@@ -370,11 +370,10 @@ jobs:
         # versions such as the one installed via homebrew
         run: >
           ccache -z
-          && source ${{ env.DEPENDENCY_DIR }}/setup.sh
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DPython_EXECUTABLE=${{ env.DEPENDENCY_DIR }}/python/3.12.2/bin/python3
+          -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DDD4HEP_DEBUG_CMAKE=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
