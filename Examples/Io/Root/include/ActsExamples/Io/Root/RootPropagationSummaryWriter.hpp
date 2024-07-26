@@ -105,9 +105,9 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   float m_p = 0;
 
   // steper statistics
-  float m_nSteps = 0;
-  float m_nStepTrials = 0;
-  float m_pathLength = 0;
+  int m_nSteps = 0;
+  int m_nStepTrials = 0;
+  int m_pathLength = 0;
 
   /// volume identifier
   std::vector<int> m_stepVolumeID;
@@ -145,7 +145,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   std::vector<float> m_stepUsr;
   /// Number of iterations needed by the stepsize finder (e.g. Runge-Kutta) of
   /// the stepper.
-  std::vector<std::size_t> m_stepTrials;
+  std::vector<int> m_stepTrials;
 };
 
 }  // namespace ActsExamples
