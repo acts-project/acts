@@ -182,22 +182,19 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
       if (addCentreFromConvexFace) {
         vertices.push_back(wCenter);
       }
-      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::convexFaceMesh(vertices, true);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::cylindricalFaceMesh(vertices);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     }
-  } else {
-    throw std::domain_error(
-        "Polyhedron repr of boundless surface not possible.");
   }
-  return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
+  throw std::domain_error("Polyhedron repr of boundless surface not possible.");
 }
 
 Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(

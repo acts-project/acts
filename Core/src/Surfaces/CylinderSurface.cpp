@@ -194,10 +194,9 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
   // Prepare vertices and faces
   std::vector<Vector3> vertices =
       bounds().circleVertices(ctrans, quarterSegments);
-  std::vector<Polyhedron::FaceType> faces;
-  std::vector<Polyhedron::FaceType> triangularMesh;
-  auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
-  return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::cylindricalFaceMesh(vertices);
+  return Polyhedron(vertices, faces, triangularMesh, false);
 }
 
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(

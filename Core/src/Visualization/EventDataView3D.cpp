@@ -31,8 +31,9 @@ void Acts::EventDataView3D::drawCovarianceCartesian(
 
   ellipse.push_back(transform *
                     Vector3(lposition.x(), lposition.y(), viewConfig.offset));
-  auto faces = detail::FacesHelper::convexFaceMesh(ellipse, true);
-  Polyhedron ellipseHedron(ellipse, faces.first, faces.second);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::convexFaceMesh(ellipse, true);
+  Polyhedron ellipseHedron(ellipse, faces, triangularMesh);
   Acts::GeometryView3D::drawPolyhedron(helper, ellipseHedron, viewConfig);
 }
 
@@ -60,8 +61,9 @@ void Acts::EventDataView3D::drawCovarianceAngular(
 
   std::vector<Vector3> coneTop = ellipse;
   coneTop.push_back(anker);
-  auto coneTopFaces = detail::FacesHelper::convexFaceMesh(coneTop, true);
-  Polyhedron coneTopHedron(coneTop, coneTopFaces.first, coneTopFaces.second);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::convexFaceMesh(coneTop, true);
+  Polyhedron coneTopHedron(coneTop, faces, triangularMesh);
   GeometryView3D::drawPolyhedron(helper, coneTopHedron, viewConfig);
 
   std::vector<Vector3> cone = ellipse;
@@ -69,7 +71,8 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   // Force triangular
   ViewConfig coneViewConfig = viewConfig;
   coneViewConfig.triangulate = true;
-  auto coneFaces = detail::FacesHelper::convexFaceMesh(cone, true);
-  Polyhedron coneHedron(cone, coneFaces.first, coneFaces.second);
+  auto [faces, triangularMesh] =
+      detail::FacesHelper::convexFaceMesh(cone, true);
+  Polyhedron coneHedron(cone, faces, triangularMesh);
   GeometryView3D::drawPolyhedron(helper, coneHedron, coneViewConfig);
 }

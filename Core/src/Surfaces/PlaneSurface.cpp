@@ -122,20 +122,20 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     // @todo same as for Discs: coversFull is not the right criterium
     // for triangulation
     if (!isEllipse || !innerExists || !coversFull) {
-      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::convexFaceMesh(vertices);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto [faces, triangularMesh] = detail::FacesHelper::cylindricalFaceMesh(vertices);
+      auto [faces, triangularMesh] =
+          detail::FacesHelper::cylindricalFaceMesh(vertices);
+      return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     }
-  } else {
-    throw std::domain_error(
-        "Polyhedron repr of boundless surface not possible.");
   }
-  return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
+  throw std::domain_error(
+      "Polyhedron representation of boundless surface not possible.");
 }
 
 Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
