@@ -41,6 +41,7 @@ class AdaptiveMultiVertexFitter {
           const Acts::MagneticFieldContext& magContext)
         : ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
+
     // Vertex collection to be fitted
     std::vector<Vertex*> vertexCollection;
 
