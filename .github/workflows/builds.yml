@@ -352,11 +352,8 @@ jobs:
           brew install cmake ninja ccache xerces-c
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.zst ${{ env.DEPENDENCY_URL }}
           && mkdir ${{ env.DEPENDENCY_DIR }}
-          && ls ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
-          && ls ${{ env.DEPENDENCY_DIR }}
-          && ls ${{ env.DEPENDENCY_DIR }}/python
-          && ${{ env.DEPENDENCY_DIR }}/python/3.12.2/bin/python3 -m pip install pyyaml jinja2
+          && ${{ env.DEPENDENCY_DIR }}/bin/python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
