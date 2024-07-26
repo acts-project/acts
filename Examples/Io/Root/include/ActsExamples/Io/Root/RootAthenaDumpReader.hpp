@@ -94,11 +94,28 @@ class RootAthenaDumpReader : public IReader {
   const Config &config() const { return m_cfg; }
 
  private:
+  /// Particles with barcodes larger then this value are considered to be
+  /// secondary particles
+  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
+  constexpr static int s_maxBarcodeForPrimary = 200000;
+
   /// Private access to the logging instance
   const Acts::Logger &logger() const { return *m_logger; }
 
   /// The config class
   Config m_cfg;
+
+  /// Helper method to read particles
+  SimParticleContainer readParticles() const;
+
+  /// Helper method to read measurements
+  std::tuple<ClusterContainer, MeasurementContainer, IndexMultimap<ActsFatras::Barcode>> readMeasurements(SimParticleContainer &particles) const;
+
+  /// Helper method to read spacepoints
+  std::pair<SimSpacePointContainer, SimSpacePointContainer> readSpacepoints() const;
+
+  /// Helper method to reprocess particle ids
+  std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>> reprocessParticles(const SimParticleContainer &particles, const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
 
   /// Write handlers
   WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{

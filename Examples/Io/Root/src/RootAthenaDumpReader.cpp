@@ -21,60 +21,30 @@
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
 
-class BarcodeConstructor {
-  /// Particles with barcodes larger then this value are considered to be
-  /// secondary particles
-  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
-  constexpr static int s_maxBarcodeForPrimary = 200000;
-
-  std::uint16_t m_primaryCount = 0;
-  std::uint16_t m_secondaryCount = 0;
-  std::unordered_map<std::uint64_t, ActsFatras::Barcode> m_barcodeMap;
-
-  static std::uint64_t concatInts(int a, int b) {
+namespace {
+  std::uint64_t concatInts(int a, int b) {
     auto va = static_cast<std::uint32_t>(a);
     auto vb = static_cast<std::uint32_t>(b);
     std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
     return value;
   }
 
- public:
-  ActsFatras::Barcode getBarcode(int barcode, int evtnumber) {
-    auto v = concatInts(barcode, evtnumber);
-    auto found = m_barcodeMap.find(v);
-    if (found != m_barcodeMap.end()) {
-      return found->second;
-    }
-
-    auto primary = (barcode < s_maxBarcodeForPrimary);
-
-    ActsFatras::Barcode fBarcode;
-
-    // vertex primary shouldn't be zero for a valid particle
-    fBarcode.setVertexPrimary(1);
-    if (primary) {
-      fBarcode.setVertexSecondary(0);
-      fBarcode.setParticle(m_primaryCount);
-      assert(m_primaryCount < std::numeric_limits<std::uint16_t>::max());
-      m_primaryCount++;
-    } else {
-      fBarcode.setVertexSecondary(1);
-      fBarcode.setParticle(m_secondaryCount);
-      assert(m_primaryCount < std::numeric_limits<std::uint16_t>::max());
-      m_secondaryCount++;
-    }
-
-    m_barcodeMap[v] = fBarcode;
-    return fBarcode;
+  std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
+      return {
+          static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
+          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)
+      };
   }
-};
+}
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
 
-ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
-    const ActsExamples::RootAthenaDumpReader::Config& config,
+namespace ActsExamples {
+
+RootAthenaDumpReader::RootAthenaDumpReader(
+    const RootAthenaDumpReader::Config& config,
     Acts::Logging::Level level)
-    : ActsExamples::IReader(),
+    : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
   if (m_cfg.inputfile.empty()) {
@@ -255,32 +225,16 @@ ActsExamples::RootAthenaDumpReader::RootAthenaDumpReader(
 
 }  // constructor
 
-ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
-  ACTS_DEBUG("Reading event " << ctx.eventNumber);
-  auto entry = ctx.eventNumber;
-  if (entry >= m_events) {
-    ACTS_ERROR("event out of bounds");
-    return ProcessCode::ABORT;
-  }
-
-  std::lock_guard<std::mutex> lock(m_read_mutex);
-
-  m_inputchain->GetEntry(entry);
-
-  // Concat the two 32bit integers from athena to a Fatras barcode
-
+SimParticleContainer RootAthenaDumpReader::readParticles() const {
   SimParticleContainer particles;
-  BarcodeConstructor barcodeConstructor;
 
   for (auto ip = 0; ip < nPartEVT; ++ip) {
     if (m_cfg.onlyPassedParticles && !static_cast<bool>(Part_passed[ip])) {
       continue;
     }
 
-    auto barcode =
-        barcodeConstructor.getBarcode(Part_barcode[ip], Part_event_number[ip]);
-    SimParticle particle(barcode,
+    auto dummyBarcode = concatInts(Part_barcode[ip], Part_event_number[ip]);
+    SimParticle particle(dummyBarcode,
                          static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
     Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} *
@@ -294,24 +248,32 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
 
     particles.insert(particle);
   }
+  
+  ACTS_DEBUG("Created " << particles.size() << " particles");
+  return particles;
+}
 
+std::tuple<ClusterContainer, MeasurementContainer, IndexMultimap<ActsFatras::Barcode>> RootAthenaDumpReader::readMeasurements(SimParticleContainer &particles) const {
   ClusterContainer clusters(nCL);
+  clusters.reserve(nCL);
+
   MeasurementContainer measurements;
   measurements.reserve(nCL);
 
+  const auto prevParticlesSize = particles.size();
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   for (int im = 0; im < nCL; im++) {
     if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
-      ACTS_ERROR("hardware is neither 'PIXEL' or 'STRIP'");
-      return ActsExamples::ProcessCode::ABORT;
+      ACTS_ERROR("hardware is neither 'PIXEL' or 'STRIP', skip particle");
+      continue;
     }
     ACTS_VERBOSE("Cluster " << im << ": " << CLhardware->at(im));
 
     auto type = (CLhardware->at(im) == "PIXEL") ? ePixel : eStrip;
 
     // Make cluster
-    // TODO refactor ActsExamples::Cluster class so it is not so tedious
+    // TODO refactor Cluster class so it is not so tedious
     Cluster cluster;
 
     const auto& etas = CLetas->at(im);
@@ -384,19 +346,34 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     measurements.push_back(createMeasurement(digiPars, sl));
 
     // Create measurement particles map and particles container
-    for (const auto& [subevt, bc] : Acts::zip(CLparticleLink_eventIndex->at(im),
+    for (const auto& [subevt, barcode] : Acts::zip(CLparticleLink_eventIndex->at(im),
                                               CLparticleLink_barcode->at(im))) {
-      auto barcode = barcodeConstructor.getBarcode(bc, subevt);
-      measPartMap.insert(std::pair<Index, ActsFatras::Barcode>{im, barcode});
+      auto dummyBarcode = concatInts(barcode, subevt);
+      // If we don't find the particle, create one with default values
+      if( particles.find(dummyBarcode) == particles.end() ) {
+        ACTS_VERBOSE("Particle with subevt " << subevt << ", barcode " << barcode << "not found, create dummy one");
+        particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
+      }
+      measPartMap.insert(std::pair<Index, ActsFatras::Barcode>{im, dummyBarcode});
     }
   }
 
+  if(particles.size() - prevParticlesSize > 0) {
+    ACTS_DEBUG("Created " << particles.size() - prevParticlesSize << " dummy particles");
+  }
+
+  return {clusters, measurements, measPartMap};
+}
+
+std::pair<SimSpacePointContainer, SimSpacePointContainer> RootAthenaDumpReader::readSpacepoints() const {
   // Prepare pixel space points
   SimSpacePointContainer pixelSpacePoints;
+  pixelSpacePoints.reserve(nSP);
 
   // Prepare space-point container
   // They contain both pixel and SCT space points
   SimSpacePointContainer spacePoints;
+  spacePoints.reserve(nSP);
 
   // Loop on space points
   std::size_t skippedSpacePoints = 0;
@@ -454,7 +431,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
     spacePoints.push_back(sp);
   }
 
-  ACTS_DEBUG("Created " << particles.size() << " particles");
   if (m_cfg.skipOverlapSPsEta || m_cfg.skipOverlapSPsPhi) {
     ACTS_DEBUG("Skipped " << skippedSpacePoints
                           << " because of eta/phi overlaps");
@@ -462,6 +438,81 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
+
+  return {spacePoints, pixelSpacePoints};
+}
+
+std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>> RootAthenaDumpReader::reprocessParticles(
+    const SimParticleContainer &particles, const IndexMultimap<ActsFatras::Barcode> &measPartMap
+) const {
+  SimParticleContainer newParticles;
+  IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
+
+  const auto partMeasMap = invertIndexMultimap(measPartMap);
+
+  std::uint16_t primaryCount = 0;
+  std::uint16_t secondaryCount = 0;
+
+  for(const auto &particle : particles) {
+    const auto [begin, end] = partMeasMap.equal_range(particle.particleId());
+
+    if( begin == end ) {
+      ACTS_VERBOSE("Particle " << particle.particleId().value() << " has no measurements");
+      continue;
+    }
+
+    auto [athBarcode, athSubevent] = splitInt(particle.particleId().value());
+    auto primary = (athBarcode < s_maxBarcodeForPrimary);
+
+    ActsFatras::Barcode fatrasBarcode;
+
+    // vertex primary shouldn't be zero for a valid particle
+    fatrasBarcode.setVertexPrimary(1);
+    if (primary) {
+      fatrasBarcode.setVertexSecondary(0);
+      fatrasBarcode.setParticle(primaryCount);
+      assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
+      primaryCount++;
+    } else {
+      fatrasBarcode.setVertexSecondary(1);
+      fatrasBarcode.setParticle(secondaryCount);
+      assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
+      secondaryCount++;
+    }
+
+    auto newParticle = particle.withParticleId(fatrasBarcode);
+    newParticles.insert(newParticle);
+
+    for(auto it=begin; it != end; ++it) {
+      newMeasPartMap.insert(std::pair<Index, ActsFatras::Barcode>{it->second, fatrasBarcode});
+    }
+  }
+
+  ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of " << particles.size() << " remain");
+
+  return {newParticles, newMeasPartMap};
+}
+
+ProcessCode RootAthenaDumpReader::read(
+    const AlgorithmContext& ctx) {
+  ACTS_DEBUG("Reading event " << ctx.eventNumber);
+  auto entry = ctx.eventNumber;
+  if (entry >= m_events) {
+    ACTS_ERROR("event out of bounds");
+    return ProcessCode::ABORT;
+  }
+
+  std::lock_guard<std::mutex> lock(m_read_mutex);
+
+  m_inputchain->GetEntry(entry);
+
+  auto candidateParticles = readParticles();
+
+  auto [clusters, measurements, candidateMeasPartMap] = readMeasurements(candidateParticles);
+
+  auto [spacePoints, pixelSpacePoints] = readSpacepoints();
+
+  auto [particles, measPartMap] = reprocessParticles(candidateParticles, candidateMeasPartMap);
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
   m_outputSpacePoints(ctx, std::move(spacePoints));
@@ -471,4 +522,5 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaDumpReader::read(
   m_outputMeasurements(ctx, std::move(measurements));
 
   return ProcessCode::SUCCESS;
+}
 }
