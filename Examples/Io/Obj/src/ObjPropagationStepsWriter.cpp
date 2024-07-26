@@ -12,10 +12,10 @@ namespace ActsExamples {
 
 ObjPropagationStepsWriter::ObjPropagationStepsWriter(const Config& cfg,
                                                      Acts::Logging::Level level)
-    : WriterT<PropagationSummaries>(cfg.inputSummaryCollection,
-                                    "ObjPropagationStepsWriter", level),
+    : WriterT<PropagationSummaries>(cfg.collection, "ObjPropagationStepsWriter",
+                                    level),
       m_cfg(cfg) {
-  if (m_cfg.inputSummaryCollection.empty()) {
+  if (m_cfg.collection.empty()) {
     throw std::invalid_argument("Missing input collection");
   }
 }

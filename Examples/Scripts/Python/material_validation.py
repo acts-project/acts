@@ -57,7 +57,8 @@ def runMaterialValidation(
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
-        sterileLogger=False,
+        sterileLogger=True,
+        outputSummaryCollection="propagation_summary",
         recordMaterialInteractions=True,
         inputTrackParameters="start_parameters",
         outputPropagationSteps="propagation_steps",

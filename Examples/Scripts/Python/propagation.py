@@ -58,7 +58,6 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         level=acts.logging.INFO,
         ntests=1000,
         sterileLogger=True,
-        inputTrackParameters="start_parameters",
         outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)
@@ -79,7 +78,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         acts.examples.RootPropagationSummaryWriter(
             level=acts.logging.INFO,
             collection="propagation_summary",
-            filePath=outputDir + "/propagation_summary.root",
+            filePath=outputDir + "/propagation_steps.root",
         )
     )
 
