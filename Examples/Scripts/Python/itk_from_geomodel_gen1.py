@@ -209,46 +209,30 @@ class ItkBuilder:
             rmid2 = 260
 
             # Tilted part of endcaps
-            tiltedVols = []
+            vols = []
 
-            zmax_tilted = 1060
-            halfz_tilted = 0.5 * (zmax_tilted - zmax_barrel)
-            zshift_tilted = sign * (zmax_barrel + halfz_tilted)
+            halfz = 0.5 * (zmax_ec - zmax_barrel)
+            zshift = sign * (zmax_barrel + halfz)
 
-            tiltedLayers1 = [ self.layerCreator.discLayer(self.gctx, endcap[3][eta].flatten(), 1, 1) for eta in range(6) ]
-            tiltedBounds1 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmid1, halfz=halfz_tilted)
-            tiltedVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, tiltedLayers1, tiltedBounds1, zshift_tilted,  f"PixelEndcap{ec}Tilted1"))
+            layers1 = \
+                [ self.layerCreator.discLayer(self.gctx, endcap[3][eta].flatten(), 1, 1) for eta in range(6) ] + \
+                [ self.layerCreator.discLayer(self.gctx, endcap[4][eta].flatten(), 1, 1) for eta in range(11) ]
+            bounds1 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmid1, halfz=halfz)
+            vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, layers1, bounds1, zshift, f"PixelOuterEndcap{ec}1"))
 
-            tiltedLayers2 = [ self.layerCreator.discLayer(self.gctx, endcap[5][eta].flatten(), 1, 1) for eta in range(8) ]
-            tiltedBounds2 = acts.CylinderVolumeBounds(rmin=rmid1, rmax=rmid2, halfz=halfz_tilted)
-            tiltedVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, tiltedLayers2, tiltedBounds2, zshift_tilted,  f"PixelEndcap{ec}Tilted2"))
+            layers2 = \
+                [ self.layerCreator.discLayer(self.gctx, endcap[5][eta].flatten(), 1, 1) for eta in range(8) ] + \
+                [ self.layerCreator.discLayer(self.gctx, endcap[6][eta].flatten(), 1, 1) for eta in range(8) ]
+            bounds2 = acts.CylinderVolumeBounds(rmin=rmid1, rmax=rmid2, halfz=halfz)
+            vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, layers2, bounds2, zshift,  f"PixelOuterEndcap{ec}2"))
 
-            tiltedLayers3 = [ self.layerCreator.discLayer(self.gctx, endcap[7][eta].flatten(), 1, 1) for eta in range(9) ]
-            tiltedBounds3 = acts.CylinderVolumeBounds(rmin=rmid2, rmax=rmax, halfz=halfz_tilted)
-            tiltedVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, tiltedLayers3, tiltedBounds3, zshift_tilted,  f"PixelEndcap{ec}Tilted3"))
+            layers3 = \
+                [ self.layerCreator.discLayer(self.gctx, endcap[7][eta].flatten(), 1, 1) for eta in range(9) ] + \
+                [ self.layerCreator.discLayer(self.gctx, endcap[8][eta].flatten(), 1, 1) for eta in range(9) ]
+            bounds3 = acts.CylinderVolumeBounds(rmin=rmid2, rmax=rmax, halfz=halfz)
+            vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, layers3, bounds3, zshift,  f"PixelOuterEndcap{ec}3"))
 
-            pixel2Vols.append(self.cylVolHelper.createContainerTrackingVolume(self.gctx, tiltedVols))
-
-            # Outer part of endcaps
-            halfz_outer = 0.5 * (zmax_ec - zmax_tilted)
-            zshift_outer = sign * (zmax_tilted + halfz_outer)
-
-            outerVols = []
-
-            tiltedLayers1 = [ self.layerCreator.discLayer(self.gctx, endcap[4][eta].flatten(), 1, 1) for eta in range(11) ]
-            tiltedBounds1 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmid1, halfz=halfz_outer)
-            outerVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, tiltedLayers1, tiltedBounds1, zshift_outer,  f"PixelEndcap{ec}Outer1"))
-
-            tiltedLayers2 = [ self.layerCreator.discLayer(self.gctx, endcap[6][eta].flatten(), 1, 1) for eta in range(8) ]
-            tiltedBounds2 = acts.CylinderVolumeBounds(rmin=rmid1, rmax=rmid2, halfz=halfz_outer)
-            outerVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, tiltedLayers2, tiltedBounds2, zshift_outer,  f"PixelEndcap{ec}Outer2"))
-
-            tiltedLayers3 = [ self.layerCreator.discLayer(self.gctx, endcap[8][eta].flatten(), 1, 1) for eta in range(9) ]
-            tiltedBounds3 = acts.CylinderVolumeBounds(rmin=rmid2, rmax=rmax, halfz=halfz_outer)
-            outerVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, tiltedLayers3, tiltedBounds3, zshift_outer,  f"PixelEndcap{ec}Outer3"))
-
-            outerPart = self.cylVolHelper.createContainerTrackingVolume(self.gctx, outerVols)
-            pixel2Vols.append(self.cylVolHelper.createContainerTrackingVolume(self.gctx, outerVols))
+            pixel2Vols.append(self.cylVolHelper.createContainerTrackingVolume(self.gctx, vols))
 
         return self.cylVolHelper.createContainerTrackingVolume(self.gctx, pixel2Vols)
 
@@ -328,12 +312,12 @@ def main():
     ]
     gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
-    gmFactoryOptions.queries = "GeoModelXML"
+    gmFactoryOptions.queries = ["GeoModelXML",]
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
 
     gmFactory.construct(gmFactoryCache, gctx, gmTree, gmFactoryOptions)
 
-    itkBuilder = ItkBuilder(gmFactoryCache, gctx)
+    itkBuilder = ItkBuilder(gmFactoryCache, gctx, logLevel)
 
     # Uncomment this to build individual parts of the detector
     # itkBuilder.buildInnerPixel()
