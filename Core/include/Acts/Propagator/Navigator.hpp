@@ -198,7 +198,6 @@ class Navigator {
       currentLayer = nullptr;
       currentSurface = nullptr;
 
-      startLayerResolved = false;
       navigationStage = Stage::undefined;
     }
   };
