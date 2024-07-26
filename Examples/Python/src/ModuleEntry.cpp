@@ -51,6 +51,7 @@ void addEventData(Context& ctx);
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
+void addGeometryBuildingGen1(Context &ctx);
 void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
@@ -115,6 +116,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addEventData(ctx);
 
   addPropagation(ctx);
+  addGeometryBuildingGen1(ctx);
   addGeometry(ctx);
   addExperimentalGeometry(ctx);
 

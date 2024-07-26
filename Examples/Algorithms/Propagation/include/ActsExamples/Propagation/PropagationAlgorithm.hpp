@@ -30,6 +30,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/EventData/Propagation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -47,19 +48,6 @@ namespace ActsExamples {
 
 class PropagatorInterface;
 struct AlgorithmContext;
-
-/// Using some short hands for Recorded Material
-using RecordedMaterial = Acts::MaterialInteractor::result_type;
-
-/// And recorded material track
-/// - this is start:  position, start momentum
-///   and the Recorded material
-using RecordedMaterialTrack =
-    std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
-
-/// Finally the output of the propagation test
-using PropagationOutput =
-    std::pair<std::vector<Acts::detail::Step>, RecordedMaterial>;
 
 /// @brief this test algorithm performs test propagation
 /// within the Acts::Propagator

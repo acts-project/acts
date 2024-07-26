@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
 import os
 
 import acts
@@ -10,7 +11,7 @@ from acts.examples.odd import getOpenDataDetectorDirectory
 u = acts.UnitConstants
 
 
-def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
+def runPropagation(trackingGeometry, field, outputDir=None, s=None, decorators=[]):
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
 
     for d in decorators:
@@ -32,28 +33,31 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         level=acts.logging.INFO,
         randomNumberSvc=rnd,
         ntests=1000,
-        sterileLogger=True,
+        sterileLogger=False,
         propagationStepCollection="propagation-steps",
     )
 
     s.addAlgorithm(alg)
 
     # Output
-    s.addWriter(
-        acts.examples.ObjPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation-steps",
-            outputDir=outputDir + "/obj",
-        )
-    )
+    if outputDir is not None:
+        Path(outputDir).mkdir(exist_ok=True, parents=True)
 
-    s.addWriter(
-        acts.examples.RootPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection="propagation-steps",
-            filePath=outputDir + "/propagation_steps.root",
+        # s.addWriter(
+        #     acts.examples.ObjPropagationStepsWriter(
+        #         level=acts.logging.INFO,
+        #         collection="propagation-steps",
+        #         outputDir=outputDir + "/obj",
+        #     )
+        # )
+
+        s.addWriter(
+            acts.examples.RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation-steps",
+                filePath=outputDir + "/propagation_steps.root",
+            )
         )
-    )
 
     return s
 

@@ -105,7 +105,7 @@ void addOutput(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::ObjPropagationStepsWriter<Acts::detail::Step>, mex,
+      ActsExamples::ObjPropagationStepsWriter, mex,
       "ObjPropagationStepsWriter", collection, outputDir, outputScalor,
       outputPrecision);
 

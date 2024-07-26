@@ -86,7 +86,16 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @return to the Geant4 physical volume
   const GeoFullPhysVol& physicalVolume() const;
 
+  /// Get the name of the logical volume
+  const std::string &logVolName() const;
+
+  /// Get/Set a custom name (e.g. database entry)
+  const std::string &databaseEntryName() const { return m_entryName; };
+  void setDatabaseEntryName(const std::string &n) { m_entryName = n; };
+
  private:
+  std::string m_entryName;
+
   /// Attach a surface
   ///
   /// @param surface The surface to attach

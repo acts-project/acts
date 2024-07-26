@@ -89,6 +89,7 @@ class RootPropagationStepsWriter
   std::vector<float> m_x;          ///< global x
   std::vector<float> m_y;          ///< global y
   std::vector<float> m_z;          ///< global z
+  std::vector<float> m_r;          ///< global r - hypot(x,y)
   std::vector<float> m_dx;         ///< global direction x
   std::vector<float> m_dy;         ///< global direction y
   std::vector<float> m_dz;         ///< global direction z

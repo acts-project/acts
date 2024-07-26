@@ -7,8 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
-
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <GeoModelKernel/GeoFullPhysVol.h>
 
 #include <utility>
 
@@ -39,4 +40,8 @@ Acts::ActsScalar Acts::GeoModelDetectorElement::thickness() const {
 
 const GeoFullPhysVol& Acts::GeoModelDetectorElement::physicalVolume() const {
   return *m_geoPhysVol;
+}
+
+const std::string &Acts::GeoModelDetectorElement::logVolName() const {
+  return m_geoPhysVol->getLogVol()->getName();
 }
