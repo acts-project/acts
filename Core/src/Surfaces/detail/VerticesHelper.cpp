@@ -22,7 +22,7 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   }
 
   // First check that no reference phi is outside the range
-  for (const auto& phiRef : phiRefs) {
+  for (ActsScalar phiRef : phiRefs) {
     if (phiRef < phiMin || phiRef > phiMax) {
       throw std::invalid_argument(
           "VerticesHelper::phiSegments ... Reference phi is outside the range "
