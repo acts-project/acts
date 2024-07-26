@@ -29,7 +29,6 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
           "of the segment");
     }
   }
-  // Bail out if minSegmens is smaller 4 or not a multiple of 4
   if (quarterSegments == 0u) {
     throw std::invalid_argument(
         "VerticesHelper::phiSegments ... Number of segments must be larger "
