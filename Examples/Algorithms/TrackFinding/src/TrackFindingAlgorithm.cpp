@@ -560,12 +560,20 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                   (*std::next(secondTrackCopy.trackStatesReversed().begin()))
                       .index();
 
-              trackCandidate.parameters() = secondTrackCopy.parameters();
-              trackCandidate.covariance() = secondTrackCopy.covariance();
-              trackCandidate.setReferenceSurface(
-                  secondTrackCopy.referenceSurface().getSharedPtr());
+              // finalize the track candidate
 
-              if (m_cfg.reverseSearch) {
+              if (!m_cfg.reverseSearch) {
+                // these parameters are already extrapolated by the CKF and have
+                // the optimal resolution. note that we did not smooth all the
+                // states.
+
+                trackCandidate.parameters() = secondTrackCopy.parameters();
+                trackCandidate.covariance() = secondTrackCopy.covariance();
+                trackCandidate.setReferenceSurface(
+                    secondTrackCopy.referenceSurface().getSharedPtr());
+              } else if (m_cfg.reverseSearch) {
+                // smooth the full track and extrapolate to the reference
+
                 auto secondSmoothingResult =
                     Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
                 if (!secondSmoothingResult.ok()) {
@@ -578,6 +586,20 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
                 }
 
                 trackCandidate.reverseTrackStates(true);
+
+                auto secondExtrapolationResult =
+                    Acts::extrapolateTrackToReferenceSurface(
+                        trackCandidate, *pSurface, extrapolator,
+                        extrapolationOptions, m_cfg.extrapolationStrategy,
+                        logger());
+                if (!secondExtrapolationResult.ok()) {
+                  m_nFailedExtrapolation++;
+                  ACTS_ERROR("Second extrapolation for seed "
+                             << iSeed << " and track " << secondTrack.index()
+                             << " failed with error "
+                             << secondExtrapolationResult.error());
+                  continue;
+                }
               }
 
               Acts::calculateTrackQuantities(trackCandidate);
