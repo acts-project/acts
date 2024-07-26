@@ -157,9 +157,6 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
-  std::vector<Polyhedron::FaceType> faces;
-  std::vector<Polyhedron::FaceType> triangularMesh;
-
   // Understand the disc
   bool fullDisc = m_bounds->coversFullAzimuth();
   bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
