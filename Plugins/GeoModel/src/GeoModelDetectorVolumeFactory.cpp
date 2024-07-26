@@ -48,7 +48,9 @@ std::string recType(const GeoShape &gshape) {
 }  // namespace
 
 namespace Acts {
-Acts::GeoModelDetectorVolumeFactory::GeoModelDetectorVolumeFactory(const Config& cfg, std::unique_ptr<const Logger> mlogger) : m_cfg(cfg), m_logger(std::move(mlogger)) {}
+Acts::GeoModelDetectorVolumeFactory::GeoModelDetectorVolumeFactory(
+    const Config& cfg, std::unique_ptr<const Logger> mlogger)
+    : m_cfg(cfg), m_logger(std::move(mlogger)) {}
   
 
 void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const GeometryContext& gctx, const GeoModelTree& geoModelTree, const Options& options){
@@ -56,7 +58,7 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
     throw std::invalid_argument("GeoModelTree has no GeoModelReader");
   }
   for (const auto &q : options.queries) {
-    //ACTS_VERBOSE("Constructing detector elements for query " << q);//TODO put back
+    ACTS_VERBOSE("Constructing detector elements for query " << q);
     //load data from database according to querie (Muon)
     auto qFPV = geoModelTree.geoReader->getPublishedNodes<std::string, GeoFullPhysVol *>(q);
 
@@ -121,7 +123,6 @@ void Acts::GeoModelDetectorVolumeFactory::construct(Cache& cache, const Geometry
           for(int j=0;j<subsubvolumes.size();j++){
             const Transform3 &subtransform =transform * subsubvolumes[j].transform;
             //convert sensitive surfaces
-            //cache.sensitiveSurfaces.push_back(sensitives);
             convertSensitive(subsubvolumes[j].volume, subtransform, sensitives);
             cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(), sensitives.begin(), sensitives.end());
           }
@@ -156,14 +157,14 @@ void Acts::GeoModelDetectorVolumeFactory::convertSensitive(PVConstLink geoPV, co
     sensitives.push_back(converted.value());
     const auto &[el, sf] = converted.value();
 
-    //ACTS_VERBOSE("(successfully converted: " << name << " / " << recType(*shape) << " / " << logVol->getMaterial()->getName() << ")");
+    ACTS_VERBOSE("(successfully converted: " << name << " / " << recType(*shape) << " / " << logVol->getMaterial()->getName() << ")");
 
     if (!el || !sf) {
       throw std::runtime_error("The Detector Element or the Surface is nllptr");
     }
     return;
   }
-  //ACTS_ERROR(name << " / " << recType(*shape)<< ") could not be converted by any converter");
+  ACTS_ERROR(name << " / " << recType(*shape)<< ") could not be converted by any converter");
 }
 
 }

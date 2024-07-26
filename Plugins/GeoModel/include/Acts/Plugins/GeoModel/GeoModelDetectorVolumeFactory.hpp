@@ -5,6 +5,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "GeoModelKernel/GeoDefinitions.h"
+#include "Acts/Utilities/Logger.hpp"
 
 class GeoShape;
 struct GeoModelTree;
@@ -45,5 +46,7 @@ class GeoModelDetectorVolumeFactory {
   std::unique_ptr<const Logger> m_logger;
   std::string name;
   Config m_cfg;
+
+   const Logger& logger() const { return *m_logger; }
 };
 }
