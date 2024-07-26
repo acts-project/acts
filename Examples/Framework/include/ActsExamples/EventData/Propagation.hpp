@@ -61,4 +61,4 @@ using RecordedMaterialTrack =
 using PropagationOutput =
     std::pair<std::vector<Acts::detail::Step>, RecordedMaterial>;
 
-}
+}  // namespace ActsExamples

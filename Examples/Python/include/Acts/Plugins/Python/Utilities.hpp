@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -69,9 +69,7 @@ class PythonLogger {
     m_logger = Acts::getDefaultLogger(m_name, level);
   }
 
-  const Logger & logger() const {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
  private:
   std::string m_name;

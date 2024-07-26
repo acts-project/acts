@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "ActsExamples/EventData/Propagation.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/EventData/Propagation.hpp"
 
 #include <fstream>
 
@@ -65,9 +65,9 @@ class ObjPropagationStepsWriter
  protected:
   /// This implementation holds the actual writing method
   /// and is called by the WriterT<>::write interface
-  ProcessCode writeT(
-      const AlgorithmContext& context,
-      const std::vector<std::vector<Acts::detail::Step>>& stepCollection) override {
+  ProcessCode writeT(const AlgorithmContext& context,
+                     const std::vector<std::vector<Acts::detail::Step>>&
+                         stepCollection) override {
     // open per-event file
     std::string path = ActsExamples::perEventFilepath(
         m_cfg.outputDir, "propagation-steps.obj", context.eventNumber);

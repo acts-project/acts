@@ -7,11 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <GeoModelKernel/GeoFullPhysVol.h>
-
 #include <utility>
+
+#include <GeoModelKernel/GeoFullPhysVol.h>
 
 Acts::GeoModelDetectorElement::GeoModelDetectorElement(
     const GeoFullPhysVol& geoPhysVol, std::shared_ptr<Surface> surface,
@@ -42,6 +43,6 @@ const GeoFullPhysVol& Acts::GeoModelDetectorElement::physicalVolume() const {
   return *m_geoPhysVol;
 }
 
-const std::string &Acts::GeoModelDetectorElement::logVolName() const {
+const std::string& Acts::GeoModelDetectorElement::logVolName() const {
   return m_geoPhysVol->getLogVol()->getName();
 }

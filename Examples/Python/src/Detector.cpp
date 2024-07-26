@@ -43,9 +43,9 @@ void addDetector(Context& ctx) {
         .def("name", &IContextDecorator::name);
   }
 
-    py::enum_<Acts::BinningType>(m, "BinningType")
-        .value("equidistant", Acts::BinningType::equidistant)
-        .value("arbitrary", Acts::BinningType::arbitrary);
+  py::enum_<Acts::BinningType>(m, "BinningType")
+      .value("equidistant", Acts::BinningType::equidistant)
+      .value("arbitrary", Acts::BinningType::arbitrary);
 
   {
     using Config = GenericDetector::Config;

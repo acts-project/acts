@@ -51,7 +51,7 @@ void addEventData(Context& ctx);
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
-void addGeometryBuildingGen1(Context &ctx);
+void addGeometryBuildingGen1(Context& ctx);
 void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);

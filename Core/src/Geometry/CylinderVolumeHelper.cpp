@@ -291,7 +291,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   auto lastVolume = volumes.end();
 
   for (std::size_t ivol = 0; firstVolume != lastVolume; ++firstVolume, ++ivol) {
-    if( *firstVolume == nullptr ) {
+    if (*firstVolume == nullptr) {
       ACTS_ERROR("Volume " << ivol << " is nullptr, return nullptr");
       return nullptr;
     }
