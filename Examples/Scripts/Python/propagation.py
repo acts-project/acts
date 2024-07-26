@@ -137,5 +137,5 @@ if "__main__" == __name__:
     # )
 
     runPropagation(
-        trackingGeometry, field, os.getcwd(), decorators=contextDecorators
+        trackingGeometry, field, os.getcwd() + "/propagation", decorators=contextDecorators
     ).run()

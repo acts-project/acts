@@ -59,10 +59,10 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
       const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
-  ~RootPropagationSummaryWriter() final;
+  ~RootPropagationSummaryWriter() override;
 
   /// End-of-run hook
-  ProcessCode finalize() final;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -74,7 +74,7 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   /// @param context The Algorithm context with per event information
   /// @param summaries is the data to be written out
   ProcessCode writeT(const AlgorithmContext& context,
-                     const PropagationSummaries& summaries) final;
+                     const PropagationSummaries& summaries) override;
 
  private:
   /// the configuration object
