@@ -15,6 +15,7 @@ from acts import examples
 
 from propagation import runPropagation
 
+
 def merge(a, b):
     if isinstance(a, list) and isinstance(b, list):
         return a + b
@@ -40,26 +41,29 @@ def merge(a, b):
 
 
 class HierarchySetting:
-    '''
+    """
     This class will be passed to all child hierarchies by reference (compared to a single bool, that will be passed by value)
     This way, we can manipulate all child trees with one call
-    '''
+    """
+
     allow_insertion = True
 
+
 class Hierarchy(dict):
-    '''
+    """
     Small utility class, that allows to easily construct fixed depth hierarchies
     After maxlevel is reached, a list is inserted instead of another Hierarchy
-    '''
-    def __init__(self, level, max_level, settings = HierarchySetting()):
-        self.level= level
+    """
+
+    def __init__(self, level, max_level, settings=HierarchySetting()):
+        self.level = level
         self.max_level = max_level
         self.settings = settings
 
     def __getitem__(self, key):
         if key is None:
             assert self.level < self.max_level
-            broadcast = Hierarchy(self.level+1, self.max_level, self.settings)
+            broadcast = Hierarchy(self.level + 1, self.max_level, self.settings)
             for k in self.keys():
                 broadcast = merge(broadcast, self[k])
 
@@ -67,7 +71,7 @@ class Hierarchy(dict):
 
         if isinstance(key, list):
             assert self.level < self.max_level
-            broadcast = Hierarchy(self.level+1, self.max_level, self.settings)
+            broadcast = Hierarchy(self.level + 1, self.max_level, self.settings)
             for k in key:
                 broadcast = merge(broadcast, self[k])
 
@@ -75,16 +79,16 @@ class Hierarchy(dict):
 
         if self.settings.allow_insertion and not key in self:
             if self.level < self.max_level:
-                self[key] = Hierarchy(self.level+1, self.max_level, self.settings)
+                self[key] = Hierarchy(self.level + 1, self.max_level, self.settings)
             else:
                 self[key] = []
 
         return super().__getitem__(key)
 
     def flatten(self):
-        '''
+        """
         Flatten out the hierarchy at a given level
-        '''
+        """
         l = []
         if self.level < self.max_level:
             for key in self.keys():
@@ -94,7 +98,6 @@ class Hierarchy(dict):
                 l += self[key]
 
         return l
-
 
 
 class ItkBuilder:
@@ -116,19 +119,21 @@ class ItkBuilder:
                 barrel_endcap = int(match[1])
                 hardware = "PIXEL"
                 eta = int(match[2])
-                layer_wheel =int(match[3])
+                layer_wheel = int(match[3])
                 phi_module = int(match[4])
             elif match := re.match(stripPattern, detEl.databaseEntryName()):
                 barrel_endcap = int(match[1])
                 hardware = "STRIP"
                 eta = int(match[2])
-                layer_wheel =int(match[3])
+                layer_wheel = int(match[3])
                 phi_module = int(match[4])
             else:
                 self.error(f"Could not match {detEl.databaseEntryName()}")
                 continue
 
-            self.index_hierarchy[hardware][barrel_endcap][layer_wheel][eta][phi_module].append(gmSurfaces[surfaceIdx])
+            self.index_hierarchy[hardware][barrel_endcap][layer_wheel][eta][
+                phi_module
+            ].append(gmSurfaces[surfaceIdx])
 
         self.index_hierarchy.settings.allow_insertion = False
         self.gctx = gctx
@@ -140,7 +145,9 @@ class ItkBuilder:
         cylVolHelperCfg = acts.CylinderVolumeHelper.Config()
         cylVolHelperCfg.layerArrayCreator = acts.LayerArrayCreator()
         cylVolHelperCfg.trackingVolumeArrayCreator = acts.TrackingVolumeArrayCreator()
-        self.cylVolHelper = acts.CylinderVolumeHelper(cylVolHelperCfg, acts.logging.INFO)
+        self.cylVolHelper = acts.CylinderVolumeHelper(
+            cylVolHelperCfg, acts.logging.INFO
+        )
 
         self.rPixInner = 30
         self.rPixOuter = 130
@@ -165,9 +172,22 @@ class ItkBuilder:
 
         pixel1Vols = []
 
-        pixelBarrelBounds1 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmax, halfz=zmax_barrel)
-        pixelBarrelLayers1 = [ self.layerCreator.cylinderLayer(self.gctx, pixelBarrel[lid].flatten(), 1, 1) for lid in [0,1] ]
-        pixel1Vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, pixelBarrelLayers1, pixelBarrelBounds1, 0.0, "PixelBarrelInner"))
+        pixelBarrelBounds1 = acts.CylinderVolumeBounds(
+            rmin=rmin, rmax=rmax, halfz=zmax_barrel
+        )
+        pixelBarrelLayers1 = [
+            self.layerCreator.cylinderLayer(self.gctx, pixelBarrel[lid].flatten(), 1, 1)
+            for lid in [0, 1]
+        ]
+        pixel1Vols.append(
+            self.cylVolHelper.createTrackingVolume(
+                self.gctx,
+                pixelBarrelLayers1,
+                pixelBarrelBounds1,
+                0.0,
+                "PixelBarrelInner",
+            )
+        )
 
         for ec in [-2, 2]:
             self.info(f"Build inner pixel endcaps {ec}")
@@ -177,11 +197,29 @@ class ItkBuilder:
             halfz_ec = 0.5 * (zmax_ec - zmax_barrel)
             shift = sign * (zmax_barrel + halfz_ec)
 
-            pixelEndcapBounds1 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmax, halfz=halfz_ec)
-            pixelEndcapLayers1 = \
-                [ self.layerCreator.discLayer(self.gctx, pixelEndcap[[0,2]][eta].flatten(), 1, 1) for eta in range(23) ] + \
-                [ self.layerCreator.discLayer(self.gctx, pixelEndcap[1][eta].flatten(), 1, 1) for eta in range(6)]
-            pixel1Vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, pixelEndcapLayers1, pixelEndcapBounds1, shift, f"PixelEndcap{ec}Inner"))
+            pixelEndcapBounds1 = acts.CylinderVolumeBounds(
+                rmin=rmin, rmax=rmax, halfz=halfz_ec
+            )
+            pixelEndcapLayers1 = [
+                self.layerCreator.discLayer(
+                    self.gctx, pixelEndcap[[0, 2]][eta].flatten(), 1, 1
+                )
+                for eta in range(23)
+            ] + [
+                self.layerCreator.discLayer(
+                    self.gctx, pixelEndcap[1][eta].flatten(), 1, 1
+                )
+                for eta in range(6)
+            ]
+            pixel1Vols.append(
+                self.cylVolHelper.createTrackingVolume(
+                    self.gctx,
+                    pixelEndcapLayers1,
+                    pixelEndcapBounds1,
+                    shift,
+                    f"PixelEndcap{ec}Inner",
+                )
+            )
 
         return self.cylVolHelper.createContainerTrackingVolume(self.gctx, pixel1Vols)
 
@@ -195,9 +233,24 @@ class ItkBuilder:
 
         self.info("Build outer pixel barrel")
 
-        pixelBarrelBounds2 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmax, halfz=zmax_barrel)
-        pixelBarrelLayers2 = [ self.layerCreator.cylinderLayer(self.gctx, self.index_hierarchy["PIXEL"][0][lid].flatten(), 1, 1) for lid in [2,3,4] ]
-        pixel2Vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, pixelBarrelLayers2, pixelBarrelBounds2, 0.0, "PixelBarrelOuter"))
+        pixelBarrelBounds2 = acts.CylinderVolumeBounds(
+            rmin=rmin, rmax=rmax, halfz=zmax_barrel
+        )
+        pixelBarrelLayers2 = [
+            self.layerCreator.cylinderLayer(
+                self.gctx, self.index_hierarchy["PIXEL"][0][lid].flatten(), 1, 1
+            )
+            for lid in [2, 3, 4]
+        ]
+        pixel2Vols.append(
+            self.cylVolHelper.createTrackingVolume(
+                self.gctx,
+                pixelBarrelLayers2,
+                pixelBarrelBounds2,
+                0.0,
+                "PixelBarrelOuter",
+            )
+        )
 
         for ec in [-2, 2]:
             self.info(f"Build outer pixel endcaps {ec}")
@@ -214,28 +267,53 @@ class ItkBuilder:
             halfz = 0.5 * (zmax_ec - zmax_barrel)
             zshift = sign * (zmax_barrel + halfz)
 
-            layers1 = \
-                [ self.layerCreator.discLayer(self.gctx, endcap[3][eta].flatten(), 1, 1) for eta in range(6) ] + \
-                [ self.layerCreator.discLayer(self.gctx, endcap[4][eta].flatten(), 1, 1) for eta in range(11) ]
+            layers1 = [
+                self.layerCreator.discLayer(self.gctx, endcap[3][eta].flatten(), 1, 1)
+                for eta in range(6)
+            ] + [
+                self.layerCreator.discLayer(self.gctx, endcap[4][eta].flatten(), 1, 1)
+                for eta in range(11)
+            ]
             bounds1 = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmid1, halfz=halfz)
-            vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, layers1, bounds1, zshift, f"PixelOuterEndcap{ec}1"))
+            vols.append(
+                self.cylVolHelper.createTrackingVolume(
+                    self.gctx, layers1, bounds1, zshift, f"PixelOuterEndcap{ec}1"
+                )
+            )
 
-            layers2 = \
-                [ self.layerCreator.discLayer(self.gctx, endcap[5][eta].flatten(), 1, 1) for eta in range(8) ] + \
-                [ self.layerCreator.discLayer(self.gctx, endcap[6][eta].flatten(), 1, 1) for eta in range(8) ]
+            layers2 = [
+                self.layerCreator.discLayer(self.gctx, endcap[5][eta].flatten(), 1, 1)
+                for eta in range(8)
+            ] + [
+                self.layerCreator.discLayer(self.gctx, endcap[6][eta].flatten(), 1, 1)
+                for eta in range(8)
+            ]
             bounds2 = acts.CylinderVolumeBounds(rmin=rmid1, rmax=rmid2, halfz=halfz)
-            vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, layers2, bounds2, zshift,  f"PixelOuterEndcap{ec}2"))
+            vols.append(
+                self.cylVolHelper.createTrackingVolume(
+                    self.gctx, layers2, bounds2, zshift, f"PixelOuterEndcap{ec}2"
+                )
+            )
 
-            layers3 = \
-                [ self.layerCreator.discLayer(self.gctx, endcap[7][eta].flatten(), 1, 1) for eta in range(9) ] + \
-                [ self.layerCreator.discLayer(self.gctx, endcap[8][eta].flatten(), 1, 1) for eta in range(9) ]
+            layers3 = [
+                self.layerCreator.discLayer(self.gctx, endcap[7][eta].flatten(), 1, 1)
+                for eta in range(9)
+            ] + [
+                self.layerCreator.discLayer(self.gctx, endcap[8][eta].flatten(), 1, 1)
+                for eta in range(9)
+            ]
             bounds3 = acts.CylinderVolumeBounds(rmin=rmid2, rmax=rmax, halfz=halfz)
-            vols.append(self.cylVolHelper.createTrackingVolume(self.gctx, layers3, bounds3, zshift,  f"PixelOuterEndcap{ec}3"))
+            vols.append(
+                self.cylVolHelper.createTrackingVolume(
+                    self.gctx, layers3, bounds3, zshift, f"PixelOuterEndcap{ec}3"
+                )
+            )
 
-            pixel2Vols.append(self.cylVolHelper.createContainerTrackingVolume(self.gctx, vols))
+            pixel2Vols.append(
+                self.cylVolHelper.createContainerTrackingVolume(self.gctx, vols)
+            )
 
         return self.cylVolHelper.createContainerTrackingVolume(self.gctx, pixel2Vols)
-
 
     def buildStrips(self):
         self.info("Build barrel strips")
@@ -249,9 +327,18 @@ class ItkBuilder:
 
         stripVols = []
 
-        stripBarrelBounds = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmax, halfz=zmax_barrel)
-        stripBarrelLayers = [ self.layerCreator.cylinderLayer(self.gctx, stripBarrel[lid].flatten(), 1, 1) for lid in range(4) ]
-        stripVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, stripBarrelLayers, stripBarrelBounds, 0.0, "StripBarrel"))
+        stripBarrelBounds = acts.CylinderVolumeBounds(
+            rmin=rmin, rmax=rmax, halfz=zmax_barrel
+        )
+        stripBarrelLayers = [
+            self.layerCreator.cylinderLayer(self.gctx, stripBarrel[lid].flatten(), 1, 1)
+            for lid in range(4)
+        ]
+        stripVols.append(
+            self.cylVolHelper.createTrackingVolume(
+                self.gctx, stripBarrelLayers, stripBarrelBounds, 0.0, "StripBarrel"
+            )
+        )
 
         for ec in [-2, 2]:
             self.info(f"Build strips endcaps {ec}")
@@ -261,22 +348,39 @@ class ItkBuilder:
             halfz_ec = 0.5 * (zmax_ec - zmax_barrel)
             shift = sign * (zmax_barrel + halfz_ec)
 
-            stripEndcapBounds = acts.CylinderVolumeBounds(rmin=rmin, rmax=rmax, halfz=halfz_ec)
-            stripEndcapLayers = [ self.layerCreator.discLayer(self.gctx, pixelEndcap[lid].flatten(), 1, 1) for lid in range(6) ]
-            stripVols.append(self.cylVolHelper.createTrackingVolume(self.gctx, stripEndcapLayers, stripEndcapBounds, shift, f"StripEndcap{ec}"))
+            stripEndcapBounds = acts.CylinderVolumeBounds(
+                rmin=rmin, rmax=rmax, halfz=halfz_ec
+            )
+            stripEndcapLayers = [
+                self.layerCreator.discLayer(self.gctx, pixelEndcap[lid].flatten(), 1, 1)
+                for lid in range(6)
+            ]
+            stripVols.append(
+                self.cylVolHelper.createTrackingVolume(
+                    self.gctx,
+                    stripEndcapLayers,
+                    stripEndcapBounds,
+                    shift,
+                    f"StripEndcap{ec}",
+                )
+            )
 
         return self.cylVolHelper.createContainerTrackingVolume(self.gctx, stripVols)
 
-
     def finalize(self):
         self.info(f"Build beampipe")
-        beampipeVol = acts.TrackingVolume(acts.CylinderVolumeBounds(rmin=0, rmax=self.rPixInner, halfz=self.zMaxEc), "BeamPipe")
+        beampipeVol = acts.TrackingVolume(
+            acts.CylinderVolumeBounds(rmin=0, rmax=self.rPixInner, halfz=self.zMaxEc),
+            "BeamPipe",
+        )
 
         innerPixVol = self.buildInnerPixel()
         outerPixVol = self.buildOuterPixel()
         stripVol = self.buildStrips()
 
-        highestVol = self.cylVolHelper.createContainerTrackingVolume(self.gctx, [beampipeVol, innerPixVol, outerPixVol, stripVol])
+        highestVol = self.cylVolHelper.createContainerTrackingVolume(
+            self.gctx, [beampipeVol, innerPixVol, outerPixVol, stripVol]
+        )
 
         trkGeoLogger = acts.logging.getLogger("TrackingGeometry")
         trkGeoLogger.setLevel(acts.logging.INFO)
@@ -285,7 +389,9 @@ class ItkBuilder:
             return geoid
 
         self.info("Finally build tracking geometry")
-        return acts.TrackingGeometry(highestVol, acts.GeometryIdentifierHook(hook), trkGeoLogger)
+        return acts.TrackingGeometry(
+            highestVol, acts.GeometryIdentifierHook(hook), trkGeoLogger
+        )
 
 
 def main():
@@ -312,7 +418,9 @@ def main():
     ]
     gmFactory = gm.GeoModelDetectorSurfaceFactory(gmFactoryConfig, logLevel)
     gmFactoryOptions = gm.GeoModelDetectorSurfaceFactory.Options()
-    gmFactoryOptions.queries = ["GeoModelXML",]
+    gmFactoryOptions.queries = [
+        "GeoModelXML",
+    ]
     gmFactoryCache = gm.GeoModelDetectorSurfaceFactory.Cache()
 
     gmFactory.construct(gmFactoryCache, gctx, gmTree, gmFactoryOptions)
@@ -329,6 +437,6 @@ def main():
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
     runPropagation(trkGeometry, field, outputDir="propagation").run()
 
+
 if "__main__" == __name__:
     main()
-
