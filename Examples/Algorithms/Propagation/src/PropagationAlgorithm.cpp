@@ -95,7 +95,7 @@ ProcessCode PropagationAlgorithm::execute(
 std::optional<Acts::BoundSquareMatrix> PropagationAlgorithm::generateCovariance(
     ActsExamples::RandomEngine& rng) const {
   // Standard gaussian distribution for covarianmces
-  std::normal_distribution<double> gauss(0., 1.);
+  std::normal_distribution gauss(0., 1.);
 
   if (m_cfg.covarianceTransport) {
     // We start from the correlation matrix
@@ -123,16 +123,16 @@ Acts::BoundTrackParameters PropagationAlgorithm::generateBoundParameters(
     ActsExamples::RandomEngine& rng,
     std::shared_ptr<const Acts::Surface> surface) const {
   // Standard gaussian distribution for covarianmces
-  std::normal_distribution<double> gauss(0., 1.);
+  std::normal_distribution gauss(0., 1.);
 
   // Setup random number distributions for some quantities
-  std::uniform_real_distribution<double> phiDist(m_cfg.phiRange.first,
-                                                 m_cfg.phiRange.second);
-  std::uniform_real_distribution<double> etaDist(m_cfg.etaRange.first,
-                                                 m_cfg.etaRange.second);
-  std::uniform_real_distribution<double> ptDist(m_cfg.ptRange.first,
-                                                m_cfg.ptRange.second);
-  std::uniform_real_distribution<double> qDist(0., 1.);
+  std::uniform_real_distribution phiDist(m_cfg.phiRange.first,
+                                         m_cfg.phiRange.second);
+  std::uniform_real_distribution etaDist(m_cfg.etaRange.first,
+                                         m_cfg.etaRange.second);
+  std::uniform_real_distribution ptDist(m_cfg.ptRange.first,
+                                        m_cfg.ptRange.second);
+  std::uniform_real_distribution qDist(0., 1.);
 
   // get the d0 and z0
   double d0 = m_cfg.d0Sigma * gauss(rng);

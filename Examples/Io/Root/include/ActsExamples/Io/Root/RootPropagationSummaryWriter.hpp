@@ -36,8 +36,7 @@ struct AlgorithmContext;
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootPropagationSummaryWriter final
-    : public WriterT<PropagationSummaries> {
+class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
  public:
   struct Config {
     /// particle collection to write

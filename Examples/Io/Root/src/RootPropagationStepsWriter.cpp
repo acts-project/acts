@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -141,10 +141,9 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_volumeID.push_back(geoID.volume());
 
       int material = 0;
-      if (step.surface) {
-        if (step.surface->surfaceMaterial() != nullptr) {
-          material = 1;
-        }
+      if (step.surface != nullptr &&
+          step.surface->surfaceMaterial() != nullptr) {
+        material = 1;
       }
       m_material.push_back(material);
 
@@ -166,7 +165,6 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       double aboAbs = std::abs(aborter);
       double usrAbs = std::abs(user);
 
-      // todo - fold with direction
       if (actAbs < accAbs && actAbs < aboAbs && actAbs < usrAbs) {
         m_step_type.push_back(0);
       } else if (accAbs < aboAbs && accAbs < usrAbs) {
@@ -189,5 +187,6 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     }
     m_outputTree->Fill();
   }
+
   return ActsExamples::ProcessCode::SUCCESS;
 }

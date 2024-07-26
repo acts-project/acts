@@ -98,8 +98,8 @@ class RootPropagationStepsWriter : public WriterT<PropagationSummaries> {
   std::vector<float> m_step_act;   ///< actor check
   std::vector<float> m_step_abt;   ///< aborter
   std::vector<float> m_step_usr;   ///< user
-  /// Number of iterations needed by the stepsize
-  ///  finder (e.g. Runge-Kutta) of the stepper.
+  /// Number of iterations needed by the stepsize finder (e.g. Runge-Kutta) of
+  /// the stepper.
   std::vector<std::size_t> m_nStepTrials;
 };
 

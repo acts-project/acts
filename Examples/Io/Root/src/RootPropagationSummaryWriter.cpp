@@ -121,10 +121,10 @@ ProcessCode RootPropagationSummaryWriter::finalize() {
 ProcessCode RootPropagationSummaryWriter::writeT(
     const AlgorithmContext& context, const PropagationSummaries& summaries) {
   // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  std::scoped_lock lock(m_writeMutex);
 
   // Get the event number
-  m_eventNr = context.eventNumber;
+  m_eventNr = static_cast<int>(context.eventNumber);
 
   // Initialize the last total trials
   // This is used to calculate the number of trials per step
@@ -153,80 +153,79 @@ ProcessCode RootPropagationSummaryWriter::writeT(
     m_stepTrials.clear();
 
     // Set the track number
-    m_trackNr = trackNr;
+    m_trackNr = static_cast<int>(trackNr);
 
     // Set the initial trajectory parameters
     const auto& startParameters = summary.startParameters;
-    m_d0 = startParameters.parameters()[Acts::eBoundLoc0];
-    m_z0 = startParameters.parameters()[Acts::eBoundLoc1];
-    m_phi = startParameters.parameters()[Acts::eBoundPhi];
-    m_theta = startParameters.parameters()[Acts::eBoundTheta];
-    m_qOverP = startParameters.parameters()[Acts::eBoundQOverP];
-    m_t = startParameters.parameters()[Acts::eBoundTime];
+    m_d0 = static_cast<float>(startParameters.parameters()[Acts::eBoundLoc0]);
+    m_z0 = static_cast<float>(startParameters.parameters()[Acts::eBoundLoc1]);
+    m_phi = static_cast<float>(startParameters.parameters()[Acts::eBoundPhi]);
+    m_theta =
+        static_cast<float>(startParameters.parameters()[Acts::eBoundTheta]);
+    m_qOverP =
+        static_cast<float>(startParameters.parameters()[Acts::eBoundQOverP]);
+    m_t = static_cast<float>(startParameters.parameters()[Acts::eBoundTime]);
 
     // Derived initial trajectory parameters
-    m_eta = Acts::VectorHelpers::eta(startParameters.direction());
-    m_pt = startParameters.transverseMomentum();
-    m_p = startParameters.absoluteMomentum();
+    m_eta = static_cast<float>(
+        Acts::VectorHelpers::eta(startParameters.direction()));
+    m_pt = static_cast<float>(startParameters.transverseMomentum());
+    m_p = static_cast<float>(startParameters.absoluteMomentum());
 
     // Stepper statistics
-    m_nSteps = summary.steps.size();
-    m_nStepTrials = summary.nStepTrials;
-    m_pathLength = summary.pathLength;
+    m_nSteps = static_cast<int>(summary.steps.size());
+    m_nStepTrials = static_cast<int>(summary.nStepTrials);
+    m_pathLength = static_cast<int>(summary.pathLength);
 
     // Loop over single steps
     for (const auto& step : summary.steps) {
       const auto& geoID = step.geoID;
-      m_stepVolumeID.push_back(geoID.volume());
-      m_stepBoundaryID.push_back(geoID.boundary());
-      m_stepLayerID.push_back(geoID.layer());
-      m_stepApproachID.push_back(geoID.approach());
-      m_stepSensitiveID.push_back(geoID.sensitive());
+      m_stepVolumeID.push_back(static_cast<int>(geoID.volume()));
+      m_stepBoundaryID.push_back(static_cast<int>(geoID.boundary()));
+      m_stepLayerID.push_back(static_cast<int>(geoID.layer()));
+      m_stepApproachID.push_back(static_cast<int>(geoID.approach()));
+      m_stepSensitiveID.push_back(static_cast<int>(geoID.sensitive()));
 
       int material = 0;
-      if (step.surface) {
-        if (step.surface->surfaceMaterial() != nullptr) {
-          material = 1;
-        }
+      if (step.surface != nullptr &&
+          step.surface->surfaceMaterial() != nullptr) {
+        material = 1;
       }
       m_stepMaterial.push_back(material);
 
       // kinematic information
-      m_stepX.push_back(step.position.x());
-      m_stepY.push_back(step.position.y());
-      m_stepZ.push_back(step.position.z());
+      m_stepX.push_back(static_cast<float>(step.position.x()));
+      m_stepY.push_back(static_cast<float>(step.position.y()));
+      m_stepZ.push_back(static_cast<float>(step.position.z()));
       auto direction = step.momentum.normalized();
-      m_stepDx.push_back(direction.x());
-      m_stepDy.push_back(direction.y());
-      m_stepDz.push_back(direction.z());
+      m_stepDx.push_back(static_cast<float>(direction.x()));
+      m_stepDy.push_back(static_cast<float>(direction.y()));
+      m_stepDz.push_back(static_cast<float>(direction.z()));
 
-      {
-        double accuracy = step.stepSize.accuracy();
-        double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
-        double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
-        double user = step.stepSize.value(Acts::ConstrainedStep::user);
-        double actAbs = std::abs(actor);
-        double accAbs = std::abs(accuracy);
-        double aboAbs = std::abs(aborter);
-        double usrAbs = std::abs(user);
+      double accuracy = step.stepSize.accuracy();
+      double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
+      double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
+      double user = step.stepSize.value(Acts::ConstrainedStep::user);
+      double actAbs = std::abs(actor);
+      double accAbs = std::abs(accuracy);
+      double aboAbs = std::abs(aborter);
+      double usrAbs = std::abs(user);
 
-        // todo - fold with direction
-        if (actAbs < accAbs && actAbs < aboAbs && actAbs < usrAbs) {
-          m_stepType.push_back(0);
-        } else if (accAbs < aboAbs && accAbs < usrAbs) {
-          m_stepType.push_back(1);
-        } else if (aboAbs < usrAbs) {
-          m_stepType.push_back(2);
-        } else {
-          m_stepType.push_back(3);
-        }
-
-        // Step size information
-        m_stepAcc.push_back(Acts::clampValue<float>(accuracy));
-        m_stepAct.push_back(Acts::clampValue<float>(actor));
-        m_stepAbt.push_back(Acts::clampValue<float>(aborter));
-        m_stepUsr.push_back(Acts::clampValue<float>(user));
+      if (actAbs < accAbs && actAbs < aboAbs && actAbs < usrAbs) {
+        m_stepType.push_back(0);
+      } else if (accAbs < aboAbs && accAbs < usrAbs) {
+        m_stepType.push_back(1);
+      } else if (aboAbs < usrAbs) {
+        m_stepType.push_back(2);
+      } else {
+        m_stepType.push_back(3);
       }
+
+      // Step size information
+      m_stepAcc.push_back(Acts::clampValue<float>(accuracy));
+      m_stepAct.push_back(Acts::clampValue<float>(actor));
+      m_stepAbt.push_back(Acts::clampValue<float>(aborter));
+      m_stepUsr.push_back(Acts::clampValue<float>(user));
 
       // Stepper efficiency
       m_stepTrials.push_back(step.nTotalTrials - lastTotalTrials);
