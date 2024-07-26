@@ -72,7 +72,7 @@ def runMaterialValidation(
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            inputMaterialTracks=alg.config.outputMaterialTracks,
+            inputMaterialTracks=alg.config.outputMaterialCollection,
             filePath=os.path.join(outputDir, (outputName + ".root")),
             storeSurface=True,
             storeVolume=True,
