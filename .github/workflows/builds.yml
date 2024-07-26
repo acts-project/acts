@@ -354,7 +354,7 @@ jobs:
           && mkdir ${{ env.DEPENDENCY_DIR }}
           && tar -xf deps.tar.zst -C ${{ env.DEPENDENCY_DIR }}
           && PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && pip3 install pyyaml jinja2
+          && python3 -m pip install pyyaml jinja2
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
