@@ -129,9 +129,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
       // are needed to describe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
+      auto [faces, triangularMesh] = detail::FacesHelper::cylindricalFaceMesh(vertices);
     }
   } else {
     throw std::domain_error(
