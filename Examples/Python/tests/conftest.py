@@ -211,7 +211,7 @@ def basic_prop_seq(rng):
             randomNumberSvc=rng,
             ntests=10,
             sterileLogger=False,
-            propagationStepCollection="propagation-steps",
+            outputSummaryCollection="propagation_summary",
         )
         s.addAlgorithm(alg)
         return s, alg

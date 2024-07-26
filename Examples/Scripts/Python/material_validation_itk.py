@@ -61,7 +61,7 @@ def runMaterialValidation(
         s.addWriter(
             acts.examples.RootPropagationStepsWriter(
                 level=acts.logging.INFO,
-                collection=alg.config.propagationStepCollection,
+                collection=alg.config.outputSummaryCollection,
                 filePath=outputDir + "/propagation_steps.root",
             )
         )

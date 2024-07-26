@@ -34,7 +34,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         randomNumberSvc=rnd,
         ntests=1000,
         sterileLogger=True,
-        propagationStepCollection="propagation-steps",
+        outputSummaryCollection="propagation_summary",
     )
 
     s.addAlgorithm(alg)
@@ -43,7 +43,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     s.addWriter(
         acts.examples.ObjPropagationStepsWriter(
             level=acts.logging.INFO,
-            collection="propagation-steps",
+            collection="propagation_summary",
             outputDir=outputDir + "/obj",
         )
     )
@@ -51,7 +51,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
     s.addWriter(
         acts.examples.RootPropagationStepsWriter(
             level=acts.logging.INFO,
-            collection="propagation-steps",
+            collection="propagation_summary",
             filePath=outputDir + "/propagation_steps.root",
         )
     )

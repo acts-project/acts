@@ -30,7 +30,7 @@ class ObjPropagationStepsWriter : public WriterT<PropagationSummaries> {
  public:
   struct Config {
     /// which collection to write
-    std::string inputSummaryCollection;
+    std::string collection;
     /// where to place output files
     std::string outputDir;
     /// scale output values
